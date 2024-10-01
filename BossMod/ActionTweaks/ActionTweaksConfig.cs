@@ -1,6 +1,6 @@
 ﻿namespace BossMod;
 
-[ConfigDisplay(Name = "Action tweaks", Order = 4)]
+[ConfigDisplay(Name = "（已屏蔽）Action tweaks", Order = 4)]
 public sealed class ActionTweaksConfig : ConfigNode
 {
     // TODO: consider exposing max-delay to config; 0 would mean 'remove all delay', max-value would mean 'disable'

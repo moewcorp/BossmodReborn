@@ -1,9 +1,9 @@
 {
-  "Author": "The Combat Reborn Team",
+  "Author": "The Combat Reborn Team / NiGuangOwO（本地化&适配）",
   "Name": "Bossmod Reborn",
   "InternalName": "BossModReborn",
-  "Punchline": "Don't fail at raid mechanics anymore",
-  "Description": "A bunch of utilities to simplify bosses.",
+  "Punchline": "大脑按摩用的(在线安装Only)",
+  "Description": "此版本仅保留画图功能",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
   "ImageUrls": [

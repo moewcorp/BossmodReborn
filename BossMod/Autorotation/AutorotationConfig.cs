@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation;
 
-[ConfigDisplay(Name = "Autorotation", Order = 5)]
+[ConfigDisplay(Name = "（已屏蔽）Autorotation", Order = 5)]
 public sealed class AutorotationConfig : ConfigNode
 {
     [PropertyDisplay("Show in-game UI")]

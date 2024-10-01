@@ -71,11 +71,11 @@ sealed class WorldStateGameSync : IDisposable
         _interceptor.ServerIPCReceived += ServerIPCReceived;
 
         _netConfig = Service.Config.GetAndSubscribe<ReplayManagementConfig>(config => _interceptor.Active = config.RecordServerPackets || config.DumpServerPackets);
-        _subscriptions = new
-        (
-            amex.ActionRequestExecuted.Subscribe(OnActionRequested),
-            amex.ActionEffectReceived.Subscribe(OnActionEffect)
-        );
+        //_subscriptions = new
+        //(
+        //    amex.ActionRequestExecuted.Subscribe(OnActionRequested),
+        //    amex.ActionEffectReceived.Subscribe(OnActionEffect)
+        //);
 
         _processPacketActorCastHook = Service.Hook.HookFromSignature<ProcessPacketActorCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", ProcessPacketActorCastDetour);
         _processPacketActorCastHook.Enable();
@@ -116,7 +116,7 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketNpcYellHook.Dispose();
         _processEnvControlHook.Dispose();
         _processPacketRSVDataHook.Dispose();
-        _subscriptions.Dispose();
+        //_subscriptions.Dispose();
         _netConfig.Dispose();
         _interceptor.Dispose();
     }
@@ -584,7 +584,7 @@ sealed class WorldStateGameSync : IDisposable
             _ws.Execute(new ClientState.OpPlayerStatsChange(stats));
 
         Span<Cooldown> cooldowns = stackalloc Cooldown[_ws.Client.Cooldowns.Length];
-        _amex.GetCooldowns(cooldowns);
+        //_amex.GetCooldowns(cooldowns);
         if (!MemoryExtensions.SequenceEqual(_ws.Client.Cooldowns.AsSpan(), cooldowns))
         {
             if (cooldowns.IndexOfAnyExcept(default(Cooldown)) < 0)
@@ -593,9 +593,9 @@ sealed class WorldStateGameSync : IDisposable
                 _ws.Execute(new ClientState.OpCooldown(false, CalcCooldownDifference(cooldowns, _ws.Client.Cooldowns.AsSpan())));
         }
 
-        var (dutyAction0, dutyAction1) = _amex.GetDutyActions();
-        if (_ws.Client.DutyActions[0] != dutyAction0 || _ws.Client.DutyActions[1] != dutyAction1)
-            _ws.Execute(new ClientState.OpDutyActionsChange(dutyAction0, dutyAction1));
+        //var (dutyAction0, dutyAction1) = _amex.GetDutyActions();
+        //if (_ws.Client.DutyActions[0] != dutyAction0 || _ws.Client.DutyActions[1] != dutyAction1)
+        //    _ws.Execute(new ClientState.OpDutyActionsChange(dutyAction0, dutyAction1));
 
         Span<byte> bozjaHolster = stackalloc byte[_ws.Client.BozjaHolster.Length];
         bozjaHolster.Clear();

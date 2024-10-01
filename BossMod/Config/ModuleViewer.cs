@@ -63,9 +63,13 @@ public sealed class ModuleViewer : IDisposable
         Customize(BossModuleInfo.Category.MaskedCarnivale, playStyle?.GetRow(8));
         Customize(BossModuleInfo.Category.Hunt, playStyle?.GetRow(10));
 
+        _categories[(int)BossModuleInfo.Category.Extreme].name = "极神";
         _categories[(int)BossModuleInfo.Category.Extreme].icon = _categories[(int)BossModuleInfo.Category.Trial].icon;
+        _categories[(int)BossModuleInfo.Category.Unreal].name = "幻巧战";
         _categories[(int)BossModuleInfo.Category.Unreal].icon = _categories[(int)BossModuleInfo.Category.Trial].icon;
+        _categories[(int)BossModuleInfo.Category.Savage].name = "零式大型任务";
         _categories[(int)BossModuleInfo.Category.Savage].icon = _categories[(int)BossModuleInfo.Category.Raid].icon;
+        _categories[(int)BossModuleInfo.Category.Alliance].name = "团队任务";
         _categories[(int)BossModuleInfo.Category.Alliance].icon = _categories[(int)BossModuleInfo.Category.Raid].icon;
         //_categories[(int)BossModuleInfo.Category.Event].icon = GetIcon(61757);
 

@@ -35,11 +35,11 @@ public sealed class ConfigUI : IDisposable
         _mv = new(rotationDB?.Plans, ws);
         _presets = rotationDB != null ? new(rotationDB.Presets) : null;
 
-        _tabs.Add("Settings", DrawSettings);
-        _tabs.Add("Supported bosses", () => _mv.Draw(_tree, _ws));
-        _tabs.Add("Autorotation presets", () => _presets?.Draw());
-        _tabs.Add("Slash commands", DrawAvailableCommands);
-        _tabs.Add("About", _about.Draw);
+        _tabs.Add("设置", DrawSettings);
+        _tabs.Add("支持的Boss", () => _mv.Draw(_tree, _ws));
+        //_tabs.Add("Autorotation presets", () => _presets?.Draw());
+        //_tabs.Add("Slash commands", DrawAvailableCommands);
+        //_tabs.Add("About", _about.Draw);
 
         Dictionary<Type, UINode> nodes = [];
         foreach (var n in config.Nodes)

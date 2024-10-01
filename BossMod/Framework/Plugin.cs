@@ -38,9 +38,25 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ReplayManagementWindow _wndReplay;
     private readonly UIRotationWindow _wndRotation;
     private readonly MainDebugWindow _wndDebug;
-
-    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
+    private IDalamudPluginInterface PluginInterface;
+    private INotificationManager NotificationManager;
+    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager, INotificationManager notificationManager)
     {
+#if !DEBUG
+        PluginInterface = dalamud;
+        NotificationManager = notificationManager;
+        if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
+        {
+            notificationManager.AddNotification(new Dalamud.Interface.ImGuiNotification.Notification()
+            {
+                Type = Dalamud.Interface.ImGuiNotification.NotificationType.Error,
+                Title = "加载验证",
+                Content = "由于本地加载或安装来源仓库非NiGuangOwO个人仓库，插件加载失败",
+                Minimized = false
+            });
+            return;
+        }
+#endif
         if (!dalamud.ConfigDirectory.Exists)
             dalamud.ConfigDirectory.Create();
         var dalamudRoot = dalamud.GetType().Assembly.
@@ -58,7 +74,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.WindowSystem = new("bmr");
         //Service.Device = pluginInterface.UiBuilder.Device;
         Service.Condition.ConditionChange += OnConditionChanged;
-        MultiboxUnlock.Exec();
+        //MultiboxUnlock.Exec();
         Network.IDScramble.Initialize();
         Camera.Instance = new();
 
@@ -78,14 +94,14 @@ public sealed class Plugin : IDalamudPlugin
         _hints = new();
         _bossmod = new(_ws);
         _hintsBuilder = new(_ws, _bossmod);
-        _movementOverride = new();
-        _amex = new(_ws, _hints, _movementOverride);
+        //_movementOverride = new();
+        //_amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
-        _rotation = new(_rotationDB, _bossmod, _hints);
-        _ai = new(_rotation, _amex, _movementOverride);
-        _broadcast = new();
-        _ipc = new(_rotation, _amex, _movementOverride, _ai);
-        _dtr = new(_rotation, _ai);
+        //_rotation = new(_rotationDB, _bossmod, _hints);
+        //_ai = new(_rotation, _amex, _movementOverride);
+        //_broadcast = new();
+        //_ipc = new(_rotation, _amex, _movementOverride, _ai);
+        //_dtr = new(_rotation, _ai);
         _wndBossmod = new(_bossmod);
         _wndBossmodHints = new(_bossmod);
         var config = Service.Config.Get<ReplayManagementConfig>();
@@ -93,8 +109,8 @@ public sealed class Plugin : IDalamudPlugin
         _wndReplay = new ReplayManagementWindow(_ws, _rotationDB, new DirectoryInfo(replayDir));
         _configUI = new(Service.Config, _ws, new DirectoryInfo(replayDir), _rotationDB);
         config.Modified.ExecuteAndSubscribe(() => _wndReplay.UpdateLogDirectory());
-        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
-        _wndDebug = new(_ws, _rotation, _amex);
+        //_wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
+        //_wndDebug = new(_ws, _rotation, _amex);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
@@ -103,23 +119,29 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+#if !DEBUG
+        if (PluginInterface.IsDev || !PluginInterface.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
+        {
+            return;
+        }
+#endif
         Service.Condition.ConditionChange -= OnConditionChanged;
-        _wndDebug.Dispose();
-        _wndRotation.Dispose();
+        //_wndDebug.Dispose();
+        //_wndRotation.Dispose();
         _wndReplay.Dispose();
         _wndBossmodHints.Dispose();
         _wndBossmod.Dispose();
         _configUI.Dispose();
-        _ipc.Dispose();
-        _ai.Dispose();
-        _rotation.Dispose();
+        //_ipc.Dispose();
+        //_ai.Dispose();
+        //_rotation.Dispose();
         _wsSync.Dispose();
-        _amex.Dispose();
-        _movementOverride.Dispose();
+        //_amex.Dispose();
+        //_movementOverride.Dispose();
         _hintsBuilder.Dispose();
         _bossmod.Dispose();
-        _dtr.Dispose();
-        ActionDefinitions.Instance.Dispose();
+        //_dtr.Dispose();
+        //ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
         CommandManager.RemoveHandler("/vbm");
     }
@@ -267,17 +289,17 @@ public sealed class Plugin : IDalamudPlugin
     {
         var tsStart = DateTime.Now;
 
-        _dtr.Update();
+        //_dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
         _hintsBuilder.Update(_hints, PartyState.PlayerSlot);
-        _amex.QueueManualActions();
-        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
-        _rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn, _movementOverride.IsMoving());
-        _ai.Update();
-        _broadcast.Update();
-        _amex.FinishActionGather();
+        //_amex.QueueManualActions();
+        //var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
+        //_rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn, _movementOverride.IsMoving());
+        //_ai.Update();
+        //_broadcast.Update();
+        //_amex.FinishActionGather();
         ExecuteHints();
 
         var uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
@@ -301,7 +323,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private unsafe void ExecuteHints()
     {
-        _movementOverride.DesiredDirection = _hints.ForcedMovement;
+        //_movementOverride.DesiredDirection = _hints.ForcedMovement;
         // update forced target, if needed (TODO: move outside maybe?)
         if (_hints.ForcedTarget != null)
         {
