@@ -94,8 +94,8 @@ public sealed class Plugin : IDalamudPlugin
         _hints = new();
         _bossmod = new(_ws);
         _hintsBuilder = new(_ws, _bossmod);
-        //_movementOverride = new();
-        //_amex = new(_ws, _hints, _movementOverride);
+        _movementOverride = new();
+        _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
         //_rotation = new(_rotationDB, _bossmod, _hints);
         //_ai = new(_rotation, _amex, _movementOverride);
@@ -136,12 +136,12 @@ public sealed class Plugin : IDalamudPlugin
         //_ai.Dispose();
         //_rotation.Dispose();
         _wsSync.Dispose();
-        //_amex.Dispose();
-        //_movementOverride.Dispose();
+        _amex.Dispose();
+        _movementOverride.Dispose();
         _hintsBuilder.Dispose();
         _bossmod.Dispose();
         //_dtr.Dispose();
-        //ActionDefinitions.Instance.Dispose();
+        ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
         CommandManager.RemoveHandler("/vbm");
     }

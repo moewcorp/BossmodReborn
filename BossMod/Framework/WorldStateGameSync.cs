@@ -71,11 +71,11 @@ sealed class WorldStateGameSync : IDisposable
         _interceptor.ServerIPCReceived += ServerIPCReceived;
 
         _netConfig = Service.Config.GetAndSubscribe<ReplayManagementConfig>(config => _interceptor.Active = config.RecordServerPackets || config.DumpServerPackets);
-        //_subscriptions = new
-        //(
-        //    amex.ActionRequestExecuted.Subscribe(OnActionRequested),
-        //    amex.ActionEffectReceived.Subscribe(OnActionEffect)
-        //);
+        _subscriptions = new
+        (
+            amex.ActionRequestExecuted.Subscribe(OnActionRequested),
+            amex.ActionEffectReceived.Subscribe(OnActionEffect)
+        );
 
         _processPacketActorCastHook = Service.Hook.HookFromSignature<ProcessPacketActorCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", ProcessPacketActorCastDetour);
         _processPacketActorCastHook.Enable();
@@ -116,7 +116,7 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketNpcYellHook.Dispose();
         _processEnvControlHook.Dispose();
         _processPacketRSVDataHook.Dispose();
-        //_subscriptions.Dispose();
+        _subscriptions.Dispose();
         _netConfig.Dispose();
         _interceptor.Dispose();
     }

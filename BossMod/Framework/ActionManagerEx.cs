@@ -83,8 +83,8 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
         Service.Log($"[AMEx] ActionManager singleton address = 0x{(ulong)_inst:X}");
         _updateHook = new(ActionManager.Addresses.Update, UpdateDetour);
-        _useActionHook = new(ActionManager.Addresses.UseAction, UseActionDetour);
-        _useActionLocationHook = new(ActionManager.Addresses.UseActionLocation, UseActionLocationDetour);
+        //_useActionHook = new(ActionManager.Addresses.UseAction, UseActionDetour);
+        //_useActionLocationHook = new(ActionManager.Addresses.UseActionLocation, UseActionLocationDetour);
         _useBozjaFromHolsterDirectorHook = new(PublicContentBozja.Addresses.UseFromHolster, UseBozjaFromHolsterDirectorDetour);
         _processPacketActionEffectHook = new(ActionEffectHandler.Addresses.Receive, ProcessPacketActionEffectDetour);
 
@@ -97,8 +97,8 @@ public sealed unsafe class ActionManagerEx : IDisposable
     {
         _processPacketActionEffectHook.Dispose();
         _useBozjaFromHolsterDirectorHook.Dispose();
-        _useActionLocationHook.Dispose();
-        _useActionHook.Dispose();
+        //_useActionLocationHook.Dispose();
+        //_useActionHook.Dispose();
         _updateHook.Dispose();
         _oocActionsTweak.Dispose();
     }
