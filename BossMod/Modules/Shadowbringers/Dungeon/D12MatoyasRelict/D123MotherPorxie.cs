@@ -157,6 +157,12 @@ class Barbeque(BossModule module) : Components.GenericAOEs(module)
         if (_aoe != null)
             hints.AddForbiddenZone(ShapeDistance.InvertedRect(new(imminent ? 18.5f : actor.Position.X + 0.1f, 0), new(19, 0), 20));
     }
+
+    public override void AddGlobalHints(GlobalHints hints)
+    {
+        if (imminent)
+            hints.Add("Go to the opposite side of the arena and work against getting sucked in!");
+    }
 }
 
 class D123MotherPorxieStates : StateMachineBuilder
