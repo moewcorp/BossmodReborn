@@ -1,4 +1,4 @@
-﻿namespace BossMod.Endwalker.Unreal.Un5Thordan;
+﻿namespace BossMod.Heavensward.Extreme.Ex3Thordan;
 
 abstract class SpiralThrust(BossModule module, float predictionDelay) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SpiralThrust))
 {
@@ -27,7 +27,7 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
         switch ((AID)spell.Action.ID)
         {
             case AID.KnightAppear:
-                if ((OID)caster.OID is OID.Vellguine or OID.Paulecrain or OID.Ignasse && (caster.Position - Module.Center).LengthSq() > 625)
+                if ((OID)caster.OID is OID.SerVellguine or OID.SerPaulecrain or OID.SerIgnasse && (caster.Position - Module.Center).LengthSq() > 625)
                 {
                     // prediction
                     _aoes.Add(new(_shape, caster.Position, Angle.FromDirection(Arena.Center - caster.Position), WorldState.FutureTime(_predictionDelay), Risky: false));

@@ -50,7 +50,7 @@ class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, ActionID
     }
 }
 
-class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 6)
+class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
