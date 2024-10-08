@@ -553,8 +553,6 @@ sealed class WorldStateGameSync : IDisposable
         var freeSlot = FindFreePartySlot(1, PartyState.MaxPartySize);
         if (freeSlot >= 0)
             _ws.Execute(new PartyState.OpModify(freeSlot, m));
-        else
-            Service.Log($"[WorldState] Failed to find empty slot for party member {m.ContentId:X}:{m.InstanceId:X}");
     }
 
     private void UpdatePartySlot(int slot, PartyState.Member m)
