@@ -43,8 +43,8 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     // build a triangulation of the polygon
     public bool Triangulate(List<RelTriangle> result)
     {
-        int vertexCount = Vertices.Count;
-        double[] pts = ArrayPool<double>.Shared.Rent(vertexCount * 2);
+        var vertexCount = Vertices.Count;
+        var pts = ArrayPool<double>.Shared.Rent(vertexCount * 2);
         try
         {
             for (int i = 0, j = 0; i < vertexCount; i++, j += 2)
@@ -55,7 +55,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
             }
 
             var tess = Earcut.Tessellate(new Span<double>(pts, 0, vertexCount * 2), HoleStarts);
-            for (int i = 0; i < tess.Count; i += 3)
+            for (var i = 0; i < tess.Count; i += 3)
             {
                 result.Add(new(Vertices[tess[i]], Vertices[tess[i + 1]], Vertices[tess[i + 2]]));
             }
@@ -63,7 +63,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         }
         finally
         {
-            ArrayPool<double>.Shared.Return(pts);
+            ArrayPool<double>.Shared.Return(pts, true);
         }
     }
     public List<RelTriangle> Triangulate()
@@ -387,7 +387,7 @@ public static class PolygonUtil
 
     public static IEnumerable<(T, T)> EnumerateEdges<T>(IEnumerable<T> contour) where T : struct, IEquatable<T>
     {
-        var contourList = contour as IList<T> ?? contour.ToList();
+        var contourList = contour as IList<T> ?? contour.ToArray();
         var count = contourList.Count;
         if (count == 0)
             yield break;
@@ -438,12 +438,7 @@ public readonly struct Edge
 
     public readonly float GetClosestDistance(float px, float py)
     {
-        var t = ((px - Ax) * Dx + (py - Ay) * Dy) * _invLengthSq;
-        if (t < 0)
-            t = 0;
-        else if (t > 1)
-            t = 1;
-
+        var t = Math.Clamp(((px - Ax) * Dx + (py - Ay) * Dy) * _invLengthSq, 0, 1);
         var distX = px - (Ax + t * Dx);
         var distY = py - (Ay + t * Dy);
 
@@ -453,79 +448,75 @@ public readonly struct Edge
 
 public class SpatialIndex
 {
-    private readonly ConcurrentDictionary<(int, int), List<int>> _gridDictionary;
+    private readonly List<int>[,] _grid;
     private readonly float _cellSize;
     private readonly Edge[] _edges;
+    private readonly int _minX, _minY, _gridWidth, _gridHeight;
+
     public SpatialIndex(Edge[] edges, float cellSize)
     {
         _edges = edges;
-        _cellSize = cellSize;
-        _gridDictionary = new ConcurrentDictionary<(int, int), List<int>>();
+        _cellSize = 1 / cellSize;
+        ComputeGridBounds(out _minX, out _minY, out _gridWidth, out _gridHeight);
 
+        _grid = new List<int>[_gridWidth, _gridHeight];
         BuildIndex();
+    }
+
+    private void ComputeGridBounds(out int minX, out int minY, out int gridWidth, out int gridHeight)
+    {
+        minX = minY = int.MaxValue;
+        int maxX = int.MinValue, maxY = int.MinValue;
+
+        foreach (var edge in _edges)
+        {
+            var ex0 = (int)MathF.Floor(MathF.Min(edge.Ax, edge.Ax + edge.Dx) * _cellSize);
+            var ex1 = (int)MathF.Floor(MathF.Max(edge.Ax, edge.Ax + edge.Dx) * _cellSize);
+            var ey0 = (int)MathF.Floor(MathF.Min(edge.Ay, edge.Ay + edge.Dy) * _cellSize);
+            var ey1 = (int)MathF.Floor(MathF.Max(edge.Ay, edge.Ay + edge.Dy) * _cellSize);
+
+            minX = Math.Min(minX, ex0);
+            minY = Math.Min(minY, ey0);
+            maxX = Math.Max(maxX, ex1);
+            maxY = Math.Max(maxY, ey1);
+        }
+
+        gridWidth = maxX - minX + 1;
+        gridHeight = maxY - minY + 1;
     }
 
     private void BuildIndex()
     {
-        Parallel.ForEach(
-            Partitioner.Create(0, _edges.Length),
-            () => new Dictionary<(int, int), List<int>>(),
-            (range, state, localDict) =>
-            {
-                for (var i = range.Item1; i < range.Item2; i++)
-                {
-                    var edge = _edges[i];
-                    var minX = Math.Min(edge.Ax, edge.Ax + edge.Dx);
-                    var maxX = Math.Max(edge.Ax, edge.Ax + edge.Dx);
-                    var minY = Math.Min(edge.Ay, edge.Ay + edge.Dy);
-                    var maxY = Math.Max(edge.Ay, edge.Ay + edge.Dy);
+        for (var i = 0; i < _edges.Length; i++)
+        {
+            var edge = _edges[i];
+            var minX = MathF.Min(edge.Ax, edge.Ax + edge.Dx);
+            var maxX = MathF.Max(edge.Ax, edge.Ax + edge.Dx);
+            var minY = MathF.Min(edge.Ay, edge.Ay + edge.Dy);
+            var maxY = MathF.Max(edge.Ay, edge.Ay + edge.Dy);
 
-                    var x0 = (int)Math.Floor(minX / _cellSize);
-                    var x1 = (int)Math.Floor(maxX / _cellSize);
-                    var y0 = (int)Math.Floor(minY / _cellSize);
-                    var y1 = (int)Math.Floor(maxY / _cellSize);
+            var x0 = (int)MathF.Floor(minX * _cellSize) - _minX;
+            var x1 = (int)MathF.Floor(maxX * _cellSize) - _minX;
+            var y0 = (int)MathF.Floor(minY * _cellSize) - _minY;
+            var y1 = (int)MathF.Floor(maxY * _cellSize) - _minY;
 
-                    for (var x = x0; x <= x1; x++)
-                    {
-                        for (var y = y0; y <= y1; y++)
-                        {
-                            var key = (x, y);
-                            if (!localDict.TryGetValue(key, out var list))
-                            {
-                                list = [];
-                                localDict[key] = list;
-                            }
-                            list.Add(i);
-                        }
-                    }
-                }
-                return localDict;
-            },
-            localDict =>
+            for (var x = x0; x <= x1; x++)
             {
-                foreach (var kvp in localDict)
+                for (var y = y0; y <= y1; y++)
                 {
-                    _gridDictionary.AddOrUpdate(
-                        kvp.Key,
-                        kvp.Value,
-                        (key, existingList) =>
-                        {
-                            lock (existingList)
-                            {
-                                existingList.AddRange(kvp.Value);
-                            }
-                            return existingList;
-                        });
+                    if (_grid[x, y] == null)
+                        _grid[x, y] = [];
+                    _grid[x, y].Add(i);
                 }
-            });
+            }
+        }
     }
 
     public List<int> Query(float px, float py)
     {
-        var cellX = (int)Math.Floor(px / _cellSize);
-        var cellY = (int)Math.Floor(py / _cellSize);
-        var key = (cellX, cellY);
+        var cellX = (int)MathF.Floor(px * _cellSize) - _minX;
+        var cellY = (int)MathF.Floor(py * _cellSize) - _minY;
 
-        return _gridDictionary.TryGetValue(key, out var list) ? list : [];
+        return cellX >= 0 && cellX < _gridWidth && cellY >= 0 && cellY < _gridHeight ? _grid[cellX, cellY] ?? [] : ([]);
     }
 }
