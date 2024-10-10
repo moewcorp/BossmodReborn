@@ -22,8 +22,10 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     public IEnumerable<(WDir, WDir)> ExteriorEdges => PolygonUtil.EnumerateEdges(Vertices.Take(ExteriorEnd));
     public IEnumerable<(WDir, WDir)> InteriorEdges(int index) => PolygonUtil.EnumerateEdges(Vertices.Skip(HoleStarts[index]).Take(HoleEnd(index) - HoleStarts[index]));
 
-    public bool IsSimple => HoleStarts.Count == 0;
-    public bool IsConvex => IsSimple && PolygonUtil.IsConvex(Exterior);
+    private static readonly ArrayPool<double> _doublePool = ArrayPool<double>.Shared;
+    private ContourEdgeBuckets? _exteriorEdgeBuckets;
+    private List<ContourEdgeBuckets> _holeEdgeBuckets = [];
+    private const int BucketCount = 10;
 
     private int ExteriorEnd => HoleStarts.Count > 0 ? HoleStarts[0] : Vertices.Count;
     private int HoleEnd(int index) => index + 1 < HoleStarts.Count ? HoleStarts[index + 1] : Vertices.Count;
@@ -44,7 +46,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     public bool Triangulate(List<RelTriangle> result)
     {
         var vertexCount = Vertices.Count;
-        var pts = ArrayPool<double>.Shared.Rent(vertexCount * 2);
+        var pts = _doublePool.Rent(vertexCount * 2);
         try
         {
             for (int i = 0, j = 0; i < vertexCount; i++, j += 2)
@@ -63,7 +65,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         }
         finally
         {
-            ArrayPool<double>.Shared.Return(pts, true);
+            _doublePool.Return(pts, true);
         }
     }
     public List<RelTriangle> Triangulate()
@@ -76,33 +78,119 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        if (!InSimplePolygon(p, Exterior))
-            return false;
-        for (var i = 0; i < HoleStarts.Count; i++)
+        if (_exteriorEdgeBuckets == null)
         {
-            if (InSimplePolygon(p, Interior(i)))
+            _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior);
+            if (HoleStarts.Count > 0)
+            {
+                _holeEdgeBuckets = new List<ContourEdgeBuckets>(HoleStarts.Count);
+                for (var i = 0; i < HoleStarts.Count; i++)
+                {
+                    _holeEdgeBuckets.Add(BuildEdgeBucketsForContour(Interior(i)));
+                }
+            }
+        }
+
+        if (!InSimplePolygon(p, _exteriorEdgeBuckets!))
+            return false;
+        for (var i = 0; i < _holeEdgeBuckets.Count; i++)
+        {
+            if (InSimplePolygon(p, _holeEdgeBuckets[i]))
                 return false;
         }
         return true;
     }
 
-    private static bool InSimplePolygon(WDir p, ReadOnlySpan<WDir> contour)
+    private static bool InSimplePolygon(WDir p, ContourEdgeBuckets buckets)
     {
-        var inside = false;
         float x = p.X, y = p.Z;
-        var count = contour.Length;
+        var bucketIndex = (int)((y - buckets.MinY) * buckets.InvBucketHeight);
+        if (bucketIndex is < 0 or >= BucketCount)
+            return false;
 
-        for (int i = 0, j = count - 1; i < count; j = i++)
+        var edges = buckets.EdgeBuckets[bucketIndex];
+        var inside = false;
+        for (var i = 0; i < edges.Length; ++i)
         {
-            var yi = contour[i].Z;
-            var yj = contour[j].Z;
-
-            if ((yi > y) != (yj > y) && x < (contour[j].X - contour[i].X) * (y - yi) / (yj - yi) + contour[i].X)
+            var edge = edges[i];
+            if ((edge.y0 > y) != (edge.y1 > y) && x < edge.x0 + (edge.x1 - edge.x0) * (y - edge.y0) * edge.InvDy)
             {
                 inside = !inside;
             }
         }
+
         return inside;
+    }
+
+    private static ContourEdgeBuckets BuildEdgeBucketsForContour(ReadOnlySpan<WDir> contour)
+    {
+        float minY = float.MaxValue, maxY = float.MinValue;
+        var count = contour.Length;
+        for (var i = 0; i < count; ++i)
+        {
+            var cont = contour[i];
+            minY = Math.Min(minY, cont.Z);
+            maxY = Math.Max(maxY, cont.Z);
+        }
+
+        var invBucketHeight = BucketCount / (maxY - minY + 1e-8f);
+        var buckets = new Edges[BucketCount][];
+        var counts = new int[BucketCount];
+
+        for (var i = 0; i < BucketCount; i++)
+        {
+            buckets[i] = new Edges[contour.Length];
+        }
+
+        var prev = contour[^1];
+        for (var i = 0; i < count; ++i)
+        {
+            var cont = contour[i];
+            var edge = new Edges(prev.X, prev.Z, cont.X, cont.Z);
+            prev = cont;
+
+            var edgeMinY = Math.Min(edge.y0, edge.y1);
+            var edgeMaxY = Math.Max(edge.y0, edge.y1);
+
+            var bucketStart = (int)((edgeMinY - minY) * invBucketHeight);
+            var bucketEnd = (int)((edgeMaxY - minY) * invBucketHeight);
+
+            bucketStart = Math.Clamp(bucketStart, 0, BucketCount - 1);
+            bucketEnd = Math.Clamp(bucketEnd, 0, BucketCount - 1);
+
+            for (var b = bucketStart; b <= bucketEnd; b++)
+            {
+                buckets[b][counts[b]++] = edge;
+            }
+        }
+
+        for (var i = 0; i < BucketCount; i++)
+        {
+            Array.Resize(ref buckets[i], counts[i]);
+        }
+
+        return new ContourEdgeBuckets(buckets, minY, invBucketHeight);
+    }
+
+    private readonly struct Edges
+    {
+        public readonly float x0, y0, x1, y1, InvDy;
+
+        public Edges(float ax, float ay, float bx, float by)
+        {
+            x0 = ax;
+            y0 = ay;
+            x1 = bx;
+            y1 = by;
+            var dy = by - ay;
+            InvDy = dy != 0 ? 1 / dy : 0;
+        }
+    }
+
+    private sealed class ContourEdgeBuckets(Edges[][] edgeBuckets, float minY, float invBucketHeight)
+    {
+        public readonly Edges[][] EdgeBuckets = edgeBuckets;
+        public readonly float MinY = minY, InvBucketHeight = invBucketHeight;
     }
 
     public static Func<WPos, float> CacheFunction(Func<WPos, float> func)
@@ -141,7 +229,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
                 AddEdgesFromPart(part, origin, edges);
             }
             _edges = [.. edges];
-            _spatialIndex = new(_edges, 1);
+            _spatialIndex = new(_edges);
         }
 
         public readonly float Distance(WPos p)
@@ -152,7 +240,12 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
             var minDistanceSq = float.MaxValue;
             foreach (var i in _spatialIndex.Query(p.X, p.Z))
             {
-                minDistanceSq = Math.Min(minDistanceSq, _edges[i].GetClosestDistance(p.X, p.Z));
+                var edge = _edges[i];
+                var t = Math.Clamp(((p.X - edge.Ax) * edge.Dx + (p.Z - edge.Ay) * edge.Dy) * edge.InvLengthSq, 0, 1);
+                var distX = p.X - (edge.Ax + t * edge.Dx);
+                var distY = p.Z - (edge.Ay + t * edge.Dy);
+
+                minDistanceSq = Math.Min(minDistanceSq, distX * distX + distY * distY);
             }
 
             var minDistance = MathF.Sqrt(minDistanceSq);
@@ -174,9 +267,6 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
 // generic 'simplified' complex polygon that consists of 0 or more non-intersecting polygons with holes (note however that some polygons could be fully inside other polygon's hole)
 public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
 {
-    public bool IsSimple => Parts.Count == 1 && Parts[0].IsSimple;
-    public bool IsConvex => Parts.Count == 1 && Parts[0].IsConvex;
-
     public RelSimplifiedComplexPolygon() : this(new List<RelPolygonWithHoles>()) { }
 
     // constructors for simple polygon
@@ -187,16 +277,16 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
     public List<RelTriangle> Triangulate()
     {
         List<RelTriangle> result = [];
-        foreach (var p in Parts)
-            p.Triangulate(result);
+        for (var i = 0; i < Parts.Count; ++i)
+            Parts[i].Triangulate(result);
         return result;
     }
 
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        foreach (var part in Parts)
-            if (part.Contains(p))
+        for (var i = 0; i < Parts.Count; ++i)
+            if (Parts[i].Contains(p))
                 return true;
         return false;
     }
@@ -205,40 +295,32 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
     public RelSimplifiedComplexPolygon Offset(float offset)
     {
         var clipperOffset = new ClipperOffset();
-        var exteriorPaths = new List<Path64>();
-        var holePaths = new List<Path64>();
+        var allPaths = new Paths64();
 
         foreach (var part in Parts)
         {
-            exteriorPaths.Add(ToPath64(part.Exterior));
+            allPaths.Add(ToPath64(part.Exterior));
             foreach (var i in part.Holes)
-                holePaths.Add(ToPath64(part.Interior(i)));
+                allPaths.Add(ToPath64(part.Interior(i)));
         }
 
-        var exteriorSolution = new Paths64();
-        clipperOffset.AddPaths(new Paths64(exteriorPaths), JoinType.Miter, EndType.Polygon);
-        clipperOffset.Execute(offset * PolygonClipper.Scale, exteriorSolution);
-
-        clipperOffset.Clear();
-        var holeSolution = new Paths64();
-        clipperOffset.AddPaths(new Paths64(holePaths), JoinType.Miter, EndType.Polygon);
-        clipperOffset.Execute(-offset * PolygonClipper.Scale, holeSolution);
+        var solution = new Paths64();
+        clipperOffset.AddPaths(allPaths, JoinType.Miter, EndType.Polygon);
+        clipperOffset.Execute(offset * PolygonClipper.Scale, solution);
 
         var result = new RelSimplifiedComplexPolygon();
-
-        foreach (var path in exteriorSolution)
-        {
-            var vertices = path.Select(pt => new WDir(pt.X * PolygonClipper.InvScale, pt.Y * PolygonClipper.InvScale)).ToList();
-            result.Parts.Add(new(vertices));
-        }
-
-        foreach (var hole in holeSolution)
-        {
-            var holeVertices = hole.Select(pt => new WDir(pt.X * PolygonClipper.InvScale, pt.Y * PolygonClipper.InvScale)).ToList();
-            result.Parts.Last().AddHole(holeVertices);
-        }
-
+        BuildResultFromPaths(result, solution);
         return result;
+    }
+
+    private void BuildResultFromPaths(RelSimplifiedComplexPolygon result, Paths64 paths)
+    {
+        var c = new Clipper64();
+        c.AddPaths(paths, PathType.Subject);
+        var tree = new PolyTree64();
+        c.Execute(ClipType.Union, FillRule.NonZero, tree);
+
+        PolygonClipper.BuildResult(result, tree);
     }
 
     private static Path64 ToPath64(ReadOnlySpan<WDir> vertices)
@@ -328,7 +410,7 @@ public class PolygonClipper
         return result;
     }
 
-    private static void BuildResult(RelSimplifiedComplexPolygon result, PolyPath64 parent)
+    public static void BuildResult(RelSimplifiedComplexPolygon result, PolyPath64 parent)
     {
         for (var i = 0; i < parent.Count; ++i)
         {
@@ -392,74 +474,30 @@ public static class PolygonUtil
         if (count == 0)
             yield break;
 
-        for (var i = 0; i < count; i++)
+        var prevPoint = contourList[count - 1];
+        foreach (var currentPoint in contourList)
         {
-            yield return (contourList[i], contourList[(i + 1) % count]);
+            yield return (prevPoint, currentPoint);
+            prevPoint = currentPoint;
         }
-    }
-
-    public static bool IsConvex(ReadOnlySpan<WDir> contour)
-    {
-        var len = contour.Length;
-        if (len < 3)
-            return false;
-
-        var isPositive = false;
-        WDir prev = contour[len - 2], curr = contour[len - 1], next;
-        for (var i = 0; i < len; i++)
-        {
-            next = contour[i];
-            var cross = (curr.X - prev.X) * (next.Z - curr.Z) - (curr.Z - prev.Z) * (next.X - curr.X);
-            if (i == 0)
-                isPositive = cross > 0;
-            else if ((cross > 0) != isPositive)
-                return false;
-            prev = curr;
-            curr = next;
-        }
-        return true;
     }
 }
 
-public readonly struct Edge
+public readonly struct Edge(float ax, float ay, float dx, float dy)
 {
-    public readonly float Ax, Ay, Dx, Dy;
-    private readonly float _invLengthSq;
-
-    public Edge(float ax, float ay, float dx, float dy)
-    {
-        Ax = ax;
-        Ay = ay;
-        Dx = dx;
-        Dy = dy;
-        var lengthSq = dx * dx + dy * dy + 1e-8f;
-        _invLengthSq = 1 / lengthSq;
-    }
-
-    public readonly float GetClosestDistance(float px, float py)
-    {
-        var t = Math.Clamp(((px - Ax) * Dx + (py - Ay) * Dy) * _invLengthSq, 0, 1);
-        var distX = px - (Ax + t * Dx);
-        var distY = py - (Ay + t * Dy);
-
-        return distX * distX + distY * distY;
-    }
+    public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1 / (dx * dx + dy * dy + 1e-8f);
 }
 
 public class SpatialIndex
 {
-    private readonly List<int>[,] _grid;
-    private readonly float _cellSize;
+    private readonly List<int>[] _grid;
     private readonly Edge[] _edges;
     private readonly int _minX, _minY, _gridWidth, _gridHeight;
-
-    public SpatialIndex(Edge[] edges, float cellSize)
+    public SpatialIndex(Edge[] edges)
     {
         _edges = edges;
-        _cellSize = 1 / cellSize;
         ComputeGridBounds(out _minX, out _minY, out _gridWidth, out _gridHeight);
-
-        _grid = new List<int>[_gridWidth, _gridHeight];
+        _grid = new List<int>[_gridWidth * _gridHeight];
         BuildIndex();
     }
 
@@ -470,10 +508,10 @@ public class SpatialIndex
 
         foreach (var edge in _edges)
         {
-            var ex0 = (int)MathF.Floor(MathF.Min(edge.Ax, edge.Ax + edge.Dx) * _cellSize);
-            var ex1 = (int)MathF.Floor(MathF.Max(edge.Ax, edge.Ax + edge.Dx) * _cellSize);
-            var ey0 = (int)MathF.Floor(MathF.Min(edge.Ay, edge.Ay + edge.Dy) * _cellSize);
-            var ey1 = (int)MathF.Floor(MathF.Max(edge.Ay, edge.Ay + edge.Dy) * _cellSize);
+            var ex0 = (int)MathF.Floor(Math.Min(edge.Ax, edge.Ax + edge.Dx));
+            var ex1 = (int)MathF.Floor(Math.Max(edge.Ax, edge.Ax + edge.Dx));
+            var ey0 = (int)MathF.Floor(Math.Min(edge.Ay, edge.Ay + edge.Dy));
+            var ey1 = (int)MathF.Floor(Math.Max(edge.Ay, edge.Ay + edge.Dy));
 
             minX = Math.Min(minX, ex0);
             minY = Math.Min(minY, ey0);
@@ -490,23 +528,26 @@ public class SpatialIndex
         for (var i = 0; i < _edges.Length; i++)
         {
             var edge = _edges[i];
-            var minX = MathF.Min(edge.Ax, edge.Ax + edge.Dx);
-            var maxX = MathF.Max(edge.Ax, edge.Ax + edge.Dx);
-            var minY = MathF.Min(edge.Ay, edge.Ay + edge.Dy);
-            var maxY = MathF.Max(edge.Ay, edge.Ay + edge.Dy);
+            var minX = Math.Min(edge.Ax, edge.Ax + edge.Dx);
+            var maxX = Math.Max(edge.Ax, edge.Ax + edge.Dx);
+            var minY = Math.Min(edge.Ay, edge.Ay + edge.Dy);
+            var maxY = Math.Max(edge.Ay, edge.Ay + edge.Dy);
 
-            var x0 = (int)MathF.Floor(minX * _cellSize) - _minX;
-            var x1 = (int)MathF.Floor(maxX * _cellSize) - _minX;
-            var y0 = (int)MathF.Floor(minY * _cellSize) - _minY;
-            var y1 = (int)MathF.Floor(maxY * _cellSize) - _minY;
+            var x0 = (int)MathF.Floor(minX) - _minX;
+            var x1 = (int)MathF.Floor(maxX) - _minX;
+            var y0 = (int)MathF.Floor(minY) - _minY;
+            var y1 = (int)MathF.Floor(maxY) - _minY;
 
             for (var x = x0; x <= x1; x++)
             {
                 for (var y = y0; y <= y1; y++)
                 {
-                    if (_grid[x, y] == null)
-                        _grid[x, y] = [];
-                    _grid[x, y].Add(i);
+                    var index = x * _gridHeight + y;
+                    if (_grid[index] == null)
+                    {
+                        _grid[index] = [];
+                    }
+                    _grid[index].Add(i);
                 }
             }
         }
@@ -514,9 +555,9 @@ public class SpatialIndex
 
     public List<int> Query(float px, float py)
     {
-        var cellX = (int)MathF.Floor(px * _cellSize) - _minX;
-        var cellY = (int)MathF.Floor(py * _cellSize) - _minY;
+        var cellX = (int)MathF.Floor(px) - _minX;
+        var cellY = (int)MathF.Floor(py) - _minY;
 
-        return cellX >= 0 && cellX < _gridWidth && cellY >= 0 && cellY < _gridHeight ? _grid[cellX, cellY] ?? [] : ([]);
+        return (uint)cellX >= _gridWidth || (uint)cellY >= _gridHeight ? ([]) : _grid[cellX * _gridHeight + cellY] ?? [];
     }
 }
