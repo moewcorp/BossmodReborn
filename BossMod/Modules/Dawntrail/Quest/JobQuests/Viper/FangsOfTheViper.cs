@@ -2,7 +2,6 @@ namespace BossMod.Dawntrail.Quest.JobQuests.Viper.FangsOfTheViper;
 
 public enum OID : uint
 {
-
     Boss = 0x429F, // R0.5
     FawningPeiste = 0x42A1, // R2.34
     FawningRaptor = 0x42A3, // R1.82

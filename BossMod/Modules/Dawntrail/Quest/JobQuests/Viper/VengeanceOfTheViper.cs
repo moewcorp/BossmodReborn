@@ -1,5 +1,3 @@
-using BossMod.AST;
-
 namespace BossMod.Dawntrail.Quest.JobQuests.Viper.VengeanceOfTheViper;
 
 public enum OID : uint
@@ -52,10 +50,10 @@ public enum AID : uint
     Razorwind = 38736 // Helper->Keshkwa, 5.0s cast, range 7 circle, stack
 }
 
-class Razorwind(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Razorwind), 5, 2, 2);
+class Razorwind(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Razorwind), 7, 2, 2);
 class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCircle(15));
 
-class SwoopingFrenzy1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), 15);
+class SwoopingFrenzy1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SwoopingFrenzy1), 15);
 class SwoopingFrenzy2(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
@@ -94,7 +92,7 @@ class FirestormCycle(BossModule module) : Components.ConcentricAOEs(module, _sha
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.FirestormCycleOut)
-            AddSequence(Arena.Center, Module.CastFinishAt(spell));
+            AddSequence(caster.Position, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -107,7 +105,7 @@ class FirestormCycle(BossModule module) : Components.ConcentricAOEs(module, _sha
                 AID.FirestormCycleIn => 1,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2.4f));
+            AdvanceSequence(order, caster.Position, WorldState.FutureTime(2.4f));
         }
     }
 }
@@ -119,7 +117,7 @@ class StormkissedFlames(BossModule module) : Components.ConcentricAOEs(module, _
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.StormkissedFlamesIn)
-            AddSequence(Arena.Center, Module.CastFinishAt(spell));
+            AddSequence(caster.Position, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -132,7 +130,7 @@ class StormkissedFlames(BossModule module) : Components.ConcentricAOEs(module, _
                 AID.StormkissedFlamesOut => 1,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2.4f));
+            AdvanceSequence(order, caster.Position, WorldState.FutureTime(2.4f));
         }
     }
 }
