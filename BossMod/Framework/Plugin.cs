@@ -20,6 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly WorldState _ws;
     private readonly AIHints _hints;
     private readonly BossModuleManager _bossmod;
+    private readonly ZoneModuleManager _zonemod;
     private readonly AIHintsBuilder _hintsBuilder;
     private readonly MovementOverride _movementOverride;
     private readonly ActionManagerEx _amex;
@@ -93,17 +94,18 @@ public sealed class Plugin : IDalamudPlugin
         _ws = new(qpf, gameVersion);
         _hints = new();
         _bossmod = new(_ws);
-        _hintsBuilder = new(_ws, _bossmod);
+        _zonemod = new(_ws);
+        _hintsBuilder = new(_ws, _bossmod, _zonemod);
         _movementOverride = new();
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
-        //_rotation = new(_rotationDB, _bossmod, _hints);
-        //_ai = new(_rotation, _amex, _movementOverride);
-        //_broadcast = new();
-        //_ipc = new(_rotation, _amex, _movementOverride, _ai);
-        //_dtr = new(_rotation, _ai);
-        _wndBossmod = new(_bossmod);
-        _wndBossmodHints = new(_bossmod);
+        // _rotation = new(_rotationDB, _bossmod, _hints);
+        // _ai = new(_rotation, _amex, _movementOverride);
+        // _broadcast = new();
+        // _ipc = new(_rotation, _amex, _movementOverride, _ai);
+        // _dtr = new(_rotation, _ai);
+        _wndBossmod = new(_bossmod, _zonemod);
+        _wndBossmodHints = new(_bossmod, _zonemod);
         var config = Service.Config.Get<ReplayManagementConfig>();
         var replayDir = string.IsNullOrEmpty(config.ReplayFolder) ? dalamud.ConfigDirectory.FullName + "/replays" : config.ReplayFolder;
         _wndReplay = new ReplayManagementWindow(_ws, _rotationDB, new DirectoryInfo(replayDir));
@@ -141,11 +143,14 @@ public sealed class Plugin : IDalamudPlugin
         _amex.Dispose();
         _movementOverride.Dispose();
         _hintsBuilder.Dispose();
+        _zonemod.Dispose();
         _bossmod.Dispose();
         //_dtr.Dispose();
         ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
+        CommandManager.RemoveHandler("/bmrai");
         CommandManager.RemoveHandler("/vbm");
+        CommandManager.RemoveHandler("/vbmai");
     }
 
     private void OnCommand(string cmd, string args)
@@ -165,7 +170,7 @@ public sealed class Plugin : IDalamudPlugin
                 _wndDebug.BringToFront();
                 break;
             case "CFG":
-                var output = Service.Config.ConsoleCommand(new ArraySegment<string>(split, 1, split.Length - 1));
+                var output = Service.Config.ConsoleCommand(split.AsSpan(1));
                 foreach (var msg in output)
                     Service.ChatGui.Print(msg);
                 break;
@@ -291,17 +296,20 @@ public sealed class Plugin : IDalamudPlugin
     {
         var tsStart = DateTime.Now;
 
-        //_dtr.Update();
+        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
+        var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
+
+        // _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot);
-        //_amex.QueueManualActions();
-        //var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
-        //_rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn, _movementOverride.IsMoving());
-        //_ai.Update();
-        //_broadcast.Update();
-        //_amex.FinishActionGather();
+        _zonemod.ActiveModule?.Update();
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
+        // _amex.QueueManualActions();
+        // _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
+        // _ai.Update();
+        // _broadcast.Update();
+        // _amex.FinishActionGather();
         ExecuteHints();
 
         var uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
@@ -355,22 +363,22 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case "SET":
                 if (cmd.Length <= 2)
-                    PrintAutorotationHelp();
+                    Service.Log("Specify an autorotation preset name.");
                 else
                     ParseAutorotationSetCommand(cmd[2], false);
                 break;
             case "TOGGLE":
                 ParseAutorotationSetCommand(cmd.Length > 2 ? cmd[2] : "", true);
                 break;
-            default:
-                PrintAutorotationHelp();
+            case "ui":
+                _wndRotation.SetVisible(!_wndRotation.IsOpen);
                 break;
         }
     }
 
     private void ParseAutorotationSetCommand(string presetName, bool toggle)
     {
-        var preset = presetName.Length > 0 ? _rotation.Database.Presets.Presets.FirstOrDefault(p => p.Name == presetName) : RotationModuleManager.ForceDisable;
+        var preset = presetName.Length > 0 ? _rotation.Database.Presets.VisiblePresets.FirstOrDefault(p => p.Name == presetName) : RotationModuleManager.ForceDisable;
         if (preset != null)
         {
             var newPreset = toggle && _rotation.Preset == preset ? null : preset;
@@ -381,16 +389,6 @@ public sealed class Plugin : IDalamudPlugin
         {
             Service.ChatGui.PrintError($"Failed to find preset '{presetName}'");
         }
-    }
-
-    private static void PrintAutorotationHelp()
-    {
-        Service.ChatGui.Print("Autorotation commands:");
-        Service.ChatGui.Print("* /vbm ar clear - clear current preset; autorotation will do nothing unless plan is active");
-        Service.ChatGui.Print("* /vbm ar disable - force disable autorotation; no actions will be executed automatically even if plan is active");
-        Service.ChatGui.Print("* /vbm ar set Preset - start executing specified preset");
-        Service.ChatGui.Print("* /vbm ar toggle - force disable autorotation if not already; otherwise clear overrides");
-        Service.ChatGui.Print("* /vbm ar toggle Preset - start executing specified preset unless it's already active; clear otherwise");
     }
 
     private static void OnConditionChanged(ConditionFlag flag, bool value)

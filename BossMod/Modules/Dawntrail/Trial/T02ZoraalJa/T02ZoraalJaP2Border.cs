@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Trial.T02ZoraalP2;
+﻿namespace BossMod.Dawntrail.Trial.T02ZoraalJaP2;
 
 class DawnofanAgeBorder(BossModule module) : Components.GenericAOEs(module)
 {

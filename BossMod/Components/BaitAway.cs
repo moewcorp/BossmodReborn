@@ -265,7 +265,7 @@ public class BaitAwayChargeCast(BossModule module, ActionID aid, float halfWidth
 }
 
 // a variation of baits with tethers for charges that end at target
-public class BaitAwayChargeTether(BossModule module, float halfWidth, float activationDelay, uint tetherIDBad, uint tetherIDGood, ActionID aidGood, ActionID aidBad = default, uint enemyOID = default, float minimumDistance = default)
+public class BaitAwayChargeTether(BossModule module, float halfWidth, float activationDelay, ActionID aidGood, ActionID aidBad = default, uint tetherIDBad = 57, uint tetherIDGood = 1, uint enemyOID = default, float minimumDistance = default)
 : StretchTetherDuo(module, minimumDistance, activationDelay, tetherIDBad, tetherIDGood, new AOEShapeRect(default, halfWidth), default, enemyOID)
 {
     public ActionID AidGood = aidGood;

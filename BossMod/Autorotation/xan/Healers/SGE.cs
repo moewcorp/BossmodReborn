@@ -55,7 +55,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
         Gall = gauge.Addersgall;
         Sting = gauge.Addersting;
-        NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
+        NextGall = Math.Max(0, 20f - gauge.AddersgallTimer / 1000f);
         Eukrasia = gauge.EukrasiaActive;
 
         (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(strategy, primaryTarget, 6, IsSplashTarget);

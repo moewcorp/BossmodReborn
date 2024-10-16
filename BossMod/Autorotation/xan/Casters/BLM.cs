@@ -173,7 +173,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (Unlocked(AID.Fire4))
         {
-            var minF4Time = MathF.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
+            var minF4Time = Math.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
 
             if (Fire == 3)
             {

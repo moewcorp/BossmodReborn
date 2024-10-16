@@ -32,7 +32,7 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
         var b = base.GetCastTime(aid);
 
         if (LightspeedLeft > GCD)
-            b = MathF.Max(0, b - 2.5f);
+            b = Math.Max(0, b - 2.5f);
 
         return b;
     }

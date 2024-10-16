@@ -78,7 +78,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         _ => default
     };
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         // ranged
         if (strategy.Enabled(Track.Ranged) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
@@ -225,7 +225,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         var currentCD = NextChargeIn(action);
         var maxCD = ActionDefinitions.Instance[action]!.Cooldown;
-        var effectRemaining = MathF.Max(0, actionDuration + currentCD - maxCD);
+        var effectRemaining = Math.Max(0, actionDuration + currentCD - maxCD);
         var ready = currentCD < deadline;
         if (resourceCheck != null)
             ready &= resourceCheck(this);

@@ -143,10 +143,10 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
         if (primaryTarget == null)
             return (float.MaxValue, float.MaxValue, float.MaxValue);
 
-        var wind = MathF.Max(StatusDetails(primaryTarget, SID.Windbite, Player.InstanceID, 45).Left, StatusDetails(primaryTarget, SID.Stormbite, Player.InstanceID, 45).Left);
-        var poison = MathF.Max(StatusDetails(primaryTarget, SID.VenomousBite, Player.InstanceID, 45).Left, StatusDetails(primaryTarget, SID.CausticBite, Player.InstanceID, 45).Left);
+        var wind = Math.Max(StatusDetails(primaryTarget, SID.Windbite, Player.InstanceID, 45).Left, StatusDetails(primaryTarget, SID.Stormbite, Player.InstanceID, 45).Left);
+        var poison = Math.Max(StatusDetails(primaryTarget, SID.VenomousBite, Player.InstanceID, 45).Left, StatusDetails(primaryTarget, SID.CausticBite, Player.InstanceID, 45).Left);
 
-        return (MathF.Min(wind, poison), wind, poison);
+        return (Math.Min(wind, poison), wind, poison);
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)

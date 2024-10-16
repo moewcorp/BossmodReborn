@@ -1,8 +1,8 @@
-﻿namespace BossMod.Dawntrail.Trial.T02ZoraalP2;
+﻿namespace BossMod.Dawntrail.Trial.T02ZoraalJaP2;
 
-class T02ZoraalP2States : StateMachineBuilder
+class T02ZoraalJaP2States : StateMachineBuilder
 {
-    public T02ZoraalP2States(BossModule module) : base(module)
+    public T02ZoraalJaP2States(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<SmitingCircuit4>()
@@ -34,5 +34,5 @@ class HalfCircuit4(BossModule module) : Components.SelfTargetedAOEs(module, Acti
 class HalfCircuit5(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HalfCircuit5), new AOEShapeCircle(10));
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 995, NameID = 12882)]
-public class T02ZoraalP2(WorldState ws, Actor primary) : BossModule(ws, primary, DawnofanAgeBorder.Center, DawnofanAgeBorder.NormalBounds);
+public class T02ZoraalJaP2(WorldState ws, Actor primary) : BossModule(ws, primary, DawnofanAgeBorder.Center, DawnofanAgeBorder.NormalBounds);
 // Arena swaps to 10x10 square with 45 degree rotation periodically

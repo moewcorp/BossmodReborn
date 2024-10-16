@@ -171,8 +171,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.Hypercharge, Player);
     }
 
-    private float NextToolCharge => MathF.Min(NextChargeIn(AID.Drill), MathF.Min(NextChargeIn(AID.ChainSaw), NextChargeIn(AID.AirAnchor)));
-    private float NextToolCap => MathF.Min(MaxChargesIn(AID.Drill), MathF.Min(MaxChargesIn(AID.ChainSaw), MaxChargesIn(AID.AirAnchor)));
+    private float NextToolCharge => Math.Min(NextChargeIn(AID.Drill), Math.Min(NextChargeIn(AID.ChainSaw), NextChargeIn(AID.AirAnchor)));
+    private float NextToolCap => Math.Min(MaxChargesIn(AID.Drill), Math.Min(MaxChargesIn(AID.ChainSaw), MaxChargesIn(AID.AirAnchor)));
 
     private float MaxGaussCD => MaxChargesIn(AID.GaussRound);
     private float MaxRicochetCD => MaxChargesIn(AID.Ricochet);

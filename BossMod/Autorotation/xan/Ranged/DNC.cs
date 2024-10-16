@@ -82,8 +82,8 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         ImprovisationLeft = StatusLeft(SID.Improvisation);
         ImprovisedFinishLeft = StatusLeft(SID.ImprovisedFinish);
         DevilmentLeft = StatusLeft(SID.Devilment);
-        SymmetryLeft = MathF.Max(StatusLeft(SID.SilkenSymmetry), StatusLeft(SID.FlourishingSymmetry));
-        FlowLeft = MathF.Max(StatusLeft(SID.SilkenFlow), StatusLeft(SID.FlourishingFlow));
+        SymmetryLeft = Math.Max(StatusLeft(SID.SilkenSymmetry), StatusLeft(SID.FlourishingSymmetry));
+        FlowLeft = Math.Max(StatusLeft(SID.SilkenFlow), StatusLeft(SID.FlourishingFlow));
         FlourishingStarfallLeft = StatusLeft(SID.FlourishingStarfall);
         ThreefoldLeft = StatusLeft(SID.ThreefoldFanDance);
         FourfoldLeft = StatusLeft(SID.FourfoldFanDance);

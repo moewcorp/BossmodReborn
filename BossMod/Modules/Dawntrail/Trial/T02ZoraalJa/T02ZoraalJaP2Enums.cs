@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Trial.T02ZoraalP2;
+﻿namespace BossMod.Dawntrail.Trial.T02ZoraalJaP2;
 
 public enum OID : uint
 {

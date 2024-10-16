@@ -366,7 +366,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         foreach (var flt in collection)
         {
             elements++;
-            min = MathF.Min(flt, min);
+            min = Math.Min(flt, min);
         }
 
         return elements >= minElements ? min : null;
