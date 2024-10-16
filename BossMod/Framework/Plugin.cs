@@ -75,7 +75,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.WindowSystem = new("bmr");
         //Service.Device = pluginInterface.UiBuilder.Device;
         Service.Condition.ConditionChange += OnConditionChanged;
-        //MultiboxUnlock.Exec();
+        MultiboxUnlock.Exec();
         Network.IDScramble.Initialize();
         Camera.Instance = new();
 
@@ -99,11 +99,11 @@ public sealed class Plugin : IDalamudPlugin
         _movementOverride = new();
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
-        // _rotation = new(_rotationDB, _bossmod, _hints);
-        // _ai = new(_rotation, _amex, _movementOverride);
-        // _broadcast = new();
-        // _ipc = new(_rotation, _amex, _movementOverride, _ai);
-        // _dtr = new(_rotation, _ai);
+        _rotation = new(_rotationDB, _bossmod, _hints);
+        _ai = new(_rotation, _amex, _movementOverride);
+        _broadcast = new();
+        _ipc = new(_rotation, _amex, _movementOverride, _ai);
+        _dtr = new(_rotation, _ai);
         _wndBossmod = new(_bossmod, _zonemod);
         _wndBossmodHints = new(_bossmod, _zonemod);
         var config = Service.Config.Get<ReplayManagementConfig>();
@@ -111,8 +111,8 @@ public sealed class Plugin : IDalamudPlugin
         _wndReplay = new ReplayManagementWindow(_ws, _rotationDB, new DirectoryInfo(replayDir));
         _configUI = new(Service.Config, _ws, new DirectoryInfo(replayDir), _rotationDB);
         config.Modified.ExecuteAndSubscribe(() => _wndReplay.UpdateLogDirectory());
-        //_wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
-        //_wndDebug = new(_ws, _rotation, _amex, _hintsBuilder, dalamud);
+        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
+        _wndDebug = new(_ws, _rotation, _amex, _hintsBuilder, dalamud);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
@@ -130,22 +130,22 @@ public sealed class Plugin : IDalamudPlugin
         }
 #endif
         Service.Condition.ConditionChange -= OnConditionChanged;
-        //_wndDebug.Dispose();
-        //_wndRotation.Dispose();
+        _wndDebug.Dispose();
+        _wndRotation.Dispose();
         _wndReplay.Dispose();
         _wndBossmodHints.Dispose();
         _wndBossmod.Dispose();
         _configUI.Dispose();
-        //_ipc.Dispose();
-        //_ai.Dispose();
-        //_rotation.Dispose();
+        _ipc.Dispose();
+        _ai.Dispose();
+        _rotation.Dispose();
         _wsSync.Dispose();
         _amex.Dispose();
         _movementOverride.Dispose();
         _hintsBuilder.Dispose();
         _zonemod.Dispose();
         _bossmod.Dispose();
-        //_dtr.Dispose();
+        _dtr.Dispose();
         ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
         CommandManager.RemoveHandler("/bmrai");
@@ -296,20 +296,20 @@ public sealed class Plugin : IDalamudPlugin
     {
         var tsStart = DateTime.Now;
 
-        //var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
-        //var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
+        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
+        var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
 
-        // _dtr.Update();
+        _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
         _zonemod.ActiveModule?.Update();
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, 0);
-        // _amex.QueueManualActions();
-        // _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
-        // _ai.Update();
-        // _broadcast.Update();
-        // _amex.FinishActionGather();
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
+        _amex.QueueManualActions();
+        _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
+        _ai.Update();
+        _broadcast.Update();
+        _amex.FinishActionGather();
         ExecuteHints();
 
         var uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
@@ -333,7 +333,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private unsafe void ExecuteHints()
     {
-        //_movementOverride.DesiredDirection = _hints.ForcedMovement;
+        _movementOverride.DesiredDirection = _hints.ForcedMovement;
         // update forced target, if needed (TODO: move outside maybe?)
         if (_hints.ForcedTarget != null)
         {
