@@ -296,15 +296,15 @@ public sealed class Plugin : IDalamudPlugin
     {
         var tsStart = DateTime.Now;
 
-        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
-        var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
+        //var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
+        //var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
 
         // _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
         _zonemod.ActiveModule?.Update();
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, 0);
         // _amex.QueueManualActions();
         // _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
         // _ai.Update();
