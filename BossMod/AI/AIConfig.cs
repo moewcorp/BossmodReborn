@@ -1,48 +1,48 @@
 ﻿namespace BossMod.AI;
 
-[ConfigDisplay(Name = "AI configuration (AI is very experimental, use at your own risk!)", Order = 7)]
+[ConfigDisplay(Name = "AI配置", Order = 7)]
 sealed class AIConfig : ConfigNode
 {
-    [PropertyDisplay("Show status in DTR bar")]
+    [PropertyDisplay("在标题栏中显示AI状态")]
     public bool ShowDTR = false;
 
-    [PropertyDisplay("Show AI interface")]
+    [PropertyDisplay("显示AI窗口")]
     public bool DrawUI = true;
 
-    [PropertyDisplay("Focus target master")]
+    [PropertyDisplay("聚焦目标敌人")]
     public bool FocusTargetLeader = true;
 
-    [PropertyDisplay("Broadcast keypresses to other windows")]
+    [PropertyDisplay("将按键广播到其他窗口")]
     public bool BroadcastToSlaves = false;
 
-    [PropertyDisplay("Follow party slot")]
+    [PropertyDisplay("跟随第几位队友")]
     public int FollowSlot = 0;
 
-    [PropertyDisplay("Forbid actions")]
+    [PropertyDisplay("禁止技能")]
     public bool ForbidActions = false;
 
-    [PropertyDisplay("Forbid movement")]
+    [PropertyDisplay("禁止移动")]
     public bool ForbidMovement = false;
 
-    [PropertyDisplay("Follow during combat")]
+    [PropertyDisplay("战斗时跟随")]
     public bool FollowDuringCombat = false;
 
-    [PropertyDisplay("Follow during active boss module")]
+    [PropertyDisplay("在boss模块启用期间跟随")]
     public bool FollowDuringActiveBossModule = false;
 
-    [PropertyDisplay("Follow out of combat")]
+    [PropertyDisplay("脱战时跟随")]
     public bool FollowOutOfCombat = false;
 
-    [PropertyDisplay("Follow target")]
+    [PropertyDisplay("跟随目标")]
     public bool FollowTarget = false;
 
-    [PropertyDisplay("Desired positional when following target")]
-    [PropertyCombo(["Any", "Flank", "Rear", "Front"])]
+    [PropertyDisplay("跟随目标时所需的位置")]
+    [PropertyCombo(["任何", "侧面", "背面", "正面"])]
     public Positional DesiredPositional = Positional.Any;
 
-    [PropertyDisplay("Max distance to slot")]
+    [PropertyDisplay("到队友的最大距离")]
     public float MaxDistanceToSlot = 1;
 
-    [PropertyDisplay("Max distance to target")]
+    [PropertyDisplay("到目标的最大距离")]
     public float MaxDistanceToTarget = 2.6f;
 }
