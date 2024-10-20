@@ -77,12 +77,11 @@ public class ConfigRoot
         }
     }
 
-    public List<string> ConsoleCommand(ReadOnlySpan<string> args, bool save = true)
+    public List<string> ConsoleCommand(IReadOnlyList<string> args, bool save = true)
     {
         List<string> result = [];
-        if (args.Length == 0)
+        if (args.Count == 0)
         {
-            result.Add("Usage: /bmr cfg <config-type> <field> <value>");
             result.Add("Usage: /vbm cfg <config-type> <field> <value>");
             result.Add("Both config-type and field can be shortened. Valid config-types:");
             foreach (var t in _nodes.Keys)
@@ -106,9 +105,8 @@ public class ConfigRoot
                 foreach (var n in matchingNodes)
                     result.Add($"- {n.GetType().Name}");
             }
-            else if (args.Length == 1)
+            else if (args.Count == 1)
             {
-                result.Add("Usage: /bmr cfg <config-type> <field> <value>");
                 result.Add("Usage: /vbm cfg <config-type> <field> <value>");
                 result.Add($"Valid fields for {matchingNodes[0].GetType().Name}:");
                 foreach (var f in matchingNodes[0].GetType().GetFields().Where(f => f.GetCustomAttribute<PropertyDisplayAttribute>() != null))
@@ -134,7 +132,6 @@ public class ConfigRoot
                 }
                 /*else if (args.Count == 2)
                 {
-                    result.Add("Usage: /bmr cfg <config-type> <field> <value>");
                     result.Add("Usage: /vbm cfg <config-type> <field> <value>");
                     result.Add($"Type of {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} is {matchingFields[0].FieldType.Name}");
                 }*/
@@ -142,7 +139,7 @@ public class ConfigRoot
                 {
                     try
                     {
-                        if (args.Length == 2)
+                        if (args.Count == 2)
                             result.Add(matchingFields[0].GetValue(matchingNodes[0])?.ToString() ?? $"Failed to get value of '{args[2]}'");
                         else
                         {
@@ -161,7 +158,7 @@ public class ConfigRoot
                     }
                     catch (Exception e)
                     {
-                        if (args.Length == 2)
+                        if (args.Count == 2)
                             result.Add($"Failed to get value of {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} : {e}");
                         else
                             result.Add($"Failed to set {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} to {args[2]}: {e}");
@@ -274,7 +271,7 @@ public class ConfigRoot
             {
                 if (config?["CooldownPlans"] is not JsonObject plans)
                     continue;
-                var isTEA = k == typeof(Shadowbringers.Ultimate.TEA.TEAConfig).FullName;
+                bool isTEA = k == typeof(Shadowbringers.Ultimate.TEA.TEAConfig).FullName;
                 foreach (var (cls, planList) in plans)
                 {
                     if (planList?["Available"] is not JsonArray avail)
@@ -353,7 +350,7 @@ public class ConfigRoot
             if (jChild is not JsonObject jChildObj)
                 continue;
 
-            var realTypeName = isV0 ? (jChildObj["__type__"]?.ToString() ?? childTypeName) : childTypeName;
+            string realTypeName = isV0 ? (jChildObj["__type__"]?.ToString() ?? childTypeName) : childTypeName;
             ConvertV1GatherChildren(result, jChildObj, isV0);
             result.Add(realTypeName, jChild);
         }

@@ -265,7 +265,7 @@ public sealed record class AOEShapeCustom(IEnumerable<Shape> Shapes1, IEnumerabl
 
     public override Func<WPos, float> Distance(WPos origin, Angle rotation)
     {
-        var shapeDistance = RelPolygonWithHoles.PolygonWithHoles(origin, GetCombinedPolygon(origin));
+        var shapeDistance = new PolygonWithHolesDistanceFunction(origin, GetCombinedPolygon(origin)).Distance;
         return InvertForbiddenZone ? p => -shapeDistance(p) : shapeDistance;
     }
 

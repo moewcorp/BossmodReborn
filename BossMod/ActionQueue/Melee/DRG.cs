@@ -51,7 +51,6 @@ public enum AID : uint
     TrueNorth = ClassShared.AID.TrueNorth, // L50, instant, 45.0s CD (group 45/50) (2 charges), range 0, single-target, targets=Self
 }
 
-
 public enum TraitID : uint
 {
     None = 0,

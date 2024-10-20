@@ -31,6 +31,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IPCProvider _ipc;
     private readonly DTRProvider _dtr;
     private TimeSpan _prevUpdateTime;
+    private DateTime _throttleJump;
 
     // windows
     private readonly ConfigUI _configUI; // TODO: should be a proper window!
@@ -108,7 +109,7 @@ public sealed class Plugin : IDalamudPlugin
         _wndBossmodHints = new(_bossmod, _zonemod);
         var config = Service.Config.Get<ReplayManagementConfig>();
         var replayDir = string.IsNullOrEmpty(config.ReplayFolder) ? dalamud.ConfigDirectory.FullName + "/replays" : config.ReplayFolder;
-        _wndReplay = new ReplayManagementWindow(_ws, _rotationDB, new DirectoryInfo(replayDir));
+        _wndReplay = new ReplayManagementWindow(_ws, _bossmod, _rotationDB, new DirectoryInfo(replayDir));
         _configUI = new(Service.Config, _ws, new DirectoryInfo(replayDir), _rotationDB);
         config.Modified.ExecuteAndSubscribe(() => _wndReplay.UpdateLogDirectory());
         _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
@@ -116,6 +117,7 @@ public sealed class Plugin : IDalamudPlugin
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
+        dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
         dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
 
         _ = new ConfigChangelogWindow();
@@ -136,6 +138,7 @@ public sealed class Plugin : IDalamudPlugin
         _wndBossmodHints.Dispose();
         _wndBossmod.Dispose();
         _configUI.Dispose();
+        _dtr.Dispose();
         _ipc.Dispose();
         _ai.Dispose();
         _rotation.Dispose();
@@ -145,12 +148,9 @@ public sealed class Plugin : IDalamudPlugin
         _hintsBuilder.Dispose();
         _zonemod.Dispose();
         _bossmod.Dispose();
-        _dtr.Dispose();
         ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
-        CommandManager.RemoveHandler("/bmrai");
         CommandManager.RemoveHandler("/vbm");
-        CommandManager.RemoveHandler("/vbmai");
     }
 
     private void OnCommand(string cmd, string args)
@@ -170,7 +170,7 @@ public sealed class Plugin : IDalamudPlugin
                 _wndDebug.BringToFront();
                 break;
             case "CFG":
-                var output = Service.Config.ConsoleCommand(split.AsSpan(1));
+                var output = Service.Config.ConsoleCommand(new ArraySegment<string>(split, 1, split.Length - 1));
                 foreach (var msg in output)
                     Service.ChatGui.Print(msg);
                 break;
@@ -206,7 +206,7 @@ public sealed class Plugin : IDalamudPlugin
             switch (messageData[1].ToUpperInvariant())
             {
                 case "ON":
-                    _wndReplay.StartRecording();
+                    _wndReplay.StartRecording("");
                     break;
                 case "OFF":
                     _wndReplay.StopRecording();
@@ -346,6 +346,12 @@ public sealed class Plugin : IDalamudPlugin
         {
             var res = FFXIVClientStructs.FFXIV.Client.Game.StatusManager.ExecuteStatusOff(s.statusId, s.sourceId != 0 ? (uint)s.sourceId : 0xE0000000);
             Service.Log($"[ExecHints] Canceling status {s.statusId} from {s.sourceId:X} -> {res}");
+        }
+        if (_hints.WantJump && _ws.CurrentTime > _throttleJump)
+        {
+            //Service.Log($"[ExecHints] Jumping...");
+            FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->UseAction(FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction, 2);
+            _throttleJump = _ws.CurrentTime.AddMilliseconds(100);
         }
     }
 
