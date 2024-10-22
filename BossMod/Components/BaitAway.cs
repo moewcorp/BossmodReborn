@@ -1,6 +1,4 @@
-﻿using Clipper2Lib;
-
-namespace BossMod.Components;
+﻿namespace BossMod.Components;
 
 // generic component for mechanics that require baiting some aoe (by proximity, by tether, etc) away from raid
 // some players can be marked as 'forbidden' - if any of them is baiting, they are warned
@@ -73,27 +71,24 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
     {
         if (bait.Source == bait.Target) // TODO: think about how to handle source == target baits, eg. vomitting mechanics
             return;
-        switch (bait.Shape)
-        {
-            case AOEShapeCircle circle:
-                foreach (var a in Raid.WithoutSlot().Exclude(actor))
-                    hints.AddForbiddenZone(circle, a.Position, default, bait.Activation);
-                break;
-
-            case AOEShapeCone cone:
-                foreach (var a in Raid.WithoutSlot().Exclude(actor))
+        foreach (var a in Raid.WithoutSlot().Exclude(actor))
+            switch (bait.Shape)
+            {
+                case AOEShapeDonut:
+                case AOEShapeCircle:
+                    hints.AddForbiddenZone(bait.Shape, a.Position, default, bait.Activation);
+                    break;
+                case AOEShapeCone cone:
                     hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
-                break;
+                    break;
 
-            case AOEShapeRect rect:
-                foreach (var a in Raid.WithoutSlot().Exclude(actor))
-                    hints.AddForbiddenZone(ShapeDistance.Rect(bait.Source.Position, bait.Source.AngleTo(a), 100, default, rect.HalfWidth), bait.Activation);
-                break;
-            case AOEShapeCross cross:
-                foreach (var a in Raid.WithoutSlot().Exclude(actor))
+                case AOEShapeRect rect:
+                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (actor.Position - bait.Source.Position).Length())), bait.Activation);
+                    break;
+                case AOEShapeCross cross:
                     hints.AddForbiddenZone(cross, a.Position, bait.Rotation, bait.Activation);
-                break;
-        }
+                    break;
+            }
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => ActiveBaitsOn(player).Any() ? BaiterPriority : PlayerPriority.Irrelevant;
