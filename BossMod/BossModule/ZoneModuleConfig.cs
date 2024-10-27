@@ -14,7 +14,4 @@ public sealed class ZoneModuleConfig : ConfigNode
 
     [PropertyDisplay("使用冲刺技能进行导航（速涂、回避跳跃等）")]
     public bool UseDash = true;
-
-    [PropertyDisplay("显示 xan 调试 UI")]
-    public bool ShowXanDebugger = false;
 }

@@ -20,14 +20,14 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("锁定雷达和提示窗口的移动和鼠标交互")]
     public bool Lock = false;
 
-    [PropertyDisplay("透明的雷达窗口背景", tooltip: "移除雷达周围的黑色窗口；如果将雷达移至其他显示器，此功能将无效")]
-    public bool TrishaMode = false;
+    [PropertyDisplay("透明雷达窗口背景", tooltip: "去除雷达周围的黑色窗口；如果您将雷达移至其他的显示器，这将不起作用")]
+    public bool TrishaMode = true;
 
-    [PropertyDisplay("在雷达中为场地添加不透明背景")]
-    public bool OpaqueArenaBackground = false;
+    [PropertyDisplay("为雷达中的场地添加不透明背景")]
+    public bool OpaqueArenaBackground = true;
 
     [PropertyDisplay("在各种雷达标记上显示轮廓和阴影")]
-    public bool ShowOutlinesAndShadows = false;
+    public bool ShowOutlinesAndShadows = true;
 
     [PropertyDisplay("雷达场地缩放系数", tooltip: "雷达窗口内场地的缩放比例")]
     [PropertySlider(0.1f, 10, Speed = 0.1f, Logarithmic = true)]
@@ -39,8 +39,9 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("如果旋转地图关闭，则将地图旋转 180°")]
     public bool FlipArena = false;
 
-    [PropertyDisplay("为旋转提供额外的雷达空间", tooltip: "如果你使用了上述设置，此选项为雷达边缘提供额外空间，以避免在战斗时旋转相机时被剪切")]
-    public bool AddSlackForRotations = true;
+    [PropertyDisplay("为雷达提供额外的旋转空间", tooltip: "如果您使用上述设置，您可以在修剪边缘之前在侧面给雷达额外的空间，以便考虑在战斗过程中旋转相机或给基本方向空间。", since: "7.2.0.169")]
+    [PropertySlider(1, 2, Speed = 0.1f, Logarithmic = true)]
+    public float SlackForRotations = 1.5f;
 
     [PropertyDisplay("在雷达中显示场地边框")]
     public bool ShowBorder = true;
