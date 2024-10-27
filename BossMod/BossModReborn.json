@@ -3,7 +3,7 @@
   "Name": "Bossmod Reborn",
   "InternalName": "BossModReborn",
   "Punchline": "大脑按摩用的(在线安装Only)",
-  "Description": "此版本仅保留画图功能",
+  "Description": "仅禁用了与后期软件冲突的代码（AI可用，自动循环可能失效）",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
   "ImageUrls": [

@@ -42,6 +42,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly MainDebugWindow _wndDebug;
     private IDalamudPluginInterface PluginInterface;
     private INotificationManager NotificationManager;
+    private bool isDev;
     public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager, INotificationManager notificationManager)
     {
 #if !DEBUG
@@ -49,13 +50,7 @@ public sealed class Plugin : IDalamudPlugin
         NotificationManager = notificationManager;
         if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
         {
-            notificationManager.AddNotification(new Dalamud.Interface.ImGuiNotification.Notification()
-            {
-                Type = Dalamud.Interface.ImGuiNotification.NotificationType.Error,
-                Title = "加载验证",
-                Content = "由于本地加载或安装来源仓库非NiGuangOwO个人仓库，插件加载失败",
-                Minimized = false
-            });
+            isDev = true;
             return;
         }
 #endif
@@ -126,7 +121,7 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
 #if !DEBUG
-        if (PluginInterface.IsDev || !PluginInterface.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
+        if (isDev)
         {
             return;
         }
