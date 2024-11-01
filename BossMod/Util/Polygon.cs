@@ -214,11 +214,12 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
         var clipperOffset = new ClipperOffset();
         var allPaths = new Paths64();
 
-        foreach (var part in Parts)
+        for (var i = 0; i < Parts.Count; ++i)
         {
+            var part = Parts[i];
             allPaths.Add(ToPath64(part.Exterior));
-            foreach (var i in part.Holes)
-                allPaths.Add(ToPath64(part.Interior(i)));
+            foreach (var j in part.Holes)
+                allPaths.Add(ToPath64(part.Interior(j)));
         }
 
         var solution = new Paths64();
@@ -274,9 +275,10 @@ public class PolygonClipper
 
         public void AddContour(ReadOnlySpan<WDir> contour, bool isOpen = false)
         {
-            Path64 path = new(contour.Length);
-            foreach (var p in contour)
-                path.Add(ConvertPoint(p));
+            var count = contour.Length;
+            Path64 path = new(count);
+            for (var i = 0; i < count; ++i)
+                path.Add(ConvertPoint(contour[i]));
             AddContour(path, isOpen);
         }
 
@@ -496,14 +498,16 @@ public readonly struct PolygonWithHolesDistanceFunction
         {
             var part = polygon.Parts[i];
             var exteriorEdges = GetEdges(part.Exterior, origin);
-            Array.Copy(exteriorEdges, 0, _edges, edgeIndex, exteriorEdges.Length);
-            edgeIndex += exteriorEdges.Length;
+            var exteriorCount = exteriorEdges.Length;
+            Array.Copy(exteriorEdges, 0, _edges, edgeIndex, exteriorCount);
+            edgeIndex += exteriorCount;
 
             for (var j = 0; j < part.Holes.Count(); ++j)
             {
                 var holeEdges = GetEdges(part.Interior(j), origin);
-                Array.Copy(holeEdges, 0, _edges, edgeIndex, holeEdges.Length);
-                edgeIndex += holeEdges.Length;
+                var holeEdgesCount = holeEdges.Length;
+                Array.Copy(holeEdges, 0, _edges, edgeIndex, holeEdgesCount);
+                edgeIndex += holeEdgesCount;
             }
         }
         _spatialIndex = new(_edges);

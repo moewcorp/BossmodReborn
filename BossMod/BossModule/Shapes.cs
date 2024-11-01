@@ -33,7 +33,7 @@ public record class Rectangle(WPos Center, float HalfWidth, float HalfHeight, An
 {
     public override List<WDir> Contour(WPos center)
     {
-        var (sin, cos) = MathF.SinCos(Rotation.Rad);
+        var (sin, cos) = ((float, float))Math.SinCos(Rotation.Rad); // calculating as double and converting to float on purpose, otherwise error gets visibly magnified by polygon operations
         var rotatedHalfWidth = new WDir(HalfWidth * cos, HalfWidth * sin);
         var rotatedHalfHeight = new WDir(-HalfHeight * sin, HalfHeight * cos);
         var offset = Center - center;
@@ -51,7 +51,7 @@ public record class Rectangle(WPos Center, float HalfWidth, float HalfHeight, An
 
 // for rectangles defined by a start point, end point and halfwidth
 public record class RectangleSE(WPos Start, WPos End, float HalfWidth) : Rectangle(
-    Center: new WPos((Start.X + End.X) * 0.5f, (Start.Z + End.Z) * 0.5f),
+    Center: new((Start.X + End.X) * 0.5f, (Start.Z + End.Z) * 0.5f),
     HalfWidth: HalfWidth,
     HalfHeight: (End - Start).Length() * 0.5f,
     Rotation: new Angle(MathF.Atan2(End.Z - Start.Z, End.X - Start.X)) + 90.Degrees()
@@ -63,7 +63,8 @@ public record class Cross(WPos Center, float Length, float HalfWidth, Angle Rota
 {
     public override List<WDir> Contour(WPos center)
     {
-        var dx = Rotation.ToDirection();
+        var (sin, cos) = ((float, float))Math.SinCos(Rotation.Rad); // calculating as double and converting to float on purpose, otherwise error gets visibly magnified by polygon operations
+        var dx = new WDir(sin, cos);
         var dy = dx.OrthoL();
         var dx1 = dx * Length;
         var dx2 = dx * HalfWidth;
@@ -99,7 +100,7 @@ public record class TriangleE(WPos Center, float SideLength, Angle Rotation = de
         var height = SideLength * heightFactor;
         var halfSideLength = SideLength * 0.5f;
         var halfHeight = height * 0.5f;
-        var (sin, cos) = MathF.SinCos(Rotation.Rad);
+        var (sin, cos) = ((float, float))Math.SinCos(Rotation.Rad); // calculating as double and converting to float on purpose, otherwise error gets visibly magnified by polygon operations
         var offset = Center - center;
         return
         [
@@ -122,7 +123,7 @@ public record class Polygon(WPos Center, float Radius, int Vertices, Angle Rotat
         for (var i = Vertices - 1; i >= 0; i--)
         {
             var angle = i * angleIncrement + initialRotation;
-            var (sin, cos) = MathF.SinCos(angle);
+            var (sin, cos) = ((float, float))Math.SinCos(angle); // calculating as double and converting to float on purpose, otherwise error gets visibly magnified by polygon operations
             var x = Center.X + Radius * cos;
             var z = Center.Z + Radius * sin;
             vertices.Add(new WDir(x - center.X, z - center.Z));
@@ -153,3 +154,61 @@ public record class DonutSegment(WPos Center, float InnerRadius, float OuterRadi
 // for donut segments defined by inner and outer radius, direction and half angle
 public record class DonutSegmentHA(WPos Center, float InnerRadius, float OuterRadius, Angle CenterDir, Angle HalfAngle) : DonutSegment(Center, InnerRadius, OuterRadius,
 CenterDir - HalfAngle, CenterDir + HalfAngle);
+
+// Approximates a cone with a customizable number of vertices
+public record class ConeV(WPos Center, float Radius, Angle CenterDir, Angle HalfAngle, int Vertices) : Shape
+{
+    public override List<WDir> Contour(WPos center)
+    {
+        var angleIncrement = 2 * HalfAngle.Rad / (Vertices - 1);
+        var startAngle = CenterDir.Rad - HalfAngle.Rad;
+        var vertices = new List<WDir>(Vertices);
+
+        for (var i = 0; i < Vertices; i++)
+        {
+            var angle = startAngle + i * angleIncrement;
+            var (sin, cos) = ((float, float))Math.SinCos(angle);
+            var x = Center.X + Radius * cos;
+            var z = Center.Z + Radius * sin;
+            vertices.Add(new WDir(x - center.X, z - center.Z));
+        }
+
+        vertices.Add(new WDir(Center.X - center.X, Center.Z - center.Z));
+        return vertices;
+    }
+
+    public override string ToString() => $"{nameof(ConeV)}:{Center.X},{Center.Z},{Radius},{CenterDir},{HalfAngle},{Vertices}";
+}
+
+// Approximates a donut segment with a customizable number of vertices
+public record class DonutSegmentV(WPos Center, float InnerRadius, float OuterRadius, Angle CenterDir, Angle HalfAngle, int Vertices) : Shape
+{
+    public override List<WDir> Contour(WPos center)
+    {
+        var angleIncrement = 2 * HalfAngle.Rad / (Vertices - 1);
+        var startAngle = CenterDir.Rad - HalfAngle.Rad;
+        var contourVertices = new List<WDir>();
+
+        for (var i = Vertices - 1; i >= 0; i--)
+        {
+            var angle = startAngle + i * angleIncrement;
+            var (sin, cos) = ((float, float))Math.SinCos(angle);
+            var x = Center.X + OuterRadius * cos;
+            var z = Center.Z + OuterRadius * sin;
+            contourVertices.Add(new WDir(x - center.X, z - center.Z));
+        }
+
+        for (var i = 0; i < Vertices; i++)
+        {
+            var angle = startAngle + i * angleIncrement;
+            var (sin, cos) = ((float, float))Math.SinCos(angle);
+            var x = Center.X + InnerRadius * cos;
+            var z = Center.Z + InnerRadius * sin;
+            contourVertices.Add(new WDir(x - center.X, z - center.Z));
+        }
+
+        return contourVertices;
+    }
+
+    public override string ToString() => $"{nameof(DonutSegmentV)}:{Center.X},{Center.Z},{InnerRadius},{OuterRadius},{CenterDir},{HalfAngle},{Vertices}";
+}

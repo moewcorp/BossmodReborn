@@ -68,6 +68,7 @@ sealed class AIManager : IDisposable
         Beh?.Dispose();
         Beh = null;
         MasterSlot = PartyState.PlayerSlot;
+        Autorot.Preset = null;
         Controller.Clear();
         _wndAI.UpdateTitle();
     }
@@ -184,6 +185,12 @@ sealed class AIManager : IDisposable
                 break;
             case "MAXDISTANCESLOT":
                 configModified = HandleMaxDistanceSlotCommand(messageData);
+                break;
+            case "SETPRESETNAME":
+                if (cmd.Length <= 2)
+                    Service.Log("Specify an AI autorotation preset name.");
+                else
+                    ParseAIAutorotationSetCommand(messageData);
                 break;
             default:
                 Service.ChatGui.Print($"[AI] Unknown command: {messageData[0]}");
@@ -489,5 +496,40 @@ sealed class AIManager : IDisposable
                 return i;
         }
         return -1;
+    }
+
+    private void ParseAIAutorotationSetCommand(string[] presetName)
+    {
+        if (presetName.Length < 2)
+        {
+            Service.Log("No valid preset name provided.");
+            return;
+        }
+
+        var userInput = string.Join(" ", presetName.Skip(1)).Trim();
+        if (userInput == "null" || string.IsNullOrWhiteSpace(userInput))
+        {
+            SetAIPreset(null);
+            Autorot.Preset = null;
+            _config.AIAutorotPresetName = null;
+            Service.Log("Disabled AI autorotation preset.");
+            return;
+        }
+
+        var normalizedInput = userInput.ToUpperInvariant();
+        var preset = Autorot.Database.Presets.VisiblePresets
+            .FirstOrDefault(p => p.Name.Trim().Equals(normalizedInput, StringComparison.OrdinalIgnoreCase))
+            ?? RotationModuleManager.ForceDisable;
+
+        if (preset != null)
+        {
+            Service.Log($"Console: Changed preset from '{Beh?.AIPreset?.Name ?? "<n/a>"}' to '{preset?.Name ?? "<n/a>"}'");
+            SetAIPreset(preset);
+            _config.AIAutorotPresetName = preset?.Name;
+        }
+        else
+        {
+            Service.ChatGui.PrintError($"Failed to find preset '{userInput}'");
+        }
     }
 }

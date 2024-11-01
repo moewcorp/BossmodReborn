@@ -247,14 +247,15 @@ public sealed record class AOEShapeCustom(IEnumerable<Shape> Shapes1, IEnumerabl
     public override void Outline(MiniArena arena, WPos origin, Angle rotation, uint color = 0)
     {
         var combinedPolygon = polygon ?? GetCombinedPolygon(origin);
-        foreach (var part in combinedPolygon.Parts)
+        for (var i = 0; i < combinedPolygon.Parts.Count; ++i)
         {
+            var part = combinedPolygon.Parts[i];
             var exteriorEdges = part.ExteriorEdges.ToList();
-            for (var i = 0; i < exteriorEdges.Count; i++)
+            for (var j = 0; j < exteriorEdges.Count; j++)
             {
-                var (start, end) = exteriorEdges[i];
+                var (start, end) = exteriorEdges[j];
                 arena.PathLineTo(origin + start);
-                if (i != exteriorEdges.Count - 1)
+                if (j != exteriorEdges.Count - 1)
                     arena.PathLineTo(origin + end);
             }
             MiniArena.PathStroke(true, color);
@@ -262,11 +263,11 @@ public sealed record class AOEShapeCustom(IEnumerable<Shape> Shapes1, IEnumerabl
             foreach (var holeIndex in part.Holes)
             {
                 var interiorEdges = part.InteriorEdges(holeIndex).ToList();
-                for (var i = 0; i < interiorEdges.Count; i++)
+                for (var j = 0; j < interiorEdges.Count; j++)
                 {
-                    var (start, end) = interiorEdges[i];
+                    var (start, end) = interiorEdges[j];
                     arena.PathLineTo(origin + start);
-                    if (i != interiorEdges.Count - 1)
+                    if (j != interiorEdges.Count - 1)
                         arena.PathLineTo(origin + end);
                 }
                 MiniArena.PathStroke(true, color);
