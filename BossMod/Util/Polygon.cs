@@ -24,6 +24,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     private ContourEdgeBuckets? _exteriorEdgeBuckets;
     private List<ContourEdgeBuckets> _holeEdgeBuckets = [];
     private const int BucketCount = 10;
+    private const float Epsilon = 1e-8f;
 
     private int ExteriorEnd => HoleStarts.Count > 0 ? HoleStarts[0] : Vertices.Count;
     private int HoleEnd(int index) => index + 1 < HoleStarts.Count ? HoleStarts[index + 1] : Vertices.Count;
@@ -121,7 +122,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
                 maxY = y;
         }
 
-        var invBucketHeight = BucketCount / (maxY - minY + 1e-8f);
+        var invBucketHeight = BucketCount / (maxY - minY + Epsilon);
 
         var edgeBucketsArray = new List<Edges>[BucketCount];
         for (var b = 0; b < BucketCount; b++)
@@ -384,7 +385,9 @@ public static class PolygonUtil
 
 public readonly struct Edge(float ax, float ay, float dx, float dy)
 {
-    public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1 / (dx * dx + dy * dy + 1e-8f);
+    private const float Epsilon = 1e-8f;
+
+    public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1 / (dx * dx + dy * dy + Epsilon);
 }
 
 public class SpatialIndex

@@ -154,6 +154,22 @@ public sealed record class AOEShapeTriCone(float SideLength, Angle HalfAngle, An
     }
 }
 
+public sealed record class AOEShapeCapsule(float Radius, float Length, Angle DirectionOffset = default, bool InvertForbiddenZone = false) : AOEShape
+{
+    public override string ToString() => $"Capsule: radius={Radius:f3}, length={Length}, off={DirectionOffset}, ifz={InvertForbiddenZone}";
+    public override bool Check(WPos position, WPos origin, Angle rotation) => position.InCapsule(origin, (rotation + DirectionOffset).ToDirection(), Radius, Length);
+
+    public override void Draw(MiniArena arena, WPos origin, Angle rotation, uint color = 0) => arena.ZoneCapsule(origin, (rotation + DirectionOffset).ToDirection(), Radius, Length, color);
+
+    public override Func<WPos, float> Distance(WPos origin, Angle rotation)
+    {
+        return !InvertForbiddenZone ? ShapeDistance.Capsule(origin, rotation, Length, Radius) : ShapeDistance.InvertedCapsule(origin, rotation, Length, Radius);
+    }
+
+    public override void Outline(MiniArena arena, WPos origin, Angle rotation, uint color = 0)
+    => arena.AddCapsule(origin, (rotation + DirectionOffset).ToDirection(), Radius, Length, color);
+}
+
 public enum OperandType
 {
     Union,
