@@ -41,7 +41,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertySlider(0, 10, Speed = 0.01f)]
     public float PyreticThreshold = 1.0f;
 
-    [PropertyDisplay("在使用技能后恢复角色面向（已弃用）", tooltip: "注意：此功能已被智能角色面向取代，并将在未来移除。")]
+    [PropertyDisplay("在使用技能后恢复角色面向")]
     public bool RestoreRotation = false;
 
     [PropertyDisplay("对鼠标悬停的目标使用技能")]

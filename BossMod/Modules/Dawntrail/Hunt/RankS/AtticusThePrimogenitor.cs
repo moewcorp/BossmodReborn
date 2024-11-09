@@ -109,7 +109,7 @@ class BreathSequence(BossModule module) : Components.GenericAOEs(module)
                 case AID.BreathSequenceFirstFront:
                 case AID.BreathSequenceFirstLeft:
                 case AID.BreathSequenceFirstRight:
-                    for (var i = 0; i < _aoes.Count; i++)
+                    for (var i = 0; i < _aoes.Count; ++i)
                         _aoes[i] = new(_aoes[i].Shape, _aoes[i].Origin, _aoes[i].Rotation, Module.CastFinishAt(spell, 2.3f * i));
                     break;
             }
