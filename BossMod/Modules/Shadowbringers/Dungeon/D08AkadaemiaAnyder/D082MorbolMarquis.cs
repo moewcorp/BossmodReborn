@@ -136,7 +136,7 @@ public class D082MorbolMarquis(WorldState ws, Actor primary) : BossModule(ws, pr
     private const int X = -224, InnerRadius = 10, OuterRadius = 15, Radius = 25, Edges = 12;
     private static readonly WPos ArenaCenter = new(X, -38);
     public static readonly Angle A45 = 45.Degrees(), a135 = 135.Degrees();
-    private static readonly Polygon[] defaultCircle = [new(ArenaCenter, 24.5f / MathF.Cos(MathF.PI / 48), 48)];
+    private static readonly Polygon[] defaultCircle = [new(ArenaCenter, 24.5f * CosPI.Pi48th, 48)];
     private static readonly Rectangle[] defaultDifference = [new(new(X, -13), Radius, 1.1f), new(new(X, -63), Radius, 1.1f)];
     private static readonly Shape[] blueBlossom = [new ConeV(ArenaCenter, InnerRadius, A45, A45, Edges), new ConeV(ArenaCenter, InnerRadius, -a135, A45, Edges),
     new DonutSegmentV(ArenaCenter, OuterRadius, Radius, A45, A45, Edges), new DonutSegmentV(ArenaCenter, OuterRadius, Radius, -a135, A45, Edges)];

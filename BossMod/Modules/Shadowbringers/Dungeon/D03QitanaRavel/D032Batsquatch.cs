@@ -77,5 +77,5 @@ class D032BatsquatchStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8232)]
 public class D032Batsquatch(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(62, -35), 14.5f / MathF.Cos(MathF.PI / 28), 28)], [new Rectangle(new(61.9f, -20), 20, 2), new Rectangle(new(61.9f, -50), 20, 2)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(62, -35), 14.5f * CosPI.Pi28th, 28)], [new Rectangle(new(61.9f, -20), 20, 2), new Rectangle(new(61.9f, -50), 20, 2)]);
 }

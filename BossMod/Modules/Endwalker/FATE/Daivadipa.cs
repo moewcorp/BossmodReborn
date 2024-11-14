@@ -59,7 +59,6 @@ class LitPath(BossModule module) : Components.GenericAOEs(module)
     private bool redblue2;
     private bool bluered1;
     private bool bluered2;
-    private const float maxError = MathF.PI / 180;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -67,16 +66,16 @@ class LitPath(BossModule module) : Components.GenericAOEs(module)
         {
             foreach (var o in Module.Enemies(OID.OrbOfImmolationBlue))
             {
-                if (bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), maxError) || o.Rotation.AlmostEqual(180.Degrees(), maxError)))
+                if (bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
                     yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(1.9f));
-                if (redblue2 && !redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), maxError) || o.Rotation.AlmostEqual(180.Degrees(), maxError)))
+                if (redblue2 && !redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
                     yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(4));
             }
             foreach (var o in Module.Enemies(OID.OrbOfImmolationRed))
             {
-                if (bluered2 && !bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), maxError) || o.Rotation.AlmostEqual(180.Degrees(), maxError)))
+                if (bluered2 && !bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
                     yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(4));
-                if (redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), maxError) || o.Rotation.AlmostEqual(180.Degrees(), maxError)))
+                if (redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
                     yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(1.9f));
             }
         }

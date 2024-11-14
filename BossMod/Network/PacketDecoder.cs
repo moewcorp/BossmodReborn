@@ -8,8 +8,8 @@ public abstract unsafe class PacketDecoder
     protected DateTime Now;
     private const float Hundredth = 1e-2f;
     private const float Thousandth = 1e-3f;
-    private const float TwoKD65k = 2000f / 65535;
-    private const float Inv65k = 1f / 65535;
+    private const float TwoKD65k = (float)(2000d / 65535);
+    private const float Inv65k = (float)(1d / 65535);
 
     public class TextNode(string text)
     {

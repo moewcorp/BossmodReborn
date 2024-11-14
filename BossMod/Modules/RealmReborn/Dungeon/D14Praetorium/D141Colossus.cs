@@ -42,6 +42,6 @@ class D141ColossusStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2134)]
 public class D141Colossus(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(192, 0), 14.5f / MathF.Cos(MathF.PI / 48), 48)],
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(192, 0), 14.5f * CosPI.Pi48th, 48)],
     [new Rectangle(new(207, 0), 20, 1.25f, 90.Degrees()), new Rectangle(new(177, 0), 20, 1.8f, 90.Degrees())]);
 }

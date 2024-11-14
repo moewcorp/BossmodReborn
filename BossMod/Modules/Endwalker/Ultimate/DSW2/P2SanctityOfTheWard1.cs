@@ -220,7 +220,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
             var severDirEast = _severStartDir;
             if (severDirEast.Rad < 0)
                 severDirEast += 180.Degrees();
-            var severDiagonalSE = severDirEast.Rad < MathF.PI / 2;
+            var severDiagonalSE = severDirEast.Rad < MathF.PI * 0.5f;
             var chargeCW = _flares.ChargeAngle.Rad < 0;
             _chargeEarly = severDiagonalSE == chargeCW;
         }

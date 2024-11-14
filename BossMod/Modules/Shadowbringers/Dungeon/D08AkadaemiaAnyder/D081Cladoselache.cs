@@ -52,7 +52,7 @@ class D081CladoselacheStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 661, NameID = 8235)]
 public class D081Cladoselache(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-305, 211.5f), 19.5f / MathF.Cos(MathF.PI / 60), 60)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-305, 211.5f), 19.5f * CosPI.Pi60th, 60)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

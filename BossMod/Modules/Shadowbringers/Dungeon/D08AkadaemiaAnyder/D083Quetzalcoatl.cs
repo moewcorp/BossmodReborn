@@ -140,5 +140,5 @@ class D083QuetzalcoatlStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 661, NameID = 8273)]
 public class D083Quetzalcoatl(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(0, -379), 19.5f / MathF.Cos(MathF.PI / 48), 48)], [new Rectangle(new(0, -359), 20, 1.1f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(0, -379), 19.5f * CosPI.Pi48th, 48)], [new Rectangle(new(0, -359), 20, 1.1f)]);
 }

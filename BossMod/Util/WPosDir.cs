@@ -15,7 +15,12 @@ public record struct WDir(float X, float Z)
     public static WDir operator -(WDir a, WPos b) => new(a.X - b.X, a.Z - b.Z);
     public static WDir operator *(WDir a, float b) => new(a.X * b, a.Z * b);
     public static WDir operator *(float a, WDir b) => new(a * b.X, a * b.Z);
-    public static WDir operator /(WDir a, float b) => new(a.X / b, a.Z / b);
+    public static WDir operator /(WDir a, float b)
+    {
+        var invB = 1 / b;
+        return new(a.X * invB, a.Z * invB);
+    }
+
     public readonly WDir Abs() => new(Math.Abs(X), Math.Abs(Z));
     public readonly WDir Sign() => new(Math.Sign(X), Math.Sign(Z));
     public readonly WDir OrthoL() => new(Z, -X); // CCW, same length
@@ -36,7 +41,7 @@ public record struct WDir(float X, float Z)
     public readonly bool AlmostEqual(WDir b, float eps) => AlmostZero(this - b, eps);
     public readonly WDir Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WDir Rounded() => new(MathF.Round(X), MathF.Round(Z));
-    public readonly WDir Rounded(float precision) => Scaled(1.0f / precision).Rounded().Scaled(precision);
+    public readonly WDir Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public readonly WDir Floor() => new(MathF.Floor(X), MathF.Floor(Z));
 
     public override readonly string ToString() => $"({X:f3}, {Z:f3})";
@@ -60,8 +65,17 @@ public record struct WPos(float X, float Z)
 
     public static WPos operator *(WPos a, float b) => new(a.X * b, a.Z * b);
     public static WPos operator +(WPos a, float b) => new(a.X + b, a.Z + b);
-    public static WPos operator /(WPos a, int b) => new(a.X / b, a.Z / b);
-    public static WPos operator /(WPos a, float b) => new(a.X / b, a.Z / b);
+    public static WPos operator /(WPos a, int b)
+    {
+        var invB = 1f / b;
+        return new(a.X * invB, a.Z * invB);
+    }
+
+    public static WPos operator /(WPos a, float b)
+    {
+        var invB = 1 / b;
+        return new(a.X * invB, a.Z * invB);
+    }
     public static WPos operator +(WPos a, WDir b) => new(a.X + b.X, a.Z + b.Z);
     public static WPos operator +(WDir a, WPos b) => new(a.X + b.X, a.Z + b.Z);
     public static WPos operator -(WPos a, WDir b) => new(a.X - b.X, a.Z - b.Z);
@@ -70,14 +84,14 @@ public record struct WPos(float X, float Z)
     public readonly bool AlmostEqual(WPos b, float eps) => (this - b).AlmostZero(eps);
     public readonly WPos Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WPos Rounded() => new(MathF.Round(X), MathF.Round(Z));
-    public readonly WPos Rounded(float precision) => Scaled(1.0f / precision).Rounded().Scaled(precision);
+    public readonly WPos Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public static WPos Lerp(WPos from, WPos to, float progress) => new(from.ToVec2() * (1 - progress) + to.ToVec2() * progress);
 
-    public static WPos RotateAroundOrigin(float rotateByDegrees, WPos origin, WPos caster)
+    public static WPos RotateAroundOrigin(float rotateByDegrees, WPos origin, WPos point)
     {
         var (sin, cos) = ((float, float))Math.SinCos(rotateByDegrees * Angle.DegToRad);
-        var deltaX = caster.X - origin.X;
-        var deltaZ = caster.Z - origin.Z;
+        var deltaX = point.X - origin.X;
+        var deltaZ = point.Z - origin.Z;
         var rotatedX = cos * deltaX - sin * deltaZ;
         var rotatedZ = sin * deltaX + cos * deltaZ;
         return new(origin.X + rotatedX, origin.Z + rotatedZ);

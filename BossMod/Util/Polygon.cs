@@ -17,13 +17,21 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     public ReadOnlySpan<WDir> AllVertices => Vertices.AsSpan();
     public ReadOnlySpan<WDir> Exterior => AllVertices[..ExteriorEnd];
     public ReadOnlySpan<WDir> Interior(int index) => AllVertices[HoleStarts[index]..HoleEnd(index)];
-    public IEnumerable<int> Holes => Enumerable.Range(0, HoleStarts.Count);
+    public IEnumerable<int> Holes
+    {
+        get
+        {
+            for (var i = 0; i < HoleStarts.Count; ++i)
+                yield return i;
+        }
+    }
+
     public IEnumerable<(WDir, WDir)> ExteriorEdges => PolygonUtil.EnumerateEdges(Vertices.Take(ExteriorEnd));
     public IEnumerable<(WDir, WDir)> InteriorEdges(int index) => PolygonUtil.EnumerateEdges(Vertices.Skip(HoleStarts[index]).Take(HoleEnd(index) - HoleStarts[index]));
 
     private ContourEdgeBuckets? _exteriorEdgeBuckets;
     private List<ContourEdgeBuckets> _holeEdgeBuckets = [];
-    private const int BucketCount = 10;
+    private const int BucketCount = 20;
     private const float Epsilon = 1e-8f;
 
     private int ExteriorEnd => HoleStarts.Count > 0 ? HoleStarts[0] : Vertices.Count;
@@ -68,17 +76,20 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         if (_exteriorEdgeBuckets == null)
         {
             var holecount = HoleStarts.Count;
-            _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior);
-            if (holecount > 0)
-            {
-                _holeEdgeBuckets = new List<ContourEdgeBuckets>(new ContourEdgeBuckets[holecount]);
-                Parallel.For(0, holecount, i =>
-                {
-                    _holeEdgeBuckets[i] = BuildEdgeBucketsForContour(Interior(i));
-                });
-            }
+            if (holecount == 0)
+                _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior);
+            else
+                Parallel.Invoke(
+                    () => _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior),
+                    () =>
+                    {
+                        _holeEdgeBuckets = new List<ContourEdgeBuckets>(new ContourEdgeBuckets[holecount]);
+                        Parallel.For(0, holecount, i =>
+                        {
+                            _holeEdgeBuckets[i] = BuildEdgeBucketsForContour(Interior(i));
+                        });
+                    });
         }
-
         if (!InSimplePolygon(p, _exteriorEdgeBuckets!))
             return false;
         for (var i = 0; i < _holeEdgeBuckets.Count; ++i)
@@ -125,7 +136,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         var invBucketHeight = BucketCount / (maxY - minY + Epsilon);
 
         var edgeBucketsArray = new List<Edges>[BucketCount];
-        for (var b = 0; b < BucketCount; b++)
+        for (var b = 0; b < BucketCount; ++b)
         {
             edgeBucketsArray[b] = [];
         }
@@ -142,7 +153,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
             bucketStart = Math.Clamp(bucketStart, 0, BucketCount - 1);
             bucketEnd = Math.Clamp(bucketEnd, 0, BucketCount - 1);
 
-            for (var b = bucketStart; b <= bucketEnd; b++)
+            for (var b = bucketStart; b <= bucketEnd; ++b)
             {
                 edgeBucketsArray[b].Add(edge);
             }
@@ -151,7 +162,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         }
 
         var edgeBuckets = new Edges[BucketCount][];
-        for (var b = 0; b < BucketCount; b++)
+        for (var b = 0; b < BucketCount; ++b)
         {
             edgeBuckets[b] = [.. edgeBucketsArray[b]];
         }

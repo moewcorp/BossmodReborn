@@ -102,6 +102,6 @@ class D112ZiggyStates : StateMachineBuilder
 public class D112Ziggy(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(185.8f, 137.5f);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 20.06f / MathF.Cos(MathF.PI / 36), 36)], [new Rectangle(new(166, 138), 20, 1.1f, 90.Degrees()),
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 20.06f * CosPI.Pi36th, 36)], [new Rectangle(new(166, 138), 20, 1.1f, 90.Degrees()),
     new Rectangle(new(207, 137), 20, 2.6f, 90.Degrees())]);
 }

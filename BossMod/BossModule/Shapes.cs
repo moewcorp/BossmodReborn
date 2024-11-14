@@ -1,3 +1,5 @@
+using Clipper2Lib;
+
 namespace BossMod;
 
 public abstract record class Shape
@@ -21,6 +23,24 @@ public record class PolygonCustom(IEnumerable<WPos> Vertices) : Shape
 {
     public override List<WDir> Contour(WPos center) => Vertices.Select(v => v - center).ToList();
     public override string ToString() => $"{nameof(PolygonCustom)}:{string.Join(",", Vertices.Select(v => $"{v.X},{v.Z}"))}";
+}
+
+// for custom polygons defined by an IEnumerable of vertices with an offset, eg to account for hitbox radius
+public record class PolygonCustomO(IEnumerable<WPos> Vertices, float Offset) : Shape
+{
+    public override List<WDir> Contour(WPos center)
+    {
+        var originalPath = new Path64(Vertices.Select(v => new Point64((long)(v.X * PolygonClipper.Scale), (long)(v.Z * PolygonClipper.Scale))));
+        ClipperOffset co = new();
+        co.AddPath(originalPath, JoinType.Miter, EndType.Polygon);
+        Paths64 solution = [];
+        co.Execute(Offset * PolygonClipper.Scale, solution);
+        var offsetPath = solution[0];
+        var offsetContour = offsetPath.Select(p => new WDir((float)(p.X * PolygonClipper.InvScale - center.X), (float)(p.Y * PolygonClipper.InvScale - center.Z))).ToList();
+        return offsetContour;
+    }
+
+    public override string ToString() => $"{nameof(PolygonCustomO)}:{string.Join(",", Vertices.Select(v => $"{v.X},{v.Z}"))},{Offset}";
 }
 
 public record class Donut(WPos Center, float InnerRadius, float OuterRadius) : Shape

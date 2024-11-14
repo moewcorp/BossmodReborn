@@ -218,6 +218,6 @@ class D133LiviaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2118)]
 public class D133Livia(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-98, -33), 19.5f / MathF.Cos(MathF.PI / 36), 36)],
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-98, -33), 19.5f * CosPI.Pi36th, 36)],
     [new Rectangle(new(-78.187f, -36.886f), 20, 1.25f, 79.Degrees())]);
 }

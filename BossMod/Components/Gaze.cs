@@ -17,7 +17,7 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
     private const float _eyeOuterR = (_eyeOuterH * _eyeOuterH + _eyeOuterV * _eyeOuterV) / (2 * _eyeOuterV);
     private const float _eyeOffsetV = _eyeOuterR - _eyeOuterV;
 
-    private static readonly float _eyeHalfAngle = MathF.Asin(_eyeOuterH / _eyeOuterR);
+    private static readonly float _eyeHalfAngle = (float)Math.Asin(_eyeOuterH / _eyeOuterR);
     private static readonly Vector2 offset = new(0, _eyeOffsetV);
     private static readonly float halfPIHalfAngleP = Angle.HalfPi + _eyeHalfAngle;
     private static readonly float halfPIHalfAngleM = Angle.HalfPi - _eyeHalfAngle;
