@@ -36,7 +36,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
     public static readonly ArenaBoundsSquare DefaultBounds = new(19.5f);
     private static readonly WPos[] positions = [new(19.5f, 152), new(2.5f, 152), new(2.5f, 136),
     new(19.5f, 136)];
-    private static readonly Rectangle[] squares = positions.Select(pos => new Rectangle(pos, 2, 1.5f)).ToArray();
+    private static readonly Rectangle[] squares = [.. positions.Select(pos => new Rectangle(pos, 2, 1.5f))];
     private static readonly Rectangle[] rect = [new(ArenaCenter, 6.5f, 19.5f)];
     private readonly List<Shape> union = [];
 

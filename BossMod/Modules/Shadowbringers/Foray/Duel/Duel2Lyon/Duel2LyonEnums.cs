@@ -43,5 +43,4 @@ public enum TetherID : uint
 public enum SID : uint
 {
     Enaero = 206, // Boss->Boss, extra=0x64
-    TemporaryMisdirection = 1422, // Boss->player, extra=0x2D0
 }

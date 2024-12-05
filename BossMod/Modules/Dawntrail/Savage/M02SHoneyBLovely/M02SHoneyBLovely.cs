@@ -22,5 +22,5 @@ class PoisonStingBait(BossModule module) : Components.BaitAwayCast(module, Actio
 class PoisonStingVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.PoisonStingVoidzone).Where(z => z.EventState != 7));
 class BeeSting(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BeeStingAOE), 6, 4, 4);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 988, NameID = 12685, PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 988, NameID = 12685, PlanLevel = 100)]
 public class M02SHoneyBLovely(WorldState ws, Actor primary) : Raid.M02NHoneyBLovely.M02NHoneyBLovely(ws, primary);

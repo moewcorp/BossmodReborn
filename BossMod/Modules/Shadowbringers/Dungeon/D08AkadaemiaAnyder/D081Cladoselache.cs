@@ -26,7 +26,7 @@ public enum AID : uint
 class MarineMayhem(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MarineMayhem));
 class ProtolithicPuncture(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.ProtolithicPuncture));
 class PelagicCleaver1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver1), new AOEShapeCone(40, 30.Degrees()));
-class PelagicCleaver2(BossModule module) : Components.LocationTargetedAOEsOther(module, ActionID.MakeSpell(AID.PelagicCleaver2), new AOEShapeCone(50, 30.Degrees()));
+class PelagicCleaver2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver2), new AOEShapeCone(50, 30.Degrees()));
 class TidalGuillotine1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine1), new AOEShapeCircle(13));
 class TidalGuillotine2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine2), 13);
 class AquaticLance(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AquaticLance), 8);

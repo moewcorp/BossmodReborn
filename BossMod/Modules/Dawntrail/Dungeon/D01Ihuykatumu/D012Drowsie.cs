@@ -74,12 +74,12 @@ class D012DrowsieStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 826, NameID = 12716)]
 public class D012Drowsie(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(80, 53), 19.5f)], [new Rectangle(new(65.5f, 38), 20, 1.75f, 130.Degrees()), new Rectangle(new(80, 74), 20, 2)]);
-
+    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(new(80, 53), 19.5f, 32)], [new Rectangle(new(65.5f, 38), 20, 1.8f, 130.Degrees()),
+    new Rectangle(new(80, 74), 20, 2.15f)]);
+    private static readonly uint[] adds = [(uint)OID.Mimiclot1, (uint)OID.Mimiclot2, (uint)OID.Mimiclot3, (uint)OID.Mimiclot4, (uint)OID.Mimiclot5, (uint)OID.Mimiclot6];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Mimiclot1).Concat(Enemies(OID.Mimiclot2)).Concat(Enemies(OID.Mimiclot3)).Concat(Enemies(OID.Mimiclot4))
-        .Concat(Enemies(OID.Mimiclot5)).Concat(Enemies(OID.Mimiclot6)));
+        Arena.Actors(Enemies(adds));
     }
 }

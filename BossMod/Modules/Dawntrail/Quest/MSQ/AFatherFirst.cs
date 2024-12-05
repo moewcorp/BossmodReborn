@@ -71,9 +71,10 @@ class DualBlowsSteeledStrike(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
+        var count = _aoes.Count;
+        if (count > 0)
             yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
+        if (count > 1)
             yield return _aoes[1] with { Risky = false };
     }
 
@@ -103,11 +104,12 @@ class BurningSun(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            for (var i = 0; i < Math.Clamp(_aoes.Count, 0, 9); ++i)
+        var count = _aoes.Count;
+        if (count > 0)
+            for (var i = 0; i < Math.Clamp(count, 0, 9); ++i)
                 yield return _aoes[i] with { Color = Colors.Danger };
-        if (_aoes.Count > 9)
-            for (var i = 9; i < _aoes.Count; ++i)
+        if (count > 9)
+            for (var i = 9; i < count; ++i)
                 yield return _aoes[i];
     }
 

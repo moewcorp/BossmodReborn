@@ -11,8 +11,7 @@ sealed class IPCProvider : IDisposable
     public IPCProvider(RotationModuleManager autorotation, ActionManagerEx amex, MovementOverride movement, AIManager ai)
     {
         Register("HasModuleByDataId", (uint dataId) => BossModuleRegistry.FindByOID(dataId) != null);
-        Register("Configuration", (IReadOnlyList<string> args, bool save) => Service.Config.ConsoleCommand(args, save));
-
+        Register("Configuration", (List<string> args, bool save) => Service.Config.ConsoleCommand(args.AsSpan(), save));
         Register("Presets.Get", (string name) =>
         {
             var preset = autorotation.Database.Presets.FindPresetByName(name);
@@ -80,6 +79,15 @@ sealed class IPCProvider : IDisposable
             ms.Settings.Add(new(default, iTrack, new() { Option = iOpt }));
             return true;
         });
+
+        Register("AI.SetPreset", (string name) =>
+            ai.SetAIPreset(autorotation.Database.Presets.VisiblePresets.FirstOrDefault(x => x.Name == name)));
+        Register("AI.GetPreset", () => ai.GetAIPreset);
+        Register("AI.GetPotentialTargets", () => autorotation.Hints.PotentialTargets);
+        Register("AI.GetSpecialMode", () => autorotation.Hints.ImminentSpecialMode);
+        Register("AI.ForbiddenDirections", () => autorotation.Hints.ForbiddenDirections);
+        Register("AI.ForcedTarget", () => autorotation.Hints.ForcedTarget);
+        Register("AI.SetPositional", (Positional positional) => autorotation.Hints.SetPositional(positional));
     }
 
     public void Dispose() => _disposeActions?.Invoke();
@@ -119,10 +127,10 @@ sealed class IPCProvider : IDisposable
     //    _disposeActions += p.UnregisterAction;
     //}
 
-    //private void Register<T1>(string name, Action<T1> func)
-    //{
-    //    var p = Service.PluginInterface.GetIpcProvider<T1, object>("BossMod." + name);
-    //    p.RegisterAction(func);
-    //    _disposeActions += p.UnregisterAction;
-    //}
+    private void Register<T1>(string name, Action<T1> func)
+    {
+        var p = Service.PluginInterface.GetIpcProvider<T1, object>("BossMod." + name);
+        p.RegisterAction(func);
+        _disposeActions += p.UnregisterAction;
+    }
 }

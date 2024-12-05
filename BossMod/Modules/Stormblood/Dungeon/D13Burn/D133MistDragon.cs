@@ -174,7 +174,7 @@ abstract class BaitAway(BossModule module) : Components.GenericBaitAway(module)
 
 class ChillingAspiration(BossModule module) : BaitAway(module)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.BaitawayRect)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, Module.WorldState.FutureTime(6.1f)));
@@ -207,7 +207,7 @@ class ChillingAspiration(BossModule module) : BaitAway(module)
 
 class FrostBreath(BossModule module) : BaitAway(module)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.BaitawayCone)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, cone, Module.WorldState.FutureTime(4.1f)));

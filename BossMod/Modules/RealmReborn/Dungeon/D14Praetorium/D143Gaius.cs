@@ -99,7 +99,7 @@ class D143GaiusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2136)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2136)]
 public class D143Gaius(WorldState ws, Actor primary) : BossModule(ws, primary, new(-562, 220), new ArenaBoundsRect(14.5f, 19.5f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

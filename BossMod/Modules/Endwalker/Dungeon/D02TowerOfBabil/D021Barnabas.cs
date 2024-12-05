@@ -74,7 +74,7 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
     private Angle rotation;
     private const int RectDistance = 9;
     private const int CircleDistance = 5;
-    private readonly Angle offset = 90.Degrees();
+    private static readonly Angle offset = 90.Degrees();
     private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
 
     private bool IsKnockback(Actor actor, Shape shape, MagneticPole pole)
@@ -104,7 +104,7 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<ElectromagneticRelease1>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
         (Module.FindComponent<ElectromagneticRelease2>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is ((uint)IconID.Plus) or ((uint)IconID.Minus))
         {

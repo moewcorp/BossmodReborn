@@ -67,7 +67,7 @@ class T04GauntletStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.TerminalStart, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 96)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.TerminalStart, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 96)]
 public class T04Gauntlet : BossModule
 {
     public IReadOnlyList<Actor> P1Bugs;

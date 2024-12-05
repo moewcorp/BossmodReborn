@@ -25,6 +25,8 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
     private AOEShape? _activeMissile;
     private Actor? _activeTarget;
     private WPos _activeLocation;
+    private static readonly AOEShapeCircle circle = new(6);
+    private static readonly AOEShapeDonut donut = new(6, 20);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -54,11 +56,11 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
         switch ((AID)spell.Action.ID)
         {
             case AID.BallisticMissileCircleWarning:
-                _activeMissile = new AOEShapeCircle(6);
+                _activeMissile = circle;
                 _activeTarget = WorldState.Actors.Find(spell.TargetID);
                 break;
             case AID.BallisticMissileDonutWarning:
-                _activeMissile = new AOEShapeDonut(6, 20);
+                _activeMissile = donut;
                 _activeTarget = WorldState.Actors.Find(spell.TargetID);
                 break;
             case AID.BallisticMissileCircle:
@@ -103,5 +105,5 @@ class MinervaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10627)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10627)]
 public class Minerva(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

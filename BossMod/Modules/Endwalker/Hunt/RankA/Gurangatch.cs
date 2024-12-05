@@ -25,6 +25,8 @@ public enum AID : uint
 class Slammer(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
+    private static readonly HashSet<AID> castEnds = [AID.LeftHammerSlammer, AID.RightHammerSlammer, AID.LeftHammerSecond, AID.RightHammerSecond,
+    AID.OctupleSlammerLCW, AID.OctupleSlammerRCW, AID.OctupleSlammerRestL, AID.OctupleSlammerRestR, AID.OctupleSlammerLCCW, AID.OctupleSlammerRCCW];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -50,11 +52,8 @@ class Slammer(BossModule module) : Components.GenericRotatingAOE(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0 && caster == Module.PrimaryActor && (AID)spell.Action.ID is AID.LeftHammerSlammer or AID.RightHammerSlammer or AID.LeftHammerSecond or AID.RightHammerSecond
-            or AID.OctupleSlammerLCW or AID.OctupleSlammerRCW or AID.OctupleSlammerRestL or AID.OctupleSlammerRestR or AID.OctupleSlammerLCCW or AID.OctupleSlammerRCCW)
-        {
+        if (caster == Module.PrimaryActor && castEnds.Contains((AID)spell.Action.ID))
             AdvanceSequence(0, WorldState.CurrentTime);
-        }
     }
 }
 
@@ -70,5 +69,5 @@ class GurangatchStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10631)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10631)]
 public class Gurangatch(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

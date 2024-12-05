@@ -109,5 +109,5 @@ class D021AencThonStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8141)]
 public class D021AencThon(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(0, 30), 19.5f)], [new Rectangle(new(0, 50), 20, 1), new Rectangle(new(0, 10), 20, 1.2f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(0, 30), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(0, 50), 20, 1), new Rectangle(new(0, 10), 20, 1.4f)]);
 }

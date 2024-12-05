@@ -38,7 +38,7 @@ class EnterNightPull(BossModule module) : Components.Knockback(module)
             yield return new(Module.PrimaryActor.Position, 40, target.Item2, default, default, Kind.TowardsOrigin);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is ((uint)IconID.EnterNight))
             target = (actor, WorldState.FutureTime(3));

@@ -91,7 +91,6 @@ public class HeroesAndPretenders(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.PerchOfTheApex).Concat([PrimaryActor]).Concat(Enemies(OID.CultivatedMossFungus)).Concat(Enemies(OID.CultivatedMorbolSeedling))
-        .Concat(Enemies(OID.CultivatedOchu1)).Concat(Enemies(OID.CultivatedOchu2)));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
     }
 }

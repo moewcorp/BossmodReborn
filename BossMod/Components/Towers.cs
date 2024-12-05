@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Components;
 
-public class GenericTowers(BossModule module, ActionID aid = default) : CastCounter(module, aid)
+public class GenericTowers(BossModule module, ActionID aid = default, bool prioritizeInsufficient = false) : CastCounter(module, aid)
 {
     public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, BitMask forbiddenSoakers = default, DateTime activation = default)
     {
@@ -20,6 +20,7 @@ public class GenericTowers(BossModule module, ActionID aid = default) : CastCoun
     }
 
     public List<Tower> Towers = [];
+    public bool PrioritizeInsufficient = prioritizeInsufficient; // give priority to towers with more than 0 but less than min soakers
 
     // default tower styling
     public static void DrawTower(MiniArena arena, WPos pos, float radius, bool safe)
@@ -57,14 +58,22 @@ public class GenericTowers(BossModule module, ActionID aid = default) : CastCoun
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Towers.Count == 0)
+        var count = Towers.Count;
+        if (count == 0)
             return;
         var forbiddenInverted = new List<Func<WPos, float>>();
         var forbidden = new List<Func<WPos, float>>();
         if (!Towers.Any(x => x.ForbiddenSoakers[slot]))
         {
-            foreach (var t in Towers.Where(x => !x.IsInside(actor) && x.InsufficientAmountInside(Module) && x.NumInside(Module) > 0))
-                forbiddenInverted.Add(ShapeDistance.InvertedCircle(t.Position, t.Radius));
+            if (PrioritizeInsufficient)
+            {
+                List<Tower> insufficientTowers = [];
+                foreach (var t in Towers.Where(x => x.InsufficientAmountInside(Module) && x.NumInside(Module) > 0))
+                    insufficientTowers.Add(t);
+                var mostRelevantTower = insufficientTowers.OrderByDescending(x => x.NumInside(Module)).ThenBy(x => (x.Position - actor.Position).LengthSq()).FirstOrDefault();
+                if (insufficientTowers.Count > 0)
+                    forbiddenInverted.Add(ShapeDistance.InvertedCircle(mostRelevantTower.Position, mostRelevantTower.Radius));
+            }
             var inTower = Towers.Any(x => x.IsInside(actor) && x.CorrectAmountInside(Module));
             var missingSoakers = !inTower && Towers.Any(x => x.InsufficientAmountInside(Module));
             if (forbiddenInverted.Count == 0)

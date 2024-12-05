@@ -149,5 +149,5 @@ class CE44FamiliarFaceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
 public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, new(330, 390), new ArenaBoundsCircle(30));

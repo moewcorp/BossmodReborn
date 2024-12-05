@@ -7,8 +7,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
     private static readonly Square[] defaultSquare = [new(ArenaCenter, 20)];
     public BitMask DamagedCells;
     public BitMask DestroyedCells;
-    public static readonly Square[] Tiles = Enumerable.Range(0, 16)
-        .Select(index => new Square(CellCenter(index), 5)).ToArray();
+    public static readonly Square[] Tiles = [.. Enumerable.Range(0, 16).Select(index => new Square(CellCenter(index), 5))];
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -57,7 +56,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     private void UpdateArenaBounds()
     {
-        Shape[] brokenTiles = Tiles.Where((tile, index) => DestroyedCells[index]).ToArray();
+        Shape[] brokenTiles = [.. Tiles.Where((tile, index) => DestroyedCells[index])];
         ArenaBoundsComplex arena = new(defaultSquare, brokenTiles, Offset: -0.5f);
         Arena.Bounds = arena;
         Arena.Center = arena.Center;

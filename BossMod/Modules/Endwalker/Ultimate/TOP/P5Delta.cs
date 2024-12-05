@@ -168,7 +168,7 @@ class P5Delta(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((OID)actor.OID is OID.LeftArmUnit or OID.RightArmUnit)
         {
@@ -386,7 +386,7 @@ class P5DeltaExplosion(BossModule module) : Components.LocationTargetedAOEs(modu
         var ps = _delta.Players[pcSlot];
         var partner = Raid.WithSlot(true).WhereSlot(i => _delta.Players[i].IsLocal == ps.IsLocal && i != ps.PartnerSlot && _delta.Players[i].RocketPunch?.OID != ps.RocketPunch?.OID).FirstOrDefault().Item2;
         if (partner != null)
-            Arena.AddCircle(partner.Position, Shape.Radius, Colors.Safe);
+            Arena.AddCircle(partner.Position, 3, Colors.Safe);
     }
 }
 

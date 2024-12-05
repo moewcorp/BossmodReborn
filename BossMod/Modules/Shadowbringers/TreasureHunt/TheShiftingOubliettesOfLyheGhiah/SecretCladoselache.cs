@@ -44,7 +44,7 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
     private DateTime _activation;
     private static readonly AOEShapeCone _shape = new(40, 30.Degrees());
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var increment = (IconID)iconID switch
         {
@@ -111,12 +111,12 @@ class SecretCladoselacheStates : StateMachineBuilder
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
-            .Raw.Update = () => module.Enemies(OID.SecretShark).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.KeeperOfKeys)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9778)]
-public class SecretCladoselache(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class SecretCladoselache(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -127,13 +127,13 @@ public class SecretCladoselache(WorldState ws, Actor primary) : BossModule(ws, p
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.KeeperOfKeys => 3,
-                OID.SecretShark => 2,
-                OID.Boss => 1,
+                OID.KeeperOfKeys => 2,
+                OID.SecretShark => 1,
                 _ => 0
             };
         }

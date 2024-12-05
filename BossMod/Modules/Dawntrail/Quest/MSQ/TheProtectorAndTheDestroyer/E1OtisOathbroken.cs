@@ -52,10 +52,11 @@ class Rush(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            for (var i = 0; i < Math.Clamp(_aoes.Count, 0, 2); ++i)
+        var count = _aoes.Count;
+        if (count > 0)
+            for (var i = 0; i < Math.Clamp(count, 0, 2); ++i)
                 yield return _aoes[i] with { Color = Colors.Danger };
-        if (_aoes.Count > 2)
+        if (count > 2)
             for (var i = 2; i < 4; ++i)
                 yield return _aoes[i];
     }
@@ -98,15 +99,10 @@ class OtisOathbrokenStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70478, NameID = 13168)]
 public class OtisOathbroken(WorldState ws, Actor primary) : BossModule(ws, primary, new(349, -14), new ArenaBoundsCircle(19.5f))
 {
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.EverkeepSentryG10).Any(e => e.InCombat) || Enemies(OID.EverkeepAerostat).Any(e => e.InCombat);
+    protected override bool CheckPull() => Raid.WithoutSlot().Any(x => x.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.EverkeepAerostat));
-        Arena.Actors(Enemies(OID.EverkeepAerostat2));
-        Arena.Actors(Enemies(OID.EverkeepSentryG10));
-        Arena.Actors(Enemies(OID.EverkeepSentryR10));
-        Arena.Actors(Enemies(OID.EverkeepTurret));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
     }
 }

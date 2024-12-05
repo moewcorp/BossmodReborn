@@ -17,7 +17,7 @@ class Palladion(BossModule module) : BossComponent(module)
             hints.Add($"Order: {order + 1}", false);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var (target, partner) = (IconID)iconID switch
         {
@@ -170,7 +170,7 @@ class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 class PalladionWhiteFlame : Components.GenericBaitAway
 {
     private readonly Palladion? _palladion;
-
+    public static readonly Actor FakeActor = new(0, 0, -1, "dummy", 0, ActorType.None, Class.None, 0, new(100, 0, 100, 0));
     private static readonly AOEShapeRect _shape = new(100, 2);
 
     public PalladionWhiteFlame(BossModule module) : base(module)
@@ -184,7 +184,7 @@ class PalladionWhiteFlame : Components.GenericBaitAway
         CurrentBaits.Clear();
         if (_palladion != null && _palladion.NumBaitsDone < _palladion.NumBaitsAssigned && _palladion.BaitOrder[_palladion.NumBaitsDone])
             foreach (var t in Raid.WithoutSlot().SortedByRange(Module.Center).Take(2))
-                CurrentBaits.Add(new(Actor.FakeActor, t, _shape));
+                CurrentBaits.Add(new(FakeActor, t, _shape));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

@@ -80,4 +80,3 @@ public readonly record struct StrategyValues(List<StrategyConfig> Configs)
         return new(ref Configs.Ref(idx), ref Values[idx]);
     }
 }
-#pragma warning restore CA2227

@@ -1,7 +1,6 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.InstanceContent;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -70,6 +69,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
     private delegate void ExecuteCommandGTDelegate(uint commandId, Vector3* position, uint param1, uint param2, uint param3, uint param4);
     private readonly ExecuteCommandGTDelegate _executeCommandGT;
     private DateTime _nextAllowedExecuteCommand;
+    private const uint InvalidEntityId = 0xE0000000;
 
     public ActionManagerEx(WorldState ws, AIHints hints, MovementOverride movement)
     {
@@ -133,7 +133,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         return _inst->GetGroundPositionForCursor(&res) ? res : null;
     }
 
-    public void FaceTarget(Vector3 position, ulong unkObjID = 0xE0000000) => _inst->AutoFaceTargetPosition(&position, unkObjID);
+    public void FaceTarget(Vector3 position, ulong unkObjID = InvalidEntityId) => _inst->AutoFaceTargetPosition(&position, unkObjID);
     public void FaceDirection(WDir direction)
     {
         var player = GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
@@ -156,6 +156,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     public void GetCooldowns(Span<Cooldown> cooldowns)
     {
+        // TODO: 7.1: there are now 87 cdgroups
         // [0,80) are stored in actionmanager, [80,81) are stored in director
         var rg = _inst->GetRecastGroupDetail(0);
         for (var i = 0; i < 80; ++i)
@@ -181,10 +182,11 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     public ClientState.DutyAction GetDutyAction(ushort slot)
     {
-        var cd = EventFramework.Instance()->GetContentDirector();
-        return cd == null || !cd->DutyActionManager.ActionsPresent || slot >= cd->DutyActionManager.NumValidSlots
+        // TODO: 7.1: there are now 5 actions, but only 2 charges...
+        var dm = DutyActionManager.GetInstanceIfReady();
+        return dm == null || !dm->ActionsPresent || slot >= dm->NumValidSlots
             ? default
-            : new(new(ActionType.Spell, cd->DutyActionManager.ActionId[slot]), cd->DutyActionManager.CurCharges[slot], cd->DutyActionManager.MaxCharges[slot]);
+            : new(new(ActionType.Spell, dm->ActionId[slot]), dm->CurCharges[slot], dm->MaxCharges[slot]);
     }
     public (ClientState.DutyAction, ClientState.DutyAction) GetDutyActions() => (GetDutyAction(0), GetDutyAction(1));
 
@@ -252,35 +254,45 @@ public sealed unsafe class ActionManagerEx : IDisposable
     // skips queueing etc
     private bool ExecuteAction(ActionID action, ulong targetId, Vector3 targetPos)
     {
-        if (action.Type is ActionType.BozjaHolsterSlot0 or ActionType.BozjaHolsterSlot1)
+        switch (action.Type)
         {
-            // fake action type - using action from bozja holster
-            var state = PublicContentBozja.GetState(); // note: if it's non-null, the director instance can't be null too
-            var holsterIndex = state != null ? state->HolsterActions.IndexOf((byte)action.ID) : -1;
-            return holsterIndex >= 0 && PublicContentBozja.GetInstance()->UseFromHolster((uint)holsterIndex, action.Type == ActionType.BozjaHolsterSlot1 ? 1u : 0);
-        }
-        else if (action.Type == ActionType.PetAction && action.ID == 3)
-        {
-            // pet actions are special; TODO support actions other than place (3), these use different send-packet function
-            var now = DateTime.Now;
-            if (_nextAllowedExecuteCommand > now)
-                return false;
-            _nextAllowedExecuteCommand = now.AddMilliseconds(100);
-            _executeCommandGT(1800, &targetPos, action.ID, 0, 0, 0);
-            return true;
-        }
-        else
-        {
-            // real action type, just execute our UAL hook
-            // note that for items extraParam should be 0xFFFF (since we want to use any item, not from first inventory slot)
-            // note that for 'summon carbuncle/eos/titan/ifrit/garuda' actions, extraParam can be used to select glamour
-            var extraParam = action.Type switch
-            {
-                ActionType.Spell => ActionManager.GetExtraParamForSummonAction(action.ID), // will return 0 for non-summon actions
-                ActionType.Item => 0xFFFFu,
-                _ => 0u
-            };
-            return _inst->UseActionLocation((CSActionType)action.Type, action.ID, targetId, &targetPos, extraParam);
+            case ActionType.Spell:
+                // for spells, execute our UAL hook
+                // note that for 'summon carbuncle/eos/titan/ifrit/garuda' actions, extraParam can be used to select glamour; the function will return 0 for non-summon actions
+                return _inst->UseActionLocation(CSActionType.Action, action.ID, targetId, &targetPos, ActionManager.GetExtraParamForSummonAction(action.ID));
+            case ActionType.Item:
+                // note that for items extraParam should be 0xFFFF (since we want to use any item, not from first inventory slot)
+                return _inst->UseActionLocation(CSActionType.Item, action.ID, targetId, &targetPos, 0xFFFFu);
+            case ActionType.General:
+                // TODO: are there any general actions that require (or even work with) UAL?
+                // 23 Dismount does not, haven't tested others
+                return _useActionHook.Original(_inst, CSActionType.GeneralAction, action.ID, targetId, 0, ActionManager.UseActionMode.None, 0, null);
+            case ActionType.PetAction:
+                if (action.ID == 3)
+                {
+                    // pet action "Place" - uses location targeting but doesn't interact with UseActionLocation at all, meaning it requires its own send-packet function
+                    var now = DateTime.Now;
+                    if (_nextAllowedExecuteCommand > now)
+                        return false;
+                    _nextAllowedExecuteCommand = now.AddMilliseconds(100);
+                    _executeCommandGT(1800, &targetPos, action.ID, 0, 0, 0);
+                    return true;
+                }
+                else
+                {
+                    // all other pet actions can be used as normal through UA (not UAL)
+                    // TODO: consider calling UsePetAction instead?..
+                    return _useActionHook.Original(_inst, CSActionType.PetAction, action.ID, targetId, 0, ActionManager.UseActionMode.None, 0, null);
+                }
+            case ActionType.BozjaHolsterSlot0:
+            case ActionType.BozjaHolsterSlot1:
+                // fake action type - using action from bozja holster
+                var state = PublicContentBozja.GetState(); // note: if it's non-null, the director instance can't be null too
+                var holsterIndex = state != null ? state->HolsterActions.IndexOf((byte)action.ID) : -1;
+                return holsterIndex >= 0 && PublicContentBozja.GetInstance()->UseFromHolster((uint)holsterIndex, action.Type == ActionType.BozjaHolsterSlot1 ? 1u : 0);
+            default:
+                // fall back to UAL hook for everything not covered explicitly
+                return _inst->UseActionLocation((CSActionType)action.Type, action.ID, targetId, &targetPos, 0);
         }
     }
 
@@ -303,9 +315,9 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var castInfo = player->GetCastInfo();
         var isCasting = castInfo != null && castInfo->IsCasting != 0;
         var currentAction = isCasting ? new((ActionType)castInfo->ActionType, castInfo->ActionId) : actionImminent ? AutoQueue.Action : default;
-        var currentTargetId = isCasting ? (ulong)castInfo->TargetId : (AutoQueue.Target?.InstanceID ?? 0xE0000000);
+        var currentTargetId = isCasting ? (ulong)castInfo->TargetId : (AutoQueue.Target?.InstanceID ?? InvalidEntityId);
         var currentTargetSelf = currentTargetId == player->EntityId;
-        var currentTargetObj = currentTargetSelf ? &player->GameObject : currentTargetId is not 0 and not 0xE0000000 ? GameObjectManager.Instance()->Objects.GetObjectByGameObjectId(currentTargetId) : null;
+        var currentTargetObj = currentTargetSelf ? &player->GameObject : currentTargetId is not 0 and not InvalidEntityId ? GameObjectManager.Instance()->Objects.GetObjectByGameObjectId(currentTargetId) : null;
         WPos? currentTargetPos = currentTargetObj != null ? new WPos(currentTargetObj->Position.X, currentTargetObj->Position.Z) : null;
         var currentTargetLoc = isCasting ? new WPos(castInfo->TargetLocation.X, castInfo->TargetLocation.Z) : new(AutoQueue.TargetPos.XZ()); // note: this only matters for area-targeted spells, for which targetlocation in castinfo is set correctly
         var idealOrientation = currentAction ? _smartRotationTweak.GetSpellOrientation(GetSpellIdForAction(currentAction), new(player->Position.X, player->Position.Z), currentTargetSelf, currentTargetPos, currentTargetLoc) : null;
@@ -337,7 +349,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var desiredRotation = CalculateDesiredOrientation(actionImminent);
 
         // execute rotation, if needed
-        var autoRotateConfig = Framework.Instance()->SystemConfig.GetConfigOption((uint)ConfigOption.AutoFaceTargetOnAction);
+        var autoRotateConfig = fwk->SystemConfig.GetConfigOption((uint)ConfigOption.AutoFaceTargetOnAction);
         var autoRotateOriginal = autoRotateConfig->Value.UInt;
         if (desiredRotation != null)
         {
@@ -348,7 +360,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         if (actionImminent)
         {
             var actionAdj = NormalizeActionForQueue(AutoQueue.Action);
-            var targetID = AutoQueue.Target?.InstanceID ?? 0xE0000000;
+            var targetID = AutoQueue.Target?.InstanceID ?? InvalidEntityId;
             var status = GetActionStatus(actionAdj, targetID);
             if (status == 0)
             {
@@ -364,7 +376,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
             }
             else
             {
-                Service.Log($"[AMEx] Can't execute prio {AutoQueue.Priority} action {AutoQueue.Action} (=> {actionAdj}) @ {targetID:X}: status {status} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.LogMessage>(status)?.Text}'");
+                Service.Log($"[AMEx] Can't execute prio {AutoQueue.Priority} action {AutoQueue.Action} (=> {actionAdj}) @ {targetID:X}: status {status} '{Service.LuminaRow<Lumina.Excel.Sheets.LogMessage>(status)?.Text}'");
                 blockMovement = false;
             }
         }
@@ -385,7 +397,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
             _inst->UseAction(CSActionType.Action, 4);
     }
 
-    // note: targetId is usually your current primary target (or 0xE0000000 if you don't target anyone), unless you do something like /ac XXX <f> etc
+    // note: targetId is usually your current primary target (or InvalidEntityId if you don't target anyone), unless you do something like /ac XXX <f> etc
     private bool UseActionDetour(ActionManager* self, CSActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* outOptAreaTargeted)
     {
         var action = new ActionID((ActionType)actionType, actionId);
@@ -394,7 +406,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
         // if mouseover mode is enabled AND target is a usual primary target AND current mouseover is valid target for action, then we override target to mouseover
         var primaryTarget = TargetSystem.Instance()->Target;
-        var primaryTargetId = primaryTarget != null ? primaryTarget->GetGameObjectId() : 0xE0000000;
+        var primaryTargetId = primaryTarget != null ? primaryTarget->GetGameObjectId() : InvalidEntityId;
         var targetOverridden = targetId != primaryTargetId;
         if (Config.PreferMouseover && !targetOverridden)
         {
@@ -407,7 +419,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         }
 
         (ulong, Vector3?) getAreaTarget() => targetOverridden ? (targetId, null) :
-            (Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtTarget ? targetId : 0xE0000000, Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtCursor ? GetWorldPosUnderCursor() : null);
+            (Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtTarget ? targetId : InvalidEntityId, Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtCursor ? GetWorldPosUnderCursor() : null);
 
         // note: only standard mode can be filtered
         // note: current implementation introduces slight input lag (on button press, next autorotation update will pick state updates, which will be executed on next action manager update)
@@ -456,7 +468,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         if (res)
         {
             var entry = (BozjaHolsterID)self->State.HolsterActions[(int)holsterIndex];
-            HandleActionRequest(ActionID.MakeBozjaHolster(entry, (int)slot), 0, 0xE0000000, default, prevRot, currRot);
+            HandleActionRequest(ActionID.MakeBozjaHolster(entry, (int)slot), 0, InvalidEntityId, default, prevRot, currRot);
         }
         return res;
     }

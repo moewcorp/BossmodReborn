@@ -36,6 +36,13 @@ public enum AID : uint
 
     BlazingBlastVisual = 38259, // Boss->self, 3s cast, single-target visual
     BlazingBlast = 38260, // Helper->location, 3s cast, range 6 circle
+
+    TearyTwirl = 32301, // TuraliOnion->self, 3.5s cast, range 7 circle
+    HeirloomScream = 32304, // TuraliTomato->self, 3.5s cast, range 7 circle
+    PungentPirouette = 32303, // TuraliGarlic->self, 3.5s cast, range 7 circle
+    PluckAndPrune = 32302, // TuraliEggplant->self, 3.5s cast, range 7 circle
+    Pollen = 32305, // TuligoraQueen->self, 3.5s cast, range 7 circle
+    Telega = 9630 // BonusAdds->self, no cast, single-target, bonus adds disappear
 }
 
 class Blade(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Blade));
@@ -56,6 +63,13 @@ class CrossfireBlade2(BossModule module) : Crosses(module, AID.CrossfireBlade2);
 class BlazingBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlazingBreath), new AOEShapeRect(44, 5));
 class BlazingBlast(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BlazingBlast), 6);
 
+abstract class Mandragoras(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(7));
+class PluckAndPrune(BossModule module) : Mandragoras(module, AID.PluckAndPrune);
+class TearyTwirl(BossModule module) : Mandragoras(module, AID.TearyTwirl);
+class HeirloomScream(BossModule module) : Mandragoras(module, AID.HeirloomScream);
+class PungentPirouette(BossModule module) : Mandragoras(module, AID.PungentPirouette);
+class Pollen(BossModule module) : Mandragoras(module, AID.Pollen);
+
 class BullApollyonStates : StateMachineBuilder
 {
     public BullApollyonStates(BossModule module) : base(module)
@@ -71,18 +85,42 @@ class BullApollyonStates : StateMachineBuilder
             .ActivateOnEnter<CrossfireBlade2>()
             .ActivateOnEnter<CrossfireBlade3>()
             .ActivateOnEnter<BlazingBlast>()
-            .Raw.Update = () => module.Enemies(OID.TuraliTomato).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.TuraliEggplant)).Concat(module.Enemies(OID.TuligoraQueen))
-            .Concat(module.Enemies(OID.TuraliOnion)).Concat(module.Enemies(OID.TuraliGarlic)).Concat(module.Enemies(OID.UolonOfFortune)).All(e => e.IsDeadOrDestroyed);
+            .ActivateOnEnter<PluckAndPrune>()
+            .ActivateOnEnter<TearyTwirl>()
+            .ActivateOnEnter<HeirloomScream>()
+            .ActivateOnEnter<PungentPirouette>()
+            .ActivateOnEnter<Pollen>()
+            .Raw.Update = () => module.Enemies(BullApollyon.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Kismet", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 993, NameID = 13247)]
-public class BullApollyon(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -372), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Kismet, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 993, NameID = 13247)]
+public class BullApollyon(WorldState ws, Actor primary) : SharedBounds(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.TuraliEggplant, (uint)OID.TuraliTomato, (uint)OID.TuligoraQueen, (uint)OID.TuraliGarlic,
+    (uint)OID.TuraliOnion, (uint)OID.UolonOfFortune];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.TuraliEggplant).Concat(Enemies(OID.TuraliTomato)).Concat(Enemies(OID.TuligoraQueen)).Concat(Enemies(OID.TuraliGarlic))
-        .Concat(Enemies(OID.TuraliOnion)).Concat(Enemies(OID.UolonOfFortune)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = (OID)e.Actor.OID switch
+            {
+                OID.TuraliOnion => 5,
+                OID.TuraliEggplant => 4,
+                OID.TuraliGarlic => 3,
+                OID.TuraliTomato => 2,
+                OID.TuligoraQueen or OID.UolonOfFortune => 1,
+                _ => 0
+            };
+        }
     }
 }

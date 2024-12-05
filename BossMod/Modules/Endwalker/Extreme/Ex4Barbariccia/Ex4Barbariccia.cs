@@ -25,5 +25,5 @@ class DryBlowsRaidwide(BossModule module) : Components.CastCounter(module, Actio
 class DryBlowsPuddle(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DryBlowsPuddle), 3);
 class IronOut(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.IronOutAOE));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 871, NameID = 11398)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 871, NameID = 11398)]
 public class Ex4Barbariccia(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));

@@ -20,10 +20,11 @@ class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
             var compare = count > 1 && _aoes[0].Rotation != _aoes[1].Rotation;
             for (var i = 0; i < count; ++i)
             {
+                var aoe = _aoes[i];
                 if (i == 0)
-                    yield return compare ? _aoes[i] with { Color = Colors.Danger } : _aoes[i];
+                    yield return compare ? aoe with { Color = Colors.Danger } : aoe;
                 else if (i == 1 && compare)
-                    yield return _aoes[i] with { Risky = false };
+                    yield return aoe with { Risky = false };
             }
         }
     }
@@ -55,7 +56,7 @@ class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && castEnds.Contains((AID)spell.Action.ID))
+        if (_aoes.Count != 0 && castEnds.Contains((AID)spell.Action.ID))
             _aoes.RemoveAt(0);
     }
 

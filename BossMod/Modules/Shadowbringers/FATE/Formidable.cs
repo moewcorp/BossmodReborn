@@ -94,7 +94,7 @@ class BarrageFire(BossModule module) : Components.RaidwideCast(module, ActionID.
 // i've also seen player getting rez, immediately getting stack later than others, but then caster gets destroyed without finishing the cast
 class DrillShot(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DrillShot), 6)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DrillShot)
             AddStack(actor, WorldState.FutureTime(5.0f));
@@ -239,5 +239,5 @@ class FormidableStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1464, NameID = 8822)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1464, NameID = 8822)]
 public class Formidable(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

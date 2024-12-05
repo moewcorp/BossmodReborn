@@ -47,7 +47,7 @@ class TheRamsKeeperBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCircle circle = new(6);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Baitaway)
             CurrentBaits.Add(new(actor, actor, circle));
@@ -95,12 +95,12 @@ class AltarChimeraStates : StateMachineBuilder
             .ActivateOnEnter<Hurl>()
             .ActivateOnEnter<RaucousScritch>()
             .ActivateOnEnter<Spin>()
-            .Raw.Update = () => module.Enemies(OID.AltarAhriman).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.AltarMatanga)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7591)]
-public class AltarChimera(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class AltarChimera(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -111,13 +111,13 @@ public class AltarChimera(WorldState ws, Actor primary) : BossModule(ws, primary
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.AltarMatanga => 3,
-                OID.AltarAhriman => 2,
-                OID.Boss => 1,
+                OID.AltarMatanga => 2,
+                OID.AltarAhriman => 1,
                 _ => 0
             };
         }

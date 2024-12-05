@@ -75,7 +75,7 @@ class RestraintCollar(BossModule module) : BossComponent(module)
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(ironchain.Position, ironchain.HitboxRadius + 3));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Fetters)
         {
@@ -100,7 +100,7 @@ class BigBoot(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
             yield return new(Module.PrimaryActor.Position, 15);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Knockback)
             _target = actor;

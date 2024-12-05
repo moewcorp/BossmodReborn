@@ -14,7 +14,7 @@ class AbsoluteAuthorityFlare(BossModule module) : Components.BaitAwayIcon(module
 
 class AbsoluteAuthorityDorito(BossModule module) : Components.GenericStackSpread(module)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.DoritoStack && Stacks.Count == 0)
             Stacks.Add(new(actor, 1.5f, 8, 8, activation: WorldState.FutureTime(5.1f)));

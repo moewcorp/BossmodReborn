@@ -38,8 +38,11 @@ sealed class AIManagementWindow : UIWindow
             _config.Modified.Fire();
         }
     }
+    public void DrawDebug()
+    {
 
-    public override void Draw()
+    }
+    private Task UIAsync()
     {
         ImGui.TextUnformatted($"Navi={_manager.Controller.NaviTargetPos}");
         _manager.Beh?.DrawDebug();
@@ -60,7 +63,9 @@ sealed class AIManagementWindow : UIWindow
                     _config.Modified.Fire();
                 }
             }
+            ImGui.EndCombo();
         }
+        ImGui.Separator();
         ImGui.Text("Desired positional");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
@@ -128,6 +133,12 @@ sealed class AIManagementWindow : UIWindow
             }
             _config.Modified.Fire();
         }
+        return Task.CompletedTask;
+    }
+
+    public override void Draw()
+    {
+        _ = UIAsync().ConfigureAwait(true);
     }
 
     public override void OnClose() => SetVisible(false);

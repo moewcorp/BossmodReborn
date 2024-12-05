@@ -125,7 +125,7 @@ public static class BossModuleRegistry
             }
 
             var sortOrder = infoAttr?.SortOrder ?? 0;
-            if (sortOrder == 0 && int.TryParse(module.Name.SkipWhile(c => !char.IsAsciiDigit(c)).TakeWhile(char.IsAsciiDigit).ToArray(), out var inferredSortOrder))
+            if (sortOrder == 0 && int.TryParse([.. module.Name.SkipWhile(c => !char.IsAsciiDigit(c)).TakeWhile(char.IsAsciiDigit)], out var inferredSortOrder))
             {
                 sortOrder = inferredSortOrder;
             }

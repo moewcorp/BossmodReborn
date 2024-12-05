@@ -1,0 +1,6 @@
+namespace BossMod.Dawntrail.TreasureHunt.CenoteJaJaGural;
+
+public abstract class SharedBounds(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaBounds.Center, ArenaBounds)
+{
+    public static readonly ArenaBoundsComplex ArenaBounds = new([new Polygon(new(0, -372), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(0, -352), 20, 1.65f)]);
+}

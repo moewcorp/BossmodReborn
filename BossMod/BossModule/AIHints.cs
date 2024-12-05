@@ -1,4 +1,6 @@
-﻿namespace BossMod;
+﻿using BossMod.AST;
+
+namespace BossMod;
 
 // information relevant for AI decision making process for a specific player
 public sealed class AIHints
@@ -29,7 +31,7 @@ public sealed class AIHints
         Normal,
         Pyretic, // pyretic/acceleration bomb type of effects - no movement, no actions, no casting allowed at activation time
         Freezing, // should be moving at activation time
-        // TODO: misdirection, etc
+        Misdirection, // temporary misdirection - if current time is greater than activation, use special pathfinding codepath
     }
 
     public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30);
@@ -37,11 +39,11 @@ public sealed class AIHints
     // information needed to build base pathfinding map (onto which forbidden/goal zones are later rasterized), if needed (lazy, since it's somewhat expensive and not always needed)
     public WPos PathfindMapCenter;
     public ArenaBounds PathfindMapBounds = DefaultBounds;
-    public WaypointManager WaypointManager { get; private set; } = new WaypointManager();
     public Bitmap.Region PathfindMapObstacles;
 
     // list of potential targets
     public List<Enemy> PotentialTargets = [];
+    private int potentialTargetsCount;
     public int HighestPotentialTargetPriority;
 
     // forced target
@@ -66,6 +68,10 @@ public sealed class AIHints
 
     // positioning: next positional hint (TODO: reconsider, maybe it should be a list prioritized by in-gcds, and imminent should be in-gcds instead? or maybe it should be property of an enemy? do we need correct?)
     public (Actor? Target, Positional Pos, bool Imminent, bool Correct) RecommendedPositional;
+    public void SetPositional(Positional positional)
+    {
+        RecommendedPositional = new(RecommendedPositional.Target, positional, RecommendedPositional.Imminent, RecommendedPositional.Correct);
+    }
 
     // orientation restrictions (e.g. for gaze attacks): a list of forbidden orientation ranges, now or in near future
     // AI will rotate to face allowed orientation at last possible moment, potentially losing uptime
@@ -73,6 +79,9 @@ public sealed class AIHints
 
     // closest special movement/targeting/action mode, if any
     public (SpecialMode mode, DateTime activation) ImminentSpecialMode;
+
+    // for misdirection: if forced movement is set, make real direction be within this angle
+    public Angle MisdirectionThreshold;
 
     // predicted incoming damage (raidwides, tankbusters, etc.)
     // AI will attempt to shield & mitigate
@@ -99,6 +108,7 @@ public sealed class AIHints
         PathfindMapBounds = DefaultBounds;
         PathfindMapObstacles = default;
         PotentialTargets.Clear();
+        potentialTargetsCount = 0;
         ForcedTarget = null;
         ForcedMovement = null;
         InteractWithTarget = null;
@@ -107,6 +117,7 @@ public sealed class AIHints
         RecommendedPositional = default;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;
+        MisdirectionThreshold = 15.Degrees();
         PredictedDamage.Clear();
         MaxCastTimeEstimate = float.MaxValue;
         ActionsToExecute.Clear();
@@ -118,13 +129,13 @@ public sealed class AIHints
     // fill list of potential targets from world state
     public void FillPotentialTargets(WorldState ws, bool playerIsDefaultTank)
     {
-        var playerInFate = ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
+        var playerInFate = ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.Sheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
         var allowedFateID = playerInFate ? ws.Client.ActiveFate.ID : 0;
         foreach (var actor in ws.Actors.Where(a => a.IsTargetable && !a.IsAlly && !a.IsDead))
         {
             // fate mob in fate we are NOT a part of, skip entirely. it's okay to "attack" these (i.e., they won't be added as forbidden targets) because we can't even hit them
             // (though aggro'd mobs will continue attacking us after we unsync, but who really cares)
-            if (actor.FateID > 0 && actor.FateID != allowedFateID)
+            if (actor.FateID != 0 && actor.FateID != allowedFateID)
                 continue;
 
             // target is dying; skip it so that AI retargets, but ensure that it's not marked as a forbidden target
@@ -143,28 +154,38 @@ public sealed class AIHints
             {
                 Priority = allowedAttack ? 0 : Enemy.PriorityForbidAI
             });
+            ++potentialTargetsCount;
         }
     }
 
     public void PrioritizeTargetsByOID(uint oid, int priority = 0)
     {
-        foreach (var h in PotentialTargets)
+        for (var i = 0; i < potentialTargetsCount; ++i)
+        {
+            var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
                 h.Priority = Math.Max(priority, h.Priority);
+        }
     }
     public void PrioritizeTargetsByOID<OID>(OID oid, int priority = 0) where OID : Enum => PrioritizeTargetsByOID((uint)(object)oid, priority);
 
     public void PrioritizeTargetsByOID(uint[] oids, int priority = 0)
     {
-        foreach (var h in PotentialTargets)
+        for (var i = 0; i < potentialTargetsCount; ++i)
+        {
+            var h = PotentialTargets[i];
             if (oids.Contains(h.Actor.OID))
                 h.Priority = Math.Max(priority, h.Priority);
+        }
     }
 
     public void PrioritizeAll()
     {
-        foreach (var h in PotentialTargets)
+        for (var i = 0; i < potentialTargetsCount; ++i)
+        {
+            var h = PotentialTargets[i];
             h.Priority = Math.Max(h.Priority, 0);
+        }
     }
 
     public void InteractWithOID(WorldState ws, uint oid) => InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);

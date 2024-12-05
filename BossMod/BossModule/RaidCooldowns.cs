@@ -48,10 +48,10 @@ public sealed class RaidCooldowns : IDisposable
         return Math.Min(float.MaxValue, (float)(firstAvailable - _ws.CurrentTime).TotalSeconds);
     }
 
-    public static bool IsDamageBuff(uint statusID) => statusID
-        is (uint)AST.SID.Divination or (uint)DRG.SID.BattleLitany or (uint)RPR.SID.ArcaneCircle or (uint)MNK.SID.Brotherhood
-        or (uint)BRD.SID.BattleVoice or (uint)DNC.SID.TechnicalFinish or (uint)SMN.SID.SearingLight or (uint)RDM.SID.Embolden
-        or (uint)PCT.SID.StarryMuse;
+    private static readonly HashSet<uint> damageBuffs = [(uint)AST.SID.Divination, (uint)DRG.SID.BattleLitany, (uint)RPR.SID.ArcaneCircle,
+    (uint)MNK.SID.Brotherhood, (uint)BRD.SID.BattleVoice, (uint)DNC.SID.TechnicalFinish, (uint)SMN.SID.SearingLight, (uint)RDM.SID.Embolden,
+    (uint)PCT.SID.StarryMuse];
+    public static bool IsDamageBuff(uint statusID) => damageBuffs.Contains(statusID);
 
     public float DamageBuffLeft(Actor target)
     {

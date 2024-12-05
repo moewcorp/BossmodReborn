@@ -56,10 +56,6 @@ class BileBombardment(BossModule module) : Components.LocationTargetedAOEs(modul
 
 class FunambulistsFantasia(BossModule module) : BossComponent(module)
 {
-    private bool WaypointsAdded;
-    private static readonly WPos[] waypoints = [new(-142.88f, -233.2f), new(-140.89f, -246.16f), new(-129.9f, -242.38f), new(-114.19f, -244.35f),
-    new(-125.81f, -249.33f), new(-123.5f, -256.17f)];
-
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.FunambulistsFantasia)
@@ -68,41 +64,14 @@ class FunambulistsFantasia(BossModule module) : BossComponent(module)
             Arena.Bounds = D033AencThon.arena;
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
-    {
-        if ((SID)status.ID == SID.FoolsTumble && actor == Module.Raid.Player())
-            WaypointsAdded = false;
-    }
-
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null)
-            return;
         var lyre = Module.Enemies(OID.LiarsLyre).FirstOrDefault();
-        hints.WaypointManager.module = Module;
-        hints.WaypointManager.UpdateCurrentWaypoint(actor.Position);
-        if (hints.WaypointManager.HasWaypoints)
-        {
-            var currentWaypoint = hints.WaypointManager.CurrentWaypoint;
-            if (currentWaypoint.HasValue)
-            {
-                hints.ForcedMovement = (currentWaypoint.Value - actor.Position).ToVec3();
-            }
-        }
         if (Arena.Bounds == D033AencThon.chasmArena && lyre != null)
         {
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(lyre.Position, 3));
-            if (!WaypointsAdded)
-            {
-                hints.WaypointManager.ClearWaypoints();
-                hints.WaypointManager.WaypointTimeLimit = 10;
-                WaypointsAdded = true;
-                hints.WaypointManager.AddWaypointsWithRandomization(waypoints, 0.1f, 10);
-            }
         }
-        else if (Arena.Bounds == D033AencThon.arena)
-            hints.WaypointManager.ClearWaypoints();
     }
 }
 
@@ -180,28 +149,28 @@ class D033AencThonStates : StateMachineBuilder
             .ActivateOnEnter<FlailingTentacles>()
             .ActivateOnEnter<FunambulistsFantasia>()
             .ActivateOnEnter<Finale>();
-
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8146)]
 public class D033AencThon(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly Circle[] union = [new Circle(new(-128.5f, -244), 19.75f)];
-    public static readonly ArenaBoundsComplex arena = new(union, [new Rectangle(new(-128.5f, -224), 20, 1.25f)]);
+    private static readonly Polygon[] union = [new(new(-128.5f, -244), 19.7f, 40)];
+    private static readonly Rectangle[] difference = [new(new(-128.5f, -224), 20, 1.5f)];
+    public static readonly ArenaBoundsComplex arena = new(union, difference);
     private static readonly PolygonCustom[] union2 = [new([new(-142.32f, -233.89f), new(-140.52f, -245.64f), new(-129.91f, -241.9f), new(-113.72f, -243.84f),
     new(-113.81f, -244.74f), new(-125.19f, -249.54f), new(-123.72f, -254.08f), new(-124.58f, -254.05f), new(-126.13f, -249.73f), new(-126.39f, -249.05f),
     new(-115.51f, -244.47f), new(-129.9f, -242.73f), new(-140.47f, -246.47f), new(-141.19f, -246.74f), new(-143.12f, -233.92f)])];
-    public static readonly ArenaBoundsComplex chasmArena = new(union, [new Rectangle(new(-128.5f, -224), 20, 1.25f), new Rectangle(new(-128.5f, -244), 20, 10)], union2);
+    public static readonly ArenaBoundsComplex chasmArena = new(union, [.. difference, new Rectangle(new(-128.5f, -244), 20, 10)], union2, 0.25f);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.LiarsLyre => 2,
-                OID.Boss => 1,
+                OID.LiarsLyre => 1,
                 _ => 0
             };
         }

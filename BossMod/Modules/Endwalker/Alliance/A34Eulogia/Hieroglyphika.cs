@@ -18,12 +18,12 @@ class Hieroglyphika(BossModule module) : Components.GenericAOEs(module, ActionID
             BindsAssigned = true;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         WDir dir = (IconID)iconID switch
         {
-            IconID.HieroglyphikaCW => new(1, 0),
-            IconID.HieroglyphikaCCW => new(-1, 0),
+            IconID.HieroglyphikaCW => new(-1, 0),
+            IconID.HieroglyphikaCCW => new(1, 0),
             _ => default
         };
         if (dir == default)

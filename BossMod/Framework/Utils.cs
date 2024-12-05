@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
+using PInvoke;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -26,6 +27,7 @@ public static partial class Utils
     public static Vector2 XZ(this Vector4 v) => new(v.X, v.Z);
     public static Vector2 XZ(this Vector3 v) => new(v.X, v.Z);
     public static Vector3 ToSystem(this FFXIVClientStructs.FFXIV.Common.Math.Vector3 v) => new(v.X, v.Y, v.Z);
+    public static Vector3 ToVector3(this (float X, float Y, float Z) t) => new(t.X, t.Y, t.Z);
 
     public static bool AlmostEqual(float a, float b, float eps) => Math.Abs(a - b) <= eps;
     public static bool AlmostEqual(Vector3 a, Vector3 b, float eps) => (a - b).LengthSquared() <= eps * eps;
@@ -33,13 +35,13 @@ public static partial class Utils
     public static string Vec3String(Vector3 pos) => $"[{pos.X:f3}, {pos.Y:f3}, {pos.Z:f3}]";
     public static string QuatString(Quaternion q) => $"[{q.X:f3}, {q.Y:f3}, {q.Z:f3}, {q.W:f3}]";
     public static string PosRotString(Vector4 posRot) => $"[{posRot.X:f3}, {posRot.Y:f3}, {posRot.Z:f3}, {posRot.W.Radians()}]";
-    public static bool CharacterIsOmnidirectional(uint oid) => Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(oid)?.Unknown10 ?? false;
-    public static string StatusString(uint statusID) => $"{statusID} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.Status>(statusID)?.Name ?? "<not found>"}'";
-    public static bool StatusIsRemovable(uint statusID) => Service.LuminaRow<Lumina.Excel.GeneratedSheets.Status>(statusID)?.CanDispel ?? false;
+    public static bool CharacterIsOmnidirectional(uint oid) => Service.LuminaRow<Lumina.Excel.Sheets.BNpcBase>(oid)?.IsOmnidirectional ?? false;
+    public static string StatusString(uint statusID) => $"{statusID} '{Service.LuminaRow<Lumina.Excel.Sheets.Status>(statusID)?.Name ?? "<not found>"}'";
+    public static bool StatusIsRemovable(uint statusID) => Service.LuminaRow<Lumina.Excel.Sheets.Status>(statusID)?.CanDispel ?? false;
     public static string StatusTimeString(DateTime expireAt, DateTime now) => $"{Math.Max(0, (expireAt - now).TotalSeconds):f3}";
     public static string CastTimeString(float current, float total) => $"{current:f2}/{total:f2}";
     public static string CastTimeString(ActorCastInfo cast, DateTime now) => CastTimeString(cast.ElapsedTime, cast.TotalTime);
-    public static string LogMessageString(uint id) => $"{id} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.LogMessage>(id)?.Text}'";
+    public static string LogMessageString(uint id) => $"{id} '{Service.LuminaRow<Lumina.Excel.Sheets.LogMessage>(id)?.Text}'";
 
     public static unsafe T ReadField<T>(void* address, int offset) where T : unmanaged => *(T*)((IntPtr)address + offset);
     public static unsafe void WriteField<T>(void* address, int offset, T value) where T : unmanaged => *(T*)((IntPtr)address + offset) = value;
@@ -293,4 +295,107 @@ public static partial class Utils
 
     [GeneratedRegex("[^a-zA-Z0-9]")]
     private static partial Regex NonAlphaNumRegex();
+
+#pragma warning disable
+    /// <summary>
+    /// Sets whether <see cref="User32.GetKeyState"/> or <see cref="User32.GetAsyncKeyState"/> will be used when calling <see cref="IsKeyPressed(Keys)"/> or <see cref="IsKeyPressed(LimitedKeys)"/>
+    /// </summary>
+    private static bool UseAsyncKeyCheck;
+#pragma warning restore
+    /// <summary>
+    /// Checks if a key is pressed via winapi.
+    /// </summary>
+    /// <param name="key">Key</param>
+    /// <returns>Whether the key is currently pressed</returns>
+    public static bool IsKeyPressed(int key)
+    {
+        if (key == 0)
+            return false;
+        if (UseAsyncKeyCheck)
+        {
+            return Bitmasks.IsBitSet(User32.GetKeyState(key), 15);
+        }
+        else
+        {
+            return Bitmasks.IsBitSet(User32.GetAsyncKeyState(key), 15);
+        }
+    }
+
+    /// <summary>
+    /// Checks if a key is pressed via winapi.
+    /// </summary>
+    /// <param name="key">Key</param>
+    /// <returns>Whether the key is currently pressed</returns>
+    public static bool IsKeyPressed(Util.LimitedKeys key) => IsKeyPressed((int)key);
+
+    public static bool IsAnyKeyPressed(IEnumerable<Util.LimitedKeys> keys) => keys.Any(IsKeyPressed);
+
+    public static bool IsKeyPressed(IEnumerable<Util.LimitedKeys> keys)
+    {
+        foreach (var x in keys)
+        {
+            if (IsKeyPressed(x))
+                return true;
+        }
+        return false;
+    }
+
+    public static bool IsKeyPressed(IEnumerable<int> keys)
+    {
+        foreach (var x in keys)
+        {
+            if (IsKeyPressed(x))
+                return true;
+        }
+        return false;
+    }
+
+    public static Vector3 RotatePoint(float cx, float cy, float angle, Vector3 p)
+    {
+        if (angle == 0f)
+            return p;
+        var s = (float)Math.Sin(angle);
+        var c = (float)Math.Cos(angle);
+
+        // translate point back to origin:
+        p.X -= cx;
+        p.Z -= cy;
+
+        // rotate point
+        var xnew = p.X * c - p.Z * s;
+        var ynew = p.X * s + p.Z * c;
+
+        // translate point back:
+        p.X = xnew + cx;
+        p.Z = ynew + cy;
+        return p;
+    }
+}
+
+public static class Bitmasks
+{
+    public static bool IsBitSet(ulong b, int pos)
+    {
+        return (b & (1UL << pos)) != 0;
+    }
+
+    public static void SetBit(ref ulong b, int pos)
+    {
+        b |= 1UL << pos;
+    }
+
+    public static void ResetBit(ref ulong b, int pos)
+    {
+        b &= ~(1UL << pos);
+    }
+
+    public static bool IsBitSet(byte b, int pos)
+    {
+        return (b & (1 << pos)) != 0;
+    }
+
+    public static bool IsBitSet(short b, int pos)
+    {
+        return (b & (1 << pos)) != 0;
+    }
 }

@@ -13,14 +13,14 @@ class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Info? modu
     public static readonly HashSet<uint> BoringOIDs = [0x3E1A, 0x3E1B, 0x3E1C, 0x447E, 0x447D, 0x4480, 0x4583, 0x447F, 0x4584, 0x4570, 0x4256, 0x260E, 0x260B,
     0x2630, 0x2611, 0x2610, 0x2617, 0x2608, 0x2613, 0x2618, 0x2609, 0x261A, 0x262F, 0x2609, 0x2614, 0x2664, 0x2668, 0x2619, 0x2631, 0x2632, 0x260A, 0x2616, 0x2667,
     0x2E7F, 0x2F33, 0x2F32, 0x2F38, 0x2E80, 0x2E82, 0x2E81, 0x2F36, 0x2E7D, 0x2F35, 0x2EB0, 0x2F31, 0x2F37, 0x2E7C, 0x2E7B, 0x2EAE, 0x2F3A, 0x2F30, 0x2E7E, 0x2EAF,
-    0x428B, 0x44B8, 0x43D2, 0x43D1, 0x41FD, 0x42A4, 0x41C5, 0x30B7, 0x4021, 0x4019, 0x401C, 0x401B, 0x401F, 0x40FB, 0x4105, 0x401D, 0x4102];
+    0x428B, 0x44B8, 0x43D2, 0x43D1, 0x41FD, 0x42A4, 0x41C5, 0x30B7, 0x4021, 0x4019, 0x401C, 0x401B, 0x401F, 0x40FB, 0x4105, 0x401D, 0x4102, 0x4629, 0x4628, 0x4631,
+    0x4630, 0x46D6];
     private readonly HashSet<ActionID> _filteredActions = [];
     private readonly HashSet<uint> _filteredStatuses = [];
     private readonly HashSet<uint> _filteredDirectorUpdateTypes = [];
 #pragma warning disable IDE0032
     private bool _showActorSizeEvents;
 #pragma warning restore IDE0032
-
     private bool _nodesUpToDate;
 
     public bool ShowActorSizeEvents
@@ -163,16 +163,16 @@ class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Info? modu
             ActorState.OpAggroPlayer op => $"Aggro player: {ActorString(op.InstanceID, op.Timestamp)} = {op.Has}",
             ActorState.OpEventState op => $"Event state: {ActorString(op.InstanceID, op.Timestamp)} -> {op.Value}",
             ActorState.OpTarget op => $"Target: {ActorString(op.InstanceID, op.Timestamp)} -> {ActorString(op.Value, op.Timestamp)}",
-            ActorState.OpMount op => $"Mount: {ActorString(op.InstanceID, op.Timestamp)} = {Service.LuminaRow<Lumina.Excel.GeneratedSheets.Mount>(op.Value)?.Singular ?? "<unknown>"}",
+            ActorState.OpMount op => $"Mount: {ActorString(op.InstanceID, op.Timestamp)} = {Service.LuminaRow<Lumina.Excel.Sheets.Mount>(op.Value)?.Singular ?? "<unknown>"}",
             ActorState.OpTether op => $"Tether: {ActorString(op.InstanceID, op.Timestamp)} {op.Value.ID} ({ModuleInfo?.TetherIDType?.GetEnumName(op.Value.ID)}) @ {ActorString(op.Value.Target, op.Timestamp)}",
             ActorState.OpCastInfo op => $"Cast {(op.Value != null ? "started" : "ended")}: {CastString(op.InstanceID, op.Timestamp, op.Value != null)}",
             ActorState.OpCastEvent op => $"Cast event: {ActorString(op.InstanceID, op.Timestamp)}: {op.Value.Action} ({ModuleInfo?.ActionIDType?.GetEnumName(op.Value.Action.ID)}) @ {CastEventTargetString(op.Value, op.Timestamp)} ({op.Value.Targets.Count} targets affected) #{op.Value.GlobalSequence}",
             ActorState.OpStatus op => $"Status change: {ActorString(op.InstanceID, op.Timestamp)} #{op.Index}: {StatusesString(op.InstanceID, op.Index, op.Timestamp)}",
-            ActorState.OpIcon op => $"Icon: {ActorString(op.InstanceID, op.Timestamp)} -> {op.IconID} ({ModuleInfo?.IconIDType?.GetEnumName(op.IconID)})",
+            ActorState.OpIcon op => $"Icon: {ActorString(op.InstanceID, op.Timestamp)} -> {ActorString(op.TargetID, op.Timestamp)}: {op.IconID} ({ModuleInfo?.IconIDType?.GetEnumName(op.IconID)})",
             ActorState.OpEventObjectStateChange op => $"EObjState: {ActorString(op.InstanceID, op.Timestamp)} = {op.State:X4}",
             ActorState.OpEventObjectAnimation op => $"EObjAnim: {ActorString(op.InstanceID, op.Timestamp)} = {((uint)op.Param1 << 16) | op.Param2:X8}",
             ActorState.OpPlayActionTimelineEvent op => $"Play action timeline: {ActorString(op.InstanceID, op.Timestamp)} = {op.ActionTimelineID:X4}",
-            ActorState.OpEventNpcYell op => $"Yell: {ActorString(op.InstanceID, op.Timestamp)} = {op.Message} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.NpcYell>(op.Message)?.Text}'",
+            ActorState.OpEventNpcYell op => $"Yell: {ActorString(op.InstanceID, op.Timestamp)} = {op.Message} '{Service.LuminaRow<Lumina.Excel.Sheets.NpcYell>(op.Message)?.Text}'",
             ClientState.OpDutyActionsChange op => $"Player duty actions change: {op.Slot0}, {op.Slot1}",
             ClientState.OpBozjaHolsterChange op => $"Player bozja holster change: {string.Join(", ", op.Contents.Select(e => $"{e.count}x {e.entry}"))}",
             _ => DumpOp(o)

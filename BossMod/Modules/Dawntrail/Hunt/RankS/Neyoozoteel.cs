@@ -20,6 +20,9 @@ public enum AID : uint
     NoxiousSap4 = 37370, // Boss->self, no cast, range 30 120-degree cone
     NoxiousSap5 = 37396, // Boss->self, no cast, range 30 120-degree cone
     NoxiousSap6 = 37371, // Boss->self, no cast, range 30 120-degree cone
+    NoxiousSap7 = 42174, // Boss->self, no cast, range 30 120-degree cone
+    NoxiousSap8 = 42173, // Boss->self, no cast, range 30 120-degree cone
+    NoxiousSap9 = 42172, // Boss->self, no cast, range 30 120-degree cone
 
     Neurotoxify = 38331, // Boss->self, 5.0s cast, range 40 circle
 
@@ -60,20 +63,24 @@ class RavagingRoots(BossModule module) : Components.GenericRotatingAOE(module)
 class SapSpiller(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40, 60.Degrees());
-    private static readonly Angle a180 = 180.Degrees();
-    private static readonly Angle a90 = 90.Degrees();
+    private static readonly Angle a180 = 180.Degrees(), a90 = 90.Degrees();
     private readonly List<AOEInstance> _aoes = [];
     private static readonly HashSet<AID> castEnd = [AID.NoxiousSap2, AID.NoxiousSap3, AID.NoxiousSap4,
-    AID.NoxiousSap5, AID.NoxiousSap6];
+    AID.NoxiousSap5, AID.NoxiousSap6, AID.NoxiousSap7, AID.NoxiousSap8, AID.NoxiousSap9];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
+        if (count != 0)
         {
-            yield return _aoes[0] with { Color = Colors.Danger };
-            foreach (var a in _aoes.Skip(1).Take(count - 1))
-                yield return a;
+            for (var i = 0; i < count; ++i)
+            {
+                var aoe = _aoes[i];
+                if (i == 0)
+                    yield return count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+                else if (i > 0)
+                    yield return aoe;
+            }
         }
     }
 
@@ -82,31 +89,32 @@ class SapSpiller(BossModule module) : Components.GenericAOEs(module)
         switch ((AID)spell.Action.ID)
         {
             case AID.WhirlingOmen1:
-                AddAOEs(a180, -a90, -a90, spell);
+                AddAOEs([a180, -a90, -a90], spell);
                 break;
             case AID.WhirlingOmen2:
-                AddAOEs(a90, a180, -a90, spell);
+                AddAOEs([a90, a180, -a90], spell);
                 break;
             case AID.WhirlingOmen3:
-                AddAOEs(-a90, a90, a180, spell);
+                AddAOEs([-a90, a90, a180], spell);
                 break;
             case AID.WhirlingOmen4:
-                AddAOEs(a90, a180, a90, spell);
+                AddAOEs([a90, a180, a90], spell);
                 break;
         }
     }
 
-    private void AddAOEs(Angle first, Angle second, Angle third, ActorCastInfo spell)
+    private void AddAOEs(ReadOnlySpan<Angle> angles, ActorCastInfo spell)
     {
-        var position = Module.PrimaryActor.Position;
-        _aoes.Add(new(cone, position, spell.Rotation + first, Module.CastFinishAt(spell, 14.6f)));
-        _aoes.Add(new(cone, position, _aoes[0].Rotation + second, Module.CastFinishAt(spell, 16.8f)));
-        _aoes.Add(new(cone, position, _aoes[1].Rotation + third, Module.CastFinishAt(spell, 19.1f)));
+        for (var i = 0; i < 3; ++i)
+        {
+            var angle = (i == 0 ? spell.Rotation : _aoes[i - 1].Rotation) + angles[i];
+            _aoes.Add(new(cone, Module.PrimaryActor.Position, angle, Module.CastFinishAt(spell, 14.6f + 2.2f * i)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && castEnd.Contains((AID)spell.Action.ID))
+        if (_aoes.Count != 0 && castEnd.Contains((AID)spell.Action.ID))
             _aoes.RemoveAt(0);
     }
 }

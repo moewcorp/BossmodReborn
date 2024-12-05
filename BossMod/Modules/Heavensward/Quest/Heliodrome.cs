@@ -90,7 +90,7 @@ class GrynewahtStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "xan", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 222, NameID = 5576)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 222, NameID = 5576)]
 public class Grynewaht(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), HexBounds)
 {
     public static readonly ArenaBoundsCustom HexBounds = BuildHexBounds();

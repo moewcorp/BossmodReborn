@@ -6,5 +6,5 @@ class DoubleRushReturn(BossModule module) : Components.CastCounter(module, Actio
 class SonicShatter(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.SonicShatterRest));
 class DevourBait(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.DevourBait));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 873, NameID = 11440, PlanLevel = 90)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 873, NameID = 11440, PlanLevel = 90)]
 public class P5S(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsSquare(15));

@@ -193,7 +193,7 @@ class NeapTide(BossModule module) : Components.SpreadFromIcon(module, (uint)Icon
 
 class SpringTideHydroFall(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4) // both use the same icon
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Stackmarker)
             AddStack(actor, WorldState.FutureTime(5));

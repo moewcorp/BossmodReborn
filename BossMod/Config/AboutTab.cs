@@ -19,7 +19,7 @@ public sealed class AboutTab(DirectoryInfo? replayDir)
         using var wrap = ImRaii.TextWrapPos(0);
 
         ImGui.TextUnformatted("BossModReborn (BMR) provides boss fight radar, auto-rotation, cooldown planning, and AI. All of its modules can be toggled individually. Support for it can be found in the Discord server linked at the bottom of this tab.");
-        ImGui.TextUnformatted("This is a FORK of veyn's BossMod (VBM). Please do not ask him for any support for problems you encounter while using this fork. Instead ask for support on the Combat Reborn Discord.");
+        ImGui.TextUnformatted("This is a FORK of the original BossMod (VBM). Only ask for support on the Combat Reborn Discord.");
         ImGui.TextUnformatted("Please also make sure to not load VBM and this fork at the same time. The consequences of doing that are unexplored and unsupported.");
         ImGui.Spacing();
         DrawSection("Radar",

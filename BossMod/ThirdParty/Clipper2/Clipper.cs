@@ -26,7 +26,6 @@ namespace Clipper2Lib
   {
     private const double DoublePI = 2 * Math.PI;
     private const double Half = 0.5;
-    private const double Third = 1d / 3;
   
     private static Rect64 invalidRect64 = new Rect64(false);
     public static Rect64 InvalidRect64 => invalidRect64;
@@ -612,7 +611,7 @@ namespace Clipper2Lib
 
     public static Path64 MakePath(int[] arr)
     {
-      int len = (int)(arr.Length * Half);
+      int len = arr.Length / 2;
       Path64 p = new Path64(len);
       for (int i = 0; i < len; ++i)
         p.Add(new Point64(arr[i * 2], arr[i * 2 + 1]));
@@ -621,7 +620,7 @@ namespace Clipper2Lib
 
     public static Path64 MakePath(long[] arr)
     {
-      int len = (int)(arr.Length * Half);
+      int len = arr.Length / 2;
       Path64 p = new Path64(len);
       for (int i = 0; i < len; ++i)
         p.Add(new Point64(arr[i * 2], arr[i * 2 + 1]));
@@ -630,7 +629,7 @@ namespace Clipper2Lib
 
     public static PathD MakePath(double[] arr)
     {
-      int len = (int)(arr.Length * Half);
+      int len = arr.Length / 2;
       PathD p = new PathD(len);
       for (int i = 0; i < len; ++i)
         p.Add(new PointD(arr[i * 2], arr[i * 2 + 1]));
@@ -640,7 +639,7 @@ namespace Clipper2Lib
 #if USINGZ
     public static Path64 MakePathZ(long[] arr)
     {
-      int len = (int)(arr.Length * Third);
+      int len = arr.Length / 2;
       Path64 p = new Path64(len);
       for (int i = 0; i < len; ++i)
         p.Add(new Point64(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]));
@@ -648,7 +647,7 @@ namespace Clipper2Lib
     }
     public static PathD MakePathZ(double[] arr)
     {
-      int len = (int)(arr.Length * Third);
+      int len = arr.Length / 3;
       PathD p = new PathD(len);
       for (int i = 0; i < len; ++i)
         p.Add(new PointD(arr[i * 3], arr[i * 3 + 1], (long)arr[i * 3 + 2]));

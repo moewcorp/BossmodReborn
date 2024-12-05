@@ -43,7 +43,7 @@ public class SelfTargetedAOEs(BossModule module, ActionID aid, AOEShape shape, i
 
     public IEnumerable<Actor> ActiveCasters => Casters.Take(MaxCasts);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Color == 0 ? Colors.AOE : Color, Risky));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -83,54 +83,33 @@ public class SelfTargetedLegacyRotationAOEs(BossModule module, ActionID aid, AOE
 }
 
 // location-targeted circle aoe that happens at the end of the cast
-public class LocationTargetedAOEs(BossModule module, ActionID aid, float radius, int maxCasts = int.MaxValue) : GenericAOEs(module, aid)
+public class LocationTargetedAOEs(BossModule module, ActionID aid, AOEShape shape, int maxCasts = int.MaxValue, bool targetIsLocation = false) : GenericAOEs(module, aid)
 {
-    public AOEShapeCircle Shape { get; init; } = new(radius);
-    public int MaxCasts = maxCasts; // used for staggered aoes, when showing all active would be pointless
-    public uint Color; // can be customized if needed
-    public bool Risky = true; // can be customized if needed
-    public readonly List<Actor> Casters = [];
-
-    public IEnumerable<Actor> ActiveCasters => Casters.Take(MaxCasts);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, WorldState.Actors.Find(c.CastInfo!.TargetID)?.Position ?? c.CastInfo!.LocXZ, c.CastInfo.Rotation, Module.CastFinishAt(c.CastInfo), Color, Risky));
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action == WatchedAction)
-            Casters.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action == WatchedAction)
-            Casters.Remove(caster);
-    }
-}
-
-// location-targeted aoe component which supports shapes that aren't circles
-public class LocationTargetedAOEsOther(BossModule module, ActionID aid, AOEShape shape, int maxCasts = int.MaxValue) : GenericAOEs(module, aid)
-{
+    public LocationTargetedAOEs(BossModule module, ActionID aid, float radius, int maxCasts = int.MaxValue, bool targetIsLocation = false) : this(module, aid, new AOEShapeCircle(radius), maxCasts, targetIsLocation) { }
     public AOEShape Shape { get; init; } = shape;
     public int MaxCasts = maxCasts; // used for staggered aoes, when showing all active would be pointless
     public uint Color; // can be customized if needed
     public bool Risky = true; // can be customized if needed
-    public readonly List<Actor> Casters = [];
+    public bool TargetIsLocation { get; init; } = targetIsLocation; // can be customized if needed
 
-    public IEnumerable<Actor> ActiveCasters => Casters.Take(MaxCasts);
+    public List<AOEInstance> Casters { get; } = [];
+    public IEnumerable<AOEInstance> ActiveCasters => Casters.Take(MaxCasts);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, WorldState.Actors.Find(c.CastInfo!.TargetID)?.Position ?? c.CastInfo!.LocXZ, c.CastInfo.Rotation, Module.CastFinishAt(c.CastInfo), Color, Risky));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Take(MaxCasts);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            Casters.Add(caster);
+        {
+            var loc = TargetIsLocation ? WorldState.Actors.Find(caster.CastInfo!.TargetID)?.Position : spell.LocXZ;
+            Casters.Add(new(Shape, loc ?? default, spell.Rotation, Module.CastFinishAt(spell), Color, Risky));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action == WatchedAction)
-            Casters.Remove(caster);
+        if (Casters.Count != 0 && spell.Action == WatchedAction)
+            Casters.RemoveAt(0);
     }
 }
 

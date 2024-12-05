@@ -99,7 +99,7 @@ class ParhelionCone(BossModule module) : Components.GenericRotatingAOE(module)
             AdvanceSequence(caster.Position, caster.Rotation, WorldState.CurrentTime);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.RotateCCW)
             increment = 45.Degrees();
@@ -269,7 +269,7 @@ public class WorthyOfHisBackStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "xan, Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69968, NameID = 10586)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69968, NameID = 10586)]
 public class WorthyOfHisBack(WorldState ws, Actor primary) : BossModule(ws, primary, new(-630, 72), new ArenaBoundsCircle(24.5f))
 {
     public static readonly ArenaBoundsCircle DefaultBounds = new(20);

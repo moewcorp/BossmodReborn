@@ -27,7 +27,7 @@ class D040VanguardSentryR7States : StateMachineBuilder
             .ActivateOnEnter<Swoop>()
             .ActivateOnEnter<FloaterTurn>()
             .ActivateOnEnter<SpinningAxle>()
-            .Raw.Update = () => module.Enemies(OID.SentryR7).Concat([module.PrimaryActor]).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(D040VanguardSentryR7.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
@@ -38,10 +38,10 @@ public class D040VanguardSentryR7(WorldState ws, Actor primary) : BossModule(ws,
     new(-90.005f, 307.76f), new(-74.234f, 318.768f), new(-48.199f, 318.908f), new(-47.511f, 333.532f), new(-97.889f, 334.552f), new(-97.019f, 331.294f), new(-109.076f, 316.539f), new(-108.71f, 287.42f),
     new(-117.732f, 287.449f), new(-118.057f, 273.564f), new(-109.382f, 273.519f), new(-109.449f, 263.178f)];
     private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SentryR7];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SentryR7));
+        Arena.Actors(Enemies(Trash));
     }
 }

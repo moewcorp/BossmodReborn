@@ -78,36 +78,37 @@ class GymnasiouSphinxStates : StateMachineBuilder
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouGryps).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasticEggplant)).Concat(module.Enemies(OID.GymnasticQueen))
-            .Concat(module.Enemies(OID.GymnasticOnion)).Concat(module.Enemies(OID.GymnasticGarlic)).Concat(module.Enemies(OID.GymnasticTomato)).Concat(module.Enemies(OID.GymnasiouLampas))
-            .Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(GymnasiouSphinx.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12016)]
-public class GymnasiouSphinx(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class GymnasiouSphinx(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasticEggplant, (uint)OID.GymnasticGarlic, (uint)OID.GymnasticOnion, (uint)OID.GymnasticTomato,
+    (uint)OID.GymnasticQueen, (uint)OID.GymnasiouLyssa, (uint)OID.GymnasiouLampas];
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.GymnasiouGryps, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies(OID.GymnasiouGryps));
-        Arena.Actors(Enemies(OID.GymnasticEggplant).Concat(Enemies(OID.GymnasticTomato)).Concat(Enemies(OID.GymnasticQueen)).Concat(Enemies(OID.GymnasticGarlic))
-        .Concat(Enemies(OID.GymnasticOnion)).Concat(Enemies(OID.GymnasiouLyssa)).Concat(Enemies(OID.GymnasiouLampas)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.GymnasticOnion => 7,
-                OID.GymnasticEggplant => 6,
-                OID.GymnasticGarlic => 5,
-                OID.GymnasticTomato => 4,
-                OID.GymnasticQueen or OID.GymnasiouLampas or OID.GymnasiouLyssa => 3,
-                OID.GymnasiouGryps => 2,
-                OID.Boss => 1,
+                OID.GymnasticOnion => 6,
+                OID.GymnasticEggplant => 5,
+                OID.GymnasticGarlic => 4,
+                OID.GymnasticTomato => 3,
+                OID.GymnasticQueen or OID.GymnasiouLampas or OID.GymnasiouLyssa => 2,
+                OID.GymnasiouGryps => 1,
                 _ => 0
             };
         }

@@ -129,7 +129,7 @@ class WindsPeakKB(BossModule module) : Components.Knockback(module)
     }
 }
 
-class SplittingRage(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SplittingRage), "Applies temporary misdirection");
+class SplittingRage(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.SplittingRage));
 
 class NaturesBlood(BossModule module) : Components.Exaflare(module, 4)
 {

@@ -42,5 +42,5 @@ class D132MagitekVanguardF1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2116)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2116)]
 public class D132MagitekVanguardF1(WorldState ws, Actor primary) : BossModule(ws, primary, new(-13, 31), new ArenaBoundsSquare(19.5f, 11.Degrees()));

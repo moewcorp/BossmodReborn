@@ -106,18 +106,22 @@ class LuckyFaceStates : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () => module.Enemies(OID.ExcitingTomato).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.ExcitingEgg)).Concat(module.Enemies(OID.ExcitingQueen))
-            .Concat(module.Enemies(OID.ExcitingOnion)).Concat(module.Enemies(OID.ExcitingGarlic)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(LuckyFace.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 819, NameID = 10831)]
-public class LuckyFace(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -460), new ArenaBoundsCircle(20))
+public class LuckyFace(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(0, -460), 19.5f, 32)], [new Rectangle(new(0, -440), 20, 1)]);
+    private static readonly uint[] bonusAdds = [(uint)OID.ExcitingEgg, (uint)OID.ExcitingQueen, (uint)OID.ExcitingOnion, (uint)OID.ExcitingTomato,
+    (uint)OID.ExcitingGarlic];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ExcitingEgg).Concat(Enemies(OID.ExcitingTomato)).Concat(Enemies(OID.ExcitingQueen)).Concat(Enemies(OID.ExcitingGarlic)).Concat(Enemies(OID.ExcitingOnion)), Colors.Vulnerable);
+        Arena.Actors(Enemies(OID.Boss));
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

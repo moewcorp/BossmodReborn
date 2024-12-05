@@ -89,7 +89,7 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
             CurrentBaits.RemoveAt(0);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID is >= IconID.Target1 and <= IconID.Target4)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(7.2f)));

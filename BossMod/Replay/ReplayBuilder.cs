@@ -90,7 +90,7 @@ public sealed class ReplayBuilder : IDisposable
             if (enc.ActiveState != null)
             {
                 enc.Encounter.Phases.Add(new(enc.ActivePhaseIndex, enc.ActiveState.ID, _ws.CurrentTime));
-                enc.Encounter.States.Add(new(enc.ActiveState.ID, enc.ActiveState.Name, enc.ActiveState.Comment, enc.ActiveState.Duration, _ws.CurrentTime));
+                enc.Encounter.States.Add(new(enc.ActiveState.ID, enc.ActiveState.Name, enc.ActiveState.Comment, enc.ActiveState.Duration, [.. (enc.ActiveState.NextStates ?? []).Select(s => s.ID)], _ws.CurrentTime));
             }
             enc.Encounter.Time.End = _ws.CurrentTime;
         }
@@ -138,7 +138,7 @@ public sealed class ReplayBuilder : IDisposable
                     {
                         m.Encounter.Phases.Add(new(m.ActivePhaseIndex, m.ActiveState.ID, _ws.CurrentTime));
                     }
-                    m.Encounter.States.Add(new(m.ActiveState.ID, m.ActiveState.Name, m.ActiveState.Comment, m.ActiveState.Duration, _ws.CurrentTime));
+                    m.Encounter.States.Add(new(m.ActiveState.ID, m.ActiveState.Name, m.ActiveState.Comment, m.ActiveState.Duration, [.. (m.ActiveState.NextStates ?? []).Select(s => s.ID)], _ws.CurrentTime));
                 }
                 m.ActivePhaseIndex = m.Module.StateMachine?.ActivePhaseIndex ?? -1;
                 m.ActiveState = m.Module.StateMachine?.ActiveState;
@@ -327,9 +327,9 @@ public sealed class ReplayBuilder : IDisposable
         _statuses.Remove((actor.InstanceID, index));
     }
 
-    private void EventIcon(Actor actor, uint iconID)
+    private void EventIcon(Actor actor, uint iconID, ulong targetId)
     {
-        _res.Icons.Add(new(iconID, GetOrCreateParticipant(actor.InstanceID), _ws.CurrentTime));
+        _res.Icons.Add(new(iconID, GetOrCreateParticipant(actor.InstanceID), targetId != 0 ? GetOrCreateParticipant(targetId) : null, _ws.CurrentTime));
     }
 
     private void EventCast(Actor actor, ActorCastEvent cast)
@@ -448,7 +448,7 @@ public sealed class ReplayBuilder : IDisposable
         if (data.ActiveState != null)
         {
             data.Encounter.Phases.Add(new(data.ActivePhaseIndex, data.ActiveState.ID, _ws.CurrentTime));
-            data.Encounter.States.Add(new(data.ActiveState.ID, data.ActiveState.Name, data.ActiveState.Comment, data.ActiveState.Duration, _ws.CurrentTime));
+            data.Encounter.States.Add(new(data.ActiveState.ID, data.ActiveState.Name, data.ActiveState.Comment, data.ActiveState.Duration, [.. (data.ActiveState.NextStates ?? []).Select(s => s.ID)], _ws.CurrentTime));
         }
         data.Encounter.Time.End = _ws.CurrentTime;
     }

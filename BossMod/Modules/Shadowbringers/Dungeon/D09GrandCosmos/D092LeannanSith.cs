@@ -80,10 +80,10 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         };
     }
 
-    private static Square[] GenerateTiles(WPos[] positions) => positions.Select(pos => new Square(pos, HalfSize)).ToArray();
+    private static Square[] GenerateTiles(WPos[] positions) => [.. positions.Select(pos => new Square(pos, HalfSize))];
 
     private static Square[] GenerateRotatedTiles(float angle)
-        => defaultGreenTiles.Select(pos => new Square(WPos.RotateAroundOrigin(angle, D092LeananSith.ArenaCenter, pos), HalfSize)).ToArray();
+        => [.. defaultGreenTiles.Select(pos => new Square(WPos.RotateAroundOrigin(angle, D092LeananSith.ArenaCenter, pos), HalfSize))];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

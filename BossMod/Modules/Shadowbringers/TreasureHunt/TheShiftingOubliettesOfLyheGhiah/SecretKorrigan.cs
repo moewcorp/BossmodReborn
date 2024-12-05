@@ -55,13 +55,12 @@ class SecretKorriganStates : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () => module.Enemies(OID.SecretMandragora).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.SecretEgg)).Concat(module.Enemies(OID.SecretQueen))
-            .Concat(module.Enemies(OID.SecretOnion)).Concat(module.Enemies(OID.SecretGarlic)).Concat(module.Enemies(OID.SecretTomato)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9806)]
-public class SecretKorrigan(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class SecretKorrigan(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -72,17 +71,17 @@ public class SecretKorrigan(WorldState ws, Actor primary) : BossModule(ws, prima
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.SecretOnion => 7,
-                OID.SecretEgg => 6,
-                OID.SecretGarlic => 5,
-                OID.SecretTomato => 4,
-                OID.SecretQueen => 3,
-                OID.SecretMandragora => 2,
-                OID.Boss => 1,
+                OID.SecretOnion => 6,
+                OID.SecretEgg => 5,
+                OID.SecretGarlic => 4,
+                OID.SecretTomato => 3,
+                OID.SecretQueen => 2,
+                OID.SecretMandragora => 1,
                 _ => 0
             };
         }

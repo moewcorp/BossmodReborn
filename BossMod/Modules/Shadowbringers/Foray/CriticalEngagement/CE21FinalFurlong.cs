@@ -58,7 +58,7 @@ class GraspingRancor : Components.LocationTargetedAOEs
             var hand = _hands.FirstOrDefault(h => h.Tether.Target == actor.InstanceID);
             if (hand != null)
             {
-                var shouldBeFrozen = Shape.Check(hand.Position, Casters[0].CastInfo!.LocXZ);
+                var shouldBeFrozen = Shape.Check(hand.Position, Casters[0].Origin, new());
                 var isFrozen = hand.Tether.ID == (uint)TetherID.Frozen;
                 hints.Add(shouldBeFrozen ? "Face the hand!" : "Look away from hand and kite into safezone!", shouldBeFrozen != isFrozen);
             }
@@ -103,5 +103,5 @@ class CE21FinalFurlongStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 6)] // bnpcname=9405
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 6)] // bnpcname=9405
 public class CE21FinalFurlong(WorldState ws, Actor primary) : BossModule(ws, primary, new(644, 228), new ArenaBoundsCircle(27));

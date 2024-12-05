@@ -95,7 +95,7 @@ class OnHigh(BossModule module) : Components.Knockback(module)
     private static readonly SafeWall[] allSafeWalls = [.. safeWallsW, .. safeWallsN, .. safeWallsE, .. safeWallsS];
 
     private static SafeWall[] GenerateRotatedSafeWalls(SafeWall[] baseWalls, float angle)
-    => baseWalls.Select(wall => new SafeWall(GenerateRotatedVertice(wall.Vertex1, angle), GenerateRotatedVertice(wall.Vertex2, angle))).ToArray();
+    => [.. baseWalls.Select(wall => new SafeWall(GenerateRotatedVertice(wall.Vertex1, angle), GenerateRotatedVertice(wall.Vertex2, angle)))];
 
     private static WPos GenerateRotatedVertice(WPos vertex, float rotationAngle) => WPos.RotateAroundOrigin(rotationAngle, D152DotoliCiloc.ArenaCenter, vertex);
 
@@ -197,14 +197,11 @@ public class D152DotoliCiloc(WorldState ws, Actor primary) : BossModule(ws, prim
     public static readonly Polygon[] StartingBoundsP = [new Polygon(ArenaCenter, 29.45f * CosPI.Pi16th, 16, 11.25f.Degrees())];
     public static readonly Polygon[] DefaultBoundsP = [new Polygon(ArenaCenter, 20 * CosPI.Pi16th, 16, 11.25f.Degrees())];
     private static readonly WPos[] verticesW = [new(227.1f, 17.333f), new(226.122f, 13.411f), new(227, 10.126f), new(225.087f, 9.583f), new(224.016f, 13.541f), new(225.124f, 17.756f)];
-    private static readonly WPos[] verticesN = GenerateRotatedVertices(verticesW, 90);
-    private static readonly WPos[] verticesE = GenerateRotatedVertices(verticesW, 180);
-    private static readonly WPos[] verticesS = GenerateRotatedVertices(verticesW, 270);
+    private static readonly WPos[] verticesN = WPos.GenerateRotatedVertices(ArenaCenter, verticesW, 90);
+    private static readonly WPos[] verticesE = WPos.GenerateRotatedVertices(ArenaCenter, verticesW, 180);
+    private static readonly WPos[] verticesS = WPos.GenerateRotatedVertices(ArenaCenter, verticesW, 270);
     private static readonly PolygonCustomO[] difference = [new PolygonCustomO(verticesW, offset), new PolygonCustomO(verticesN, offset),
     new PolygonCustomO(verticesE, offset), new PolygonCustomO(verticesS, offset)];
     public static readonly ArenaBoundsComplex StartingBounds = new(StartingBoundsP, difference);
     public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultBoundsP, difference);
-
-    public static WPos[] GenerateRotatedVertices(WPos[] vertices, float rotationAngle)
-    => vertices.Select(vertex => WPos.RotateAroundOrigin(rotationAngle, ArenaCenter, vertex)).ToArray();
 }

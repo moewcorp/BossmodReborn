@@ -62,7 +62,7 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(default, Actor.FakeActor).Any())
+        if (Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(default, Raid.Player()!).Any())
             hints.Add("Use the turrets to stun the boss!");
     }
 

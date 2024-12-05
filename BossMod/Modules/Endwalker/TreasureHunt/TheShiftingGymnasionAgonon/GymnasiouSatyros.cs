@@ -49,31 +49,33 @@ class GymnasiouSatyrosStates : StateMachineBuilder
             .ActivateOnEnter<Wingblow>()
             .ActivateOnEnter<DreadDive>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouElaphos).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasiouLampas))
-            .Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(GymnasiouSatyros.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12003)]
-public class GymnasiouSatyros(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class GymnasiouSatyros(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasiouLampas, (uint)OID.GymnasiouLyssa];
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.GymnasiouElaphos, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies(OID.GymnasiouElaphos));
-        Arena.Actors(Enemies(OID.GymnasiouLampas).Concat(Enemies(OID.GymnasiouLyssa)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.GymnasiouLampas => 4,
-                OID.GymnasiouLyssa => 3,
-                OID.GymnasiouElaphos => 2,
-                OID.Boss => 1,
+                OID.GymnasiouLampas => 3,
+                OID.GymnasiouLyssa => 2,
+                OID.GymnasiouElaphos => 1,
                 _ => 0
             };
         }

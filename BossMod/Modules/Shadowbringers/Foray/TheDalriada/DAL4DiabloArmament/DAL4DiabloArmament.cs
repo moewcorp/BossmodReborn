@@ -9,7 +9,7 @@ class AdvancedNox : Components.StandardChasingAOEs
         ExcludedTargets = Raid.WithSlot(true).Mask();
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Nox)
             ExcludedTargets.Clear(Raid.FindSlot(actor.InstanceID));

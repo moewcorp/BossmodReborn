@@ -65,7 +65,7 @@ class TerrifyingGlanceGaze(BossModule module) : Components.GenericGaze(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Gaze)
             activation = WorldState.FutureTime(3.1f);

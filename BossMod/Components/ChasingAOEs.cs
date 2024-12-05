@@ -136,7 +136,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == Icon)
         {

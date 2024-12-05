@@ -57,7 +57,7 @@ sealed class AIManager : IDisposable
         var player = WorldState.Party.Player();
         var master = WorldState.Party[MasterSlot];
         if (Beh != null && player != null && master != null && !WorldState.Party.Members[PartyState.PlayerSlot].InCutscene)
-            Beh.Execute(player, master);
+            _ = Beh.Execute(player, master);
         else
             Controller.Clear();
         Controller.Update(player, Autorot.Hints, WorldState.CurrentTime);
@@ -77,7 +77,7 @@ sealed class AIManager : IDisposable
     {
         SwitchToIdle();
         MasterSlot = WorldState.Party[masterSlot]?.Name == null ? 0 : masterSlot;
-        Beh = new AIBehaviour(Controller, Autorot, AiPreset);
+        Beh = new AIBehaviour(Controller, Autorot, Autorot.Database.Presets.VisiblePresets.FirstOrDefault(p => p.Name == _config.AIAutorotPresetName));
         _wndAI.UpdateTitle();
     }
 
@@ -177,6 +177,9 @@ sealed class AIManager : IDisposable
             case "FOLLOWTARGET":
                 configModified = ToggleFollowTarget(messageData);
                 break;
+            case "OVERRIDEAUTOROTATION":
+                configModified = ToggleAutorotationOverride();
+                break;
             case "POSITIONAL":
                 configModified = HandlePositionalCommand(messageData);
                 break;
@@ -222,6 +225,12 @@ sealed class AIManager : IDisposable
     private bool ToggleFocusTargetLeader()
     {
         _config.FocusTargetLeader = !_config.FocusTargetLeader;
+        return true;
+    }
+
+    private bool ToggleAutorotationOverride()
+    {
+        _config.OverrideAutorotation = !_config.OverrideAutorotation;
         return true;
     }
 

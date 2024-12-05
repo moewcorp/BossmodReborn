@@ -64,7 +64,7 @@ class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
             yield return new(cross, _casterssorted[1].Position, a45, _activation.AddSeconds(3 + activation));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var icon = (IconID)iconID;
         if (icon is >= IconID.Icon1 and <= IconID.Icon4)
@@ -170,12 +170,11 @@ class GlassyEyed(BossModule module) : Components.GenericGaze(module)
 
 public class TenebrismTowers(BossModule module) : Components.GenericTowers(module)
 {
-    private WPos position;
-
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00010008)
         {
+            WPos position = default;
             switch (index)
             {
                 case 0x07:

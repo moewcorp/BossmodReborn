@@ -128,13 +128,13 @@ class Allfire(BossModule module) : Components.GenericAOEs(module)
         {
             var count1 = _aoesWave1.Count;
             var count2 = _aoesWave2.Count;
-            if (_aoesWave1.Count > 0)
+            if (count1 > 0)
                 foreach (var a in _aoesWave1)
                     yield return a with { Color = Colors.Danger };
-            if (_aoesWave2.Count > 0)
+            if (count2 > 0)
                 foreach (var a in _aoesWave2)
                     yield return a with { Color = count1 > 0 ? Colors.AOE : Colors.Danger, Risky = count1 == 0 };
-            if (_aoesWave1.Count == 0 && _aoesWave3.Count > 0)
+            if (count1 == 0 && _aoesWave3.Count > 0)
                 foreach (var a in _aoesWave3)
                     yield return a with { Color = count2 > 0 ? Colors.AOE : Colors.Danger, Risky = count2 == 0 };
         }

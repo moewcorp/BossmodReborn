@@ -29,7 +29,7 @@ class D101ChudoYudoStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1677)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1677)]
 public class D101ChudoYudo(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly Shape[] difference = [new Square(new(-20, 136), 3, 45.Degrees()), new Square(new(20, 136), 3, 45.Degrees()), new Square(new(-20, 96), 3, 45.Degrees()),

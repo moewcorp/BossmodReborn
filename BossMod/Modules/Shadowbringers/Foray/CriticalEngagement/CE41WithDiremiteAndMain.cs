@@ -125,7 +125,7 @@ class Hailfire(BossModule module) : Components.GenericAOEs(module, ActionID.Make
         base.OnEventCast(caster, spell);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var order = (IconID)iconID switch
         {
@@ -162,7 +162,7 @@ class CE41WithDiremiteAndMainStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
 public class CE41WithDiremiteAndMain : BossModule
 {
     private readonly IReadOnlyList<Actor> _dimCrystals;

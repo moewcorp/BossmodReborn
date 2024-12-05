@@ -78,8 +78,9 @@ public class BossModuleMainWindow : UIWindow
         }
         else
         {
-            foreach (var m in _mgr.LoadedModules)
+            for (var i = 0; i < _mgr.LoadedModules.Count; ++i)
             {
+                var m = _mgr.LoadedModules[i];
                 var oidType = BossModuleRegistry.FindByOID(m.PrimaryActor.OID)?.ObjectIDType;
                 var oidName = oidType?.GetEnumName(m.PrimaryActor.OID);
                 if (ImGui.Button($"{m.GetType()} ({m.PrimaryActor.InstanceID:X} '{m.PrimaryActor.Name}' {oidName})"))

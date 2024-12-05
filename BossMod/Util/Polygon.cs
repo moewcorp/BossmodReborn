@@ -1,5 +1,6 @@
 ﻿using Clipper2Lib;
 using EarcutNet;
+using System.Threading;
 
 // currently we use Clipper2 library (based on Vatti algorithm) for boolean operations and Earcut.net library (earcutting) for triangulating
 // note: the major user of these primitives is bounds clipper; since they operate in 'local' coordinates, we use WDir everywhere (offsets from center) and call that 'relative polygons' - i'm not quite happy with that, it's not very intuitive
@@ -29,8 +30,7 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     public IEnumerable<(WDir, WDir)> ExteriorEdges => PolygonUtil.EnumerateEdges(Vertices.Take(ExteriorEnd));
     public IEnumerable<(WDir, WDir)> InteriorEdges(int index) => PolygonUtil.EnumerateEdges(Vertices.Skip(HoleStarts[index]).Take(HoleEnd(index) - HoleStarts[index]));
 
-    private ContourEdgeBuckets? _exteriorEdgeBuckets;
-    private List<ContourEdgeBuckets> _holeEdgeBuckets = [];
+    private EdgeBuckets? _edgeBuckets;
     private const int BucketCount = 20;
     private const float Epsilon = 1e-8f;
 
@@ -70,31 +70,55 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         return result;
     }
 
+    // build a new polygon by transformation
+    public RelPolygonWithHoles Transform(WDir offset, WDir rotation) => new([.. Vertices.Select(v => v.Rotate(rotation) + offset)], [.. HoleStarts]);
+
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        if (_exteriorEdgeBuckets == null)
+        var edgeBuckets = _edgeBuckets;
+        if (edgeBuckets == null)
         {
             var holecount = HoleStarts.Count;
+            ContourEdgeBuckets[] holeEdgeBuckets;
+            var exteriorTask = Task.Run(() => BuildEdgeBucketsForContour(Exterior));
             if (holecount == 0)
-                _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior);
+            {
+                holeEdgeBuckets = [];
+            }
+            else if (holecount == 1)
+            {
+                holeEdgeBuckets = new ContourEdgeBuckets[1];
+                holeEdgeBuckets[0] = BuildEdgeBucketsForContour(Interior(0));
+            }
             else
-                Parallel.Invoke(
-                    () => _exteriorEdgeBuckets = BuildEdgeBucketsForContour(Exterior),
-                    () =>
+            {
+                holeEdgeBuckets = new ContourEdgeBuckets[holecount];
+                var holeTasks = new Task[holecount];
+                for (var i = 0; i < holecount; ++i)
+                {
+                    var index = i;
+                    holeTasks[i] = Task.Run(() =>
                     {
-                        _holeEdgeBuckets = new List<ContourEdgeBuckets>(new ContourEdgeBuckets[holecount]);
-                        Parallel.For(0, holecount, i =>
-                        {
-                            _holeEdgeBuckets[i] = BuildEdgeBucketsForContour(Interior(i));
-                        });
+                        holeEdgeBuckets[index] = BuildEdgeBucketsForContour(Interior(index));
                     });
+                }
+                Task.WaitAll(holeTasks);
+            }
+
+            var exteriorEdgeBuckets = exteriorTask.Result;
+            var newEdgeBuckets = new EdgeBuckets(exteriorEdgeBuckets, holeEdgeBuckets);
+            var original = Interlocked.CompareExchange(ref _edgeBuckets, newEdgeBuckets, null);
+
+            edgeBuckets = original ?? newEdgeBuckets;
         }
-        if (!InSimplePolygon(p, _exteriorEdgeBuckets!))
+
+        if (!InSimplePolygon(p, edgeBuckets.ExteriorEdgeBuckets))
             return false;
-        for (var i = 0; i < _holeEdgeBuckets.Count; ++i)
+
+        for (var i = 0; i < edgeBuckets.HoleEdgeBuckets.Length; ++i)
         {
-            if (InSimplePolygon(p, _holeEdgeBuckets[i]))
+            if (InSimplePolygon(p, edgeBuckets.HoleEdgeBuckets[i]))
                 return false;
         }
         return true;
@@ -186,6 +210,12 @@ public record class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         }
     }
 
+    private sealed class EdgeBuckets(ContourEdgeBuckets exteriorEdgeBuckets, ContourEdgeBuckets[] holeEdgeBuckets)
+    {
+        public readonly ContourEdgeBuckets ExteriorEdgeBuckets = exteriorEdgeBuckets;
+        public readonly ContourEdgeBuckets[] HoleEdgeBuckets = holeEdgeBuckets;
+    }
+
     private sealed class ContourEdgeBuckets(Edges[][] edgeBuckets, float minY, float invBucketHeight)
     {
         public readonly Edges[][] EdgeBuckets = edgeBuckets;
@@ -210,6 +240,9 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
             Parts[i].Triangulate(result);
         return result;
     }
+
+    // build a new polygon by transformation
+    public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation) => new([.. Parts.Select(p => p.Transform(offset, rotation))]);
 
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
@@ -380,7 +413,7 @@ public static class PolygonUtil
 {
     public static IEnumerable<(T, T)> EnumerateEdges<T>(IEnumerable<T> contour) where T : struct, IEquatable<T>
     {
-        var contourList = contour as IList<T> ?? contour.ToArray();
+        var contourList = contour as IList<T> ?? [.. contour];
         var count = contourList.Count;
         if (count == 0)
             yield break;

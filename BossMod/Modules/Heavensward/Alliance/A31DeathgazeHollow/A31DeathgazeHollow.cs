@@ -42,7 +42,7 @@ class VoidAeroII(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {

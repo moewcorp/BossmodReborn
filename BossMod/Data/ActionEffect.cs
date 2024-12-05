@@ -30,30 +30,20 @@ public enum ActionEffectType : byte
     EnmityAmountUp = 25, // 0x19 - ? summons
     EnmityAmountDown = 26, // 0x1A
     StartActionCombo = 27, // 0x1B
-    Retaliation = 29, // 0x1D - 'vengeance' has value = 7, 'arms length' has value = 0
-    Knockback = 32, // 0x20
-    Attract1 = 33, // 0x21
-    Attract2 = 34, // 0x22
-    AttractCustom1 = 35, // 0x23
-    AttractCustom2 = 36, // 0x24
-    AttractCustom3 = 37, // 0x25
-    //Unknown_27 = 39, // 0x27
-    Mount = 40, // 0x28
-    //unknown_30 = 48, // 0x30
-    //unknown_31 = 49, // 0x31
-    //Unknown_32 = 50, // 0x32
-    ReviveLB = 51, // 0x33 - heal lb3 revive with full hp; seen value == 1
-    //Unknown_34 = 52, // 0x34
+    Retaliation = 28, // 0x1C - 'vengeance' has value = 7, 'arms length' has value = 0
+    Knockback = 31, // 0x1F
+    Attract1 = 32, // 0x20
+    Attract2 = 33, // 0x21
+    AttractCustom1 = 34, // 0x22
+    AttractCustom2 = 35, // 0x23
+    AttractCustom3 = 36, // 0x24
+    Mount = 39, // 0x27
+    ReviveLB = 50, // 0x32 - heal lb3 revive with full hp; seen value == 1
     FullResistStatus = 55, // 0x37 - full resist status (e.g. 9 = resist 'arms length' slow, 2 = resist 'low blow' stun)
-    //Unknown_38 = 56, // 0x38
     //Unknown_39 = 57, // 0x39 - 'you have been sentenced to death!' message
     VFX = 59, // 0x3B
     //Unknown_3D = 61, // 0x3D - was called 'gauge', but i think it's incorrect
     Resource = 62, // 0x3E - value 0x34 = gain war gauge (amount == hitSeverity)
-    //Unknown_41 = 65, // 0x41
-    //Unknown_43 = 67, // 0x43
-    //Unknown_47 = 71, // 0x47
-    //Unknown_48 = 72, // 0x48
     SetModelState = 73, // 0x49 - value == model state
     SetHP = 74, // 0x4A - e.g. zodiark's kokytos
     PartialInvulnerable = 75, // 0x4B
@@ -225,12 +215,12 @@ public static class ActionEffectParser
                 res.Append($"aid={eff.Value}");
                 break;
             case ActionEffectType.Knockback:
-                var kbData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Knockback>(eff.Value);
-                res.Append($"row={eff.Value}, dist={kbData?.Distance}+{eff.Param0}, dir={(KnockbackDirection?)kbData?.Direction}{(kbData?.Direction == (byte)KnockbackDirection.Arg ? $" ({kbData.DirectionArg}deg)" : "")}, speed={kbData?.Speed}");
+                var kbData = Service.LuminaRow<Lumina.Excel.Sheets.Knockback>(eff.Value);
+                res.Append($"row={eff.Value}, dist={kbData?.Distance}+{eff.Param0}, dir={(KnockbackDirection?)kbData?.Direction}{(kbData?.Direction == (byte)KnockbackDirection.Arg ? $" ({kbData?.DirectionArg}deg)" : "")}, speed={kbData?.Speed}");
                 break;
             case ActionEffectType.Attract1:
             case ActionEffectType.Attract2:
-                var attrData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Attract>(eff.Value);
+                var attrData = Service.LuminaRow<Lumina.Excel.Sheets.Attract>(eff.Value);
                 res.Append($"row={eff.Value}, dist<={attrData?.MaxDistance} up to {attrData?.MinRemainingDistance} between {(attrData?.UseDistanceBetweenHitboxes == true ? "hitboxes" : "centers")}, dir={attrData?.Direction}, speed={attrData?.Speed}");
                 break;
             case ActionEffectType.AttractCustom1:
@@ -239,7 +229,7 @@ public static class ActionEffectParser
                 res.Append($"dist={eff.Value} (min={eff.Param1}), speed={eff.Param0}");
                 break;
             case ActionEffectType.Mount:
-                res.Append($"{eff.Value} '{Service.LuminaRow<Lumina.Excel.GeneratedSheets.Mount>(eff.Value)?.Singular}'");
+                res.Append($"{eff.Value} '{Service.LuminaRow<Lumina.Excel.Sheets.Mount>(eff.Value)?.Singular}'");
                 break;
             case ActionEffectType.FullResistStatus:
                 res.Append(Utils.StatusString(eff.Value));

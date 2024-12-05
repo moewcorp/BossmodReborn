@@ -43,7 +43,7 @@ class D063LadyAmandineStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 6, NameID = 422)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 6, NameID = 422)]
 public class D063LadyAmandine(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly PolygonCustom[] shape = [new([new(20.5f, -3.4f), new(17.4f, -11.9f), new(-15.9f, -11.1f), new(-22.3f, -10.5f),

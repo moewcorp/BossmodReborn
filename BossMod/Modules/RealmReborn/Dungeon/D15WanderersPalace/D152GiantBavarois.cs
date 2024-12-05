@@ -38,7 +38,7 @@ class AmorphicFlail(BossModule module) : BossComponent(module)
             hints.AddForbiddenZone(ShapeDistance.Circle(Module.PrimaryActor.Position, 8));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.AmorphicFlail)
             _kiter = actor;
@@ -61,5 +61,5 @@ class D152GiantBavaroisStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1549)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1549)]
 public class D152GiantBavarois(WorldState ws, Actor primary) : BossModule(ws, primary, new(43, -232), new ArenaBoundsSquare(20));

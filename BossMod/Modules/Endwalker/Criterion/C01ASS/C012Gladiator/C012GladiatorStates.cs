@@ -85,7 +85,7 @@ class C012GladiatorStates : StateMachineBuilder
         ComponentCondition<CurseOfTheFallen>(id + 2, 1.1f, comp => comp.Active)
             .ActivateOnEnter<CurseOfTheFallen>();
 
-        CastMulti(id + 0x10, new AID[] { _savage ? AID.SRingOfMight1Out : AID.NRingOfMight1Out, _savage ? AID.SRingOfMight2Out : AID.NRingOfMight2Out, _savage ? AID.SRingOfMight3Out : AID.NRingOfMight3Out }, 3.7f, 10, "Out")
+        CastMulti(id + 0x10, [_savage ? AID.SRingOfMight1Out : AID.NRingOfMight1Out, _savage ? AID.SRingOfMight2Out : AID.NRingOfMight2Out, _savage ? AID.SRingOfMight3Out : AID.NRingOfMight3Out], 3.7f, 10, "Out")
             .ActivateOnEnter<NRingOfMight1Out>(!_savage)
             .ActivateOnEnter<NRingOfMight2Out>(!_savage)
             .ActivateOnEnter<NRingOfMight3Out>(!_savage)

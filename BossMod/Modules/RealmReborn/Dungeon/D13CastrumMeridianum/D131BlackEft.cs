@@ -43,7 +43,7 @@ class D131BlackEftStates : StateMachineBuilder
 // first wave = 3x signifier + 3x laquearius
 // second wave = 2x colossus
 // third wave = 2x colossus + 2x signifier + 2x laquearius
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 557)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 557)]
 public class D131BlackEft(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(12.14f, -73.48f), new(12.44f, -73), new(12.44f, -71.9f), new(12.74f, -71.3f), new(13.13f, -70.8f),

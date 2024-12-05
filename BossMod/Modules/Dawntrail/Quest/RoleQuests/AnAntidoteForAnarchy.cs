@@ -81,6 +81,7 @@ class StingingMaladyBait(BossModule module) : Components.GenericBaitAway(module)
 }
 
 class BewilderingBlight(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BewilderingBlight), 6);
+class BewilderingBlightTM(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BewilderingBlight));
 
 abstract class SkineaterSurge(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
 class SkineaterSurge1(BossModule module) : SkineaterSurge(module, AID.SkineaterSurge1);
@@ -157,6 +158,7 @@ class AnAntidoteForAnarchyStates : StateMachineBuilder
             .ActivateOnEnter<StingingMalady>()
             .ActivateOnEnter<StingingMaladyBait>()
             .ActivateOnEnter<BewilderingBlight>()
+            .ActivateOnEnter<BewilderingBlightTM>()
             .ActivateOnEnter<SkineaterSurge1>()
             .ActivateOnEnter<SkineaterSurge2>()
             .ActivateOnEnter<Burst>()
@@ -180,6 +182,6 @@ public class AnAntidoteForAnarchy(WorldState ws, Actor primary) : BossModule(ws,
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.KAModelMammet).Concat(Enemies(OID.KRModelMammet)).Concat(Enemies(OID.SuffocatingCloud)).Concat([PrimaryActor]));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
     }
 }

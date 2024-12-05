@@ -31,7 +31,7 @@ class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorDestroyed(Actor actor)
     {
         // not sure if needed, just a safeguard incase the removal by OnEventCast failed for whatever reason
-        if (_targets.Count > 0 && (OID)actor.OID == OID.QueenEternal3)
+        if (_targets.Count != 0 && (OID)actor.OID == OID.QueenEternal3)
             _targets.RemoveAll(x => x.Item1 == actor);
     }
 }

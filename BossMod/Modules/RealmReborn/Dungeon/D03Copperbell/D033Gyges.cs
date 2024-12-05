@@ -35,5 +35,5 @@ class D033GygesStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
 public class D033Gyges(WorldState ws, Actor primary) : BossModule(ws, primary, new(-100, 6), new ArenaBoundsCircle(19.5f));

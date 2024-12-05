@@ -27,7 +27,7 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, ActionID.M
         if (!_dangerDirty)
             return;
 
-        var effStates = _states.ToArray();
+        State[] effStates = [.. _states];
         foreach (var (from, to) in _tethers)
         {
             var i1 = PositionToIndex(from.Position);

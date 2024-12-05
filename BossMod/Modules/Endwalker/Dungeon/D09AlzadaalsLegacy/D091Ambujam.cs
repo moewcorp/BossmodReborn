@@ -57,7 +57,7 @@ class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.CorrosiveVenom or AID.ToxinShower)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.CorrosiveVenom or AID.ToxinShower)
             _aoes.RemoveAt(0);
     }
 }

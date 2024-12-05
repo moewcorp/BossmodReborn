@@ -24,7 +24,7 @@ class Trounce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.
 class Groundstorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Groundstorm), new AOEShapeDonut(5, 40));
 class MightySpin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MightySpin), new AOEShapeCircle(14));
 class ForestFire(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ForestFire), new AOEShapeCircle(15));
-class BafflementBulb(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BafflementBulb), "Pull + Temporary Misdirection -> Donut -> Out");
+class BafflementBulb(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BafflementBulb), "Pull + Temporary Misdirection -> Donut -> Out");
 class MetamorphicBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MetamorphicBlast));
 
 class MightySpin2(BossModule module) : Components.GenericAOEs(module)

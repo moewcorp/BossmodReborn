@@ -162,6 +162,6 @@ public class AHunterTrue(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Garula).Concat([PrimaryActor]).Concat(Enemies(OID.SteppeEagle)).Concat(Enemies(OID.Dzo)).Concat(Enemies(OID.FilthyShackle)));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
     }
 }

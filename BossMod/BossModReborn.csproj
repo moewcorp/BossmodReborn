@@ -48,7 +48,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.13" />
+    <PackageReference Include="DalamudPackager" Version="11.0.0" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
@@ -84,6 +84,10 @@
     </Reference>
     <Reference Include="InteropGenerator.Runtime">
       <HintPath>$(DalamudLibPath)InteropGenerator.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PInvoke.User32">
+      <HintPath>$(DalamudLibPath)PInvoke.User32.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

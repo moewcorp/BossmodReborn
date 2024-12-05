@@ -41,7 +41,11 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertySlider(0, 10, Speed = 0.01f)]
     public float PyreticThreshold = 1.0f;
 
-    [PropertyDisplay("在使用技能后恢复角色面向")]
+    [PropertyDisplay("自动目押：如果正常面向和目押之间的角度大于此阈值（设置为 180 禁用），则防止在目押下移动。")]
+    [PropertySlider(0, 180)]
+    public float MisdirectionThreshold = 180;
+
+    [PropertyDisplay("使用技能后恢复角色面向")]
     public bool RestoreRotation = false;
 
     [PropertyDisplay("对鼠标悬停的目标使用技能")]

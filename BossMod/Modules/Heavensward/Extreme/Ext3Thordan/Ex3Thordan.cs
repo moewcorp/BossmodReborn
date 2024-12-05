@@ -51,7 +51,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus), veyn (from Unreal Thordan)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 91, NameID = 3632, PlanLevel = 60)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 91, NameID = 3632, PlanLevel = 60)]
 public class Ex3Thordan(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(23.5f))
 {
     public static readonly ArenaBoundsCircle DefaultBounds = new(21);

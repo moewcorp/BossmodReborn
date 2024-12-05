@@ -51,5 +51,5 @@ class CE14VigilForLostStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 3)] // bnpcname=9396
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 3)] // bnpcname=9396
 public class CE14VigilForLost(WorldState ws, Actor primary) : BossModule(ws, primary, new(451, 830), new ArenaBoundsCircle(30));

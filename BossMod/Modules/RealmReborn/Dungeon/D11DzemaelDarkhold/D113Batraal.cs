@@ -46,7 +46,7 @@ class D113BatraalStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 13, NameID = 1396)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 13, NameID = 1396)]
 public class D113Batraal(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly PolygonCustom[] shape = [new([new(69.7f, -150.8f), new(84.3f, -160.6f), new(100.8f, -150.9f),

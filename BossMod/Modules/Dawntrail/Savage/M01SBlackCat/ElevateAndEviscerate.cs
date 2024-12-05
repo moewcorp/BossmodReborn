@@ -61,7 +61,7 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
             Cache = CurrentTarget.Position;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID != (uint)IconID.ElevateAndEviscerate)
             return;

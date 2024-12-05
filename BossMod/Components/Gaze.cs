@@ -50,11 +50,7 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
         {
             var danger = HitByEye(pc, eye) != Inverted;
             var eyeCenter = IndicatorScreenPos(eye.Position);
-            var dl = ImGui.GetWindowDrawList();
-            dl.PathArcTo(eyeCenter - offset, _eyeOuterR, halfPIHalfAngleP, halfPIHalfAngleM);
-            dl.PathArcTo(eyeCenter + offset, _eyeOuterR, -halfPIHalfAngleP, -halfPIHalfAngleM);
-            dl.PathFillConvex(danger ? Colors.Enemy : Colors.PC);
-            dl.AddCircleFilled(eyeCenter, _eyeInnerR, Colors.Border);
+            DrawEye(eyeCenter, danger);
 
             if (pc.Position.InCircle(eye.Position, eye.Range))
             {
@@ -63,6 +59,15 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
                 MiniArena.PathStroke(false, Colors.Enemy);
             }
         }
+    }
+
+    public static void DrawEye(Vector2 eyeCenter, bool danger)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        dl.PathArcTo(eyeCenter - offset, _eyeOuterR, halfPIHalfAngleP, halfPIHalfAngleM);
+        dl.PathArcTo(eyeCenter + offset, _eyeOuterR, -halfPIHalfAngleP, -halfPIHalfAngleM);
+        dl.PathFillConvex(danger ? Colors.Enemy : Colors.PC);
+        dl.AddCircleFilled(eyeCenter, _eyeInnerR, Colors.Border);
     }
 
     private static bool HitByEye(Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree

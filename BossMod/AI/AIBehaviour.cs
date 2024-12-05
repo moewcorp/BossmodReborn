@@ -25,7 +25,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     {
     }
 
-    public void Execute(Actor player, Actor master)
+    public async Task Execute(Actor player, Actor master)
     {
         ForceMovementIn = float.MaxValue;
         if (player.IsDead)
@@ -38,6 +38,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         _afkMode = _config.AutoAFK && !master.InCombat && (WorldState.CurrentTime - _masterLastMoved).TotalSeconds > _config.AFKModeTimer;
         var gazeImminent = autorot.Hints.ForbiddenDirections.Count > 0 && autorot.Hints.ForbiddenDirections[0].activation <= WorldState.FutureTime(0.5f);
         var pyreticImminent = autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1);
+        var misdirectionMode = autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Misdirection && autorot.Hints.ImminentSpecialMode.activation <= WorldState.CurrentTime;
         var forbidActions = _config.ForbidActions || _afkMode || gazeImminent || pyreticImminent;
 
         Targeting target = new();
@@ -54,27 +55,30 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
         if (!WorldState.PendingEffects.PendingKnockbacks(player.InstanceID))
         {
-            _naviDecision = followTarget && autorot.WorldState.Actors.Find(player.TargetID) != null ? BuildNavigationDecision(player, autorot.WorldState.Actors.Find(player.TargetID)!, ref target) : BuildNavigationDecision(player, master, ref target);
-            // there is a difference between having a small positive leeway and having a negative one for pathfinding, prefer to keep positive
+            var actorTarget = autorot.WorldState.Actors.Find(player.TargetID);
+            (var naviDecision, target) = followTarget && actorTarget != null
+                ? await BuildNavigationDecision(player, actorTarget, target).ConfigureAwait(true)
+                : await BuildNavigationDecision(player, master, target).ConfigureAwait(true);
+            _naviDecision = naviDecision;
+
+            // There is a difference between having a small positive leeway and having a negative one for pathfinding, prefer to keep positive
             _naviDecision.LeewaySeconds = Math.Max(0, _naviDecision.LeewaySeconds - 0.1f);
         }
 
         var masterIsMoving = TrackMasterMovement(master);
         var moveWithMaster = masterIsMoving && (master == player || _followMaster);
         ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? 0 : _naviDecision.LeewaySeconds;
-
         if (!forbidActions)
         {
             autorot.Preset = target.Target != null ? AIPreset : null;
         }
-
-        UpdateMovement(player, master, target, gazeImminent || pyreticImminent, !forbidActions ? autorot.Hints.ActionsToExecute : null);
+        UpdateMovement(player, master, target, gazeImminent || pyreticImminent, misdirectionMode ? autorot.Hints.MisdirectionThreshold : default, !forbidActions ? autorot.Hints.ActionsToExecute : null);
     }
 
     // returns null if we're to be idle, otherwise target to attack
     private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
-        if (autorot.Hints.InteractWithTarget is Actor interact)
+        if (AIManager.Instance?.Beh != null && autorot.Hints.InteractWithTarget is Actor interact)
             return new Targeting(new AIHints.Enemy(interact, false), 3);
 
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
@@ -123,33 +127,57 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             targeting.PreferredPosition = Positional.Any;
     }
 
-    private NavigationDecision BuildNavigationDecision(Actor player, Actor master, ref Targeting targeting)
+    private async Task<(NavigationDecision decision, Targeting updatedTargeting)> BuildNavigationDecision(Actor player, Actor master, Targeting targeting)
     {
-        var target = autorot.WorldState.Actors.Find(player.TargetID);
         if (_config.ForbidMovement)
-            return new() { LeewaySeconds = float.MaxValue };
-        if (_followMaster && !_config.FollowTarget || _followMaster && _config.FollowTarget && target == null)
-            return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, master.Position, _config.MaxDistanceToSlot, new(), Positional.Any);
-        if (_followMaster && _config.FollowTarget && target != null)
-            return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, target.Position, target.HitboxRadius + (_config.DesiredPositional != Positional.Any ? 2.6f : _config.MaxDistanceToTarget), target.Rotation, target != player ? _config.DesiredPositional : Positional.Any);
-        if (targeting.Target == null)
-            return NavigationDecision.Build(_naviCtx, autorot.WorldState, autorot.Hints, player, null, 0, new(), Positional.Any);
-        var adjRange = targeting.PreferredRange + player.HitboxRadius + targeting.Target.Actor.HitboxRadius;
-        if (targeting.PreferTanking)
+            return (new NavigationDecision { LeewaySeconds = float.MaxValue }, targeting);
+
+        if (_followMaster && (AIPreset == null || _config.OverrideAutorotation))
         {
-            // see whether we need to move target
-            // TODO: think more about keeping uptime while tanking, this is tricky...
-            var desiredToTarget = targeting.Target.Actor.Position - targeting.Target.DesiredPosition;
-            if (desiredToTarget.LengthSq() > 4 /*&& (_autorot.ClassActions?.GetState().GCD ?? 0) > 0.5f*/)
+            var target = autorot.WorldState.Actors.Find(player.TargetID);
+            if (!_config.FollowTarget || _config.FollowTarget && target == null)
             {
-                var dest = autorot.Hints.ClampToBounds(targeting.Target.DesiredPosition - adjRange * desiredToTarget.Normalized());
-                return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, dest, 0.5f, new(), Positional.Any);
+                var decision = await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, master.Position, _config.MaxDistanceToSlot, new(), Positional.Any)).ConfigureAwait(true);
+                return (decision, targeting);
+            }
+            if (_config.FollowTarget && target != null)
+            {
+                var decision = await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, target.Position, target.HitboxRadius + (_config.DesiredPositional != Positional.Any ? 2.6f : _config.MaxDistanceToTarget), target.Rotation, target != player ? _config.DesiredPositional : Positional.Any)).ConfigureAwait(true);
+                return (decision, targeting);
             }
         }
-        var adjRotation = targeting.PreferTanking ? targeting.Target.DesiredRotation : targeting.Target.Actor.Rotation;
-        return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, targeting.Target.Actor.Position, adjRange, adjRotation, targeting.PreferredPosition);
-    }
+        if (targeting.Target == null)
+        {
+            var decision = await Task.Run(() => NavigationDecision.Build(_naviCtx, autorot.WorldState, autorot.Hints, player, null, 0, new(), Positional.Any)).ConfigureAwait(true);
+            return (decision, targeting);
+        }
 
+        var adjRange = targeting.PreferredRange + player.HitboxRadius + targeting.Target.Actor.HitboxRadius;
+
+        if (targeting.PreferTanking)
+        {
+            var desiredToTarget = targeting.Target.Actor.Position - targeting.Target.DesiredPosition;
+
+            if (desiredToTarget.LengthSq() > 4 /*&& (_autorot.ClassActions?.GetState().GCD ?? 0) > 0.5f*/)
+            {
+                var decision = await Task.Run(() =>
+                {
+                    var dest = autorot.Hints.ClampToBounds(targeting.Target.DesiredPosition - adjRange * desiredToTarget.Normalized());
+                    return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, dest, 0.5f, new(), Positional.Any);
+                }).ConfigureAwait(true);
+
+                return (decision, targeting);
+            }
+        }
+
+        var adjRotation = targeting.PreferTanking ? targeting.Target.DesiredRotation : targeting.Target.Actor.Rotation;
+
+        var fdecision = await Task.Run(() =>
+            NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, autorot.Hints.RecommendedPositional.Target?.Position, adjRange, adjRotation, autorot.Hints.RecommendedPositional.Pos)
+        ).ConfigureAwait(true);
+
+        return (fdecision, targeting);
+    }
     private void FocusMaster(Actor master)
     {
         var masterChanged = Service.TargetManager.FocusTarget?.EntityId != master.InstanceID;
@@ -182,7 +210,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         return masterIsMoving;
     }
 
-    private void UpdateMovement(Actor player, Actor master, Targeting target, bool gazeOrPyreticImminent, ActionQueue? queueForSprint)
+    private void UpdateMovement(Actor player, Actor master, Targeting target, bool gazeOrPyreticImminent, Angle misdirectionAngle, ActionQueue? queueForSprint)
     {
         if (gazeOrPyreticImminent)
         {
@@ -190,6 +218,19 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             ctrl.NaviTargetPos = null;
             ctrl.NaviTargetVertical = null;
             ctrl.ForceCancelCast = true;
+        }
+        else if (misdirectionAngle != default && _naviDecision.Destination != null)
+        {
+            ctrl.NaviTargetPos = _naviDecision.NextTurn == 0 ? _naviDecision.Destination
+                : player.Position + (_naviDecision.Destination.Value - player.Position).Rotate(_naviDecision.NextTurn > 0 ? -misdirectionAngle : misdirectionAngle);
+            ctrl.AllowInterruptingCastByMovement = true;
+
+            // debug
+            //void drawLine(WPos from, WPos to, uint color) => Camera.Instance!.DrawWorldLine(new(from.X, player.PosRot.Y, from.Z), new(to.X, player.PosRot.Y, to.Z), color);
+            //var toDest = _naviDecision.Destination.Value - player.Position;
+            //drawLine(player.Position, _naviDecision.Destination.Value, 0xff00ff00);
+            //drawLine(_naviDecision.Destination.Value, _naviDecision.Destination.Value + toDest.Normalized().OrthoL(), 0xff00ff00);
+            //drawLine(player.Position, ctrl.NaviTargetPos.Value, 0xff00ffff);
         }
         else
         {
@@ -224,6 +265,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         configModified |= ImGui.Checkbox("Forbid movement", ref _config.ForbidMovement);
         ImGui.SameLine();
         configModified |= ImGui.Checkbox("Follow during combat", ref _config.FollowDuringCombat);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Override autorotation values", ref _config.OverrideAutorotation);
         ImGui.Spacing();
         configModified |= ImGui.Checkbox("Follow during active boss module", ref _config.FollowDuringActiveBossModule);
         ImGui.SameLine();

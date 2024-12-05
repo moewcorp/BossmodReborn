@@ -24,7 +24,7 @@ class Cleave(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, A
 class WhatIsLeft(BossModule module) : Cleave(module, AID.WhatIsLeft);
 class WhatIsRight(BossModule module) : Cleave(module, AID.WhatIsRight);
 
-class LostHope(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.LostHope), "Applies temporary misdirection");
+class LostHope(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.LostHope));
 class Vitriol(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Vitriol), new AOEShapeCircle(13));
 class NoteOfDespair(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.NoteOfDespair));
 class Wallow(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Wallow), 6);

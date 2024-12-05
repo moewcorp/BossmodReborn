@@ -46,7 +46,7 @@ class Bubble(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCircle circle = new(10);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Baitaway)
             CurrentBaits.Add(new(actor, actor, circle));
@@ -96,13 +96,12 @@ class SecretWormStates : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () => module.Enemies(OID.SecretTomato).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.SecretEgg)).Concat(module.Enemies(OID.SecretQueen))
-            .Concat(module.Enemies(OID.SecretOnion)).Concat(module.Enemies(OID.SecretGarlic)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9780)]
-public class SecretWorm(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class SecretWorm(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -112,16 +111,16 @@ public class SecretWorm(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.SecretOnion => 6,
-                OID.SecretEgg => 5,
-                OID.SecretGarlic => 4,
-                OID.SecretTomato => 3,
-                OID.SecretQueen => 2,
-                OID.Boss => 1,
+                OID.SecretOnion => 5,
+                OID.SecretEgg => 4,
+                OID.SecretGarlic => 3,
+                OID.SecretTomato => 2,
+                OID.SecretQueen => 1,
                 _ => 0
             };
         }

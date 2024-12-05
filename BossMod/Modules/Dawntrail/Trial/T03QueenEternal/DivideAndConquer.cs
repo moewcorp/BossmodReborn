@@ -2,13 +2,13 @@ namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 
 class DivideAndConquer(BossModule module) : Components.GenericBaitAway(module)
 {
-    // for some reason the icon is detected on the boss instead of the player
-    // so we will have to make a hack, line baits can be staggered so we can't use BaitAwayIcon which clears all at the same time
+    // line baits can be staggered so we can't use BaitAwayIcon which clears all at the same time
     // staggered waves always got 8 casts even if some players are dead, simultan waves got line baits on all alive players
+    // drawing all 8 baits at the same time to make it easier to preposition for the 8 simultan casts
     private static readonly AOEShapeRect rect = new(100, 2.5f);
     private int counter;
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.LineBaits && CurrentBaits.Count == 0)
         {

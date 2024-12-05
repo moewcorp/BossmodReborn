@@ -79,7 +79,7 @@ class D142NeroStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2135)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2135)]
 public class D142Nero(WorldState ws, Actor primary) : BossModule(ws, primary, startingBounds.Center, startingBounds)
 {
     private static readonly WPos[] vertices = [new(-158.27f, -29.04f), new(-156.76f, -28.7f), new(-155.3f, -28.29f), new(-151.86f, -26.99f), new(-151.47f, -25.48f),

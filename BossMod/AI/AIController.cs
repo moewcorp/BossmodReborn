@@ -49,7 +49,7 @@ sealed class AIController(WorldState ws, ActionManagerEx amex, MovementOverride 
         var moveRequested = _movement.IsMoveRequested();
         var castInProgress = player.CastInfo != null && !player.CastInfo.EventHappened;
         var forbidMovement = moveRequested || !AllowInterruptingCastByMovement && _amex.MoveMightInterruptCast;
-        if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.01f)
+        if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.001f)
         {
             var y = NaviTargetVertical != null && IsVerticalAllowed ? NaviTargetVertical.Value : player.PosRot.Y;
             desiredPosition = new(NaviTargetPos.Value.X, y, NaviTargetPos.Value.Z);
@@ -68,7 +68,7 @@ sealed class AIController(WorldState ws, ActionManagerEx amex, MovementOverride 
 
     private unsafe void ExecuteInteract(DateTime now, Actor target)
     {
-        if (_amex.EffectiveAnimationLock > 0 || now < _nextInteract)
+        if (AIManager.Instance?.Beh == null || _amex.EffectiveAnimationLock > 0 || now < _nextInteract)
             return;
         var obj = GameObjectManager.Instance()->Objects.IndexSorted[target.SpawnIndex].Value;
         if (obj == null || obj->GetGameObjectId() != target.InstanceID)

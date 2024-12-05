@@ -85,15 +85,15 @@ class ExpandingOrb(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Actor> _aoes = [];
     private static readonly AOEShapeCircle circle = new(1.5f);
-    private int Size => (int)(NumCasts * 0.25);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count > 0)
         {
+            var size = Math.Clamp(circle.Radius + NumCasts / 4, default, 12);
             for (var i = 0; i < count; ++i)
-                yield return new(circle with { Radius = Math.Clamp(circle.Radius + Size, default, 12) }, _aoes[i].Position, default, WorldState.FutureTime(1.1f));
+                yield return new(circle with { Radius = size }, _aoes[i].Position, default, WorldState.FutureTime(1.1f));
         }
     }
 

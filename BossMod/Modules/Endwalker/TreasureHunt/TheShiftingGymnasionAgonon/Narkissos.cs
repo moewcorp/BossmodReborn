@@ -90,7 +90,8 @@ class SapShower : Components.LocationTargetedAOEs
 class ExtensibleTendrils(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ExtensibleTendrils), new AOEShapeCross(25, 3));
 class PutridBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PutridBreath), new AOEShapeCone(25, 45.Degrees()));
 class RockHard(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.RockHard), 6);
-class BeguilingGas(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BeguilingGas), "Raidwide + Temporary Misdirection");
+class BeguilingGasTM(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BeguilingGas));
+class BeguilingGas(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeguilingGas));
 
 class HeavySmash(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HeavySmash), 6);
 
@@ -109,29 +110,33 @@ class NarkissosStates : StateMachineBuilder
             .ActivateOnEnter<PutridBreath>()
             .ActivateOnEnter<RockHard>()
             .ActivateOnEnter<BeguilingGas>()
+            .ActivateOnEnter<BeguilingGasTM>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouLampas).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(Narkissos.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12029)]
-public class Narkissos(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class Narkissos(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasiouLampas, (uint)OID.GymnasiouLyssa];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.GymnasiouLyssa).Concat(Enemies(OID.GymnasiouLampas)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.GymnasiouLampas => 3,
-                OID.GymnasiouLyssa => 2,
-                OID.Boss => 1,
+                OID.GymnasiouLampas => 2,
+                OID.GymnasiouLyssa => 1,
                 _ => 0
             };
         }

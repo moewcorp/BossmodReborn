@@ -35,12 +35,13 @@ public class Exaflare(BossModule module, AOEShape shape, ActionID aid = default)
 
     protected IEnumerable<(WPos, DateTime, Angle)> FutureAOEs()
     {
-        foreach (var l in Lines)
+        for (var i = 0; i < Lines.Count; ++i)
         {
+            var l = Lines[i];
             var num = Math.Min(l.ExplosionsLeft, l.MaxShownExplosions);
             var pos = l.Next;
             var time = l.NextExplosion > WorldState.CurrentTime ? l.NextExplosion : WorldState.CurrentTime;
-            for (var i = 1; i < num; ++i)
+            for (var j = 1; j < num; ++j)
             {
                 pos += l.Advance;
                 time = time.AddSeconds(l.TimeToMove);

@@ -84,14 +84,12 @@ class GreedyPixieStates : StateMachineBuilder
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
-            .Raw.Update = () => module.Enemies(OID.SecretMorpho).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.SecretEgg)).Concat(module.Enemies(OID.SecretQueen))
-            .Concat(module.Enemies(OID.SecretOnion)).Concat(module.Enemies(OID.SecretGarlic)).Concat(module.Enemies(OID.SecretTomato)).Concat(module.Enemies(OID.KeeperOfKeys))
-            .Concat(module.Enemies(OID.FuathTrickster)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9797)]
-public class GreedyPixie(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class GreedyPixie(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -103,17 +101,17 @@ public class GreedyPixie(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.SecretOnion => 7,
-                OID.SecretEgg => 6,
-                OID.SecretGarlic => 5,
-                OID.SecretTomato or OID.FuathTrickster => 4,
-                OID.SecretQueen or OID.KeeperOfKeys => 3,
-                OID.SecretMorpho => 2,
-                OID.Boss => 1,
+                OID.SecretOnion => 6,
+                OID.SecretEgg => 5,
+                OID.SecretGarlic => 4,
+                OID.SecretTomato or OID.FuathTrickster => 3,
+                OID.SecretQueen or OID.KeeperOfKeys => 2,
+                OID.SecretMorpho => 1,
                 _ => 0
             };
         }

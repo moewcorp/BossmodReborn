@@ -74,7 +74,7 @@ class GhostlyGuise(BossModule module) : Components.GenericAOEs(module)
     private readonly IllIntentMaliciousMist _seek = module.FindComponent<IllIntentMaliciousMist>()!;
 
     private static readonly WPos[] positions = [new(137.5f, -443.5f), new(158.5f, -443.5f), new(137.5f, -422.5f), new(158.5f, -422.5f)];
-    private static readonly Circle[] circles = positions.Select(pos => new Circle(pos, 3)).ToArray();
+    private static readonly Circle[] circles = [.. positions.Select(pos => new Circle(pos, 3))];
     private static readonly AOEShapeCustom circlesInverted = new(circles, InvertForbiddenZone: true);
     private static readonly AOEShapeCustom circlesAvoid = new(circles, []);
     private bool activated;

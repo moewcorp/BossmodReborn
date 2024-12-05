@@ -23,7 +23,7 @@ public enum AID : uint
 
 class WaterIII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.WaterIII), 8);
 
-class PelagicCleaver(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 30.Degrees()));
+abstract class PelagicCleaver(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 30.Degrees()));
 class PelagicCleaver1(BossModule module) : PelagicCleaver(module, AID.PelagicCleaver1);
 class PelagicCleaver2(BossModule module) : PelagicCleaver(module, AID.PelagicCleaver2);
 
@@ -53,7 +53,7 @@ public class A30Trash1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, LTS, veyn", PrimaryActorOID = (uint)OID.Serpent, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 12478, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, LTS", PrimaryActorOID = (uint)OID.Serpent, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 12478, SortOrder = 1)]
 public class A30Trash1(WorldState ws, Actor primary) : BossModule(ws, primary, new(-800, -800), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

@@ -75,14 +75,12 @@ class TheWingedStates : StateMachineBuilder
             .ActivateOnEnter<Hurl>()
             .ActivateOnEnter<RaucousScritch>()
             .ActivateOnEnter<Spin>()
-            .Raw.Update = () => module.Enemies(OID.GoldWhisker).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.AltarEgg)).Concat(module.Enemies(OID.AltarQueen))
-            .Concat(module.Enemies(OID.AltarOnion)).Concat(module.Enemies(OID.AltarGarlic)).Concat(module.Enemies(OID.AltarTomato)).Concat(module.Enemies(OID.AltarMatanga))
-            .All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => Module.WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7595)]
-public class TheWinged(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class TheWinged(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -93,16 +91,16 @@ public class TheWinged(WorldState ws, Actor primary) : BossModule(ws, primary, n
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.AltarOnion => 6,
-                OID.AltarEgg => 5,
-                OID.AltarGarlic => 4,
-                OID.AltarTomato => 3,
-                OID.AltarQueen or OID.GoldWhisker or OID.AltarMatanga => 2,
-                OID.Boss => 1,
+                OID.AltarOnion => 5,
+                OID.AltarEgg => 4,
+                OID.AltarGarlic => 3,
+                OID.AltarTomato => 2,
+                OID.AltarQueen or OID.GoldWhisker or OID.AltarMatanga => 1,
                 _ => 0
             };
         }

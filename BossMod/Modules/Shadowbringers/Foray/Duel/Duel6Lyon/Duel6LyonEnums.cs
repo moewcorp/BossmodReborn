@@ -42,6 +42,5 @@ public enum AID : uint
 public enum SID : uint
 {
     OnFire = 2547, // Boss->Boss
-    TemporaryMisdirection = 1422, // Boss->player, extra=0x2D0
     DuelOrDie = 2545, // Boss/Helper->player
 }

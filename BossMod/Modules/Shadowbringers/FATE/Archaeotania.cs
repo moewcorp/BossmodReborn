@@ -64,7 +64,7 @@ class Megaflare(BossModule module) : Components.UniformStackSpread(module, 6, 0)
         base.Update();
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Megaflare)
             AddStack(actor, WorldState.FutureTime(5));
@@ -112,5 +112,5 @@ class ArchaeotaniaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1432, NameID = 8234)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1432, NameID = 8234)]
 public class Archaeotania(WorldState ws, Actor primary) : BossModule(ws, primary, new(279, 249), new ArenaBoundsSquare(29));

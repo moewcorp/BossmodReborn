@@ -16,9 +16,10 @@ class OneTwoPaw(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
+        var count = _aoes.Count;
+        if (count > 0)
             yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
+        if (count > 1)
             yield return _aoes[1] with { Risky = false };
     }
 
@@ -68,7 +69,7 @@ class OneTwoPaw(BossModule module) : Components.GenericAOEs(module)
     {
         if (helper != null && _currentPattern != Pattern.None)
         {
-            var angle = _currentPattern == Pattern.EastWest ? angles : angles.AsEnumerable().Reverse().ToArray();
+            var angle = _currentPattern == Pattern.EastWest ? angles : [.. angles.AsEnumerable().Reverse()];
             _aoes.Add(new(cone, helper.Position, angle[0], WorldState.FutureTime(8.7f)));
             _aoes.Add(new(cone, helper.Position, angle[1], WorldState.FutureTime(10.7f)));
             _currentPattern = Pattern.None;

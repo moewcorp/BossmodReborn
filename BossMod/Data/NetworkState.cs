@@ -36,6 +36,6 @@ public sealed class NetworkState
             .Emit(Packet.Epoch)
             .Emit(Packet.SourceServerActor, "X8")
             .Emit(Packet.SendTimestamp.Ticks)
-            .Emit(Packet.Payload.ToArray());
+            .Emit([.. Packet.Payload]);
     }
 }

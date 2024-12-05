@@ -51,12 +51,6 @@ public enum AID : uint
     PoisonDaggers = 39046, // Helper->player/TentoawaTheWideEye/LoazenikweTheShutEye, no cast, single-target
 }
 
-public enum TetherID : uint
-{
-    Wakeup = 45, // Zundus->TentoawaTheWideEye
-    Daggerflight = 84, // BossP2->TentoawaTheWideEye/player
-}
-
 class Bladestorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bladestorm), new AOEShapeCone(20, 45.Degrees()));
 class KeenTempest(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.KeenTempest), new AOEShapeCircle(8))
 {
@@ -90,7 +84,7 @@ class AetherialRay(BossModule module) : Components.SelfTargetedAOEs(module, Acti
 class Aethershot(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Aethershot), 5);
 class BloodyTrinity(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.BloodyTrinity));
 class PoisonDaggers(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.PoisonDaggersVisual));
-class Daggerflight(BossModule module) : Components.InterceptTether(module, ActionID.MakeSpell(AID.DaggerflightVisual), (uint)TetherID.Daggerflight)
+class Daggerflight(BossModule module) : Components.InterceptTether(module, ActionID.MakeSpell(AID.DaggerflightVisual))
 {
     private DateTime _activation;
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -100,15 +94,13 @@ class Daggerflight(BossModule module) : Components.InterceptTether(module, Actio
             _activation = Module.CastFinishAt(spell, 0.2f);
     }
 
-    //TODO: consider moving this logic to the component
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Active)
         {
             var source = Module.PrimaryActor;
             var target = Module.Enemies(OID.TentoawaTheWideEye).FirstOrDefault()!;
-            var direction = (target.Position - source.Position).Normalized();
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position - (source.HitboxRadius + 0.1f) * Angle.FromDirection(direction).ToDirection(), source.Position, 0.5f), _activation);
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), _activation);
         }
     }
 }
@@ -168,10 +160,7 @@ public class DreamsOfANewDay(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.BossP2).Concat([PrimaryActor]).Concat(Enemies(OID.UnboundRaider1)).Concat(Enemies(OID.UnboundRaider2))
-        .Concat(Enemies(OID.UnboundRaider3)).Concat(Enemies(OID.UnboundRaider4)).Concat(Enemies(OID.UnboundRavager1)).Concat(Enemies(OID.UnboundRavager2))
-        .Concat(Enemies(OID.UnboundRavager3)).Concat(Enemies(OID.UnboundRavager4)).Concat(Enemies(OID.UnboundRavager5)).Concat(Enemies(OID.UnboundRavager6)
-        .Concat(Enemies(OID.UnboundRavager7))).Concat(Enemies(OID.UnboundRavager8)));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
     }
 
     protected override bool CheckPull() => Raid.WithoutSlot().Any(x => x.InCombat);

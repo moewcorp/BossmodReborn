@@ -84,14 +84,14 @@ public sealed class RotationModuleManager : IDisposable
         {
             Service.Log($"[RMM] Changing active plan: '{Planner?.Plan?.Guid}' -> '{expectedPlan?.Guid}'");
             Planner = Bossmods.ActiveModule != null ? new(Bossmods.ActiveModule, expectedPlan) : null;
-            DirtyActiveModules(Preset == null);
+            DirtyActiveModules(_preset == null);
         }
 
         // rebuild modules if needed
-        ActiveModules ??= Preset != null ? RebuildActiveModules(Preset.Modules.Keys) : Planner?.Plan != null ? RebuildActiveModules(Planner.Plan.Modules.Keys) : [];
+        ActiveModules ??= _preset != null ? RebuildActiveModules(_preset.Modules.Keys) : Planner?.Plan != null ? RebuildActiveModules(Planner.Plan.Modules.Keys) : [];
 
         // forced target update
-        if (Hints.ForcedTarget == null && Preset == null && Planner?.ActiveForcedTarget() is var forced && forced != null)
+        if (Hints.ForcedTarget == null && _preset == null && Planner?.ActiveForcedTarget() is var forced && forced != null)
         {
             Hints.ForcedTarget = forced.Value.Target != StrategyTarget.Automatic
                 ? ResolveTargetOverride(forced.Value.Target, forced.Value.TargetParam)
@@ -100,10 +100,11 @@ public sealed class RotationModuleManager : IDisposable
 
         // auto actions
         var target = Hints.ForcedTarget ?? WorldState.Actors.Find(Player?.TargetID ?? 0);
-        foreach (var m in ActiveModules)
+        for (var i = 0; i < ActiveModules.Count; ++i)
         {
+            var m = ActiveModules[i];
             var mt = m.Module.GetType();
-            var values = Preset?.ActiveStrategyOverrides(mt) ?? Planner?.ActiveStrategyOverrides(mt) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
+            var values = _preset?.ActiveStrategyOverrides(mt) ?? Planner?.ActiveStrategyOverrides(mt) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
             m.Module.Execute(values, target, estimatedAnimLockDelay, isMoving);
         }
     }
@@ -166,16 +167,16 @@ public sealed class RotationModuleManager : IDisposable
 
         CombatStart = actor.InCombat ? WorldState.CurrentTime : default; // keep track of combat time in case rotation modules want to do something special in openers
 
-        if (!actor.InCombat && (Preset == ForceDisable || Config.ClearPresetOnCombatEnd))
+        if (!actor.InCombat && (_preset == ForceDisable || Config.ClearPresetOnCombatEnd))
         {
             // player exits combat => clear manual overrides
-            Service.Log($"[RMM] Player exits combat => clear preset '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player exits combat => clear preset '{_preset?.Name ?? "<n/a>"}'");
             Preset = null;
         }
         else if (actor.InCombat && WorldState.Client.CountdownRemaining > Config.EarlyPullThreshold)
         {
             // player enters combat while countdown is in progress => force disable
-            Service.Log($"[RMM] Player ninja pulled => force-disabling from '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player ninja pulled => force-disabling from '{_preset?.Name ?? "<n/a>"}'");
             Preset = ForceDisable;
         }
         // if player enters combat when countdown is either not active or around zero, proceed normally - if override is queued, let it run, otherwise let plan run
@@ -190,7 +191,7 @@ public sealed class RotationModuleManager : IDisposable
         if (actor.IsDead && actor.InCombat)
         {
             // player died in combat => force disable (otherwise there's a risk of dying immediately after rez)
-            Service.Log($"[RMM] Player died in combat => force-disabling from '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player died in combat => force-disabling from '{_preset?.Name ?? "<n/a>"}'");
             Preset = ForceDisable;
         }
         // else: player either died outside combat (no need to touch anything) or rez'd (unless player cleared override, we stay in force disable mode)
@@ -202,14 +203,14 @@ public sealed class RotationModuleManager : IDisposable
         {
             // countdown ended and player is not in combat - so either it was cancelled, or pull didn't happen => clear manual overrides
             // note that if pull will happen regardless after this, we'll start executing plan normally (without prepull part)
-            Service.Log($"[RMM] Countdown expired or aborted => clear preset '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Countdown expired or aborted => clear preset '{_preset?.Name ?? "<n/a>"}'");
             Preset = null;
         }
     }
 
     private void OnPresetModified(Preset? prev, Preset? curr)
     {
-        if (prev != null && prev == Preset)
+        if (prev != null && prev == _preset)
             Preset = curr;
     }
 

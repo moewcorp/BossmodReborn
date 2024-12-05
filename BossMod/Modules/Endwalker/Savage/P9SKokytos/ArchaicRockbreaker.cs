@@ -110,7 +110,7 @@ class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(
         {
             var safespots = new ArcList(_aoes[0].Origin, _shapeOut.Radius + 0.25f);
             foreach (var f in forbidden.ActiveCasters)
-                safespots.ForbidCircle(f.Position, forbidden.Shape.Radius);
+                safespots.ForbidCircle(f.Origin, 8);
             if (safespots.Forbidden.Segments.Count > 0)
             {
                 foreach (var a in safespots.Allowed(default))

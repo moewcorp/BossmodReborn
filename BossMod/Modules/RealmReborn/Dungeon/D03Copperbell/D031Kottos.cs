@@ -34,7 +34,7 @@ class D031KottosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
 public class D031Kottos(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly ArenaBoundsComplex arena = new([new Circle(new(43, -89.8f), 14.75f)], [new Rectangle(new(42.9f, -105.9f), 20, 2), new Circle(new(39.5f, -74.4f), 1.5f), new Circle(new(47.5f, -74.4f), 1.8f)]);

@@ -20,7 +20,7 @@ class P2Eruption(BossModule module) : Components.LocationTargetedAOEs(module, Ac
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_baiters[pcSlot])
-            Arena.AddCircle(pc.Position, Shape.Radius, Colors.Safe);
+            Arena.AddCircle(pc.Position, 8, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

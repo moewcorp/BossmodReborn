@@ -19,7 +19,7 @@ class CrossTailSwitchLast(BossModule module) : Components.CastCounter(module, Ac
 class WickedSpecialCenter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WickedSpecialCenterAOE), new AOEShapeRect(40, 10));
 class WickedSpecialSides(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WickedSpecialSidesAOE), new AOEShapeRect(40, 7.5f));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 992, NameID = 13057, PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 992, NameID = 13057, PlanLevel = 100)]
 public class M04SWickedThunder(WorldState ws, Actor primary) : BossModule(ws, primary, P1DefaultCenter, P1DefaultBounds)
 {
     public static readonly WPos P1DefaultCenter = new(100, 100);

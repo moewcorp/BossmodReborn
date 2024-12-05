@@ -187,7 +187,7 @@ public record struct Stampede(bool Active, WPos Position, Angle Rotation, IReadO
     public DateTime Reset;
 }
 
-class Icebreaker(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17);
+class Icebreaker(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17, targetIsLocation: true);
 
 class IcyThroes(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(6));
 class IcyThroes1(BossModule module) : IcyThroes(module, AID.IcyThroes1);

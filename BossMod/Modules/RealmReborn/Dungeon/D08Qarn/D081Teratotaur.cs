@@ -95,7 +95,7 @@ class D081TeratotaurStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1567)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1567)]
 public class D081Teratotaur(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly PolygonCustom[] shape = [new ([new(-94.9f, -59), new(-70.2f, -46.1f), new(-55.3f, -46.6f),

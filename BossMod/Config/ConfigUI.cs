@@ -97,6 +97,7 @@ public sealed class ConfigUI : IDisposable
         { "positional X", "Switch to positional when following targets. (any, rear, flank, front)" },
         { "maxdistancetarget X", "Sets max distance to target. (default = 2.6)" },
         { "maxdistanceslot X", "Sets max distance to slot. (default = 1)" },
+        { "overrideautorotation", "Overrides autorotation distance and positional values with custom settings." },
         { "setpresetname X", "Sets an autorotation preset for the AI, eg. setpresetname vbm default." }
     };
 

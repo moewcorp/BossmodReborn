@@ -124,28 +124,31 @@ class LyssaChrysineStates : StateMachineBuilder
             .ActivateOnEnter<FrigidStone>()
             .ActivateOnEnter<HeavySmash2>()
             .ActivateOnEnter<PillarPierce>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouLampas).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(LyssaChrysine.All).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12024)]
-public class LyssaChrysine(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class LyssaChrysine(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasiouLampas, (uint)OID.GymnasiouLyssa];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.GymnasiouLyssa).Concat(Enemies(OID.GymnasiouLampas)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.GymnasiouLampas => 3,
-                OID.GymnasiouLyssa => 2,
-                OID.Boss => 1,
+                OID.GymnasiouLampas => 2,
+                OID.GymnasiouLyssa => 1,
                 _ => 0
             };
         }

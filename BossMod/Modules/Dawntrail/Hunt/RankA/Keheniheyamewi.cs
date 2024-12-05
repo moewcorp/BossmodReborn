@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Hunt.RankA.Keheniheyamewi;
+namespace BossMod.Dawntrail.Hunt.RankA.Keheniheyamewi;
 
 public enum OID : uint
 {
@@ -8,6 +8,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     Scatterscourge1 = 39807, // Boss->self, 4.0s cast, range 10-40 donut
     BodyPress = 40063, // Boss->self, 4.0s cast, range 15 circle
     SlipperyScatterscourge = 38648, // Boss->self, 5.0s cast, range 20 width 10 rect
@@ -16,7 +17,7 @@ public enum AID : uint
     PoisonGas = 38652, // Boss->self, 5.0s cast, range 60 circle
     BodyPress2 = 38651, // Boss->self, 4.0s cast, range 15 circle
     MalignantMucus = 38653, // Boss->self, 5.0s cast, single-target
-    PoisonMucus = 38654, // Boss->location, 1.0s cast, range 6 circle
+    PoisonMucus = 38654 // Boss->location, 1.0s cast, range 6 circle
 }
 
 public enum SID : uint
@@ -29,7 +30,7 @@ public enum SID : uint
 
 class BodyPress(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BodyPress), new AOEShapeCircle(15));
 class BodyPress2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BodyPress2), new AOEShapeCircle(15));
-class Scatterscourge1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Scatterscourge1), new AOEShapeDonut(10, 40));
+class Scatterscourge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Scatterscourge1), new AOEShapeDonut(10, 40));
 
 class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
 {
@@ -68,29 +69,30 @@ class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID != (uint)AID.SlipperyScatterscourge)
             return;
-
+        var activation = WorldState.FutureTime(10);
         _caster = caster;
         _finishedCast = false;
-        _activeAOEs.Add(new(_shapeRect, _caster.Position, _caster.Rotation, WorldState.FutureTime(10), Colors.Danger));
+        _activeAOEs.Add(new(_shapeRect, _caster.Position, _caster.Rotation, activation, Colors.Danger));
 
         var rectEndPosition = GetRectEndPosition(_caster.Position, _caster.Rotation, _shapeRect.LengthFront);
 
-        _activeAOEs.Add(new(_shapeDonut, rectEndPosition, default, WorldState.FutureTime(10)));
-        _activeAOEs.Add(new(_shapeCircle, rectEndPosition, default, WorldState.FutureTime(10), Colors.SafeFromAOE, false));
+        _activeAOEs.Add(new(_shapeDonut, rectEndPosition, default, activation));
+        _activeAOEs.Add(new(_shapeCircle, rectEndPosition, default, activation, Colors.SafeFromAOE, false));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.SlipperyScatterscourge)
         {
+            var activation = WorldState.FutureTime(10);
             var index = _activeAOEs.FindIndex(aoe => aoe.Shape == _shapeDonut);
             if (index != -1)
             {
-                _activeAOEs[index] = new(_shapeDonut, _activeAOEs[index].Origin, _activeAOEs[index].Rotation, WorldState.FutureTime(10), Colors.Danger, true);
+                _activeAOEs[index] = new(_shapeDonut, _activeAOEs[index].Origin, _activeAOEs[index].Rotation, activation, Colors.Danger);
                 var circleIndex = _activeAOEs.FindIndex(aoe => aoe.Shape == _shapeCircle);
                 if (circleIndex != -1)
                 {
-                    _activeAOEs[circleIndex] = new(_shapeCircle, _activeAOEs[circleIndex].Origin, _activeAOEs[circleIndex].Rotation, WorldState.FutureTime(10), Colors.SafeFromAOE, false);
+                    _activeAOEs[circleIndex] = new(_shapeCircle, _activeAOEs[circleIndex].Origin, _activeAOEs[circleIndex].Rotation, activation, Colors.SafeFromAOE, false);
                 }
             }
             _finishedCast = true;
@@ -119,19 +121,20 @@ class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class PoisonGas(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PoisonGas), new AOEShapeCircle(60));
+class PoisonGas(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PoisonGas), "Applies Forced March!");
 
-class PoisonGasMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 13, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace) // TODO: AI still doesn't seem to always get the correct safe spot on this :(
+class PoisonGasMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, 5)
 {
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         return Module.FindComponent<SlipperyScatterscourge>()?.ActiveAOEs(slot, actor).Any(a => a.Color != Colors.SafeFromAOE && a.Shape.Check(pos, a.Origin, a.Rotation)) ?? false;
     }
 
-    public override void AddGlobalHints(GlobalHints hints)
+    public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (Module.PrimaryActor.CastInfo?.IsSpell(AID.PoisonGas) ?? false)
-            hints.Add("Forced March! Check debuff and aim towards the safe zone!");
+        var last = ForcedMovements(actor).LastOrDefault();
+        if (last.from != last.to && DestinationUnsafe(slot, actor, last.to))
+            hints.Add("Aim for green safe spot!");
     }
 }
 
@@ -145,7 +148,7 @@ class KeheniheyamewiStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<BodyPress>()
             .ActivateOnEnter<BodyPress2>()
-            .ActivateOnEnter<Scatterscourge1>()
+            .ActivateOnEnter<Scatterscourge>()
             .ActivateOnEnter<SlipperyScatterscourge>()
             .ActivateOnEnter<PoisonGas>()
             .ActivateOnEnter<PoisonGasMarch>()
@@ -154,5 +157,6 @@ class KeheniheyamewiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13401)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13401)]
 public class Keheniheyamewi(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+

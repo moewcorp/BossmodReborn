@@ -103,16 +103,68 @@ class Inhale(BossModule module) : Components.GenericAOEs(module)
 class PunutiyPress(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PunutiyPress));
 class Hydrowave(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Hydrowave), new AOEShapeCone(60, 15.Degrees()));
 
-class Bury1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury1), new AOEShapeCircle(12));
-class Bury2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury2), new AOEShapeRect(35, 5));
-class Bury3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury3), new AOEShapeCircle(8));
-class Bury4(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury4), new AOEShapeCircle(4));
-class Bury5(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury5), new AOEShapeRect(25, 3));
-class Bury6(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury6), new AOEShapeCircle(6));
-class Bury7(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury7), new AOEShapeRect(25, 3));
-class Bury8(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bury8), new AOEShapeRect(35, 5));
+class BuryDecay(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(12), new AOEShapeRect(35, 5), new AOEShapeCircle(8), new AOEShapeCircle(4),
+    new AOEShapeRect(25, 3), new AOEShapeCircle(6), new AOEShapeRect(25, 3), new AOEShapeRect(35, 5), new AOEShapeDonut(6, 40)];
+    private static readonly HashSet<AID> castEnd = [AID.Bury1, AID.Bury2, AID.Bury3, AID.Bury4, AID.Bury5, AID.Bury6, AID.Bury7, AID.Bury8, AID.Decay];
 
-class Decay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Decay), new AOEShapeDonut(6, 40));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 2)
+                yield return count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else if (i > 1)
+                yield return aoe;
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        void AddAOE(AOEShape shape)
+        => _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+        switch ((AID)spell.Action.ID)
+        {
+            case AID.Bury1:
+                AddAOE(_shapes[0]);
+                break;
+            case AID.Bury2:
+                AddAOE(_shapes[1]);
+                break;
+            case AID.Bury3:
+                AddAOE(_shapes[2]);
+                break;
+            case AID.Bury4:
+                AddAOE(_shapes[3]);
+                break;
+            case AID.Bury5:
+                AddAOE(_shapes[4]);
+                break;
+            case AID.Bury6:
+                AddAOE(_shapes[5]);
+                break;
+            case AID.Bury7:
+                AddAOE(_shapes[6]);
+                break;
+            case AID.Bury8:
+                AddAOE(_shapes[7]);
+                break;
+            case AID.Decay:
+                AddAOE(_shapes[8]);
+                break;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (_aoes.Count != 0 && castEnd.Contains((AID)spell.Action.ID))
+            _aoes.RemoveAt(0);
+    }
+}
 
 class PunutiyFlop1(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.PunutiyFlop1), 14);
 class PunutiyFlop2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.PunutiyFlop2), 6);
@@ -153,15 +205,7 @@ class D011PrimePunutiyStates : StateMachineBuilder
             .ActivateOnEnter<PunutiyPress>()
             .ActivateOnEnter<Hydrowave>()
             .ActivateOnEnter<HydrowaveBait>()
-            .ActivateOnEnter<Bury1>()
-            .ActivateOnEnter<Bury2>()
-            .ActivateOnEnter<Bury3>()
-            .ActivateOnEnter<Bury4>()
-            .ActivateOnEnter<Bury5>()
-            .ActivateOnEnter<Bury6>()
-            .ActivateOnEnter<Bury7>()
-            .ActivateOnEnter<Bury8>()
-            .ActivateOnEnter<Decay>()
+            .ActivateOnEnter<BuryDecay>()
             .ActivateOnEnter<PunutiyFlop1>()
             .ActivateOnEnter<PunutiyFlop2>()
             .ActivateOnEnter<ShoreShaker>();
@@ -171,9 +215,10 @@ class D011PrimePunutiyStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 826, NameID = 12723)]
 public class D011PrimePunutiy(WorldState ws, Actor primary) : BossModule(ws, primary, new(35, -95), new ArenaBoundsSquare(19.5f))
 {
+    private static readonly uint[] adds = [(uint)OID.Punutiy, (uint)OID.PetitPunutiy, (uint)OID.ProdigiousPunutiy];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Punutiy).Concat(Enemies(OID.PetitPunutiy)).Concat(Enemies(OID.ProdigiousPunutiy)));
+        Arena.Actors(Enemies(adds));
     }
 }

@@ -107,15 +107,13 @@ public sealed class Plugin : IDalamudPlugin
         _wndReplay = new ReplayManagementWindow(_ws, _bossmod, _rotationDB, new DirectoryInfo(replayDir));
         _configUI = new(Service.Config, _ws, new DirectoryInfo(replayDir), _rotationDB);
         config.Modified.ExecuteAndSubscribe(() => _wndReplay.UpdateLogDirectory());
-        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
-        _wndDebug = new(_ws, _rotation, _zonemod, _amex, _hintsBuilder, dalamud);
+        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotation presets"));
+        _wndDebug = new(_ws, _rotation, _zonemod, _amex, _movementOverride, _hintsBuilder, dalamud);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
         dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
         dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
-
-        _ = new ConfigChangelogWindow();
     }
 
     public void Dispose()
@@ -291,13 +289,14 @@ public sealed class Plugin : IDalamudPlugin
         // see ActionManager.IsActionUnlocked
         var gameMain = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
         return link == 0
-            || Service.LuminaRow<Lumina.Excel.GeneratedSheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse == 31 // deep dungeons check is hardcoded in game
+            || Service.LuminaRow<Lumina.Excel.Sheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse.RowId == 31 // deep dungeons check is hardcoded in game
             || FFXIVClientStructs.FFXIV.Client.Game.UI.UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(link);
     }
 
     private unsafe void ExecuteHints()
     {
         _movementOverride.DesiredDirection = _hints.ForcedMovement;
+        _movementOverride.MisdirectionThreshold = _hints.MisdirectionThreshold;
         // update forced target, if needed (TODO: move outside maybe?)
         if (_hints.ForcedTarget != null)
         {
@@ -335,12 +334,12 @@ public sealed class Plugin : IDalamudPlugin
                 if (cmd.Length <= 2)
                     Service.Log("Specify an autorotation preset name.");
                 else
-                    ParseAutorotationSetCommand(cmd.Skip(1).ToArray(), false);
+                    ParseAutorotationSetCommand([.. cmd.Skip(1)], false);
                 break;
             case "TOGGLE":
-                ParseAutorotationSetCommand(cmd.Length > 2 ? cmd.Skip(1).ToArray() : [""], true);
+                ParseAutorotationSetCommand(cmd.Length > 2 ? [.. cmd.Skip(1)] : [""], true);
                 break;
-            case "ui":
+            case "UI":
                 _wndRotation.SetVisible(!_wndRotation.IsOpen);
                 break;
         }

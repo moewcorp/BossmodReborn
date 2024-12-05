@@ -93,7 +93,7 @@ public class D151NuzalHueloc(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly && x.FindStatus(SID.Invincibility) == null));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

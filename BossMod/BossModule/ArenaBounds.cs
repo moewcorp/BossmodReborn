@@ -12,6 +12,7 @@ public abstract record class ArenaBounds(float Radius, float MapResolution, floa
     public List<RelTriangle> ShapeTriangulation { get; private set; } = [];
     private readonly PolygonClipper.Operand _clipOperand = new();
     public readonly Dictionary<object, object> Cache = [];
+
 #pragma warning disable IDE0032
     private float _screenHalfSize;
 #pragma warning restore IDE0032
@@ -176,7 +177,7 @@ public record class ArenaBoundsCustom : ArenaBounds
 {
     private const float Epsilon = 1e-5f;
     private Pathfinding.Map? _cachedMap;
-    private readonly RelSimplifiedComplexPolygon poly;
+    public readonly RelSimplifiedComplexPolygon poly;
     private readonly (WDir, WDir)[] edges;
     private readonly float offset;
     public float HalfWidth, HalfHeight;
@@ -220,7 +221,7 @@ public record class ArenaBoundsCustom : ArenaBounds
         var cacheKey = (poly, offset);
         if (Cache.TryGetValue(cacheKey, out var cachedResult))
             return (WDir)cachedResult;
-        if (Contains(offset) || offset.AlmostEqual(default, 1) || offset.X == default) // if actor is almost in the center of the arena, do nothing (eg donut arena)
+        if (Contains(offset) || offset.AlmostEqual(default, 1) || Math.Abs(offset.X) < 0.1f) // if actor is almost in the center of the arena, do nothing (eg donut arena)
         {
             Cache[(poly, offset)] = offset;
             return offset;
