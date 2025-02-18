@@ -5,7 +5,7 @@ class T01AI(BossModule module) : BossComponent(module)
     private readonly Platforms? _platforms = module.FindComponent<Platforms>();
     private readonly HoodSwing? _hoodSwing = module.FindComponent<HoodSwing>();
     private readonly CloneMerge? _clone = module.FindComponent<CloneMerge>();
-    private readonly IReadOnlyList<Actor> _slimes = module.Enemies(OID.DarkMatterSlime);
+    private readonly List<Actor> _slimes = module.Enemies(OID.DarkMatterSlime);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -87,7 +87,7 @@ class T01AI(BossModule module) : BossComponent(module)
                 {
                     e.Priority = 1; // this is a baseline; depending on whether we want to prioritize clone vs boss, clone's priority changes
                     if (cloneSpawningSoon && e.Actor.FindStatus(SID.SteelScales) != null)
-                        e.Priority = AIHints.Enemy.PriorityForbidAI; // stop dps until stack can be dropped
+                        e.Priority = AIHints.Enemy.PriorityPointless; // stop dps until stack can be dropped
                 }
                 else
                 {
@@ -112,9 +112,9 @@ class T01AI(BossModule module) : BossComponent(module)
             else if ((OID)e.Actor.OID == OID.DarkMatterSlime)
             {
                 // for now, let kiter damage it until 20%
-                var predictedHP = (int)e.Actor.HPMP.CurHP + WorldState.PendingEffects.PendingHPDifference(e.Actor.InstanceID);
+                var predictedHP = e.Actor.PredictedHPRaw;
                 //e.Priority = predictedHP > 0.7f * e.Actor.HPMP.MaxHP ? (actor.Role is Role.Ranged or Role.Melee ? 3 : AIHints.Enemy.PriorityForbidAI) : AIHints.Enemy.PriorityForbidAI;
-                e.Priority = predictedHP > 0.2f * e.Actor.HPMP.MaxHP ? (e.Actor.TargetID == actor.InstanceID ? 3 : AIHints.Enemy.PriorityForbidAI) : AIHints.Enemy.PriorityForbidAI;
+                e.Priority = predictedHP > 0.2f * e.Actor.HPMP.MaxHP ? (e.Actor.TargetID == actor.InstanceID ? 3 : AIHints.Enemy.PriorityPointless) : AIHints.Enemy.PriorityPointless;
                 e.ShouldBeTanked = false;
                 e.ForbidDOTs = true;
             }

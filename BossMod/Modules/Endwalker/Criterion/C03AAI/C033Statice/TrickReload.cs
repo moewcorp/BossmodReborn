@@ -2,9 +2,9 @@
 
 class TrickReload(BossModule module) : BossComponent(module)
 {
-    public bool FirstStack { get; private set; }
-    public int SafeSlice { get; private set; }
-    public int NumLoads { get; private set; }
+    public bool FirstStack;
+    public int SafeSlice;
+    public int NumLoads;
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -34,7 +34,7 @@ class TrickReload(BossModule module) : BossComponent(module)
 
 class Trapshooting(BossModule module) : Components.UniformStackSpread(module, 6, 6, 4, alwaysShowSpreads: true)
 {
-    public int NumResolves { get; private set; }
+    public int NumResolves;
     private readonly TrickReload? _reload = module.FindComponent<TrickReload>();
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -44,13 +44,13 @@ class Trapshooting(BossModule module) : Components.UniformStackSpread(module, 6,
             var stack = NumResolves == 0 ? _reload.FirstStack : !_reload.FirstStack;
             if (stack)
             {
-                var target = Raid.WithoutSlot().FirstOrDefault(); // TODO: dunno how target is selected...
+                var target = Raid.WithoutSlot(false, true, true).FirstOrDefault(); // TODO: dunno how target is selected...
                 if (target != null)
                     AddStack(target, Module.CastFinishAt(spell, 4.1f));
             }
             else
             {
-                AddSpreads(Raid.WithoutSlot(true), Module.CastFinishAt(spell, 4.1f));
+                AddSpreads(Raid.WithoutSlot(true, true, true), Module.CastFinishAt(spell, 4.1f));
             }
         }
     }
@@ -79,6 +79,6 @@ class Trapshooting(BossModule module) : Components.UniformStackSpread(module, 6,
     }
 }
 
-abstract class TriggerHappy(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 30.Degrees()));
+abstract class TriggerHappy(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 30.Degrees()));
 class NTriggerHappy(BossModule module) : TriggerHappy(module, AID.NTriggerHappyAOE);
 class STriggerHappy(BossModule module) : TriggerHappy(module, AID.STriggerHappyAOE);

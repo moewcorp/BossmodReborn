@@ -11,7 +11,7 @@ class SwordQuiverRaidwide(BossModule module) : Components.CastCounter(module, de
 
 class SwordQuiverBurst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SwordQuiverBurst))
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(4);
 
     private static readonly AOEShapeRect _shape = new(30, 6, 30);
 
@@ -22,9 +22,9 @@ class SwordQuiverBurst(BossModule module) : Components.GenericAOEs(module, Actio
         if ((AID)spell.Action.ID is AID.SwordQuiverN or AID.SwordQuiverC or AID.SwordQuiverS)
         {
             var activation = Module.CastFinishAt(spell, 8.9f);
-            _aoes.Add(new(_shape, Module.Center, 0.Degrees(), activation));
-            _aoes.Add(new(_shape, Module.Center, 118.Degrees(), activation));
-            _aoes.Add(new(_shape, Module.Center, -118.Degrees(), activation));
+            _aoes.Add(new(_shape, Arena.Center, -0.003f.Degrees(), activation));
+            _aoes.Add(new(_shape, Arena.Center, 117.998f.Degrees(), activation));
+            _aoes.Add(new(_shape, Arena.Center, -118.003f.Degrees(), activation));
 
             var zOffset = (AID)spell.Action.ID switch
             {
@@ -32,7 +32,7 @@ class SwordQuiverBurst(BossModule module) : Components.GenericAOEs(module, Actio
                 AID.SwordQuiverS => +10,
                 _ => 0
             };
-            _aoes.Add(new(_shape, Module.Center + new WDir(0, zOffset), 90.Degrees(), activation));
+            _aoes.Add(new(_shape, Arena.Center + new WDir(0, zOffset), 89.999f.Degrees(), activation));
         }
     }
 }
@@ -44,7 +44,7 @@ class SwordQuiverLaceration(BossModule module) : Components.CastCounter(module, 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         var dir = Angle.FromDirection(actor.Position - Module.Center);
-        var clipped = Raid.WithoutSlot().Exclude(actor).InShape(_shape, Module.Center, dir).CountByCondition(p => p.Class.IsSupport() == actor.Class.IsSupport());
+        var clipped = Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, Module.Center, dir).CountByCondition(p => p.Class.IsSupport() == actor.Class.IsSupport());
         if (clipped.match != 0 || clipped.mismatch != 1)
             hints.Add("Spread by roles!");
     }

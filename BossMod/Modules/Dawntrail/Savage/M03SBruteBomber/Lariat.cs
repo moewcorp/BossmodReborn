@@ -1,9 +1,12 @@
 ﻿namespace BossMod.Dawntrail.Savage.M03SBruteBomber;
 
-class OctupleLariatOut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OctupleLariatOutAOE), new AOEShapeCircle(10));
-class OctupleLariatIn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OctupleLariatInAOE), new AOEShapeDonut(10, 60));
-class QuadrupleLariatOut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.QuadrupleLariatOutAOE), new AOEShapeCircle(10));
-class QuadrupleLariatIn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.QuadrupleLariatInAOE), new AOEShapeDonut(10, 60));
+abstract class LariatOut(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
+class OctupleLariatOut(BossModule module) : LariatOut(module, AID.OctupleLariatOutAOE);
+class QuadrupleLariatOut(BossModule module) : LariatOut(module, AID.QuadrupleLariatOutAOE);
+
+abstract class LariatIn(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(10, 60));
+class OctupleLariatIn(BossModule module) : LariatIn(module, AID.OctupleLariatInAOE);
+class QuadrupleLariatIn(BossModule module) : LariatIn(module, AID.QuadrupleLariatInAOE);
 
 // TODO: generalize to a conal stack/spread with role-based targets
 class BlazingLariat(BossModule module) : Components.CastCounter(module, default)
@@ -21,7 +24,7 @@ class BlazingLariat(BossModule module) : Components.CastCounter(module, default)
         if (_source != null)
         {
             var pcDir = Angle.FromDirection(actor.Position - _source.Position);
-            var clipped = Raid.WithoutSlot().Exclude(actor).InShape(ActiveShape, _source.Position, pcDir);
+            var clipped = Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(ActiveShape, _source.Position, pcDir);
             if (_stack)
             {
                 var cond = clipped.CountByCondition(a => a.Class.IsSupport() == actor.Class.IsSupport());

@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     Efface = 15595, // Boss->player, 4.5s cast, single-target
     Wellbore = 15597, // Boss->self, 7.0s cast, range 15 circle
     GeyserEruption = 15598, // Helper->self, 3.5s cast, range 8 circle
@@ -20,25 +21,24 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Tankbuster = 198, // player
     RotateCCW = 157, // Boss
     RotateCW = 156 // Boss
 }
 
 class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly Angle a60 = 60.Degrees();
+    private static readonly Angle a60 = 60f.Degrees();
     private Angle _increment;
     private Angle _rotation;
     private DateTime _activation;
-    private static readonly AOEShapeCone _shape = new(50, 30.Degrees());
+    private static readonly AOEShapeCone _shape = new(50f, 30f.Degrees());
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = (IconID)iconID switch
+        var increment = iconID switch
         {
-            IconID.RotateCW => -a60,
-            IconID.RotateCCW => a60,
+            (uint)IconID.RotateCW => -a60,
+            (uint)IconID.RotateCCW => a60,
             _ => default
         };
         if (increment != default)
@@ -50,7 +50,7 @@ class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(modu
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SwiftSpillFirst)
+        if (spell.Action.ID == (uint)AID.SwiftSpillFirst)
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell);
@@ -61,7 +61,7 @@ class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(modu
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Sequences.Count > 0 && (AID)spell.Action.ID is AID.SwiftSpillFirst or AID.SwiftSpillRest)
+        if (spell.Action.ID is (uint)AID.SwiftSpillFirst or (uint)AID.SwiftSpillRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 
@@ -78,10 +78,29 @@ class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(modu
 
 class Efface(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Efface));
 class HighPressureRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HighPressure));
-class HighPressureKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HighPressure), 20, stopAtWall: true);
-class GeyserEruption(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GeyserEruption), new AOEShapeCircle(8));
-class Geysers(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.Geyser).Where(v => v.EventState != 7));
-class Wellbore(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Wellbore), new AOEShapeCircle(15));
+class HighPressureKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HighPressure), 20f, stopAtWall: true);
+class GeyserEruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GeyserEruption), 8f);
+class Geysers(BossModule module) : Components.PersistentVoidzone(module, 4, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Geyser);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+class Wellbore(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Wellbore), 15);
 
 class D042AmphibiousTalosStates : StateMachineBuilder
 {
@@ -101,7 +120,5 @@ class D042AmphibiousTalosStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8250)]
 public class D042AmphibiousTalos(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly Circle[] union = [new Circle(new(208, 275), 19.55f)];
-    private static readonly Rectangle[] difference = [new Rectangle(new(208, 255.4f), 20, 1), new Rectangle(new(208, 294.55f), 20, 1)];
-    private static readonly ArenaBoundsComplex arena = new(union, difference);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(208f, 275f), 19.5f, 48)], [new Rectangle(new(208f, 255.45f), 20f, 1f), new Rectangle(new(208.089f, 294.664f), 20f, 1.25f, 1.92f.Degrees())]);
 }

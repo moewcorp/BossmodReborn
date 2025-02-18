@@ -46,17 +46,17 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
     public float ScreenMarginSize => 20 * Config.ArenaScale;
 
     // these are set at the beginning of each draw
-    public Vector2 ScreenCenter { get; private set; }
+    public Vector2 ScreenCenter;
     private Angle _cameraAzimuth;
     private float _cameraSinAzimuth;
     private float _cameraCosAzimuth = 1;
 
-    public bool InBounds(WPos position) => Bounds.Contains(position - Center);
-    public WPos ClampToBounds(WPos position) => Center + Bounds.ClampToBounds(position - Center);
-    public float IntersectRayBounds(WPos rayOrigin, WDir rayDir) => Bounds.IntersectRay(rayOrigin - Center, rayDir);
+    public bool InBounds(WPos position) => _bounds.Contains(position - _center);
+    public WPos ClampToBounds(WPos position) => _center + _bounds.ClampToBounds(position - _center);
+    public float IntersectRayBounds(WPos rayOrigin, WDir rayDir) => _bounds.IntersectRay(rayOrigin - _center, rayDir);
 
     // prepare for drawing - set up internal state, clip rect etc.
-    public async Task Begin(Angle cameraAzimuth)
+    public void Begin(Angle cameraAzimuth)
     {
         var centerOffset = new Vector2(ScreenMarginSize + Config.SlackForRotations * ScreenHalfSize);
         var fullSize = 2 * centerOffset;
@@ -66,7 +66,7 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var cursor = ImGui.GetCursorScreenPos();
         ImGui.Dummy(fullSize);
 
-        if (Bounds.ScreenHalfSize != ScreenHalfSize)
+        if (_bounds.ScreenHalfSize != ScreenHalfSize)
         {
             Bounds.ScreenHalfSize = ScreenHalfSize;
             _triCache.Invalidate();
@@ -86,13 +86,8 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
         if (Config.OpaqueArenaBackground)
         {
-            await GenerateBackgroundAsync().ConfigureAwait(true);
+            Zone(_bounds.ShapeTriangulation, Colors.Background);
         }
-    }
-    private Task GenerateBackgroundAsync()
-    {
-        Zone(Bounds.ShapeTriangulation, Colors.Background);
-        return Task.CompletedTask;
     }
 
     // if you are 100% sure your primitive does not need clipping, you can use drawlist api directly
@@ -115,7 +110,7 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
     private Vector2 WorldOffsetToScreenOffset(WDir worldOffset)
     {
-        return ScreenHalfSize * RotatedCoords(worldOffset.ToVec2()) / Bounds.Radius;
+        return ScreenHalfSize * RotatedCoords(worldOffset.ToVec2()) / _bounds.Radius;
     }
 
     // unclipped primitive rendering that accept world-space positions; thin convenience wrappers around drawlist api
@@ -156,14 +151,15 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
     public void AddCircle(WPos center, float radius, uint color = 0, float thickness = 1)
     {
+        var radiusscreenhalfsize = radius / _bounds.Radius * ScreenHalfSize;
         if (Config.ShowOutlinesAndShadows)
-            ImGui.GetWindowDrawList().AddCircle(WorldPositionToScreenPosition(center), radius / Bounds.Radius * ScreenHalfSize, Colors.Shadows, 0, thickness + 1);
-        ImGui.GetWindowDrawList().AddCircle(WorldPositionToScreenPosition(center), radius / Bounds.Radius * ScreenHalfSize, color != 0 ? color : Colors.Danger, 0, thickness);
+            ImGui.GetWindowDrawList().AddCircle(WorldPositionToScreenPosition(center), radiusscreenhalfsize, Colors.Shadows, 0, thickness + 1);
+        ImGui.GetWindowDrawList().AddCircle(WorldPositionToScreenPosition(center), radiusscreenhalfsize, color != 0 ? color : Colors.Danger, 0, thickness);
     }
 
     public void AddCircleFilled(WPos center, float radius, uint color = 0)
     {
-        ImGui.GetWindowDrawList().AddCircleFilled(WorldPositionToScreenPosition(center), radius / Bounds.Radius * ScreenHalfSize, color != 0 ? color : Colors.Danger);
+        ImGui.GetWindowDrawList().AddCircleFilled(WorldPositionToScreenPosition(center), radius / _bounds.Radius * ScreenHalfSize, color != 0 ? color : Colors.Danger);
     }
 
     public void AddCone(WPos center, float radius, Angle centerDirection, Angle halfAngle, uint color = 0, float thickness = 1)
@@ -172,7 +168,7 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var sDir = Angle.HalfPi - centerDirection.Rad + _cameraAzimuth.Rad;
         var drawlist = ImGui.GetWindowDrawList();
         drawlist.PathLineTo(sCenter);
-        drawlist.PathArcTo(sCenter, radius / Bounds.Radius * ScreenHalfSize, sDir - halfAngle.Rad, sDir + halfAngle.Rad);
+        drawlist.PathArcTo(sCenter, radius / _bounds.Radius * ScreenHalfSize, sDir - halfAngle.Rad, sDir + halfAngle.Rad);
         drawlist.PathStroke(color != 0 ? color : Colors.Danger, ImDrawFlags.Closed, thickness);
     }
 
@@ -181,25 +177,24 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var sCenter = WorldPositionToScreenPosition(center);
         var sDir = Angle.HalfPi - centerDirection.Rad + _cameraAzimuth.Rad;
         var drawlist = ImGui.GetWindowDrawList();
-        var invRadius = 1 / Bounds.Radius * ScreenHalfSize;
         var sDirP = sDir + halfAngle.Rad;
         var sDirN = sDir - halfAngle.Rad;
-        drawlist.PathArcTo(sCenter, innerRadius * invRadius, sDirP, sDirN);
-        drawlist.PathArcTo(sCenter, outerRadius * invRadius, sDirN, sDirP);
+        drawlist.PathArcTo(sCenter, innerRadius / Bounds.Radius * ScreenHalfSize, sDirP, sDirN);
+        drawlist.PathArcTo(sCenter, outerRadius / Bounds.Radius * ScreenHalfSize, sDirN, sDirP);
         drawlist.PathStroke(color != 0 ? color : Colors.Danger, ImDrawFlags.Closed, thickness);
     }
 
     public void AddCapsule(WPos start, WDir direction, float radius, float length, uint color = 0, float thickness = 1)
     {
         var dirNorm = direction.Normalized();
-        var halfLength = length * 0.5f;
-        var capsuleStart = start - dirNorm * halfLength;
-        var capsuleEnd = start + dirNorm * halfLength;
+        var halfLengthdirNorm = dirNorm * length * 0.5f;
+        var capsuleStart = start - halfLengthdirNorm;
+        var capsuleEnd = start + halfLengthdirNorm;
         var orthoDir = dirNorm.OrthoR();
 
         var drawList = ImGui.GetWindowDrawList();
 
-        var screenRadius = radius / Bounds.Radius * ScreenHalfSize;
+        var screenRadius = radius / _bounds.Radius * ScreenHalfSize;
         var screenCapsuleStart = WorldPositionToScreenPosition(capsuleStart);
         var screenCapsuleEnd = WorldPositionToScreenPosition(capsuleEnd);
 
@@ -229,8 +224,8 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
     public void AddPolygon(ReadOnlySpan<WPos> vertices, uint color = 0, float thickness = 1)
     {
-        foreach (var p in vertices)
-            PathLineTo(p);
+        for (var i = 0; i < vertices.Length; ++i)
+            PathLineTo(vertices[i]);
         PathStroke(true, color != 0 ? color : Colors.Danger, thickness);
     }
 
@@ -239,6 +234,23 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         foreach (var p in vertices)
             PathLineTo(p);
         PathStroke(true, color != 0 ? color : Colors.Danger, thickness);
+    }
+
+    public void AddPolygonTransformed(WPos center, WDir rotation, ReadOnlySpan<WDir> vertices, uint color, float thickness = 1)
+    {
+        foreach (var p in vertices)
+            PathLineTo(center + p.Rotate(rotation));
+        PathStroke(true, color != 0 ? color : Colors.Danger, thickness);
+    }
+
+    public void AddComplexPolygon(WPos center, WDir rotation, RelSimplifiedComplexPolygon poly, uint color, float thickness = 1)
+    {
+        foreach (var part in poly.Parts)
+        {
+            AddPolygonTransformed(center, rotation, part.Exterior, color, thickness);
+            foreach (var h in part.Holes)
+                AddPolygonTransformed(center, rotation, part.Interior(h), color, thickness);
+        }
     }
 
     // path api: add new point to path; this adds new edge from last added point, or defines first vertex if path is empty
@@ -250,7 +262,7 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
     // adds a bunch of points corresponding to arc - if path is non empty, this adds an edge from last point to first arc point
     public void PathArcTo(WPos center, float radius, float amin, float amax)
     {
-        ImGui.GetWindowDrawList().PathArcTo(WorldPositionToScreenPosition(center), radius / Bounds.Radius * ScreenHalfSize, Angle.HalfPi - amin + _cameraAzimuth.Rad, Angle.HalfPi - amax + _cameraAzimuth.Rad);
+        ImGui.GetWindowDrawList().PathArcTo(WorldPositionToScreenPosition(center), radius / _bounds.Radius * ScreenHalfSize, Angle.HalfPi - amin + _cameraAzimuth.Rad, Angle.HalfPi - amax + _cameraAzimuth.Rad);
     }
 
     public static void PathStroke(bool closed, uint color = 0, float thickness = 1)
@@ -269,7 +281,8 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var drawlist = ImGui.GetWindowDrawList();
         var restoreFlags = drawlist.Flags;
         drawlist.Flags &= ~ImDrawListFlags.AntiAliasedFill;
-        for (var i = 0; i < triangulation.Count; ++i)
+        var count = triangulation.Count;
+        for (var i = 0; i < count; ++i)
         {
             var tri = triangulation[i];
             drawlist.AddTriangleFilled(ScreenCenter + WorldOffsetToScreenOffset(tri.A), ScreenCenter + WorldOffsetToScreenOffset(tri.B), ScreenCenter + WorldOffsetToScreenOffset(tri.C), color != 0 ? color : Colors.AOE);
@@ -279,31 +292,47 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
     // draw zones - these are filled primitives clipped to arena border; note that triangulation is cached
     public void ZoneCone(WPos center, float innerRadius, float outerRadius, Angle centerDirection, Angle halfAngle, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(1, center, innerRadius, outerRadius, centerDirection, halfAngle)] ??= Bounds.ClipAndTriangulateCone(center - Center, innerRadius, outerRadius, centerDirection, halfAngle), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(1, center, innerRadius, outerRadius, centerDirection, halfAngle)] ??= _bounds.ClipAndTriangulateCone(center - Center, innerRadius, outerRadius, centerDirection, halfAngle), color);
     public void ZoneCircle(WPos center, float radius, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(2, center, radius)] ??= Bounds.ClipAndTriangulateCircle(center - Center, radius), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(2, center, radius)] ??= _bounds.ClipAndTriangulateCircle(center - Center, radius), color);
     public void ZoneDonut(WPos center, float innerRadius, float outerRadius, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(3, center, innerRadius, outerRadius)] ??= Bounds.ClipAndTriangulateDonut(center - Center, innerRadius, outerRadius), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(3, center, innerRadius, outerRadius)] ??= _bounds.ClipAndTriangulateDonut(center - Center, innerRadius, outerRadius), color);
     public void ZoneTri(WPos a, WPos b, WPos c, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(4, a, b, c)] ??= Bounds.ClipAndTriangulateTri(a - Center, b - Center, c - Center), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(4, a, b, c)] ??= _bounds.ClipAndTriangulateTri(a - Center, b - Center, c - Center), color);
     public void ZoneIsoscelesTri(WPos apex, WDir height, WDir halfBase, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(5, apex, height, halfBase)] ??= Bounds.ClipAndTriangulateIsoscelesTri(apex - Center, height, halfBase), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(5, apex, height, halfBase)] ??= _bounds.ClipAndTriangulateIsoscelesTri(apex - Center, height, halfBase), color);
     public void ZoneIsoscelesTri(WPos apex, Angle direction, Angle halfAngle, float height, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(6, apex, direction, halfAngle, height)] ??= Bounds.ClipAndTriangulateIsoscelesTri(apex - Center, direction, halfAngle, height), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(6, apex, direction, halfAngle, height)] ??= _bounds.ClipAndTriangulateIsoscelesTri(apex - Center, direction, halfAngle, height), color);
     public void ZoneRect(WPos origin, WDir direction, float lenFront, float lenBack, float halfWidth, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(7, origin, direction, lenFront, lenBack, halfWidth)] ??= Bounds.ClipAndTriangulateRect(origin - Center, direction, lenFront, lenBack, halfWidth), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(7, origin, direction, lenFront, lenBack, halfWidth)] ??= _bounds.ClipAndTriangulateRect(origin - Center, direction, lenFront, lenBack, halfWidth), color);
     public void ZoneRect(WPos origin, Angle direction, float lenFront, float lenBack, float halfWidth, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(8, origin, direction, lenFront, lenBack, halfWidth)] ??= Bounds.ClipAndTriangulateRect(origin - Center, direction, lenFront, lenBack, halfWidth), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(8, origin, direction, lenFront, lenBack, halfWidth)] ??= _bounds.ClipAndTriangulateRect(origin - Center, direction, lenFront, lenBack, halfWidth), color);
     public void ZoneRect(WPos start, WPos end, float halfWidth, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(9, start, end, halfWidth)] ??= Bounds.ClipAndTriangulateRect(start - Center, end - Center, halfWidth), color);
-    public void ZonePoly(object key, IEnumerable<WPos> contour, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(10, key)] ??= Bounds.ClipAndTriangulate(contour.Select(p => p - Center)), color);
-    public void ZoneRelPoly(object key, IEnumerable<WDir> relContour, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(11, key)] ??= Bounds.ClipAndTriangulate(relContour), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(9, start, end, halfWidth)] ??= _bounds.ClipAndTriangulateRect(start - Center, end - Center, halfWidth), color);
+    public void ZoneComplex(WPos origin, Angle direction, RelSimplifiedComplexPolygon poly, uint color)
+        => Zone(_triCache[TriangulationCache.GetKeyHash(10, origin, direction, poly)] ?? Bounds.ClipAndTriangulate(poly.Transform(origin - Center, direction.ToDirection())), color);
+    public void ZonePoly(object key, WPos[] contour, uint color)
+    {
+        var hash = TriangulationCache.GetKeyHash(11, key);
+        var triangulation = _triCache[hash];
+        if (triangulation == null)
+        {
+            var adjustedContour = new WDir[contour.Length];
+            for (var i = 0; i < contour.Length; ++i)
+            {
+                adjustedContour[i] = contour[i] - Center;
+            }
+            triangulation = _bounds.ClipAndTriangulate(adjustedContour);
+            _triCache[hash] = triangulation;
+        }
+        Zone(triangulation, color);
+    }
+    public void ZoneRelPoly(object key, WDir[] relContour, uint color)
+        => Zone(_triCache[TriangulationCache.GetKeyHash(12, key)] ??= _bounds.ClipAndTriangulate(relContour), color);
     public void ZoneRelPoly(int key, RelSimplifiedComplexPolygon poly, uint color)
-        => Zone(_triCache[key] ??= Bounds.ClipAndTriangulate(poly), color);
+        => Zone(_triCache[key] ??= _bounds.ClipAndTriangulate(poly), color);
     public void ZoneCapsule(WPos start, WDir direction, float radius, float length, uint color)
-        => Zone(_triCache[TriangulationCache.GetKeyHash(12, start, direction, radius, length)] ??= Bounds.ClipAndTriangulateCapsule(start - Center, direction, radius, length), color);
+        => Zone(_triCache[TriangulationCache.GetKeyHash(12, start, direction, radius, length)] ??= _bounds.ClipAndTriangulateCapsule(start - Center, direction, radius, length), color);
 
     public void TextScreen(Vector2 center, string text, uint color, float fontSize = 17)
     {
@@ -321,15 +350,15 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
     public void Border(uint color)
     {
         var dl = ImGui.GetWindowDrawList();
-
-        for (var partIndex = 0; partIndex < Bounds.ShapeSimplified.Parts.Count; partIndex++)
+        var count = _bounds.ShapeSimplified.Parts.Count;
+        for (var i = 0; i < count; ++i)
         {
-            var part = Bounds.ShapeSimplified.Parts[partIndex];
+            var part = _bounds.ShapeSimplified.Parts[i];
             Vector2? lastPoint = null;
-
-            for (var exteriorIndex = 0; exteriorIndex < part.Exterior.Length; exteriorIndex++)
+            var exteriorLen = part.Exterior.Length;
+            for (var j = 0; j < exteriorLen; ++j)
             {
-                var offset = part.Exterior[exteriorIndex];
+                var offset = part.Exterior[j];
                 var currentPoint = ScreenCenter + WorldOffsetToScreenOffset(offset);
                 if (lastPoint != currentPoint)
                     dl.PathLineTo(currentPoint);
@@ -338,14 +367,16 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
 
             dl.PathStroke(color, ImDrawFlags.Closed, 2);
 
-            foreach (var holeIndex in part.Holes)
+            var lenHoles = part.Holes.Length;
+            for (var l = 0; l < lenHoles; ++l)
             {
                 lastPoint = null;
 
-                var holeInteriorPoints = part.Interior(holeIndex);
-                for (var interiorIndex = 0; interiorIndex < holeInteriorPoints.Length; interiorIndex++)
+                var holeInteriorPoints = part.Interior(part.Holes[l]);
+                var interiorLen = holeInteriorPoints.Length;
+                for (var k = 0; k < interiorLen; ++k)
                 {
-                    var offset = holeInteriorPoints[interiorIndex];
+                    var offset = holeInteriorPoints[k];
                     var currentPoint = ScreenCenter + WorldOffsetToScreenOffset(offset);
                     if (lastPoint != currentPoint)
                         dl.PathLineTo(currentPoint);
@@ -377,9 +408,13 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var scale07 = scale * 0.7f * dir;
         var scale035 = scale * 0.35f * dir;
         var scale0433 = scale * 0.433f * dir.OrthoR();
+        var positionscale07 = position + scale07;
+        var positionscale035 = position - scale035;
+        var positionscale035pscale0433 = positionscale035 + scale0433;
+        var positionscale035mscale0433 = positionscale035 - scale0433;
         if (Config.ShowOutlinesAndShadows)
-            AddTriangle(position + scale07, position - scale035 + scale0433, position - scale035 - scale0433, Colors.Shadows, 2);
-        AddTriangleFilled(position + scale07, position - scale035 + scale0433, position - scale035 - scale0433, color);
+            AddTriangle(positionscale07, positionscale035pscale0433, positionscale035mscale0433, Colors.Shadows, 2);
+        AddTriangleFilled(positionscale07, positionscale035pscale0433, positionscale035mscale0433, color);
     }
 
     public void ActorOutsideBounds(WPos position, Angle rotation, uint color)
@@ -389,7 +424,8 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
         var scale07 = scale * 0.7f * dir;
         var scale035 = scale * 0.35f * dir;
         var scale0433 = scale * 0.433f * dir.OrthoR();
-        AddTriangle(position + scale07, position - scale035 + scale0433, position - scale035 - scale0433, color);
+        var positionscale035 = position - scale035;
+        AddTriangle(position + scale07, positionscale035 + scale0433, positionscale035 - scale0433, color);
     }
 
     public void ActorProjected(WPos from, WPos to, Angle rotation, uint color)
@@ -430,6 +466,17 @@ public sealed class MiniArena(BossModuleConfig config, WPos center, ArenaBounds 
     {
         foreach (var a in actors)
             Actor(a, color == 0 ? Colors.Enemy : color, allowDeadAndUntargetable);
+    }
+
+    public void Actors(List<Actor> actors, uint color = 0, bool allowDeadAndUntargetable = false)
+    {
+        var count = actors.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
+        {
+            Actor(actors[i], color == 0 ? Colors.Enemy : color, allowDeadAndUntargetable);
+        }
     }
 
     public static void End()

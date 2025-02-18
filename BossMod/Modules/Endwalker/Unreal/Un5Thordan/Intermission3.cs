@@ -2,7 +2,7 @@
 
 class HiemalStormSpread(BossModule module) : Components.UniformStackSpread(module, 0, 6, alwaysShowSpreads: true)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.HiemalStorm)
             AddSpread(actor, WorldState.FutureTime(3));
@@ -17,7 +17,7 @@ class HiemalStormSpread(BossModule module) : Components.UniformStackSpread(modul
 
 class HiemalStormVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.HiemalStorm).Where(x => x.EventState != 7));
 class SpiralPierce(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50, 6), (uint)TetherID.SpiralPierce, ActionID.MakeSpell(AID.SpiralPierce));
-class DimensionalCollapse(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9);
+class DimensionalCollapse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9);
 
 class FaithUnmoving(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.FaithUnmoving), true)
 {

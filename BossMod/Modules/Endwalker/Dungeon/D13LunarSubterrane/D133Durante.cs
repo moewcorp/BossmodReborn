@@ -72,19 +72,22 @@ class Contrapasso(BossModule module) : Components.RaidwideCast(module, ActionID.
 
 class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(32);
     private static readonly AOEShapeCircle circle = new(5);
-    private const int MaxInitialAOEs = 16;
-    private const int MaxAOEs = 32;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var clampedCount = Math.Min(_aoes.Count, MaxAOEs);
-        for (var i = 0; i < clampedCount; ++i)
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
         {
-            var isRisky = i < MaxInitialAOEs;
-            yield return new(circle, _aoes[i].Origin, default, _aoes[i].Activation, isRisky ? Colors.Danger : Colors.AOE, isRisky);
+            var aoe = _aoes[i];
+            var isRisky = i < 16;
+            aoes.Add(aoe with { Color = isRisky ? Colors.Danger : 0, Risky = isRisky });
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -96,27 +99,26 @@ class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.DuplicitousBattery)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.DuplicitousBattery)
             _aoes.RemoveAt(0);
     }
 }
 
-class Explosion1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion1), new AOEShapeCircle(11));
-class Explosion2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion2), new AOEShapeCircle(9));
+class Explosion1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion1), 11);
+class Explosion2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion2), 9);
 class FallenGrace(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FallenGrace), 6);
 class AntipodalAssault(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.AntipodalAssaultMarker), ActionID.MakeSpell(AID.AntipodalAssault), 5.4f, markerIsFinalTarget: false);
-class HardSlash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HardSlash), new AOEShapeCone(50, 45.Degrees()));
-class TwilightPhase(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TwilightPhase), new AOEShapeRect(30, 10, 30));
-class DarkImpact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DarkImpact), new AOEShapeCircle(25));
-class DeathsJourneyCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeathsJourneyCircle), new AOEShapeCircle(8));
-class DeathsJourneyCone(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeathsJourneyCone), new AOEShapeCone(30, 15.Degrees()));
+class HardSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HardSlash), new AOEShapeCone(50, 45.Degrees()));
+class TwilightPhase(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwilightPhase), new AOEShapeRect(60, 10));
+class DarkImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkImpact), 25);
+class DeathsJourneyCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathsJourneyCircle), 8);
+class DeathsJourneyCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathsJourneyCone), new AOEShapeCone(30, 15.Degrees()));
 
 class D133DuranteStates : StateMachineBuilder
 {
     public D133DuranteStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<OldMagicArenaChange>()
             .ActivateOnEnter<OldMagic>()
             .ActivateOnEnter<ArcaneEdge>()

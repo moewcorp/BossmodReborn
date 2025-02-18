@@ -1,12 +1,12 @@
 ﻿namespace BossMod.Heavensward.Alliance.A12IrminsulSawtooth;
 
-class WhiteBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WhiteBreath), new AOEShapeCone(28, 60.Degrees()));
-class MeanThrash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MeanThrash), new AOEShapeCone(12, 60.Degrees()));
+class WhiteBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhiteBreath), new AOEShapeCone(28, 60.Degrees()));
+class MeanThrash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeanThrash), new AOEShapeCone(12, 60.Degrees()));
 class MeanThrashKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.MeanThrash), 10, stopAtWall: true);
 class MucusBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MucusBomb), 10);
-class MucusSpray(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MucusSpray2), new AOEShapeDonut(6, 20));
+class MucusSpray(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MucusSpray2), new AOEShapeDonut(6, 20));
 class Rootstorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Rootstorm));
-class Ambush(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Ambush), new AOEShapeCircle(9));
+class Ambush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ambush), 9);
 class AmbushKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Ambush), 30, stopAtWall: true, kind: Kind.TowardsOrigin);
 
 class ShockwaveStomp(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ShockwaveStomp), 70)

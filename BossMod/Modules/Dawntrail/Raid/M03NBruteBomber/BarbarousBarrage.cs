@@ -7,8 +7,8 @@ class BarbarousBarrageTower(BossModule module) : Components.GenericTowers(module
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index == 0x01 && state == 0x00020004)
-            foreach (var p in positions)
-                Towers.Add(new(p, 4, 1, 1, default, WorldState.FutureTime(10)));
+            for (var i = 0; i < 4; ++i)
+                Towers.Add(new(positions[i], 4, 1, 1, default, WorldState.FutureTime(10)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

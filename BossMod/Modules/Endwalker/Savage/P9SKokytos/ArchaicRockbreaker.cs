@@ -1,19 +1,19 @@
 ﻿namespace BossMod.Endwalker.Savage.P9SKokytos;
 
-class ArchaicRockbreakerCenter(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerCenter), 6);
+class ArchaicRockbreakerCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerCenter), 6);
 
 class ArchaicRockbreakerShockwave(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.ArchaicRockbreakerShockwave), true)
 {
     private readonly DateTime _activation = module.WorldState.FutureTime(6.5f);
     private static readonly List<SafeWall> Walls0 = [new(new(93, 117.5f), new(108, 117.5f)), new(new(82.5f, 93), new(82.5f, 108)),
     new(new(117.5f, 93), new(117.5f, 108)), new(new(93, 82.5f), new(108, 82.5f))];
-    private static readonly List<SafeWall> Walls45 = Walls0.Select(wall => RotatedSafeWall(wall.Vertex1, wall.Vertex2)).ToList();
+    private static readonly List<SafeWall> Walls45 = [.. Walls0.Select(wall => RotatedSafeWall(wall.Vertex1, wall.Vertex2))];
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         if (Arena.Bounds == P9SKokytos.arenaUplift0)
             yield return new(Arena.Center, 21, _activation, SafeWalls: Walls0);
-        if (Arena.Bounds == P9SKokytos.arenaUplift45)
+        else if (Arena.Bounds == P9SKokytos.arenaUplift45)
             yield return new(Arena.Center, 21, _activation, SafeWalls: Walls45);
     }
 
@@ -29,7 +29,7 @@ class ArchaicRockbreakerPairs : Components.UniformStackSpread
 {
     public ArchaicRockbreakerPairs(BossModule module) : base(module, 6, 0, 2)
     {
-        foreach (var p in Raid.WithoutSlot(true).Where(p => p.Class.IsSupport()))
+        foreach (var p in Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()))
             AddStack(p, WorldState.FutureTime(7.8f));
     }
 
@@ -40,7 +40,7 @@ class ArchaicRockbreakerPairs : Components.UniformStackSpread
     }
 }
 
-class ArchaicRockbreakerLine(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerLine), 8, maxCasts: 8);
+class ArchaicRockbreakerLine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerLine), 8, maxCasts: 8);
 
 class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(module)
 {
@@ -100,7 +100,7 @@ class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(
     private void PopAOE()
     {
         ++NumCasts;
-        if (_aoes.Count > 0)
+        if (_aoes.Count != 0)
             _aoes.RemoveAt(0);
     }
 
@@ -110,12 +110,12 @@ class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(
         {
             var safespots = new ArcList(_aoes[0].Origin, _shapeOut.Radius + 0.25f);
             foreach (var f in forbidden.ActiveCasters)
-                safespots.ForbidCircle(f.Position, forbidden.Shape.Radius);
+                safespots.ForbidCircle(f.Origin, 8);
             if (safespots.Forbidden.Segments.Count > 0)
             {
                 foreach (var a in safespots.Allowed(default))
                 {
-                    var mid = ((a.Item1.Rad + a.Item2.Rad) * 0.5f).Radians();
+                    var mid = ((a.min.Rad + a.max.Rad) * 0.5f).Radians();
                     yield return safespots.Center + safespots.Radius * mid.ToDirection();
                 }
             }
@@ -128,7 +128,7 @@ class ArchaicDemolish(BossModule module) : Components.UniformStackSpread(module,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ArchaicDemolish)
-            AddStacks(Raid.WithoutSlot(true).Where(a => a.Role == Role.Healer), Module.CastFinishAt(spell, 1.2f));
+            AddStacks(Raid.WithoutSlot(true, true, true).Where(a => a.Role == Role.Healer), Module.CastFinishAt(spell, 1.2f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

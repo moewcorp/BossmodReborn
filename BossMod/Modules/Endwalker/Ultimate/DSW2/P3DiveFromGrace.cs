@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Ultimate.DSW2;
 
-class P3Geirskogul(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Geirskogul), new AOEShapeRect(62, 4))
+class P3Geirskogul(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Geirskogul), new AOEShapeRect(62, 4))
 {
     private readonly List<Actor> _predicted = [];
 
@@ -9,7 +9,7 @@ class P3Geirskogul(BossModule module) : Components.SelfTargetedAOEs(module, Acti
         foreach (var p in _predicted)
         {
             Arena.Actor(p, Colors.Object, true);
-            var target = Raid.WithoutSlot().Closest(p.Position);
+            var target = Raid.WithoutSlot(false, true, true).Closest(p.Position);
             if (target != null)
                 Shape.Outline(Arena, p.Position, Angle.FromDirection(target.Position - p.Position));
         }
@@ -61,7 +61,7 @@ class P3GnashAndLash(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID is AID.GnashingWheel or AID.LashingWheel)
         {
             ++NumCasts;
-            if (_aoes.Count > 0)
+            if (_aoes.Count != 0)
                 _aoes.RemoveAt(0);
         }
     }
@@ -86,7 +86,7 @@ class P3DiveFromGrace(BossModule module) : Components.CastTowers(module, ActionI
         public readonly bool CanBait(int order, int spot) => JumpOrder == order && (AssignedSpot == 0 || AssignedSpot == spot);
     }
 
-    public int NumJumps { get; private set; }
+    public int NumJumps;
     private readonly DSW2Config _config = Service.Config.Get<DSW2Config>();
     private bool _haveDirections;
     private readonly PlayerState[] _playerStates = new PlayerState[PartyState.MaxPartySize];
@@ -136,7 +136,7 @@ class P3DiveFromGrace(BossModule module) : Components.CastTowers(module, ActionI
 
         // draw baited jumps
         var baitOrder = CurrentBaitOrder();
-        foreach (var (slot, player) in Raid.WithSlot(true).WhereSlot(i => _playerStates[i].JumpOrder == baitOrder))
+        foreach (var (slot, player) in Raid.WithSlot(true, true, true).WhereSlot(i => _playerStates[i].JumpOrder == baitOrder))
         {
             var pos = player.Position + _playerStates[slot].JumpDirection * player.Rotation.ToDirection() * _towerOffset;
             Arena.AddCircle(pos, Radius, Colors.Object);
@@ -248,7 +248,7 @@ class P3DiveFromGrace(BossModule module) : Components.CastTowers(module, ActionI
 
     private int TowerSpot(WPos pos)
     {
-        var towerOffset = pos - Module.Center;
+        var towerOffset = pos - Arena.Center;
         var toStack = DirectionForStack();
         var dotForward = DirectionForForwardArrow().Dot(towerOffset);
         return -toStack.Dot(towerOffset) > Math.Abs(dotForward) ? 2 : dotForward > 0 ? 3 : 1;
@@ -264,7 +264,7 @@ class P3DiveFromGrace(BossModule module) : Components.CastTowers(module, ActionI
             < 8 => spot != 2 ? 2 : 1,
             _ => -1
         };
-        var forbidden = Raid.WithSlot(true).WhereSlot(i => !_playerStates[i].CanBait(soakerOrder, spot)).Mask();
+        var forbidden = Raid.WithSlot(true, true, true).WhereSlot(i => !_playerStates[i].CanBait(soakerOrder, spot)).Mask();
         return new(pos, Radius, forbiddenSoakers: forbidden);
     }
 

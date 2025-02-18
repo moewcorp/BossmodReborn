@@ -5,7 +5,6 @@ public enum OID : uint
     Boss = 0xF5, // R1.700, x1
     Monolith = 0xF3, // R2.300, x4
     EyeOfTheStorm = 0x626, // R0.500, x1
-    Helper = 0x1B2, // R0.500, x18
     RazorPlume = 0xF4, // R0.500, spawn during fight
     SpinyPlume = 0x600, // R0.500, spawn during fight
     SatinPlume = 0x601, // R0.500, spawn during fight
@@ -17,6 +16,7 @@ public enum OID : uint
     Monolith3 = 0x1E8708, // R2.000, x1, EventObj type
     Monolith4 = 0x1E8709, // R2.000, x1, EventObj type
     SpinyShield = 0x1E8F68, // R0.500, EventObj type, spawn during fight
+    Helper = 0x1B2
 }
 
 public enum AID : uint

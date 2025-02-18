@@ -61,7 +61,7 @@ class VengefulBelone(BossModule module) : BossComponent(module)
             }
 
             int goodInRange = 0, badInRange = 0;
-            foreach ((var i, var player) in Raid.WithSlot().InRadius(orb.Position, _burstRadius))
+            foreach ((var i, var player) in Raid.WithSlot(false, true, true).InRadius(orb.Position, _burstRadius))
             {
                 if (IsOrbLethal(i, player, orbRole))
                     ++badInRange;
@@ -73,7 +73,7 @@ class VengefulBelone(BossModule module) : BossComponent(module)
             Arena.AddCircle(orb.Position, _burstRadius, goodToExplode ? Colors.Safe : Colors.Danger);
         }
 
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             var nearLethalOrb = orbs.Where(orb => IsOrbLethal(i, player, OrbTarget(orb.InstanceID))).InRadius(player.Position, _burstRadius).Any();
             Arena.Actor(player, nearLethalOrb ? Colors.PlayerInteresting : Colors.PlayerGeneric);

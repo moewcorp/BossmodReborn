@@ -16,7 +16,7 @@ public class StateMachineTree
         public bool IsVulnerable;
         public StateMachine.State State;
         public Node? Predecessor;
-        public List<Node> Successors = [];
+        public readonly List<Node> Successors = [];
 
         internal Node(float t, int phaseID, int branchID, StateMachine.State state, StateMachine.Phase phase, Node? pred)
         {
@@ -90,21 +90,19 @@ public class StateMachineTree
         }
     }
 
-    private readonly Dictionary<uint, Node> _nodes = [];
-    public IReadOnlyDictionary<uint, Node> Nodes => _nodes;
+    public readonly Dictionary<uint, Node> Nodes = [];
 
-    private readonly List<Phase> _phases = [];
-    public IReadOnlyList<Phase> Phases => _phases;
+    public readonly List<Phase> Phases = [];
 
-    public int TotalBranches { get; private set; }
-    public float TotalMaxTime { get; private set; }
+    public int TotalBranches;
+    public float TotalMaxTime;
 
     public StateMachineTree(StateMachine sm)
     {
         for (var i = 0; i < sm.Phases.Count; ++i)
         {
             var (startingNode, maxTime) = LayoutNodeAndSuccessors(0, i, TotalBranches, sm.Phases[i].InitialState, sm.Phases[i], null);
-            _phases.Add(new(sm.Phases[i], startingNode, maxTime));
+            Phases.Add(new(sm.Phases[i], startingNode, maxTime));
             TotalBranches += startingNode.NumBranches;
             TotalMaxTime = Math.Max(TotalMaxTime, maxTime);
         }
@@ -129,10 +127,10 @@ public class StateMachineTree
     // find phase index that corresponds to specified time; assumes ApplyTimings was called before
     public int FindPhaseAtTime(float t)
     {
-        var next = _phases.FindIndex(p => p.StartTime > t);
+        var next = Phases.FindIndex(p => p.StartTime > t);
         return next switch
         {
-            < 0 => _phases.Count - 1,
+            < 0 => Phases.Count - 1,
             0 => 0,
             _ => next - 1
         };
@@ -152,7 +150,7 @@ public class StateMachineTree
 
     private (Node, float) LayoutNodeAndSuccessors(float t, int phaseID, int branchID, StateMachine.State state, StateMachine.Phase phase, Node? pred)
     {
-        var node = _nodes[state.ID] = new Node(t + state.Duration, phaseID, branchID, state, phase, pred);
+        var node = Nodes[state.ID] = new Node(t + state.Duration, phaseID, branchID, state, phase, pred);
         float succDuration = 0;
 
         if (state.NextStates?.Length > 0)

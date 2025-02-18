@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using System.IO;
 using System.Reflection;
 
@@ -14,7 +15,7 @@ public sealed class Plugin : IDalamudPlugin
 {
     public string Name => "BossMod Reborn";
 
-    private ICommandManager CommandManager { get; init; }
+    private readonly ICommandManager CommandManager;
 
     private readonly RotationDatabase _rotationDB;
     private readonly WorldState _ws;
@@ -32,11 +33,13 @@ public sealed class Plugin : IDalamudPlugin
     private readonly DTRProvider _dtr;
     private TimeSpan _prevUpdateTime;
     private DateTime _throttleJump;
+    private DateTime _throttleInteract;
 
     // windows
     private readonly ConfigUI _configUI; // TODO: should be a proper window!
     private readonly BossModuleMainWindow _wndBossmod;
     private readonly BossModuleHintsWindow _wndBossmodHints;
+    private readonly ZoneModuleWindow _wndZone;
     private readonly ReplayManagementWindow _wndReplay;
     private readonly UIRotationWindow _wndRotation;
     private readonly MainDebugWindow _wndDebug;
@@ -101,21 +104,21 @@ public sealed class Plugin : IDalamudPlugin
         _ipc = new(_rotation, _amex, _movementOverride, _ai);
         _dtr = new(_rotation, _ai);
         _wndBossmod = new(_bossmod, _zonemod);
+
         _wndBossmodHints = new(_bossmod, _zonemod);
+        _wndZone = new(_zonemod);
         var config = Service.Config.Get<ReplayManagementConfig>();
         var replayDir = string.IsNullOrEmpty(config.ReplayFolder) ? dalamud.ConfigDirectory.FullName + "/replays" : config.ReplayFolder;
         _wndReplay = new ReplayManagementWindow(_ws, _bossmod, _rotationDB, new DirectoryInfo(replayDir));
         _configUI = new(Service.Config, _ws, new DirectoryInfo(replayDir), _rotationDB);
         config.Modified.ExecuteAndSubscribe(() => _wndReplay.UpdateLogDirectory());
-        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotatiion presets"));
-        _wndDebug = new(_ws, _rotation, _zonemod, _amex, _hintsBuilder, dalamud);
+        _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotation presets"));
+        _wndDebug = new(_ws, _rotation, _zonemod, _amex, _movementOverride, _hintsBuilder, dalamud);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
         dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
         dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
-
-        _ = new ConfigChangelogWindow();
     }
 
     public void Dispose()
@@ -130,6 +133,7 @@ public sealed class Plugin : IDalamudPlugin
         _wndDebug.Dispose();
         _wndRotation.Dispose();
         _wndReplay.Dispose();
+        _wndZone.Dispose();
         _wndBossmodHints.Dispose();
         _wndBossmod.Dispose();
         _configUI.Dispose();
@@ -146,6 +150,7 @@ public sealed class Plugin : IDalamudPlugin
         ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/bmr");
         CommandManager.RemoveHandler("/vbm");
+        GarbageCollection();
     }
 
     private void OnCommand(string cmd, string args)
@@ -170,9 +175,7 @@ public sealed class Plugin : IDalamudPlugin
                     Service.ChatGui.Print(msg);
                 break;
             case "GC":
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+                GarbageCollection();
                 break;
             case "R":
                 HandleReplayCommand(split);
@@ -218,16 +221,16 @@ public sealed class Plugin : IDalamudPlugin
     {
         var defaultConfig = ColorConfig.DefaultConfig;
         var currentConfig = Service.Config.Get<ColorConfig>();
-        var properties = typeof(ColorConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var fields = typeof(ColorConfig).GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-        for (var i = 0; i < properties.Length; ++i)
+        for (var i = 0; i < fields.Length; ++i)
         {
-            var property = properties[i];
-            if (!property.CanWrite)
-                continue;
-            property.SetValue(currentConfig, property.GetValue(defaultConfig));
+            ref var field = ref fields[i];
+            var value = field.GetValue(defaultConfig);
+            if (value is Color or Color[])
+                field.SetValue(currentConfig, value);
         }
-        currentConfig.ArenaBackground = defaultConfig.ArenaBackground;
+
         currentConfig.Modified.Fire();
         Service.Log("Colors have been reset to default values.");
     }
@@ -259,28 +262,27 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUI()
     {
         var tsStart = DateTime.Now;
-
-        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
-        var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
+        var moveImminent = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
 
         _dtr.Update();
         Camera.Instance?.Update();
-        _wsSync.Update(_prevUpdateTime);
+        _wsSync.Update(ref _prevUpdateTime);
         _bossmod.Update();
         _zonemod.ActiveModule?.Update();
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, moveImminent);
         _amex.QueueManualActions();
         _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
         _ai.Update();
         _broadcast.Update();
         _amex.FinishActionGather();
-        ExecuteHints();
 
         var uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
         if (!uiHidden)
         {
             Service.WindowSystem?.Draw();
         }
+
+        ExecuteHints();
 
         Camera.Instance?.DrawWorldPrimitives();
         _prevUpdateTime = DateTime.Now - tsStart;
@@ -291,15 +293,16 @@ public sealed class Plugin : IDalamudPlugin
         // see ActionManager.IsActionUnlocked
         var gameMain = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
         return link == 0
-            || Service.LuminaRow<Lumina.Excel.GeneratedSheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse == 31 // deep dungeons check is hardcoded in game
+            || Service.LuminaRow<Lumina.Excel.Sheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse.RowId == 31 // deep dungeons check is hardcoded in game
             || FFXIVClientStructs.FFXIV.Client.Game.UI.UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(link);
     }
 
     private unsafe void ExecuteHints()
     {
         _movementOverride.DesiredDirection = _hints.ForcedMovement;
+        _movementOverride.MisdirectionThreshold = _hints.MisdirectionThreshold;
         // update forced target, if needed (TODO: move outside maybe?)
-        if (_hints.ForcedTarget != null)
+        if (_hints.ForcedTarget != null && _hints.ForcedTarget.IsTargetable)
         {
             var obj = _hints.ForcedTarget.SpawnIndex >= 0 ? FFXIVClientStructs.FFXIV.Client.Game.Object.GameObjectManager.Instance()->Objects.IndexSorted[_hints.ForcedTarget.SpawnIndex].Value : null;
             if (obj != null && obj->EntityId != _hints.ForcedTarget.InstanceID)
@@ -317,6 +320,44 @@ public sealed class Plugin : IDalamudPlugin
             FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->UseAction(FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction, 2);
             _throttleJump = _ws.CurrentTime.AddMilliseconds(100);
         }
+
+        if (CheckInteractRange(_ws.Party.Player(), _hints.InteractWithTarget))
+        {
+            // many eventobj interactions "immediately" start some cast animation (delayed by server roundtrip), and if we keep trying to move toward the target after sending the interact request, it will be canceled and force us to start over
+            _movementOverride.DesiredDirection = default;
+
+            if (_amex.EffectiveAnimationLock == 0 && _ws.CurrentTime >= _throttleInteract)
+            {
+                FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->InteractWithObject(GetActorObject(_hints.InteractWithTarget), false);
+                _throttleInteract = _ws.FutureTime(0.1f);
+            }
+        }
+    }
+
+    private unsafe bool CheckInteractRange(Actor? player, Actor? target)
+    {
+        var playerObj = GetActorObject(player);
+        var targetObj = GetActorObject(target);
+        if (playerObj == null || targetObj == null)
+            return false;
+
+        // treasure chests have no client-side interact range check at all; just assume they use the standard "small" range, seems to be accurate from testing
+        if (targetObj->ObjectKind is FFXIVClientStructs.FFXIV.Client.Game.Object.ObjectKind.Treasure)
+            return player?.DistanceToHitbox(target) <= 2.09f;
+
+        return EventFramework.Instance()->CheckInteractRange(playerObj, targetObj, 1, false);
+    }
+
+    private unsafe FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject* GetActorObject(Actor? actor)
+    {
+        if (actor == null)
+            return null;
+
+        var obj = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObjectManager.Instance()->Objects.IndexSorted[actor.SpawnIndex].Value;
+        if (obj == null || obj->GetGameObjectId() != actor.InstanceID)
+            return null;
+
+        return obj;
     }
 
     private void ParseAutorotationCommands(string[] cmd)
@@ -335,12 +376,12 @@ public sealed class Plugin : IDalamudPlugin
                 if (cmd.Length <= 2)
                     Service.Log("Specify an autorotation preset name.");
                 else
-                    ParseAutorotationSetCommand(cmd.Skip(1).ToArray(), false);
+                    ParseAutorotationSetCommand([.. cmd.Skip(1)], false);
                 break;
             case "TOGGLE":
-                ParseAutorotationSetCommand(cmd.Length > 2 ? cmd.Skip(1).ToArray() : [""], true);
+                ParseAutorotationSetCommand(cmd.Length > 2 ? [.. cmd.Skip(1)] : [""], true);
                 break;
-            case "ui":
+            case "UI":
                 _wndRotation.SetVisible(!_wndRotation.IsOpen);
                 break;
         }
@@ -380,5 +421,12 @@ public sealed class Plugin : IDalamudPlugin
     private static void OnConditionChanged(ConditionFlag flag, bool value)
     {
         Service.Log($"Condition change: {flag}={value}");
+    }
+
+    public static void GarbageCollection()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
     }
 }

@@ -41,7 +41,11 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertySlider(0, 10, Speed = 0.01f)]
     public float PyreticThreshold = 1.0f;
 
-    [PropertyDisplay("在使用技能后恢复角色面向")]
+    [PropertyDisplay("自动精神失常：如果正常移动和精神失常之间的角度大于此阈值（设置为 180 度以禁用），则防止精神失常下的移动。")]
+    [PropertySlider(0, 180)]
+    public float MisdirectionThreshold = 180;
+
+    [PropertyDisplay("使用技能后恢复角色面向")]
     public bool RestoreRotation = false;
 
     [PropertyDisplay("对鼠标悬停的目标使用技能")]
@@ -72,5 +76,9 @@ public sealed class ActionTweaksConfig : ConfigNode
     }
     [PropertyDisplay("地面目标技能的自动目标选择")]
     public GroundTargetingMode GTMode = GroundTargetingMode.Manual;
+
+    [PropertyDisplay("尽量避免冲入 AOE", tooltip: "防止自动使用带位移技能（如战士猛攻），如果它们会将您带入危险区域。在没有模块的情况下可能无法按预期工作。")]
+    public bool PreventDangerousDash = false;
+
     public bool ActivateAnticheat = true;
 }

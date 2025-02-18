@@ -62,10 +62,10 @@ class MagitekCompressor(BossModule module) : Components.GenericRotatingAOE(modul
     }
 }
 
-class AcceleratedLanding(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AcceleratedLanding), 6);
+class AcceleratedLanding(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AcceleratedLanding), 6);
 class CalculatedCombustion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CalculatedCombustion));
 class Pummel(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Pummel));
-class SoporificGas(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SoporificGas), new AOEShapeCircle(12));
+class SoporificGas(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SoporificGas), 12);
 
 class ArmstrongStates : StateMachineBuilder
 {
@@ -80,5 +80,5 @@ class ArmstrongStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10619)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10619)]
 public class Armstrong(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

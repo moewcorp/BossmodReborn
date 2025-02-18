@@ -8,8 +8,8 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Detonation = 14696, // 2705->self, no cast, range 6+R circle
-    Blizzard = 14709, // 2704->player, 1.0s cast, single-target
+    Detonation = 14696, // Boss->self, no cast, range 6+R circle
+    Blizzard = 14709, // Sprite->player, 1.0s cast, single-target
 }
 
 class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
@@ -41,20 +41,21 @@ class Stage07Act2States : StateMachineBuilder
     public Stage07Act2States(BossModule module) : base(module)
     {
         TrivialPhase()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Sprite).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage07Act2.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8094, SortOrder = 2)]
 public class Stage07Act2 : BossModule
 {
-    public Stage07Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), Layouts.Layout4Quads)
+    public Stage07Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.Layout4Quads)
     {
         ActivateComponent<Hints>();
         ActivateComponent<SlimeExplosion>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Sprite];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Sprite).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

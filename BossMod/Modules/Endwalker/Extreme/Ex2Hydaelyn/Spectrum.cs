@@ -7,7 +7,7 @@ class Spectrum(BossModule module) : Components.CastCounter(module, ActionID.Make
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         int tanksInRange = 0, nonTanksInRange = 0;
-        foreach (var other in Raid.WithoutSlot().InRadiusExcluding(actor, _radius))
+        foreach (var other in Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius))
         {
             if (other.Role == Role.Tank)
                 ++tanksInRange;
@@ -25,7 +25,7 @@ class Spectrum(BossModule module) : Components.CastCounter(module, ActionID.Make
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         Arena.AddCircle(pc.Position, _radius, Colors.Danger);
-        foreach (var player in Raid.WithoutSlot().Exclude(pc))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
             Arena.Actor(player, player.Position.InCircle(pc.Position, _radius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
     }
 }

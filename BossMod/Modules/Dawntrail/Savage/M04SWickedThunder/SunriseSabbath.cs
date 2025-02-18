@@ -56,7 +56,7 @@ class SunriseSabbathSoaringSoulpress(BossModule module) : Components.GenericTowe
     {
         var intercard = ((int)Math.Round(bird.Rotation.Deg / 45) & 1) != 0;
         var pos = bird.Position + bird.Rotation.ToDirection() * (intercard ? 21.21320344f : 30);
-        var forbidden = _sabbath != null ? Raid.WithSlot(true).WhereSlot(i => _sabbath.BaitOrder[i] == forbiddenOrder).Mask() : default;
+        var forbidden = _sabbath != null ? Raid.WithSlot(true, true, true).WhereSlot(i => _sabbath.BaitOrder[i] == forbiddenOrder).Mask() : default;
         Towers.Add(new(pos, 3, 2, 2, forbiddenSoakers: forbidden));
     }
 }
@@ -73,7 +73,7 @@ class SunriseSabbathElectronStream(BossModule module) : Components.GenericBaitAw
         CurrentBaits.Clear();
         foreach (var c in Cannons)
         {
-            var t = Raid.WithoutSlot().Closest(c.cannon.Position);
+            var t = Raid.WithoutSlot(false, true, true).Closest(c.cannon.Position);
             if (t != null)
                 CurrentBaits.Add(new(c.cannon, t, _shape));
         }
@@ -97,7 +97,7 @@ class SunriseSabbathElectronStream(BossModule module) : Components.GenericBaitAw
         {
             Cannons.Add((actor, status.Extra == 0x2F5));
             var baitOrder = NumCasts == 0 ? 1 : 2;
-            ForbiddenPlayers = _sabbath != null ? Raid.WithSlot(true).WhereSlot(i => _sabbath.BaitOrder[i] != baitOrder).Mask() : default;
+            ForbiddenPlayers = _sabbath != null ? Raid.WithSlot(true, true, true).WhereSlot(i => _sabbath.BaitOrder[i] != baitOrder).Mask() : default;
         }
     }
 

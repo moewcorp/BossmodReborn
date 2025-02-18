@@ -6,9 +6,9 @@ public class GenericTwister(BossModule module, float radius, uint oid, ActionID 
 {
     private readonly AOEShapeCircle _shape = new(radius);
     private readonly uint _twisterOID = oid;
-    protected IReadOnlyList<Actor> Twisters = module.Enemies(oid);
+    protected readonly List<Actor> Twisters = module.Enemies(oid);
     protected DateTime PredictedActivation;
-    protected List<WPos> PredictedPositions = [];
+    protected readonly List<WPos> PredictedPositions = [];
 
     public IEnumerable<Actor> ActiveTwisters => Twisters.Where(v => v.EventState != 7);
     public bool Active => ActiveTwisters.Any();

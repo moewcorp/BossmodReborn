@@ -2,12 +2,13 @@
 
 public enum OID : uint
 {
-    Boss = 0x35FC, // R6.000, x1
+    Boss = 0x35FC // R6.000, x1
 }
 
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     Twister = 27219, // Boss->players, 5.0s cast, range 8 circle stack + knockback 20
     BarrelingSmash = 27220, // Boss->player, no cast, single-target, charges to random player and starts casting Spark or Scythe Tail immediately afterwards
     Spark = 27221, // Boss->self, 5.0s cast, range 14-24+R donut
@@ -17,7 +18,7 @@ public enum AID : uint
     RockThrowFirst = 27225, // Boss->location, 4.0s cast, range 6 circle
     RockThrowRest = 27226, // Boss->location, 1.6s cast, range 6 circle
     Crosswind = 27227, // Boss->self, 5.0s cast, range 36 circle
-    ApplyPrey = 27229, // Boss->player, 0.5s cast, single-target
+    ApplyPrey = 27229 // Boss->player, 0.5s cast, single-target
 }
 
 class Twister(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Twister), 20, shape: new AOEShapeCircle(8))
@@ -44,8 +45,8 @@ class Twister(BossModule module) : Components.KnockbackFromCastTarget(module, Ac
     }
 }
 
-class Spark(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Spark), new AOEShapeDonut(14, 30));
-class ScytheTail(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScytheTail), new AOEShapeCircle(17));
+class Spark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spark), new AOEShapeDonut(14, 30));
+class ScytheTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheTail), 17);
 
 class Butcher(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Butcher), new AOEShapeCone(8, 60.Degrees()), endsOnCastEvent: true)
 {
@@ -56,7 +57,7 @@ class Butcher(BossModule module) : Components.BaitAwayCast(module, ActionID.Make
     }
 }
 
-class Rip(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Rip), new AOEShapeCone(8, 60.Degrees()));
+class Rip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rip), new AOEShapeCone(8, 60.Degrees()));
 
 // TODO: generalize to baited aoe
 class RockThrow(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RockThrowRest))
@@ -118,5 +119,5 @@ class SugrivaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10626)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10626)]
 public class Sugriva(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

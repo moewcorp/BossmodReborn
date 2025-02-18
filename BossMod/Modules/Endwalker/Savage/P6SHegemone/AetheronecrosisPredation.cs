@@ -3,8 +3,8 @@
 // TODO: improve...
 class AetheronecrosisPredation(BossModule module) : BossComponent(module)
 {
-    public int NumCastsAetheronecrosis { get; private set; }
-    public int NumCastsDualPredation { get; private set; }
+    public int NumCastsAetheronecrosis;
+    public int NumCastsDualPredation;
     private readonly int[] _orders = new int[PartyState.MaxPartySize];
     private BitMask _vulnSnake;
     private BitMask _vulnWing;

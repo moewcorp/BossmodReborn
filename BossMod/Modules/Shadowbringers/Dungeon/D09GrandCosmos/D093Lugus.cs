@@ -60,53 +60,42 @@ public enum SID : uint
 
 class MortalFlame(BossModule module) : BossComponent(module)
 {
-    public static bool IsBurning(Actor actor) => actor.FindStatus(SID.MortalFlame) != null;
-    private static readonly HashSet<OID> furniture = [OID.FurnitureHelper1, OID.FurnitureHelper2, OID.FurnitureHelper4, OID.FurnitureHelper5, OID.FurnitureHelper6]; // without chandeliers since they get enabled later, but exist invisible to the player
-    private HashSet<Actor> _furniture = [];
-    private bool updated;
+    public BitMask burning;
+    private IEnumerable<Actor> Furniture => Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable) ? Module.Enemies(D093Lugus.FurnitureB) : Module.Enemies(D093Lugus.FurnitureA);
 
-    public override void OnActorDestroyed(Actor actor)
+    public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        _furniture.Remove(actor);
+        if ((SID)status.ID == SID.MortalFlame)
+            burning.Set(Raid.FindSlot(actor.InstanceID));
     }
 
-    public override void OnActorCreated(Actor actor)
+    public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (furniture.Contains((OID)actor.OID))
-            _furniture.Add(actor);
-    }
-
-    public override void Update()
-    {
-        if (!updated && Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable))
-        {
-            var list = _furniture.Concat(Module.Enemies(OID.FurnitureHelper3)).ToHashSet();
-            _furniture = list;
-            updated = true;
-        }
+        if ((SID)status.ID == SID.MortalFlame)
+            burning[Raid.FindSlot(actor.InstanceID)] = default;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!IsBurning(actor))
+        if (!burning[slot])
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var h in _furniture)
-            forbidden.Add(ShapeDistance.InvertedCircle(h.Position, h.HitboxRadius));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)));
+        var forbidden = new List<Func<WPos, float>>(Furniture.Count());
+        foreach (var h in Furniture)
+            forbidden.Add(ShapeDistance.InvertedCircle(h.Position, h.HitboxRadius - 0.5f));
+        if (forbidden.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (IsBurning(actor))
+        if (burning[slot])
             hints.Add("Pass flames debuff to furniture!");
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (IsBurning(pc))
-            foreach (var a in _furniture)
+        if (burning[pcSlot])
+            foreach (var a in Furniture)
                 Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Safe);
     }
 }
@@ -115,32 +104,9 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCircle circle = new(6);
     private static readonly AOEShapeCross cross = new(10, 2);
-    private static readonly HashSet<OID> furniture = [OID.FurnitureHelper1, OID.FurnitureHelper2, OID.FurnitureHelper4, OID.FurnitureHelper5, OID.FurnitureHelper6]; // without chandeliers since they get enabled later, but exist invisible to the player
-    private HashSet<Actor> _furniture = [];
-    private bool updated;
+    private IEnumerable<Actor> Furniture => Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable) ? Module.Enemies(D093Lugus.FurnitureB) : Module.Enemies(D093Lugus.FurnitureA);
 
-    public override void OnActorDestroyed(Actor actor)
-    {
-        _furniture.Remove(actor);
-    }
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if (furniture.Contains((OID)actor.OID))
-            _furniture.Add(actor);
-    }
-
-    public override void Update()
-    {
-        if (!updated && Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable))
-        {
-            var list = _furniture.Concat(Module.Enemies(OID.FurnitureHelper3)).ToHashSet();
-            _furniture = list;
-            updated = true;
-        }
-    }
-
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.BlackFlame)
         {
@@ -162,7 +128,7 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
         if (CurrentBaits.Any(x => x.Target == actor))
         {
             var b = ActiveBaitsOn(actor).FirstOrDefault(x => x.Shape == cross);
-            foreach (var p in _furniture)
+            foreach (var p in Furniture)
             {
                 // AOE and hitboxes seem to be forbidden to intersect
                 hints.AddForbiddenZone(ShapeDistance.Cross(p.Position, b.Rotation, cross.Length + p.HitboxRadius, cross.HalfWidth + p.HitboxRadius), b.Activation);
@@ -176,7 +142,7 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
         base.DrawArenaForeground(pcSlot, pc);
         if (!ActiveBaits.Any(x => x.Target == pc))
             return;
-        foreach (var a in _furniture)
+        foreach (var a in Furniture)
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
     }
 
@@ -187,16 +153,16 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class OtherworldlyHeat(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OtherworldlyHeat), new AOEShapeCross(10, 2));
+class OtherworldlyHeat(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OtherworldlyHeat), new AOEShapeCross(10, 2));
 
-abstract class Scorching(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
+abstract class Scorching(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
 class ScorchingLeft(BossModule module) : Scorching(module, AID.ScorchingLeft);
 class ScorchingRight(BossModule module) : Scorching(module, AID.ScorchingRight);
 
 class CullingBlade(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CullingBlade));
 class CaptiveBolt(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.CaptiveBolt));
-class FiresIre(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FiresIre), new AOEShapeCone(20, 45.Degrees()));
-class Plummet(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Plummet), 3);
+class FiresIre(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FiresIre), new AOEShapeCone(20, 45.Degrees()));
+class Plummet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plummet), 3);
 class FiresDomainTether(BossModule module) : Components.StretchTetherDuo(module, default, default)
 {
     private static readonly WDir offset = new(0, 24);
@@ -214,11 +180,11 @@ class FiresDomain(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (CurrentBaits.Count > 0 && (AID)spell.Action.ID is AID.FiresDomain1 or AID.FiresDomain2)
+        if (CurrentBaits.Count != 0 && (AID)spell.Action.ID is AID.FiresDomain1 or AID.FiresDomain2)
             CurrentBaits.RemoveAt(0);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID is >= IconID.Target1 and <= IconID.Target4)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, rect));
@@ -237,32 +203,9 @@ class FiresDomain(BossModule module) : Components.GenericBaitAway(module)
 class FiresIreBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(20, 45.Degrees());
-    private static readonly HashSet<OID> furniture = [OID.FurnitureHelper1, OID.FurnitureHelper2, OID.FurnitureHelper4, OID.FurnitureHelper5, OID.FurnitureHelper6]; // without chandeliers since they get enabled later, but exist invisible to the player
-    private HashSet<Actor> _furniture = [];
-    private bool updated;
+    private IEnumerable<Actor> Furniture => Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable) ? Module.Enemies(D093Lugus.FurnitureB) : Module.Enemies(D093Lugus.FurnitureA);
 
-    public override void OnActorDestroyed(Actor actor)
-    {
-        _furniture.Remove(actor);
-    }
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if (furniture.Contains((OID)actor.OID))
-            _furniture.Add(actor);
-    }
-
-    public override void Update()
-    {
-        if (!updated && Module.Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable))
-        {
-            var list = _furniture.Concat(Module.Enemies(OID.FurnitureHelper3)).ToHashSet();
-            _furniture = list;
-            updated = true;
-        }
-    }
-
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID is >= IconID.Target1 and <= IconID.Target4)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, cone));
@@ -270,7 +213,7 @@ class FiresIreBait(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (CurrentBaits.Count > 0 && (AID)spell.Action.ID is AID.FiresDomain1 or AID.FiresDomain2)
+        if (CurrentBaits.Count != 0 && (AID)spell.Action.ID is AID.FiresDomain1 or AID.FiresDomain2)
             CurrentBaits.RemoveAt(0);
     }
 
@@ -282,7 +225,7 @@ class FiresIreBait(BossModule module) : Components.GenericBaitAway(module)
         if (CurrentBaits.Any(x => x.Target == actor))
         {
             var b = ActiveBaitsOn(actor).FirstOrDefault();
-            var actors = _furniture.Concat(Raid.WithoutSlot().Exclude([actor]).ToHashSet());
+            var actors = Furniture.Concat(Raid.WithoutSlot(false, true, true).Exclude([actor]));
             foreach (var a in actors)
                 hints.AddForbiddenZone(ShapeDistance.Circle(a.Position, 10), b.Activation);
         }
@@ -292,7 +235,7 @@ class FiresIreBait(BossModule module) : Components.GenericBaitAway(module)
     {
         if (!ActiveBaits.Any(x => x.Target == pc))
             return;
-        foreach (var a in _furniture)
+        foreach (var a in Furniture)
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
         foreach (var b in ActiveBaitsOn(pc))
             b.Shape.Outline(Arena, b.Target.Position - (b.Target.HitboxRadius + Module.PrimaryActor.HitboxRadius) * Module.PrimaryActor.DirectionTo(b.Target), b.Rotation);
@@ -334,11 +277,12 @@ class D093LugusStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 692, NameID = 9046)]
 public class D093Lugus(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -340), new ArenaBoundsSquare(24.5f))
 {
+    public static readonly uint[] FurnitureA = [(uint)OID.FurnitureHelper1, (uint)OID.FurnitureHelper2, (uint)OID.FurnitureHelper4, (uint)OID.FurnitureHelper5, (uint)OID.FurnitureHelper6];
+    public static readonly uint[] FurnitureB = [.. FurnitureA, (uint)OID.FurnitureHelper3];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.FurnitureHelper1).Concat(Enemies(OID.FurnitureHelper2)).Concat(Enemies(OID.FurnitureHelper4)).Concat(Enemies(OID.FurnitureHelper5)).Concat(Enemies(OID.FurnitureHelper6)), Colors.Object, true);
-        if (Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable))
-            Arena.Actors(Enemies(OID.FurnitureHelper3), Colors.Object, true);
+        Arena.Actors(Enemies(OID.CrystalChandelier).Any(x => x.IsTargetable) ? Enemies(FurnitureB) : Enemies(FurnitureA), Colors.Object, true);
     }
 }

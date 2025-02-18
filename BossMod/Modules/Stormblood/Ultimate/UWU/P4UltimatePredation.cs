@@ -5,7 +5,7 @@ class P4UltimatePredation(BossModule module) : BossComponent(module)
 {
     public enum State { Inactive, Predicted, First, Second, Done }
 
-    public State CurState { get; private set; }
+    public State CurState;
     private readonly List<WPos> _hints = [];
     private readonly ArcList _first = new(new(), _dodgeRadius);
     private readonly ArcList _second = new(new(), _dodgeRadius);
@@ -133,7 +133,7 @@ class P4UltimatePredation(BossModule module) : BossComponent(module)
         }
     }
 
-    private float AngularDistance((Angle, Angle) p)
+    private static float AngularDistance((Angle, Angle) p)
     {
         var dist = Math.Abs(p.Item1.Rad - p.Item2.Rad);
         return dist < MathF.PI ? dist : Angle.DoublePI - dist;

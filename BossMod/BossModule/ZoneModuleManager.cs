@@ -3,7 +3,7 @@
 public sealed class ZoneModuleManager : IDisposable
 {
     public readonly WorldState WorldState;
-    public readonly ZoneModuleConfig Config = Service.Config.Get<ZoneModuleConfig>();
+    public static readonly ZoneModuleConfig Config = Service.Config.Get<ZoneModuleConfig>();
     private readonly EventSubscriptions _subsciptions;
 
     public ZoneModule? ActiveModule;

@@ -67,6 +67,6 @@ class Aetheroplasm(BossModule module) : BossComponent(module)
         if (_kiters.None())
             return null;
         var orbDir = orb.Rotation.ToDirection();
-        return Raid.WithSlot().IncludedInMask(_kiters).MaxBy(a => (a.Item2.Position - orb.Position).Normalized().Dot(orbDir)).Item2;
+        return Raid.WithSlot(false, true, true).IncludedInMask(_kiters).MaxBy(a => (a.Item2.Position - orb.Position).Normalized().Dot(orbDir)).Item2;
     }
 }

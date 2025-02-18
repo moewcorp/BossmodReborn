@@ -46,35 +46,37 @@ public enum AID : uint
     Telega = 9630 // Mandragoras->self, no cast, single-target, bonus adds disappear
 }
 
-class AChoo(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AChoo), new AOEShapeCone(12, 45.Degrees()));
-class FellSwipe(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FellSwipe), new AOEShapeCone(8, 60.Degrees()));
-class WindShot(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WindShot), new AOEShapeRect(40, 3));
-class LingeringSnort(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LingeringSnort), new AOEShapeCircle(20));
-class UnpleasantBreeze(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.UnpleasantBreeze), 6);
-class Fireball(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Fireball), 6, 8, 8);
+class AChoo(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AChoo), new AOEShapeCone(12f, 45f.Degrees()));
+class FellSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FellSwipe), new AOEShapeCone(8f, 60f.Degrees()));
+class WindShot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindShot), new AOEShapeRect(40f, 3f));
+class LingeringSnort(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LingeringSnort), 20f);
+class UnpleasantBreeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UnpleasantBreeze), 6f);
+class Fireball(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Fireball), 6f, 8, 8);
 
-class SnortsaultKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.SnortsaultKB), 20, stopAtWall: true);
+class SnortsaultKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.SnortsaultKB), 20f, stopAtWall: true);
 class SnortsaultCircle(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly LingeringSnort _aoes = module.FindComponent<LingeringSnort>()!;
-    private static readonly AOEShapeCircle circle = new(5);
+    private static readonly AOEShapeCircle circle = new(5f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (!_aoes.ActiveCasters.Any() && _aoe.HasValue)
-            yield return _aoe.Value;
+        if (_aoes.ActiveCasters.Count == 0 && _aoe != null)
+            return [_aoe.Value];
+        else
+            return [];
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.DaenOseTheAvaricious2)
-            _aoe = new(circle, Module.PrimaryActor.Position, default, WorldState.FutureTime(14.3f));
+        if (actor.OID == (uint)OID.DaenOseTheAvaricious2)
+            _aoe = new(circle, WPos.ClampToGrid(Arena.Center), default, WorldState.FutureTime(14.3d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SnortAssaultEnd)
+        if (spell.Action.ID == (uint)AID.SnortAssaultEnd)
             _aoe = null;
     }
 }
@@ -82,56 +84,55 @@ class SnortsaultCircle(BossModule module) : Components.GenericAOEs(module)
 class Snortsault(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private readonly LingeringSnort _aoe = module.FindComponent<LingeringSnort>()!;
-    private static readonly Angle increment = 6.Degrees();
-    private static readonly AOEShapeCone cone = new(20, 22.5f.Degrees());
+    private static readonly Angle increment = 6f.Degrees();
+    private static readonly AOEShapeCone cone = new(20f, 22.5f.Degrees());
 
     public override void OnActorCreated(Actor actor)
     {
-        switch ((OID)actor.OID)
+        switch (actor.OID)
         {
-            case OID.DaenOseTheAvaricious3:
-                AddSequences(actor, isClockwise: false);
+            case (uint)OID.DaenOseTheAvaricious3:
+                AddSequences(false);
                 break;
-            case OID.DaenOseTheAvaricious1:
-                AddSequences(actor, isClockwise: true);
+            case (uint)OID.DaenOseTheAvaricious1:
+                AddSequences(true);
                 break;
         }
-    }
-
-    private void AddSequences(Actor actor, bool isClockwise)
-    {
-        var rotationIncrement = isClockwise ? increment : -increment;
-        var activation = WorldState.FutureTime(14.5f);
-        Sequences.Add(new(cone, Arena.Center, actor.Rotation, rotationIncrement, activation, 1.1f, 31, 9));
-        Sequences.Add(new(cone, Arena.Center, actor.Rotation + 180.Degrees(), rotationIncrement, activation, 1.1f, 31, 9));
+        void AddSequences(bool isClockwise)
+        {
+            var rotationIncrement = isClockwise ? increment : -increment;
+            AddSequence(default);
+            AddSequence(180f.Degrees());
+            void AddSequence(Angle offset) => Sequences.Add(new(cone, WPos.ClampToGrid(Arena.Center), actor.Rotation + offset, rotationIncrement, WorldState.FutureTime(14.5d), 1.1f, 31, 9));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SnortsaultCone)
+        if (spell.Action.ID == (uint)AID.SnortsaultCone)
             AdvanceSequence(caster.Position, caster.Rotation, WorldState.CurrentTime);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_aoe.ActiveCasters.Any())
+        if (_aoe.ActiveCasters.Count == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_aoe.ActiveCasters.Any())
+        if (_aoe.ActiveCasters.Count == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        if (!_aoe.ActiveCasters.Any())
+        if (_aoe.ActiveCasters.Count == 0)
             base.DrawArenaBackground(pcSlot, pc);
     }
 }
 
-abstract class Mandragoras(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(6.84f));
+abstract class Mandragoras(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6.84f);
 class PluckAndPrune(BossModule module) : Mandragoras(module, AID.PluckAndPrune);
 class TearyTwirl(BossModule module) : Mandragoras(module, AID.TearyTwirl);
 class HeirloomScream(BossModule module) : Mandragoras(module, AID.HeirloomScream);
@@ -157,33 +158,48 @@ class DaenOseTheAvariciousTyphonStates : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () => module.Enemies(OID.WrigglingMenace).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.SecretEgg)).Concat(module.Enemies(OID.SecretQueen))
-            .Concat(module.Enemies(OID.SecretOnion)).Concat(module.Enemies(OID.SecretGarlic)).Concat(module.Enemies(OID.SecretTomato)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(DaenOseTheAvariciousTyphon.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9808)]
-public class DaenOseTheAvariciousTyphon(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9808, SortOrder = 1)]
+public class DaenOseTheAvariciousTyphon(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.SecretEgg, (uint)OID.SecretGarlic, (uint)OID.SecretOnion, (uint)OID.SecretTomato,
+    (uint)OID.SecretQueen];
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.WrigglingMenace, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.WrigglingMenace).Concat([PrimaryActor]));
-        Arena.Actors(Enemies(OID.SecretEgg).Concat(Enemies(OID.SecretTomato)).Concat(Enemies(OID.SecretQueen)).Concat(Enemies(OID.SecretGarlic)).Concat(Enemies(OID.SecretOnion)), Colors.Vulnerable);
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.WrigglingMenace));
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.SecretOnion => 7,
-                OID.SecretEgg => 6,
-                OID.SecretGarlic => 5,
-                OID.SecretTomato => 4,
-                OID.SecretQueen => 3,
-                OID.WrigglingMenace => 2,
-                OID.Boss => 1,
+                (uint)OID.SecretOnion => 6,
+                (uint)OID.SecretEgg => 5,
+                (uint)OID.SecretGarlic => 4,
+                (uint)OID.SecretTomato => 3,
+                (uint)OID.SecretQueen => 2,
+                (uint)OID.WrigglingMenace => 1,
                 _ => 0
             };
         }

@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
+
     Rake = 10355, // Boss->player, no cast, single-target
     Swinge = 8906, // Boss->self, 4.0s cast, range 50+R 60-degree cone
     Fodder = 8897, // Boss->self, 5.0s cast, single-target
@@ -18,12 +19,7 @@ public enum AID : uint
     CoilingIvy = 8901 // Boss->self, 3.0s cast, single-target
 }
 
-public enum TetherID : uint
-{
-    GrowthTether = 84 // EFB->Boss/player
-}
-
-class FeedingTime(BossModule module) : Components.InterceptTether(module, ActionID.MakeSpell(AID.FeedingTime), (uint)TetherID.GrowthTether)
+class FeedingTime(BossModule module) : Components.InterceptTether(module, ActionID.MakeSpell(AID.FeedingTime))
 {
     private DateTime _activation;
     public override void OnActorCreated(Actor actor)
@@ -32,14 +28,13 @@ class FeedingTime(BossModule module) : Components.InterceptTether(module, Action
             _activation = WorldState.FutureTime(10.9f);
     }
 
-    //TODO: consider moving this logic to the component
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Active)
         {
-            var source = Module.Enemies(OID.PaintedSapling)[slot].Position;
-            var direction = (Module.PrimaryActor.Position - source).Normalized();
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position - (Module.PrimaryActor.HitboxRadius + 0.1f) * Angle.FromDirection(direction).ToDirection(), source, 1), _activation);
+            var source = Module.Enemies(OID.PaintedSapling)[slot];
+            var target = Module.PrimaryActor;
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), _activation);
         }
     }
 }
@@ -54,7 +49,7 @@ class Swinge(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Swinge)
-            _aoe = new(new AOEShapeCone(50 + caster.HitboxRadius, 30.Degrees()), caster.Position, spell.Rotation, Module.CastFinishAt(spell));
+            _aoe = new(new AOEShapeCone(50f + caster.HitboxRadius, 30.Degrees()), caster.Position, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -78,21 +73,22 @@ class D022GriauleStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8143)]
 public class D022Griaule(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(7.17f, -339), 24.6f)], [new Rectangle(new(7, -363.5f), 20, 1), new Rectangle(new(7, -315), 20, 0.75f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(7.156f, -339.132f), 24.5f * CosPI.Pi32th, 32)], [new Rectangle(new(7, -363.5f), 20f, 1.1f), new Rectangle(new(7, -315), 20f, 0.75f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.PaintedRoot).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.PaintedRoot));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.PaintedRoot => 2,
-                OID.Boss => 1,
+                (uint)OID.PaintedRoot => 1,
                 _ => 0
             };
         }

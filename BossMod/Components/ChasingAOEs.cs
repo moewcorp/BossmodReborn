@@ -19,7 +19,8 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, ActionID 
         {
             var offset = Target.Position - PrevPos;
             var distance = offset.Length();
-            return distance > MoveDist ? PrevPos + MoveDist * offset / distance : Target.Position;
+            var pos = distance > MoveDist ? PrevPos + MoveDist * offset / distance : Target.Position;
+            return WPos.ClampToGrid(pos);
         }
     }
 
@@ -83,16 +84,16 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, ActionID 
 // standard chasing aoe; first cast is long - assume it is baited on the nearest allowed target; successive casts are instant
 public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID actionFirst, ActionID actionRest, float moveDistance, float secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, float activationDelay = 5.1f) : GenericChasingAOEs(module, moveDistance)
 {
-    public AOEShape Shape = shape;
-    public ActionID ActionFirst = actionFirst;
-    public ActionID ActionRest = actionRest;
-    public float MoveDistance = moveDistance;
-    public float SecondsBetweenActivations = secondsBetweenActivations;
+    public readonly AOEShape Shape = shape;
+    public readonly ActionID ActionFirst = actionFirst;
+    public readonly ActionID ActionRest = actionRest;
+    public readonly float MoveDistance = moveDistance;
+    public readonly float SecondsBetweenActivations = secondsBetweenActivations;
     public int MaxCasts = maxCasts;
     public BitMask ExcludedTargets; // any targets in this mask aren't considered to be possible targets
-    public uint Icon = icon;
-    public float ActivationDelay = activationDelay;
-    public bool ResetExcludedTargets = resetExcludedTargets;
+    public readonly uint Icon = icon;
+    public readonly float ActivationDelay = activationDelay;
+    public readonly bool ResetExcludedTargets = resetExcludedTargets;
     public readonly List<Actor> Actors = []; // to keep track of the icon before mechanic starts for handling custom forbidden zones
     public DateTime Activation;
 
@@ -111,7 +112,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
     {
         if (spell.Action == ActionFirst)
         {
-            var pos = spell.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ;
+            var pos = spell.LocXZ;
             var (slot, target) = Raid.WithSlot().ExcludedFromMask(ExcludedTargets).MinBy(ip => (ip.Item2.Position - pos).LengthSq());
             if (target != null)
             {
@@ -127,7 +128,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
         if (spell.Action == ActionFirst || spell.Action == ActionRest)
         {
             var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
-            Advance(pos, MoveDistance, WorldState.CurrentTime);
+            Advance(WPos.ClampToGrid(pos), MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetExcludedTargets)
             {
                 ExcludedTargets.Reset();
@@ -136,12 +137,61 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == Icon)
         {
             Activation = WorldState.FutureTime(ActivationDelay);
             Actors.Add(actor);
+        }
+    }
+}
+
+// since open world players don't count towards party, we need to make a new component
+public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, ActionID actionFirst, ActionID actionRest, float moveDistance, float secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, float activationDelay = 5.1f) : StandardChasingAOEs(module, shape, actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetExcludedTargets, icon, activationDelay)
+{
+    public new HashSet<Actor> ExcludedTargets = []; // any targets in this hashset aren't considered to be possible targets
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action == ActionFirst)
+        {
+            var pos = spell.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ;
+            Actor? target = null;
+            var minDistanceSq = float.MaxValue;
+
+            foreach (var actor in WorldState.Actors)
+            {
+                if (actor.OID == 0 && !ExcludedTargets.Contains(actor))
+                {
+                    var distanceSq = (actor.Position - pos).LengthSq();
+                    if (distanceSq < minDistanceSq)
+                    {
+                        minDistanceSq = distanceSq;
+                        target = actor;
+                    }
+                }
+            }
+            if (target != null)
+            {
+                Actors.Remove(target);
+                Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
+                ExcludedTargets.Add(target);
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action == ActionFirst || spell.Action == ActionRest)
+        {
+            var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
+            Advance(WPos.ClampToGrid(pos), MoveDistance, WorldState.CurrentTime);
+            if (Chasers.Count == 0 && ResetExcludedTargets)
+            {
+                ExcludedTargets.Clear();
+                NumCasts = 0;
+            }
         }
     }
 }

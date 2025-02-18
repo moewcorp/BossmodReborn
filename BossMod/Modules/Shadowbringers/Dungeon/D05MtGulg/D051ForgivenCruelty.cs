@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // 27CA->player, no cast, single-target
+
     Rake = 15611, // 27CA->player, 3.0s cast, single-target
     LumenInfinitum = 16818, // 27CA->self, 3.7s cast, range 40 width 5 rect
     TyphoonWingVisual1 = 15615, // 27CA->self, 5.0s cast, single-target
@@ -25,10 +26,10 @@ public enum AID : uint
 
 class Rake(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.Rake));
 class CycloneWing(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CycloneWing));
-class LumenInfinitum(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LumenInfinitum), new AOEShapeRect(40, 2.5f));
-class HurricaneWing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HurricaneWing), new AOEShapeCircle(10));
+class LumenInfinitum(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LumenInfinitum), new AOEShapeRect(40, 2.5f));
+class HurricaneWing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HurricaneWing), 10);
 
-class TyphoonWing(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(25, 30.Degrees()));
+class TyphoonWing(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(25, 30.Degrees()));
 class TyphoonWing1(BossModule module) : TyphoonWing(module, AID.TyphoonWing1);
 class TyphoonWing2(BossModule module) : TyphoonWing(module, AID.TyphoonWing2);
 

@@ -5,21 +5,21 @@ public enum OID : uint
     Boss = 0x2CF8, //R=4.5
     Bomb = 0x2CF9, //R=0.8
     MagitekExplosive = 0x2CEC, //R=0.8
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     BombsSpawn = 19260, // Boss->self, no cast, single-target
     Fungah = 19256, // Boss->self, no cast, range 8+R 90-degree cone, knockback 15 away from source
-    Explosion = 19259, // 2CF9->self, no cast, range 8 circle, wipe if in range
+    Explosion = 19259, // Bomb->self, no cast, range 8 circle, wipe if in range
     Fireball = 19258, // Boss->location, 4.0s cast, range 8 circle
     Fungahhh = 19257, // Boss->self, no cast, range 8+R 90-degree cone, knockback 15 away from source
     Snort = 19266, // Boss->self, 10.0s cast, range 60+R circle, knockback 15 away from source
-    MassiveExplosion = 19261, // 2CEC->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
+    MassiveExplosion = 19261 // MagitekExplosive->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
 }
 
-class Fireball(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
 class Snort(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Snort), 15, stopAtWall: true);
 
 class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
@@ -31,7 +31,7 @@ class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        if (_bombs.Count > 0 && _activation != default || otherpatterns)
+        if (_bombs.Count != 0 && _activation != default || otherpatterns)
             yield return new(Module.PrimaryActor.Position, 15, _activation, cone, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position));
     }
 
@@ -52,7 +52,7 @@ class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_bombs.Count > 0 && (AID)spell.Action.ID == AID.Explosion)
+        if (_bombs.Count != 0 && (AID)spell.Action.ID == AID.Explosion)
             _bombs.Clear();
         if ((AID)spell.Action.ID is AID.Fungah or AID.Fungahhh)
         {
@@ -160,7 +160,7 @@ class Stage27States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 696, NameID = 3046)]
 public class Stage27 : BossModule
 {
-    public Stage27(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage27(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
@@ -174,13 +174,14 @@ public class Stage27 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.MagitekExplosive => 2,
                 OID.Boss => 1,
-                OID.Bomb => -1,
+                OID.Bomb => AIHints.Enemy.PriorityPointless,
                 _ => 0
             };
         }

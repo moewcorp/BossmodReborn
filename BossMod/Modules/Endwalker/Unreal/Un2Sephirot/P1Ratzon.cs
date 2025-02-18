@@ -14,8 +14,8 @@ class P1Ratzon(BossModule module) : BossComponent(module)
         if ((_greenTargets | _purpleTargets).None())
             return;
 
-        var clippedByGreen = Raid.WithSlot().Exclude(slot).IncludedInMask(_greenTargets).InRadius(actor.Position, _greenRadius).Any();
-        var clippedByPurple = Raid.WithSlot().Exclude(slot).IncludedInMask(_purpleTargets).InRadius(actor.Position, _purpleRadius).Any();
+        var clippedByGreen = Raid.WithSlot(false, true, true).Exclude(slot).IncludedInMask(_greenTargets).InRadius(actor.Position, _greenRadius).Any();
+        var clippedByPurple = Raid.WithSlot(false, true, true).Exclude(slot).IncludedInMask(_purpleTargets).InRadius(actor.Position, _purpleRadius).Any();
         hints.Add($"Spread! (debuff: {(_greenTargets[slot] ? "green" : _purpleTargets[slot] ? "purple" : "none")})", clippedByGreen || clippedByPurple);
     }
 
@@ -26,10 +26,10 @@ class P1Ratzon(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var (slot, actor) in Raid.WithSlot().IncludedInMask(_greenTargets))
-            Arena.AddCircle(actor.Position, _greenRadius, 0xff00ff00, slot == pcSlot ? 2 : 1);
-        foreach (var (slot, actor) in Raid.WithSlot().IncludedInMask(_purpleTargets))
-            Arena.AddCircle(actor.Position, _purpleRadius, 0xffff00ff, slot == pcSlot ? 2 : 1);
+        foreach (var (slot, actor) in Raid.WithSlot(false, true, true).IncludedInMask(_greenTargets))
+            Arena.AddCircle(actor.Position, _greenRadius, Colors.Safe, slot == pcSlot ? 2 : 1);
+        foreach (var (slot, actor) in Raid.WithSlot(false, true, true).IncludedInMask(_purpleTargets))
+            Arena.AddCircle(actor.Position, _purpleRadius, Colors.Vulnerable, slot == pcSlot ? 2 : 1);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -45,7 +45,7 @@ class P1Ratzon(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {

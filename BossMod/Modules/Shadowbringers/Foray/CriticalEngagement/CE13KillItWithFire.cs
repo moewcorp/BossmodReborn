@@ -3,9 +3,9 @@
 public enum OID : uint
 {
     Boss = 0x2E2F, // R2.250, x1
-    Helper = 0x233C, // R0.500, x32
     RottenMandragora = 0x2E30, // R1.050, spawn during fight
     Pheromones = 0x2E31, // R1.500, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -28,7 +28,7 @@ public enum AID : uint
     SplashGrenadeAOE = 20524, // Helper->players, 5.0s cast, range 6 circle stack
     PlayfulBreeze = 20525, // Boss->self, 4.0s cast, single-target, visual (raidwide)
     PlayfulBreezeAOE = 20526, // Helper->self, 4.0s cast, range 60 circle raidwide
-    Budbutt = 20527, // Boss->player, 4.0s cast, single-target, tankbuster
+    Budbutt = 20527 // Boss->player, 4.0s cast, single-target, tankbuster
 }
 
 public enum SID : uint
@@ -102,9 +102,9 @@ class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "G
     };
 }
 
-class AnaphylacticShock(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AnaphylacticShock), new AOEShapeRect(30, 1));
-class SplashBomb(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SplashBombAOE), new AOEShapeCircle(6));
-class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.SplashGrenadeAOE), 6);
+class AnaphylacticShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AnaphylacticShock), new AOEShapeRect(30, 1));
+class SplashBomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SplashBombAOE), 6);
+class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.SplashGrenadeAOE), 6, 8, 24);
 class PlayfulBreeze(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PlayfulBreeze));
 class Budbutt(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Budbutt));
 
@@ -123,5 +123,5 @@ class CE13KillItWithFireStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
 public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, new(-90, 700), new ArenaBoundsCircle(25));

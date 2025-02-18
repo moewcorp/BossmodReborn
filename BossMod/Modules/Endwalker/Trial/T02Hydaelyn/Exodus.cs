@@ -1,35 +1,16 @@
 namespace BossMod.Endwalker.Trial.T02Hydaelyn;
 
-class Exodus(BossModule module) : BossComponent(module)
+class Exodus(BossModule module) : Components.RaidwideInstant(module, ActionID.MakeSpell(AID.Exodus), 7.2f)
 {
     private int _numCrystalsDestroyed;
-    private DateTime _activation;
-
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (_activation != default)
-            hints.Add("Raidwide");
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (_activation != default)
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), _activation));
-    }
 
     public override void OnActorDestroyed(Actor actor)
     {
-        if ((OID)actor.OID == OID.CrystalOfLight)
+        if (actor.OID == (uint)OID.CrystalOfLight)
         {
             ++_numCrystalsDestroyed;
             if (_numCrystalsDestroyed == 6)
-                _activation = WorldState.FutureTime(7.2f);
+                Activation = WorldState.FutureTime(7.2f);
         }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if ((AID)spell.Action.ID == AID.Exodus)
-            _activation = default;
     }
 }

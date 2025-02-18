@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class Spiritflame(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Spiritflame), 6);
+class Spiritflame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spiritflame), 6);
 class Spiritflames(BossModule module) : Components.GenericAOEs(module)
 {
     private const float Radius = 2.4f;
@@ -32,6 +32,6 @@ class Spiritflames(BossModule module) : Components.GenericAOEs(module)
         var forbidden = new List<Func<WPos, float>>();
         foreach (var f in _flames)
             forbidden.Add(ShapeDistance.Capsule(f.Position, f.Rotation, Length, Radius));
-        hints.AddForbiddenZone(p => forbidden.Min(f => f(p)));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
     }
 }

@@ -24,7 +24,7 @@ public enum SID : uint
     DamageUp = 290 // none->SkyArmorReinforcement/Helper, extra=0x0
 }
 
-class MagitekRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(42.94f, 3));
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(42.94f, 3));
 class MagitekClaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.MagitekClaw));
 class MagitekMissile(BossModule module) : Components.SingleTargetInstant(module, ActionID.MakeSpell(AID.MagitekMissile), 5, "50% HP damage on prey targets")
 {

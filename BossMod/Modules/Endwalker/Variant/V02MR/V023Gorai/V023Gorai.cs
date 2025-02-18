@@ -1,7 +1,7 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
 class Unenlightenment(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.Unenlightenment), ActionID.MakeSpell(AID.UnenlightenmentAOE), 0.5f);
-class SpikeOfFlameAOE(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SpikeOfFlameAOE), 5);
+class SpikeOfFlameAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpikeOfFlameAOE), 5);
 
 class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
@@ -10,12 +10,12 @@ class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.StringSnap1)
-            AddSequence(Module.Center, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -24,7 +24,7 @@ class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
                 AID.StringSnap3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, Module.Center, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
         }
     }
 }
@@ -39,7 +39,7 @@ class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, new A
 }
 
 class PureShock(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PureShock));
-class HumbleHammer(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HumbleHammer), 3);
+class HumbleHammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HumbleHammer), 3);
 class FightingSpirits(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FightingSpirits));
 class BiwaBreaker(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BiwaBreakerFirst), "Raidwide x5");
 

@@ -40,8 +40,8 @@ public enum SID : uint
 class OdeToLostLove(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OdeToLostLove));
 class StormOfColor(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.StormOfColor));
 class FarWindSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FarWindSpread), 5);
-class FarWind(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FarWind), 8);
-class OdeToFallenPetals(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OdeToFallenPetals), new AOEShapeDonut(5, 60));
+class FarWind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FarWind), 8);
+class OdeToFallenPetals(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OdeToFallenPetals), new AOEShapeDonut(5, 60));
 class IrefulWind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.IrefulWind), 10, kind: Kind.DirForward, stopAtWall: true);
 
 class GreenTiles(BossModule module) : Components.GenericAOEs(module)
@@ -54,16 +54,27 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         new(-15, -55), new(5, -55), new(-5, -45), new(15, -45)
     ];
     private Square[] tiles = [];
-
-    public static bool IsTransporting(Actor actor) => actor.FindStatus(SID.Transporting) != null;
+    public BitMask transporting;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (ShouldActivateAOEs())
-            yield return new(new AOEShapeCustom(tiles), Arena.Center, Color: Colors.FutureVulnerable, Risky: IsTransporting(actor));
+        if (ShouldActivateAOEs)
+            yield return new(new AOEShapeCustom(tiles), Arena.Center, Color: Colors.FutureVulnerable, Risky: transporting[slot] != default);
     }
 
-    private bool ShouldActivateAOEs() => NumCasts == 1 ? tiles.Length > 0 : tiles.Length > 8;
+    private bool ShouldActivateAOEs => NumCasts == 1 ? tiles.Length > 0 : tiles.Length > 8;
+
+    public override void OnStatusGain(Actor actor, ActorStatus status)
+    {
+        if ((SID)status.ID == SID.Transporting)
+            transporting.Set(Raid.FindSlot(actor.InstanceID));
+    }
+
+    public override void OnStatusLose(Actor actor, ActorStatus status)
+    {
+        if ((SID)status.ID == SID.Transporting)
+            transporting[Raid.FindSlot(actor.InstanceID)] = default;
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -80,10 +91,10 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         };
     }
 
-    private static Square[] GenerateTiles(WPos[] positions) => positions.Select(pos => new Square(pos, HalfSize)).ToArray();
+    private static Square[] GenerateTiles(WPos[] positions) => [.. positions.Select(pos => new Square(pos, HalfSize))];
 
     private static Square[] GenerateRotatedTiles(float angle)
-        => defaultGreenTiles.Select(pos => new Square(WPos.RotateAroundOrigin(angle, D092LeananSith.ArenaCenter, pos), HalfSize)).ToArray();
+        => [.. defaultGreenTiles.Select(pos => new Square(WPos.RotateAroundOrigin(angle, D092LeananSith.ArenaCenter, pos), HalfSize))];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -94,7 +105,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
             var knockbackDirection = new Angle(MathF.Round(spell.Rotation.Deg / 90) * 90) * Angle.DegToRad;
             var offset = 10 * knockbackDirection.ToDirection();
             var tileList = tiles.ToList();
-            var newTiles = new List<Square>();
+            var newTiles = new List<Square>(10);
             for (var i = 0; i < tileList.Count; ++i)
                 tileList[i] = new(tileList[i].Center - offset, tileList[i].HalfSize);
             foreach (var t in tileList.Where(x => (caster.Position - x.Center).LengthSq() > 625))
@@ -106,7 +117,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!ShouldActivateAOEs() || AI.AIManager.Instance?.Beh == null)
+        if (!ShouldActivateAOEs || AI.AIManager.Instance?.Beh == null)
             return;
         base.AddAIHints(slot, actor, assignment, hints);
 
@@ -114,7 +125,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         var clippedSeeds = GetClippedSeeds(shape);
         var closestSeed = clippedSeeds.Closest(actor.Position);
 
-        if (!IsTransporting(actor) && closestSeed != null)
+        if (transporting[slot] != default && closestSeed != null)
             HandleNonTransportingActor(actor, hints, clippedSeeds, closestSeed);
         else if (!shape.Shape.Check(actor.Position, shape.Origin, default))
             HandleTransportingActor(actor, hints);
@@ -123,18 +134,16 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
     }
 
     private IEnumerable<Actor> GetClippedSeeds(AOEInstance shape)
-        => Module.Enemies(OID.LeannanSeed1).Concat(Module.Enemies(OID.LeannanSeed2))
-            .Concat(Module.Enemies(OID.LeannanSeed3)).Concat(Module.Enemies(OID.LeannanSeed4))
-            .Where(x => x.IsTargetable).InShape(shape.Shape, shape.Origin, default);
+        => Module.Enemies(D092LeananSith.Seeds).Where(x => x.IsTargetable).InShape(shape.Shape, shape.Origin, default);
 
     private void HandleNonTransportingActor(Actor actor, AIHints hints, IEnumerable<Actor> clippedSeeds, Actor closestSeed)
     {
-        var forbidden = new List<Func<WPos, float>>();
+        var forbidden = new List<Func<WPos, float>>(4);
         foreach (var seed in clippedSeeds)
             forbidden.Add(ShapeDistance.InvertedCircle(seed.Position, 3));
         var distance = (actor.Position - closestSeed.Position).LengthSq();
         if (forbidden.Count > 0 && distance > 9)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)));
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
         else if (distance < 9)
             hints.InteractWithTarget = closestSeed;
     }
@@ -152,13 +161,20 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var aoes = ActiveAOEs(slot, actor).FirstOrDefault();
-        if (IsTransporting(actor) && ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position)))
-            hints.Add("Drop seed outside of vulnerable area!");
-        else if (IsTransporting(actor) && ActiveAOEs(slot, actor).Any(c => !c.Check(actor.Position)))
-            hints.Add("Drop your seed!");
-        else if (!IsTransporting(actor) && aoes.Shape != null && GetClippedSeeds(aoes).Any())
-            hints.Add("Pick up seeds in vulnerable squares!");
+        var trans = transporting[slot] != default;
+        if (trans)
+        {
+            if (ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position)))
+                hints.Add("Drop seed outside of vulnerable area!");
+            else
+                hints.Add("Drop your seed!");
+        }
+        else if (!trans)
+        {
+            var aoes = ActiveAOEs(slot, actor).FirstOrDefault();
+            if (aoes.Shape != null && GetClippedSeeds(aoes).Any())
+                hints.Add("Pick up seeds in vulnerable squares!");
+        }
     }
 }
 
@@ -181,22 +197,23 @@ class D092LeananSithStates : StateMachineBuilder
 public class D092LeananSith(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsSquare(19.5f))
 {
     public static readonly WPos ArenaCenter = new(0, -60);
+    public static readonly uint[] Seeds = [(uint)OID.LeannanSeed1, (uint)OID.LeannanSeed2, (uint)OID.LeannanSeed3, (uint)OID.LeannanSeed4];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.LeannanSeed1).Concat(Enemies(OID.LeannanSeed2)).Concat(Enemies(OID.LeannanSeed3)).Concat(Enemies(OID.LeannanSeed4)), Colors.Object);
+        Arena.Actors(Enemies(Seeds), Colors.Object);
         Arena.Actors(Enemies(OID.LoversRing));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.LoversRing => 2,
-                OID.Boss => 1,
+                OID.LoversRing => 1,
                 _ => 0
             };
         }

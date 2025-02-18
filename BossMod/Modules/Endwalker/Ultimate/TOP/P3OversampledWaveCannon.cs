@@ -86,7 +86,7 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
         if (_numPlayerAngles < 3 || _bossAngle == default)
             yield break;
 
-        WPos adjust(float x, float z) => Module.Center + new WDir(_bossAngle.Rad < 0 ? -x : x, z);
+        WPos adjust(float x, float z) => Arena.Center + new WDir(_bossAngle.Rad < 0 ? -x : x, z);
         if (IsMonitor(slot))
         {
             var nextSlot = 0;
@@ -142,7 +142,7 @@ class P3OversampledWaveCannonSpread(BossModule module) : Components.UniformStack
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.OversampledWaveCannonR or AID.OversampledWaveCannonL)
-            AddSpreads(Raid.WithoutSlot(true), Module.CastFinishAt(spell));
+            AddSpreads(Raid.WithoutSlot(true, true, true), Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

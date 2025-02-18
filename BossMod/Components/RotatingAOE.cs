@@ -15,7 +15,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         int MaxShownAOEs = 2
     );
 
-    public List<Sequence> Sequences = [];
+    public readonly List<Sequence> Sequences = [];
     public virtual uint ImminentColor { get; set; } = Colors.Danger;
     public uint FutureColor = Colors.AOE;
 

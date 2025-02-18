@@ -197,10 +197,10 @@ public class UIBitmapEditor
         var borderB = new Vector2(borderA.X + bitmapToScreenScale * Bitmap.Width, borderA.Y);
         var borderC = new Vector2(borderA.X + bitmapToScreenScale * Bitmap.Width, borderA.Y + bitmapToScreenScale * Bitmap.Height);
         var borderD = new Vector2(borderA.X, borderA.Y + bitmapToScreenScale * Bitmap.Height);
-        drawLine(borderA, borderB, 0xffffffff, 2);
-        drawLine(borderB, borderC, 0xffffffff, 2);
-        drawLine(borderC, borderD, 0xffffffff, 2);
-        drawLine(borderD, borderA, 0xffffffff, 2);
+        drawLine(borderA, borderB, Colors.Border, 2);
+        drawLine(borderB, borderC, Colors.Border, 2);
+        drawLine(borderC, borderD, Colors.Border, 2);
+        drawLine(borderD, borderA, Colors.Border, 2);
 
         // grid
         if (ZoomLevel > 1)
@@ -208,19 +208,19 @@ public class UIBitmapEditor
             for (int x = x0 + 1; x < x1; ++x)
             {
                 var off = new Vector2(x * numScreenPixelsPerBitmapPixel, 0);
-                drawLine(borderA + off, borderD + off, 0xffffffff, 1);
+                drawLine(borderA + off, borderD + off, Colors.Border, 1);
             }
             for (int y = y0 + 1; y < y1; ++y)
             {
                 var off = new Vector2(0, y * numScreenPixelsPerBitmapPixel);
-                drawLine(borderA + off, borderB + off, 0xffffffff, 1);
+                drawLine(borderA + off, borderB + off, Colors.Border, 1);
             }
         }
 
         // brush
         if ((CurrentMode == BrushModeId || CurrentMode == EraseModeId) && ImGui.IsItemHovered())
         {
-            dl.AddCircle(tl + mouseOffset, BrushRadius * bitmapToScreenScale, 0xffff00ff);
+            dl.AddCircle(tl + mouseOffset, BrushRadius * bitmapToScreenScale, Colors.Vulnerable);
         }
 
         // highlights

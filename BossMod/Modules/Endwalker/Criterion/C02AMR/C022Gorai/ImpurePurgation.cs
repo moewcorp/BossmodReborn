@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C02AMR.C022Gorai;
 
-class ImpurePurgationBait(BossModule module) : Components.BaitAwayEveryone(module, module.PrimaryActor, new AOEShapeCone(60, 22.5f.Degrees()))
+class ImpurePurgationBait(BossModule module) : Components.BaitAwayEveryone(module, module.PrimaryActor, new AOEShapeCone(60f, 22.5f.Degrees()))
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -12,6 +12,6 @@ class ImpurePurgationBait(BossModule module) : Components.BaitAwayEveryone(modul
     }
 }
 
-abstract class ImpurePurgationAOE(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60, 22.5f.Degrees()));
+abstract class ImpurePurgationAOE(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60f, 22.5f.Degrees()));
 class NImpurePurgationAOE(BossModule module) : ImpurePurgationAOE(module, AID.NImpurePurgationAOE);
 class SImpurePurgationAOE(BossModule module) : ImpurePurgationAOE(module, AID.SImpurePurgationAOE);

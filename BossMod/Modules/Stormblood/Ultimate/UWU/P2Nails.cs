@@ -3,7 +3,7 @@
 // TODO: kill priorities
 class P2Nails(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _nails = module.Enemies(OID.InfernalNail);
+    private readonly List<Actor> _nails = module.Enemies(OID.InfernalNail);
 
     public bool Active => _nails.Any(a => a.IsTargetable);
 

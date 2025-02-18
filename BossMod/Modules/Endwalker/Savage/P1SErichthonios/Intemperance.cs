@@ -72,7 +72,7 @@ class Intemperance(BossModule module) : BossComponent(module)
                     hints.Add("Go to assigned cell!");
                 }
             }
-            else if (Raid.WithoutSlot().Exclude(actor).Any(other => PositionFromCoords(other.Position) == actorCell))
+            else if (Raid.WithoutSlot(false, true, true).Exclude(actor).Any(other => PositionFromCoords(other.Position) == actorCell))
             {
                 hints.Add("Stand in own cell!");
             }
@@ -127,7 +127,7 @@ class Intemperance(BossModule module) : BossComponent(module)
                 // on first explosion, assign players to cubes
                 _playerAssignment = new int[PartyState.MaxPartySize];
                 var occupiedMask = 0;
-                foreach (var (slot, player) in Raid.WithSlot(true))
+                foreach (var (slot, player) in Raid.WithSlot(true, true, true))
                 {
                     var pos = _playerAssignment[slot] = PositionFromCoords(player.Position);
                     occupiedMask |= 1 << pos;

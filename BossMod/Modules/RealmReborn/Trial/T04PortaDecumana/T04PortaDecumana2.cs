@@ -3,9 +3,9 @@
 public enum OID : uint
 {
     Boss = 0x3900, // R=6.0
-    Helper = 0x233C,
     Aetheroplasm = 0x3902, // R=1.0
     MagitekBit = 0x3901, // R=0.6
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -43,13 +43,16 @@ public enum AID : uint
 
 class TankPurge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TankPurge));
 class HomingLasers(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HomingLasers));
-class MagitekRayF(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayAOEForward), new AOEShapeRect(40, 3));
-class MagitekRayR(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayAOERight), new AOEShapeRect(40, 3));
-class MagitekRayL(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayAOELeft), new AOEShapeRect(40, 3));
-class HomingRay(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HomingRayAOE), 6);
-class LaserFocus(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LaserFocusAOE), 6, 4, 4);
 
-class AethericBoom(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AethericBoom), 30, stopAtWall: true)
+abstract class MagitekRay(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 3f));
+class MagitekRayF(BossModule module) : MagitekRay(module, AID.MagitekRayAOEForward);
+class MagitekRayR(BossModule module) : MagitekRay(module, AID.MagitekRayAOERight);
+class MagitekRayL(BossModule module) : MagitekRay(module, AID.MagitekRayAOELeft);
+
+class HomingRay(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HomingRayAOE), 6f);
+class LaserFocus(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LaserFocusAOE), 6f, 4, 4);
+
+class AethericBoom(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AethericBoom), 30f, stopAtWall: true)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -69,9 +72,9 @@ class AethericBoom(BossModule module) : Components.KnockbackFromCastTarget(modul
 
 class Aetheroplasm(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
+    private readonly List<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
 
-    public IEnumerable<Actor> ActiveOrbs => _orbs.Where(orb => !orb.IsDead);
+    public IEnumerable<Actor> ActiveOrbs => _orbs.Where(x => !x.IsDead && !x.Rotation.AlmostEqual(default, Angle.DegToRad));
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -83,29 +86,32 @@ class Aetheroplasm(BossModule module) : BossComponent(module)
     {
         // orbs spawn with rotation 0°, checking for a different angle makes sure the AI doesn't run into the wall trying to catch them
         // since orbs are outside of the arena until they start rotating
-        var orb = ActiveOrbs.FirstOrDefault(x => !x.Rotation.AlmostEqual(0.Degrees(), Angle.DegToRad));
-        var orbs = new List<Func<WPos, float>>();
-        if (orb != null)
+        Actor[] orbz = [.. ActiveOrbs];
+        var len = orbz.Length;
+        if (len != 0)
         {
+            var orbs = new Func<WPos, float>[len];
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
-            foreach (var o in ActiveOrbs)
-                orbs.Add(ShapeDistance.InvertedCircle(o.Position + 0.5f * o.Rotation.ToDirection(), 0.5f));
+            for (var i = 0; i < len; ++i)
+            {
+                var o = orbz[i];
+                orbs[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
+            }
+            hints.AddForbiddenZone(ShapeDistance.Intersection(orbs), DateTime.MaxValue);
         }
-        if (orbs.Count > 0)
-            hints.AddForbiddenZone(p => orbs.Max(f => f(p)));
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         foreach (var orb in ActiveOrbs)
-            Arena.AddCircle(orb.Position, 1.4f, Colors.Safe);
+            Arena.AddCircle(orb.Position, 1f, Colors.Safe);
     }
 }
 
-class AssaultCannon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AssaultCannon), new AOEShapeRect(40, 2));
-class CitadelBuster(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CitadelBuster), new AOEShapeRect(40, 6));
+class AssaultCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AssaultCannon), new AOEShapeRect(40f, 2f));
+class CitadelBuster(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CitadelBuster), new AOEShapeRect(40f, 6f));
 
-class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCircle(16)) // TODO: verify falloff
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 16f) // TODO: verify falloff
 {
     // there is an overlap with another mechanic which has to be resolved first
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -138,7 +144,7 @@ class T04PortaDecumana2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 830, NameID = 2137, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 830, NameID = 2137, SortOrder = 2)]
 public class T04PortaDecumana2(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(19.5f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

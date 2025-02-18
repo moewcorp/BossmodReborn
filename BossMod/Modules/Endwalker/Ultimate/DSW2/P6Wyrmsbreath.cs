@@ -88,7 +88,7 @@ class P6Wyrmsbreath(BossModule module, bool allowIntersect) : Components.Generic
         }
     }
 
-    private Actor? IgnoredPartner(int slot, Actor actor) => _allowIntersect && _tetheredTo[slot] != null ? Raid.WithSlot().WhereSlot(i => _tetheredTo[i] != null && _tetheredTo[i] != _tetheredTo[slot]).Closest(actor.Position).Item2 : null;
+    private Actor? IgnoredPartner(int slot, Actor actor) => _allowIntersect && _tetheredTo[slot] != null ? Raid.WithSlot(false, true, true).WhereSlot(i => _tetheredTo[i] != null && _tetheredTo[i] != _tetheredTo[slot]).Closest(actor.Position).Item2 : null;
 }
 class P6Wyrmsbreath1(BossModule module) : P6Wyrmsbreath(module, true);
 class P6Wyrmsbreath2(BossModule module) : P6Wyrmsbreath(module, false);

@@ -4,12 +4,13 @@ public enum OID : uint
 {
     Boss = 0x31C1,
     Helper = 0x233C,
-    VermillionFlame = 0x2E8F,
+    VermillionFlame = 0x2E8F
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
+
     WildfiresFury = 23865, // Damage
     HarnessFire = 23864, // Boss->self, 3.0s cast, single-target
     HeartOfNature = 23844, // Boss->self, 3.0s cast, range 80 circle
@@ -36,12 +37,11 @@ public enum AID : uint
     NaturesBlood2 = 23849, // Helper->self, no cast, range 4 circle
     SplittingRage = 23863, // Boss->self, 3.0s cast, range 50 circle
     DuelOrDie = 23836,
-    WildfireCrucible = 23836, //enrage, 25s cast time
+    WildfireCrucible = 23836 //enrage, 25s cast time
 }
 
 public enum SID : uint
 {
     OnFire = 2547, // Boss->Boss
-    TemporaryMisdirection = 1422, // Boss->player, extra=0x2D0
     DuelOrDie = 2545, // Boss/Helper->player
 }

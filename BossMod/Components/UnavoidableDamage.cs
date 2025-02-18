@@ -13,8 +13,8 @@ public class RaidwideCast(BossModule module, ActionID aid, string hint = "Raidwi
 // generic unavoidable raidwide, initiated by a custom condition and applied by an instant cast after a delay
 public class RaidwideInstant(BossModule module, ActionID aid, float delay, string hint = "Raidwide") : CastCounter(module, aid)
 {
-    public float Delay = delay;
-    public string Hint = hint;
+    public readonly float Delay = delay;
+    public readonly string Hint = hint;
     public DateTime Activation; // default if inactive, otherwise expected cast time
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -82,13 +82,13 @@ public class SingleTargetCast(BossModule module, ActionID aid, string hint = "Ta
 // generic unavoidable single-target damage, initiated by a custom condition and applied by an instant cast after a delay
 public class SingleTargetInstant(BossModule module, ActionID aid, float delay, string hint = "Tankbuster") : CastCounter(module, aid)
 {
-    public float Delay = delay; // delay from visual cast end to cast event
-    public string Hint = hint;
+    public readonly float Delay = delay; // delay from visual cast end to cast event
+    public readonly string Hint = hint;
     public readonly List<(int slot, DateTime activation)> Targets = [];
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Targets.Count > 0 && Hint.Length > 0)
+        if (Targets.Count != 0 && Hint.Length != 0)
             hints.Add(Hint);
     }
 

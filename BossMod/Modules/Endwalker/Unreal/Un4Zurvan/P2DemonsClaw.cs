@@ -32,7 +32,7 @@ class P2DemonsClawWaveCannon(BossModule module) : Components.GenericWildCharge(m
         if (spell.Action == WatchedAction)
         {
             Source = caster;
-            foreach (var (slot, player) in Raid.WithSlot())
+            foreach (var (slot, player) in Raid.WithSlot(false, true, true))
             {
                 PlayerRoles[slot] = player == Target ? PlayerRole.Target : PlayerRole.Share;
             }

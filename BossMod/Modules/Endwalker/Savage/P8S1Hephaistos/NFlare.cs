@@ -20,10 +20,10 @@ class TetraOctaFlareCommon(BossModule module) : Components.UniformStackSpread(mo
         {
             case Concept.Tetra:
                 // note that targets are either all dps or all tanks/healers, it seems to be unknown until actual cast, so for simplicity assume it will target tanks/healers (not that it matters much in practice)
-                AddStacks(Raid.WithoutSlot().Where(a => a.Role is Role.Tank or Role.Healer));
+                AddStacks(Raid.WithoutSlot(false, true, true).Where(a => a.Role is Role.Tank or Role.Healer));
                 break;
             case Concept.Octa:
-                AddSpreads(Raid.WithoutSlot());
+                AddSpreads(Raid.WithoutSlot(false, true, true));
                 break;
         }
     }

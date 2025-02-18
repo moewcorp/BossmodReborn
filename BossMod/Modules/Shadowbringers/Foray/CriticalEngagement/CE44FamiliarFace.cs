@@ -4,11 +4,11 @@ public enum OID : uint
 {
     Boss = 0x2DD2, // R9.450, x1
     PhantomHashmal = 0x3321, // R9.450, x1
-    Helper = 0x233C, // R0.500, x24
     ArenaFeatures = 0x1EA1A1, // R2.000, x9, EventObj type
     Tower = 0x1EB17E, // R0.500, EventObj type, spawn during fight
     FallingTower = 0x1EB17D, // R0.500, EventObj type, spawn during fight, rotation at spawn determines fall direction?..
     Hammer = 0x1EB17F, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -38,19 +38,19 @@ public enum AID : uint
     IntractableLandRest = 23820, // Helper->location, no cast, range 8 circle
 
     HammerRound = 23824, // Boss->self, 5.0s cast, single-target, visual
-    Hammerfall = 23825, // Helper->self, 8.0s cast, range 37 circle aoe
+    Hammerfall = 23825 // Helper->self, 8.0s cast, range 37 circle aoe
 }
 
-class TectonicEruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TectonicEruption), 6);
+class TectonicEruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TectonicEruption), 6);
 class RockCutter(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.RockCutter));
 class AncientQuake(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AncientQuake));
 class Roxxor(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Roxxor), 6);
-class ControlTowerAppear(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ControlTowerAppear), new AOEShapeCircle(6));
+class ControlTowerAppear(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ControlTowerAppear), 6);
 
 // note: we could predict aoes way in advance, when FallingTower actors are created - they immediately have correct rotation
 // if previous cast was TowerRound, delay is ~24.4s; otherwise if previous cast was ControlTower, delay is ~9.6s; otherwise it is ~13s
 // however, just watching casts normally gives more than enough time to avoid aoes and does not interfere with mechanics that resolve earlier
-class Towerfall(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Towerfall), new AOEShapeRect(40, 5));
+class Towerfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Towerfall), new AOEShapeRect(40, 5));
 
 class ExtremeEdge(BossModule module) : Components.GenericAOEs(module)
 {
@@ -89,7 +89,7 @@ class IntractableLand(BossModule module) : Components.Exaflare(module, 8)
     {
         if ((AID)spell.Action.ID == AID.IntractableLandFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 8, MaxShownExplosions = 4 });
+            Lines.Add(new() { Next = spell.LocXZ, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 8, MaxShownExplosions = 4 });
         }
     }
 
@@ -127,7 +127,7 @@ class Hammerfall(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Hammerfall && _aoes.Count > 0)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Hammerfall)
             _aoes.RemoveAt(0);
     }
 }
@@ -149,5 +149,5 @@ class CE44FamiliarFaceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
 public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, new(330, 390), new ArenaBoundsCircle(30));

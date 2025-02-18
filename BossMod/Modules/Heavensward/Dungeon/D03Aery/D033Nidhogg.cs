@@ -97,15 +97,16 @@ class Fetters(BossModule module) : BossComponent(module)
 }
 
 class DeafeningBellow(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DeafeningBellow));
-class HotTail(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HotTail), new AOEShapeRect(34, 8, 34));
-class HotWing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HotWing), new AOEShapeRect(34, 34, -4));
-class Cauterize(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(80, 11));
+
+class HotTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotTail), new AOEShapeRect(68, 8));
+class HotWing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotWing), new AOEShapeRect(30, 34));
+class Cauterize(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(80, 11));
 class HorridRoarSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HorridRoarSpread), 6);
-class HorridRoar(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HorridRoar), 6);
+class HorridRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HorridRoar), 6);
 class HorridBlaze(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HorridBlaze), 6, 4, 4);
 class Massacre(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Massacre));
 class TheScarletPrice(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.TheScarletPrice));
-class Roast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Roast), new AOEShapeRect(30, 4));
+class Roast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Roast), new AOEShapeRect(30, 4));
 
 class D033NidhoggStates : StateMachineBuilder
 {
@@ -141,12 +142,13 @@ public class D033Nidhogg(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.TheSablePrice => 2,
-                OID.Boss or OID.Ahleh or OID.Liegedrake => 1,
+                OID.Ahleh or OID.Liegedrake => 1,
                 _ => 0
             };
         }

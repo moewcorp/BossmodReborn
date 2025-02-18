@@ -7,69 +7,68 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttackSanctifiedScathe = 17439, // 298A->player, no cast, single-target
-    LeftCheek = 17446, // 298A->self, 5.0s cast, range 60 180-degree cone
-    LeftCheek2 = 17447, // 298A->self, no cast, range 60 180-degree cone
-    RightCheek = 17448, // 298A->self, 5.0s cast, range 60 180-degree cone
-    RightCheek2 = 17449, // 298A->self, no cast, range 60 180-degree cone
-    TerrifyingGlance = 17955, // 298A->self, 3.0s cast, range 50 circle, gaze
-    TheStake = 17443, // 298A->self, 4.0s cast, range 18 circle
-    SecondCircle = 17441, // 298A->self, 3.0s cast, range 40 width 8 rect
-    CleansingFire = 17442, // 298A->self, 4.0s cast, range 40 circle
-    FeveredFlagellation = 17440, // 298A->players, 4.0s cast, range 15 90-degree cone, tankbuster
-    SanctifiedShock = 17900, // 298A->player, no cast, single-target, stuns target before WitchHunt
-    WitchHunt = 17444, // 298A->players, 3.0s cast, width 10 rect charge
-    WitchHunt2 = 17445, // 298A->players, no cast, width 10 rect charge, targets main tank
+    AutoAttackSanctifiedScathe = 17439, // Boss->player, no cast, single-target
+    LeftCheek1 = 17446, // Boss->self, 5.0s cast, range 60 180-degree cone
+    LeftCheek2 = 17447, // Boss->self, no cast, range 60 180-degree cone
+    RightCheek1 = 17448, // Boss->self, 5.0s cast, range 60 180-degree cone
+    RightCheek2 = 17449, // Boss->self, no cast, range 60 180-degree cone
+    TerrifyingGlance = 17955, // Boss->self, 3.0s cast, range 50 circle, gaze
+    TheStake = 17443, // Boss->self, 4.0s cast, range 18 circle
+    SecondCircle = 17441, // Boss->self, 3.0s cast, range 40 width 8 rect
+    CleansingFire = 17442, // Boss->self, 4.0s cast, range 40 circle
+    FeveredFlagellation = 17440, // Boss->players, 4.0s cast, range 15 90-degree cone, tankbuster
+    SanctifiedShock = 17900, // Boss->player, no cast, single-target, stuns target before WitchHunt
+    WitchHunt = 17444, // Boss->players, 3.0s cast, width 10 rect charge
+    WitchHunt2 = 17445, // Boss->players, no cast, width 10 rect charge, targets main tank
 }
 
 class LeftRightCheek(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(60, 90.Degrees());
-    private DateTime _activation;
-    private Angle _rotation;
+    private readonly List<AOEInstance> _aoes = new(2);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_activation != default)
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
         {
-            if (NumCasts == 0)
-            {
-                yield return new(cone, Module.PrimaryActor.Position, _rotation, _activation, Colors.Danger);
-                yield return new(cone, Module.PrimaryActor.Position, _rotation + 180.Degrees(), _activation.AddSeconds(3.1f), Risky: false);
-            }
-            if (NumCasts == 1)
-                yield return new(cone, Module.PrimaryActor.Position, _rotation + 180.Degrees(), _activation.AddSeconds(3.1f), Colors.Danger);
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else if (i == 1)
+                aoes.Add(aoe with { Risky = false });
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LeftCheek or AID.RightCheek)
+        if ((AID)spell.Action.ID is AID.LeftCheek1 or AID.RightCheek1)
         {
-            _rotation = spell.Rotation;
-            _activation = Module.CastFinishAt(spell);
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 3.1f)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LeftCheek or AID.RightCheek)
-            ++NumCasts;
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.LeftCheek1 or AID.RightCheek1)
+            _aoes.RemoveAt(0);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.LeftCheek2 or AID.RightCheek2)
-        {
-            NumCasts = 0;
-            _activation = default;
-        }
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.LeftCheek2 or AID.RightCheek2)
+            _aoes.RemoveAt(0);
     }
 }
 
 class TerrifyingGlance(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.TerrifyingGlance));
-class TheStake(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheStake), new AOEShapeCircle(18));
-class SecondCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SecondCircle), new AOEShapeRect(40, 4));
+class TheStake(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheStake), 18);
+class SecondCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SecondCircle), new AOEShapeRect(40, 4));
 class CleansingFire(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CleansingFire));
 
 class FeveredFlagellation(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.FeveredFlagellation), new AOEShapeCone(15, 45.Degrees()))

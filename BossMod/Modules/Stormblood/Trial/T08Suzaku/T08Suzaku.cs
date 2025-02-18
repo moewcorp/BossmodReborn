@@ -17,11 +17,11 @@ class ScarletFeverAOE(BossModule module) : Components.RaidwideCast(module, Actio
 class RuthlessRefrain(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.RuthlessRefrain), 8);
 class Cremate(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Cremate));
 class PhantomFlurryTankbuster(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.PhantomFlurryTankbuster));
-class PhantomFlurryAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryAOE), new AOEShapeCone(41, 90.Degrees()));
-class FleetingSummer(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FleetingSummer), new AOEShapeCone(40, 45.Degrees()));
-class Hotspot(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21, 60.Degrees()));
-class Swoop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Swoop), new AOEShapeRect(55, 3));
-class WellOfFlame(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41, 10));
+class PhantomFlurryAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryAOE), new AOEShapeCone(41, 90.Degrees()));
+class FleetingSummer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FleetingSummer), new AOEShapeCone(40, 45.Degrees()));
+class Hotspot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21, 60.Degrees()));
+class Swoop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Swoop), new AOEShapeRect(55, 3));
+class WellOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41, 10));
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 596, NameID = 6221)]
 public class T08Suzaku(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsCircle(20))

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Savage.P5SProtoCarbuncle;
 
-class VenomDrops(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VenomDrops), 5);
+class VenomDrops(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VenomDrops), 5);
 
 class VenomSquallSurge(BossModule module) : BossComponent(module)
 {
@@ -16,11 +16,11 @@ class VenomSquallSurge(BossModule module) : BossComponent(module)
         switch (NextMechanic)
         {
             case Mechanic.Rain:
-                if (Raid.WithoutSlot().InRadiusExcluding(actor, _radius).Any())
+                if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius).Any())
                     hints.Add("Spread!");
                 break;
             case Mechanic.Pool:
-                if (Raid.WithoutSlot().InRadius(actor.Position, _radius).Count(p => p.Role == Role.Healer) != 1)
+                if (Raid.WithoutSlot(false, true, true).InRadius(actor.Position, _radius).Count(p => p.Role == Role.Healer) != 1)
                     hints.Add("Stack with healer!");
                 break;
         }
@@ -41,11 +41,11 @@ class VenomSquallSurge(BossModule module) : BossComponent(module)
                 Arena.AddCircle(pc.Position, _radius, Colors.Danger);
                 break;
             case Mechanic.Drops: // bait
-                foreach (var p in Raid.WithoutSlot())
+                foreach (var p in Raid.WithoutSlot(false, true, true))
                     Arena.AddCircle(p.Position, _radius, Colors.Danger);
                 break;
             case Mechanic.Pool: // party stacks
-                foreach (var p in Raid.WithoutSlot().Where(p => p.Role == Role.Healer))
+                foreach (var p in Raid.WithoutSlot(false, true, true).Where(p => p.Role == Role.Healer))
                     Arena.AddCircle(p.Position, _radius, Colors.Danger);
                 break;
         }

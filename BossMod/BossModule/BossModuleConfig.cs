@@ -39,7 +39,7 @@ public class BossModuleConfig : ConfigNode
     [PropertyDisplay("如果旋转地图关闭，则将地图旋转 180°")]
     public bool FlipArena = false;
 
-    [PropertyDisplay("为雷达提供额外的旋转空间", tooltip: "如果您使用上述设置，您可以在修剪边缘之前在侧面给雷达额外的空间，以便考虑在战斗过程中旋转相机或给基本方向空间。", since: "7.2.0.169")]
+    [PropertyDisplay("为雷达提供额外的旋转空间", tooltip: "如果您使用上述设置，您可以在修剪边缘之前在侧面给雷达额外的空间，以便考虑在战斗过程中旋转相机或给基本方向空间。")]
     [PropertySlider(1, 2, Speed = 0.1f, Logarithmic = true)]
     public float SlackForRotations = 1.5f;
 
@@ -79,6 +79,9 @@ public class BossModuleConfig : ConfigNode
     // hint window settings
     [PropertyDisplay("在单独窗口中显示文字提示", tooltip: "将雷达窗口与提示窗口分离，允许你重新定位提示窗口")]
     public bool HintsInSeparateWindow = false;
+
+    [PropertyDisplay("使单独的提示窗口透明")]
+    public bool HintsInSeparateWindowTransparent = false;
 
     [PropertyDisplay("显示机制序列和计时提示")]
     public bool ShowMechanicTimers = true;

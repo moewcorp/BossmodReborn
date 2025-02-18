@@ -7,8 +7,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
     private static readonly Square[] defaultSquare = [new(ArenaCenter, 20)];
     public BitMask DamagedCells;
     public BitMask DestroyedCells;
-    public static readonly Square[] Tiles = Enumerable.Range(0, 16)
-        .Select(index => new Square(CellCenter(index), 5)).ToArray();
+    public static readonly Square[] Tiles = [.. Enumerable.Range(0, 16).Select(index => new Square(CellCenter(index), 5))];
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -57,8 +56,8 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     private void UpdateArenaBounds()
     {
-        Shape[] brokenTiles = Tiles.Where((tile, index) => DestroyedCells[index]).ToArray();
-        ArenaBoundsComplex arena = new(defaultSquare, brokenTiles, Offset: -0.5f);
+        Shape[] brokenTiles = [.. Tiles.Where((tile, index) => DestroyedCells[index])];
+        ArenaBoundsComplex arena = new(defaultSquare, brokenTiles);
         Arena.Bounds = arena;
         Arena.Center = arena.Center;
     }
@@ -67,25 +66,32 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 class Mouser(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    public static readonly AOEShapeRect Rect = new(5, 5, 5);
+    public static readonly AOEShapeRect Rect = new(5f, 5f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        var aoeCount = Math.Clamp(count, 0, NumCasts > 2 ? 2 : 3);
-        var aoeCount2 = Math.Clamp(count, 0, 4);
-        var totalAoeCount = Math.Min(count, aoeCount + aoeCount2);
-        if (_aoes.Count >= totalAoeCount)
-            for (var i = aoeCount; i < totalAoeCount; ++i)
-                yield return _aoes[i];
-        if (_aoes.Count > 0)
-            for (var i = 0; i < aoeCount; ++i)
-                yield return _aoes[i] with { Color = Colors.Danger };
+        if (count == 0)
+            return [];
+        var countDanger = NumCasts > 2 ? 2 : 3;
+        var total = countDanger + 4;
+        var max = total > count ? count : total;
+
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < countDanger)
+                aoes[i] = count > countDanger ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.MouserTelegraphFirst or AID.MouserTelegraphSecond)
+        if (spell.Action.ID is (uint)AID.MouserTelegraphFirst or (uint)AID.MouserTelegraphSecond)
             _aoes.Add(new(Rect, caster.Position, spell.Rotation, WorldState.FutureTime(9.7f)));
     }
 
@@ -97,7 +103,7 @@ class Mouser(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Mouser)
+        if (spell.Action.ID == (uint)AID.Mouser)
             if (++NumCasts == 19)
                 NumCasts = 0;
     }

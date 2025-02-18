@@ -2,17 +2,18 @@
 
 public enum OID : uint
 {
-    Boss = 0x35BF, // R5.400, x1
+    Boss = 0x35BF // R5.400, x1
 }
 
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     Soundstorm = 27230, // Boss->self, 5.0s cast, range 30 circle, applies march debuffs
     MiniLight = 27231, // Boss->self, 6.0s cast, range 18 circle
     Devour = 27232, // Boss->self, 1.0s cast, range 10 ?-degree cone, kills seduced and deals very small damage otherwise
     BogBomb = 27233, // Boss->location, 4.0s cast, range 6 circle
-    BrackishRain = 27234, // Boss->self, 4.0s cast, range 10 90-degree cone
+    BrackishRain = 27234 // Boss->self, 4.0s cast, range 10 90-degree cone
 }
 
 public enum SID : uint
@@ -21,7 +22,7 @@ public enum SID : uint
     ForwardMarch = 1958,
     AboutFace = 1959,
     LeftFace = 1960,
-    RightFace = 1961,
+    RightFace = 1961
 }
 
 class Soundstorm(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
@@ -67,8 +68,8 @@ class MiniLight(BossModule module) : Components.GenericAOEs(module)
 }
 
 class Devour(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Devour), "Harmless unless you got minimized by the previous mechanic");
-class BogBomb(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BogBomb), 6);
-class BrackishRain(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BrackishRain), new AOEShapeCone(10, 45.Degrees()));
+class BogBomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BogBomb), 6);
+class BrackishRain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrackishRain), new AOEShapeCone(10, 45.Degrees()));
 
 class YilanStates : StateMachineBuilder
 {
@@ -83,5 +84,5 @@ class YilanStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10625)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10625)]
 public class Yilan(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

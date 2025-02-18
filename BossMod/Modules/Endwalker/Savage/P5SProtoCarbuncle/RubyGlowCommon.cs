@@ -32,7 +32,7 @@ abstract class RubyGlowCommon(BossModule module, ActionID watchedAction = defaul
     }
 
     public WDir QuadrantDir(int q) => new((q & 1) != 0 ? +1 : -1, (q & 2) != 0 ? +1 : -1); // both coords are +-1
-    public WPos QuadrantCenter(int q) => Module.Center + Module.Bounds.Radius * 0.5f * QuadrantDir(q);
+    public WPos QuadrantCenter(int q) => Arena.Center + Arena.Bounds.Radius * 0.5f * QuadrantDir(q);
 
     public Waymark WaymarkForQuadrant(int q)
     {
@@ -63,14 +63,14 @@ abstract class RubyGlowCommon(BossModule module, ActionID watchedAction = defaul
         switch (State)
         {
             case ArenaState.Cells:
-                Arena.AddLine(Module.Center - new WDir(Module.Bounds.Radius, 0), Module.Center + new WDir(Module.Bounds.Radius, 0), Colors.Border);
-                Arena.AddLine(Module.Center - new WDir(0, Module.Bounds.Radius), Module.Center + new WDir(0, Module.Bounds.Radius), Colors.Border);
+                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, 0), Arena.Center + new WDir(Arena.Bounds.Radius, 0), Colors.Border);
+                Arena.AddLine(Arena.Center - new WDir(0, Arena.Bounds.Radius), Arena.Center + new WDir(0, Arena.Bounds.Radius), Colors.Border);
                 break;
             case ArenaState.DiagNW:
-                Arena.AddLine(Module.Center - new WDir(Module.Bounds.Radius, Module.Bounds.Radius), Module.Center + new WDir(Module.Bounds.Radius, Module.Bounds.Radius), Colors.Border);
+                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, Arena.Bounds.Radius), Arena.Center + new WDir(Arena.Bounds.Radius, Arena.Bounds.Radius), Colors.Border);
                 break;
             case ArenaState.DiagNE:
-                Arena.AddLine(Module.Center - new WDir(Module.Bounds.Radius, -Module.Bounds.Radius), Module.Center + new WDir(Module.Bounds.Radius, -Module.Bounds.Radius), Colors.Border);
+                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, -Arena.Bounds.Radius), Arena.Center + new WDir(Arena.Bounds.Radius, -Arena.Bounds.Radius), Colors.Border);
                 break;
         }
     }
@@ -137,8 +137,8 @@ abstract class RubyGlowRecolor(BossModule module, int expectedMagicStones) : Rub
 {
     public enum RecolorState { BeforeStones, BeforeRecolor, Done }
 
-    public RecolorState CurRecolorState { get; private set; }
-    public int AOEQuadrant { get; private set; }
+    public RecolorState CurRecolorState;
+    public int AOEQuadrant;
     private readonly int _expectedMagicStones = expectedMagicStones;
 
     private const float _recolorRadius = 5;
@@ -146,7 +146,7 @@ abstract class RubyGlowRecolor(BossModule module, int expectedMagicStones) : Rub
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (VenomPoolActive && Raid.WithoutSlot().Where(a => a.Role == Role.Healer).InRadius(actor.Position, _recolorRadius).Count() != 1)
+        if (VenomPoolActive && Raid.WithoutSlot(false, true, true).Where(a => a.Role == Role.Healer).InRadius(actor.Position, _recolorRadius).Count() != 1)
             hints.Add("Stack with healer!");
     }
 
@@ -162,7 +162,7 @@ abstract class RubyGlowRecolor(BossModule module, int expectedMagicStones) : Rub
                     Arena.Actor(o, Colors.Vulnerable, true);
 
         if (VenomPoolActive)
-            foreach (var a in Raid.WithoutSlot().Where(a => a.Role == Role.Healer))
+            foreach (var a in Raid.WithoutSlot(false, true, true).Where(a => a.Role == Role.Healer))
                 Arena.AddCircle(a.Position, _recolorRadius, Colors.Safe);
     }
 

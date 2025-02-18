@@ -11,11 +11,11 @@ class P2BrokenSeal(BossModule module) : BossComponent(module)
         public bool TooFar;
     }
 
-    public int NumAssigned { get; private set; }
-    public int NumCasts { get; private set; }
+    public int NumAssigned;
+    public int NumCasts;
     private readonly PlayerState[] _playerStates = Utils.MakeArray(PartyState.MaxPartySize, new PlayerState() { Partner = -1 });
-    private readonly IReadOnlyList<Actor> _fireTowers = module.Enemies(OID.FireTower);
-    private readonly IReadOnlyList<Actor> _iceTowers = module.Enemies(OID.IceTower);
+    private readonly List<Actor> _fireTowers = module.Enemies(OID.FireTower);
+    private readonly List<Actor> _iceTowers = module.Enemies(OID.IceTower);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -47,13 +47,13 @@ class P2BrokenSeal(BossModule module) : BossComponent(module)
         var partner = state.Color != Color.None && state.Partner >= 0 ? Raid[state.Partner] : null;
         if (partner != null)
         {
-            Arena.AddLine(pc.Position, partner.Position, state.Color == Color.Fire ? 0xff0080ff : 0xffff8000, state.TooFar ? 2 : 1);
+            Arena.AddLine(pc.Position, partner.Position, state.Color == Color.Fire ? Colors.Object : Colors.Other8, state.TooFar ? 2 : 1);
         }
 
-        foreach (var t in _fireTowers)
-            Arena.AddCircle(t.Position, 2, state.Color == Color.Fire ? Colors.Safe : Colors.Danger);
-        foreach (var t in _iceTowers)
-            Arena.AddCircle(t.Position, 2, state.Color == Color.Ice ? Colors.Safe : Colors.Danger);
+        for (var i = 0; i < _fireTowers.Count; ++i)
+            Arena.AddCircle(_fireTowers[i].Position, 2, state.Color == Color.Fire ? Colors.Safe : Colors.Danger);
+        for (var i = 0; i < _iceTowers.Count; ++i)
+            Arena.AddCircle(_iceTowers[i].Position, 2, state.Color == Color.Ice ? Colors.Safe : Colors.Danger);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

@@ -7,14 +7,15 @@ public enum OID : uint
     Beastmaster = 0x2DA9, // R0.500, x1
     Whirlwind = 0x2DAA, // R1.000, spawn during fight
     Deathwall = 0x2EE8, // R0.500, x1
-    Helper = 0x233C, // R0.500, x10
     DeathwallEvent = 0x1EB02E, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttackBeastmaster = 6497, // Beastmaster->player, no cast, single-target
     AutoAttackBossCrow = 6498, // Boss/TamedCarrionCrow->player, no cast, single-target
+
     FastBlade = 20155, // Beastmaster->player, no cast, single-target, micro tankbuster
     SavageBlade = 20156, // Beastmaster->player, no cast, single-target, micro tankbuster
     RippingBlade = 20157, // Beastmaster->player, no cast, single-target, micro tankbuster
@@ -45,20 +46,22 @@ public enum AID : uint
     WestWindAOE = 20187, // Helper->self, no cast, range 10 width 60 rect 'knock-forward' 30
 
     HardBeakCrow = 20190, // TamedCarrionCrow->player, 4.0s cast, single-target, micro tankbuster
-    PiercingBarrageCrow = 20191, // TamedCarrionCrow->self, 3.0s cast, range 40 width 8 rect
+    PiercingBarrageCrow = 20191 // TamedCarrionCrow->self, 3.0s cast, range 40 width 8 rect
 }
 
 class BestialLoyalty(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BestialLoyalty), "Summon crows");
 class RunWild(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.RunWild), showNameInHint: true);
 class HardBeak(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HardBeak));
-class PiercingBarrageBoss(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PiercingBarrageBoss), new AOEShapeRect(40, 4));
 class Helldive(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Helldive), 6);
-class BroadsideBarrage(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BroadsideBarrage), new AOEShapeRect(40, 20));
+class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BroadsideBarrage), new AOEShapeRect(40, 20));
 class BlindsideBarrage(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BlindsideBarrage), "Raidwide + deathwall appears");
-class RollingBarrage(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RollingBarrageAOE), new AOEShapeCircle(8));
+class RollingBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RollingBarrageAOE), 8);
 class Whirlwind(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.Whirlwind));
 class Wind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.WindVisual), 30, kind: Kind.DirForward);
-class PiercingBarrageCrow(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PiercingBarrageCrow), new AOEShapeRect(40, 4));
+
+abstract class PiercingBarrage(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 4));
+class PiercingBarrageBoss(BossModule module) : PiercingBarrage(module, AID.PiercingBarrageBoss);
+class PiercingBarrageCrow(BossModule module) : PiercingBarrage(module, AID.PiercingBarrageCrow);
 
 class CE11ShadowOfDeathHandStates : StateMachineBuilder
 {
@@ -79,7 +82,7 @@ class CE11ShadowOfDeathHandStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 5)] // bnpcname=9400
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 5)] // bnpcname=9400
 public class CE11ShadowOfDeathHand(WorldState ws, Actor primary) : BossModule(ws, primary, new(825, 640), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

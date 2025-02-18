@@ -6,8 +6,7 @@ class A13MarxEngelsStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<DemolishStructureArenaChange>()
-            .ActivateOnEnter<MarxSmash3>()
-            .ActivateOnEnter<MarxSmash2>()
+
             .ActivateOnEnter<PrecisionGuidedMissile2>()
             .ActivateOnEnter<DiffuseLaser>()
             .ActivateOnEnter<LaserSight1>()
@@ -16,12 +15,14 @@ class A13MarxEngelsStates : StateMachineBuilder
             //.ActivateOnEnter<IncendiaryBombing1>()
             .ActivateOnEnter<GuidedMissile>()
             .ActivateOnEnter<DiffuseLaser>()
+            .ActivateOnEnter<MarxSmash1>()
+            .ActivateOnEnter<MarxSmash2>()
+            .ActivateOnEnter<MarxSmash3>()
+            .ActivateOnEnter<MarxSmash4>()
+            .ActivateOnEnter<MarxSmash5>()
             .ActivateOnEnter<MarxSmash6>()
-            //.ActivateOnEnter<MarxSmash8>()
-            //.ActivateOnEnter<MarxSmash10>() needs placement adjustment
-            .ActivateOnEnter<MarxSmash12>()
-            .ActivateOnEnter<MarxSmash13>()
-            .ActivateOnEnter<MarxCrush2>()
+            .ActivateOnEnter<MarxSmash7>()
+            .ActivateOnEnter<MarxCrush>()
             .ActivateOnEnter<SurfaceMissile2>();
     }
 }

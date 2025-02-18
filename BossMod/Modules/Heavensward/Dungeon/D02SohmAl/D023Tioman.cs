@@ -12,6 +12,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
+
     AbyssicBuster = 3811, // Boss->self, no cast, range 25+R 90-degree cone
     ChaosBlastCircle = 3813, // Boss->location, 2.0s cast, range 2 circle
     ChaosBlastRect = 3819, // Helper->self, 2.0s cast, range 50+R width 4 rect
@@ -22,13 +23,13 @@ public enum AID : uint
     HeavensfallVisual = 3815, // Boss->self, no cast, single-target
     Heavensfall1 = 3817, // Helper->player, no cast, range 5 circle
     Heavensfall2 = 3818, // Helper->location, 3.0s cast, range 5 circle
-    DarkStar = 3812, // Boss->self, 5.0s cast, range 50+R circle
+    DarkStar = 3812 // Boss->self, 5.0s cast, range 50+R circle
 }
 
 public enum IconID : uint
 {
     Comet = 10, // player
-    Meteor = 7, // player
+    Meteor = 7 // player
 }
 
 class HeavensfallBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5), (uint)IconID.Comet, ActionID.MakeSpell(AID.Heavensfall1), 3.1f, true)
@@ -94,11 +95,11 @@ class MeteorImpact(BossModule module) : Components.GenericAOEs(module)
 }
 
 class DarkStar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DarkStar));
-class ChaosBlastCircle(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ChaosBlastCircle), 2);
-class ChaosBlastRect(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ChaosBlastRect), new AOEShapeRect(50.5f, 2));
+class ChaosBlastCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastCircle), 2);
+class ChaosBlastRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastRect), new AOEShapeRect(50.5f, 2));
 class AbyssicBuster(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssicBuster), new AOEShapeCone(31.84f, 45.Degrees()));
-class Comet(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Comet), 4);
-class Heavensfall(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Heavensfall2), 5);
+class Comet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Comet), 4);
+class Heavensfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Heavensfall2), 5);
 
 class D023TiomanStates : StateMachineBuilder
 {
@@ -132,12 +133,12 @@ public class D023Tioman(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.RightWingOfInjury or OID.LeftWingOfTragedy => 2,
-                OID.Boss => 1,
+                OID.RightWingOfInjury or OID.LeftWingOfTragedy => 1,
                 _ => 0
             };
         }

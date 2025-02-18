@@ -16,7 +16,7 @@ class AlphinaudAI(WorldState ws) : UnmanagedRotation(ws, 25)
 
         Hints.InteractWithTarget = World.Actors.FirstOrDefault(x => x.OID is 0x1EB44F or 0x1EB2FB && x.IsTargetable);
 
-        var refugee = World.Party.WithoutSlot().FirstOrDefault(x => x.OID == 0x35F1 && x.HPMP.CurHP < x.HPMP.MaxHP && x.IsTargetable);
+        var refugee = World.Party.WithoutSlot(false, true, true).FirstOrDefault(x => x.OID == 0x35F1 && x.HPMP.CurHP < x.HPMP.MaxHP && x.IsTargetable);
         if (refugee is Actor r)
             UseAction(RID.Diagnosis, r);
 
@@ -32,7 +32,7 @@ class AlphinaudAI(WorldState ws) : UnmanagedRotation(ws, 25)
     private void AutoHeal()
     {
         foreach (var h in Hints.PredictedDamage.Where(pd => pd.players.NumSetBits() == 1))
-            foreach (var (_, player) in World.Party.WithSlot().IncludedInMask(h.players))
+            foreach (var (_, player) in World.Party.WithSlot(false, true, false).IncludedInMask(h.players))
                 if (StatusDetails(player, 2844, Player.InstanceID).Left == 0)
                     UseAction(RID.LeveilleurDiagnosis, player);
 

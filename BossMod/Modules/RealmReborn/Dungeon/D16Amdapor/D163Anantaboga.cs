@@ -8,7 +8,7 @@ public enum OID : uint
     Pillar1 = 0x1E86A7, // x1, EventObj type
     Pillar2 = 0x1E86A8, // x1, EventObj type
     Pillar3 = 0x1E86A9, // x1, EventObj type
-    Pillar4 = 0x1E86AA, // x1, EventObj type
+    Pillar4 = 0x1E86AA // x1, EventObj type
 }
 
 public enum AID : uint
@@ -21,24 +21,24 @@ public enum AID : uint
     TerrorEye = 1077, // DarkHelot->location, 3.5s cast, range 6 circle puddle
     TriumphantRoar = 741, // DarkHelot->self, no cast, single-target damage up (enrage if not killed fast enough)
     PlagueDance = 1075, // Boss->self, no cast, single-target, visual (spawns dark nova)
-    BubonicCloud = 1076, // DarkNova->self, no cast, range 10+R circle, voidzone
+    BubonicCloud = 1076 // DarkNova->self, no cast, range 10+R circle, voidzone
 }
 
 public enum TetherID : uint
 {
-    PlagueDance = 1, // Boss->player
+    PlagueDance = 1 // Boss->player
 }
 
 class TheLook(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.TheLook), new AOEShapeCone(11.5f, 45.Degrees())); // TODO: verify angle
-class RottenBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RottenBreath), new AOEShapeCone(11.5f, 45.Degrees())); // TODO: verify angle
-class TailDrive(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TailDrive), new AOEShapeCone(35.5f, 45.Degrees()));
+class RottenBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RottenBreath), new AOEShapeCone(11.5f, 45.Degrees())); // TODO: verify angle
+class TailDrive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailDrive), new AOEShapeCone(35.5f, 45.Degrees()));
 
 class ImminentCatastrophe(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ImminentCatastrophe), 100, true)
 {
     public override IEnumerable<Actor> BlockerActors() => ((D163Anantaboga)Module).ActivePillars();
 }
 
-class TerrorEye(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TerrorEye), 6);
+class TerrorEye(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TerrorEye), 6);
 
 class PlagueDance(BossModule module) : BossComponent(module)
 {
@@ -103,7 +103,7 @@ class D163AnantabogaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1696)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1696)]
 public class D163Anantaboga(WorldState ws, Actor primary) : BossModule(ws, primary, new(10, 0), new ArenaBoundsSquare(25))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

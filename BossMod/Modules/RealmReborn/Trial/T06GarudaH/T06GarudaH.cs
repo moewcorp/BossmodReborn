@@ -13,12 +13,13 @@ public enum OID : uint
     Monolith1 = 0x1E8706, // x1, EventObj type
     Monolith2 = 0x1E8707, // x1, EventObj type
     Monolith3 = 0x1E8708, // x1, EventObj type
-    Monolith4 = 0x1E8709, // x1, EventObj type
+    Monolith4 = 0x1E8709 // x1, EventObj type
 }
 
 public enum AID : uint
 {
     AutoAttack = 870, // Boss/Chirada/Suparna->player, no cast, single-target
+
     Friction = 1379, // Boss/Chirada/Suparna->players, no cast, range 5 circle at random target
     Downburst = 1380, // Boss/Chirada/Suparna->self, no cast, range 10+R ?-degree cone cleave
     WickedWheel = 1381, // Boss/Chirada/Suparna->self, no cast, range 7+R circle cleave
@@ -29,7 +30,7 @@ public enum AID : uint
     GreatWhirlwind = 1386, // Whirlwind->location, 3.0s cast, range 8 circle aoe with knockback 15
     EyeOfTheStorm = 1387, // EyeOfTheStorm->self, 3.0s cast, range 12-25 donut
     Featherlance = 1388, // RazorPlume->self, no cast, range 8 circle, suicide attack if not killed in ~25s
-    ThermalTumult = 1389, // SatinPlume->self, no cast, range 6 circle, suicide attack (applies sleep) if not killed in ~25s
+    ThermalTumult = 1389 // SatinPlume->self, no cast, range 6 circle, suicide attack (applies sleep) if not killed in ~25s
 }
 
 public enum TetherID : uint
@@ -50,7 +51,7 @@ class Friction(BossModule module) : BossComponent(module)
 }
 
 class Downburst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Downburst), new AOEShapeCone(11.7f, 60.Degrees()));
-class Slipstream(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Slipstream), new AOEShapeCone(11.7f, 45.Degrees()));
+class Slipstream(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Slipstream), new AOEShapeCone(11.7f, 45.Degrees()));
 
 class MistralShriek(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.MistralShriek), 24.7f, true)
 {
@@ -63,8 +64,8 @@ class MistralSong(BossModule module) : Components.CastLineOfSightAOE(module, Act
 }
 
 class AerialBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AerialBlast));
-class GreatWhirlwind(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GreatWhirlwind), 8);
-class EyeOfTheStorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EyeOfTheStorm), new AOEShapeDonut(12, 25));
+class GreatWhirlwind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GreatWhirlwind), 8);
+class EyeOfTheStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheStorm), new AOEShapeDonut(12, 25));
 
 class T06GarudaHStates : StateMachineBuilder
 {
@@ -82,13 +83,13 @@ class T06GarudaHStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 61, NameID = 1644)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 61, NameID = 1644)]
 public class T06GarudaH : BossModule
 {
-    private readonly IReadOnlyList<Actor> _monoliths;
+    private readonly List<Actor> _monoliths;
     public IEnumerable<Actor> ActiveMonoliths => _monoliths;
 
-    public T06GarudaH(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(22))
+    public T06GarudaH(WorldState ws, Actor primary) : base(ws, primary, default, new ArenaBoundsCircle(22))
     {
         _monoliths = Enemies(OID.Monolith);
     }

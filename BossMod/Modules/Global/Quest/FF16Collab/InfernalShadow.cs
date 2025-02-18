@@ -11,12 +11,12 @@ class SpreadingFire(BossModule module) : Components.ConcentricAOEs(module, _shap
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.SpreadingFire1st)
-            AddSequence(caster.Position, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -26,13 +26,14 @@ class SpreadingFire(BossModule module) : Components.ConcentricAOEs(module, _shap
                 AID.SpreadingFire4th => 3,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
         }
     }
 }
 
-class SmolderingClaw(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SmolderingClawReal), new AOEShapeCone(40, 75.Degrees()));
-class TailStrike(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TailStrikeReal), new AOEShapeCone(40, 75.Degrees()));
+abstract class Cone75(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 75.Degrees()));
+class SmolderingClaw(BossModule module) : Cone75(module, AID.SmolderingClawReal);
+class TailStrike(BossModule module) : Cone75(module, AID.TailStrikeReal);
 
 class FireRampageCleave(BossModule module) : Components.GenericAOEs(module)
 {
@@ -50,14 +51,14 @@ class FireRampageCleave(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.FieryRampageCleaveReal or AID.FieryRampageCleaveReal2)
         {
-            _castersunsorted.Add((caster.Position, spell.Rotation, Module.CastFinishAt(spell), spell.Action.ID)); //casters appear in random order in raw ops
-            _casters = _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.rotation, x.activation)).ToList();
+            _castersunsorted.Add((caster.Position, spell.Rotation, Module.CastFinishAt(spell), spell.Action.ID)); // casters appear in random order in raw ops
+            _casters = [.. _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.rotation, x.activation))];
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_casters.Count > 0 && (AID)spell.Action.ID is AID.FieryRampageCleaveReal or AID.FieryRampageCleaveReal2)
+        if (_casters.Count != 0 && (AID)spell.Action.ID is AID.FieryRampageCleaveReal or AID.FieryRampageCleaveReal2)
         {
             _casters.RemoveAt(0);
             _castersunsorted.Clear();
@@ -65,10 +66,10 @@ class FireRampageCleave(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class FieryRampageCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FieryRampageCircleReal), new AOEShapeCircle(16));
+class FieryRampageCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FieryRampageCircleReal), 16);
 class FieryRampageRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FieryRampageRaidwideReal), "Time your dodge correctly");
-class Pyrosault(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PyrosaultReal), new AOEShapeCircle(10));
-class Fireball(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FireballReal), 6);
+class Pyrosault(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PyrosaultReal), 10);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireballReal), 6);
 class CrimsonRush(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.CrimsonRushReal), 10);
 
 class CrimsonStreak(BossModule module) : Components.GenericAOEs(module)
@@ -94,12 +95,12 @@ class CrimsonStreak(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_casters.Count > 0 && (AID)spell.Action.ID == AID.CrimsonStreakReal)
+        if (_casters.Count != 0 && (AID)spell.Action.ID == AID.CrimsonStreakReal)
             _casters.RemoveAt(0);
     }
 }
 
-class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EruptionReal), 8);
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionReal), 8);
 
 class Eruption2(BossModule module) : Components.GenericAOEs(module)
 {
@@ -134,13 +135,13 @@ class Eruption2(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID is AID.EruptionReal2 or AID.EruptionReal3 or AID.EruptionReal4)
         {
             _castersunsorted.Add((spell.LocXZ, Module.CastFinishAt(spell), spell.Action.ID));
-            _casters = _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.activation)).ToList();
+            _casters = [.. _castersunsorted.OrderBy(x => x.AID).Select(x => (x.position, x.activation))];
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_casters.Count > 0 && (AID)spell.Action.ID is AID.EruptionReal2 or AID.EruptionReal3 or AID.EruptionReal4)
+        if (_casters.Count != 0 && (AID)spell.Action.ID is AID.EruptionReal2 or AID.EruptionReal3 or AID.EruptionReal4)
         {
             _casters.RemoveAt(0);
             ++NumCasts;
@@ -213,7 +214,7 @@ class SearingStomp(BossModule module) : BossComponent(module)
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70334, NameID = 12564)] // also: CFC 959
-public class InfernalShadow(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
+public class InfernalShadow(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

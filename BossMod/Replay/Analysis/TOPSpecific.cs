@@ -42,7 +42,7 @@ class TOPSpecific
         {
             _plotFlamethrowers.Begin();
             foreach (var i in _flamethrowers)
-                _plotFlamethrowers.Point(new(i.Difference.Deg, 0.5f), 0xff00ffff, () => $"{i.Replay.Path} @ {i.Timestamp:O}");
+                _plotFlamethrowers.Point(new(i.Difference.Deg, 0.5f), Colors.TextColor2, () => $"{i.Replay.Path} @ {i.Timestamp:O}");
             _plotFlamethrowers.End();
         }
     }

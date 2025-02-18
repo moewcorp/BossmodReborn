@@ -2,39 +2,48 @@
 
 class EyeThunderVortex(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCircle _shapeCircle = new(15f);
+    private static readonly AOEShapeDonut _shapeDonut = new(8f, 30f);
 
-    private static readonly AOEShapeCircle _shapeCircle = new(15);
-    private static readonly AOEShapeDonut _shapeDonut = new(8, 30);
-    private static readonly HashSet<AID> castEnd = [AID.NEyeOfTheThunderVortexFirst, AID.NEyeOfTheThunderVortexSecond, AID.NVortexOfTheThunderEyeFirst,
-    AID.NVortexOfTheThunderEyeSecond, AID.SEyeOfTheThunderVortexFirst, AID.SEyeOfTheThunderVortexSecond, AID.SVortexOfTheThunderEyeFirst, AID.SVortexOfTheThunderEyeSecond];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NEyeOfTheThunderVortexFirst:
-            case AID.SEyeOfTheThunderVortexFirst:
-                _aoes.Add(new(_shapeCircle, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(_shapeDonut, caster.Position, default, Module.CastFinishAt(spell, 4)));
+            case (uint)AID.NEyeOfTheThunderVortexFirst:
+            case (uint)AID.SEyeOfTheThunderVortexFirst:
+                AddAOEs(_shapeCircle, _shapeDonut);
                 break;
-            case AID.NVortexOfTheThunderEyeFirst:
-            case AID.SVortexOfTheThunderEyeFirst:
-                _aoes.Add(new(_shapeDonut, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(_shapeCircle, caster.Position, default, Module.CastFinishAt(spell, 4)));
+            case (uint)AID.NVortexOfTheThunderEyeFirst:
+            case (uint)AID.SVortexOfTheThunderEyeFirst:
+                AddAOEs(_shapeDonut, _shapeCircle);
                 break;
+        }
+        void AddAOEs(AOEShape shape1, AOEShape shape2)
+        {
+            _aoes.Add(new(shape1, spell.LocXZ, default, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape2, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (castEnd.Contains((AID)spell.Action.ID))
+        switch (spell.Action.ID)
         {
-            if (_aoes.Count > 0)
-                _aoes.RemoveAt(0);
-            ++NumCasts;
+            case (uint)AID.NEyeOfTheThunderVortexFirst:
+            case (uint)AID.NEyeOfTheThunderVortexSecond:
+            case (uint)AID.NVortexOfTheThunderEyeFirst:
+            case (uint)AID.NVortexOfTheThunderEyeSecond:
+            case (uint)AID.SEyeOfTheThunderVortexFirst:
+            case (uint)AID.SEyeOfTheThunderVortexSecond:
+            case (uint)AID.SVortexOfTheThunderEyeFirst:
+            case (uint)AID.SVortexOfTheThunderEyeSecond:
+                if (_aoes.Count != 0)
+                    _aoes.RemoveAt(0);
+                ++NumCasts;
+                break;
         }
     }
 }

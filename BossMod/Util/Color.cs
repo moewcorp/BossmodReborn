@@ -70,6 +70,9 @@ public static class Colors
     public static uint Other4 => _config.ArenaOther[3].ABGR;
     public static uint Other5 => _config.ArenaOther[4].ABGR;
     public static uint Other6 => _config.ArenaOther[5].ABGR;
+    public static uint Other7 => _config.ArenaOther[6].ABGR;
+    public static uint Other8 => _config.ArenaOther[7].ABGR;
+    public static uint Other9 => _config.ArenaOther[8].ABGR;
     public static uint Shadows => _config.Shadows.ABGR;
     public static uint CardinalN => _config.CardinalN.ABGR;
     public static uint CardinalE => _config.CardinalE.ABGR;
@@ -117,4 +120,11 @@ public static class Colors
     public static uint Caster => _config.ArenaPlayerGenericCaster.ABGR;
     public static uint PhysRanged => _config.ArenaPlayerGenericPhysRanged.ABGR;
     public static uint Focus => _config.ArenaPlayerGenericFocus.ABGR;
+    public static uint CollisionColor1 => _config.CollisionColors[0].ABGR;
+    public static uint CollisionColor2 => _config.CollisionColors[1].ABGR;
+    public static uint CollisionColor3 => _config.CollisionColors[2].ABGR;
+    public static uint PathfindingColor1 => _config.PathfindingColors[0].ABGR;
+    public static uint PathfindingColor2 => _config.PathfindingColors[1].ABGR;
+    public static uint PathfindingColor3 => _config.PathfindingColors[2].ABGR;
+    public static uint PathfindingColor4 => _config.PathfindingColors[3].ABGR;
 }

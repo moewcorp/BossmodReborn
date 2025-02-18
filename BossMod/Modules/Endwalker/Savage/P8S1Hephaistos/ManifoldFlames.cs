@@ -4,7 +4,7 @@ class ManifoldFlames : Components.UniformStackSpread
 {
     public ManifoldFlames(BossModule module) : base(module, 0, 6)
     {
-        AddSpreads(Raid.WithoutSlot(true));
+        AddSpreads(Raid.WithoutSlot(true, true, true));
     }
 }
 
@@ -16,13 +16,13 @@ class NestOfFlamevipersCommon(BossModule module) : Components.CastCounter(module
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (Raid.WithSlot().IncludedInMask(BaitingPlayers).WhereActor(p => p != actor && _shape.Check(actor.Position, Module.PrimaryActor.Position, Angle.FromDirection(p.Position - Module.PrimaryActor.Position))).Any())
+        if (Raid.WithSlot(false, true, true).IncludedInMask(BaitingPlayers).WhereActor(p => p != actor && _shape.Check(actor.Position, Module.PrimaryActor.Position, Angle.FromDirection(p.Position - Module.PrimaryActor.Position))).Any())
             hints.Add("GTFO from baited aoe!");
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var (_, player) in Raid.WithSlot().IncludedInMask(BaitingPlayers))
+        foreach (var (_, player) in Raid.WithSlot(false, true, true).IncludedInMask(BaitingPlayers))
             _shape.Outline(Arena, Module.PrimaryActor.Position, Angle.FromDirection(player.Position - Module.PrimaryActor.Position));
     }
 }
@@ -35,7 +35,7 @@ class NestOfFlamevipersBaited(BossModule module) : NestOfFlamevipersCommon(modul
 
     public override void Update()
     {
-        BaitingPlayers = Active ? Raid.WithSlot().SortedByRange(Module.PrimaryActor.Position).Take(4).Mask() : new();
+        BaitingPlayers = Active ? Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(4).Mask() : new();
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -64,6 +64,6 @@ class NestOfFlamevipersEveryone(BossModule module) : NestOfFlamevipersCommon(mod
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.NestOfFlamevipers)
-            BaitingPlayers = Raid.WithSlot().Mask();
+            BaitingPlayers = Raid.WithSlot(false, true, true).Mask();
     }
 }

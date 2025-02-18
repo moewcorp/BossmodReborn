@@ -108,7 +108,7 @@ class WildAnguish2(BossModule module) : Components.GenericTowers(module)
 
     public override void Update()
     {
-        if (Towers.Count > 0 && _sp.Spreads.Count == 0)
+        if (Towers.Count != 0 && _sp.Spreads.Count == 0)
             Towers.Clear();
     }
 
@@ -132,43 +132,39 @@ class WildAnguish2(BossModule module) : Components.GenericTowers(module)
 
 class WildRageKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.WildRageKnockback), 15)
 {
-    private static readonly Angle a10 = 10.Degrees();
-    private static readonly Angle a45 = 45.Degrees();
+    private static readonly Angle a10 = 10.Degrees(), a45 = 45.Degrees();
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var source = Sources(slot, actor).FirstOrDefault();
-
         if (source != default)
         {
-            var forbidden = new List<Func<WPos, float>>();
+            var forbidden = new List<Func<WPos, float>>(2);
             var dir = source.Origin.X == 738 ? 1 : -1;
             forbidden.Add(ShapeDistance.InvertedDonutSector(source.Origin, 8, 9, a45 * dir, a10));
             forbidden.Add(ShapeDistance.InvertedDonutSector(source.Origin, 8, 9, 3 * a45 * dir, a10));
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)), source.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), source.Activation);
         }
     }
 }
 
 class WildRageRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.WildRageKnockback));
-class WildRage(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.WildRage), 8);
+class WildRage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildRage), 8);
 class BeastlyFury(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeastlyFury));
 
 class CratersWildRampage(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly WPos pos1 = new(738, 482);
-    private static readonly WPos pos2 = new(762, 482);
-    private static readonly Circle circle1 = new(pos1, 7);
-    private static readonly Circle circle2 = new(pos2, 7);
-    public readonly List<Circle> Circles = [];
+    private static readonly WPos pos1 = new(738, 482), pos2 = new(762, 482);
+    private static readonly Circle circle1 = new(pos1, 7), circle2 = new(pos2, 7);
+    public readonly List<Circle> Circles = new(2);
     private bool invert;
     private DateTime activation;
     private const string Hint = "Go inside crater!";
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (Circles.Count > 0)
-            yield return new(new AOEShapeCustom(Circles) with { InvertForbiddenZone = invert }, Arena.Center, default, activation, invert ? Colors.SafeFromAOE : Colors.AOE);
+        if (Circles.Count != 0)
+            yield return new(new AOEShapeCustom([.. Circles]) with { InvertForbiddenZone = invert }, Arena.Center, default, activation, invert ? Colors.SafeFromAOE : Colors.AOE);
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
@@ -212,7 +208,7 @@ class CratersWildRampage(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-abstract class RagingSlice(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(50, 3));
+abstract class RagingSlice(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(50, 3));
 class RagingSliceFirst(BossModule module) : RagingSlice(module, AID.RagingSliceFirst);
 class RagingSliceRest(BossModule module) : RagingSlice(module, AID.RagingSliceRest);
 
@@ -221,7 +217,6 @@ class D113SpectralBerserkerStates : StateMachineBuilder
     public D113SpectralBerserkerStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<BeastlyFuryArenaChange>()
             .ActivateOnEnter<BeastlyFury>()
             .ActivateOnEnter<FallingRock>()

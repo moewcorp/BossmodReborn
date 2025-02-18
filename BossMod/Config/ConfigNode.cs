@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Reflection;
 
 namespace BossMod;
 
@@ -10,18 +11,16 @@ public sealed class ConfigDisplayAttribute : Attribute
     public string? Name { get; set; }
     public int Order { get; set; }
     public Type? Parent { get; set; }
-    public string? Since { get; set; }
 }
 
 // attribute that specifies how config node field or enumeration value is shown in the UI
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class PropertyDisplayAttribute(string label, uint color = 0, string tooltip = "", bool separator = false, string? since = null) : Attribute
+public sealed class PropertyDisplayAttribute(string label, uint color = 0, string tooltip = "", bool separator = false) : Attribute
 {
     public string Label { get; } = label;
     public uint Color { get; } = color == 0 ? Colors.TextColor1 : color;
     public string Tooltip { get; } = tooltip;
     public bool Separator { get; } = separator;
-    public string? Since { get; } = since;
 }
 
 // attribute that specifies combobox should be used for displaying int/bool property
@@ -56,15 +55,43 @@ public abstract class ConfigNode
     // draw custom contents; override this for complex config nodes
     public virtual void DrawCustom(UITree tree, WorldState ws) { }
 
+    private static readonly ConcurrentDictionary<Type, FieldInfo[]> _fieldsCache = [];
+
+    private static FieldInfo[] GetSerializableFields(Type t)
+    {
+        if (_fieldsCache.TryGetValue(t, out var cachedFields))
+            return cachedFields;
+
+        var fields = t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        var len = fields.Length;
+        var discoveredFields = new FieldInfo[len];
+        var index = 0;
+        for (var i = 0; i < len; ++i)
+        {
+            var field = fields[i];
+            if (!field.IsStatic && !field.IsDefined(typeof(JsonIgnoreAttribute), false))
+            {
+                discoveredFields[index++] = field;
+            }
+        }
+
+        return _fieldsCache[t] = discoveredFields[..index];
+    }
+
     // deserialize fields from json; default implementation should work fine for most cases
     public virtual void Deserialize(JsonElement j, JsonSerializerOptions ser)
     {
         var type = GetType();
         foreach (var jfield in j.EnumerateObject())
         {
-            var field = type.GetField(jfield.Name);
+            var field = type.GetField(jfield.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             if (field != null)
             {
+                if (field.IsStatic)
+                    continue;
+                if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                    continue;
+
                 var value = jfield.Value.Deserialize(field.FieldType, ser);
                 if (value != null)
                 {
@@ -74,10 +101,30 @@ public abstract class ConfigNode
         }
     }
 
-    // serialize node to json; default implementation should work fine for most cases
-    public virtual void Serialize(Utf8JsonWriter jwriter, JsonSerializerOptions ser)
+    // serialize node to json;
+    public virtual void Serialize(Utf8JsonWriter writer, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(jwriter, this, GetType(), ser);
+        writer.WriteStartObject();
+
+        var fields = GetSerializableFields(GetType());
+        var len = fields.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var field = ref fields[i];
+            var fieldValue = field.GetValue(this);
+
+            writer.WritePropertyName(field.Name);
+            if (fieldValue is ConfigNode subNode)
+            {
+                subNode.Serialize(writer, options);
+            }
+            else
+            {
+                JsonSerializer.Serialize(writer, fieldValue, field.FieldType, options);
+            }
+        }
+
+        writer.WriteEndObject();
     }
 }
 

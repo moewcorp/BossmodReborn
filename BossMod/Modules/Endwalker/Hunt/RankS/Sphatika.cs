@@ -2,7 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x3670, // R8.750, x1
+    Boss = 0x3670 // R8.750, x1
 }
 
 public enum AID : uint
@@ -27,7 +27,7 @@ public enum AID : uint
     HindWhipLeftward = 27632, // Boss->self, 1.0s cast, range 40 180-degree cone aimed right (with leftward bearing)
     HindWhipRightward = 27633, // Boss->self, 1.0s cast, range 40 180-degree cone aimed left (with rightward bearing)
     LongLickSecond = 27714, // Boss->self, 1.0s cast, range 40 180-degree cone (after hind whip)
-    HindWhipSecond = 27715, // Boss->self, 1.0s cast, range 40 180-degree cone (after long lick)
+    HindWhipSecond = 27715 // Boss->self, 1.0s cast, range 40 180-degree cone (after long lick)
 }
 
 public enum SID : uint
@@ -35,7 +35,7 @@ public enum SID : uint
     ForwardBearing = 2835, // Boss->Boss, extra=0x0
     BackwardBearing = 2836, // Boss->Boss, extra=0x0
     LeftwardBearing = 2837, // Boss->Boss, extra=0x0
-    RightwardBearing = 2838, // Boss->Boss, extra=0x0
+    RightwardBearing = 2838 // Boss->Boss, extra=0x0
 }
 
 class Gnaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Gnaw));
@@ -44,24 +44,25 @@ class Caterwaul(BossModule module) : Components.RaidwideCast(module, ActionID.Ma
 class Stance(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Angle> _pendingCleaves = [];
-
-    private static readonly AOEShapeCone _shape = new(40, 90.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 90f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_pendingCleaves.Count > 0)
-            yield return new(_shape, Module.PrimaryActor.Position, _pendingCleaves[0]); // TODO: activation
+            return [new(_shape, Module.PrimaryActor.Position, _pendingCleaves[0])]; // TODO: activation
+        else
+            return [];
     }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (!(Module.PrimaryActor.CastInfo?.IsSpell() ?? false))
             return;
-        var hint = (AID)Module.PrimaryActor.CastInfo!.Action.ID switch
+        var hint = Module.PrimaryActor.CastInfo!.Action.ID switch
         {
-            AID.Brace1 or AID.Brace2 or AID.Brace3 or AID.Brace4 => "Select directions",
-            AID.LickwhipStance => "Cleave sides literal",
-            AID.WhiplickStance => "Cleave sides inverted",
+            (uint)AID.Brace1 or (uint)AID.Brace2 or (uint)AID.Brace3 or (uint)AID.Brace4 => "Select directions",
+            (uint)AID.LickwhipStance => "Cleave sides literal",
+            (uint)AID.WhiplickStance => "Cleave sides inverted",
             _ => ""
         };
         if (hint.Length > 0)
@@ -73,12 +74,12 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
         if (caster != Module.PrimaryActor)
             return;
 
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.LickwhipStance:
+            case (uint)AID.LickwhipStance:
                 InitCleaves(spell.Rotation, false);
                 break;
-            case AID.WhiplickStance:
+            case (uint)AID.WhiplickStance:
                 InitCleaves(spell.Rotation, true);
                 break;
         }
@@ -86,12 +87,22 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster == Module.PrimaryActor && _pendingCleaves.Count > 0 &&
-            (AID)spell.Action.ID is AID.LongLickForward or AID.LongLickBackward or AID.LongLickLeftward or AID.LongLickRightward or AID.LongLickSecond
-                                 or AID.HindWhipForward or AID.HindWhipBackward or AID.HindWhipLeftward or AID.HindWhipRightward or AID.HindWhipSecond)
-        {
-            _pendingCleaves.RemoveAt(0);
-        }
+        if (_pendingCleaves.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.LongLickForward:
+                case (uint)AID.LongLickBackward:
+                case (uint)AID.LongLickLeftward:
+                case (uint)AID.LongLickRightward:
+                case (uint)AID.LongLickSecond:
+                case (uint)AID.HindWhipForward:
+                case (uint)AID.HindWhipBackward:
+                case (uint)AID.HindWhipLeftward:
+                case (uint)AID.HindWhipRightward:
+                case (uint)AID.HindWhipSecond:
+                    _pendingCleaves.RemoveAt(0);
+                    break;
+            }
     }
 
     private void InitCleaves(Angle reference, bool inverted)
@@ -100,19 +111,19 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
         List<(Angle offset, int priority)> bearings = [];
         foreach (var s in Module.PrimaryActor.Statuses)
         {
-            switch ((SID)s.ID)
+            switch (s.ID)
             {
-                case SID.ForwardBearing:
-                    bearings.Add((0.Degrees(), 0));
+                case (uint)SID.ForwardBearing:
+                    bearings.Add((default, 0));
                     break;
-                case SID.BackwardBearing:
-                    bearings.Add((180.Degrees(), 1));
+                case (uint)SID.BackwardBearing:
+                    bearings.Add((180f.Degrees(), 1));
                     break;
-                case SID.LeftwardBearing:
-                    bearings.Add((90.Degrees(), 2));
+                case (uint)SID.LeftwardBearing:
+                    bearings.Add((90f.Degrees(), 2));
                     break;
-                case SID.RightwardBearing:
-                    bearings.Add((-90.Degrees(), 3));
+                case (uint)SID.RightwardBearing:
+                    bearings.Add((-90f.Degrees(), 3));
                     break;
             }
         }
@@ -123,9 +134,9 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
         {
             var dir = reference + b.offset;
             if (inverted)
-                dir += 180.Degrees();
+                dir += 180f.Degrees();
             _pendingCleaves.Add(dir);
-            _pendingCleaves.Add(dir + 180.Degrees());
+            _pendingCleaves.Add(dir + 180f.Degrees());
         }
     }
 }
@@ -141,5 +152,5 @@ class SphatikaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10618)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10618)]
 public class Sphatika(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

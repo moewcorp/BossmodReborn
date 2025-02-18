@@ -15,9 +15,9 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public int NumPlayerTethers { get; private set; }
     public int NumShapeTethers { get; private set; }
-    private readonly IReadOnlyList<Actor> _hexa = module.Enemies(OID.ConceptOfWater);
-    private readonly IReadOnlyList<Actor> _tri = module.Enemies(OID.ConceptOfFire);
-    private readonly IReadOnlyList<Actor> _sq = module.Enemies(OID.ConceptOfEarth);
+    private readonly List<Actor> _hexa = module.Enemies(OID.ConceptOfWater);
+    private readonly List<Actor> _tri = module.Enemies(OID.ConceptOfFire);
+    private readonly List<Actor> _sq = module.Enemies(OID.ConceptOfEarth);
     private readonly (WPos hexa, WPos tri, WPos sq)[] _resolvedShapes = new (WPos, WPos, WPos)[4];
     private readonly PlayerState[] _states = Utils.MakeArray(PartyState.MaxPartySize, new PlayerState() { Column = -1, PartnerSlot = -1 });
     private readonly bool _invert = invert;
@@ -93,7 +93,7 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
             _states[slot].Debuff = debuff;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var column = (IconID)iconID switch
         {
@@ -151,7 +151,7 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
     }
     private IEnumerable<Actor> Neighbours(IEnumerable<Actor> list, Actor shape) => list.Where(s => ShapesAreNeighbours(s, shape));
     private int NumNeighbouringHexagons(Actor shape) => _hexa.Count(h => ShapesAreNeighbours(h, shape));
-    private Actor? LinkedShape(IReadOnlyList<Actor> shapes, Actor hexa) => Neighbours(shapes, hexa).MinBy(NumNeighbouringHexagons);
+    private Actor? LinkedShape(List<Actor> shapes, Actor hexa) => Neighbours(shapes, hexa).MinBy(NumNeighbouringHexagons);
 
     private WPos InvertedPos(WPos p) => new(200 - p.X, 184 - p.Z);
 
@@ -171,11 +171,11 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 class ClassicalConcepts1(BossModule module) : ClassicalConcepts(module, false);
 class ClassicalConcepts2(BossModule module) : ClassicalConcepts(module, true);
 
-class Implode(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Implode), new AOEShapeCircle(4));
+class Implode(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Implode), 4);
 
 class PalladianRayBait(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.PalladianRayAOEFirst))
 {
-    private readonly Actor[] _dummies = [new(0, 0, -1, "L dummy", 0, ActorType.None, Class.None, 0, new(92, 0, 92, 0)), new(0, 0, -1, "R dummy", 0, ActorType.None, Class.None, 0, new(108, 0, 92, 0))];
+    private static readonly Actor[] _dummies = [new(0, 0, -1, "L dummy", 0, ActorType.None, Class.None, 0, new(92, 0, 92, 0)), new(0, 0, -1, "R dummy", 0, ActorType.None, Class.None, 0, new(108, 0, 92, 0))];
 
     private static readonly AOEShapeCone _shape = new(100, 15.Degrees());
 
@@ -183,7 +183,7 @@ class PalladianRayBait(BossModule module) : Components.GenericBaitAway(module, A
     {
         CurrentBaits.Clear();
         foreach (var d in _dummies)
-            foreach (var p in Raid.WithoutSlot().SortedByRange(d.Position).Take(4))
+            foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(d.Position).Take(4))
                 CurrentBaits.Add(new(d, p, _shape));
     }
 }

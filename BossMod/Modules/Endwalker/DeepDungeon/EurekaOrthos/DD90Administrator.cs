@@ -47,8 +47,8 @@ public enum IconID : uint
 
 class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCone(50, 60.Degrees()), new AOEShapeDonut(8, 60), new AOEShapeRect(40, 2.5f),
-    new AOEShapeCross(60, 5), new AOEShapeDonut(5, 60)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(50f, 60f.Degrees()), new AOEShapeDonut(8f, 60f), new AOEShapeRect(40f, 2.5f),
+    new AOEShapeCross(60f, 5f), new AOEShapeDonut(5f, 60f)];
     private readonly Dictionary<uint, List<AOEInstance>> _icons = new() {
         { (uint)IconID.Icon1, [] },
         { (uint)IconID.Icon2, [] },
@@ -67,9 +67,9 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
                 var nextIcon = _icons.FirstOrDefault(x => x.Key == icon.Key + 1).Value;
                 if (nextIcon != null)
                     foreach (var c in nextIcon)
-                        yield return new(c.Shape, c.Origin, c.Rotation, c.Activation, Colors.AOE, false);
+                        yield return new(c.Shape, c.Origin, c.Rotation, c.Activation, Risky: false);
                 if (_boss != default)
-                    yield return new(_boss.Shape, _boss.Origin, _boss.Rotation, _boss.Activation, Colors.AOE, false);
+                    yield return new(_boss.Shape, _boss.Origin, _boss.Rotation, _boss.Activation, Risky: false);
                 yield break;
             }
         }
@@ -77,67 +77,88 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
             yield return new(_boss.Shape, _boss.Origin, _boss.Rotation, _boss.Activation, Colors.Danger);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var shapeIndex = (OID)actor.OID switch
+        var shapeIndex = actor.OID switch
         {
-            OID.SquareInterceptor => 2,
-            OID.OrbInterceptor => 1,
-            OID.EggInterceptor => 0,
+            (uint)OID.SquareInterceptor => 2,
+            (uint)OID.OrbInterceptor => 1,
+            (uint)OID.EggInterceptor => 0,
             _ => default
         };
 
         var activation = iconID switch
         {
-            (uint)IconID.Icon1 => WorldState.FutureTime(7),
-            (uint)IconID.Icon2 => WorldState.FutureTime(10.5f),
-            (uint)IconID.Icon3 => WorldState.FutureTime(14),
+            (uint)IconID.Icon1 => WorldState.FutureTime(7d),
+            (uint)IconID.Icon2 => WorldState.FutureTime(10.5d),
+            (uint)IconID.Icon3 => WorldState.FutureTime(14d),
             _ => default
         };
 
-        _icons[iconID].Add(new(_shapes[shapeIndex], actor.Position, (OID)actor.OID == OID.OrbInterceptor ? default : actor.Rotation, activation));
+        _icons[iconID].Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, activation));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        _boss = (AID)spell.Action.ID switch
+        _boss = spell.Action.ID switch
         {
-            AID.PeripheralLasers => new(_shapes[4], caster.Position, default, Module.CastFinishAt(spell)),
-            AID.CrossLaser => new(_shapes[3], caster.Position, spell.Rotation, Module.CastFinishAt(spell)),
+            (uint)AID.PeripheralLasers => new(_shapes[4], spell.LocXZ, default, Module.CastFinishAt(spell)),
+            (uint)AID.CrossLaser => new(_shapes[3], spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)),
             _ => _boss
         };
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.AetherochemicalLaserCone or AID.AetherochemicalLaserLine or AID.AetherochemicalLaserDonut)
+        if (spell.Action.ID is (uint)AID.AetherochemicalLaserCone or (uint)AID.AetherochemicalLaserLine or (uint)AID.AetherochemicalLaserDonut)
         {
             foreach (var icon in _icons)
-                if (icon.Value.Count > 0)
+                if (icon.Value.Count != 0)
                 {
                     icon.Value.RemoveAt(0);
                     break;
                 }
         }
-        if ((AID)spell.Action.ID is AID.PeripheralLasers or AID.CrossLaser)
+        else if (spell.Action.ID is (uint)AID.PeripheralLasers or (uint)AID.CrossLaser)
             _boss = default;
     }
 }
 
-class AetherLaserLine(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine), new AOEShapeRect(40, 2.5f), 4)
+class AetherLaserLine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine), new AOEShapeRect(40f, 2.5f), 4)
 {
+    private readonly AetheroChemicalLaserCombo _aoe = module.FindComponent<AetheroChemicalLaserCombo>()!;
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return !Module.FindComponent<AetheroChemicalLaserCombo>()!.ActiveAOEs(slot, actor).Any()
-            ? ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Colors.Danger, Risky)).Take(2)
-            .Concat(ActiveCasters.Select(c => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Colors.AOE, Risky)).Take(4).Skip(2))
-            : ([]);
+        var count = Casters.Count;
+
+        if (count == 0)
+            return [];
+
+        var hasActiveAOEs = false;
+        {
+            foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
+            {
+                hasActiveAOEs = true;
+                break;
+            }
+        }
+        if (hasActiveAOEs)
+            return [];
+
+        var max = count > 4 ? 4 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var caster = Casters[i];
+            aoes[i] = caster with { Color = i < 2 && count > i ? Colors.Danger : 0 };
+        }
+        return aoes;
     }
 }
 
-class AetherLaserLine2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine2), new AOEShapeRect(40, 2.5f));
-class AetherLaserCone(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserCone2), new AOEShapeCone(50, 60.Degrees()));
-class HomingLasers(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HomingLaser), 6);
+class AetherLaserLine2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine2), new AOEShapeRect(40f, 2.5f));
+class AetherLaserCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserCone2), new AOEShapeCone(50f, 60f.Degrees()));
+class HomingLasers(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HomingLaser), 6f);
 class Laserstream(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Laserstream));
 
 class DD90AdministratorStates : StateMachineBuilder
@@ -155,4 +176,4 @@ class DD90AdministratorStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 905, NameID = 12102)]
-public class DD90Administrator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300, -300), new ArenaBoundsSquare(20));
+public class DD90Administrator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300f, -300f), new ArenaBoundsSquare(20f));

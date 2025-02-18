@@ -3,8 +3,8 @@
 public enum OID : uint
 {
     Boss = 0x3131, // R4.000, x1
-    Helper = 0x233C, // R0.500, x16, 523 type
-    AetherialOrb = 0x3132, // R2.000, x0 (spawn during fight)
+    AetherialOrb = 0x3132, // R2.0
+    Helper = 0x233C
 }
 
 public enum AID : uint

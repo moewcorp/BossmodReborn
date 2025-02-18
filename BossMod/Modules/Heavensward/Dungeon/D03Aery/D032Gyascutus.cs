@@ -46,11 +46,11 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ProximityPyre(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ProximityPyre), new AOEShapeCircle(12));
-class Burst(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Burst), 10);
+class ProximityPyre(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ProximityPyre), 12);
+class Burst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Burst), 10);
 class CripplingBlow(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.CripplingBlow));
 class DeafeningBellow(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DeafeningBellow));
-class AshenOuroboros(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AshenOuroboros), new AOEShapeDonut(11, 20));
+class AshenOuroboros(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AshenOuroboros), new AOEShapeDonut(11, 20));
 class BodySlam(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BodySlam), 10)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -66,7 +66,6 @@ class D032GyascutusStates : StateMachineBuilder
     public D032GyascutusStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<ProximityPyre>()
             .ActivateOnEnter<Burst>()

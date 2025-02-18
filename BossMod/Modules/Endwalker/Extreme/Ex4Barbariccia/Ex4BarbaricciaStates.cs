@@ -135,13 +135,13 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
     private void SavageBarberyHairRaid(uint id, float delay, bool fast = false)
     {
-        CastMulti(id, new AID[] { AID.SavageBarberyDonut1, AID.SavageBarberyDonut2, AID.SavageBarberyDonut3, AID.SavageBarberyDonut4, AID.SavageBarberyRect1, AID.SavageBarberyRect2 }, delay, 6)
+        CastMulti(id, [AID.SavageBarberyDonut1, AID.SavageBarberyDonut2, AID.SavageBarberyDonut3, AID.SavageBarberyDonut4, AID.SavageBarberyRect1, AID.SavageBarberyRect2], delay, 6)
             .ActivateOnEnter<SavageBarbery>();
         ComponentCondition<SavageBarbery>(id + 0x10, 1, comp => comp.NumActiveCasts < 2, "Donut/rect");
         ComponentCondition<SavageBarbery>(id + 0x20, 2.1f, comp => comp.NumActiveCasts == 0, "Sword")
             .DeactivateOnExit<SavageBarbery>();
 
-        CastMulti(id + 0x1000, new AID[] { AID.HairRaidCone, AID.HairRaidDonut }, fast ? 1 : 4.2f, 6)
+        CastMulti(id + 0x1000, [AID.HairRaidCone, AID.HairRaidDonut], fast ? 1 : 4.2f, 6)
             .ActivateOnEnter<HairRaid>()
             .ActivateOnEnter<HairSprayDeadlyTwist>();
         ComponentCondition<HairRaid>(id + 0x1010, 2, comp => comp.NumActiveCasts == 0, "Donut/cone")
@@ -152,46 +152,46 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
     private void WindingGaleBoulderBreak(uint id, float delay)
     {
-        ComponentCondition<WarningGale>(id, delay, comp => comp.ActiveCasters.Any())
+        ComponentCondition<WarningGale>(id, delay, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<WarningGale>();
         ComponentCondition<BoulderBreak>(id + 1, 0.8f, comp => comp.Active)
             .ActivateOnEnter<BoulderBreak>();
-        ComponentCondition<WarningGale>(id + 2, 4.2f, comp => comp.NumCasts > 0, "Spirals")
+        ComponentCondition<WarningGale>(id + 2, 4.2f, comp => comp.NumCasts != 0, "Spirals")
             .ActivateOnEnter<WindingGale>()
             .DeactivateOnExit<WindingGale>()
             .DeactivateOnExit<WarningGale>();
-        ComponentCondition<BoulderBreak>(id + 3, 0.8f, comp => comp.NumCasts > 0, "Shared tankbuster")
+        ComponentCondition<BoulderBreak>(id + 3, 0.8f, comp => comp.NumCasts != 0, "Shared tankbuster")
             .DeactivateOnExit<BoulderBreak>();
 
-        ComponentCondition<WindingGaleCharge>(id + 0x10, 2.8f, comp => comp.Casters.Count > 0)
+        ComponentCondition<WindingGaleCharge>(id + 0x10, 2.8f, comp => comp.Casters.Count != 0)
             .ActivateOnEnter<WindingGaleCharge>();
         ComponentCondition<WindingGaleCharge>(id + 0x11, 2, comp => comp.Casters.Count > 6);
         ComponentCondition<WindingGaleCharge>(id + 0x12, 0.5f, comp => comp.Casters.Count <= 6);
         ComponentCondition<WindingGaleCharge>(id + 0x13, 2, comp => comp.Casters.Count == 0)
             .DeactivateOnExit<WindingGaleCharge>();
 
-        ComponentCondition<WarningGale>(id + 0x20, 1.5f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<WarningGale>(id + 0x20, 1.5f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<WarningGale>();
-        ComponentCondition<Boulder>(id + 0x21, 1.1f, comp => comp.Casters.Count > 0, "Bait")
+        ComponentCondition<Boulder>(id + 0x21, 1.1f, comp => comp.Casters.Count != 0, "Bait")
             .ActivateOnEnter<WindingGale>()
             .ActivateOnEnter<Boulder>();
-        ComponentCondition<BrittleBoulder>(id + 0x22, 3, comp => comp.NumFinishedSpreads > 0, "Spread")
+        ComponentCondition<BrittleBoulder>(id + 0x22, 3, comp => comp.NumFinishedSpreads != 0, "Spread")
             .ActivateOnEnter<BrittleBoulder>()
             .DeactivateOnExit<BrittleBoulder>();
 
         ComponentCondition<HairFlayUpbraid>(id + 0x30, 0.2f, comp => comp.Active)
             .ActivateOnEnter<HairFlayUpbraid>();
-        ComponentCondition<TornadoChainInner>(id + 0x31, 0.4f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<TornadoChainInner>(id + 0x31, 0.4f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<TornadoChainInner>();
-        ComponentCondition<WarningGale>(id + 0x32, 0.2f, comp => comp.NumCasts > 0, "Spirals")
+        ComponentCondition<WarningGale>(id + 0x32, 0.2f, comp => comp.NumCasts != 0, "Spirals")
             .DeactivateOnExit<WarningGale>()
             .DeactivateOnExit<WindingGale>();
-        ComponentCondition<Boulder>(id + 0x33, 0.2f, comp => comp.NumCasts > 0)
+        ComponentCondition<Boulder>(id + 0x33, 0.2f, comp => comp.NumCasts != 0)
             .DeactivateOnExit<Boulder>();
 
-        ComponentCondition<TornadoChainInner>(id + 0x40, 3.6f, comp => comp.NumCasts > 0, "Out")
+        ComponentCondition<TornadoChainInner>(id + 0x40, 3.6f, comp => comp.NumCasts != 0, "Out")
             .DeactivateOnExit<TornadoChainInner>();
-        ComponentCondition<TornadoChainOuter>(id + 0x41, 2.5f, comp => comp.NumCasts > 0, "In")
+        ComponentCondition<TornadoChainOuter>(id + 0x41, 2.5f, comp => comp.NumCasts != 0, "In")
             .ActivateOnEnter<TornadoChainOuter>()
             .DeactivateOnExit<TornadoChainOuter>();
 
@@ -201,11 +201,11 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
     private void BlowAwayImpactBoldBoulderTrample(uint id, float delay)
     {
-        ComponentCondition<BlowAwayRaidwide>(id, delay, comp => comp.NumCasts > 0)
+        ComponentCondition<BlowAwayRaidwide>(id, delay, comp => comp.NumCasts != 0)
             .ActivateOnEnter<BlowAwayRaidwide>()
             .DeactivateOnExit<BlowAwayRaidwide>()
             .SetHint(StateMachine.StateHint.Raidwide);
-        ComponentCondition<BlowAwayPuddle>(id + 1, 1.7f, comp => comp.ActiveCasters.Any(), "Bait 1")
+        ComponentCondition<BlowAwayPuddle>(id + 1, 1.7f, comp => comp.ActiveCasters.Count != 0, "Bait 1")
             .ActivateOnEnter<BlowAwayPuddle>();
         ComponentCondition<BrutalRush>(id + 2, 0.7f, comp => comp.HavePendingRushes)
             .ActivateOnEnter<BrutalRush>();
@@ -223,14 +223,14 @@ class Ex4BarbaricciaStates : StateMachineBuilder
         // +8.4s: rush 4 finish
         // +9.3s: puddles 4 finish
 
-        ComponentCondition<ImpactAOE>(id + 0x100, 7.7f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<ImpactAOE>(id + 0x100, 7.7f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<ImpactAOE>();
         ComponentCondition<BrutalRush>(id + 0x110, 0.7f, comp => comp.NumCasts >= 4, "Charges")
             .ActivateOnEnter<ImpactKnockback>()
             .DeactivateOnExit<BrutalRush>();
-        ComponentCondition<BoldBoulderTrample>(id + 0x120, 0.3f, comp => comp.Stacks.Count > 0)
+        ComponentCondition<BoldBoulderTrample>(id + 0x120, 0.3f, comp => comp.Stacks.Count != 0)
             .ActivateOnEnter<BoldBoulderTrample>();
-        ComponentCondition<BlowAwayPuddle>(id + 0x130, 0.6f, comp => !comp.ActiveCasters.Any())
+        ComponentCondition<BlowAwayPuddle>(id + 0x130, 0.6f, comp => comp.ActiveCasters.Count == 0)
             .DeactivateOnExit<BlowAwayPuddle>();
         ComponentCondition<ImpactAOE>(id + 0x200, 4.7f, comp => comp.NumCasts > 0, "Knockback")
             .DeactivateOnExit<ImpactAOE>()
@@ -242,11 +242,11 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
     private void BlowAwayBoulders(uint id, float delay)
     {
-        ComponentCondition<BlowAwayRaidwide>(id, delay, comp => comp.NumCasts > 0)
+        ComponentCondition<BlowAwayRaidwide>(id, delay, comp => comp.NumCasts != 0)
             .ActivateOnEnter<BlowAwayRaidwide>()
             .DeactivateOnExit<BlowAwayRaidwide>()
             .SetHint(StateMachine.StateHint.Raidwide);
-        ComponentCondition<BlowAwayPuddle>(id + 1, 1.7f, comp => comp.ActiveCasters.Any(), "Bait 1")
+        ComponentCondition<BlowAwayPuddle>(id + 1, 1.7f, comp => comp.ActiveCasters.Count != 0, "Bait 1")
             .ActivateOnEnter<BlowAwayPuddle>();
         // +2.0s: puddles 2 bait
         // +4.0s: puddles 1 finish + 3 bait
@@ -257,14 +257,14 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
         ComponentCondition<BrutalRush>(id + 0x100, 8.4f, comp => comp.HavePendingRushes)
             .ActivateOnEnter<BrutalRush>();
-        ComponentCondition<Boulder>(id + 0x110, 1.1f, comp => comp.Casters.Count > 0, "Bait center")
+        ComponentCondition<Boulder>(id + 0x110, 1.1f, comp => comp.Casters.Count != 0, "Bait center")
             .ActivateOnEnter<Boulder>();
         ComponentCondition<BrutalRush>(id + 0x120, 2.5f, comp => comp.NumCasts >= 1, "Charge 1")
             .ActivateOnEnter<BrittleBoulder>()
             .DeactivateOnExit<BlowAwayPuddle>();
         ComponentCondition<BrittleBoulder>(id + 0x130, 0.5f, comp => !comp.Active, "Spread")
             .DeactivateOnExit<BrittleBoulder>();
-        ComponentCondition<Boulder>(id + 0x140, 1, comp => comp.NumCasts > 0)
+        ComponentCondition<Boulder>(id + 0x140, 1, comp => comp.NumCasts != 0)
             .DeactivateOnExit<Boulder>();
         ComponentCondition<BrutalRush>(id + 0x150, 3.6f, comp => comp.NumCasts >= 4, "Charge 4")
             .DeactivateOnExit<BrutalRush>();
@@ -274,17 +274,17 @@ class Ex4BarbaricciaStates : StateMachineBuilder
     {
         Cast(id, AID.TeasingTangles1, delay, 4)
             .ActivateOnEnter<Tangle>();
-        ComponentCondition<Tangle>(id + 2, 0.6f, comp => comp.NumCasts > 0, "Tangles 1 start");
-        ComponentCondition<Tangle>(id + 0x10, 0.6f, comp => comp.NumTethers > 0);
+        ComponentCondition<Tangle>(id + 2, 0.6f, comp => comp.NumCasts != 0, "Tangles 1 start");
+        ComponentCondition<Tangle>(id + 0x10, 0.6f, comp => comp.NumTethers != 0);
         ComponentCondition<HairFlayUpbraid>(id + 0x20, 2.8f, comp => comp.Active)
             .ActivateOnEnter<HairFlayUpbraid>();
         Cast(id + 0x30, AID.SecretBreeze, 4.5f, 3)
             .ActivateOnEnter<SecretBreezeCones>();
         ComponentCondition<HairFlayUpbraid>(id + 0x40, 0.5f, comp => !comp.Active, "Stack/spread")
             .DeactivateOnExit<HairFlayUpbraid>();
-        ComponentCondition<SecretBreezeCones>(id + 0x50, 0.5f, comp => comp.NumCasts > 0, "Cones")
+        ComponentCondition<SecretBreezeCones>(id + 0x50, 0.5f, comp => comp.NumCasts != 0, "Cones")
             .DeactivateOnExit<SecretBreezeCones>();
-        ComponentCondition<SecretBreezeProteans>(id + 0x60, 2, comp => comp.NumCasts > 0, "Proteans")
+        ComponentCondition<SecretBreezeProteans>(id + 0x60, 2, comp => comp.NumCasts != 0, "Proteans")
             .ActivateOnEnter<SecretBreezeProteans>()
             .DeactivateOnExit<SecretBreezeProteans>();
         ComponentCondition<Tangle>(id + 0x70, 3.2f, comp => comp.NumTethers == 0, "Tangles 1 end")
@@ -302,11 +302,11 @@ class Ex4BarbaricciaStates : StateMachineBuilder
         ComponentCondition<BrutalRush>(id + 4, 1.7f, comp => comp.NumCasts >= 4, "Charge 4")
             .DeactivateOnExit<BrutalRush>();
 
-        ComponentCondition<BlusteryRuler>(id + 0x10, 0.4f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<BlusteryRuler>(id + 0x10, 0.4f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<BlusteryRuler>();
-        ComponentCondition<Tangle>(id + 0x20, 0.8f, comp => comp.NumCasts > 0, "Tangles 2 start");
-        ComponentCondition<Tangle>(id + 0x21, 0.5f, comp => comp.NumTethers > 0);
-        ComponentCondition<BlusteryRuler>(id + 0x30, 3.7f, comp => !comp.ActiveCasters.Any())
+        ComponentCondition<Tangle>(id + 0x20, 0.8f, comp => comp.NumCasts != 0, "Tangles 2 start");
+        ComponentCondition<Tangle>(id + 0x21, 0.5f, comp => comp.NumTethers != 0);
+        ComponentCondition<BlusteryRuler>(id + 0x30, 3.7f, comp => comp.ActiveCasters.Count == 0)
             .DeactivateOnExit<BlusteryRuler>();
 
         ComponentCondition<DryBlowsRaidwide>(id + 0x40, 2.8f, comp => comp.NumCasts > 0)
@@ -314,14 +314,14 @@ class Ex4BarbaricciaStates : StateMachineBuilder
             .DeactivateOnExit<DryBlowsRaidwide>()
             .SetHint(StateMachine.StateHint.Raidwide);
 
-        ComponentCondition<TornadoChainInner>(id + 0x50, 7.6f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<TornadoChainInner>(id + 0x50, 7.6f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<TornadoChainInner>()
             .ActivateOnEnter<DryBlowsPuddle>();
         ComponentCondition<HairFlayUpbraid>(id + 0x51, 0.3f, comp => comp.Active)
             .ActivateOnEnter<HairFlayUpbraid>();
-        ComponentCondition<TornadoChainInner>(id + 0x52, 3.7f, comp => comp.NumCasts > 0, "Out")
+        ComponentCondition<TornadoChainInner>(id + 0x52, 3.7f, comp => comp.NumCasts != 0, "Out")
             .DeactivateOnExit<TornadoChainInner>();
-        ComponentCondition<TornadoChainOuter>(id + 0x53, 2.5f, comp => comp.NumCasts > 0, "In")
+        ComponentCondition<TornadoChainOuter>(id + 0x53, 2.5f, comp => comp.NumCasts != 0, "In")
             .ActivateOnEnter<TornadoChainOuter>()
             .DeactivateOnExit<TornadoChainOuter>();
         ComponentCondition<HairFlayUpbraid>(id + 0x54, 1.8f, comp => !comp.Active, "Stack in pairs")
@@ -338,9 +338,9 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
         Cast(id + 0x10, AID.SecretBreeze, 6.5f, 3)
             .ActivateOnEnter<SecretBreezeCones>();
-        ComponentCondition<SecretBreezeCones>(id + 0x12, 1, comp => comp.NumCasts > 0, "Cones")
+        ComponentCondition<SecretBreezeCones>(id + 0x12, 1, comp => comp.NumCasts != 0, "Cones")
             .DeactivateOnExit<SecretBreezeCones>();
-        ComponentCondition<SecretBreezeProteans>(id + 0x13, 2, comp => comp.NumCasts > 0, "Proteans")
+        ComponentCondition<SecretBreezeProteans>(id + 0x13, 2, comp => comp.NumCasts != 0, "Proteans")
             .ActivateOnEnter<SecretBreezeProteans>()
             .DeactivateOnExit<SecretBreezeProteans>();
     }
@@ -359,18 +359,18 @@ class Ex4BarbaricciaStates : StateMachineBuilder
 
     private void TornadoChainImpactHairSpray(uint id, float delay)
     {
-        ComponentCondition<TornadoChainInner>(id, delay, comp => comp.ActiveCasters.Any())
+        ComponentCondition<TornadoChainInner>(id, delay, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<TornadoChainInner>();
         ComponentCondition<HairSprayDeadlyTwist>(id + 1, 3.9f, comp => comp.Active)
             .ActivateOnEnter<HairSprayDeadlyTwist>();
-        ComponentCondition<TornadoChainInner>(id + 2, 0.1f, comp => comp.NumCasts > 0, "Out")
+        ComponentCondition<TornadoChainInner>(id + 2, 0.1f, comp => comp.NumCasts != 0, "Out")
             .DeactivateOnExit<TornadoChainInner>();
-        ComponentCondition<TornadoChainOuter>(id + 0x10, 2.5f, comp => comp.NumCasts > 0, "In")
+        ComponentCondition<TornadoChainOuter>(id + 0x10, 2.5f, comp => comp.NumCasts != 0, "In")
             .ActivateOnEnter<TornadoChainOuter>()
             .ActivateOnEnter<ImpactAOE>() // starts ~0.2s after out finishes
             .ActivateOnEnter<ImpactKnockback>()
             .DeactivateOnExit<TornadoChainOuter>();
-        ComponentCondition<ImpactAOE>(id + 0x20, 3.9f, comp => comp.NumCasts > 0, "Knockback")
+        ComponentCondition<ImpactAOE>(id + 0x20, 3.9f, comp => comp.NumCasts != 0, "Knockback")
             .DeactivateOnExit<ImpactAOE>()
             .DeactivateOnExit<ImpactKnockback>();
         ComponentCondition<HairSprayDeadlyTwist>(id + 0x21, 1.5f, comp => !comp.Active, "Spread")
@@ -387,53 +387,53 @@ class Ex4BarbaricciaStates : StateMachineBuilder
         ComponentCondition<BrutalRush>(id + 3, 1.7f, comp => comp.NumCasts >= 3);
         ComponentCondition<BrutalRush>(id + 4, 1.7f, comp => comp.NumCasts >= 4, "Charge 4")
             .DeactivateOnExit<BrutalRush>();
-        ComponentCondition<BlusteryRuler>(id + 5, 1, comp => comp.NumCasts > 0)
+        ComponentCondition<BlusteryRuler>(id + 5, 1, comp => comp.NumCasts != 0)
             .DeactivateOnExit<BlusteryRuler>();
 
-        ComponentCondition<DryBlowsRaidwide>(id + 0x10, 3.1f, comp => comp.NumCasts > 0)
+        ComponentCondition<DryBlowsRaidwide>(id + 0x10, 3.1f, comp => comp.NumCasts != 0)
             .ActivateOnEnter<DryBlowsRaidwide>()
             .DeactivateOnExit<DryBlowsRaidwide>()
             .SetHint(StateMachine.StateHint.Raidwide);
 
-        ComponentCondition<TornadoChainInner>(id + 0x20, 5.6f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<TornadoChainInner>(id + 0x20, 5.6f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<TornadoChainInner>()
             .ActivateOnEnter<DryBlowsPuddle>();
-        ComponentCondition<TornadoChainInner>(id + 0x21, 4, comp => comp.NumCasts > 0, "Out")
+        ComponentCondition<TornadoChainInner>(id + 0x21, 4, comp => comp.NumCasts != 0, "Out")
             .DeactivateOnExit<TornadoChainInner>();
-        ComponentCondition<TornadoChainOuter>(id + 0x22, 2.5f, comp => comp.NumCasts > 0, "In")
+        ComponentCondition<TornadoChainOuter>(id + 0x22, 2.5f, comp => comp.NumCasts != 0, "In")
             .ActivateOnEnter<BoulderBreak>() // <0.1s after out
             .ActivateOnEnter<TornadoChainOuter>()
             .DeactivateOnExit<TornadoChainOuter>();
-        ComponentCondition<BoulderBreak>(id + 0x23, 2.5f, comp => comp.NumCasts > 0, "Shared tankbuster")
+        ComponentCondition<BoulderBreak>(id + 0x23, 2.5f, comp => comp.NumCasts != 0, "Shared tankbuster")
             .DeactivateOnExit<BoulderBreak>()
             .DeactivateOnExit<DryBlowsPuddle>();
 
-        ComponentCondition<WarningGale>(id + 0x30, 0.3f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<WarningGale>(id + 0x30, 0.3f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<WarningGale>();
-        ComponentCondition<WarningGale>(id + 0x31, 5, comp => comp.NumCasts > 0, "Spirals")
+        ComponentCondition<WarningGale>(id + 0x31, 5, comp => comp.NumCasts != 0, "Spirals")
             .ActivateOnEnter<WindingGale>()
             .DeactivateOnExit<WindingGale>()
             .DeactivateOnExit<WarningGale>();
 
-        ComponentCondition<WindingGaleCharge>(id + 0x40, 3.7f, comp => comp.Casters.Count > 0)
+        ComponentCondition<WindingGaleCharge>(id + 0x40, 3.7f, comp => comp.Casters.Count != 0)
             .ActivateOnEnter<WindingGaleCharge>(); // tornado chain starts at the same time
         ComponentCondition<WindingGaleCharge>(id + 0x41, 2, comp => comp.Casters.Count > 6)
             .ActivateOnEnter<TornadoChainInner>();
         ComponentCondition<WindingGaleCharge>(id + 0x42, 0.5f, comp => comp.Casters.Count <= 6);
-        ComponentCondition<TornadoChainInner>(id + 0x43, 1.5f, comp => comp.NumCasts > 0, "Out")
+        ComponentCondition<TornadoChainInner>(id + 0x43, 1.5f, comp => comp.NumCasts != 0, "Out")
             .DeactivateOnExit<TornadoChainInner>();
         ComponentCondition<WindingGaleCharge>(id + 0x44, 0.5f, comp => comp.Casters.Count == 0)
             .ActivateOnEnter<TornadoChainOuter>()
             .DeactivateOnExit<WindingGaleCharge>();
 
-        ComponentCondition<WarningGale>(id + 0x50, 1.8f, comp => comp.ActiveCasters.Any())
+        ComponentCondition<WarningGale>(id + 0x50, 1.8f, comp => comp.ActiveCasters.Count != 0)
             .ActivateOnEnter<WarningGale>();
-        ComponentCondition<TornadoChainOuter>(id + 0x51, 0.2f, comp => comp.NumCasts > 0, "In")
+        ComponentCondition<TornadoChainOuter>(id + 0x51, 0.2f, comp => comp.NumCasts != 0, "In")
             .ActivateOnEnter<WindingGale>()
             .DeactivateOnExit<TornadoChainOuter>();
-        ComponentCondition<BoldBoulderTrample>(id + 0x52, 1.6f, comp => comp.Stacks.Count > 0)
+        ComponentCondition<BoldBoulderTrample>(id + 0x52, 1.6f, comp => comp.Stacks.Count != 0)
             .ActivateOnEnter<BoldBoulderTrample>();
-        ComponentCondition<WarningGale>(id + 0x53, 3.2f, comp => comp.NumCasts > 0, "Spirals")
+        ComponentCondition<WarningGale>(id + 0x53, 3.2f, comp => comp.NumCasts != 0, "Spirals")
             .DeactivateOnExit<WarningGale>()
             .DeactivateOnExit<WindingGale>();
         ComponentCondition<BoldBoulderTrample>(id + 0x54, 2.7f, comp => comp.Stacks.Count == 0, "Stack");

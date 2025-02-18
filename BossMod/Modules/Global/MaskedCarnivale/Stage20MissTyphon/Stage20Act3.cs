@@ -4,29 +4,29 @@ public enum OID : uint
 {
     Boss = 0x272C, //R=4.5
     Ultros = 0x272D, //R=5.1
-    Tentacle = 0x272E, //R=7.2
+    Tentacle = 0x272E //R=7.2
 }
 
 public enum AID : uint
 {
-    Fungah = 14705, // 272C->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
-    Fireball = 14706, // 272C->location, 3.5s cast, range 8 circle
-    Snort = 14704, // 272C->self, 7.0s cast, range 50+R circle
-    Fireball2 = 14707, // 272C->player, no cast, range 8 circle
-    Tentacle = 14747, // 272E->self, 3.0s cast, range 8 circle
-    Wallop = 14748, // 272E->self, 3.5s cast, range 50+R width 10 rect, knockback 20 away from source
-    Clearout = 14749, // 272E->self, no cast, range 13+R ?-degree cone, knockback 20 away from source
-    AquaBreath = 14745, // 272D->self, 2.5s cast, range 8+R 90-degree cone
-    Megavolt = 14746, // 272D->self, 3.0s cast, range 6+R circle
-    ImpSong = 14744, // 272D->self, 6.0s cast, range 50+R circle
+    Fungah = 14705, // Boss->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
+    Fireball = 14706, // Boss->location, 3.5s cast, range 8 circle
+    Snort = 14704, // Boss->self, 7.0s cast, range 50+R circle
+    Fireball2 = 14707, // Boss->player, no cast, range 8 circle
+    Tentacle = 14747, // Tentacle->self, 3.0s cast, range 8 circle
+    Wallop = 14748, // Tentacle->self, 3.5s cast, range 50+R width 10 rect, knockback 20 away from source
+    Clearout = 14749, // Tentacle->self, no cast, range 13+R ?-degree cone, knockback 20 away from source
+    AquaBreath = 14745, // Ultros->self, 2.5s cast, range 8+R 90-degree cone
+    Megavolt = 14746, // Ultros->self, 3.0s cast, range 6+R circle
+    ImpSong = 14744 // Ultros->self, 6.0s cast, range 50+R circle
 }
 
-class AquaBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AquaBreath), new AOEShapeCone(13.1f, 45.Degrees()));
-class Megavolt(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Megavolt), new AOEShapeCircle(11.1f));
-class Tentacle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tentacle), new AOEShapeCircle(8));
-class Wallop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Wallop), new AOEShapeRect(57.2f, 5));
+class AquaBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AquaBreath), new AOEShapeCone(13.1f, 45.Degrees()));
+class Megavolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Megavolt), 11.1f);
+class Tentacle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tentacle), 8);
+class Wallop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Wallop), new AOEShapeRect(57.2f, 5));
 class WallopKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Wallop), 20, kind: Kind.AwayFromOrigin); //knockback actually delayed by 0.8s
-class Fireball(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
 class ImpSong(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.ImpSong), showNameInHint: true);
 class Snort(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Snort), "Use Diamondback!");
 class SnortKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Snort), 30, kind: Kind.AwayFromOrigin);  //knockback actually delayed by 0.7s
@@ -65,7 +65,7 @@ class Stage20Act3States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 3046, SortOrder = 3)]
 public class Stage20Act3 : BossModule
 {
-    public Stage20Act3(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage20Act3(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }
@@ -79,13 +79,13 @@ public class Stage20Act3 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.Tentacle => 2,//this ruins the achievement if boss is still alive when tentacles spawn
+                OID.Tentacle => 2, // this ruins the achievement if boss is still alive when tentacles spawn, TODO: consider making this a setting
                 OID.Ultros => 1,
-                OID.Boss => 0,
                 _ => 0
             };
         }

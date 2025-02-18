@@ -2,7 +2,7 @@ namespace BossMod.Shadowbringers.Hunt.RankA.Rusalka;
 
 public enum OID : uint
 {
-    Boss = 0x2853, // R=3.6
+    Boss = 0x2853 // R=3.6
 }
 
 public enum AID : uint
@@ -11,11 +11,11 @@ public enum AID : uint
     Hydrocannon = 17363, // Boss->location, 3.5s cast, range 8 circle
     AetherialSpark = 17368, // Boss->self, 2.5s cast, range 12 width 4 rect
     AetherialPull = 17366, // Boss->self, 4.0s cast, range 30 circle, pull 30 between centers
-    Flood = 17369, // Boss->self, no cast, range 8 circle
+    Flood = 17369 // Boss->self, no cast, range 8 circle
 }
 
-class Hydrocannon(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Hydrocannon), 8);
-class AetherialSpark(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherialSpark), new AOEShapeRect(12, 2));
+class Hydrocannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hydrocannon), 8);
+class AetherialSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSpark), new AOEShapeRect(12, 2));
 
 class AetherialPull(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AetherialPull), 30, shape: new AOEShapeCircle(30), kind: Kind.TowardsOrigin)
 {
@@ -25,13 +25,14 @@ class AetherialPull(BossModule module) : Components.KnockbackFromCastTarget(modu
 class Flood(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
+    private static readonly AOEShapeCircle circle = new(8);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.AetherialPull)
-            _aoe = new(new AOEShapeCircle(8), Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 3.6f));
+            _aoe = new(circle, Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 3.6f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -54,4 +55,4 @@ class RusalkaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8896)]
-public class Rusalka(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class Rusalka(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

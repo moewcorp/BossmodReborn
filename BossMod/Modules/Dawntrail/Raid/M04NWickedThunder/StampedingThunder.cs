@@ -55,12 +55,4 @@ class ArenaChanges(BossModule module) : BossComponent(module)
             }
         }
     }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Arena.Bounds == DefaultBounds) // prevent AI from accidently leaving the arena
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.Center + new WDir(0, 19.5f), Module.Center + new WDir(0, -19.5f), 19.5f));
-        else
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.Center + new WDir(0, 19.5f), Module.Center + new WDir(0, -19.5f), 4.5f));
-    }
 }

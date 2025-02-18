@@ -12,7 +12,7 @@ class TaintedFlood : Components.CastCounter
         var flow = module.FindComponent<ChannelingFlow>();
         if (flow != null)
         {
-            _ignoredTargets = Raid.WithSlot().WhereSlot(flow.SlotActive).Mask();
+            _ignoredTargets = Raid.WithSlot(false, true, true).WhereSlot(flow.SlotActive).Mask();
         }
     }
 
@@ -24,13 +24,13 @@ class TaintedFlood : Components.CastCounter
         if (_ignoredTargets[slot])
         {
             // player is not a target of flood, so just make sure he is not clipped by others
-            if (Raid.WithSlot().ExcludedFromMask(_ignoredTargets).InRadius(actor.Position, _radius).Any())
+            if (Raid.WithSlot(false, true, true).ExcludedFromMask(_ignoredTargets).InRadius(actor.Position, _radius).Any())
                 hints.Add("GTFO from flood!");
         }
         else
         {
             // player is target of flood => make sure no one is in range
-            if (Raid.WithoutSlot().InRadiusExcluding(actor, _radius).Any())
+            if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius).Any())
                 hints.Add("Spread!");
         }
     }
@@ -42,7 +42,7 @@ class TaintedFlood : Components.CastCounter
 
         if (_ignoredTargets[pcSlot])
         {
-            foreach ((_, var actor) in Raid.WithSlot().ExcludedFromMask(_ignoredTargets))
+            foreach ((_, var actor) in Raid.WithSlot(false, true, true).ExcludedFromMask(_ignoredTargets))
             {
                 Arena.Actor(actor, Colors.Danger);
                 Arena.AddCircle(actor.Position, _radius, Colors.Danger);
@@ -51,7 +51,7 @@ class TaintedFlood : Components.CastCounter
         else
         {
             Arena.AddCircle(pc.Position, _radius, Colors.Danger);
-            foreach (var player in Raid.WithoutSlot().Exclude(pc))
+            foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
                 Arena.Actor(player, player.Position.InCircle(pc.Position, _radius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
         }
     }

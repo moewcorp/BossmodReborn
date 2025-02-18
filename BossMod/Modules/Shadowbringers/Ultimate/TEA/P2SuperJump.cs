@@ -8,7 +8,7 @@ class P2SuperJump(BossModule module) : Components.GenericBaitAway(module, Action
     {
         CurrentBaits.Clear();
         var source = ((TEA)Module).BruteJustice();
-        var target = source != null ? Raid.WithoutSlot().Farthest(source.Position) : null;
+        var target = source != null ? Raid.WithoutSlot(false, true, true).Farthest(source.Position) : null;
         if (source != null && target != null)
             CurrentBaits.Add(new(source, target, _shape));
     }

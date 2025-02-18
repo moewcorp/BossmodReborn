@@ -4,8 +4,8 @@
 // TODO: revise and improve (track invuln, ai hints, num stacked tanks?)
 public class GenericSharedTankbuster(BossModule module, ActionID aid, AOEShape shape, bool originAtTarget = false) : CastCounter(module, aid)
 {
-    public AOEShape Shape { get; init; } = shape;
-    public bool OriginAtTarget { get; init; } = originAtTarget;
+    public readonly AOEShape Shape = shape;
+    public readonly bool OriginAtTarget = originAtTarget;
     protected Actor? Source;
     protected Actor? Target;
     protected DateTime Activation;
@@ -109,7 +109,7 @@ public class IconSharedTankbuster(BossModule module, uint iconId, ActionID aid, 
 
     public virtual Actor? BaitSource(Actor target) => Module.PrimaryActor;
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == iconId)
         {

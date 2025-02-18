@@ -19,12 +19,12 @@ public enum AID : uint
     Groundstorm = 18023, // Boss->self, 5.0s cast, range 5-40 donut
 }
 
-class WildHorn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(17, 60.Degrees()));
-class Trounce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(40, 30.Degrees()));
-class Groundstorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Groundstorm), new AOEShapeDonut(5, 40));
-class MightySpin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MightySpin), new AOEShapeCircle(14));
-class ForestFire(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ForestFire), new AOEShapeCircle(15));
-class BafflementBulb(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BafflementBulb), "Pull + Temporary Misdirection -> Donut -> Out");
+class WildHorn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(17, 60.Degrees()));
+class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(40, 30.Degrees()));
+class Groundstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Groundstorm), new AOEShapeDonut(5, 40));
+class MightySpin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MightySpin), 14);
+class ForestFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ForestFire), 15);
+class BafflementBulb(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BafflementBulb), "Pull + Temporary Misdirection -> Donut -> Out");
 class MetamorphicBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MetamorphicBlast));
 
 class MightySpin2(BossModule module) : Components.GenericAOEs(module)

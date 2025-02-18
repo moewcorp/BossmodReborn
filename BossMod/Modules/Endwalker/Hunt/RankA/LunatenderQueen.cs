@@ -2,12 +2,13 @@
 
 public enum OID : uint
 {
-    Boss = 0x35DF, // R5.320, x1
+    Boss = 0x35DF // R5.320, x1
 }
 
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     AvertYourEyes = 27363, // Boss->self, 7.0s cast, range 40 circle
     YouMayApproach = 27364, // Boss->self, 7.0s cast, range 6-40 donut
     AwayWithYou = 27365, // Boss->self, 7.0s cast, range 15 circle
@@ -15,17 +16,17 @@ public enum AID : uint
     WickedWhim = 27367, // Boss->self, 4.0s cast, single-target
     AvertYourEyesInverted = 27369, // Boss->self, 7.0s cast, range 40 circle
     YouMayApproachInverted = 27370, // Boss->self, 7.0s cast, range 15 circle
-    AwayWithYouInverted = 27371, // Boss->self, 7.0s cast, range 6-40 donut
+    AwayWithYouInverted = 27371 // Boss->self, 7.0s cast, range 6-40 donut
 }
 
 class AvertYourEyes(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.AvertYourEyes));
-class YouMayApproach(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.YouMayApproach), new AOEShapeDonut(6, 40));
-class AwayWithYou(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AwayWithYou), new AOEShapeCircle(15));
-class Needles(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Needles), new AOEShapeCircle(6));
+class YouMayApproach(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.YouMayApproach), new AOEShapeDonut(6, 40));
+class AwayWithYou(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AwayWithYou), 15);
+class Needles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Needles), 6);
 class WickedWhim(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.WickedWhim), "Invert next cast");
 class AvertYourEyesInverted(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.AvertYourEyesInverted), true);
-class YouMayApproachInverted(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.YouMayApproachInverted), new AOEShapeCircle(15));
-class AwayWithYouInverted(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AwayWithYouInverted), new AOEShapeDonut(6, 40));
+class YouMayApproachInverted(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.YouMayApproachInverted), 15);
+class AwayWithYouInverted(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AwayWithYouInverted), new AOEShapeDonut(6, 40));
 
 class LunatenderQueenStates : StateMachineBuilder
 {
@@ -43,5 +44,5 @@ class LunatenderQueenStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10629)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10629)]
 public class LunatenderQueen(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

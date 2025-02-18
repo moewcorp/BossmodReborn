@@ -15,19 +15,19 @@ class PuffTracker(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.BracingSudsPuff:
+            case (uint)SID.BracingSudsPuff:
                 BracingPuffs.Add(actor);
                 ChillingPuffs.Remove(actor);
                 FizzlingPuffs.Remove(actor);
                 break;
-            case SID.ChillingSudsPuff:
+            case (uint)SID.ChillingSudsPuff:
                 BracingPuffs.Remove(actor);
                 ChillingPuffs.Add(actor);
                 FizzlingPuffs.Remove(actor);
                 break;
-            case SID.FizzlingSudsPuff:
+            case (uint)SID.FizzlingSudsPuff:
                 BracingPuffs.Remove(actor);
                 ChillingPuffs.Remove(actor);
                 FizzlingPuffs.Add(actor);
@@ -37,15 +37,15 @@ class PuffTracker(BossModule module) : BossComponent(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.BracingSudsPuff:
+            case (uint)SID.BracingSudsPuff:
                 BracingPuffs.Remove(actor);
                 break;
-            case SID.ChillingSudsPuff:
+            case (uint)SID.ChillingSudsPuff:
                 ChillingPuffs.Remove(actor);
                 break;
-            case SID.FizzlingSudsPuff:
+            case (uint)SID.FizzlingSudsPuff:
                 FizzlingPuffs.Remove(actor);
                 break;
         }

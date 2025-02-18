@@ -1,6 +1,6 @@
 ﻿namespace BossMod;
 
-[ConfigDisplay(Name = "Smart character orientation", Parent = typeof(ActionTweaksConfig), Since = "7.2.0.146")]
+[ConfigDisplay(Name = "Smart character orientation", Parent = typeof(ActionTweaksConfig))]
 class SmartRotationConfig : ConfigNode
 {
     [PropertyDisplay("Enable the feature", tooltip: "Replace in-game 'auto face target' option with a smarter alternative.\nWhen using an action, changes direction only if target is not in frontal cone.\nDuring cast, keep character facing the target.")]
@@ -22,19 +22,19 @@ public sealed class SmartRotationTweak(WorldState ws, AIHints hints)
 {
     private readonly SmartRotationConfig _config = Service.Config.Get<SmartRotationConfig>();
     private readonly DisjointSegmentList _forbidden = new();
-    private readonly Angle _minWindow = 5.Degrees();
+    private static readonly Angle _minWindow = 5.Degrees();
     public bool Enabled => _config.Enabled;
 
     // return 'ideal orientation' for a spell, or null if spell is not oriented (self-targeted or does not require facing)
     public Angle? GetSpellOrientation(uint spellId, WPos playerPos, bool targetIsSelf, WPos? targetPos, WPos targetLoc)
     {
-        var data = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Action>(spellId);
-        if (data == null || !data.Unknown26) // does not require facing
+        var data = Service.LuminaRow<Lumina.Excel.Sheets.Action>(spellId);
+        if (data == null || !data.Value.NeedToFaceTarget || data.Value.Range == 0) // does not require facing
             return null;
-        if (data.TargetArea)
+        if (data.Value.TargetArea)
             return Angle.FromDirection(targetLoc - playerPos);
         // see ActionManager.ResolveTarget
-        targetIsSelf |= ActionDefinitions.Instance.SpellAllowedTargets(data) == ActionTargets.Self;
+        targetIsSelf |= ActionDefinitions.Instance.SpellAllowedTargets(data.Value) == ActionTargets.Self;
         return targetIsSelf || targetPos == null ? null : Angle.FromDirection(targetPos.Value - playerPos); // self-targeted don't have ideal orientation
     }
 
@@ -107,7 +107,7 @@ public sealed class SmartRotationTweak(WorldState ws, AIHints hints)
 
             // find widest safe range in a cone around preferred direction
             var best = initBest(coneMin, Math.Max(_forbidden[intersection.first].Min, coneMin));
-            for (int i = 1; i < intersection.count; ++i)
+            for (var i = 1; i < intersection.count; ++i)
                 updateBest(ref best, _forbidden[intersection.first + i - 1].Max, _forbidden[intersection.first + i].Min);
             updateBest(ref best, Math.Min(_forbidden[intersection.first + intersection.count - 1].Max, coneMax), coneMax);
 
@@ -118,7 +118,7 @@ public sealed class SmartRotationTweak(WorldState ws, AIHints hints)
         // find widest safe range in the whole circle
         {
             var best = initBest(_forbidden[^1].Max, _forbidden[0].Min + Angle.DoublePI);
-            for (int i = 1; i < _forbidden.Count; ++i)
+            for (var i = 1; i < _forbidden.Count; ++i)
                 updateBest(ref best, _forbidden[i - 1].Max, _forbidden[i].Min);
             return midpoint + best.mid.Radians();
         }

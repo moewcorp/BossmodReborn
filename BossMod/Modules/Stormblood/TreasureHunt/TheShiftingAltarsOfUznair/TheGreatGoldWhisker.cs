@@ -19,7 +19,7 @@ public enum AID : uint
 
 class TripleTrident(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.TripleTrident));
 class FishOutOfWater(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.FishOutOfWater), "Spawns adds");
-class Tingle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tingle), new AOEShapeCircle(12.4f));
+class Tingle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tingle), 12.4f);
 
 class TheGreatGoldWhiskerStates : StateMachineBuilder
 {
@@ -29,27 +29,40 @@ class TheGreatGoldWhiskerStates : StateMachineBuilder
             .ActivateOnEnter<TripleTrident>()
             .ActivateOnEnter<FishOutOfWater>()
             .ActivateOnEnter<Tingle>()
-            .Raw.Update = () => module.Enemies(OID.GoldWhisker).Concat([module.PrimaryActor]).All(e => e.IsDead);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(TheGreatGoldWhisker.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7599)]
-public class TheGreatGoldWhisker(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class TheGreatGoldWhisker(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.GoldWhisker];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.GoldWhisker), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.GoldWhisker), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.GoldWhisker => 2,
-                OID.Boss => 1,
+                (uint)OID.GoldWhisker => 1,
                 _ => 0
             };
         }

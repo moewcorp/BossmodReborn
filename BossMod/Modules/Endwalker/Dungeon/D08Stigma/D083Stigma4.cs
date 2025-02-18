@@ -3,10 +3,10 @@
 public enum OID : uint
 {
     Boss = 0x3428, // R6.990, x1
-    Helper = 0x233C, // R0.500, x2, 523 type
     OmegaFrame = 0x342A, // R8.995, x0 (spawn during fight)
     HybridDragon = 0x342B, // R5.000, x0 (spawn during fight)
     ProtoRocketPunch = 0x3429, // R2.500, x0 (spawn during fight)
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -34,30 +34,28 @@ public enum AID : uint
     SelfDestructOmega = 25644, // OmegaFrame->self, 15.0s cast, range 60 circle
     SelfDestructDragon = 25647, // HybridDragon->self, 15.0s cast, range 60 circle
 
-    Touchdown = 26873, // HybridDragon->self, 2.0s cast, range 7 circle
+    Touchdown = 26873 // HybridDragon->self, 2.0s cast, range 7 circle
 }
 
 public enum SID : uint
 {
-    VulnerabilityUp = 1789, // HybridDragon/Helper->player, extra=0x1/0x2/0x3
     AboutFace = 1959, // Boss->player, extra=0x0
     ForwardMarch = 1958, // Boss->player, extra=0x0
     RightFace = 1961, // Boss->player, extra=0x0
-    LeftFace = 1960, // Boss->player, extra=0x0
-    ForcedMarch = 1257, // Boss->player, extra=0x2/0x1/0x8
-    Bleeding = 2088, // Boss->player, extra=0x0
+    LeftFace = 1960 // Boss->player, extra=0x0
 }
 
 class Mindhack(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, activationLimit: 8);
 
-class ElectromagneticReleaseIn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ElectromagneticReleaseIn), new AOEShapeDonut(7, 60));
-class ElectromagneticReleaseOut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ElectromagneticReleaseOut), new AOEShapeCircle(16));
+class ElectromagneticReleaseIn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ElectromagneticReleaseIn), new AOEShapeDonut(7, 60));
+class ElectromagneticReleaseOut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ElectromagneticReleaseOut), 16);
 
-class FireBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FireBreath), new AOEShapeCone(40, 60.Degrees()));
-class Touchdown(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Touchdown), new AOEShapeCircle(7));
+class FireBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireBreath), new AOEShapeCone(40, 60.Degrees()));
+class Touchdown(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Touchdown), 7);
 
-class ProtoWaveCannon1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ProtoWaveCannon1), new AOEShapeCone(60, 90.Degrees()));
-class ProtoWaveCannon2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ProtoWaveCannon2), new AOEShapeCone(60, 90.Degrees()));
+abstract class ProtoWaveCannon(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60, 90.Degrees()));
+class ProtoWaveCannon1(BossModule module) : ProtoWaveCannon(module, AID.ProtoWaveCannon1);
+class ProtoWaveCannon2(BossModule module) : ProtoWaveCannon(module, AID.ProtoWaveCannon2);
 
 class Rush(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Rush), 2.5f);
 

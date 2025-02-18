@@ -5,15 +5,15 @@ class Clearout(BossModule module) : Components.GenericAOEs(module)
 {
     public List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeCone _shape = new(27, 90.Degrees()); // TODO: verify range, it's definitely bigger than what table suggests... maybe origin is wrong?
+    private static readonly AOEShapeCone _shape = new(27f, 90f.Degrees()); // TODO: verify range, it's definitely bigger than what table suggests... maybe origin is wrong?
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E43 && (OID)actor.OID is OID.NOniClaw or OID.SOniClaw)
+        if (id == 0x1E43 && actor.OID is (uint)OID.NOniClaw or (uint)OID.SOniClaw)
         {
-            AOEs.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(8.3f)));
+            AOEs.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(8.3d)));
         }
     }
 }
@@ -25,7 +25,7 @@ class AccursedEdge : Components.GenericBaitAway
     private Mechanic _curMechanic;
     private readonly Clearout? _clearout;
 
-    private static readonly AOEShapeCircle _shape = new(6);
+    private static readonly AOEShapeCircle _shape = new(6f);
     private static readonly WDir[] _safespotDirections = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     public AccursedEdge(BossModule module) : base(module, centerAtTarget: true)
@@ -42,7 +42,7 @@ class AccursedEdge : Components.GenericBaitAway
         CurrentBaits.Clear();
         if (_curMechanic != Mechanic.None)
         {
-            var players = Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position).ToList();
+            var players = Raid.WithoutSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).ToList();
             foreach (var p in _curMechanic == Mechanic.Far ? players.TakeLast(2) : players.Take(2))
                 CurrentBaits.Add(new(Module.PrimaryActor, p, _shape));
         }
@@ -76,10 +76,10 @@ class AccursedEdge : Components.GenericBaitAway
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var mechanic = (AID)spell.Action.ID switch
+        var mechanic = spell.Action.ID switch
         {
-            AID.FarEdge => Mechanic.Far,
-            AID.NearEdge => Mechanic.Near,
+            (uint)AID.FarEdge => Mechanic.Far,
+            (uint)AID.NearEdge => Mechanic.Near,
             _ => Mechanic.None
         };
         if (mechanic != Mechanic.None)
@@ -88,7 +88,7 @@ class AccursedEdge : Components.GenericBaitAway
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NAccursedEdge or AID.SAccursedEdge)
+        if (spell.Action.ID is (uint)AID.NAccursedEdge or (uint)AID.SAccursedEdge)
         {
             ++NumCasts;
             _curMechanic = Mechanic.None;

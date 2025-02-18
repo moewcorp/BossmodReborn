@@ -4,24 +4,51 @@ class HailOfFeathers(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shape = new(20); // TODO: verify falloff
+    private static readonly AOEShapeCircle _shape = new(20f); // TODO: verify falloff
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Skip(NumCasts).Take(2);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+            aoes[i] = _aoes[i];
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HailOfFeathersAOE1 or AID.HailOfFeathersAOE2 or AID.HailOfFeathersAOE3 or AID.HailOfFeathersAOE4 or AID.HailOfFeathersAOE5 or AID.HailOfFeathersAOE6)
+        switch (spell.Action.ID)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.SortBy(x => x.Activation);
+            case (uint)AID.HailOfFeathersAOE1:
+            case (uint)AID.HailOfFeathersAOE2:
+            case (uint)AID.HailOfFeathersAOE3:
+            case (uint)AID.HailOfFeathersAOE4:
+            case (uint)AID.HailOfFeathersAOE5:
+            case (uint)AID.HailOfFeathersAOE6:
+                _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+                if (_aoes.Count == 6)
+                    _aoes.SortBy(x => x.Activation);
+                break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HailOfFeathersAOE1 or AID.HailOfFeathersAOE2 or AID.HailOfFeathersAOE3 or AID.HailOfFeathersAOE4 or AID.HailOfFeathersAOE5 or AID.HailOfFeathersAOE6)
+        switch (spell.Action.ID)
         {
-            ++NumCasts;
+            case (uint)AID.HailOfFeathersAOE1:
+            case (uint)AID.HailOfFeathersAOE2:
+            case (uint)AID.HailOfFeathersAOE3:
+            case (uint)AID.HailOfFeathersAOE4:
+            case (uint)AID.HailOfFeathersAOE5:
+            case (uint)AID.HailOfFeathersAOE6:
+                ++NumCasts;
+                if (_aoes.Count != 0)
+                    _aoes.RemoveAt(0);
+                break;
         }
     }
 }
@@ -40,7 +67,7 @@ class BlightedBolt : Components.GenericAOEs
         var platform = module.FindComponent<ThunderPlatform>();
         if (platform != null)
         {
-            foreach (var (i, _) in module.Raid.WithSlot(true))
+            foreach (var (i, _) in module.Raid.WithSlot(true, true, true))
             {
                 platform.RequireHint[i] = true;
                 platform.RequireLevitating[i] = false;

@@ -40,12 +40,24 @@ public enum SID : uint
 
 class Brainstorm(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<SapShower>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    private readonly SapShower _aoe = module.FindComponent<SapShower>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var count = _aoe.Casters.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var caster = _aoe.Casters[i];
+            if (caster.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
 
 class FetchingFulgence(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.FetchingFulgence));
 class Lash(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Lash));
-class PotentPerfume(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.PotentPerfume), 8);
+class PotentPerfume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PotentPerfume), 8f);
 
 class SapShowerTendrilsHint(BossModule module) : BossComponent(module)
 {
@@ -54,7 +66,7 @@ class SapShowerTendrilsHint(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SapShower)
+        if (spell.Action.ID == (uint)AID.SapShower)
         {
             active = true;
             ++NumCasts;
@@ -63,7 +75,7 @@ class SapShowerTendrilsHint(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SapShower)
+        if (spell.Action.ID == (uint)AID.SapShower)
             active = false;
     }
 
@@ -79,59 +91,75 @@ class SapShowerTendrilsHint(BossModule module) : BossComponent(module)
     }
 }
 
-class SapShower : Components.LocationTargetedAOEs
+class SapShower : Components.SimpleAOEs
 {
-    public SapShower(BossModule module) : base(module, ActionID.MakeSpell(AID.SapShower), 8)
+    public SapShower(BossModule module) : base(module, ActionID.MakeSpell(AID.SapShower), 8f)
     {
         Color = Colors.Danger;
     }
 }
 
-class ExtensibleTendrils(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ExtensibleTendrils), new AOEShapeCross(25, 3));
-class PutridBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PutridBreath), new AOEShapeCone(25, 45.Degrees()));
-class RockHard(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.RockHard), 6);
-class BeguilingGas(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BeguilingGas), "Raidwide + Temporary Misdirection");
+class ExtensibleTendrils(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExtensibleTendrils), new AOEShapeCross(25f, 3f));
+class PutridBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PutridBreath), new AOEShapeCone(25f, 45f.Degrees()));
+class RockHard(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.RockHard), 6f);
+class BeguilingGasTM(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BeguilingGas));
+class BeguilingGas(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeguilingGas));
 
-class HeavySmash(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HeavySmash), 6);
+class HeavySmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavySmash), 6f);
 
 class NarkissosStates : StateMachineBuilder
 {
     public NarkissosStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<SapShower>()
             .ActivateOnEnter<Brainstorm>()
             .ActivateOnEnter<Lash>()
             .ActivateOnEnter<FetchingFulgence>()
             .ActivateOnEnter<PotentPerfume>()
-            .ActivateOnEnter<SapShower>()
             .ActivateOnEnter<SapShowerTendrilsHint>()
             .ActivateOnEnter<ExtensibleTendrils>()
             .ActivateOnEnter<PutridBreath>()
             .ActivateOnEnter<RockHard>()
             .ActivateOnEnter<BeguilingGas>()
+            .ActivateOnEnter<BeguilingGasTM>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouLampas).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Narkissos.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12029)]
-public class Narkissos(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class Narkissos(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasiouLampas, (uint)OID.GymnasiouLyssa];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.GymnasiouLyssa).Concat(Enemies(OID.GymnasiouLampas)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.GymnasiouLampas => 3,
-                OID.GymnasiouLyssa => 2,
-                OID.Boss => 1,
+                (uint)OID.GymnasiouLampas => 2,
+                (uint)OID.GymnasiouLyssa => 1,
                 _ => 0
             };
         }

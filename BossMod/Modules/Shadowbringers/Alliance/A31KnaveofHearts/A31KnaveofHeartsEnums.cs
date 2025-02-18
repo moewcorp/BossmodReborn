@@ -20,28 +20,26 @@ public enum AID : uint
     BalancedEdge = 23791, // Ally2B->self, 2.0s cast, range 5 circle
     WhirlingAssault = 23792, // Ally2B->self, 2.0s cast, range 40 width 4 rect
 
-    ColossalImpact1 = 24228, // Boss/CopiedKnave->self, 7.0s cast, single-target
+    ColossalImpactVisual1 = 24228, // Boss/CopiedKnave->self, 7.0s cast, single-target
+    ColossalImpactVisual2 = 23805, // Boss->self, 8.5s cast, single-target
+    ColossalImpact1 = 24774, // Helper->self, 9.5s cast, range 61 width 20 rect
+    ColossalImpact2 = 24775, // Helper->self, 9.5s cast, range 61 width 20 rect
+    ColossalImpact3 = 24776, // Boss->self, 9.5s cast, range 61 width 20 rect
     ColossalImpactLeft = 24229, // Helper->self, 8.0s cast, range 61 width 20 rect // left
     ColossalImpactRight = 24230, // Helper->self, 8.0s cast, range 61 width 20 rect // right
-    ColossalImpactMiddle = 24231, // Boss/CopiedKnave->self, 8.0s cast, range 61 width 20 rect // middle
+    ColossalImpactCenter = 24231, // Boss/CopiedKnave->self, 8.0s cast, range 61 width 20 rect // middle
 
-    ColossalImpact5 = 23805, // Boss->self, 8.5s cast, single-target
+    MagicArtilleryBetaVisual = 24242, // Boss->self, 3.0s cast, single-target
+    MagicArtilleryBeta = 24243, // Helper->player, 5.0s cast, range 3 circle
 
-    ColossalImpact6 = 24774, // Helper->self, 9.5s cast, range 61 width 20 rect
-    ColossalImpact7 = 24775, // Helper->self, 9.5s cast, range 61 width 20 rect
-    ColossalImpact8 = 24776, // Boss->self, 9.5s cast, range 61 width 20 rect
+    MagicArtilleryAlphaVisual = 24234, // Boss->self, 3.0s cast, single-target
+    MagicArtilleryAlpha = 24235, // Helper->players, 6.0s cast, range 5 circle
 
-    MagicArtilleryBeta1 = 24242, // Boss->self, 3.0s cast, single-target
-    MagicArtilleryBeta2 = 24243, // Helper->player, 5.0s cast, range 3 circle
+    StackingTheDeckVisual = 24816, // CopiedKnave->self, 6.0s cast, single-target
+    StackingTheDeck = 23801, // Boss->self, 6.0s cast, single-target
 
-    MagicArtilleryAlpha1 = 24234, // Boss->self, 3.0s cast, single-target
-    MagicArtilleryAlpha2 = 24235, // Helper->players, 6.0s cast, range 5 circle
-
-    StackingTheDeck1 = 24816, // CopiedKnave->self, 6.0s cast, single-target
-    StackingTheDeck2 = 23801, // Boss->self, 6.0s cast, single-target
-
-    LightLeap1 = 24238, // Boss->self, 7.0s cast, single-target
-    LightLeap2 = 24239, // Helper->location, 8.5s cast, range 40 circle
+    LightLeapVisual = 24238, // Boss->self, 7.0s cast, single-target
+    LightLeap = 24239, // Helper->location, 8.5s cast, range 40 circle
 
     Replicate = 24233, // Boss->self, 3.0s cast, single-target
     Spheroids = 24232, // Boss->self, 4.0s cast, single-target

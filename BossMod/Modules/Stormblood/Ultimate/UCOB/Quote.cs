@@ -52,7 +52,7 @@ class Quote(BossModule module) : BossComponent(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (PendingMechanics.Count > 0 && (AID)spell.Action.ID == PendingMechanics[0])
+        if (PendingMechanics.Count != 0 && (AID)spell.Action.ID == PendingMechanics[0])
         {
             PendingMechanics.RemoveAt(0);
             NextActivation = WorldState.FutureTime(3.1f);
@@ -69,7 +69,7 @@ class QuoteIronChariotLunarDynamo(BossModule module) : Components.GenericAOEs(mo
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        AOEShape? shape = _quote != null && _quote.PendingMechanics.Count > 0 ? _quote.PendingMechanics[0] switch
+        AOEShape? shape = _quote != null && _quote.PendingMechanics.Count != 0 ? _quote.PendingMechanics[0] switch
         {
             AID.IronChariot => _shapeChariot,
             AID.LunarDynamo => _shapeDynamo,
@@ -86,7 +86,7 @@ class QuoteThermionicBeam(BossModule module) : Components.UniformStackSpread(mod
 
     public override void Update()
     {
-        var stackImminent = _quote != null && _quote.PendingMechanics.Count > 0 && _quote.PendingMechanics[0] == AID.ThermionicBeam;
+        var stackImminent = _quote != null && _quote.PendingMechanics.Count != 0 && _quote.PendingMechanics[0] == AID.ThermionicBeam;
         if (stackImminent && Stacks.Count == 0 && Raid.Player() is var target && target != null) // note: target is random
             AddStack(target, _quote!.NextActivation);
         else if (!stackImminent && Stacks.Count > 0)
@@ -101,9 +101,9 @@ class QuoteRavenDive(BossModule module) : Components.UniformStackSpread(module, 
 
     public override void Update()
     {
-        var spreadImminent = _quote != null && _quote.PendingMechanics.Count > 0 && _quote.PendingMechanics[0] == AID.RavenDive;
+        var spreadImminent = _quote != null && _quote.PendingMechanics.Count != 0 && _quote.PendingMechanics[0] == AID.RavenDive;
         if (spreadImminent && Spreads.Count == 0)
-            AddSpreads(Raid.WithoutSlot(true), _quote!.NextActivation);
+            AddSpreads(Raid.WithoutSlot(true, true, true), _quote!.NextActivation);
         else if (!spreadImminent && Spreads.Count > 0)
             Spreads.Clear();
         base.Update();
@@ -118,7 +118,7 @@ class QuoteMeteorStream(BossModule module) : Components.UniformStackSpread(modul
     {
         var spreadImminent = _quote != null && _quote.PendingMechanics.Count > 0 && _quote.PendingMechanics[0] == AID.MeteorStream;
         if (spreadImminent && Spreads.Count == 0)
-            AddSpreads(Raid.WithoutSlot(true), _quote!.NextActivation);
+            AddSpreads(Raid.WithoutSlot(true, true, true), _quote!.NextActivation);
         else if (!spreadImminent && Spreads.Count > 0)
             Spreads.Clear();
         base.Update();

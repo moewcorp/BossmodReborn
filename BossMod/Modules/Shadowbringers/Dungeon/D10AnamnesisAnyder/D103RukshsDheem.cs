@@ -43,11 +43,6 @@ public enum AID : uint
 
 class ArenaChanges(BossModule module) : BossComponent(module)
 {
-    private static readonly WDir offset = new(0, 8);
-    private static readonly Func<WPos, float> stayInBounds = p =>
-        Math.Max(ShapeDistance.InvertedCircle(D103RukshsDheem.ArenaCenter + offset, 3)(p),
-            ShapeDistance.InvertedCircle(D103RukshsDheem.ArenaCenter - offset, 3)(p));
-
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001)
@@ -65,45 +60,44 @@ class ArenaChanges(BossModule module) : BossComponent(module)
         else if (state == 0x00080004 && index is 0x017 or 0x18)
             Arena.Bounds = D103RukshsDheem.DefaultBounds;
     }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Arena.Bounds != D103RukshsDheem.DefaultBounds && !Arena.InBounds(actor.Position))
-            hints.AddForbiddenZone(stayInBounds);
-    }
 }
 
 class Wavebreaker(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeRect rectNarrow = new(36, 4);
     private static readonly AOEShapeRect rectWide = new(21, 5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count == 0)
-            yield break;
         var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        List<AOEInstance> aoes = new(count);
         if (Arena.Bounds == D103RukshsDheem.SplitBounds)
             for (var i = 0; i < count; ++i)
             {
+                var aoe = _aoes[i];
                 if (i == 0)
-                    yield return _aoes[i] with { Color = Colors.Danger };
-                else if (i > 0)
-                    yield return _aoes[i];
+                    aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+                else
+                    aoes.Add(aoe);
             }
         else if (Arena.Bounds == D103RukshsDheem.DefaultBounds)
             for (var i = 0; i < count; ++i)
-                yield return _aoes[i];
+                aoes.Add(_aoes[i]);
         else
-            for (var i = 0; i < Math.Clamp(count, 0, 4); ++i)
+            for (var i = 0; i < (count > 4 ? 4 : count); ++i)
             {
-                if (_aoes[i].Rotation == _aoes[0].Rotation)
+                var aoe = _aoes[i];
+                if (aoe.Rotation == _aoes[0].Rotation)
                     if (i == 0)
-                        yield return _aoes[i] with { Color = Colors.Danger };
-                    else if (i > 0)
-                        yield return _aoes[i];
+                        aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+                    else
+                        aoes.Add(aoe);
             }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -141,18 +135,18 @@ class Wavebreaker(BossModule module) : Components.GenericAOEs(module)
 
 class Drains(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<WPos> activeDrains = [], solvedDrains = [];
-    private const int X = 11;
+    private readonly List<WPos> activeDrains = new(8), solvedDrains = new(4);
+    private static readonly int[] xPositions = [-11, 11];
     private const float SideLength = 1.25f;
     private static readonly WPos[] drainPositions = new WPos[8];
     private const string Hint = "Block a drain!";
+    private static readonly WDir dir = new(0, 1);
     private DateTime activation;
 
     static Drains()
     {
-        int[] xPositions = [-X, X];
-        var zStart = -465;
-        var zStep = 10;
+        const int zStart = -465;
+        const int zStep = 10;
         var index = 0;
 
         for (var i = 0; i < 2; ++i)
@@ -165,16 +159,20 @@ class Drains(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        if (activation == default)
+            return [];
+        List<AOEInstance> aoes = new(8);
         for (var i = 0; i < activeDrains.Count; ++i)
-            yield return new(square, activeDrains[i], Color: Colors.SafeFromAOE, Risky: false);
+            aoes.Add(new(square, activeDrains[i], Color: Colors.SafeFromAOE, Risky: false));
         for (var i = 0; i < solvedDrains.Count; ++i)
         {
             var drain = solvedDrains[i];
-            yield return new(square, drain, Color: IsBlockingDrain(actor, drain) ? Colors.SafeFromAOE : Colors.AOE, Risky: false);
+            aoes.Add(new(square, drain, Color: IsBlockingDrain(actor, drain) ? Colors.SafeFromAOE : 0, Risky: false));
         }
+        return aoes;
     }
 
-    public static bool IsBlockingDrain(Actor actor, WPos pos) => actor.Position.InRect(pos, new Angle(), SideLength, SideLength, SideLength);
+    public static bool IsBlockingDrain(Actor actor, WPos pos) => actor.Position.InRect(pos, dir, SideLength, SideLength, SideLength);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -209,22 +207,31 @@ class Drains(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if ((OID)actor.OID == OID.QueensHarpooner) // there doesn't seem to be any ENVC or the like when mechanic ends
+            activation = default;
+    }
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
+        if (activation == default)
+            return;
+        var forbidden = new List<Func<WPos, float>>(8);
         for (var i = 0; i < activeDrains.Count; ++i)
-            forbidden.Add(ShapeDistance.InvertedRect(activeDrains[i], new Angle(), SideLength, SideLength, SideLength));
+            forbidden.Add(ShapeDistance.InvertedRect(activeDrains[i], dir, SideLength, SideLength, SideLength));
         for (var i = 0; i < solvedDrains.Count; ++i)
         {
             var drain = solvedDrains[i];
             if (IsBlockingDrain(actor, drain))
             {
-                forbidden.Add(ShapeDistance.InvertedRect(drain, new Angle(), SideLength, SideLength, SideLength));
+                forbidden.Add(ShapeDistance.InvertedRect(drain, dir, SideLength, SideLength, SideLength));
                 break; // can only block one drain at a time, no point to keep checking
             }
         }
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)), activation);
+
+        if (forbidden.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), activation);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -244,9 +251,9 @@ class Seafoam(BossModule module) : Components.RaidwideCast(module, ActionID.Make
 class Bonebreaker(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.Bonebreaker));
 class FallingWater(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FallingWater), 8);
 class FlyingFount(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FlyingFount), 6);
-class CommandCurrent(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CommandCurrent), new AOEShapeCone(40, 15.Degrees()));
-class CoralTrident(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CoralTrident), new AOEShapeCone(6, 45.Degrees()));
-class RisingTide(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RisingTide), new AOEShapeCross(50, 3));
+class CommandCurrent(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CommandCurrent), new AOEShapeCone(40, 15.Degrees()));
+class CoralTrident(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CoralTrident), new AOEShapeCone(6, 45.Degrees()));
+class RisingTide(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RisingTide), new AOEShapeCross(50, 3));
 
 class D103RukshsDheemStates : StateMachineBuilder
 {
@@ -279,6 +286,20 @@ public class D103RukshsDheem(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.QueensHarpooner).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.QueensHarpooner));
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = (OID)e.Actor.OID switch
+            {
+                OID.QueensHarpooner => 1,
+                _ => 0
+            };
+        }
     }
 }

@@ -6,7 +6,7 @@ class EntrapmentAttract(BossModule module) : Components.Knockback(module, Action
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(new(Module.Center.X, Module.Center.Z + Module.Bounds.Radius), 60, _activation, Kind: Kind.TowardsOrigin);
+        yield return new(new(Arena.Center.X, Arena.Center.Z + Module.Bounds.Radius), 60, _activation, Kind: Kind.TowardsOrigin);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -248,6 +248,6 @@ class EntrapmentInescapable(BossModule module) : Entrapment(module, _allowedPatt
     }
 }
 
-class LethalBlow(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LethalBlow), new AOEShapeRect(44, 24));
+class LethalBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LethalBlow), new AOEShapeRect(44, 24));
 class LeapingSpark(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.LeapingSparkAOE));
-class Devour(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Devour), new AOEShapeCone(6, 60.Degrees()));
+class Devour(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Devour), new AOEShapeCone(6, 60.Degrees()));

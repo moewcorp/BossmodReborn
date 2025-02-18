@@ -4,7 +4,7 @@ abstract class Tornado(BossModule module, AID aid) : Components.SpreadFromCastTa
 class NTornado(BossModule module) : Tornado(module, AID.NTornado);
 class STornado(BossModule module) : Tornado(module, AID.STornado);
 
-abstract class Ovation(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(12, 2));
+abstract class Ovation(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(12, 2));
 class NOvation(BossModule module) : Ovation(module, AID.NOvation);
 class SOvation(BossModule module) : Ovation(module, AID.SOvation);
 
@@ -54,8 +54,8 @@ class C030WoodGolemStates : StateMachineBuilder
 class C030NWoodGolemStates(BossModule module) : C030WoodGolemStates(module, false);
 class C030SWoodGolemStates(BossModule module) : C030WoodGolemStates(module, true);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.NWoodGolem, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12560, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NWoodGolem, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12560, SortOrder = 6)]
 public class C030NWoodGolem(WorldState ws, Actor primary) : C030Trash2(ws, primary);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.SWoodGolem, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12560, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SWoodGolem, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12560, SortOrder = 6)]
 public class C030SWoodGolem(WorldState ws, Actor primary) : C030Trash2(ws, primary);

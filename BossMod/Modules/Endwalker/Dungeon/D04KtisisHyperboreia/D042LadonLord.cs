@@ -30,7 +30,6 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    BreathCombo = 2195, // none->Boss, extra=0x144/0x145/0x149/0x146/0x148/0x147, seems to save the current breath combo or what is left of it
     MiddleHead = 2812, // none->Boss, extra=0x9F6
     LeftHead = 2813, // none->Boss, extra=0x177F
     RightHead = 2814 // none->Boss, extra=0x21A8
@@ -38,17 +37,26 @@ public enum SID : uint
 
 class PyricBreath(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private readonly List<uint> buffs = [];
+    private readonly List<AOEInstance> _aoes = new(2);
+    private readonly List<uint> buffs = new(2);
     private static readonly Angle angle = 120.Degrees();
     private static readonly AOEShapeCone cone = new(40, 60.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
-            yield return _aoes[1];
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -61,16 +69,16 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.PyricBreathFront or AID.PyricBreathLeft or AID.PyricBreathRight)
         {
-            _aoes.Add(new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (buffs.Count == 2)
             {
                 var activation = Module.CastFinishAt(spell, 2.1f);
                 if (buffs[1] == (uint)SID.RightHead)
-                    _aoes.Add(new(cone, caster.Position, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? -angle : -2 * angle), activation));
+                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? -angle : -2 * angle), activation));
                 else if (buffs[1] == (uint)SID.LeftHead)
-                    _aoes.Add(new(cone, caster.Position, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? angle : 2 * angle), activation));
+                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? angle : 2 * angle), activation));
                 else if (buffs[1] == (uint)SID.MiddleHead)
-                    _aoes.Add(new(cone, caster.Position, spell.Rotation + (buffs[0] == (uint)SID.LeftHead ? -angle : angle), activation));
+                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.LeftHead ? -angle : angle), activation));
             }
         }
     }
@@ -80,7 +88,7 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID is AID.PyricBreathFront or AID.PyricBreathLeft or AID.PyricBreathRight)
         {
             ++NumCasts;
-            if (_aoes.Count > 0 && buffs.Count > 0)
+            if (_aoes.Count != 0 && buffs.Count != 0)
             {
                 _aoes.RemoveAt(0);
                 buffs.RemoveAt(0);
@@ -98,7 +106,7 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class PyricSphere(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PyricSphere), new AOEShapeCross(50, 2)); // we could draw this almost 5s earlier, but why bother with 10s cast time
+class PyricSphere(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PyricSphere), new AOEShapeCross(50, 2)); // we could draw this almost 5s earlier, but why bother with 10s cast time
 class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PyricBlast), 6, 4, 4);
 class Scratch(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Scratch));
 class Intimidation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Intimidation));

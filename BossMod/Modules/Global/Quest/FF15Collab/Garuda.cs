@@ -43,7 +43,7 @@ class GustFront(BossModule module) : Components.UniformStackSpread(module, 1.2f,
     }
 }
 
-class Microburst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Microburst), new AOEShapeCircle(18))
+class Microburst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Microburst), 18)
 {
     private bool casting;
 
@@ -75,7 +75,7 @@ class Microburst(BossModule module) : Components.SelfTargetedAOEs(module, Action
     }
 }
 
-class MistralShriek(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MistralShriek), new AOEShapeCircle(30))
+class MistralShriek(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralShriek), 30)
 {
     private bool casting;
     private DateTime done;
@@ -111,8 +111,8 @@ class MistralShriek(BossModule module) : Components.SelfTargetedAOEs(module, Act
     }
 }
 
-class MistralSong(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MistralSong), new AOEShapeCone(20, 75.Degrees()));
-class WickedTornado(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WickedTornado), new AOEShapeDonut(8, 20));
+class MistralSong(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralSong), new AOEShapeCone(20, 75.Degrees()));
+class WickedTornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WickedTornado), new AOEShapeDonut(8, 20));
 class MiniSupercell(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.MiniSupercell), ActionID.MakeSpell(AID.MiniSupercell2), 5, 45, 3, 2);
 class MiniSupercellKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.MiniSupercell2), 50, shape: new AOEShapeRect(45, 3), stopAtWall: true);
 

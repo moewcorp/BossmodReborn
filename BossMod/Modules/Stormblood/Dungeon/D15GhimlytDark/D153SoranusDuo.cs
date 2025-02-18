@@ -38,14 +38,16 @@ public enum AID : uint
     StunningSweep = 14098, // Boss->self, 4.0s cast, range 6+R circle
 
     CrosshatchVisual = 14113, // SoranusDuo2->self, no cast, single-target
-    CrosshatchTelegraph1 = 14115, // Helper->self, 3.5s cast, range 20+R width 4 rect
-    CrosshatchTelegraph2 = 14411, // Helper->self, 3.5s cast, range 35+R width 4 rect
-    CrosshatchTelegraph3 = 14412, // Helper->self, 3.5s cast, range 39+R width 4 rect
-    CrosshatchTelegraph4 = 14116, // Helper->self, 3.5s cast, range 40+R width 4 rect
-    CrosshatchTelegraph5 = 14698, // Helper->self, 3.5s cast, range 39+R width 4 rect
+
+    CrosshatchTelegraph1 = 14411, // Helper->self, 3.5s cast, range 35+R width 4 rect
+    CrosshatchTelegraph2 = 14412, // Helper->self, 3.5s cast, range 39+R width 4 rect
+    CrosshatchTelegraph3 = 14413, // Helper->self, 3.5s cast, range 29+R width 4 rect
+    CrosshatchTelegraph4 = 14115, // Helper->self, 3.5s cast, range 20+R width 4 rect
+    CrosshatchTelegraph5 = 14116, // Helper->self, 3.5s cast, range 40+R width 4 rect
     CrosshatchTelegraph6 = 14697, // Helper->self, 3.5s cast, range 35+R width 4 rect
-    CrosshatchTelegraph7 = 14413, // Helper->self, 3.5s cast, range 29+R width 4 rect
+    CrosshatchTelegraph7 = 14698, // Helper->self, 3.5s cast, range 39+R width 4 rect
     CrosshatchTelegraph8 = 14699, // Helper->self, 3.5s cast, range 40+R width 4 rect
+
     Crosshatch = 14114, // Helper->self, no cast, range 40+R width 4 rect
     CrosshatchVisualJulia = 14118, // JuliaQuoSoranus->self, no cast, single-target
     CrosshatchVisualAnnia = 14117, // Boss->self, no cast, single-target
@@ -75,21 +77,18 @@ class Heirsbane(BossModule module) : Components.SingleTargetCast(module, ActionI
 class ArtificialPlasmaAnnia(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ArtificialPlasmaAnnia));
 class ArtificialPlasmaJulia(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ArtificialPlasmaJulia));
 
-class Crossbones(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Crossbones), 2);
+class Crossbones(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Crossbones), 2f);
+
 class CrossbonesKB(BossModule module) : Components.Knockback(module, stopAtWall: true)
 {
     private DateTime _activation;
     private Actor? _caster;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
-    {
-        if (_caster != null)
-            yield return new(_caster.Position, 15, _activation);
-    }
+    public override IEnumerable<Source> Sources(int slot, Actor actor) => _caster != null ? [new(_caster.Position, 15f, _activation)] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Crossbones)
+        if (spell.Action.ID == (uint)AID.Crossbones)
         {
             _activation = Module.CastFinishAt(spell);
             _caster = caster;
@@ -98,20 +97,20 @@ class CrossbonesKB(BossModule module) : Components.Knockback(module, stopAtWall:
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Crossbones)
+        if (spell.Action.ID == (uint)AID.Crossbones)
             _caster = null;
     }
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<Bombardment>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
 }
 
-class AngrySalamander(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AngrySalamander), new AOEShapeRect(45.6f, 3));
-class Quaternity1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Quaternity1), new AOEShapeRect(41, 2));
-class Quaternity2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Quaternity2), new AOEShapeRect(23, 2, 3));
-class StunningSweep(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.StunningSweep), new AOEShapeCircle(6.6f));
-class Bombardment(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Bombardment), 10);
-class MagitekMissile(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MissileImpact), 6);
-class CoveringFire(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.CoveringFire), 8);
+class AngrySalamander(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamander), new AOEShapeRect(45.6f, 3f));
+class Quaternity1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quaternity1), new AOEShapeRect(41f, 2f));
+class Quaternity2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quaternity2), new AOEShapeRect(26f, 2f));
+class StunningSweep(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StunningSweep), 6.6f);
+class Bombardment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bombardment), 10f);
+class MagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MissileImpact), 6f);
+class CoveringFire(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.CoveringFire), 8f);
 
 class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
 {
@@ -129,17 +128,18 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.CeruleumTank && _aoes.Count == 0)
+        var count = _aoes.Count;
+        if (count == 0 && actor.OID == (uint)OID.CeruleumTank)
         {
-            for (var i = 0; i < origins.Length; ++i)
+            for (var i = 0; i < 8; ++i)
             {
-                float activation;
-                if (_aoes.Count == 0)
-                    activation = 8.8f;
+                double activation;
+                if (count == 0)
+                    activation = 8.8d;
                 else
                 {
-                    var set = (_aoes.Count + 1) * 0.5f;
-                    activation = 8.8f + 2.4f * set;
+                    var set = (count + 1) * 0.5d;
+                    activation = 8.8d + 2.4d * set;
                 }
                 _aoes.Add(new(circle, origins[i], default, WorldState.FutureTime(activation)));
             }
@@ -150,38 +150,53 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.Roundhouse or AID.Burst)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.Roundhouse or (uint)AID.Burst)
             _aoes.RemoveAt(0);
     }
 }
 
 class Crosshatch(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40.5f, 2);
-    private static readonly HashSet<AID> telegraphs = [AID.CrosshatchTelegraph1, AID.CrosshatchTelegraph2, AID.CrosshatchTelegraph3, AID.CrosshatchTelegraph4,
-    AID.CrosshatchTelegraph5, AID.CrosshatchTelegraph6, AID.CrosshatchTelegraph7, AID.CrosshatchTelegraph8];
+    private readonly List<AOEInstance> _aoes = new(8);
+    private static readonly AOEShapeRect rect = new(40.5f, 2f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
         {
-            yield return _aoes[0] with { Color = Colors.Danger };
-            for (var i = 1; i < count; ++i)
-                yield return _aoes[i];
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (telegraphs.Contains((AID)spell.Action.ID))
-            _aoes.Add(new(rect, caster.Position, spell.Rotation, _aoes.Count == 0 ? Module.CastFinishAt(spell, 2.1f) : _aoes[0].Activation.AddSeconds(_aoes.Count * 0.5f)));
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.CrosshatchTelegraph1:
+            case (uint)AID.CrosshatchTelegraph2:
+            case (uint)AID.CrosshatchTelegraph3:
+            case (uint)AID.CrosshatchTelegraph4:
+            case (uint)AID.CrosshatchTelegraph5:
+            case (uint)AID.CrosshatchTelegraph6:
+            case (uint)AID.CrosshatchTelegraph7:
+            case (uint)AID.CrosshatchTelegraph8:
+                _aoes.Add(new(rect, caster.Position, spell.Rotation, _aoes.Count == 0 ? Module.CastFinishAt(spell, 2.1f) : _aoes[0].Activation.AddSeconds(_aoes.Count * 0.5d)));
+                break;
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.Crosshatch)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Crosshatch)
             _aoes.RemoveAt(0);
     }
 }
@@ -219,12 +234,17 @@ class D153SoranusDuoStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 611, NameID = 7861, SortOrder = 5)]
 public class D153SoranusDuo(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(371, -265), 19.5f, 24)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(371f, -265f), 19.5f, 24)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.JuliaQuoSoranus).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.JuliaQuoSoranus));
     }
 
-    protected override bool CheckPull() => Enemies(OID.JuliaQuoSoranus).Concat([PrimaryActor]).Any(x => x.InCombat);
+    protected override bool CheckPull()
+    {
+        var julia = Enemies(OID.JuliaQuoSoranus);
+        return PrimaryActor.InCombat || julia.Count != 0 && julia[0].InCombat;
+    }
 }

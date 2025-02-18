@@ -8,7 +8,7 @@ class VisceralWhirl(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect _shapeNormal = new(29, 14);
     private static readonly AOEShapeRect _shapeOffset = new(60, 14);
 
-    public bool Active => _aoes.Count > 0;
+    public bool Active => _aoes.Count != 0;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
@@ -36,20 +36,49 @@ class VisceralWhirl(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MiasmicBlast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MiasmicBlast), new AOEShapeCross(60, 5));
+class MiasmicBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MiasmicBlast), new AOEShapeCross(60, 5));
 
 class VoidBio(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly IReadOnlyList<Actor> _bubbles = module.Enemies(OID.ToxicBubble);
+    private readonly List<Actor> _bubbles = module.Enemies(OID.ToxicBubble);
 
-    private static readonly AOEShapeCircle _shape = new(2); // TODO: verify explosion radius
+    private static readonly AOEShapeCapsule _shape = new(2, 3); // TODO: verify explosion radius
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _bubbles.Where(actor => !actor.IsDead).Select(b => new AOEInstance(_shape, b.Position));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        Actor[] bubbles = [.. _bubbles.Where(actor => !actor.IsDead)];
+        var count = bubbles.Length;
+        if (count == 0)
+            return [];
+        var aoes = new List<AOEInstance>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            AOEInstance aoeInstance = new(_shape, bubbles[i].Position);
+            aoes.Add(aoeInstance);
+        }
+        return aoes;
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        Actor[] bubbles = [.. _bubbles.Where(actor => !actor.IsDead)];
+        var count = bubbles.Length;
+        if (bubbles.Length == 0)
+            return;
+        var forbidden = new List<Func<WPos, float>>(count);
+        var angle = Angle.AnglesCardinals[1];
+        for (var i = 0; i < count; ++i)
+        {
+            var h = bubbles[i];
+            forbidden.Add(ShapeDistance.Capsule(h.Position, angle, 3, 2)); // merging all forbidden zones into one to make pathfinding less demanding
+        }
+        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+    }
 }
 
 class BondsOfDarkness(BossModule module) : BossComponent(module)
 {
-    public int NumTethers { get; private set; }
+    public int NumTethers;
     private readonly int[] _partners = Utils.MakeArray(PartyState.MaxPartySize, -1);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

@@ -136,18 +136,39 @@ public static class ActorEnumeration
     // sort range by distance from point
     public static IEnumerable<Actor> SortedByRange(this IEnumerable<Actor> range, WPos origin)
     {
-        return range
-            .Select(actor => (actor, (actor.Position - origin).LengthSq()))
-            .OrderBy(actorDist => actorDist.Item2)
-            .Select(actorDist => actorDist.actor);
+        var actors = new List<(Actor actor, float distanceSq)>();
+
+        foreach (var a in range)
+        {
+            var distanceSq = (a.Position - origin).LengthSq();
+            actors.Add((a, distanceSq));
+        }
+
+        actors.Sort((a, b) => a.distanceSq.CompareTo(b.distanceSq));
+
+        for (var i = 0; i < actors.Count; ++i)
+        {
+            yield return actors[i].actor;
+        }
     }
 
     public static IEnumerable<(int, Actor)> SortedByRange(this IEnumerable<(int, Actor)> range, WPos origin)
     {
-        return range
-            .Select(indexPlayer => (indexPlayer.Item1, indexPlayer.Item2, (indexPlayer.Item2.Position - origin).LengthSq()))
-            .OrderBy(indexPlayerDist => indexPlayerDist.Item3)
-            .Select(indexPlayerDist => (indexPlayerDist.Item1, indexPlayerDist.Item2));
+        var actors = new List<(int index, Actor actor, float distanceSq)>();
+
+        foreach (var a in range)
+        {
+            var distanceSq = (a.Item2.Position - origin).LengthSq();
+            actors.Add((a.Item1, a.Item2, distanceSq));
+        }
+
+        actors.Sort((a, b) => a.distanceSq.CompareTo(b.distanceSq));
+
+        for (var i = 0; i < actors.Count; ++i)
+        {
+            var actor = actors[i];
+            yield return (actor.index, actor.actor);
+        }
     }
 
     // find closest actor to point
@@ -184,5 +205,50 @@ public static class ActorEnumeration
         if (count > 0)
             sum /= count;
         return sum.ToWPos();
+    }
+
+    public static (int, Actor)[] ExcludedFromMask(this List<(int, Actor)> range, BitMask mask)
+    {
+        var count = range.Count;
+        var result = new List<(int, Actor)>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var indexActor = range[i];
+            if (!mask[indexActor.Item1])
+            {
+                result.Add(indexActor);
+            }
+        }
+        return [.. result];
+    }
+
+    public static (int, Actor)[] WhereSlot(this List<(int, Actor)> range, Func<int, bool> predicate)
+    {
+        var count = range.Count;
+        var result = new List<(int, Actor)>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var indexActor = range[i];
+            if (predicate(indexActor.Item1))
+            {
+                result.Add(indexActor);
+            }
+        }
+        return [.. result];
+    }
+
+    public static (int, Actor)[] InRadius(this List<(int, Actor)> range, WPos origin, float radius)
+    {
+        var count = range.Count;
+        var result = new List<(int, Actor)>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var indexActor = range[i];
+            if (indexActor.Item2.Position.InCircle(origin, radius))
+            {
+                result.Add(indexActor);
+            }
+        }
+        return [.. result];
     }
 }

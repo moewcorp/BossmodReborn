@@ -4,19 +4,19 @@ class Sabertail(BossModule module) : Components.Exaflare(module, new AOEShapeCir
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SabertailFirst)
+        if (spell.Action.ID == (uint)AID.SabertailFirst)
         {
             var dir = spell.Rotation.ToDirection();
-            var startOffset = caster.Position - Module.Center;
+            var startOffset = caster.Position - Arena.Center;
             startOffset.Z *= 0.99f; // handle exaflares right on N/S borders
-            var distanceToBorder = Module.Bounds.IntersectRay(startOffset, dir);
+            var distanceToBorder = Arena.Bounds.IntersectRay(startOffset, dir);
             Lines.Add(new() { Next = caster.Position, Advance = 6.5f * dir, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.7f, ExplosionsLeft = (int)(distanceToBorder / 6.5f) + 1, MaxShownExplosions = 5 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SabertailFirst or AID.SabertailRest)
+        if (spell.Action.ID is (uint)AID.SabertailFirst or (uint)AID.SabertailRest)
         {
             ++NumCasts;
             int index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));

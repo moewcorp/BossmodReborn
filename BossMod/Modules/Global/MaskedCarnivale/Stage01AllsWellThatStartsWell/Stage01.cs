@@ -3,18 +3,19 @@ namespace BossMod.Global.MaskedCarnivale.Stage01;
 public enum OID : uint
 {
     Boss = 0x25BE, //R=1.5
-    Slime = 0x25BD, //R=1.5
+    Slime = 0x25BD //R=1.5
 }
 
 public enum AID : uint
 {
-    AutoAttack = 6499, // 25BD->player, no cast, single-target
-    FluidSpread = 14198, // 25BD->player, no cast, single-target
-    AutoAttack2 = 6497, // 25BE->player, no cast, single-target
-    IronJustice = 14199, // 25BE->self, 2.5s cast, range 8+R 120-degree cone
+    AutoAttack = 6499, // Slime->player, no cast, single-target
+    AutoAttack2 = 6497, // Boss->player, no cast, single-target
+
+    FluidSpread = 14198, // Slime->player, no cast, single-target
+    IronJustice = 14199 // Boss->self, 2.5s cast, range 8+R 120-degree cone
 }
 
-class IronJustice(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice), new AOEShapeCone(9.5f, 60.Degrees()));
+class IronJustice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice), new AOEShapeCone(9.5f, 60.Degrees()));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -31,19 +32,21 @@ class Stage01States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<IronJustice>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Slime).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage01.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 610, NameID = 8077)]
 public class Stage01 : BossModule
 {
-    public Stage01(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage01(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Slime).Any(e => e.InCombat);
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Slime];
+
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

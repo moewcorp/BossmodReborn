@@ -10,10 +10,10 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+    Teleport = 28475, // Boss->location, no cast, single-target
 
     IronUprising = 28482, // Boss->self, 3.0s cast, range 7 120-degree cone aoe (knockback 12)
     SpineShatter = 28483, // Boss->player, 5.0s cast, single-target tankbuster
-    Teleport = 28475, // Boss->location, no cast, single-target
     AugmentedSuffering = 28476, // Boss->self, 5.0s cast, knockback 12
     AugmentedShatter = 28477, // Boss->player, 5.0s cast, range 6 circle stack
     AugmentedUprising = 28478, // Boss->self, 7.0s cast, range 45 90-degree cone aoe
@@ -22,21 +22,21 @@ public enum AID : uint
     WheelOfSuffering = 28481 // Boss->self, 3.5s cast, range 7 circle aoe (knockback 12)
 }
 
-class IronUprising(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronUprising), new AOEShapeCone(7, 60.Degrees()));
+class IronUprising(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronUprising), new AOEShapeCone(7, 60.Degrees()));
 class SpineShatter(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SpineShatter));
 
 class AugmentedSuffering(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AugmentedSuffering), 12)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Casters.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center, Module.Bounds.Radius - Distance), Module.CastFinishAt(Casters[0].CastInfo!));
+        if (Casters.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, Arena.Bounds.Radius - Distance), Module.CastFinishAt(Casters[0].CastInfo!));
     }
 }
 
 class AugmentedShatter(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.AugmentedShatter), 6, 4, 4);
-class AugmentedUprising(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AugmentedUprising), new AOEShapeCone(45, 45.Degrees()));
-class WheelOfSuffering(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WheelOfSuffering), new AOEShapeCircle(7));
+class AugmentedUprising(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AugmentedUprising), new AOEShapeCone(45, 45.Degrees()));
+class WheelOfSuffering(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WheelOfSuffering), 7);
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
@@ -51,6 +51,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x00 && state == 0x00020001)
         {
             Arena.Bounds = D142Nero.DefaultBounds;
+            Arena.Center = D142Nero.DefaultBounds.Center;
             _aoe = null;
             begin = true;
         }
@@ -68,7 +69,6 @@ class D142NeroStates : StateMachineBuilder
     public D142NeroStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<IronUprising>()
             .ActivateOnEnter<SpineShatter>()
@@ -79,7 +79,7 @@ class D142NeroStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2135)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 16, NameID = 2135)]
 public class D142Nero(WorldState ws, Actor primary) : BossModule(ws, primary, startingBounds.Center, startingBounds)
 {
     private static readonly WPos[] vertices = [new(-158.27f, -29.04f), new(-156.76f, -28.7f), new(-155.3f, -28.29f), new(-151.86f, -26.99f), new(-151.47f, -25.48f),
@@ -105,16 +105,16 @@ public class D142Nero(WorldState ws, Actor primary) : BossModule(ws, primary, st
     new(-166.99f, -29.45f), new(-165.38f, -29.56f)];
 
     private static readonly ArenaBoundsComplex startingBounds = new([new PolygonCustom(vertices)]);
-    public static readonly ArenaBoundsCircle DefaultBounds = new(20);
+    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(new(-164, 0), 20, 48)]);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.MagitekDeathClaw => 2,
-                OID.Boss => 1,
+                OID.MagitekDeathClaw => 1,
                 _ => 0
             };
         }

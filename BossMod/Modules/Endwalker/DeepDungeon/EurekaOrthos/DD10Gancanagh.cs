@@ -15,9 +15,9 @@ public enum AID : uint
     Mandrastorm = 31479 // Boss->self, 5.0s cast, range 60 circle, damage fall off AOE
 }
 
-class MandraStorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Mandrastorm), new AOEShapeCircle(20));
-class Mandrashock1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Mandrashock1), new AOEShapeCircle(10));
-class Mandrashock2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Mandrashock2), new AOEShapeCircle(10), 6);
+class MandraStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mandrastorm), 20f);
+class Mandrashock1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mandrashock1), 10f);
+class Mandrashock2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mandrashock2), 10f, 6);
 
 class DD10GancanaghStates : StateMachineBuilder
 {
@@ -31,4 +31,4 @@ class DD10GancanaghStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 897, NameID = 12240)]
-public class DD10Gancanagh(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300, -300), new ArenaBoundsSquare(19.5f));
+public class DD10Gancanagh(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300f, -300f), new ArenaBoundsSquare(19.5f));

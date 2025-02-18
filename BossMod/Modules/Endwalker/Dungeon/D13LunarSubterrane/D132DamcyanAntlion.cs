@@ -94,7 +94,7 @@ class Landslip(BossModule module) : Components.Knockback(module)
 
 class EarthenGeyser(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.EarthenGeyser), 10, 4, 4);
 class QuicksandVoidzone(BossModule module) : Components.PersistentVoidzone(module, 10, m => m.Enemies(OID.QuicksandVoidzone).Where(z => z.EventState != 7));
-class PoundSand(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.PoundSand), 12);
+class PoundSand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PoundSand), 12);
 
 class AntlionMarch(BossModule module) : Components.GenericAOEs(module)
 {
@@ -185,10 +185,10 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
                         forbidden.Add(ShapeDistance.Rect(_aoes[i].Origin, _aoes[i].Rotation, rect.LengthFront, default, rect.HalfWidth));
             }
             var activation = Module.FindComponent<Landslip>()!.Activation.AddSeconds(0.7f);
-            if (forbiddenInverted.Count > 0)
-                hints.AddForbiddenZone(p => forbiddenInverted.Max(f => f(p)), activation);
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), activation);
+            if (forbiddenInverted.Count != 0)
+                hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), activation);
+            if (forbidden.Count != 0)
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), activation);
         }
         else
             base.AddAIHints(slot, actor, assignment, hints);
@@ -200,7 +200,6 @@ class D132DamcyanAntlionStates : StateMachineBuilder
     public D132DamcyanAntlionStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<SandblastVoidzone>()
             .ActivateOnEnter<Sandblast>()
             .ActivateOnEnter<Landslip>()

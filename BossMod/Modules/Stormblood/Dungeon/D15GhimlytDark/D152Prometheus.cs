@@ -93,9 +93,9 @@ class Heat(BossModule module) : Components.GenericAOEs(module)
 
 class Nitrospin(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Nitrospin));
 class UnbreakableCermetDrill(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.UnbreakableCermetDrill));
-class OilShower(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OilShower), new AOEShapeCone(47.8f, 135.Degrees()));
-class NeedleGun(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.NeedleGun), new AOEShapeCone(47.8f, 45.Degrees()));
-class FreezingMissile(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FreezingMissile), 8);
+class OilShower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OilShower), new AOEShapeCone(47.8f, 135.Degrees()));
+class NeedleGun(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NeedleGun), new AOEShapeCone(47.8f, 45.Degrees()));
+class FreezingMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FreezingMissile), 8);
 
 class D152PrometheusStates : StateMachineBuilder
 {

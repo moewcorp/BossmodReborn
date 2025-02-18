@@ -2,7 +2,7 @@
 
 class P4UltimateAnnihilation(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
+    private readonly List<Actor> _orbs = module.Enemies(OID.Aetheroplasm);
 
     private const float _radius = 6;
 

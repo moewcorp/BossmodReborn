@@ -10,7 +10,7 @@ class P4WaveCannonProtean(BossModule module) : Components.GenericBaitAway(module
     {
         NumCasts = 0;
         if (_source != null)
-            foreach (var p in Raid.WithoutSlot(true))
+            foreach (var p in Raid.WithoutSlot(true, true, true))
                 CurrentBaits.Add(new(_source, p, _shape));
     }
 
@@ -33,7 +33,7 @@ class P4WaveCannonProtean(BossModule module) : Components.GenericBaitAway(module
     }
 }
 
-class P4WaveCannonProteanAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.P4WaveCannonProteanAOE), new AOEShapeRect(100, 3));
+class P4WaveCannonProteanAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.P4WaveCannonProteanAOE), new AOEShapeRect(100, 3));
 
 // TODO: generalize (line stack)
 class P4WaveCannonStack : BossComponent
@@ -55,25 +55,25 @@ class P4WaveCannonStack : BossComponent
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (Imminent && Raid.WithSlot(true).IncludedInMask(_targets).WhereActor(p => _shape.Check(actor.Position, Module.Center, Angle.FromDirection(p.Position - Module.Center))).Count() is var clips && clips != 1)
+        if (Imminent && Raid.WithSlot(true, true, true).IncludedInMask(_targets).WhereActor(p => _shape.Check(actor.Position, Arena.Center, Angle.FromDirection(p.Position - Arena.Center))).Count() is var clips && clips != 1)
             hints.Add(clips == 0 ? "Share the stack!" : "GTFO from second stack!");
     }
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
         if (SafeDir(slot) is var safeDir && safeDir != default)
-            movementHints.Add(actor.Position, Module.Center + 12 * safeDir.ToDirection(), Colors.Safe);
+            movementHints.Add(actor.Position, Arena.Center + 12 * safeDir.ToDirection(), Colors.Safe);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (Imminent)
             foreach (var (_, p) in Raid.WithSlot(true).IncludedInMask(_targets))
-                _shape.Outline(Arena, Module.Center, Angle.FromDirection(p.Position - Module.Center), Colors.Safe);
+                _shape.Outline(Arena, Module.Center, Angle.FromDirection(p.Position - Arena.Center), Colors.Safe);
 
         var safeDir = SafeDir(pcSlot);
         if (safeDir != default)
-            Arena.AddCircle(Module.Center + 12 * safeDir.ToDirection(), 1, Colors.Safe);
+            Arena.AddCircle(Arena.Center + 12 * safeDir.ToDirection(), 1, Colors.Safe);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

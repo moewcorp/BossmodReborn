@@ -4,7 +4,7 @@ class P2Heavensfall(BossModule module) : Components.Knockback(module, ActionID.M
 {
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(Module.Center, 11); // TODO: activation
+        yield return new(Arena.Center, 11); // TODO: activation
     }
 }
 
@@ -37,7 +37,7 @@ class P2HeavensfallPillar(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class P2ThermionicBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ThermionicBurst), new AOEShapeCone(24.5f, 11.25f.Degrees()));
+class P2ThermionicBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermionicBurst), new AOEShapeCone(24.5f, 11.25f.Degrees()));
 
 class P2MeteorStream : Components.UniformStackSpread
 {
@@ -45,7 +45,7 @@ class P2MeteorStream : Components.UniformStackSpread
 
     public P2MeteorStream(BossModule module) : base(module, 0, 4, alwaysShowSpreads: true)
     {
-        AddSpreads(Raid.WithoutSlot(true), WorldState.FutureTime(5.6f));
+        AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(5.6f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

@@ -1,7 +1,7 @@
 ﻿namespace BossMod.RealmReborn.Extreme.Ex4Ifrit;
 
 // TODO: revise & generalize to 'baited aoe' component, with nice utilities for AI
-class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), Radius)
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), Radius)
 {
     private DateTime _baitDetectDeadline;
     public BitMask Baiters;
@@ -25,7 +25,7 @@ class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, Acti
             case AID.EruptionAOE:
                 if (WorldState.CurrentTime < _baitDetectDeadline)
                 {
-                    var baiter = Raid.WithoutSlot().Closest(spell.LocXZ);
+                    var baiter = Raid.WithoutSlot(false, true, true).Closest(spell.LocXZ);
                     if (baiter != null)
                         Baiters.Set(Raid.FindSlot(baiter.InstanceID));
                 }

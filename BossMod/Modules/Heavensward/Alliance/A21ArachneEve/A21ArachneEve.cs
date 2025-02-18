@@ -1,12 +1,12 @@
 ﻿namespace BossMod.Heavensward.Alliance.A21ArachneEve;
 
 class DarkSpike(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.DarkSpike));
-class SilkenSpray(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SilkenSpray), new AOEShapeCone(24.5f, 30.Degrees()));
+class SilkenSpray(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SilkenSpray), new AOEShapeCone(24.5f, 30.Degrees()));
 class ShadowBurst(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ShadowBurst), 6, 8);
 class SpiderThread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.SpiderThread), 6);
-class Tremblor1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tremblor1), new AOEShapeCircle(10));
-class Tremblor2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tremblor2), new AOEShapeCircle(20));
-class Tremblor3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tremblor3), new AOEShapeCircle(30));
+class Tremblor1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor1), 10.5f);
+class Tremblor2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor2), 20.5f);
+class Tremblor3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor3), 30.5f);
 class FrondAffeared(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.FrondAffeared));
 class TheWidowsEmbrace(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.TheWidowsEmbrace), 18, kind: Kind.TowardsOrigin, stopAtWall: true);
 class TheWidowsKiss(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.TheWidowsKiss), 4, kind: Kind.TowardsOrigin, stopAtWall: true);

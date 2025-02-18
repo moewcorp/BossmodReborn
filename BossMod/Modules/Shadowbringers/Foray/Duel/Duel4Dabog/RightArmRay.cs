@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.Duel.Duel4Dabog;
 
-class RightArmRayNormal(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightArmRayNormalAOE), new AOEShapeCircle(10));
+class RightArmRayNormal(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightArmRayNormalAOE), 10);
 
 class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
 {
@@ -77,7 +77,7 @@ class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var increment = (IconID)iconID switch
         {

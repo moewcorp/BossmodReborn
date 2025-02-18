@@ -9,7 +9,7 @@ class P6FlashGale : Components.GenericBaitAway
     public P6FlashGale(BossModule module) : base(module, centerAtTarget: true)
     {
         _source = module.Enemies(OID.BossP6).FirstOrDefault();
-        ForbiddenPlayers = Raid.WithSlot(true).WhereActor(p => p.Role != Role.Tank).Mask();
+        ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(p => p.Role != Role.Tank).Mask();
     }
 
     public override void Update()
@@ -18,7 +18,7 @@ class P6FlashGale : Components.GenericBaitAway
         if (_source != null)
         {
             var mainTarget = WorldState.Actors.Find(_source.TargetID);
-            var farTarget = Raid.WithoutSlot().Farthest(_source.Position);
+            var farTarget = Raid.WithoutSlot(false, true, true).Farthest(_source.Position);
             if (mainTarget != null)
                 CurrentBaits.Add(new(_source, mainTarget, _shape));
             if (farTarget != null)

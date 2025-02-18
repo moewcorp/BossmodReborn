@@ -81,7 +81,7 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
 
     private static readonly AOEShapeRect _shape = new(32, 3);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var increment = (IconID)iconID switch
         {
@@ -124,7 +124,7 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
     }
 }
 
-class IronKiss(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.IronKiss), 7);
+class IronKiss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronKiss), 7);
 
 class GoblinMercenaryStates : StateMachineBuilder
 {

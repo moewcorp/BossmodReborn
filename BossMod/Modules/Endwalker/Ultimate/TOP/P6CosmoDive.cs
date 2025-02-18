@@ -12,12 +12,12 @@ class P6CosmoDive(BossModule module) : Components.UniformStackSpread(module, 6, 
         if (_source != null)
         {
             BitMask forbidden = new();
-            foreach (var (slot, actor) in Raid.WithSlot().SortedByRange(_source.Position).Take(2))
+            foreach (var (slot, actor) in Raid.WithSlot(false, true, true).SortedByRange(_source.Position).Take(2))
             {
                 AddSpread(actor, _activation);
                 forbidden.Set(slot);
             }
-            var farthest = Raid.WithoutSlot().Farthest(_source.Position);
+            var farthest = Raid.WithoutSlot(false, true, true).Farthest(_source.Position);
             if (farthest != null)
             {
                 AddStack(farthest, _activation, forbidden);

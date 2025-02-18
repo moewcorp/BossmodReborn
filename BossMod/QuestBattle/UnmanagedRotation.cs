@@ -5,7 +5,6 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
     protected AIHints Hints = null!;
     protected Actor Player = null!;
     protected WorldState World => ws;
-    protected float MaxCastTime;
     protected uint MP;
 
     protected Roleplay.AID ComboAction => (Roleplay.AID)World.Client.ComboState.Action;
@@ -14,11 +13,10 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
 
     public void Execute(Actor player, AIHints hints)
     {
-        MaxCastTime = hints.MaxCastTimeEstimate;
         Hints = hints;
         Player = player;
 
-        MP = (uint)Math.Max(0, Player.HPMP.CurMP + World.PendingEffects.PendingHPDifference(Player.InstanceID));
+        MP = (uint)Player.PredictedMPRaw;
 
         var primary = World.Actors.Find(player.TargetID);
         if (primary != null)
@@ -31,32 +29,23 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
     protected void UseAction(ActionID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default)
     {
         var def = ActionDefinitions.Instance[action];
-
         if (def == null)
             return;
-
-        if (def.CastTime > 0)
-        {
-            var totalCastTime = def.CastTime + def.CastAnimLock;
-            if (MaxCastTime < totalCastTime - 0.5f)
-                return;
-        }
-
-        Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);
+        Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High + additionalPriority, castTime: def.CastTime + def.CastAnimLock - 0.5f, targetPos: targetPos); // TODO[cast-time]-xan: review, doesn't look right...
     }
 
     protected float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - World.CurrentTime).TotalSeconds, 0.0f);
 
     protected (float Left, int Stacks) StatusDetails(Actor? actor, uint sid, ulong sourceID, float pendingDuration = 1000)
     {
-        if (actor == null)
-            return (0, 0);
-        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, sid, sourceID);
-        if (pending != null)
-            return (pendingDuration, pending.Value);
-        var status = actor.FindStatus(sid, sourceID);
+        var status = actor?.FindStatus(sid, sourceID, World.FutureTime(pendingDuration));
         return status != null ? (StatusDuration(status.Value.ExpireAt), status.Value.Extra & 0xFF) : (0, 0);
     }
     protected (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, ulong sourceID, float pendingDuration = 1000) where SID : Enum => StatusDetails(actor, (uint)(object)sid, sourceID, pendingDuration);
 }
 
+public abstract class RotationModule<R>(BossModule module) : BossComponent(module) where R : UnmanagedRotation
+{
+    private readonly R _rotation = New<R>.Constructor<WorldState>()(module.WorldState);
+    public sealed override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) => _rotation.Execute(actor, hints);
+}

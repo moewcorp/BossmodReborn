@@ -2,8 +2,8 @@
 
 class Dominion : Components.UniformStackSpread
 {
-    public int NumDeformations { get; private set; }
-    public int NumShifts { get; private set; }
+    public int NumDeformations;
+    public int NumShifts;
     public List<Actor> Casters = [];
     private BitMask _secondOrder;
 
@@ -11,7 +11,7 @@ class Dominion : Components.UniformStackSpread
 
     public Dominion(BossModule module) : base(module, 0, 6)
     {
-        AddSpreads(Raid.WithoutSlot());
+        AddSpreads(Raid.WithoutSlot(false, true, true));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

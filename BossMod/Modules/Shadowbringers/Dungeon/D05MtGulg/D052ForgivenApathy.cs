@@ -12,20 +12,20 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 870, // 28EE/28EF->player, no cast, single-target
-    AutoAttack2 = 872, // 28F2->player, no cast, single-target
-    RavenousBite = 16812, // 28EF->player, no cast, single-target
-    AetherialPull = 16242, // 28F0->self, no cast, single-target
-    AetherialPull2 = 16243, // 233C->self, no cast, range 50 circle, pull 50 between hitboxes, can most likely be ignored
-    EarthShaker = 16244, // 28F0->self, 5.0s cast, single-target
-    EarthShaker2 = 16245, // 233C->self, 5.0s cast, range 60 60-degree cone
-    Sanctification = 16814, // 28F2->self, 5.0s cast, range 12 90-degree cone
-    PunitiveLight = 16815, // 28F2->self, 5.0s cast, range 20 circle
+    AutoAttack = 870, // ForgivenConformity/ForgivenExtortion->player, no cast, single-target
+    AutoAttack2 = 872, // ForgivenPrejudice->player, no cast, single-target
+    RavenousBite = 16812, // ForgivenExtortion->player, no cast, single-target
+    AetherialPull = 16242, // Boss->self, no cast, single-target
+    AetherialPull2 = 16243, // Helper->self, no cast, range 50 circle, pull 50 between hitboxes, can most likely be ignored
+    EarthShaker = 16244, // Boss->self, 5.0s cast, single-target
+    EarthShaker2 = 16245, // Helper->self, 5.0s cast, range 60 60-degree cone
+    Sanctification = 16814, // ForgivenPrejudice->self, 5.0s cast, range 12 90-degree cone
+    PunitiveLight = 16815, // ForgivenPrejudice->self, 5.0s cast, range 20 circle
 }
 
 class PunitiveLight(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.PunitiveLight), true, true, "Raidwide", true);
-class Sanctification(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Sanctification), new AOEShapeCone(12, 45.Degrees()));
-class EarthShaker(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EarthShaker2), new AOEShapeCone(60, 30.Degrees()));
+class Sanctification(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sanctification), new AOEShapeCone(12, 45.Degrees()));
+class EarthShaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EarthShaker2), new AOEShapeCone(60, 30.Degrees()));
 
 class D052ForgivenApathyStates : StateMachineBuilder
 {

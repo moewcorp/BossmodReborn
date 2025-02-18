@@ -34,7 +34,7 @@ class Shadowbolt(BossModule module) : Components.SingleTargetCast(module, Action
 class Tribulation(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.Tribulation), m => m.Enemies(OID.SweepVoidzone).Where(z => z.EventState != 7), 0.1f);
 class DarkPulse(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DarkPulse), 6, 4, 4);
 class DarkWell(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DarkWell), 5);
-class DarkShock(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DarkShock), 6);
+class DarkShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkShock), 6);
 class MagickedBroom(BossModule module) : Components.PersistentVoidzone(module, 3.125f, m => m.Enemies(OID.MagickedBroom).Where(x => x.ModelState.AnimState1 == 1), 10);
 
 class D091SeekerOfSolitudeStates : StateMachineBuilder

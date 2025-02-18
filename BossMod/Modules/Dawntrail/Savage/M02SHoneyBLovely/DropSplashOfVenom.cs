@@ -41,11 +41,11 @@ class DropSplashOfVenom(BossModule module) : Components.UniformStackSpread(modul
                     case Mechanic.Pairs:
                         // note: it's random whether dd or supports are hit, select supports arbitrarily
                         Activation = WorldState.FutureTime(4.5f);
-                        AddStacks(Raid.WithoutSlot(true).Where(p => p.Class.IsSupport()), Activation);
+                        AddStacks(Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), Activation);
                         break;
                     case Mechanic.Spread:
                         Activation = WorldState.FutureTime(4.5f);
-                        AddSpreads(Raid.WithoutSlot(true), Activation);
+                        AddSpreads(Raid.WithoutSlot(true, true, true), Activation);
                         break;
                 }
                 break;
@@ -61,14 +61,14 @@ class DropSplashOfVenom(BossModule module) : Components.UniformStackSpread(modul
     }
 }
 
-class Twist(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(7, 30));
+class Twist(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(7, 30));
 class TemptingTwist(BossModule module) : Twist(module, AID.TemptingTwistAOE);
 class TemptingTwistBeat(BossModule module) : Twist(module, AID.TemptingTwistBeatAOE);
 
-class Beeline(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(30, 7, 30));
+class Beeline(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(60, 7));
 class HoneyBeeline(BossModule module) : Beeline(module, AID.HoneyBeelineAOE);
 class HoneyBeelineBeat(BossModule module) : Beeline(module, AID.HoneyBeelineBeatAOE);
 
-class Splinter(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(8));
+class Splinter(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
 class PoisonCloudSplinter(BossModule module) : Splinter(module, AID.PoisonCloudSplinter);
 class SweetheartSplinter(BossModule module) : Splinter(module, AID.SweetheartSplinter);

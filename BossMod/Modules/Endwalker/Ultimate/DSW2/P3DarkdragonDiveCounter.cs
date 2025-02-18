@@ -15,7 +15,7 @@ class P3DarkdragonDiveCounter(BossModule module) : Components.GenericTowers(modu
         if (numSoakers == 0)
             return;
 
-        Towers.Add(new(caster.Position, 5, numSoakers, numSoakers));
+        Towers.Add(new(spell.LocXZ, 5, numSoakers, numSoakers));
         if (Towers.Count == 4)
             InitAssignments();
     }
@@ -23,13 +23,21 @@ class P3DarkdragonDiveCounter(BossModule module) : Components.GenericTowers(modu
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.DarkdragonDive1 or AID.DarkdragonDive2 or AID.DarkdragonDive3 or AID.DarkdragonDive4)
-            Towers.RemoveAll(t => t.Position.AlmostEqual(caster.Position, 1));
+            for (var i = 0; i < Towers.Count; ++i)
+            {
+                var tower = Towers[i];
+                if (tower.Position == caster.Position)
+                {
+                    Towers.Remove(tower);
+                    break;
+                }
+            }
     }
 
     // 0 = NW, then CW order
     private int ClassifyTower(WPos tower)
     {
-        var offset = tower - Module.Center;
+        var offset = tower - Arena.Center;
         return offset.Z > 0 ? (offset.X > 0 ? 2 : 3) : (offset.X > 0 ? 1 : 0);
     }
 

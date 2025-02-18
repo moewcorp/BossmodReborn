@@ -2,19 +2,20 @@
 
 public enum OID : uint
 {
-    Boss = 0x360B, // R6.000, x1
+    Boss = 0x360B // R6.000, x1
 }
 
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     PrincessThrenodyPrepare = 27318, // Boss->self, 4.0s cast, range 40 120-degree cone
     PrincessThrenodyResolve = 27319, // Boss->self, 1.0s cast, range 40 120-degree cone
     WhimsyAlaMode = 27320, // Boss->self, 4.0s cast, single-target
     AmorphicFlail = 27321, // Boss->self, 5.0s cast, range 9 circle
     PrincessCacophony = 27322, // Boss->location, 5.0s cast, range 12 circle
     Banish = 27323, // Boss->player, 5.0s cast, single-target
-    RemoveWhimsy = 27634, // Boss->self, no cast, single-target, removes whimsy debuffs
+    RemoveWhimsy = 27634 // Boss->self, no cast, single-target, removes whimsy debuffs
 }
 
 public enum SID : uint
@@ -22,7 +23,7 @@ public enum SID : uint
     RightwardWhimsy = 2840,
     LeftwardWhimsy = 2841,
     BackwardWhimsy = 2842,
-    ForwardWhimsy = 2958,
+    ForwardWhimsy = 2958
 }
 
 class PrincessThrenody(BossModule module) : Components.GenericAOEs(module)
@@ -71,8 +72,8 @@ class PrincessThrenody(BossModule module) : Components.GenericAOEs(module)
 }
 
 class WhimsyAlaMode(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.WhimsyAlaMode), "Select direction");
-class AmorphicFlail(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AmorphicFlail), new AOEShapeCircle(9));
-class PrincessCacophony(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.PrincessCacophony), 12);
+class AmorphicFlail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AmorphicFlail), 9);
+class PrincessCacophony(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PrincessCacophony), 12);
 class Banish(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Banish));
 
 class MoussePrincessStates : StateMachineBuilder
@@ -88,5 +89,5 @@ class MoussePrincessStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10630)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10630)]
 public class MoussePrincess(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

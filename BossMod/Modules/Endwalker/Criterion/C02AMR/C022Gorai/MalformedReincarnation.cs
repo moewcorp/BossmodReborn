@@ -11,11 +11,11 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
     private BitMatrix _playerBlue; // [i] = blue debuffs for slot i; 0 = bait, 1/2/3 = soaks
     private bool _baitsDone;
 
-    private const float TowerRadius = 4;
+    private const float TowerRadius = 4f;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_baitsDone && (Towers.Any(t => t.Position.InCircle(actor.Position, TowerRadius * 2)) || Raid.WithoutSlot().InRadiusExcluding(actor, TowerRadius * 2).Any()))
+        if (!_baitsDone && (Towers.Any(t => t.Position.InCircle(actor.Position, TowerRadius * 2f)) || Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, TowerRadius * 2f).Any()))
             hints.Add("Bait away from other towers!");
         base.AddHints(slot, actor, hints);
     }
@@ -24,15 +24,15 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
     {
         base.DrawArenaForeground(pcSlot, pc);
         if (!_baitsDone)
-            foreach (var p in Raid.WithoutSlot())
+            foreach (var p in Raid.WithoutSlot(false, true, true))
                 Arena.AddCircle(p.Position, TowerRadius, Colors.Danger);
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.OrangeTower1 or OID.BlueTower1)
+        if (actor.OID is (uint)OID.OrangeTower1 or (uint)OID.BlueTower1)
         {
-            AddTower(actor.Position, (OID)actor.OID == OID.BlueTower1);
+            AddTower(actor.Position, actor.OID == (uint)OID.BlueTower1);
         }
     }
 
@@ -48,22 +48,22 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
             // 19/3C                   1A/3D | 21/29                   22/2A
             var (offset, blue) = index switch
             {
-                19 => (new WDir(-5, -5), false),
-                20 => (new WDir(+5, -5), false),
-                21 => (new WDir(-5, +5), false),
-                22 => (new WDir(+5, +5), false),
-                23 => (new WDir(-15, -15), false),
-                24 => (new WDir(+15, -15), false),
-                25 => (new WDir(-15, +15), false),
-                26 => (new WDir(+15, +15), false),
-                27 => (new WDir(-5, -5), true),
-                28 => (new WDir(+5, -5), true),
-                29 => (new WDir(-5, +5), true),
-                30 => (new WDir(+5, +5), true),
-                31 => (new WDir(-15, -15), true),
-                32 => (new WDir(+15, -15), true),
-                33 => (new WDir(-15, +15), true),
-                34 => (new WDir(+15, +15), true),
+                0x13 => (new WDir(-5f, -5f), false),
+                0x14 => (new WDir(+5f, -5f), false),
+                0x15 => (new WDir(-5f, +5f), false),
+                0x16 => (new WDir(+5f, +5f), false),
+                0x17 => (new WDir(-15f, -15f), false),
+                0x18 => (new WDir(+15f, -15f), false),
+                0x19 => (new WDir(-15f, +15f), false),
+                0x1A => (new WDir(+15f, +15f), false),
+                0x1B => (new WDir(-5f, -5f), true),
+                0x1C => (new WDir(+5f, -5f), true),
+                0x1D => (new WDir(-5f, +5f), true),
+                0x1E => (new WDir(+5f, +5f), true),
+                0x1F => (new WDir(-15f, -15f), true),
+                0x20 => (new WDir(+15f, -15f), true),
+                0x21 => (new WDir(-15f, +15f), true),
+                0x22 => (new WDir(+15f, +15f), true),
                 _ => (new WDir(), false)
             };
             if (offset != default)
@@ -75,12 +75,12 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var blueSlot = (SID)status.ID switch
+        var blueSlot = status.ID switch
         {
-            SID.OdderPrayer => 0,
-            SID.OdderIncarnation1 => 1,
-            SID.OdderIncarnation2 => 2,
-            SID.OdderIncarnation3 => 3,
+            (uint)SID.OdderPrayer => 0,
+            (uint)SID.OdderIncarnation1 => 1,
+            (uint)SID.OdderIncarnation2 => 2,
+            (uint)SID.OdderIncarnation3 => 3,
             _ => -1
         };
         if (blueSlot >= 0 && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -89,7 +89,7 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.SquirrellyPrayer or SID.OdderPrayer)
+        if (status.ID is (uint)SID.SquirrellyPrayer or (uint)SID.OdderPrayer)
         {
             _baitsDone = true;
             EnableNextTowers();
@@ -98,10 +98,10 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NBurstOrange or AID.NBurstBlue or AID.SBurstOrange or AID.SBurstBlue)
+        if (spell.Action.ID is (uint)AID.NBurstOrange or (uint)AID.NBurstBlue or (uint)AID.SBurstOrange or (uint)AID.SBurstBlue)
         {
             ++NumCasts;
-            var index = Towers.FindIndex(t => t.Position.AlmostEqual(caster.Position, 1));
+            var index = Towers.FindIndex(t => t.Position.AlmostEqual(caster.Position, 1f));
             if (index >= 0)
                 Towers.RemoveAt(index);
             else
@@ -122,7 +122,7 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
     {
         var blueSlot = NumCasts / 4 + 1;
         BitMask forbiddenOrange = new();
-        foreach (var (slot, _) in Raid.WithSlot(true))
+        foreach (var (slot, _) in Raid.WithSlot(true, true, true))
             if (_playerBlue[slot, blueSlot])
                 forbiddenOrange.Set(slot);
         var forbiddenBlue = forbiddenOrange ^ new BitMask(0xF);
@@ -133,6 +133,6 @@ class MalformedPrayer2(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-abstract class FlickeringFlame(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(46, 2.5f), 8);
+abstract class FlickeringFlame(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(46, 2.5f), 8);
 class NFlickeringFlame(BossModule module) : FlickeringFlame(module, AID.NFireSpreadCross);
 class SFlickeringFlame(BossModule module) : FlickeringFlame(module, AID.SFireSpreadCross);

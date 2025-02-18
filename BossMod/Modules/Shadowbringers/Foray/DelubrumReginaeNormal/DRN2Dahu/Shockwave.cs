@@ -11,14 +11,14 @@ class Shockwave(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.LeftSidedShockwaveFirst or AID.RightSidedShockwaveFirst)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.6f)));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.6f)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LeftSidedShockwaveFirst or AID.RightSidedShockwaveFirst or AID.LeftSidedShockwaveSecond or AID.RightSidedShockwaveSecond && _aoes.Count > 0)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.LeftSidedShockwaveFirst or AID.RightSidedShockwaveFirst or AID.LeftSidedShockwaveSecond or AID.RightSidedShockwaveSecond)
             _aoes.RemoveAt(0);
     }
 }

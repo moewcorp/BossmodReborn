@@ -75,7 +75,7 @@ class Snake2(BossModule module) : PetrifactionCommon(module)
             if (_players[pcSlot].AssignedSnake >= 0)
                 Arena.AddCircle(ActiveGorgons[_players[pcSlot].AssignedSnake].caster.Position, 2, Colors.Safe);
 
-            foreach (var (slot, player) in Raid.WithSlot())
+            foreach (var (slot, player) in Raid.WithSlot(false, true, true))
                 if (_players[slot].HasBreath)
                     Arena.AddCircle(player.Position, _breathRadius, Colors.Safe);
         }

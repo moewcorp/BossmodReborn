@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.Extreme.Ex7Zeromus;
 
-class MeteorImpactProximity(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MeteorImpactProximity), new AOEShapeCircle(10)); // TODO: verify falloff
+class MeteorImpactProximity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeteorImpactProximity), 10); // TODO: verify falloff
 
-class MeteorImpactCharge(BossModule module) : BossComponent(module)
+class MeteorImpactCharge(BossModule module) : Components.GenericAOEs(module)
 {
     struct PlayerState
     {
@@ -10,18 +10,17 @@ class MeteorImpactCharge(BossModule module) : BossComponent(module)
         public int Order;
         public bool Stretched;
         public bool NonClipping;
-        public List<RelTriangle>? DangerZone;
     }
 
-    public int NumCasts { get; private set; }
     private int _numTethers;
-    private readonly List<WPos> _meteors = [];
+    private readonly List<WPos> _meteors = new(18);
     private readonly PlayerState[] _playerStates = new PlayerState[PartyState.MaxPartySize];
+    private AOEInstance? _aoe;
+    private readonly List<PolygonCustom> polygons = new(18);
 
     private const float _radius = 2;
     private const int _ownThickness = 2;
     private const int _otherThickness = 1;
-    private const bool _drawShadows = true;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -37,29 +36,38 @@ class MeteorImpactCharge(BossModule module) : BossComponent(module)
             hints.Add("GTFO from charges!");
     }
 
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => SourceIfActive(playerSlot) != null ? PlayerPriority.Interesting : PlayerPriority.Normal;
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        if (_drawShadows && SourceIfActive(pcSlot) is var source && source != null)
+        if (SourceIfActive(pcSlot) is var source && source != null)
         {
             ref var state = ref _playerStates.AsSpan()[pcSlot];
-            state.DangerZone ??= BuildShadowZone(source.Position - Module.Center);
-            Arena.Zone(state.DangerZone, Colors.AOE);
+            if (_aoe == null)
+            {
+                for (var i = 0; i < _meteors.Count; ++i)
+                {
+                    polygons.Add(new PolygonCustom(BuildShadowPolygon(source.Position - Arena.Center, _meteors[i] - Arena.Center, Arena.Bounds.MaxApproxError)));
+                }
+                _aoe = new(new AOEShapeCustom([.. polygons]), Arena.Center);
+            }
         }
+        base.DrawArenaBackground(pcSlot, pc);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var m in _meteors)
-            Arena.AddCircle(m, _radius, Colors.Object);
+        for (var i = 0; i < _meteors.Count; ++i)
+            Arena.AddCircle(_meteors[i], _radius, Colors.Object);
 
-        foreach (var (slot, target) in Raid.WithSlot(true))
+        foreach (var (slot, target) in Raid.WithSlot(true, true, true))
         {
             if (SourceIfActive(slot) is var source && source != null)
             {
                 var thickness = slot == pcSlot ? _ownThickness : _otherThickness;
-                if (thickness > 0)
+                if (thickness != 0)
                 {
                     var norm = (target.Position - source.Position).Normalized().OrthoL() * 2;
                     var rot = Angle.FromDirection(target.Position - source.Position);
@@ -88,7 +96,7 @@ class MeteorImpactCharge(BossModule module) : BossComponent(module)
             case AID.MeteorImpactChargeClipping:
                 _meteors.Add(spell.TargetXZ);
                 ++NumCasts;
-                var (closestSlot, closestPlayer) = Raid.WithSlot(true).Closest(spell.TargetXZ);
+                var (closestSlot, closestPlayer) = Raid.WithSlot(true, true, true).Closest(spell.TargetXZ);
                 if (closestPlayer != null)
                     _playerStates[closestSlot].TetherSource = null;
                 break;
@@ -114,38 +122,34 @@ class MeteorImpactCharge(BossModule module) : BossComponent(module)
         _ => null
     };
 
-    private static IEnumerable<WDir> BuildShadowPolygon(WDir sourceOffset, WDir meteorOffset)
+    private static List<WPos> BuildShadowPolygon(WDir sourceOffset, WDir meteorOffset, float maxerror)
     {
+        var center = Ex7Zeromus.ArenaCenter;
         var toMeteor = meteorOffset - sourceOffset;
         var dirToMeteor = Angle.FromDirection(toMeteor);
         var halfAngle = Angle.Asin(_radius * 2 / toMeteor.Length());
         // intersection point is at dirToMeteor -+ halfAngle relative to source; relative to meteor, it is (dirToMeteor + 180) +- (90 - halfAngle)
         var dirFromMeteor = dirToMeteor + 180.Degrees();
         var halfAngleFromMeteor = 90.Degrees() - halfAngle;
-        foreach (var off in CurveApprox.CircleArc(_radius * 2, dirFromMeteor + halfAngleFromMeteor, dirFromMeteor - halfAngleFromMeteor, 0.2f))
-            yield return meteorOffset + off;
-        yield return sourceOffset + 100 * (dirToMeteor + halfAngle).ToDirection();
-        yield return sourceOffset + 100 * (dirToMeteor - halfAngle).ToDirection();
-    }
-
-    private List<RelTriangle> BuildShadowZone(WDir sourceOffset)
-    {
-        PolygonClipper.Operand set = new();
-        foreach (var m in _meteors)
-            set.AddContour(BuildShadowPolygon(sourceOffset, m - Module.Center));
-        var simplified = Arena.Bounds.Clipper.Simplify(set, Clipper2Lib.FillRule.NonZero);
-        return Arena.Bounds.ClipAndTriangulate(simplified);
+        var circlearc = CurveApprox.CircleArc(_radius * 2, dirFromMeteor + halfAngleFromMeteor, dirFromMeteor - halfAngleFromMeteor, maxerror);
+        var count = circlearc.Length;
+        List<WPos> vertices = new(count + 2);
+        for (var i = 0; i < count; ++i)
+            vertices.Add(meteorOffset + circlearc[i] + center);
+        vertices.Add(sourceOffset + 100 * (dirToMeteor + halfAngle).ToDirection() + center);
+        vertices.Add(sourceOffset + 100 * (dirToMeteor - halfAngle).ToDirection() + center);
+        return vertices;
     }
 
     private static bool IsClipped(WPos source, WPos target, WPos position) => position.InCircle(target, _radius) || position.InRect(source, target - source, _radius);
 
     private bool IsClippedByOthers(Actor player)
     {
-        foreach (var (i, p) in Raid.WithSlot(true).Exclude(player))
+        foreach (var (i, p) in Raid.WithSlot(true, true, true).Exclude(player))
             if (SourceIfActive(i) is var src && src != null && IsClipped(src.Position, p.Position, player.Position))
                 return true;
         return false;
     }
 }
 
-class MeteorImpactExplosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MeteorImpactExplosion), new AOEShapeCircle(10));
+class MeteorImpactExplosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeteorImpactExplosion), 10);

@@ -57,9 +57,9 @@ class PageTear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell
 }
 
 class HeadDown(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.HeadDown), 4);
-class DeathRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeathRay), new AOEShapeRect(24.2f, 1.5f));
+class DeathRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathRay), new AOEShapeRect(24.2f, 1.5f));
 class Tomewind(BossModule module) : Components.PersistentVoidzone(module, 3, m => m.Enemies(OID.Tomewind).Where(x => !x.IsDead));
-class TailSmash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(12, 45.Degrees()));
+class TailSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(12, 45.Degrees()));
 
 class Bibliocide(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCircle(0), (uint)TetherID.WhaleOil, activationDelay: 5)
 {
@@ -94,52 +94,55 @@ class D052ByblosStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 31, NameID = 3925)]
 public class D052Byblos(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly WPos[] vertices = [new(182.26f, 3.32f), new(182.73f, 3.56f), new(183.19f, 3.90f), new(183.75f, 3.97f), new(184.83f, 3.93f),
-    new(185.39f, 3.94f), new(186.84f, 4.77f), new(187.35f, 4.97f), new(187.86f, 5.11f), new(188.42f, 5.24f),
-    new(188.97f, 5.45f), new(190.39f, 6.58f), new(191.87f, 7.27f), new(192.3f, 7.56f), new(193.11f, 8.43f),
-    new(193.52f, 8.86f), new(195, 9.83f), new(195.3f, 10.24f), new(195.94f, 11.22f), new(196.26f, 11.63f),
-    new(197.51f, 12.78f), new(198.19f, 14.29f), new(198.47f, 14.71f), new(199.54f, 16.05f), new(199.97f, 17.64f),
-    new(200.16f, 18.14f), new(200.77f, 19.2f), new(200.99f, 19.68f), new(201.11f, 20.75f), new(201.2f, 21.28f),
-    new(201.32f, 21.79f), new(201.89f, 23.34f), new(201.8f, 25.04f), new(201.87f, 25.56f), new(202.12f, 26.73f),
-    new(202.16f, 27.25f), new(201.83f, 28.83f), new(201.82f, 29.37f), new(201.88f, 30.56f), new(201.85f, 31.06f),
-    new(201.23f, 32.68f), new(201.06f, 34.28f), new(200.9f, 34.84f), new(200.02f, 36.35f), new(199.64f, 37.84f),
-    new(199.45f, 38.33f), new(198.42f, 39.59f), new(198.14f, 40.07f), new(197.67f, 41.13f), new(197.42f, 41.56f),
-    new(196.24f, 42.62f), new(195.91f, 43.04f), new(195.33f, 43.96f), new(194.95f, 44.44f), new(193.52f, 45.37f),
-    new(193.12f, 45.78f), new(192.34f, 46.65f), new(191.86f, 46.99f), new(190.44f, 47.63f), new(190.03f, 47.92f),
-    new(189.22f, 48.58f), new(188.75f, 48.89f), new(187.09f, 49.33f), new(185.59f, 50.19f), new(185.02f, 50.31f),
-    new(183.39f, 50.25f), new(182.89f, 50.56f), new(182.4f, 50.92f), new(181.39f, 50.94f), new(173.37f, 50.97f),
-    new(172.93f, 50.66f), new(172.48f, 50.39f), new(171.93f, 50.26f), new(170.21f, 50.33f), new(168.68f, 49.44f),
-    new(168.17f, 49.25f), new(167.17f, 49.01f), new(166.66f, 48.84f), new(165.43f, 47.84f), new(164.9f, 47.52f),
-    new(163.83f, 47.04f), new(163.35f, 46.77f), new(162.21f, 45.5f), new(161.78f, 45.2f), new(160.9f, 44.63f),
-    new(160.45f, 44.26f), new(159.58f, 42.92f), new(159.21f, 42.52f), new(158.42f, 41.81f), new(158.01f, 41.39f),
-    new(157.38f, 39.98f), new(157.07f, 39.47f), new(156.04f, 38.21f), new(155.6f, 36.57f), new(155.36f, 36.04f),
-    new(154.83f, 35.13f), new(154.56f, 34.58f), new(154.37f, 32.85f), new(154.19f, 32.25f), new(153.78f, 31.19f),
-    new(153.71f, 30.69f), new(153.76f, 29.55f), new(153.76f, 28.96f), new(153.43f, 27.37f), new(153.44f, 26.86f),
-    new(153.78f, 25.25f), new(153.7f, 23.69f), new(153.76f, 23.1f), new(154.31f, 21.66f), new(154.41f, 21.08f),
-    new(154.53f, 19.94f), new(154.69f, 19.4f), new(155.53f, 17.93f), new(155.98f, 16.27f), new(156.23f, 15.81f),
-    new(157.2f, 14.6f), new(157.91f, 13.06f), new(158.2f, 12.64f), new(159.4f, 11.54f), new(159.72f, 11.13f),
-    new(160.01f, 10.69f), new(160.28f, 10.23f), new(160.64f, 9.8f), new(162.06f, 8.87f), new(162.48f, 8.46f),
-    new(163.23f, 7.63f), new(163.72f, 7.27f), new(165.24f, 6.59f), new(165.65f, 6.22f), new(166.52f, 5.52f),
-    new(166.99f, 5.29f), new(168.49f, 4.88f), new(169, 4.63f), new(169.53f, 4.31f), new(170.06f, 4.02f),
-    new(170.65f, 3.94f), new(172.25f, 3.99f), new(173.17f, 3.37f), new(173.8f, 3.28f), new(181.12f, 3.27f)];
+    private static readonly WPos[] vertices = [new(182.36f, 3.29f), new(182.89f, 3.68f), new(183.4f, 3.98f), new(185.25f, 3.93f), new(185.87f, 4.23f),
+    new(187, 4.87f), new(187.68f, 5.04f), new(188.36f, 5.23f), new(189, 5.48f), new(190.01f, 6.3f),
+    new(190.52f, 6.64f), new(191.63f, 7.14f), new(192.21f, 7.45f), new(193.13f, 8.47f), new(193.62f, 8.91f),
+    new(194.81f, 9.7f), new(195.26f, 10.2f), new(195.97f, 11.28f), new(196.41f, 11.75f), new(197.46f, 12.7f),
+    new(197.77f, 13.3f), new(198.31f, 14.52f), new(199.19f, 15.61f), new(199.55f, 16.13f), new(199.91f, 17.43f),
+    new(200.11f, 18), new(200.78f, 19.17f), new(201.03f, 19.82f), new(201.18f, 21.12f), new(201.31f, 21.74f),
+    new(201.79f, 23), new(201.88f, 23.68f), new(201.82f, 24.95f), new(201.88f, 25.56f), new(202.15f, 26.85f),
+    new(202.11f, 27.53f), new(201.85f, 28.75f), new(201.83f, 29.37f), new(201.89f, 30.66f), new(201.76f, 31.3f),
+    new(201.31f, 32.48f), new(201.18f, 33.07f), new(201.04f, 34.44f), new(200.77f, 35.07f), new(200.13f, 36.19f),
+    new(199.91f, 36.76f), new(199.6f, 37.94f), new(199.28f, 38.51f), new(198.45f, 39.53f), new(198.13f, 40.07f),
+    new(197.9f, 40.67f), new(197.64f, 41.27f), new(197.19f, 41.79f), new(196.2f, 42.67f), new(195.83f, 43.15f),
+    new(195.16f, 44.18f), new(194.67f, 44.61f), new(193.64f, 45.27f), new(193.2f, 45.69f), new(192.37f, 46.61f),
+    new(191.85f, 47.01f), new(190.73f, 47.5f), new(190.19f, 47.79f), new(189.19f, 48.59f), new(188.63f, 48.93f),
+    new(187.41f, 49.25f), new(186.82f, 49.44f), new(186.28f, 49.8f), new(185.7f, 50.14f), new(185.06f, 50.31f),
+    new(183.78f, 50.26f), new(183.21f, 50.32f), new(182.73f, 50.68f), new(182.15f, 50.96f), new(173.51f, 50.96f),
+    new(172.88f, 50.62f), new(172.34f, 50.3f), new(171.74f, 50.27f), new(170.48f, 50.32f), new(169.83f, 50.1f),
+    new(168.68f, 49.42f), new(168.09f, 49.22f), new(166.79f, 48.87f), new(166.28f, 48.49f), new(165.3f, 47.7f),
+    new(163.58f, 46.95f), new(163.08f, 46.48f), new(162.21f, 45.51f), new(161.71f, 45.13f), new(160.58f, 44.4f),
+    new(160.22f, 43.87f), new(159.51f, 42.78f), new(159.05f, 42.39f), new(158.05f, 41.49f), new(157.26f, 39.73f),
+    new(156.88f, 39.22f), new(156.07f, 38.25f), new(155.88f, 37.61f), new(155.55f, 36.39f), new(155.25f, 35.81f),
+    new(154.59f, 34.67f), new(154.39f, 32.77f), new(154.18f, 32.15f), new(153.93f, 31.52f), new(153.72f, 30.86f),
+    new(153.81f, 28.96f), new(153.64f, 28.34f), new(153.5f, 27.68f), new(153.41f, 26.98f), new(153.79f, 25.15f),
+    new(153.73f, 23.82f), new(153.76f, 23.16f), new(154.21f, 21.98f), new(154.38f, 21.37f), new(154.51f, 20.13f),
+    new(154.64f, 19.48f), new(155.56f, 17.86f), new(155.92f, 16.56f), new(156.18f, 15.9f), new(156.95f, 14.94f),
+    new(157.28f, 14.46f), new(157.83f, 13.24f), new(158.19f, 12.65f), new(159.55f, 11.41f), new(160.23f, 10.36f),
+    new(160.64f, 9.79f), new(161.79f, 9.03f), new(162.3f, 8.63f), new(163.16f, 7.69f), new(163.7f, 7.27f),
+    new(164.8f, 6.77f), new(165.35f, 6.46f), new(166.46f, 5.57f), new(167.11f, 5.27f), new(168.4f, 4.92f),
+    new(168.92f, 4.66f), new(170.08f, 4), new(170.72f, 3.95f), new(171.94f, 3.99f), new(172.48f, 3.84f),
+    new(173.01f, 3.48f), new(179.1f, 3.26f), new(182.13f, 3.26f)];
+
     private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
+        if (PrimaryActor.FindStatus(SID.Invincibility) == null)
+            Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies(OID.Page64));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            if (e.Actor.FindStatus(SID.Invincibility) != null)
             {
-                OID.Page64 => 2,
-                OID.Boss => 1,
-                _ => 0
-            };
+                e.Priority = AIHints.Enemy.PriorityInvincible;
+                break;
+            }
         }
     }
 }

@@ -20,9 +20,9 @@ public enum AID : uint
     DeadlyThrust = 702, // Boss->self, 2.0s cast, visual (spawns pollen zone)
 }
 
-class Silkscreen(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(module, ActionID.MakeSpell(AID.Silkscreen), new AOEShapeRect(18, 2));
+class Silkscreen(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Silkscreen), new AOEShapeRect(18, 2));
 class StickyWeb(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.StickyWeb), "Delayed AOE at target");
-class PodBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PodBurst), new AOEShapeCircle(7.050f));
+class PodBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PodBurst), 7.05f);
 class DeadlyThrust(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.DeadlyThrust), "Persistent voidzone at target");
 class PollenZone(BossModule module) : Components.PersistentVoidzone(module, 10, m => m.Enemies(OID.PollenZone));
 
@@ -39,7 +39,7 @@ class D053GraffiasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1, NameID = 444)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1, NameID = 444)]
 public class D053Graffias(WorldState ws, Actor primary) : BossModule(ws, primary, new(215, -145), new ArenaBoundsCircle(20))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

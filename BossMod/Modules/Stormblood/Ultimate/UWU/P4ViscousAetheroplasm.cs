@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Stormblood.Ultimate.UWU;
 
-class P4ViscousAetheroplasmApply(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ViscousAetheroplasmApply), new AOEShapeCircle(2), (uint)OID.UltimaWeapon, originAtTarget: true);
+class P4ViscousAetheroplasmApply(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ViscousAetheroplasmApply), new AOEShapeCircle(2), [(uint)OID.UltimaWeapon], originAtTarget: true);
 
 // TODO: if aetheroplasm target is the same as homing laser target, assume it is being soaked solo; consider merging these two components
 class P4ViscousAetheroplasmResolve(BossModule module) : Components.UniformStackSpread(module, 4, 0, 7)
@@ -24,7 +24,7 @@ class P4ViscousAetheroplasmResolve(BossModule module) : Components.UniformStackS
             case AID.ViscousAetheroplasmApply:
                 var target = WorldState.Actors.Find(spell.MainTargetID);
                 if (target != null)
-                    AddStack(target, default, Raid.WithSlot(true).WhereActor(a => a.InstanceID != spell.MainTargetID && a.Role == Role.Tank).Mask());
+                    AddStack(target, default, Raid.WithSlot(true, true, true).WhereActor(a => a.InstanceID != spell.MainTargetID && a.Role == Role.Tank).Mask());
                 break;
             case AID.ViscousAetheroplasmResolve:
                 Stacks.Clear();
@@ -39,7 +39,7 @@ class P4ViscousAetheroplasmResolve(BossModule module) : Components.UniformStackS
 
 class P5ViscousAetheroplasmTriple(BossModule module) : Components.UniformStackSpread(module, 4, 0, 8)
 {
-    public int NumCasts { get; private set; }
+    public int NumCasts;
     private readonly List<(Actor target, DateTime resolve)> _aetheroplasms = [];
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -65,7 +65,7 @@ class P5ViscousAetheroplasmTriple(BossModule module) : Components.UniformStackSp
     private void UpdateStackTargets()
     {
         Stacks.Clear();
-        if (_aetheroplasms.Count > 0)
+        if (_aetheroplasms.Count != 0)
             AddStack(_aetheroplasms[0].target, _aetheroplasms[0].resolve);
     }
 }

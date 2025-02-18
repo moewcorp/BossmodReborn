@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C02AMR.C022Gorai;
 
-class SealOfScurryingSparks(BossModule module) : Components.UniformStackSpread(module, 6, 10, alwaysShowSpreads: true)
+class SealOfScurryingSparks(BossModule module) : Components.UniformStackSpread(module, 6f, 10f, alwaysShowSpreads: true)
 {
-    public int NumMechanics { get; private set; }
+    public int NumMechanics;
     private readonly List<Actor> _spreadTargets = [];
     private readonly List<Actor> _stackTargets = [];
     private DateTime _spreadResolve;
@@ -18,14 +18,14 @@ class SealOfScurryingSparks(BossModule module) : Components.UniformStackSpread(m
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.LiveBrazier:
+            case (uint)SID.LiveBrazier:
                 _stackTargets.Add(actor);
                 _stackResolve = status.ExpireAt;
                 UpdateStackSpread();
                 break;
-            case SID.LiveCandle:
+            case (uint)SID.LiveCandle:
                 _spreadTargets.Add(actor);
                 _spreadResolve = status.ExpireAt;
                 UpdateStackSpread();
@@ -35,10 +35,10 @@ class SealOfScurryingSparks(BossModule module) : Components.UniformStackSpread(m
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NGreaterBallOfFire:
-            case AID.SGreaterBallOfFire:
+            case (uint)AID.NGreaterBallOfFire:
+            case (uint)AID.SGreaterBallOfFire:
                 if (_stackResolve != default)
                 {
                     ++NumMechanics;
@@ -47,8 +47,8 @@ class SealOfScurryingSparks(BossModule module) : Components.UniformStackSpread(m
                     UpdateStackSpread();
                 }
                 break;
-            case AID.NGreatBallOfFire:
-            case AID.SGreatBallOfFire:
+            case (uint)AID.NGreatBallOfFire:
+            case (uint)AID.SGreatBallOfFire:
                 if (_spreadResolve != default)
                 {
                     ++NumMechanics;

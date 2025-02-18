@@ -1,4 +1,7 @@
-﻿namespace BossMod.Pathfinding;
+﻿using System.IO;
+using System.Reflection;
+
+namespace BossMod.Pathfinding;
 
 [ConfigDisplay(Name = "Obstacle map development", Order = 8)]
 public sealed class ObstacleMapConfig : ConfigNode
@@ -6,7 +9,7 @@ public sealed class ObstacleMapConfig : ConfigNode
     [PropertyDisplay("Developer mode: load obstacle maps from source rather than from plugin distribution")]
     public bool LoadFromSource;
 
-    [PropertyDisplay("Developer mode: source path", tooltip: "Should be <repo root>/BossMod/Pathfinding/ObstacleMaps/maplist.json")]
+    [PropertyDisplay("Developer mode: source path", tooltip: "Should be <repo root>/BossModReborn/Pathfinding/ObstacleMaps/maplist.json")]
     public string SourcePath = "";
 }
 
@@ -18,6 +21,8 @@ public sealed class ObstacleMapManager : IDisposable
     private readonly ObstacleMapConfig _config = Service.Config.Get<ObstacleMapConfig>();
     private readonly EventSubscriptions _subscriptions;
     private readonly List<(ObstacleMapDatabase.Entry entry, Bitmap data)> _entries = [];
+
+    public bool LoadFromSource => _config.LoadFromSource;
 
     public ObstacleMapManager(WorldState ws)
     {
@@ -41,10 +46,20 @@ public sealed class ObstacleMapManager : IDisposable
 
     public void ReloadDatabase()
     {
-        var dbPath = _config.LoadFromSource ? _config.SourcePath : ""; // TODO: load from near assembly instead
-        Service.Log($"Loading obstacle database from '{dbPath}'");
-        Database.Load(dbPath);
-        RootPath = dbPath[..(dbPath.LastIndexOfAny(['\\', '/']) + 1)];
+        Service.Log($"Loading obstacle database from {(_config.LoadFromSource ? _config.SourcePath : "<embedded>")}");
+        RootPath = _config.LoadFromSource ? _config.SourcePath[..(_config.SourcePath.LastIndexOfAny(['\\', '/']) + 1)] : "";
+
+        try
+        {
+            using var dbStream = _config.LoadFromSource ? File.OpenRead(_config.SourcePath) : GetEmbeddedResource("maplist.json");
+            Database.Load(dbStream);
+        }
+        catch (Exception ex)
+        {
+            Service.Log($"Failed to load obstacle database: {ex}");
+            Database.Entries.Clear();
+        }
+
         LoadMaps(World.CurrentZone, World.CurrentCFCID);
     }
 
@@ -63,17 +78,19 @@ public sealed class ObstacleMapManager : IDisposable
         {
             foreach (var e in entries)
             {
-                var filename = RootPath + e.Filename;
                 try
                 {
-                    var bitmap = new Bitmap(filename);
+                    using var eStream = _config.LoadFromSource ? File.OpenRead(RootPath + e.Filename) : GetEmbeddedResource(e.Filename);
+                    var bitmap = new Bitmap(eStream);
                     _entries.Add((e, bitmap));
                 }
                 catch (Exception ex)
                 {
-                    Service.Log($"Failed to load map {filename} for {zoneId}.{cfcId}: {ex}");
+                    Service.Log($"Failed to load map {e.Filename} from {(_config.LoadFromSource ? RootPath : "<embedded>")} for {zoneId}.{cfcId}: {ex}");
                 }
             }
         }
     }
+
+    private Stream GetEmbeddedResource(string name) => Assembly.GetExecutingAssembly().GetManifestResourceStream($"BossModReborn.Pathfinding.ObstacleMaps.{name}") ?? throw new InvalidDataException($"Missing embedded resource {name}");
 }

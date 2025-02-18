@@ -3,11 +3,12 @@
 public enum OID : uint
 {
     Boss = 0x3416, // R=6.0
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     AtomicFlame = 25524, // Boss->self, 5.0s cast, range 40 circle //Raidwide
     AutoMobileAssaultCannon = 25515, // Boss->self, 5.9s cast, single-target
     AutoMobileSniperCannon1 = 25520, // Boss->location, 7.0s cast, single-target
@@ -18,30 +19,17 @@ public enum AID : uint
     Unknown1 = 25514, // Boss->location, no cast, single-target
     Unknown2 = 25518, // Helper->location, 1.5s cast, width 8 rect charge
     WaveCannon = 25519, // Boss->self, 2.5s cast, range 40 180-degree cone
-    Wheel = 25525, // Boss->player, 5.0s cast, single-target //Tankbuster
-}
-
-public enum SID : uint
-{
-    VulnerabilityUp = 1789, // Boss->player, extra=0x1/0x2
-}
-
-public enum IconID : uint
-{
-    Icon218 = 218, // player
-    Icon79 = 79, // player/Helper
-    Icon81 = 81, // player/Helper
-    Icon80 = 80, // player/Helper
+    Wheel = 25525 // Boss->player, 5.0s cast, single-target //Tankbuster
 }
 
 class Tread1(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Tread1), 4);
 class Tread2(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Tread2), 4);
 class Unknown2(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Unknown2), 4);
 
-class AutoMobileSniperCannon2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AutoMobileSniperCannon2), new AOEShapeRect(40, 3));
-class Entrench(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Entrench), new AOEShapeRect(41, 4));
+class AutoMobileSniperCannon2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AutoMobileSniperCannon2), new AOEShapeRect(40, 3));
+class Entrench(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Entrench), new AOEShapeRect(41, 4));
 
-class WaveCannon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WaveCannon), new AOEShapeCone(40, 90.Degrees()));
+class WaveCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WaveCannon), new AOEShapeCone(40, 90.Degrees()));
 
 class AtomicFlame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AtomicFlame));
 class Wheel(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Wheel));

@@ -34,7 +34,7 @@ public enum SID : uint
     Concussion = 3513 // Boss->player, extra=0xF43
 }
 
-abstract class WaterBomb(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 6);
+abstract class WaterBomb(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6);
 class WaterBomb1(BossModule module) : WaterBomb(module, AID.WaterBomb1);
 class WaterBomb2(BossModule module) : WaterBomb(module, AID.WaterBomb2);
 class WaterBomb3(BossModule module) : WaterBomb(module, AID.WaterBomb3);
@@ -127,7 +127,7 @@ class FrogSong(BossModule module) : BossComponent(module)
     {
         if (actor.FindStatus(SID.Toad) != null)
             return;
-        if (Raid.WithoutSlot().Any(x => x.FindStatus(SID.Toad) != null))
+        if (Raid.WithoutSlot(false, true, true).Any(x => x.FindStatus(SID.Toad) != null))
             hints.Add("Kill the adds to stop the frog song.");
     }
 }

@@ -16,11 +16,11 @@ public enum AID : uint
     ColossalSlam = 28763, // Boss->self, 4.0s cast, range 40 60-degree cone aoe
 }
 
-class GiganticSwing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GiganticSwing), new AOEShapeDonut(4, 40));
-class GiganticSmash(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GiganticSmash), 10);
-class GiganticBlast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GiganticBlast), new AOEShapeCircle(8));
+class GiganticSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GiganticSwing), new AOEShapeDonut(4, 40));
+class GiganticSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GiganticSmash), 10);
+class GiganticBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GiganticBlast), 8);
 class GrandSlam(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.GrandSlam));
-class ColossalSlam(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(40, 30.Degrees()));
+class ColossalSlam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(40, 30.Degrees()));
 
 class D033GygesStates : StateMachineBuilder
 {
@@ -35,5 +35,5 @@ class D033GygesStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
 public class D033Gyges(WorldState ws, Actor primary) : BossModule(ws, primary, new(-100, 6), new ArenaBoundsCircle(19.5f));

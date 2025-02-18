@@ -45,9 +45,9 @@ class CalamitousCry : Components.GenericWildCharge
     private void Reset()
     {
         Source = null;
-        foreach (var (i, p) in Module.Raid.WithSlot(true))
+        foreach (var (i, p) in Module.Raid.WithSlot(true, true, true))
             PlayerRoles[i] = p.Role == Role.Tank ? PlayerRole.Share : PlayerRole.ShareNotFirst;
     }
 }
 
-class CalamitousEcho(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CalamitousEcho), new AOEShapeCone(40, 10.Degrees()));
+class CalamitousEcho(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CalamitousEcho), new AOEShapeCone(40, 10.Degrees()));

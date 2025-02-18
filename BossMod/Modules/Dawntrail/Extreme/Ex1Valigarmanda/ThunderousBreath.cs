@@ -6,7 +6,7 @@ class ThunderousBreath : Components.CastCounter
     {
         var platform = module.FindComponent<ThunderPlatform>();
         if (platform != null)
-            foreach (var (i, _) in module.Raid.WithSlot(true))
+            foreach (var (i, _) in module.Raid.WithSlot(true, true, true))
                 platform.RequireHint[i] = platform.RequireLevitating[i] = true;
     }
 }

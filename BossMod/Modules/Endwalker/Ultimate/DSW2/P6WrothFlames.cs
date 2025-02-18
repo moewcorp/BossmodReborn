@@ -129,18 +129,18 @@ class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpr
         if (_wingTail == null)
             yield break;
 
-        var z = Module.Center.Z + (_wingTail.NumAOEs != 1 ? 0 : _voidzonesNorth ? 10 : -10);
+        var z = Arena.Center.Z + (_wingTail.NumAOEs != 1 ? 0 : _voidzonesNorth ? 10 : -10);
         if (IsSpreadTarget(actor))
         {
-            yield return new WPos(Module.Center.X - 18, z);
-            yield return new WPos(Module.Center.X - 12, z);
-            yield return new WPos(Module.Center.X - 6, z);
-            yield return new WPos(Module.Center.X, z);
+            yield return new(Arena.Center.X - 18, z);
+            yield return new(Arena.Center.X - 12, z);
+            yield return new(Arena.Center.X - 6, z);
+            yield return new(Arena.Center.X, z);
         }
         else
         {
-            yield return new WPos(Module.Center.X + 9, z);
-            yield return new WPos(Module.Center.X + 18, z);
+            yield return new(Arena.Center.X + 9, z);
+            yield return new(Arena.Center.X + 18, z);
         }
     }
 }

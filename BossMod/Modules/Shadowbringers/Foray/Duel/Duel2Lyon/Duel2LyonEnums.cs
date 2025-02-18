@@ -3,14 +3,15 @@ namespace BossMod.Shadowbringers.Foray.Duel.Duel2Lyon;
 public enum OID : uint
 {
     Boss = 0x2E8D, // R0.60
-    Helper = 0x233C, // R0.500
-    VermillionFlame = 0x2E8F, //R1.2
-    RavenousGaleVoidzone = 0x1E8910 //R0.5
+    VermillionFlame = 0x2E8F, // R1.2
+    RavenousGaleVoidzone = 0x1E8910, // R0.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
+
     RagingWinds1 = 20800, // Boss->self, 3.0s cast, single-target
     RagingWinds2 = 20801, // Helper->self, 1.0s cast, range 50 circle
     UnfetteredFerocity = 20813, // Boss->location, no cast, single-target
@@ -32,7 +33,7 @@ public enum AID : uint
     TheKingsNotice = 20810, // Boss->self, 5.0s cast, range 50 circle
     SplittingRage = 20814, // Boss->self, 3.0s cast, range 50 circle
     SkyrendingStrike = 20804, //enrage, 35s cast time
-    SkyrendingStrike2 = 20805, //enrage, 0 cast time, repeat incase player survived 1st enrage
+    SkyrendingStrike2 = 20805 //enrage, 0 cast time, repeat incase player survived 1st enrage
 }
 
 public enum TetherID : uint
@@ -43,5 +44,4 @@ public enum TetherID : uint
 public enum SID : uint
 {
     Enaero = 206, // Boss->Boss, extra=0x64
-    TemporaryMisdirection = 1422, // Boss->player, extra=0x2D0
 }

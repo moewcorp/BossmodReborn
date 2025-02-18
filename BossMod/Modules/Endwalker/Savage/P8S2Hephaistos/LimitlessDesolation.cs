@@ -2,9 +2,9 @@
 
 class LimitlessDesolation : Components.UniformStackSpread
 {
-    public int NumAOEs { get; private set; }
-    public int NumTowers { get; private set; }
-    public int NumBursts { get; private set; }
+    public int NumAOEs;
+    public int NumTowers;
+    public int NumBursts;
     private BitMask _waitingForTowers;
     private BitMask _activeTowers;
     private readonly int[] _towerAssignments = Utils.MakeArray(PartyState.MaxPartySize, -1); // [slot] = tower index
@@ -16,7 +16,7 @@ class LimitlessDesolation : Components.UniformStackSpread
 
     public LimitlessDesolation(BossModule module) : base(module, 0, 6, alwaysShowSpreads: true, raidwideOnResolve: false)
     {
-        AddSpreads(Raid.WithoutSlot());
+        AddSpreads(Raid.WithoutSlot(false, true, true));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -82,7 +82,7 @@ class LimitlessDesolation : Components.UniformStackSpread
             case 0x00020001: // appear
                 _activeTowers.Set(towerIndex);
                 var towerForTH = _thRight == towerIndex >= 6;
-                var (slot, player) = Raid.WithSlot(true).FirstOrDefault(ia => _waitingForTowers[ia.Item1] && ia.Item2.Class.IsSupport() == towerForTH);
+                var (slot, player) = Raid.WithSlot(true, true, true).FirstOrDefault(ia => _waitingForTowers[ia.Item1] && ia.Item2.Class.IsSupport() == towerForTH);
                 if (player != null)
                 {
                     _towerAssignments[slot] = towerIndex;
@@ -106,4 +106,4 @@ class LimitlessDesolation : Components.UniformStackSpread
     }
 }
 
-class LimitlessDesolationTyrantsFlare(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TyrantsFlareLimitless), 8);
+class LimitlessDesolationTyrantsFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TyrantsFlareLimitless), 8);

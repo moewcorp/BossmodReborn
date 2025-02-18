@@ -26,7 +26,7 @@ class StatusInfo : CommonEnumInfo
         {
             foreach (var enc in replay.Encounters.Where(enc => enc.OID == oid))
             {
-                foreach (var status in replay.EncounterStatuses(enc).Where(s => !(s.ID is 43 or 44 or 418) && !(s.Source?.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.Buddy) && !(s.Target.Type is ActorType.Pet or ActorType.Chocobo)))
+                foreach (var status in replay.EncounterStatuses(enc).Where(s => !ReplayVisualization.OpList.BoringSIDs.Contains(s.ID) && !(s.Source?.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.Buddy) && !(s.Target.Type is ActorType.Pet or ActorType.Chocobo)))
                 {
                     var data = _data.GetOrAdd(status.ID);
                     if (status.Source != null)
@@ -80,7 +80,7 @@ class StatusInfo : CommonEnumInfo
 
     private string EnumMemberString(uint sid, StatusData data)
     {
-        var name = _sidType?.GetEnumName(sid) ?? $"_Gen_{Utils.StringToIdentifier(Service.LuminaRow<Lumina.Excel.GeneratedSheets.Status>(sid)?.Name.ToString() ?? $"Status{sid}")}";
+        var name = _sidType?.GetEnumName(sid) ?? $"_Gen_{Utils.StringToIdentifier(Service.LuminaRow<Lumina.Excel.Sheets.Status>(sid)?.Name.ToString() ?? $"Status{sid}")}";
         return $"{name} = {sid}, // {OIDListString(data.SourceOIDs)}->{OIDListString(data.TargetOIDs)}, extra={JoinStrings(data.Extras.Select(extra => $"0x{extra:X}"))}";
     }
 }

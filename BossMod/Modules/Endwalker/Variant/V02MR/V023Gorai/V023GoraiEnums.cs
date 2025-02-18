@@ -80,19 +80,10 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    DrunkWithPower = 3595, // Boss->Boss, extra=0x0
-    RodentialRebirth1 = 3597, // Helper->player, extra=0x0
-    RodentialRebirth2 = 3598, // Helper->player, extra=0x0
-    RodentialRebirth3 = 3599, // Helper->player, extra=0x0
-    Transfiguration = 1608, // none->player, extra=0x1F7
-    Stun = 2656, // Helper->player, extra=0x0
-    AreaOfInfluenceUp = 618, // none->BallOfLevin, extra=0xA
     SmallOrb = 2970 // Helper->BallOfLevin, extra=0x261
 }
 
 public enum IconID : uint
 {
-    RotateCW = 168, // Boss
-    RotateCCW = 168, // Boss
     Tankbuster = 344 // player
 }

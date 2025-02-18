@@ -44,18 +44,17 @@ public enum TetherID : uint
 class Gurgle(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(60, 5);
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly Angle[] angles = [89.999f.Degrees(), -90.004f.Degrees()];
-    private static readonly Dictionary<byte, (WPos, Angle)> aoePositions = new()
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly Dictionary<byte, WPos> aoePositions = new()
     {
-        { 0x13, (new(-20, -165), angles[0]) },
-        { 0x14, (new(-20, -155), angles[0]) },
-        { 0x15, (new(-20, -145), angles[0]) },
-        { 0x16, (new(-20, -135), angles[0]) },
-        { 0x17, (new(20, -165), angles[1]) },
-        { 0x18, (new(20, -155), angles[1]) },
-        { 0x19, (new(20, -145), angles[1]) },
-        { 0x1A, (new(20, -135), angles[1]) }
+        { 0x13, new(-20, -165) },
+        { 0x14, new(-20, -155) },
+        { 0x15, new(-20, -145) },
+        { 0x16, new(-20, -135) },
+        { 0x17, new(20, -165) },
+        { 0x18, new(20, -155) },
+        { 0x19, new(20, -145) },
+        { 0x1A, new(20, -135) }
     };
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
@@ -63,9 +62,7 @@ class Gurgle(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001 && aoePositions.TryGetValue(index, out var value))
-        {
-            _aoes.Add(new(rect, value.Item1, value.Item2, WorldState.FutureTime(9)));
-        }
+            _aoes.Add(new(rect, value, index < 0x17 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], WorldState.FutureTime(9)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -93,7 +90,7 @@ class Crack(BossModule module) : Components.GenericBaitAway(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (CurrentBaits.Count > 0)
+        if (CurrentBaits.Count != 0)
             hints.Add("4x Tankbuster cleave");
     }
 }
@@ -101,18 +98,20 @@ class Crack(BossModule module) : Components.GenericBaitAway(module)
 class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(6);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(5);
     private bool active;
     private const string RiskHint = "Go to correct geyser!";
     private const string StayHint = "Wait for erruption!";
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (Arena.Bounds == D122Nixie.DefaultArena)
+        var count = _aoes.Count;
+        if (count != 0 && Arena.Bounds == D122Nixie.DefaultArena)
         {
             var closestGeysir = _aoes.MinBy(a => (a.Origin - D122Nixie.CloudCenter).LengthSq());
-            foreach (var a in _aoes)
+            for (var i = 0; i < count; ++i)
             {
+                var a = _aoes[i];
                 var safeGeysir = active && a == closestGeysir;
                 yield return a with { Shape = safeGeysir ? circle with { InvertForbiddenZone = true } : circle, Color = safeGeysir ? Colors.SafeFromAOE : Colors.AOE };
             }
@@ -145,25 +144,29 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         base.DrawArenaBackground(pcSlot, pc);
+
         if (D122Nixie.Cloud.Contains(pc.Position - D122Nixie.CloudCenter))
-        {
-            Arena.Bounds = D122Nixie.Cloud;
-            Arena.Center = D122Nixie.CloudCenter;
-        }
+            SetArena(D122Nixie.Cloud, D122Nixie.CloudCenter);
         else
-        {
-            Arena.Bounds = D122Nixie.DefaultArena;
-            Arena.Center = D122Nixie.ArenaCenter;
-        }
+            SetArena(D122Nixie.DefaultArena, D122Nixie.ArenaCenter);
+    }
+
+    private void SetArena(ArenaBounds bounds, WPos center)
+    {
+        Arena.Bounds = bounds;
+        Arena.Center = center;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var activeAOEs = ActiveAOEs(slot, actor).ToList();
-        if (activeAOEs.Any(c => c.Color == Colors.SafeFromAOE && !c.Check(actor.Position)))
-            hints.Add(RiskHint);
-        else if (activeAOEs.Any(c => c.Color == Colors.SafeFromAOE && c.Check(actor.Position)))
-            hints.Add(StayHint, false);
+        var activeSafespot = ActiveAOEs(slot, actor).Where(c => c.Color == Colors.SafeFromAOE).ToList();
+        if (activeSafespot.Count != 0)
+        {
+            if (!activeSafespot.Any(c => c.Check(actor.Position)))
+                hints.Add(RiskHint);
+            else
+                hints.Add(StayHint, false);
+        }
         else
             base.AddHints(slot, actor, hints);
     }
@@ -193,6 +196,7 @@ public class D122Nixie(WorldState ws, Actor primary) : BossModule(ws, primary, A
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.UnfinishedNixie).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.UnfinishedNixie));
     }
 }

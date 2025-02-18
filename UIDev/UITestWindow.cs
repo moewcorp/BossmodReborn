@@ -26,7 +26,7 @@ class UITestWindow : UIWindow
     public UITestWindow(SimpleImGuiScene scene, string configPath, string rotationRoot) : base("Boss mod UI development", false, new(600, 600))
     {
         _scene = scene;
-        _testTypes = Utils.GetDerivedTypes<TestWindow>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract).ToList();
+        _testTypes = [.. Utils.GetDerivedTypes<TestWindow>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract)];
         _configPath = configPath;
 
         Service.Config.Initialize();
@@ -39,6 +39,8 @@ class UITestWindow : UIWindow
             dir = dir.Parent;
         _rotationDB = new(new(rotationRoot), new(dir!.FullName + defaultPresets));
         _replayManager = new(_rotationDB, ".");
+
+        ConfigTest.RotationDB = _rotationDB;
     }
 
     protected override void Dispose(bool disposing)

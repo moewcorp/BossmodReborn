@@ -4,15 +4,15 @@ public enum OID : uint
 {
     Boss = 0x25C0, //R=1.8
     Marshmallow = 0x25C2, //R1.8
-    Bavarois = 0x25C4, //R1.8
+    Bavarois = 0x25C4 //R1.8
 }
 
 public enum AID : uint
 {
-    Fire = 14266, // 25C0->player, 1.0s cast, single-target
-    Aero = 14269, // 25C2->player, 1.0s cast, single-target
-    Thunder = 14268, // 25C4->player, 1.0s cast, single-target
-    GoldenTongue = 14265, // 25C0/25C2/25C4->self, 5.0s cast, single-target
+    Fire = 14266, // Boss->player, 1.0s cast, single-target
+    Aero = 14269, // Marshmallow->player, 1.0s cast, single-target
+    Thunder = 14268, // Bavarois->player, 1.0s cast, single-target
+    GoldenTongue = 14265 // Boss/Marshmallow/Bavarois->self, 5.0s cast, single-target
 }
 
 class GoldenTongue(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.GoldenTongue));
@@ -41,19 +41,20 @@ class Stage02Act1States : StateMachineBuilder
             .ActivateOnEnter<GoldenTongue>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Marshmallow).All(e => e.IsDead) && module.Enemies(OID.Bavarois).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage02Act1.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 612, NameID = 8078, SortOrder = 1)]
 public class Stage02Act1 : BossModule
 {
-    public Stage02Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage02Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Marshmallow, (uint)OID.Bavarois];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Marshmallow).Any(e => e.InCombat) || Enemies(OID.Bavarois).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

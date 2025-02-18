@@ -22,7 +22,7 @@ public enum AID : uint
     ReverseCode2 = 38459, // Boss->self, 5.0s cast
 }
 
-class TargetedAdvance(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TargetedAdvance), 18);
+class TargetedAdvance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TargetedAdvance), 18);
 
 class CodeExecution(BossModule module) : Components.GenericAOEs(module)
 {
@@ -98,5 +98,5 @@ class SallyTheSweeperStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13435)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13435)]
 public class SallyTheSweeper(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

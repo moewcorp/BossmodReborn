@@ -22,18 +22,39 @@ public enum AID : uint
     TwistingDive = 31471 // Boss->self, 5.0s cast, range 50 width 15 rect
 }
 
-class Twister(BossModule module) : Components.CastTwister(module, 1, (uint)OID.Twister, ActionID.MakeSpell(AID.TwisterVisual), 0.4f, 0.25f);
-class BitingWind(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.BitingWind), m => m.Enemies(OID.BitingWind).Where(z => z.EventState != 7), 0.9f);
-class MeracydianSquall(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MeracydianSquall), 5);
+class Twister(BossModule module) : Components.CastTwister(module, 1.5f, (uint)OID.Twister, ActionID.MakeSpell(AID.TwisterVisual), 0.4f, 0.25f);
+class BitingWind(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5f, ActionID.MakeSpell(AID.Gust), GetVoidzones, 0.9f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.BitingWind);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class MeracydianSquall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeracydianSquall), 5f);
 
 class TwistersHint(BossModule module, AID aid) : Components.CastHint(module, ActionID.MakeSpell(aid), "Twisters soon, get moving!");
 class Twisters1(BossModule module) : TwistersHint(module, AID.TwisterVisual);
 class Twisters2(BossModule module) : TwistersHint(module, AID.TwistingDive);
+class DiveTwister(BossModule module) : Components.CastTwister(module, 1.5f, (uint)OID.Twister, ActionID.MakeSpell(AID.TwistingDive), 0.4f, 0.25f);
 
 class TwistingDive(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeRect rect = new(50, 7.5f);
+    private static readonly AOEShapeRect rect = new(50f, 7.5f);
     private bool preparing;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
@@ -45,13 +66,13 @@ class TwistingDive(BossModule module) : Components.GenericAOEs(module)
             if (id == 0x1E3A)
                 preparing = true;
             else if (preparing && id == 0x1E43)
-                _aoe = new(rect, actor.Position, actor.Rotation, WorldState.FutureTime(6.9f));
+                _aoe = new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6.9d));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TwistingDive)
+        if (spell.Action.ID == (uint)AID.TwistingDive)
         {
             _aoe = null;
             preparing = false;
@@ -59,24 +80,36 @@ class TwistingDive(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Turbine(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Turbine), 15)
+class Turbine(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Turbine), 15f)
 {
+    private readonly BitingWind _aoe = module.FindComponent<BitingWind>()!;
+    private static readonly Angle a20 = 20f.Degrees();
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
-        var component = Module.FindComponent<BitingWind>()?.ActiveAOEs(slot, actor)?.ToList();
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && component != null)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
         {
-            forbidden.Add(ShapeDistance.InvertedCircle(Arena.Center, 5));
+            var component = _aoe.Sources(Module).ToList();
+            var forbidden = new List<Func<WPos, float>>
+            {
+                ShapeDistance.InvertedCircle(Arena.Center, 5f)
+            };
             for (var i = 0; i < component.Count; ++i)
-                forbidden.Add(ShapeDistance.Cone(Arena.Center, 20, Angle.FromDirection(component[i].Origin - Arena.Center), 20.Degrees()));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), source.Activation);
+                forbidden.Add(ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(component[i].Position - Arena.Center), a20));
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<BitingWind>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Arena.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
+        {
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Arena.InBounds(pos);
+    }
 }
 
 class DD40TwintaniasCloneStates : StateMachineBuilder
@@ -90,9 +123,10 @@ class DD40TwintaniasCloneStates : StateMachineBuilder
             .ActivateOnEnter<BitingWind>()
             .ActivateOnEnter<MeracydianSquall>()
             .ActivateOnEnter<Turbine>()
-            .ActivateOnEnter<TwistingDive>();
+            .ActivateOnEnter<TwistingDive>()
+            .ActivateOnEnter<DiveTwister>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 900, NameID = 12263)]
-public class DD40TwintaniasClone(WorldState ws, Actor primary) : BossModule(ws, primary, new(-600, -300), new ArenaBoundsCircle(20));
+public class DD40TwintaniasClone(WorldState ws, Actor primary) : BossModule(ws, primary, new(-600f, -300f), new ArenaBoundsCircle(20f));

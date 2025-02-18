@@ -34,13 +34,13 @@ public enum TetherID : uint
 }
 
 class SelfDetonate(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SelfDetonate));
-class AetherochemicalGrenado(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
+class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8f);
 class AetherochemicalLaser(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50, 2), (uint)TetherID.BaitAway, ActionID.MakeSpell(AID.AetherochemicalLaser));
-class AetherochemicalLaserAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaser), new AOEShapeRect(50, 2));
+class AetherochemicalLaserAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaser), new AOEShapeRect(50f, 2f));
 
-class JudgmentAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.JudgmentAOE), new AOEShapeCircle(8));
-class MagitekSlug(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekSlug), new AOEShapeRect(61.65f, 2));
-class MagitekSpread(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekSpread), new AOEShapeCone(31.65f, 120.Degrees()));
+class JudgmentAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.JudgmentAOE), 8f);
+class MagitekSlug(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekSlug), new AOEShapeRect(61.65f, 2f));
+class MagitekSpread(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekSpread), new AOEShapeCone(31.65f, 120f.Degrees()));
 
 class D061RegulaStates : StateMachineBuilder
 {
@@ -57,17 +57,17 @@ class D061RegulaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3818)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3818, SortOrder = 4)]
 public class D061Regula(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly PolygonCustom[] shape = [new ([new(-89.11f, -301.95f), new(-93.32f, -310.37f), new(-106.99f, -318.19f), new(-115.01f, -318.19f),
+    private static readonly WPos[] vertices = [new(-89.11f, -301.95f), new(-93.32f, -310.37f), new(-106.99f, -318.19f), new(-115.01f, -318.19f),
     new(-128.64f, -310.32f), new(-132.28f, -303.07f), new(-132.29f, -287.96f), new(-128.64f, -280.69f), new(-115.04f, -272.8f), new(-107.04f, -272.8f),
-    new(-93.35f, -280.7f), new(-89.11f, -289.1f)])];
-    public static readonly ArenaBoundsComplex arena = new(shape);
+    new(-93.35f, -280.7f), new(-89.11f, -289.1f)];
+    public static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.MagitekTurretI));
+        Arena.Actors(Enemies((uint)OID.MagitekTurretI));
     }
 }

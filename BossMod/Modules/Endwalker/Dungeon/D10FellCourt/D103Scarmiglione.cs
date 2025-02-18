@@ -73,11 +73,11 @@ public enum TetherID : uint
 class VoidVortex1(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.VoidVortex1), 6);
 class VoidVortex3(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.VoidVortex3), 6, 4, 4);
 class VacuumWave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.VacuumWave), 30, stopAtWall: true);
-class BlightedBedevilment(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedBedevilment), new AOEShapeCircle(9));
-class BlightedBladework2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedBladework2), new AOEShapeCircle(25));
-class Nox(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Nox), new AOEShapeCircle(10));
-class RottenRampage2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RottenRampage2), 6);
-class BlightedSweep(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedSweep), new AOEShapeCone(40, 90.Degrees()));
+class BlightedBedevilment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlightedBedevilment), 9);
+class BlightedBladework2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlightedBladework2), 25);
+class Nox(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Nox), 10);
+class RottenRampage2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RottenRampage2), 6);
+class BlightedSweep(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlightedSweep), new AOEShapeCone(40, 90.Degrees()));
 class CursedEcho(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CursedEcho));
 class VoidGravity(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.VoidGravity), 6, 4, 4);
 

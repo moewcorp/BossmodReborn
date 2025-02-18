@@ -29,13 +29,13 @@ class Shackles(BossModule module) : BossComponent(module)
             return; // nothing to do...
 
         // update tether matrices
-        foreach ((var iSrc, var src) in Raid.WithSlot())
+        foreach ((var iSrc, var src) in Raid.WithSlot(false, true, true))
         {
             // blue => 3 closest
             if (blueDebuffs[iSrc])
             {
                 _blueTetherMatrix[iSrc, iSrc] = true;
-                foreach ((var iTgt, _) in Raid.WithSlot().Exclude(iSrc).SortedByRange(src.Position).Take(3))
+                foreach ((var iTgt, _) in Raid.WithSlot(false, true, true).Exclude(iSrc).SortedByRange(src.Position).Take(3))
                     _blueTetherMatrix[iTgt, iSrc] = true;
             }
 
@@ -43,20 +43,20 @@ class Shackles(BossModule module) : BossComponent(module)
             if (redDebuffs[iSrc])
             {
                 _redTetherMatrix[iSrc, iSrc] = true;
-                foreach ((var iTgt, _) in Raid.WithSlot().Exclude(iSrc).SortedByRange(src.Position).TakeLast(3))
+                foreach ((var iTgt, _) in Raid.WithSlot(false, true, true).Exclude(iSrc).SortedByRange(src.Position).TakeLast(3))
                     _redTetherMatrix[iTgt, iSrc] = true;
             }
         }
 
         // update explosion matrices and detect problems (has to be done in a separate pass)
-        foreach ((var i, var actor) in Raid.WithSlot())
+        foreach ((var i, var actor) in Raid.WithSlot(false, true, true))
         {
             if (_blueTetherMatrix[i].Any())
-                foreach ((var j, _) in Raid.WithSlot().InRadiusExcluding(actor, _blueExplosionRadius))
+                foreach ((var j, _) in Raid.WithSlot(false, true, true).InRadiusExcluding(actor, _blueExplosionRadius))
                     _blueExplosionMatrix[j, i] = true;
 
             if (_redTetherMatrix[i].Any())
-                foreach ((var j, _) in Raid.WithSlot().InRadiusExcluding(actor, _redExplosionRadius))
+                foreach ((var j, _) in Raid.WithSlot(false, true, true).InRadiusExcluding(actor, _redExplosionRadius))
                     _redExplosionMatrix[j, i] = true;
         }
     }

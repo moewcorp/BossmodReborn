@@ -16,9 +16,9 @@ public enum AID : uint
     Burst = 28465, // IchorousDrip->self, 6.0s cast, range 8 aoe
 }
 
-class Syrup(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Syrup), 4);
+class Syrup(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Syrup), 4);
 class FluidSpread(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.FluidSpread));
-class Divide(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Burst), new AOEShapeCircle(8));
+class Divide(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Burst), 8);
 
 class D032IchorousIreStates : StateMachineBuilder
 {
@@ -31,7 +31,7 @@ class D032IchorousIreStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 554)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 554)]
 public class D032IchorousIre(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly ArenaBoundsComplex arena = new([new Circle(new(27, 114), 19.5f)], [new Rectangle(new(37.5f, 95), 20, 2.4f, 25.Degrees()), new Rectangle(new(6, 112), 20, 1.75f, 270.Degrees())]);

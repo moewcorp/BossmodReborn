@@ -32,62 +32,62 @@ public enum AID : uint
     Telega = 9630 // GymnasiouLyssa/Lampas->self, no cast, single-target, bonus add disappear
 }
 
-class HeavySmash2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HeavySmash2), 6);
-class FrigidStone(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FrigidStone), 5);
+class HeavySmash2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavySmash2), 6f);
+class FrigidStone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidStone), 5f);
 
 class FrigidNeedle(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 20)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FrigidNeedleVisual)
-            AddSequence(Module.Center, Module.CastFinishAt(spell, 0.5f));
+        if (spell.Action.ID == (uint)AID.FrigidNeedleVisual)
+            AddSequence(WPos.ClampToGrid(Arena.Center), Module.CastFinishAt(spell, 0.5f));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.FrigidNeedle => 0,
-                AID.CircleOfIce => 1,
+                (uint)AID.FrigidNeedle => 0,
+                (uint)AID.CircleOfIce => 1,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }
 
 class CircleOfIce(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(10, 20), new AOEShapeCircle(10)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(10f, 20f), new AOEShapeCircle(10f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.CircleOfIceVisual)
-            AddSequence(Module.Center, Module.CastFinishAt(spell, 0.5f));
+        if (spell.Action.ID == (uint)AID.CircleOfIceVisual)
+            AddSequence(WPos.ClampToGrid(Arena.Center), Module.CastFinishAt(spell, 0.5f));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.CircleOfIce => 0,
-                AID.FrigidNeedle => 1,
+                (uint)AID.CircleOfIce => 0,
+                (uint)AID.FrigidNeedle => 1,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }
 
-class PillarPierce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80, 2));
+class PillarPierce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80f, 2f));
 class SkullDasher(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SkullDasher));
-class HeavySmash(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HeavySmash), 6, 8, 8);
+class HeavySmash(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HeavySmash), 6f, 8, 8);
 
 class IcePillar(BossModule module) : Components.GenericAOEs(module)
 {
@@ -98,12 +98,12 @@ class IcePillar(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.IcePillar)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(3.7f)));
+        if (actor.OID == (uint)OID.IcePillar)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.7d)));
     }
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.IcePillar)
+        if (spell.Action.ID == (uint)AID.IcePillar)
             _aoes.Clear();
     }
 }
@@ -124,28 +124,42 @@ class LyssaChrysineStates : StateMachineBuilder
             .ActivateOnEnter<FrigidStone>()
             .ActivateOnEnter<HeavySmash2>()
             .ActivateOnEnter<PillarPierce>()
-            .Raw.Update = () => module.Enemies(OID.GymnasiouLampas).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.GymnasiouLyssa)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(LyssaChrysine.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12024)]
-public class LyssaChrysine(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class LyssaChrysine(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.GymnasiouLampas, (uint)OID.GymnasiouLyssa];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.GymnasiouLyssa).Concat(Enemies(OID.GymnasiouLampas)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.GymnasiouLampas => 3,
-                OID.GymnasiouLyssa => 2,
-                OID.Boss => 1,
+                (uint)OID.GymnasiouLampas => 2,
+                (uint)OID.GymnasiouLyssa => 1,
                 _ => 0
             };
         }

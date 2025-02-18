@@ -29,9 +29,9 @@ class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, Action
     public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.Icicle).Where(x => x.ModelState.AnimState1 != 1);
 }
 
-class PillarImpact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarImpact), new AOEShapeCircle(4));
+class PillarImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarImpact), 4);
 
-class PillarShatter1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarShatter1), new AOEShapeCircle(8));
+class PillarShatter1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarShatter1), 8);
 class PillarShatter2(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(8);
@@ -49,7 +49,7 @@ class PillarShatter2(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class HeavenswardRoar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HeavenswardRoar), new AOEShapeCone(50, 30.Degrees()));
+class HeavenswardRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavenswardRoar), new AOEShapeCone(50, 30.Degrees()));
 class EclipticBite(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.EclipticBite));
 class ThousandYearStorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ThousandYearStorm));
 

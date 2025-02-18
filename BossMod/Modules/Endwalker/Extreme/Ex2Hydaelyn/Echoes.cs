@@ -2,7 +2,7 @@
 
 class Echoes(BossModule module) : Components.UniformStackSpread(module, 6, 0, 8)
 {
-    public int NumCasts { get; private set; }
+    public int NumCasts;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -10,7 +10,7 @@ class Echoes(BossModule module) : Components.UniformStackSpread(module, 6, 0, 8)
             ++NumCasts;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Echoes)
             AddStack(actor);

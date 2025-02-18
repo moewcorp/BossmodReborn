@@ -1,19 +1,19 @@
 ﻿namespace BossMod.Endwalker.Unreal.Un2Sephirot;
 
 class P1TripleTrial(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.TripleTrial), new AOEShapeCone(18.5f, 30.Degrees())); // TODO: verify angle
-class P1Ein(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Ein), new AOEShapeRect(50, 22.5f));
+class P1Ein(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ein), new AOEShapeRect(50, 22.5f));
 class P2GenesisCochma(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.GenesisCochma));
 class P2GenesisBinah(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.GenesisBinah));
 class P3EinSofOhr(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.EinSofOhrAOE));
-class P3Yesod(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Yesod), new AOEShapeCircle(4));
-class P3PillarOfMercyAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarOfMercyAOE), new AOEShapeCircle(5));
+class P3Yesod(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Yesod), 4);
+class P3PillarOfMercyAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarOfMercyAOE), 5);
 class P3PillarOfMercyKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.PillarOfMercyAOE), 17);
 class P3Malkuth(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Malkuth), 25);
 class P3Ascension(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Ascension)); // TODO: show safe spot?..
 class P3PillarOfSeverity(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.PillarOfSeverityAOE));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.RemovedUnreal, GroupID = 875, NameID = 4776)]
-public class Un2Sephirot(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.RemovedUnreal, GroupID = 875, NameID = 4776)]
+public class Un2Sephirot(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(20))
 {
     public Actor? BossP1() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
 

@@ -8,6 +8,7 @@ public record struct Angle(float Rad)
     public const float DegToRad = (float)(Math.PI / 180);
     public const float HalfPi = (float)(Math.PI / 2);
     public const float DoublePI = (float)(2 * Math.PI);
+
     public static readonly Angle[] AnglesIntercardinals = [-45.003f.Degrees(), 44.998f.Degrees(), 134.999f.Degrees(), -135.005f.Degrees()];
     public static readonly Angle[] AnglesCardinals = [-90.004f.Degrees(), -0.003f.Degrees(), 180.Degrees(), 89.999f.Degrees()];
 
@@ -49,6 +50,25 @@ public record struct Angle(float Rad)
     }
 
     public readonly bool AlmostEqual(Angle other, float epsRad) => Math.Abs((this - other).Normalized().Rad) <= epsRad;
+
+    // closest distance to move from this angle to destination (== 0 if equal, >0 if moving in positive/CCW dir, <0 if moving in negative/CW dir)
+    public readonly Angle DistanceToAngle(Angle other) => (other - this).Normalized();
+
+    // returns 0 if angle is within range, positive value if min is closest, negative if max is closest
+    public readonly Angle DistanceToRange(Angle min, Angle max)
+    {
+        var width = (max - min) * 0.5f;
+        var midDist = DistanceToAngle((min + max) * 0.5f);
+        return midDist.Rad > width.Rad ? midDist - width : midDist.Rad < -width.Rad ? midDist + width : default;
+    }
+
+    // closest direction in range to this angle
+    public readonly Angle ClosestInRange(Angle min, Angle max)
+    {
+        var width = (max - min) * 0.5f;
+        var midDist = DistanceToAngle((min + max) * 0.5f);
+        return midDist.Rad > width.Rad ? min : midDist.Rad < -width.Rad ? max : this;
+    }
 
     public override readonly string ToString() => Deg.ToString("f3");
 }

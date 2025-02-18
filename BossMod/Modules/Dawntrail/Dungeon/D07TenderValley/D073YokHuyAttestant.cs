@@ -28,16 +28,16 @@ public enum TetherID : uint
     StatueActivate = 37 // 28E8->Boss
 }
 
-class TectonicShift(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TectonicShift), new AOEShapeCircle(8));
+class TectonicShift(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TectonicShift), 8f);
 class BoulderToss(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.BoulderToss));
-class SunToss(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SunToss), 6);
+class SunToss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SunToss), 6);
 
 class AncientWrath(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rectShort = new(12, 4);
-    private static readonly AOEShapeRect rectMedium = new(22, 4);
-    private static readonly AOEShapeRect rectLong = new(35, 4);
+    private readonly List<AOEInstance> _aoes = new(6);
+    private static readonly AOEShapeRect rectShort = new(12f, 4f);
+    private static readonly AOEShapeRect rectMedium = new(22f, 4f);
+    private static readonly AOEShapeRect rectLong = new(35f, 4f);
 
     private static readonly (WPos Position, AOEShapeRect Shape)[] AOEMap =
         [(new(-112.5f, -486.5f), rectMedium), (new(-147.5f, -471.5f), rectMedium),
@@ -50,13 +50,13 @@ class AncientWrath(BossModule module) : Components.GenericAOEs(module)
         if (tether.ID == (uint)TetherID.StatueActivate)
         {
             var aoeShape = GetAOEShape(source.Position) ?? rectLong;
-            _aoes.Add(new(aoeShape, source.Position, source.Rotation, WorldState.FutureTime(8.1f)));
+            _aoes.Add(new(aoeShape, source.Position, source.Rotation, WorldState.FutureTime(8.1d)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AncientWrathShort or AID.AncientWrathMedium or AID.AncientWrathLong)
+        if (spell.Action.ID is (uint)AID.AncientWrathShort or (uint)AID.AncientWrathMedium or (uint)AID.AncientWrathLong)
             _aoes.Clear();
     }
 
@@ -84,10 +84,11 @@ class D073YokHuyAttestantStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12801)]
 public class D073YokHuyAttestant(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Rectangle(new(-130, -475), 17.5f, 22)], [new Rectangle(new(-135.05f, -486.25f), 1.35f, 3.5f), new Rectangle(new(-124.4f, -471.4f), 1.3f, 3.75f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Rectangle(new(-130f, -475f), 17.5f, 22f)], [new Rectangle(new(-135.05f, -486.25f), 1.35f, 3.5f), new Rectangle(new(-124.4f, -471.4f), 1.3f, 3.75f)]);
+    private static readonly uint[] Trash = [(uint)OID.YokHuyAltar, (uint)OID.YokHuyAltar2, (uint)OID.YokHuyOrb];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.YokHuyAltar).Concat(Enemies(OID.YokHuyAltar2)).Concat(Enemies(OID.YokHuyOrb)));
+        Arena.Actors(Enemies(Trash));
     }
 }

@@ -37,37 +37,34 @@ public enum AID : uint
 
 class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(20, 5, 20);
-    private static readonly Angle Rot90 = 90.Degrees();
-    private static readonly Angle RotM90 = -90.Degrees();
-    private Queue<Stampede> stampedes = new();
-    private static readonly HashSet<OID> animals = [OID.WildBeasts4, OID.WildBeasts3, OID.WildBeasts2, OID.WildBeasts1];
+    private static readonly AOEShapeRect rect = new(20f, 5f, 20f);
 
-    private static readonly (WPos, Angle)[] stampedePositions =
+    private Queue<Stampede> stampedes = new();
+    private static readonly uint[] animals = [(uint)OID.WildBeasts1, (uint)OID.WildBeasts2, (uint)OID.WildBeasts3, (uint)OID.WildBeasts4];
+
+    private static readonly WPos[] stampedePositions =
     [
-        (new(4, -759), Rot90), (new(44, -759), RotM90),
-        (new(4, -749), Rot90), (new(44, -749), RotM90),
-        (new(4, -739), Rot90), (new(44, -739), RotM90),
-        (new(4, -729), Rot90), (new(44, -729), RotM90)
+        new(4f, -759f), new(44f, -759f),
+        new(4f, -749f), new(44f, -749f),
+        new(4f, -739f), new(44f, -739f),
+        new(4f, -729f), new(44f, -729f)
     ];
 
-    private static Stampede NewStampede((WPos, Angle) stampede) => new(true, stampede.Item1, stampede.Item2, []);
+    private static Stampede NewStampede(WPos stampede) => new(true, stampede, stampede.X == 4 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], new(40));
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var stampede in stampedes)
             if (stampede.Active)
-                yield return stampede.Beasts.Count > 0 ? CreateAOEInstance(stampede) : new(rect, stampede.Position, Rot90);
+                yield return stampede.Beasts.Count > 0 ? CreateAOEInstance(stampede) : new(rect, stampede.Position, Angle.AnglesCardinals[3]);
     }
 
     private static AOEInstance CreateAOEInstance(Stampede stampede)
     {
-        var length = CalculateStampedeLength(stampede.Beasts) + 30;
-        var position = new WPos(stampede.Beasts[^1].Position.X, stampede.Position.Z);
-        return new(new AOEShapeRect(length, 5), position, stampede.Rotation);
+        return new(new AOEShapeRect(CalculateStampedeLength(stampede.Beasts) + 30f, 5f), new(stampede.Beasts[^1].Position.X, stampede.Position.Z), stampede.Rotation);
     }
 
-    private static float CalculateStampedeLength(IReadOnlyList<Actor> beasts) => (beasts[0].Position - beasts[^1].Position).Length();
+    private static float CalculateStampedeLength(List<Actor> beasts) => (beasts[0].Position - beasts[^1].Position).Length();
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -83,7 +80,7 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
             stampedes.Enqueue(stampede);
     }
 
-    private Stampede GetOrCreateStampede((WPos, Angle) stampedePosition)
+    private Stampede GetOrCreateStampede(WPos stampedePosition)
     {
         var inactiveStampede = stampedes.FirstOrDefault(s => !s.Active);
 
@@ -97,18 +94,18 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
         return NewStampede(stampedePosition);
     }
 
-    private static Stampede ResetStampede(Stampede stampede, (WPos, Angle) position)
+    private static Stampede ResetStampede(Stampede stampede, WPos position)
     {
         stampede.Active = true;
-        stampede.Position = position.Item1;
-        stampede.Rotation = position.Item2;
-        stampede.Count = 0;
+        stampede.Position = position;
+        stampede.Rotation = stampede.Position.X == 4 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
+        stampede.Count = default;
         stampede.Reset = default;
-        stampede.Beasts = [];
+        stampede.Beasts.Clear();
         return stampede;
     }
 
-    private static (WPos, Angle)? GetStampedePosition(byte index)
+    private static WPos? GetStampedePosition(byte index)
     {
         return index switch
         {
@@ -139,15 +136,15 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     private void UpdateStampede(ref Stampede stampede)
     {
-        foreach (var oid in animals)
+        var beasts = Module.Enemies(animals);
+        var updatedBeasts = stampede.Beasts == null ? new HashSet<Actor>(40) : [.. stampede.Beasts]; // use HashSet to easily prevent duplicates
+        for (var i = 0; i < beasts.Count; ++i)
         {
-            var beasts = Module.Enemies(oid);
-            var updatedBeasts = stampede.Beasts.ToList();
-            foreach (var b in beasts)
-                if (b.Position.InRect(stampede.Position, stampede.Rotation, 0, 10, 5) && !updatedBeasts.Contains(b) && stampede.Active)
-                    updatedBeasts.Add(b);
-            stampede = new Stampede(stampede.Active, stampede.Position, stampede.Rotation, updatedBeasts);
+            var b = beasts[i];
+            if (b.Position.InRect(stampede.Position, stampede.Rotation, default, 10f, 5f) && stampede.Active)
+                updatedBeasts.Add(b);
         }
+        stampede.Beasts = [.. updatedBeasts];
     }
 
     private void ResetStampede(ref Stampede stampede)
@@ -158,7 +155,7 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WildlifeCrossing)
+        if (spell.Action.ID == (uint)AID.WildlifeCrossing)
         {
             var stampedeList = stampedes.ToList();
             for (var i = 0; i < stampedeList.Count; ++i)
@@ -173,33 +170,37 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     private void UpdateStampedeCount(ref Stampede stampede, float casterZ)
     {
-        if (Math.Abs(casterZ - stampede.Position.Z) < 1)
+        if (Math.Abs(casterZ - stampede.Position.Z) < 1f)
             ++stampede.Count;
 
         if (stampede.Count == 30)
-            stampede.Reset = WorldState.FutureTime(0.5f);
+            stampede.Reset = WorldState.FutureTime(0.5d);
     }
 }
 
-public record struct Stampede(bool Active, WPos Position, Angle Rotation, IReadOnlyList<Actor> Beasts)
+public record struct Stampede(bool Active, WPos Position, Angle Rotation, List<Actor> Beasts)
 {
     public int Count;
     public DateTime Reset;
+    public List<Actor> Beasts = Beasts;
 }
 
-class Icebreaker(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17);
+class Icebreaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17);
 
-class IcyThroes(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(6));
+class IcyThroes(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
 class IcyThroes1(BossModule module) : IcyThroes(module, AID.IcyThroes1);
 class IcyThroes2(BossModule module) : IcyThroes(module, AID.IcyThroes2);
 
-class IcyThroesSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.IcyThroesSpread), 6);
-class KnockOnIce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.KnockOnIce), new AOEShapeCircle(5));
-class RightSlam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightSlam), new AOEShapeRect(20, 80, 0, -90.Degrees())); // full width = half width in this case + angle is detected incorrectly, length and width are also switched
-class LeftSlam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LeftSlam), new AOEShapeRect(20, 80, 0, 90.Degrees())); // full width = half width in this case + angle is detected incorrectly, length and width are also switched
+class IcyThroesSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.IcyThroesSpread), 6f);
+class KnockOnIce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KnockOnIce), 5f);
+
+abstract class Slam(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(80f, 10f));
+class RightSlam(BossModule module) : Slam(module, AID.RightSlam);
+class LeftSlam(BossModule module) : Slam(module, AID.LeftSlam);
+
 class AlbionsEmbrace(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.AlbionsEmbrace));
 
-class RoarOfAlbion(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.RoarOfAlbion), 60)
+class RoarOfAlbion(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.RoarOfAlbion), 60f)
 {
     public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.IcyCrystal);
 }
@@ -223,4 +224,4 @@ class D111AlbionStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 11992)]
-public class D111Albion(WorldState ws, Actor primary) : BossModule(ws, primary, new(24, -744), new ArenaBoundsSquare(19.5f));
+public class D111Albion(WorldState ws, Actor primary) : BossModule(ws, primary, new(24f, -744f), new ArenaBoundsSquare(19.5f));

@@ -8,12 +8,20 @@ namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(MathF.Sqrt(212) * 0.5f);
-    private readonly List<(Actor, DateTime)> _targets = [];
+    private readonly List<(Actor, DateTime)> _targets = new(3);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var t in _targets)
-            yield return new(circle, t.Item1.Position, default, t.Item2);
+        var count = _targets.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var t = _targets[i];
+            aoes[i] = new(circle, t.Item1.Position, default, t.Item2);
+        }
+        return aoes;
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -31,9 +39,9 @@ class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorDestroyed(Actor actor)
     {
         // not sure if needed, just a safeguard incase the removal by OnEventCast failed for whatever reason
-        if (_targets.Count > 0 && (OID)actor.OID == OID.QueenEternal3)
+        if (_targets.Count != 0 && (OID)actor.OID == OID.QueenEternal3)
             _targets.RemoveAll(x => x.Item1 == actor);
     }
 }
 
-class WaltzOfTheRegalia(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WaltzOfTheRegalia), new AOEShapeRect(7, 2, 7));
+class WaltzOfTheRegalia(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WaltzOfTheRegalia), new AOEShapeRect(14, 2));

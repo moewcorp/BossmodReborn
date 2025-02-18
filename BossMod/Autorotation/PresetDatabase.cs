@@ -14,7 +14,19 @@ public sealed class PresetDatabase
 
     private readonly FileInfo _dbPath;
 
-    public IEnumerable<Preset> VisiblePresets => _cfg.HideDefaultPreset ? UserPresets : DefaultPresets.Concat(UserPresets);
+    public List<Preset> VisiblePresets
+    {
+        get
+        {
+            if (_cfg.HideDefaultPreset)
+            {
+                return UserPresets;
+            }
+
+            List<Preset> combinedPresets = [.. DefaultPresets, .. UserPresets];
+            return combinedPresets;
+        }
+    }
 
     public PresetDatabase(string rootPath, FileInfo defaultPresets)
     {
@@ -27,10 +39,9 @@ public sealed class PresetDatabase
     {
         try
         {
-            using var json = Serialization.ReadJson(file.FullName);
-            var version = json.RootElement.GetProperty("version").GetInt32();
-            var payload = json.RootElement.GetProperty("payload");
-            return payload.Deserialize<List<Preset>>(Serialization.BuildSerializationOptions()) ?? [];
+            var data = PlanPresetConverter.PresetSchema.Load(file);
+            using var json = data.document;
+            return data.payload.Deserialize<List<Preset>>(Serialization.BuildSerializationOptions()) ?? [];
         }
         catch (Exception ex)
         {
@@ -62,13 +73,7 @@ public sealed class PresetDatabase
     {
         try
         {
-            using var fstream = new FileStream(_dbPath.FullName, FileMode.Create, FileAccess.Write, FileShare.Read);
-            using var jwriter = Serialization.WriteJson(fstream);
-            jwriter.WriteStartObject();
-            jwriter.WriteNumber("version", 0);
-            jwriter.WritePropertyName("payload");
-            JsonSerializer.Serialize(jwriter, UserPresets, Serialization.BuildSerializationOptions());
-            jwriter.WriteEndObject();
+            PlanPresetConverter.PresetSchema.Save(_dbPath, jwriter => JsonSerializer.Serialize(jwriter, UserPresets, Serialization.BuildSerializationOptions()));
             Service.Log($"Database saved successfully to '{_dbPath.FullName}'");
         }
         catch (Exception ex)
@@ -77,7 +82,7 @@ public sealed class PresetDatabase
         }
     }
 
-    public IEnumerable<Preset> PresetsForClass(Class c) => VisiblePresets.Where(p => p.Modules.Any(m => RotationModuleRegistry.Modules[m.Key].Definition.Classes[(int)c]));
+    public IEnumerable<Preset> PresetsForClass(Class c) => VisiblePresets.Where(p => p.Modules.Any(m => m.Definition.Classes[(int)c]));
 
     public Preset? FindPresetByName(ReadOnlySpan<char> name, StringComparison cmp = StringComparison.CurrentCultureIgnoreCase)
     {

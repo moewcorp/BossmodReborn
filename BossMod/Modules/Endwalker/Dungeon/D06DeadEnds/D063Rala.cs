@@ -30,7 +30,6 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    HiddenStatus = 2056, // none->GoldenWings, extra=0x16C, probably just a visual?
     Doom = 1769 // Helper->player, extra=0x0, heal to full doom
 }
 
@@ -52,23 +51,25 @@ class Doom(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_doomed.Contains(actor) && !(actor.Role == Role.Healer))
-            hints.Add("You were doomed! Get healed to full fast.");
-        else if (_doomed.Contains(actor) && actor.Role == Role.Healer)
-            hints.Add("Heal yourself to full! (Doom).");
-        foreach (var c in _doomed)
-            if (!_doomed.Contains(actor) && actor.Role == Role.Healer)
-                hints.Add($"Heal to full {c.Name}! (Doom)");
+        if (_doomed.Count != 0)
+            if (_doomed.Contains(actor))
+                if (!(actor.Role == Role.Healer))
+                    hints.Add("You were doomed! Get healed to full fast.");
+                else
+                    hints.Add("Heal yourself to full! (Doom).");
+            else if (actor.Role == Role.Healer)
+                foreach (var c in _doomed)
+                    hints.Add($"Heal to full {c.Name}! (Doom)");
     }
 }
 
-class LamellarLightCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LamellarLight1), new AOEShapeCircle(15), 3);
-class Lifesbreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Lifesbreath), new AOEShapeRect(50, 5));
-class LamellarLightRect(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LamellarLight3), new AOEShapeRect(40, 2));
+class LamellarLightCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight1), 15, 3);
+class Lifesbreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Lifesbreath), new AOEShapeRect(50, 5));
+class LamellarLightRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight3), new AOEShapeRect(40, 2));
 class StillEmbrace(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.StillEmbrace), 6);
 class Benevolence(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Benevolence), 6, 4, 4);
 
-class LovingEmbrace(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(45, 90.Degrees()));
+class LovingEmbrace(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(45, 90.Degrees()));
 class LovingEmbraceLeft(BossModule module) : LovingEmbrace(module, AID.LovingEmbraceLeft);
 class LovingEmbraceRight(BossModule module) : LovingEmbrace(module, AID.LovingEmbraceRight);
 
@@ -96,5 +97,5 @@ class D063RalaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 792, NameID = 10316)]
 public class D063Rala(WorldState ws, Actor primary) : BossModule(ws, primary, defaultBounds.Center, defaultBounds)
 {
-    private static readonly ArenaBoundsComplex defaultBounds = new([new Circle(new(-380, -135), 19.5f)], [new Rectangle(new(-380, -114.25f), 20, 2)]);
+    private static readonly ArenaBoundsComplex defaultBounds = new([new Polygon(new(-380, -135), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(-380, -114.25f), 20, 2)]);
 }

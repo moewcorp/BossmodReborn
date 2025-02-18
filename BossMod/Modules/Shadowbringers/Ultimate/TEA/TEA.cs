@@ -1,15 +1,15 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
 class P1FluidSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.FluidSwing), new AOEShapeCone(11.5f, 45.Degrees()));
-class P1FluidStrike(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.FluidSwing), new AOEShapeCone(11.6f, 45.Degrees()), (uint)OID.LiquidHand);
-class P1Sluice(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Sluice), 5);
+class P1FluidStrike(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.FluidStrike), new AOEShapeCone(11.6f, 45.Degrees()), [(uint)OID.LiquidHand]);
+class P1Sluice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sluice), 5);
 class P1Splash(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Splash));
 class P1Drainage(BossModule module) : Components.TankbusterTether(module, ActionID.MakeSpell(AID.DrainageP1), (uint)TetherID.Drainage, 6);
 class P2JKick(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.JKick));
-class P2EyeOfTheChakram(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EyeOfTheChakram), new AOEShapeRect(73, 3, 3));
-class P2HawkBlasterOpticalSight(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HawkBlasterP2), 10);
+class P2EyeOfTheChakram(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheChakram), new AOEShapeRect(76, 3));
+class P2HawkBlasterOpticalSight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HawkBlasterP2), 10);
 class P2Photon(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.PhotonAOE));
-class P2SpinCrusher(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpinCrusher), new AOEShapeCone(10, 45.Degrees()));
+class P2SpinCrusher(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpinCrusher), new AOEShapeCone(10, 45.Degrees()));
 class P2Drainage(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.LiquidRage)); // TODO: verify distance
 
 class P2PropellerWind(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.PropellerWind), 50)
@@ -19,13 +19,13 @@ class P2PropellerWind(BossModule module) : Components.CastLineOfSightAOE(module,
 
 class P2DoubleRocketPunch(BossModule module) : Components.CastSharedTankbuster(module, ActionID.MakeSpell(AID.DoubleRocketPunch), 3);
 class P3ChasteningHeat(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.ChasteningHeat), new AOEShapeCircle(5), true);
-class P3DivineSpear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.DivineSpear), new AOEShapeCone(24.2f, 45.Degrees()), (uint)OID.AlexanderPrime); // TODO: verify angle
+class P3DivineSpear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.DivineSpear), new AOEShapeCone(24.2f, 45.Degrees()), [(uint)OID.AlexanderPrime]); // TODO: verify angle
 class P3DivineJudgmentRaidwide(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.DivineJudgmentRaidwide));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694, PlanLevel = 80)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694, PlanLevel = 80)]
 public class TEA : BossModule
 {
-    private readonly IReadOnlyList<Actor> _liquidHand;
+    private readonly List<Actor> _liquidHand;
     public Actor? BossP1() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? LiquidHand() => _liquidHand.FirstOrDefault();
 
@@ -35,7 +35,7 @@ public class TEA : BossModule
     public Actor? CruiseChaser() => _cruiseChaser;
 
     private Actor? _alexPrime;
-    private readonly IReadOnlyList<Actor> _trueHeart;
+    private readonly List<Actor> _trueHeart;
     public Actor? AlexPrime() => _alexPrime;
     public Actor? TrueHeart() => _trueHeart.FirstOrDefault();
 

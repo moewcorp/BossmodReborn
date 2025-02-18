@@ -1,6 +1,4 @@
-﻿using BossMod.Autorotation;
-
-namespace BossMod.QuestBattle.Shadowbringers.SideQuests;
+﻿namespace BossMod.QuestBattle.Shadowbringers.SideQuests;
 
 class SapphireWeapon(WorldState ws) : UnmanagedRotation(ws, 40)
 {
@@ -96,9 +94,6 @@ internal class SleepNowInSapphire(WorldState ws) : QuestBattle(ws)
 
     public override void AddQuestAIHints(Actor player, AIHints hints)
     {
-        hints.PathfindMapBounds = new ArenaBoundsSquare(60, default, 1);
-        hints.PathfindMapCenter = new WPos(-15, 610);
-
         _weapon.Execute(player, hints);
     }
 }

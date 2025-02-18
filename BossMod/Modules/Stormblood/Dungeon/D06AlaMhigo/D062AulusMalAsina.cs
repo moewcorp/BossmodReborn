@@ -38,9 +38,9 @@ public enum TetherID : uint
     MindJack = 45 // EmptyVessel->player
 }
 
-class AetherochemicalGrenado(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
-class IntegratedAetheromodulator(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IntegratedAetheromodulator), new AOEShapeDonut(11.4f, 15.6f));
-class MagitekRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(45.6f, 1));
+class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
+class IntegratedAetheromodulator(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IntegratedAetheromodulator), new AOEShapeDonut(11.4f, 15.6f));
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(45.6f, 1));
 class ManaBurst(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ManaBurst));
 class Demimagicks(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Demimagicks), 5);
 class MindJack(BossModule module) : BossComponent(module)

@@ -35,18 +35,18 @@ class FarFlungFire(BossModule module) : Components.GenericWildCharge(module, 3, 
     private void InitIfReal()
     {
         if (_real && _targetID != 0)
-            foreach (var (i, p) in Raid.WithSlot(true))
+            foreach (var (i, p) in Raid.WithSlot(true, false, true))
                 PlayerRoles[i] = p.InstanceID == _targetID ? PlayerRole.Target : PlayerRole.Share;
     }
 }
 
-class DeepestPit(BossModule module) : Components.GenericAOEs(module, default, "GTFO from puddle!")
+class DeepestPit(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _real;
     private readonly List<Actor> _targets = [];
     private readonly List<Actor> _casters = [];
 
-    public bool Active => _casters.Count > 0;
+    public bool Active => _casters.Count != 0;
 
     private static readonly AOEShapeCircle _shape = new(6);
 
@@ -87,7 +87,7 @@ class DeepestPit(BossModule module) : Components.GenericAOEs(module, default, "G
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.DeepestPitTarget)
         {

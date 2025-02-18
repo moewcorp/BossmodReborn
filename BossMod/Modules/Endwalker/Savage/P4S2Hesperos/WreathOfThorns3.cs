@@ -26,18 +26,18 @@ class WreathOfThorns3(BossModule module) : BossComponent(module)
         _coneTargets = _playersInAOE = new();
         if (NumCones == NumJumps)
         {
-            _jumpTarget = Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position).LastOrDefault();
-            _playersInAOE = _jumpTarget != null ? Raid.WithSlot().InRadiusExcluding(_jumpTarget, _jumpAOERadius).Mask() : new();
+            _jumpTarget = Raid.WithoutSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).LastOrDefault();
+            _playersInAOE = _jumpTarget != null ? Raid.WithSlot(false, true, true).InRadiusExcluding(_jumpTarget, _jumpAOERadius).Mask() : new();
         }
         else
         {
-            foreach ((var i, var player) in Raid.WithSlot().SortedByRange(Module.PrimaryActor.Position).Take(3))
+            foreach ((var i, var player) in Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(3))
             {
                 _coneTargets.Set(i);
                 if (player.Position != Module.PrimaryActor.Position)
                 {
                     var direction = (player.Position - Module.PrimaryActor.Position).Normalized();
-                    _playersInAOE |= Raid.WithSlot().Exclude(i).WhereActor(p => p.Position.InCone(Module.PrimaryActor.Position, direction, _coneAOE.HalfAngle)).Mask();
+                    _playersInAOE |= Raid.WithSlot(false, true, true).Exclude(i).WhereActor(p => p.Position.InCone(Module.PrimaryActor.Position, direction, _coneAOE.HalfAngle)).Mask();
                 }
             }
         }
@@ -78,7 +78,7 @@ class WreathOfThorns3(BossModule module) : BossComponent(module)
     {
         if (_coneTargets.Any())
         {
-            foreach ((_, var player) in Raid.WithSlot().IncludedInMask(_coneTargets))
+            foreach ((_, var player) in Raid.WithSlot(false, true, true).IncludedInMask(_coneTargets))
             {
                 _coneAOE.Draw(Arena, Module.PrimaryActor.Position, Angle.FromDirection(player.Position - Module.PrimaryActor.Position));
             }
@@ -87,7 +87,7 @@ class WreathOfThorns3(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
             Arena.Actor(player, _playersInAOE[i] ? Colors.PlayerInteresting : Colors.PlayerGeneric);
 
         if (CurState != State.Done)
@@ -98,7 +98,7 @@ class WreathOfThorns3(BossModule module) : BossComponent(module)
 
         if (NumCones != NumJumps)
         {
-            foreach ((_, var player) in Raid.WithSlot().IncludedInMask(_coneTargets))
+            foreach ((_, var player) in Raid.WithSlot(false, true, true).IncludedInMask(_coneTargets))
                 Arena.Actor(player, Colors.Danger);
             Arena.Actor(_jumpTarget, Colors.Vulnerable);
         }

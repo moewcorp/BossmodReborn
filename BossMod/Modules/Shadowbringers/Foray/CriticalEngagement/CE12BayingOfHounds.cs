@@ -3,8 +3,8 @@
 public enum OID : uint
 {
     Boss = 0x2E66, // R7.020, x1
-    Helper = 0x233C, // R0.500, x14
     Hellsfire = 0x2E67, // R1.000-2.500, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -33,9 +33,9 @@ public enum AID : uint
 }
 
 class Hellclaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Hellclaw));
-class TailBlow(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TailBlow), new AOEShapeCone(19, 45.Degrees()));
-class LavaSpit(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.LavaSpitAOE), 5);
-class ScorchingLash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScorchingLash), new AOEShapeRect(50, 5));
+class TailBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailBlow), new AOEShapeCone(19, 45.Degrees()));
+class LavaSpit(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LavaSpitAOE), 5);
+class ScorchingLash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchingLash), new AOEShapeRect(50, 5));
 
 class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Hellpounce), "GTFO from charge!")
 {
@@ -54,8 +54,8 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
         switch ((AID)spell.Action.ID)
         {
             case AID.Hellpounce:
-                var offset = spell.LocXZ - Module.Center;
-                Activate(spell.LocXZ, Module.Center - offset, WorldState.FutureTime(3.7f));
+                var offset = spell.LocXZ - Arena.Center;
+                Activate(spell.LocXZ, Arena.Center - offset, WorldState.FutureTime(3.7f));
                 break;
             case AID.HellpounceSecond:
                 _charge = null;
@@ -70,18 +70,23 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     }
 }
 
-class LionsBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LionsBreathAOE), new AOEShapeCone(60, 45.Degrees()));
-class DragonsBreathR(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DragonsBreathAOER), new AOEShapeCone(60, 36.Degrees(), -10.Degrees())); // TODO: verify; there should not be an offset in reality here...
-class DragonsBreathL(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DragonsBreathAOEL), new AOEShapeCone(60, 36.Degrees(), 10.Degrees())); // TODO: verify; there should not be an offset in reality here...
+abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60, 30.Degrees()));
+class DragonsBreathR(BossModule module) : Breath(module, AID.DragonsBreathAOER);
+class DragonsBreathL(BossModule module) : Breath(module, AID.DragonsBreathAOEL);
+class LionsBreath(BossModule module) : Breath(module, AID.LionsBreathAOE);
+
 class VoidTornado(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.VoidTornado), "Set hp to 1");
 
-class VoidQuake(BossModule module) : Components.GenericAOEs(module) //this concentric AOE can happen forwards or backwards in order with the same AID as the starter
+class VoidQuake(BossModule module) : Components.GenericAOEs(module) // this concentric AOE can happen forwards or backwards in order with the same AID as the starter
 {
-    private readonly List<(Actor caster, AOEShape shape)> _active = [];
+    private readonly List<AOEInstance> _aoes = new(2);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _active.Take(1).Select(e => new AOEInstance(e.shape, e.caster.Position, e.caster.CastInfo!.Rotation, Module.CastFinishAt(e.caster.CastInfo)));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        return [_aoes[0]];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -94,12 +99,13 @@ class VoidQuake(BossModule module) : Components.GenericAOEs(module) //this conce
             _ => null
         };
         if (shape != null)
-            _active.Add((caster, shape));
+            _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        _active.RemoveAll(c => c.caster == caster);
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.VoidQuakeAOE1 or AID.VoidQuakeAOE2 or AID.VoidQuakeAOE3)
+            _aoes.RemoveAt(0);
     }
 }
 
@@ -121,5 +127,5 @@ class CE12BayingOfHoundsStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)] // bnpcname=9394
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)] // bnpcname=9394
 public class CE12BayingOfHounds(WorldState ws, Actor primary) : BossModule(ws, primary, new(154, 785), new ArenaBoundsCircle(25));

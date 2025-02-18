@@ -3,7 +3,7 @@
 class P1JagdDolls(BossModule module) : BossComponent(module)
 {
     public int NumExhausts { get; private set; }
-    private readonly IReadOnlyList<Actor> _dolls = module.Enemies(OID.JagdDoll);
+    private readonly List<Actor> _dolls = module.Enemies(OID.JagdDoll);
     private readonly HashSet<ulong> _exhaustsDone = [];
 
     private const float _exhaustRadius = 8.8f;

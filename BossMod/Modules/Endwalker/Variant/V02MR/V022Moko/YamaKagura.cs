@@ -13,7 +13,7 @@ class YamaKagura(BossModule module) : Components.KnockbackFromCastTarget(module,
             foreach (var d in Sources(slot, actor))
                 forbidden.Add(ShapeDistance.Rect(d.Origin, d.Direction, length, Distance - length, 2.5f));
             if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), source.Activation);
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), source.Activation);
         }
     }
 

@@ -28,8 +28,8 @@ class RainingCatsStack(BossModule module) : Components.UniformStackSpread(module
                 foreach (var t in _tether.CurrentBaits)
                     tetherTargets.Set(Module.Raid.FindSlot(t.Target.InstanceID));
 
-            var closest = Module.Raid.WithoutSlot().Closest(Module.PrimaryActor.Position);
-            var farthest = Module.Raid.WithoutSlot().Farthest(Module.PrimaryActor.Position);
+            var closest = Module.Raid.WithoutSlot(false, true, true).Closest(Module.PrimaryActor.Position);
+            var farthest = Module.Raid.WithoutSlot(false, true, true).Farthest(Module.PrimaryActor.Position);
             if (closest != null)
                 AddStack(closest, _activation, tetherTargets);
             if (farthest != null)

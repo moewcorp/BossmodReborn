@@ -121,7 +121,7 @@ class P2AI(BossModule module) : BossComponent(module)
         if (_fireball?.Target != null)
         {
             var hitHealers = _fireball.Target.Role == Role.Healer;
-            var hitPlayers = Raid.WithSlot().WhereActor(a => a.Role switch
+            var hitPlayers = Raid.WithSlot(false, true, true).WhereActor(a => a.Role switch
             {
                 Role.Healer => hitHealers,
                 Role.Ranged => !hitHealers,

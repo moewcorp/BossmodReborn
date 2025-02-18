@@ -16,30 +16,35 @@ public sealed record class Plan(string Name, Type Encounter)
         public StrategyValue Value = Value;
     }
 
+    public readonly record struct Module(Type Type, RotationModuleDefinition Definition, Func<RotationModuleManager, Actor, RotationModule> Builder, List<List<Entry>> Tracks) : IRotationModuleData
+    {
+        public readonly Module MakeClone() => this with { Tracks = [.. Tracks.Select(t => new List<Entry>([.. t]))] };
+    }
+
     public string Guid = "";
     public string Name = Name;
     public Type Encounter = Encounter;
     public Class Class;
     public int Level;
     public List<float> PhaseDurations = [];
-    public Dictionary<Type, List<List<Entry>>> Modules = []; // [RM][track] = entries
+    public List<Module> Modules = [];
     public List<Entry> Targeting = []; // note that Value.Option & Value.Priority are (currently?) ignored
 
-    public Plan MakeClone()
-    {
-        var res = this with { PhaseDurations = [.. PhaseDurations], Modules = [], Targeting = [.. Targeting] };
-        foreach (var kv in Modules)
-            res.Modules[kv.Key] = [.. kv.Value.Select(t => new List<Entry>([.. t]))];
-        return res;
-    }
+    public Plan MakeClone() => this with { PhaseDurations = [.. PhaseDurations], Modules = [.. Modules.Select(m => m.MakeClone())], Targeting = [.. Targeting] };
 
     // this maintains the invariant that each module has entry list per track
-    public List<List<Entry>> AddModule(Type t)
+    public int AddModule(Type t, RotationModuleDefinition def, Func<RotationModuleManager, Actor, RotationModule> builder)
     {
-        var m = Modules[t] = [];
-        foreach (var _ in RotationModuleRegistry.Modules[t].Definition.Configs)
-            m.Add([]);
-        return m;
+        List<List<Entry>> tracks = [];
+        foreach (var _ in def.Configs)
+            tracks.Add([]);
+
+        var insertionIndex = Modules.Count;
+        while (insertionIndex > 0 && Modules[insertionIndex - 1].Definition.Order > def.Order)
+            --insertionIndex;
+
+        Modules.Insert(insertionIndex, new(t, def, builder, tracks));
+        return insertionIndex;
     }
 }
 
@@ -77,7 +82,8 @@ public class JsonPlanConverter : JsonConverter<Plan>
                 continue;
             }
 
-            var m = res.AddModule(mt);
+            var mi = res.AddModule(mt, md.Definition, md.Builder);
+            var m = res.Modules[mi].Tracks;
             foreach (var jt in jm.Value.EnumerateObject())
             {
                 var iTrack = md.Definition.Configs.FindIndex(s => s.InternalName == jt.Name);
@@ -126,15 +132,14 @@ public class JsonPlanConverter : JsonConverter<Plan>
         writer.WriteStartObject(nameof(Plan.Modules));
         foreach (var m in value.Modules)
         {
-            var md = RotationModuleRegistry.Modules[m.Key].Definition;
-            writer.WriteStartObject(m.Key.FullName!);
-            for (var iTrack = 0; iTrack < m.Value.Count; ++iTrack)
+            writer.WriteStartObject(m.Type.FullName!);
+            for (var iTrack = 0; iTrack < m.Tracks.Count; ++iTrack)
             {
-                var track = m.Value[iTrack];
+                var track = m.Tracks[iTrack];
                 if (track.Count == 0)
                     continue;
 
-                var cfg = md.Configs[iTrack];
+                var cfg = m.Definition.Configs[iTrack];
                 writer.WriteStartArray(cfg.InternalName);
                 foreach (ref var s in track.AsSpan())
                 {
@@ -172,6 +177,10 @@ public class JsonPlanConverter : JsonConverter<Plan>
             entry.Value.Target = Enum.Parse<StrategyTarget>(jtarget.GetString() ?? "");
         if (jelem.TryGetProperty(nameof(StrategyValue.TargetParam), out var jtp))
             entry.Value.TargetParam = jtp.GetInt32();
+        if (jelem.TryGetProperty(nameof(StrategyValue.Offset1), out var joff1))
+            entry.Value.Offset1 = joff1.GetSingle();
+        if (jelem.TryGetProperty(nameof(StrategyValue.Offset2), out var joff2))
+            entry.Value.Offset2 = joff2.GetSingle();
         if (jelem.TryGetProperty(nameof(StrategyValue.Comment), out var jcomment))
             entry.Value.Comment = jcomment.GetString() ?? "";
     }
@@ -189,6 +198,10 @@ public class JsonPlanConverter : JsonConverter<Plan>
             writer.WriteString(nameof(StrategyValue.Target), entry.Value.Target.ToString());
         if (entry.Value.TargetParam != 0)
             writer.WriteNumber(nameof(StrategyValue.TargetParam), entry.Value.TargetParam);
+        if (entry.Value.Offset1 != 0)
+            writer.WriteNumber(nameof(StrategyValue.Offset1), entry.Value.Offset1);
+        if (entry.Value.Offset2 != 0)
+            writer.WriteNumber(nameof(StrategyValue.Offset2), entry.Value.Offset2);
         if (entry.Value.Comment.Length > 0)
             writer.WriteString(nameof(StrategyValue.Comment), entry.Value.Comment);
     }

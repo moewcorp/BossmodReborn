@@ -19,15 +19,15 @@ class PredatoryAvarice(BossModule module) : BossComponent(module)
         if (!Active)
             return;
 
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             if (_playersWithTides[i])
             {
-                _playersInTides |= Raid.WithSlot().InRadiusExcluding(player, _tidesRadius).Mask();
+                _playersInTides |= Raid.WithSlot(false, true, true).InRadiusExcluding(player, _tidesRadius).Mask();
             }
             else if (_playersWithDepths[i])
             {
-                _playersInDepths |= Raid.WithSlot().InRadiusExcluding(player, _depthsRadius).Mask();
+                _playersInDepths |= Raid.WithSlot(false, true, true).InRadiusExcluding(player, _depthsRadius).Mask();
             }
         }
     }
@@ -39,7 +39,7 @@ class PredatoryAvarice(BossModule module) : BossComponent(module)
 
         if (_playersWithTides[slot])
         {
-            if (Raid.WithoutSlot().InRadiusExcluding(actor, _tidesRadius).Any())
+            if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _tidesRadius).Any())
             {
                 hints.Add("GTFO from raid!");
             }
@@ -68,7 +68,7 @@ class PredatoryAvarice(BossModule module) : BossComponent(module)
 
         var pcHasTides = _playersWithTides[pcSlot];
         var pcHasDepths = _playersWithDepths[pcSlot];
-        foreach ((var i, var actor) in Raid.WithSlot())
+        foreach ((var i, var actor) in Raid.WithSlot(false, true, true))
         {
             if (_playersWithTides[i])
             {

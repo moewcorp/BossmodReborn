@@ -9,25 +9,25 @@ public enum OID : uint
     Licorice = 0x2714, //R=1.8
     Bavarois = 0x2715, //R=1.8
     Flan = 0x2716, //R=1.8
-    DarkVoidzone = 0x1E9C9D, //R=0.5
+    DarkVoidzone = 0x1E9C9D //R=0.5
 }
 
 public enum AID : uint
 {
-    DeathRay = 15056, // 242D->player, 1.0s cast, single-target
-    Dark = 15057, // 242D->location, 3.0s cast, range 5 circle, creates a voidzone with radius 4
-    GoldenTongue = 14265, // 242D/2713/2714/2715->self, 5.0s cast, single-target
-    Fire = 14266, // 2711->player, 1.0s cast, single-target
-    Blizzard = 14267, // 2712->player, 1.0s cast, single-target
-    Aero = 14269, // 2713->player, 1.0s cast, single-target
-    Stone = 14270, // 2714->player, 1.0s cast, single-target
-    Thunder = 14268, // 2715->player, 1.0s cast, single-target
-    Water = 14271, // 2716->player, 1.0s cast, single-target
+    DeathRay = 15056, // Boss->player, 1.0s cast, single-target
+    Dark = 15057, // Boss->location, 3.0s cast, range 5 circle, creates a voidzone with radius 4
+    GoldenTongue = 14265, // Boss/Marshmallow/Licorice/Bavarois->self, 5.0s cast, single-target
+    Fire = 14266, // Pudding->player, 1.0s cast, single-target
+    Blizzard = 14267, // Gelato->player, 1.0s cast, single-target
+    Aero = 14269, // Marshmallow->player, 1.0s cast, single-target
+    Stone = 14270, // Licorice->player, 1.0s cast, single-target
+    Thunder = 14268, // Bavarois->player, 1.0s cast, single-target
+    Water = 14271 // Flan->player, 1.0s cast, single-target
 }
 
 class GoldenTongue(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.GoldenTongue));
 class DarkVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 4, ActionID.MakeSpell(AID.Dark), m => m.Enemies(OID.DarkVoidzone).Where(e => e.EventState != 7), 1);
-class Dark(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Dark), 5);
+class Dark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dark), 5);
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -52,20 +52,20 @@ class Stage09States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 619, NameID = 8099)]
 public class Stage09 : BossModule
 {
-    public Stage09(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage09(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
-
+    private static readonly uint[] adds = [(uint)OID.Licorice, (uint)OID.Flan, (uint)OID.Pudding, (uint)OID.Marshmallow, (uint)OID.Bavarois, (uint)OID.Gelato];
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.Licorice or OID.Flan or OID.Marshmallow or OID.Pudding or OID.Bavarois or OID.Gelato => 1,
                 OID.Boss => 0,
-                _ => 0
+                _ => 1
             };
         }
     }
@@ -73,11 +73,6 @@ public class Stage09 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Licorice), Colors.Object);
-        Arena.Actors(Enemies(OID.Flan), Colors.Object);
-        Arena.Actors(Enemies(OID.Pudding), Colors.Object);
-        Arena.Actors(Enemies(OID.Marshmallow), Colors.Object);
-        Arena.Actors(Enemies(OID.Bavarois), Colors.Object);
-        Arena.Actors(Enemies(OID.Gelato), Colors.Object);
+        Arena.Actors(Enemies(adds), Colors.Object);
     }
 }

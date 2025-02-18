@@ -45,7 +45,7 @@ public enum IconID : uint
     Spreadmarker = 32 // player
 }
 
-class Bloodstain(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Bloodstain), new AOEShapeCircle(5));
+class Bloodstain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bloodstain), 5);
 class HeavenlySlash(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HeavenlySlash), new AOEShapeCone(10.2f, 45.Degrees()));
 class HoliestOfHoly(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HoliestOfHoly));
 class HolyShieldBash(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HolyShieldBash), "Stun + single target damage x2");
@@ -57,10 +57,19 @@ class BrightSphere(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        foreach (var a in _aoes.Skip(1).Take(_aoes.Count - 1))
-            yield return a;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
@@ -71,39 +80,39 @@ class BrightSphere(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.BrightFlare && _aoes.Count > 0)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.BrightFlare)
             _aoes.RemoveAt(0);
     }
 }
 
-class Execution : Components.BaitAwayIcon
-{
-    public Execution(BossModule module) : base(module, new AOEShapeCircle(5), (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.Execution), 4.8f) { CenterAtTarget = true; }
-}
+class Execution(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5), (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.Execution), 4.8f, true);
 
 class ShiningBlade(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly WPos West = new(-18.509f, -100.023f);
-    private static readonly WPos South = new(-0.015f, -81.834f);
-    private static readonly WPos North = new(-0.015f, -117.205f);
-    private static readonly WPos East = new(18.387f, -100.053f);
+    private static readonly WPos west = new(-18.509f, -100.023f), south = new(-0.015f, -81.834f);
+    private static readonly WPos north = new(-0.015f, -117.205f), east = new(18.387f, -100.053f);
 
     private const int HalfWidth = 3;
     private const float SubsequentActivationDelay = 2.2f;
-    private static readonly Angle Angle90Degrees = 90.Degrees();
-    private static readonly Angle Angle180Degrees = 180.Degrees();
-    private static readonly Angle Angle0Degrees = 0.Degrees();
-    private static readonly Angle AngleMinus90Degrees = -90.Degrees();
-    private static readonly Angle ConeAngle = 60.Degrees();
+    private static readonly Angle a90 = 90.Degrees(), a180 = 180.Degrees(), am90 = -90.Degrees(), a60 = 60.Degrees(), a0 = 0.Degrees();
 
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(4);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        foreach (var a in _aoes.Skip(1).Take(_aoes.Count - 1))
-            yield return a;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnActorNpcYell(Actor actor, ushort id)
@@ -114,19 +123,19 @@ class ShiningBlade(BossModule module) : Components.GenericAOEs(module)
         var primary = Module.PrimaryActor.Position;
         var activationTimes = GetActivationTimes(WorldState.FutureTime(0.08f));
 
-        if (primary.InCone(Arena.Center, Angle90Degrees, ConeAngle))
-            AddAOEs(primary, West, South, North, East, activationTimes);
-        else if (primary.InCone(Arena.Center, AngleMinus90Degrees, ConeAngle))
-            AddAOEs(primary, East, North, South, West, activationTimes);
-        else if (primary.InCone(Arena.Center, Angle180Degrees, ConeAngle))
-            AddAOEs(primary, South, East, West, North, activationTimes);
-        else if (primary.InCone(Arena.Center, Angle0Degrees, ConeAngle))
-            AddAOEs(primary, North, West, East, South, activationTimes);
+        if (primary.InCone(Arena.Center, a90, a60))
+            AddAOEs(primary, west, south, north, east, activationTimes);
+        else if (primary.InCone(Arena.Center, am90, a60))
+            AddAOEs(primary, east, north, south, west, activationTimes);
+        else if (primary.InCone(Arena.Center, a180, a60))
+            AddAOEs(primary, south, east, west, north, activationTimes);
+        else if (primary.InCone(Arena.Center, a0, a60))
+            AddAOEs(primary, north, west, east, south, activationTimes);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.ShiningBlade)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.ShiningBlade)
             _aoes.RemoveAt(0);
     }
 

@@ -23,36 +23,53 @@ public sealed record class Preset(string Name)
         public StrategyValue Value = Value;
     }
 
-    public record class ModuleSettings
+    public record class ModuleSettings(Type Type, RotationModuleDefinition Definition, Func<RotationModuleManager, Actor, RotationModule> Builder) : IRotationModuleData
     {
-        public readonly List<ModuleSetting> Settings = [];
-        public int NumSerialized; // entries above this are transient and are not serialized
+        public readonly List<ModuleSetting> SerializedSettings = [];
+        public readonly List<ModuleSetting> TransientSettings = [];
     }
 
     public string Name = Name;
-    public Dictionary<Type, ModuleSettings> Modules = [];
+    public List<ModuleSettings> Modules = [];
 
     public Preset MakeClone(bool includeTransient)
     {
         var res = new Preset(Name);
-        foreach (var kv in Modules)
+        foreach (var m in Modules)
         {
-            var ms = res.Modules[kv.Key] = new() { NumSerialized = kv.Value.NumSerialized };
-            ms.Settings.AddRange(includeTransient ? kv.Value.Settings : kv.Value.Settings.Take(kv.Value.NumSerialized));
+            var ms = new ModuleSettings(m.Type, m.Definition, m.Builder);
+            ms.SerializedSettings.AddRange(m.SerializedSettings);
+            if (includeTransient)
+                ms.TransientSettings.AddRange(m.TransientSettings);
+            res.Modules.Add(ms);
         }
         return res;
     }
 
-    public StrategyValues ActiveStrategyOverrides(Type type, Modifier mods)
+    public int AddModule(Type t, RotationModuleDefinition def, Func<RotationModuleManager, Actor, RotationModule> builder)
     {
-        var res = new StrategyValues(RotationModuleRegistry.Modules[type].Definition.Configs);
-        foreach (ref var s in Modules[type].Settings.AsSpan())
+        var insertionIndex = Modules.Count;
+        while (insertionIndex > 0 && Modules[insertionIndex - 1].Definition.Order > def.Order)
+            --insertionIndex;
+
+        Modules.Insert(insertionIndex, new(t, def, builder));
+        return insertionIndex;
+    }
+
+    public StrategyValues ActiveStrategyOverrides(int moduleIndex, Modifier mods)
+    {
+        var m = Modules[moduleIndex];
+        var res = new StrategyValues(m.Definition.Configs);
+        foreach (ref var s in m.SerializedSettings.AsSpan())
+            if ((s.Mod & mods) == s.Mod)
+                res.Values[s.Track] = s.Value;
+        foreach (ref var s in m.TransientSettings.AsSpan())
             if ((s.Mod & mods) == s.Mod)
                 res.Values[s.Track] = s.Value;
         return res;
     }
 
-    public StrategyValues ActiveStrategyOverrides(Type type) => ActiveStrategyOverrides(type, CurrentModifiers());
+    public StrategyValues ActiveStrategyOverrides(int moduleIndex) => ActiveStrategyOverrides(moduleIndex, CurrentModifiers());
 
     public static Modifier CurrentModifiers()
     {
@@ -83,7 +100,8 @@ public class JsonPresetConverter : JsonConverter<Preset>
                 continue;
             }
 
-            var m = res.Modules[mt] = new();
+            var mi = res.AddModule(mt, md.Definition, md.Builder);
+            var m = res.Modules[mi];
             foreach (var js in jm.Value.EnumerateArray())
             {
                 var s = new Preset.ModuleSetting() { Value = new() };
@@ -112,11 +130,14 @@ public class JsonPresetConverter : JsonConverter<Preset>
                     s.Value.Target = Enum.Parse<StrategyTarget>(jtarget.GetString() ?? "");
                 if (js.TryGetProperty(nameof(StrategyValue.TargetParam), out var jtp))
                     s.Value.TargetParam = jtp.GetInt32();
+                if (js.TryGetProperty(nameof(StrategyValue.Offset1), out var joff1))
+                    s.Value.Offset1 = joff1.GetSingle();
+                if (js.TryGetProperty(nameof(StrategyValue.Offset2), out var joff2))
+                    s.Value.Offset2 = joff2.GetSingle();
                 if (js.TryGetProperty(nameof(StrategyValue.Comment), out var jcomment))
                     s.Value.Comment = jcomment.GetString() ?? "";
 
-                m.Settings.Add(s);
-                ++m.NumSerialized;
+                m.SerializedSettings.Add(s);
             }
         }
         return res;
@@ -129,13 +150,12 @@ public class JsonPresetConverter : JsonConverter<Preset>
         writer.WriteStartObject(nameof(Preset.Modules));
         foreach (var m in value.Modules)
         {
-            writer.WriteStartArray(m.Key.FullName!);
-            var md = RotationModuleRegistry.Modules[m.Key].Definition;
-            foreach (ref var s in m.Value.Settings.AsSpan()[..m.Value.NumSerialized])
+            writer.WriteStartArray(m.Type.FullName!);
+            foreach (ref var s in m.SerializedSettings.AsSpan())
             {
                 writer.WriteStartObject();
-                writer.WriteString(nameof(Preset.ModuleSetting.Track), md.Configs[s.Track].InternalName);
-                writer.WriteString(nameof(StrategyValue.Option), md.Configs[s.Track].Options[s.Value.Option].InternalName);
+                writer.WriteString(nameof(Preset.ModuleSetting.Track), m.Definition.Configs[s.Track].InternalName);
+                writer.WriteString(nameof(StrategyValue.Option), m.Definition.Configs[s.Track].Options[s.Value.Option].InternalName);
                 if (s.Mod != Preset.Modifier.None)
                     writer.WriteString(nameof(Preset.ModuleSetting.Mod), s.Mod.ToString());
                 if (!float.IsNaN(s.Value.PriorityOverride))
@@ -144,6 +164,10 @@ public class JsonPresetConverter : JsonConverter<Preset>
                     writer.WriteString(nameof(StrategyValue.Target), s.Value.Target.ToString());
                 if (s.Value.TargetParam != 0)
                     writer.WriteNumber(nameof(StrategyValue.TargetParam), s.Value.TargetParam);
+                if (s.Value.Offset1 != 0)
+                    writer.WriteNumber(nameof(StrategyValue.Offset1), s.Value.Offset1);
+                if (s.Value.Offset2 != 0)
+                    writer.WriteNumber(nameof(StrategyValue.Offset2), s.Value.Offset2);
                 if (s.Value.Comment.Length > 0)
                     writer.WriteString(nameof(StrategyValue.Comment), s.Value.Comment);
                 writer.WriteEndObject();

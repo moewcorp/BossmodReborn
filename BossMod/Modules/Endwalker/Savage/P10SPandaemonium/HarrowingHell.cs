@@ -2,13 +2,13 @@
 
 class HarrowingHell(BossModule module) : BossComponent(module)
 {
-    public int NumCasts { get; private set; }
+    public int NumCasts;
     private BitMask _closestTargets;
 
     public override void Update()
     {
         // boss always points to (0,1) => offset dot dir == z + const
-        _closestTargets = Raid.WithSlot().OrderBy(ia => ia.Item2.Position.Z).Take(2).Mask();
+        _closestTargets = Raid.WithSlot(false, true, true).OrderBy(ia => ia.Item2.Position.Z).Take(2).Mask();
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

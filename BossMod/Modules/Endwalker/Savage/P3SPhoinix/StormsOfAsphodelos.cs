@@ -21,19 +21,19 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
         // for now, we consider tether target to be a "tank"
         var aoesPerPlayer = new int[PartyState.MaxPartySize];
 
-        foreach ((var i, var player) in Raid.WithSlot(true).WhereActor(x => x.Tether.Target == Module.PrimaryActor.InstanceID))
+        foreach ((var i, var player) in Raid.WithSlot(true, true, true).WhereActor(x => x.Tether.Target == Module.PrimaryActor.InstanceID))
         {
             _tetherTargets.Set(i);
 
             ++aoesPerPlayer[i];
-            foreach ((var j, var other) in Raid.WithSlot().InRadiusExcluding(player, _beaconAOE.Radius))
+            foreach ((var j, var other) in Raid.WithSlot(false, true, true).InRadiusExcluding(player, _beaconAOE.Radius))
             {
                 ++aoesPerPlayer[j];
                 _closeToTetherTarget.Set(j);
             }
         }
 
-        foreach ((var i, var player) in Raid.WithSlot().SortedByRange(Module.PrimaryActor.Position).Take(3))
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(3))
         {
             _bossTargets.Set(i);
             foreach ((var j, var other) in FindPlayersInWinds(Module.PrimaryActor, player))
@@ -44,7 +44,7 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
 
         foreach (var twister in Module.Enemies(OID.DarkblazeTwister))
         {
-            var target = Raid.WithoutSlot().Closest(twister.Position);
+            var target = Raid.WithoutSlot(false, true, true).Closest(twister.Position);
             if (target == null)
                 continue; // there are no alive players - target list will be left empty
 
@@ -92,7 +92,7 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             if (_tetherTargets[i])
             {
@@ -117,7 +117,7 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
             Arena.Actor(twister, Colors.Enemy, true);
         }
 
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             var tethered = _tetherTargets[i];
             if (tethered)
@@ -130,6 +130,6 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
 
     private IEnumerable<(int, Actor)> FindPlayersInWinds(Actor origin, Actor target)
     {
-        return Raid.WithSlot().InShape(_windsAOE, origin.Position, Angle.FromDirection(target.Position - origin.Position));
+        return Raid.WithSlot(false, true, true).InShape(_windsAOE, origin.Position, Angle.FromDirection(target.Position - origin.Position));
     }
 }

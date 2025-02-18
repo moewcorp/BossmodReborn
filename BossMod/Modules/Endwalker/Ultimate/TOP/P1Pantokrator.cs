@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Ultimate.TOP;
 
-class P1BallisticImpact(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BallisticImpact), 5);
+class P1BallisticImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BallisticImpact), 5);
 
 class P1FlameThrower(BossModule module) : Components.GenericAOEs(module)
 {
@@ -70,8 +70,8 @@ class P1FlameThrower(BossModule module) : Components.GenericAOEs(module)
 
 class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
 {
-    public int NumSpreadsDone { get; private set; }
-    public int NumStacksDone { get; private set; }
+    public int NumSpreadsDone;
+    public int NumStacksDone;
 
     private const float _spreadRadius = 5;
     private static readonly AOEShapeRect _stackShape = new(50, 3);
@@ -93,7 +93,7 @@ class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
         var stackOrder = NextStackOrder();
         if (ps.Order == NextSpreadOrder())
         {
-            hints.Add("Spread!", Raid.WithoutSlot().InRadiusExcluding(actor, _spreadRadius).Any());
+            hints.Add("Spread!", Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _spreadRadius).Any());
         }
         else if (ps.Order != stackOrder)
         {
@@ -109,7 +109,7 @@ class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
         var spreadOrder = NextSpreadOrder();
         var stackOrder = NextStackOrder();
 
-        foreach (var (i, p) in Raid.WithSlot(true))
+        foreach (var (i, p) in Raid.WithSlot(true, true, true))
         {
             var order = PlayerStates[i].Order;
             if (order == spreadOrder)
@@ -155,13 +155,13 @@ class P1DiffuseWaveCannonKyrios : Components.GenericBaitAway
 
     public P1DiffuseWaveCannonKyrios(BossModule module) : base(module, ActionID.MakeSpell(AID.DiffuseWaveCannonKyrios))
     {
-        ForbiddenPlayers = Raid.WithSlot().WhereActor(a => a.Role != Role.Tank).Mask();
+        ForbiddenPlayers = Raid.WithSlot(false, true, true).WhereActor(a => a.Role != Role.Tank).Mask();
     }
 
     public override void Update()
     {
         CurrentBaits.Clear();
-        CurrentBaits.AddRange(Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position).TakeLast(2).Select(t => new Bait(Module.PrimaryActor, t, _shape)));
+        CurrentBaits.AddRange(Raid.WithoutSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).TakeLast(2).Select(t => new Bait(Module.PrimaryActor, t, _shape)));
     }
 }
 
@@ -178,7 +178,7 @@ class P1WaveCannonKyrios(BossModule module) : Components.GenericBaitAway(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.WaveCannonKyrios)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, _shape));

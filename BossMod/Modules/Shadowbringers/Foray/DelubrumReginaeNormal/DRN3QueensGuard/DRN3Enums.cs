@@ -2,7 +2,6 @@
 
 public enum OID : uint
 {
-    Helper = 0x233C, // R0.500, x9, 523 type
     Warrior = 0x30BC, // R2.800, x1
     Knight = 0x30BA, // R2.800, x1
     Soldier = 0x30BF, // R4.000, x1
@@ -12,6 +11,7 @@ public enum OID : uint
     AetherialBolt = 0x30BD, // R0.600, x0 (spawn during fight)
     AetherialWard = 0x30BB, // R3.000, x0 (spawn during fight)
     GunTurret = 0x30C2, // R4.000, x?
+    Helper = 0x233C
 }
 
 public enum AID : uint

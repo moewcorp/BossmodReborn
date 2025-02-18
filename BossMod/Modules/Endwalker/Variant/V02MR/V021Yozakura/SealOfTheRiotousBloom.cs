@@ -3,27 +3,45 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Element { Fire, Water, Thunder, Wind }
-    private readonly List<AOEInstance> _aoes = [];
-    private readonly HashSet<Element> elements = [];
-    private static readonly AOEShapeCircle circle = new(9);
-    private static readonly AOEShapeDonut donut = new(5, 60);
-    private static readonly AOEShapeCone cone = new(70, 22.5f.Degrees());
+    private readonly List<AOEInstance> _aoes = new(10);
+    private readonly List<Element> elements = new(4);
+    private static readonly AOEShapeCircle circle = new(9f);
+    private static readonly AOEShapeDonut donut = new(5f, 60f);
+    private static readonly AOEShapeCone cone = new(70f, 22.5f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(5);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 5 ? 5 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+            aoes[i] = _aoes[i];
+        return aoes;
+    }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (Enum.TryParse(Enum.GetName(typeof(OID), actor.OID), out Element element))
+        Element? element = actor.OID switch
+        {
+            (uint)OID.Fire => Element.Fire,
+            (uint)OID.Water => Element.Water,
+            (uint)OID.Wind => Element.Wind,
+            (uint)OID.Thunder => Element.Thunder,
+            _ => null
+        };
+        if (element is Element e)
         {
             switch (state)
             {
                 case 0x00100020: // seals spawn
-                    elements.Add(element);
+                    elements.Add(e);
                     break;
 
                 case 0x00400080: // seal activates
-                    if (elements.Contains(element))
-                        ActivateAOE(element, WorldState.FutureTime(8.1f));
+                    if (elements.Contains(e))
+                        ActivateAOE(e, WorldState.FutureTime(8.1d));
                     break;
             }
         }
@@ -31,7 +49,7 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 4 && (AID)spell.Action.ID is AID.SealOfTheFireblossom or AID.SealOfTheWindblossom)
+        if (_aoes.Count > 4 && spell.Action.ID is (uint)AID.SealOfTheFireblossom or (uint)AID.SealOfTheWindblossom)
             _aoes.RemoveRange(0, 5);
     }
 
@@ -40,30 +58,33 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
         switch (element)
         {
             case Element.Fire:
-                _aoes.Add(new(circle, Arena.Center, default, activation));
+                AddAOE(circle, activation);
                 break;
-
             case Element.Thunder:
                 AddConeAOEs(Angle.AnglesCardinals, activation);
                 break;
-
             case Element.Water:
                 AddConeAOEs(Angle.AnglesIntercardinals, activation);
                 break;
-
             case Element.Wind:
-                _aoes.Add(new(donut, Arena.Center, default, activation));
+                AddAOE(donut, activation);
                 break;
         }
         elements.Remove(element);
-        if (_aoes.Count == 5 && elements.Count > 0)
-            foreach (var e in elements)
-                ActivateAOE(e, WorldState.FutureTime(16.3f));
+        var eCount = elements.Count;
+        if (_aoes.Count == 5 && eCount != 0)
+        {
+            Element[] ele = [.. elements];
+            for (var i = 0; i < eCount; ++i)
+                ActivateAOE(ele[i], WorldState.FutureTime(16.3d));
+        }
     }
 
-    private void AddConeAOEs(Angle[] angles, DateTime activationTime)
+    private void AddAOE(AOEShape shape, DateTime activation, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
+
+    private void AddConeAOEs(ReadOnlySpan<Angle> angles, DateTime activation)
     {
-        foreach (var angle in angles)
-            _aoes.Add(new(cone, Arena.Center, angle, activationTime));
+        for (var i = 0; i < 4; ++i)
+            AddAOE(cone, activation, angles[i]);
     }
 }

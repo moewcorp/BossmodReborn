@@ -1,20 +1,10 @@
 ﻿namespace BossMod.RealmReborn.Alliance.A34CloudofDarkness;
 
-class ZeroFormParticleBeam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ZeroFormParticleBeam), new AOEShapeRect(74, 12));
+class ZeroFormParticleBeam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ZeroFormParticleBeam), new AOEShapeRect(74, 12));
 class ParticleBeam2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ParticleBeam2));
 
-class FeintParticleBeam : Components.StandardChasingAOEs
+class FeintParticleBeam(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(10), ActionID.MakeSpell(AID.FeintParticleBeam1), ActionID.MakeSpell(AID.FeintParticleBeam2), 4, 1.5f, 5, true)
 {
-    public FeintParticleBeam(BossModule module) : base(module, new AOEShapeCircle(10), ActionID.MakeSpell(AID.FeintParticleBeam1), ActionID.MakeSpell(AID.FeintParticleBeam2), 4, 1.5f, 5) //float moveDistance, float secondsBetweenActivations, int maxCasts
-    {
-        ExcludedTargets = Raid.WithSlot(true).Mask();
-    }
-
-    public override void OnEventIcon(Actor actor, uint iconID)
-    {
-        if (iconID == (uint)IconID.FeintParticleBeam)
-            ExcludedTargets.Clear(Raid.FindSlot(actor.InstanceID));
-    }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 111, NameID = 3240)]

@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS4QueensGuard;
 
-class OptimalPlaySword(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OptimalPlaySword), new AOEShapeCircle(10));
-class OptimalPlayShield(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OptimalPlayShield), new AOEShapeDonut(5, 60));
-class OptimalPlayCone(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OptimalPlayCone), new AOEShapeCone(60, 135.Degrees()));
+class OptimalPlaySword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimalPlaySword), 10);
+class OptimalPlayShield(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimalPlayShield), new AOEShapeDonut(5, 60));
+class OptimalPlayCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimalPlayCone), new AOEShapeCone(60, 135.Degrees()));
 
 // note: apparently there is no 'front unseen' status
 class QueensShotUnseen(BossModule module) : Components.CastWeakpoint(module, ActionID.MakeSpell(AID.QueensShotUnseen), new AOEShapeCircle(60), 0, (uint)SID.BackUnseen, (uint)SID.LeftUnseen, (uint)SID.RightUnseen);
@@ -10,23 +10,23 @@ class TurretsTourUnseen(BossModule module) : Components.CastWeakpoint(module, Ac
 
 class FieryPortent(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.FieryPortent), "Stand still!");
 class IcyPortent(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.IcyPortent), "Move!");
-class PawnOff(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PawnOffReal), new AOEShapeCircle(20));
+class PawnOff(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PawnOffReal), 20);
 class Fracture(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Fracture)); // TODO: consider showing reflect hints
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9838, PlanLevel = 80)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9838, PlanLevel = 80)]
 public class DRS4 : BossModule
 {
-    private readonly IReadOnlyList<Actor> _warrior;
-    private readonly IReadOnlyList<Actor> _soldier;
-    private readonly IReadOnlyList<Actor> _gunner;
+    private readonly List<Actor> _warrior;
+    private readonly List<Actor> _soldier;
+    private readonly List<Actor> _gunner;
 
     public Actor? Knight() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? Warrior() => _warrior.FirstOrDefault();
     public Actor? Soldier() => _soldier.FirstOrDefault();
     public Actor? Gunner() => _gunner.FirstOrDefault();
-    public IReadOnlyList<Actor> GunTurrets;
-    public IReadOnlyList<Actor> AuraSpheres;
-    public IReadOnlyList<Actor> SpiritualSpheres;
+    public readonly List<Actor> GunTurrets;
+    public readonly List<Actor> AuraSpheres;
+    public readonly List<Actor> SpiritualSpheres;
 
     public DRS4(WorldState ws, Actor primary) : base(ws, primary, new(244, -162), new ArenaBoundsCircle(25))
     {

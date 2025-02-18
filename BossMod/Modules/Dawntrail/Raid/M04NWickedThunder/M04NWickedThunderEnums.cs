@@ -77,9 +77,8 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    DirectionalDisregard = 3808, // none->Boss, extra=0x0
     WickedReplica = 2056, // none->WickedReplica, extra=0x319/0x31A
-    WickedCannon = 2970, // none->Boss, extra=0x2D4/0x2D3 -> 0x2D4 south, 0x2D3 north
+    WickedCannon = 2970 // none->Boss, extra=0x2D4/0x2D3 -> 0x2D4 south, 0x2D3 north
 }
 
 public enum IconID : uint

@@ -30,10 +30,10 @@ public enum IconID : uint
 }
 
 class TheDeepSeeks(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TheDeepSeeks));
-class TheDeepReaches(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheDeepReaches), new AOEShapeRect(40, 1));
+class TheDeepReaches(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDeepReaches), new AOEShapeRect(40, 1));
 class TheDeepBeckons(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TheDeepBeckons));
 class CoinToss(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CoinToss));
-class TheDeepRends(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheDeepRends), new AOEShapeCone(20, 30.Degrees()));
+class TheDeepRends(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDeepRends), new AOEShapeCone(20, 30.Degrees()));
 class TheDeepRendsHint(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.TheDeepRends), "Targets 5 random players after initial hit");
 
 class SwivelGun(BossModule module) : Components.GenericStackSpread(module)
@@ -50,7 +50,7 @@ class SwivelGun(BossModule module) : Components.GenericStackSpread(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Stackmarker)
             Stacks.Add(new(actor, 10, 8, activation: WorldState.FutureTime(5), forbiddenPlayers: _forbidden));

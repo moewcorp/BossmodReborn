@@ -19,34 +19,27 @@ public sealed class ObstacleMapDatabase
 
     public readonly Dictionary<uint, List<Entry>> Entries = [];
 
-    public void Load(string listPath)
+    public void Load(Stream stream)
     {
         Entries.Clear();
-        try
+        using var json = Serialization.ReadJson(stream);
+        foreach (var jentries in json.RootElement.EnumerateObject())
         {
-            using var json = Serialization.ReadJson(listPath);
-            foreach (var jentries in json.RootElement.EnumerateObject())
+            var sep = jentries.Name.IndexOf('.', StringComparison.Ordinal);
+            var zone = sep >= 0 ? uint.Parse(jentries.Name.AsSpan()[..sep]) : uint.Parse(jentries.Name);
+            var cfc = sep >= 0 ? uint.Parse(jentries.Name.AsSpan()[(sep + 1)..]) : 0;
+            var entries = Entries[(zone << 16) | cfc] = [];
+            foreach (var jentry in jentries.Value.EnumerateArray())
             {
-                var sep = jentries.Name.IndexOf('.', StringComparison.Ordinal);
-                var zone = sep >= 0 ? uint.Parse(jentries.Name.AsSpan()[..sep]) : uint.Parse(jentries.Name);
-                var cfc = sep >= 0 ? uint.Parse(jentries.Name.AsSpan()[(sep + 1)..]) : 0;
-                var entries = Entries[(zone << 16) | cfc] = [];
-                foreach (var jentry in jentries.Value.EnumerateArray())
-                {
-                    entries.Add(new(
-                        ReadVec3(jentry, nameof(Entry.MinBounds)),
-                        ReadVec3(jentry, nameof(Entry.MaxBounds)),
-                        ReadWPos(jentry, nameof(Entry.Origin)),
-                        jentry.GetProperty(nameof(Entry.ViewWidth)).GetInt32(),
-                        jentry.GetProperty(nameof(Entry.ViewHeight)).GetInt32(),
-                        jentry.GetProperty(nameof(Entry.Filename)).GetString() ?? ""
-                    ));
-                }
+                entries.Add(new(
+                    ReadVec3(jentry, nameof(Entry.MinBounds)),
+                    ReadVec3(jentry, nameof(Entry.MaxBounds)),
+                    ReadWPos(jentry, nameof(Entry.Origin)),
+                    jentry.GetProperty(nameof(Entry.ViewWidth)).GetInt32(),
+                    jentry.GetProperty(nameof(Entry.ViewHeight)).GetInt32(),
+                    jentry.GetProperty(nameof(Entry.Filename)).GetString() ?? ""
+                ));
             }
-        }
-        catch (Exception ex)
-        {
-            Service.Log($"Failed to load obstacle map database '{listPath}': {ex}");
         }
     }
 

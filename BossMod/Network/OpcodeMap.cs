@@ -3,14 +3,11 @@
 // map betweek network message opcodes (which are randomized every build) to more-or-less stable indices
 public class OpcodeMap
 {
-    private readonly List<int> _opcodeToID = [];
-    private readonly List<int> _idToOpcode = [];
+    public readonly List<int> OpcodeToID = [];
+    public readonly List<int> IDToOpcode = [];
 
-    public IReadOnlyList<int> OpcodeToID => _opcodeToID;
-    public IReadOnlyList<int> IDToOpcode => _idToOpcode;
-
-    public ServerIPC.PacketID ID(int opcode) => (ServerIPC.PacketID)(opcode >= 0 && opcode < _opcodeToID.Count ? _opcodeToID[opcode] : -1);
-    public int Opcode(ServerIPC.PacketID id) => (int)id >= 0 && (int)id < _idToOpcode.Count ? _idToOpcode[(int)id] : -1;
+    public ServerIPC.PacketID ID(int opcode) => (ServerIPC.PacketID)(opcode >= 0 && opcode < OpcodeToID.Count ? OpcodeToID[opcode] : -1);
+    public int Opcode(ServerIPC.PacketID id) => (int)id >= 0 && (int)id < IDToOpcode.Count ? IDToOpcode[(int)id] : -1;
 
     public unsafe OpcodeMap()
     {
@@ -71,10 +68,10 @@ public class OpcodeMap
 
     private void AddMapping(int opcode, int id)
     {
-        if (!AddEntry(_opcodeToID, opcode, id))
+        if (!AddEntry(OpcodeToID, opcode, id))
             Service.Log($"[OpcodeMap] Trying to define several mappings for opcode {opcode} ({ID(opcode)} and ({(ServerIPC.PacketID)id})");
-        if (!AddEntry(_idToOpcode, id, opcode))
-            Service.Log($"[OpcodeMap] Trying to map multiple opcodes to same index {(ServerIPC.PacketID)id} ({_idToOpcode[id]} and {opcode})");
+        if (!AddEntry(IDToOpcode, id, opcode))
+            Service.Log($"[OpcodeMap] Trying to map multiple opcodes to same index {(ServerIPC.PacketID)id} ({IDToOpcode[id]} and {opcode})");
     }
 
     private static bool AddEntry(List<int> list, int index, int value)

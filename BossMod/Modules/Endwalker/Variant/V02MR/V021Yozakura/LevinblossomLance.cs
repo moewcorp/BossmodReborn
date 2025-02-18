@@ -2,24 +2,25 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
 class LevinblossomLance(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeRect rect = new(30, 3.5f, 30);
+    private static readonly AOEShapeRect rect = new(30f, 3.5f, 30f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        void AddSequence(Angle angle) => Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, angle, Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
+        switch (spell.Action.ID)
         {
-            case AID.LevinblossomLanceCCW:
-                Sequences.Add(new(rect, Module.PrimaryActor.Position, spell.Rotation, 28.Degrees(), Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
+            case (uint)AID.LevinblossomLanceCCW:
+                AddSequence(28f.Degrees());
                 break;
-            case AID.LevinblossomLanceCW:
-                Sequences.Add(new(rect, Module.PrimaryActor.Position, spell.Rotation, -28.Degrees(), Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
+            case (uint)AID.LevinblossomLanceCW:
+                AddSequence(-28f.Degrees());
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.LevinblossomLanceFirst or AID.LevinblossomLanceRest)
+        if (spell.Action.ID is (uint)AID.LevinblossomLanceFirst or (uint)AID.LevinblossomLanceRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 }

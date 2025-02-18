@@ -1,15 +1,15 @@
 namespace BossMod.Endwalker.VariantCriterion.V01SS.V013Gladiator;
 
-class SunderedRemains(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SunderedRemains), new AOEShapeCircle(10));
-class Landing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Landing), new AOEShapeCircle(20));
+class SunderedRemains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SunderedRemains), 10);
+class Landing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landing), 20);
 
-class GoldenFlame(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GoldenFlame), new AOEShapeRect(60, 5));
-class SculptorsPassion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SculptorsPassion), new AOEShapeRect(60, 4));
-class RackAndRuin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RackAndRuin), new AOEShapeRect(40, 2.5f), 8);
+class GoldenFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenFlame), new AOEShapeRect(60, 5));
+class SculptorsPassion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SculptorsPassion), new AOEShapeRect(60, 4));
+class RackAndRuin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RackAndRuin), new AOEShapeRect(40, 2.5f), 8);
 
 class MightySmite(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.MightySmite));
 
-class BitingWindBad(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BitingWindBad), 4);
+class BitingWindBad(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitingWindBad), 4);
 
 class ShatteringSteel(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ShatteringSteel), "Get in bigger Whirlwind to dodge");
 class ViperPoisonPatterns(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.BitingWindBad), m => m.Enemies(OID.WhirlwindBad).Where(z => z.EventState != 7), 0);

@@ -42,128 +42,137 @@ public enum AID : uint
 
 class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom square = new([new Square(D041CommanderR8.ArenaCenter, 20)], [new Square(D041CommanderR8.ArenaCenter, 17)]);
+    private static readonly AOEShapeCustom square = new([new Square(D041CommanderR8.ArenaCenter, 20f)], [new Square(D041CommanderR8.ArenaCenter, 17f)]);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Electrowave && Module.Arena.Bounds == D041CommanderR8.StartingBounds)
-            _aoe = new(square, Module.Center, default, Module.CastFinishAt(spell, 0.4f));
+        if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == D041CommanderR8.StartingBounds)
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.4f));
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001 && index == 0x0A)
         {
-            Module.Arena.Bounds = D041CommanderR8.DefaultBounds;
+            Arena.Bounds = D041CommanderR8.DefaultBounds;
             _aoe = null;
         }
     }
 }
 
-class EnhancedMobilitySword(BossModule module) : Components.GenericAOEs(module)
+class EnhancedMobility(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
-    private static readonly Angle a90 = 90.Degrees();
-    private static readonly AOEShapeRect rect = new(14, 5);
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeRect[] rects = [new(14f, 3f), new(10f, 7f), new(20f, 7f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        var shape = spell.Action.ID switch
         {
-            case AID.EnhancedMobility5:
-            case AID.EnhancedMobility7:
-                AddAOE(spell, -a90);
-                break;
-            case AID.EnhancedMobility6:
-            case AID.EnhancedMobility8:
-                AddAOE(spell, a90);
-                break;
+            (uint)AID.EnhancedMobility1 or (uint)AID.EnhancedMobility2 or (uint)AID.EnhancedMobility3 or (uint)AID.EnhancedMobility4 => rects[0],
+            (uint)AID.EnhancedMobility5 or (uint)AID.EnhancedMobility6 => rects[1],
+            (uint)AID.EnhancedMobility7 or (uint)AID.EnhancedMobility8 => rects[2],
+            _ => null
+        };
+        if (shape != null)
+        {
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 2)
+                _aoes.Sort((x, y) => x.Activation.CompareTo(y.Activation));
         }
     }
 
-    private void AddAOE(ActorCastInfo spell, Angle offset)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        _aoe = new(rect, Module.Center + 5 * spell.Rotation.ToDirection(), spell.Rotation + offset, Module.CastFinishAt(spell));
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if ((AID)spell.Action.ID is AID.EnhancedMobility5 or AID.EnhancedMobility6 or AID.EnhancedMobility7 or AID.EnhancedMobility8)
-            _aoe = null;
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.EnhancedMobility1:
+                case (uint)AID.EnhancedMobility2:
+                case (uint)AID.EnhancedMobility3:
+                case (uint)AID.EnhancedMobility4:
+                case (uint)AID.EnhancedMobility5:
+                case (uint)AID.EnhancedMobility6:
+                case (uint)AID.EnhancedMobility7:
+                case (uint)AID.EnhancedMobility8:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 
 class RapidRotary(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly Angle a60 = 60.Degrees();
-    private static readonly Angle a120 = 120.Degrees();
-    private const float ActivationDelay = 1.8f;
-    private const float ActivationDelayIncrement = 0.3f;
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeDonutSector donutSectorSmall = new(11, 17, a60);
-    private static readonly AOEShapeDonutSector donutSectorBig = new(17, 28, a60);
-    private static readonly AOEShapeCone cone = new(14, a60);
+    private static readonly Angle a60 = 60f.Degrees();
+    private static readonly Angle a120 = 120f.Degrees();
+    private readonly List<AOEInstance> _aoes = new(6);
+    private static readonly AOEShapeDonutSector donutSectorSmall = new(11f, 17f, a60);
+    private static readonly AOEShapeDonutSector donutSectorBig = new(17f, 28f, a60);
+    private static readonly AOEShapeCone cone = new(14f, a60);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        for (var i = 0; i < Math.Clamp(_aoes.Count, 0, 7); ++i)
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
-            yield return new(aoe.Shape, aoe.Origin, aoe.Rotation, aoe.Activation, i < 2 ? Colors.Danger : Colors.AOE);
+            if (i < 2)
+                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.EnhancedMobility1:
-                AddAOEs(donutSectorSmall, donutSectorBig, -a60, Module.CastFinishAt(spell));
+            case (uint)AID.EnhancedMobility1:
+                AddAOEs(donutSectorBig, -a60);
                 break;
-            case AID.EnhancedMobility2:
-                AddAOEs(donutSectorSmall, cone, a60, Module.CastFinishAt(spell));
+            case (uint)AID.EnhancedMobility2:
+                AddAOEs(cone, a60);
                 break;
-            case AID.EnhancedMobility3:
-                AddAOEs(donutSectorSmall, cone, -a60, Module.CastFinishAt(spell));
+            case (uint)AID.EnhancedMobility3:
+                AddAOEs(cone, -a60);
                 break;
-            case AID.EnhancedMobility4:
-                AddAOEs(donutSectorSmall, donutSectorBig, a60, Module.CastFinishAt(spell));
+            case (uint)AID.EnhancedMobility4:
+                AddAOEs(donutSectorBig, a60);
                 break;
         }
-    }
-
-    private void AddAOEs(AOEShape shape1, AOEShape shape2, Angle initialAngle, DateTime finishAt)
-    {
-        for (var i = 0; i < 3; ++i)
+        void AddAOEs(AOEShape shape2, Angle initialAngle)
         {
-            var angle = initialAngle - i * a120;
-            _aoes.Add(new(shape1, Module.Center, angle, finishAt.AddSeconds(ActivationDelay + i * ActivationDelayIncrement)));
-            _aoes.Add(new(shape2, Module.Center, angle, finishAt.AddSeconds(ActivationDelay + i * ActivationDelayIncrement)));
+            var pos = WPos.ClampToGrid(Arena.Center);
+            for (var i = 0; i < 3; ++i)
+            {
+                var activation = Module.CastFinishAt(spell, 1.8f + i * 0.3f);
+                var angle = initialAngle - i * a120;
+                _aoes.Add(new(donutSectorSmall, pos, angle, activation));
+                _aoes.Add(new(shape2, pos, angle, activation));
+            }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.RapidRotaryCone or AID.RapidRotaryDonutSegmentBig or AID.RapidRotaryDonutSegmentSmall)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.RapidRotaryCone or (uint)AID.RapidRotaryDonutSegmentBig or (uint)AID.RapidRotaryDonutSegmentSmall)
             _aoes.RemoveAt(0);
     }
 }
 
 class Electrowave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Electrowave));
 
-class EnhancedMobility(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(14, 3));
-class EnhancedMobility1(BossModule module) : EnhancedMobility(module, AID.EnhancedMobility1);
-class EnhancedMobility2(BossModule module) : EnhancedMobility(module, AID.EnhancedMobility2);
-class EnhancedMobility3(BossModule module) : EnhancedMobility(module, AID.EnhancedMobility3);
-class EnhancedMobility4(BossModule module) : EnhancedMobility(module, AID.EnhancedMobility4);
-
 class Rush(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Rush), 2.5f);
-class AerialOffensive(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AerialOffensive), 14, maxCasts: 4);
-class Electrosurge(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Electrosurge), 5);
+class AerialOffensive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AerialOffensive), 14f, 4);
+class Electrosurge(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Electrosurge), 5f);
 
 class D041CommanderR8States : StateMachineBuilder
 {
@@ -173,21 +182,17 @@ class D041CommanderR8States : StateMachineBuilder
             .ActivateOnEnter<ElectrowaveArenaChange>()
             .ActivateOnEnter<Electrowave>()
             .ActivateOnEnter<RapidRotary>()
-            .ActivateOnEnter<EnhancedMobilitySword>()
-            .ActivateOnEnter<EnhancedMobility1>()
-            .ActivateOnEnter<EnhancedMobility2>()
-            .ActivateOnEnter<EnhancedMobility3>()
-            .ActivateOnEnter<EnhancedMobility4>()
+            .ActivateOnEnter<EnhancedMobility>()
             .ActivateOnEnter<Rush>()
             .ActivateOnEnter<AerialOffensive>()
             .ActivateOnEnter<Electrosurge>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12750, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12750, SortOrder = 3)]
 public class D041CommanderR8(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
-    public static readonly WPos ArenaCenter = new(-100, 207);
+    public static readonly WPos ArenaCenter = new(-100f, 207f);
     public static readonly ArenaBoundsSquare StartingBounds = new(19.5f);
-    public static readonly ArenaBoundsSquare DefaultBounds = new(17);
+    public static readonly ArenaBoundsSquare DefaultBounds = new(17f);
 }

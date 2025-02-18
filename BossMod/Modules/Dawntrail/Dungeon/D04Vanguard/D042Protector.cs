@@ -54,23 +54,21 @@ public enum SID : uint
 
 class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
-    private const float Radius = 0.5f;
-    public static readonly WPos ArenaCenter = new(0, -100);
+    private const float Radius = 0.51f; // small cushion since fences don't seem to be positioned perfectly
+    public static readonly WPos ArenaCenter = new(0f, -100f);
     public static readonly ArenaBoundsRect StartingBounds = new(14.5f, 22.5f);
-    private static readonly ArenaBoundsRect defaultBounds = new(12, 20);
-    private static readonly Rectangle[] startingRect = [new(ArenaCenter, 15, 23)];
-    private static readonly Rectangle[] defaultRect = [new(ArenaCenter, 12, 20)];
+    private static readonly ArenaBoundsRect defaultBounds = new(12f, 20f);
+    private static readonly Rectangle[] startingRect = [new(ArenaCenter, 15f, 23f)];
+    private static readonly Rectangle[] defaultRect = [new(ArenaCenter, 12f, 20f)];
     private static readonly WPos[] circlePositions =
     [
-        new(12, -88), new(8, -92), new(4, -88), new(0, -88), new(-4, -88),
-        new(-12, -88), new(-8, -92), new(0, -92), new(-4, -96), new(0, -96),
-        new(4, -96), new(-4, -104), new(0, -104), new(4, -104), new(-8, -108),
-        new(-12, -112), new(-4, -112), new(0, -108), new(0, -112), new(4, -112),
-        new(8, -108), new(12, -112), new(12, -104), new(12, -96), new(-12, -96),
-        new(-12, -104)
+        new(12f, -88f), new(8f, -92f), new(4f, -88f), new(0f, -88f), new(-4f, -88f),
+        new(-12f, -88f), new(-8f, -92f), new(0f, -92f), new(-4f, -96f), new(0f, -96f),
+        new(4f, -96f), new(-4f, -104f), new(0f, -104f), new(4f, -104f), new(-8f, -108f),
+        new(-12f, -112f), new(-4f, -112f), new(0f, -108f), new(0f, -112f), new(4f, -112f),
+        new(8f, -108f), new(12f, -112f), new(12f, -104f), new(12f, -96f), new(-12f, -96f),
+        new(-12f, -104f)
     ];
-
-    private static readonly Circle[] circles = circlePositions.Select(pos => new Circle(pos, Radius)).ToArray();
 
     private static readonly (int, int)[] rectanglePairs =
     [
@@ -80,26 +78,45 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         (24, 8), (0, 22), (0, 4), (2, 10), (22, 13),
     ];
 
-    private static readonly RectangleSE[] rectangles = rectanglePairs
-        .Select(pair => new RectangleSE(circles[pair.Item1].Center, circles[pair.Item2].Center, Radius)).ToArray();
+    private static readonly Polygon[] circles = CreateCircles(circlePositions, Radius, 12);
+    private static readonly RectangleSE[] rectangles = CreateRectangles(rectanglePairs, circlePositions, Radius);
+
+    private static Polygon[] CreateCircles(WPos[] positions, float radius, int edges)
+    {
+        var result = new Polygon[26];
+        for (var i = 0; i < 26; ++i)
+            result[i] = new Polygon(positions[i], radius, edges);
+        return result;
+    }
+
+    private static RectangleSE[] CreateRectangles((int, int)[] pairs, WPos[] positions, float width)
+    {
+        var result = new RectangleSE[28];
+        for (var i = 0; i < 28; ++i)
+        {
+            var pair = pairs[i];
+            result[i] = new RectangleSE(positions[pair.Item1], positions[pair.Item2], width);
+        }
+        return result;
+    }
 
     private static readonly AOEShapeCustom rectArenaChange = new(startingRect, defaultRect);
 
     private static readonly Shape[] union01000080Shapes = GetShapesForUnion([0, 1, 2, 3, 4, 5], [0, 1, 7, 9, 5, 6, 13, 20, 17, 18, 11, 14]);
     private static readonly AOEShapeCustom electricFences01000080AOE = new(union01000080Shapes);
-    private static readonly ArenaBoundsComplex electricFences01000080Arena = new(defaultRect, union01000080Shapes, Offset: -Radius);
+    private static readonly ArenaBoundsComplex electricFences01000080Arena = new(defaultRect, union01000080Shapes);
 
     private static readonly Shape[] union08000400Shapes = GetShapesForUnion([6, 7, 8, 9, 10, 11], [21, 20, 14, 15, 12, 17, 1, 10, 3, 7, 6, 8]);
     private static readonly AOEShapeCustom electricFences08000400AOE = new(union08000400Shapes);
-    private static readonly ArenaBoundsComplex electricFences08000400Arena = new(defaultRect, union08000400Shapes, Offset: -Radius);
+    private static readonly ArenaBoundsComplex electricFences08000400Arena = new(defaultRect, union08000400Shapes);
 
     private static readonly Shape[] union00020001Shapes = GetShapesForUnion([12, 13, 14, 15, 16, 17, 18, 19], [2, 8, 11, 10, 13, 16]);
     private static readonly AOEShapeCustom electricFences00020001AOE = new(union00020001Shapes);
-    private static readonly ArenaBoundsComplex electricFences00020001Arena = new(defaultRect, union00020001Shapes, Offset: -Radius);
+    private static readonly ArenaBoundsComplex electricFences00020001Arena = new(defaultRect, union00020001Shapes);
 
     private static readonly Shape[] union00200010Shapes = GetShapesForUnion([20, 21, 22, 23, 24, 25, 26, 27], [4, 8, 11, 19, 13, 10]);
     private static readonly AOEShapeCustom electricFences00200010AOE = new(union00200010Shapes);
-    private static readonly ArenaBoundsComplex electricFences00200010Arena = new(defaultRect, union00200010Shapes, Offset: -Radius);
+    private static readonly ArenaBoundsComplex electricFences00200010Arena = new(defaultRect, union00200010Shapes);
 
     private AOEInstance? _aoe;
 
@@ -107,15 +124,21 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     private static Shape[] GetShapesForUnion(int[] rectIndices, int[] circleIndices)
     {
-        var shapes = new List<Shape>();
-        shapes.AddRange(rectIndices.Select(index => rectangles[index]));
-        shapes.AddRange(circleIndices.Select(index => circles[index]));
-        return [.. shapes];
+        var rectLen = rectIndices.Length;
+        var circleLen = circleIndices.Length;
+        var shapes = new Shape[rectLen + circleLen];
+        var position = 0;
+
+        for (var i = 0; i < rectLen; ++i)
+            shapes[position++] = rectangles[rectIndices[i]];
+        for (var i = 0; i < circleLen; ++i)
+            shapes[position++] = circles[circleIndices[i]];
+        return shapes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Electrowave && Arena.Bounds == StartingBounds)
+        if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == StartingBounds)
             _aoe = new(rectArenaChange, Arena.Center, default, Module.CastFinishAt(spell, 0.4f));
     }
 
@@ -131,7 +154,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 new { AOE = electricFences00200010AOE, Bounds = electricFences00200010Arena }
             };
 
-            for (var i = 0; i < aoeChecks.Length; ++i)
+            for (var i = 0; i < 4; ++i)
             {
                 var aoe = aoeChecks[i];
                 if (ActiveAOEs(0, Raid.Player()!).Any(c => c.Shape == aoe.AOE && c.Activation <= WorldState.CurrentTime))
@@ -157,16 +180,16 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             switch (state)
             {
                 case 0x08000400:
-                    _aoe = new(electricFences08000400AOE, Module.Center, default, activation);
+                    _aoe = new(electricFences08000400AOE, Arena.Center, default, activation);
                     break;
                 case 0x01000080:
-                    _aoe = new(electricFences01000080AOE, Module.Center, default, activation);
+                    _aoe = new(electricFences01000080AOE, Arena.Center, default, activation);
                     break;
                 case 0x00020001:
-                    _aoe = new(electricFences00020001AOE, Module.Center, default, activation);
+                    _aoe = new(electricFences00020001AOE, Arena.Center, default, activation);
                     break;
                 case 0x00200010:
-                    _aoe = new(electricFences00200010AOE, Module.Center, default, activation);
+                    _aoe = new(electricFences00200010AOE, Arena.Center, default, activation);
                     break;
                 case 0x02000004 or 0x10000004 or 0x00080004 or 0x00400004:
                     Arena.Bounds = defaultBounds;
@@ -178,58 +201,63 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
 class BatteryCircuit(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly Angle _increment = -11.Degrees();
-    private static readonly AOEShapeCone _shape = new(30, 15.Degrees());
+    private static readonly Angle _increment = -11f.Degrees();
+    private static readonly AOEShapeCone _shape = new(30f, 15f.Degrees());
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BatteryCircuitFirst)
-            Sequences.Add(new(_shape, caster.Position, spell.Rotation, _increment, Module.CastFinishAt(spell), 0.5f, 34, 9));
+        if (spell.Action.ID == (uint)AID.BatteryCircuitFirst)
+            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation, _increment, Module.CastFinishAt(spell), 0.5f, 34, 9));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BatteryCircuitFirst or AID.BatteryCircuitRest)
+        if (spell.Action.ID is (uint)AID.BatteryCircuitFirst or (uint)AID.BatteryCircuitRest)
             AdvanceSequence(caster.Position, caster.Rotation, WorldState.CurrentTime);
     }
 }
 
-class HeavyBlastCannon(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.HeavyBlastCannonMarker), ActionID.MakeSpell(AID.HeavyBlastCannon), 8, 36);
+class HeavyBlastCannon(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.HeavyBlastCannonMarker), ActionID.MakeSpell(AID.HeavyBlastCannon), 8f, 36f);
 class RapidThunder(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RapidThunder));
 class Electrowave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Electrowave));
-class BlastCannon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlastCannon), new AOEShapeRect(26, 2))
-{
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        var aoes = ActiveCasters.Select((c, index) =>
-            new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo),
-            index < 2 ? Colors.Danger : Colors.AOE, index < 2));
 
-        return aoes;
+class BlastCannon : Components.SimpleAOEs
+{
+    public BlastCannon(BossModule module) : base(module, ActionID.MakeSpell(AID.BlastCannon), new AOEShapeRect(26f, 2f))
+    {
+        MaxDangerColor = 2;
+        MaxRisky = 2;
+    }
+}
+class Shock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shock), 3f);
+
+class HomingCannon : Components.SimpleAOEs
+{
+    public HomingCannon(BossModule module) : base(module, ActionID.MakeSpell(AID.HomingCannon), new AOEShapeRect(50f, 1f))
+    {
+        MaxDangerColor = 4;
     }
 }
 
-class Shock(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Shock), 3);
-class HomingCannon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HomingCannon), new AOEShapeRect(50, 1));
-class Bombardment(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Bombardment), 5);
+class Bombardment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bombardment), 5f);
 
-class Electrowhirl(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(6));
+abstract class Electrowhirl(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
 class Electrowhirl1(BossModule module) : Electrowhirl(module, AID.Electrowhirl1);
 class Electrowhirl2(BossModule module) : Electrowhirl(module, AID.Electrowhirl2);
 
-class TrackingBolt2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TrackingBolt2), 8);
+class TrackingBolt2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TrackingBolt2), 8f);
 
-class AccelerationBomb(BossModule module) : Components.StayMove(module, 3)
+class AccelerationBomb(BossModule module) : Components.StayMove(module, 3f)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.AccelerationBomb or SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID is (uint)SID.AccelerationBomb or (uint)SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
             PlayerStates[slot] = new(Requirement.Stay, status.ExpireAt);
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.AccelerationBomb or SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID is (uint)SID.AccelerationBomb or (uint)SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
             PlayerStates[slot] = default;
     }
 }
@@ -255,5 +283,5 @@ class D042ProtectorStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12757, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12757, SortOrder = 5)]
 public class D042Protector(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChanges.ArenaCenter, ArenaChanges.StartingBounds);

@@ -61,9 +61,10 @@ class AbilityInfo : CommonEnumInfo
             _plot.TickAdvance = new(45, 5);
             foreach (var i in infos)
             {
+                var cast = i.Action.Source.Casts.LastOrDefault(c => c.ID == i.Action.ID && c.Time.Start < i.Action.Timestamp);
                 var sourcePosRot = i.Action.Source.PosRotAt(i.Action.Timestamp);
                 var sourcePos = new WPos(sourcePosRot.XZ());
-                var targetPos = new WPos(i.Action.TargetPos.XZ());
+                var targetPos = new WPos((cast?.Location ?? i.Action.TargetPos).XZ());
                 if (targetPos == sourcePos && i.Action.Targets.Count > 0)
                     targetPos = new(i.Action.Targets[0].Target.PosRotAt(i.Action.Timestamp).XZ());
                 var origin = targeting != Targeting.TargetPosSourceRot ? sourcePos : targetPos;
@@ -222,13 +223,14 @@ class AbilityInfo : CommonEnumInfo
                         switch (eff.Type)
                         {
                             case ActionEffectType.Knockback:
-                                var kbData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Knockback>(eff.Value);
-                                var kind = kbData != null ? (KnockbackDirection)kbData.Direction switch
+                                var kbData = Service.LuminaRow<Lumina.Excel.Sheets.Knockback>(eff.Value);
+                                var kind = kbData != null ? (KnockbackDirection)kbData.Value.Direction switch
                                 {
                                     KnockbackDirection.AwayFromSource => Knockback.Kind.AwayFromOrigin,
                                     KnockbackDirection.SourceForward => Knockback.Kind.DirForward,
                                     KnockbackDirection.SourceRight => Knockback.Kind.DirRight,
                                     KnockbackDirection.SourceLeft => Knockback.Kind.DirLeft,
+                                    KnockbackDirection.AwayFromSource2 => Knockback.Kind.AwayFromOrigin,
                                     _ => Knockback.Kind.None
                                 } : Knockback.Kind.None;
                                 AddPoint(i, target, (kbData?.Distance ?? 0) + eff.Param0, kind);
@@ -236,7 +238,8 @@ class AbilityInfo : CommonEnumInfo
                                 break;
                             case ActionEffectType.Attract1:
                             case ActionEffectType.Attract2:
-                                var attrData = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Attract>(eff.Value);
+
+                                var attrData = Service.LuminaRow<Lumina.Excel.Sheets.Attract>(eff.Value);
                                 AddPoint(i, target, attrData?.MaxDistance ?? 0, Knockback.Kind.TowardsOrigin);
                                 hasKnockbacks = true;
                                 break;
@@ -406,15 +409,15 @@ class AbilityInfo : CommonEnumInfo
             {
                 foreach (var n in tree.Node("Lumina data"))
                 {
-                    var row = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Action>(aid.ID);
-                    tree.LeafNode($"Category: {row?.ActionCategory?.Value?.Name}");
-                    tree.LeafNode($"Cast time: {row?.Cast100ms * 0.1f:f1} + {row?.Unknown38 * 0.1f:f1}");
+                    var row = Service.LuminaRow<Lumina.Excel.Sheets.Action>(aid.ID);
+                    tree.LeafNode($"Category: {row?.ActionCategory.ValueNullable?.Name}");
+                    tree.LeafNode($"Cast time: {row?.Cast100ms * 0.1f:f1} + {row?.ExtraCastTime100ms * 0.1f:f1}");
                     tree.LeafNode($"Target range: {row?.Range}");
-                    tree.LeafNode($"Effect shape: {row?.CastType} ({(row != null ? DescribeShape(row) : "")})");
+                    tree.LeafNode($"Effect shape: {row?.CastType} ({(row != null ? DescribeShape(row.Value) : "")})");
                     tree.LeafNode($"Effect range: {row?.EffectRange}");
                     tree.LeafNode($"Effect width: {row?.XAxisModifier}");
-                    tree.LeafNode($"Omen: {row?.Omen.Value?.Path} / {row?.Omen.Value?.PathAlly}");
-                    var omenAlt = row != null ? Service.LuminaRow<Lumina.Excel.GeneratedSheets.Omen>(row.Unknown54) : null;
+                    tree.LeafNode($"Omen: {row?.Omen.ValueNullable?.Path} / {row?.Omen.ValueNullable?.PathAlly}");
+                    var omenAlt = row != null ? Service.LuminaRow<Lumina.Excel.Sheets.Omen>(row.Value.OmenAlt.RowId) : null;
                     tree.LeafNode($"Omen alt: {omenAlt?.Path} / {omenAlt?.PathAlly}");
                 }
             }
@@ -570,17 +573,17 @@ class AbilityInfo : CommonEnumInfo
                 yield return OIDString(oid);
     }
 
-    private static string CastTimeString(ActionData data, Lumina.Excel.GeneratedSheets.Action? ldata)
-        => data.CastTime > 0 ? string.Create(CultureInfo.InvariantCulture, $"{data.CastTime:f1}{(ldata?.Unknown38 > 0 ? $"+{ldata?.Unknown38 * 0.1f:f1}" : "")}s cast") : "no cast";
+    private static string CastTimeString(ActionData data, Lumina.Excel.Sheets.Action? ldata)
+        => data.CastTime > 0 ? string.Create(CultureInfo.InvariantCulture, $"{data.CastTime:f1}{(ldata?.ExtraCastTime100ms > 0 ? $"+{ldata?.ExtraCastTime100ms * 0.1f:f1}" : "")}s cast") : "no cast";
 
     private string EnumMemberString(ActionID aid, ActionData data)
     {
-        var ldata = aid.Type == ActionType.Spell ? Service.LuminaRow<Lumina.Excel.GeneratedSheets.Action>(aid.ID) : null;
-        var name = aid.Type != ActionType.Spell ? $"// {aid}" : _aidType?.GetEnumName(aid.ID) ?? $"_{Utils.StringToIdentifier(ldata?.ActionCategory?.Value?.Name ?? "")}_{Utils.StringToIdentifier(ldata?.Name ?? $"Ability{aid.ID}")}";
-        return $"{name} = {aid.ID}, // {OIDListString(data.CasterOIDs)}->{JoinStrings(ActionTargetStrings(data))}, {CastTimeString(data, ldata)}, {DescribeShape(ldata)}";
+        var ldata = aid.Type == ActionType.Spell ? Service.LuminaRow<Lumina.Excel.Sheets.Action>(aid.ID) : null;
+        var name = aid.Type != ActionType.Spell ? $"// {aid}" : _aidType?.GetEnumName(aid.ID) ?? $"_{Utils.StringToIdentifier(ldata?.ActionCategory.ValueNullable?.Name.ToString() ?? "")}_{Utils.StringToIdentifier(ldata?.Name.ToString() ?? $"Ability{aid.ID}")}";
+        return $"{name} = {aid.ID}, // {OIDListString(data.CasterOIDs)}->{JoinStrings(ActionTargetStrings(data))}, {CastTimeString(data, ldata)}, {(ldata != null ? DescribeShape(ldata.Value) : "????")}";
     }
 
-    private static string DescribeShape(Lumina.Excel.GeneratedSheets.Action? data) => data != null ? data.CastType switch
+    private static string DescribeShape(Lumina.Excel.Sheets.Action data) => data.CastType switch
     {
         1 => "single-target",
         2 => $"range {data.EffectRange} circle",
@@ -593,26 +596,26 @@ class AbilityInfo : CommonEnumInfo
         12 => $"range {data.EffectRange} width {data.XAxisModifier} rect",
         13 => $"range {data.EffectRange} {DetermineConeAngle(data)?.ToString() ?? "?"}-degree cone",
         _ => "???"
-    } : "???";
+    };
 
-    private static Angle? DetermineConeAngle(Lumina.Excel.GeneratedSheets.Action data)
+    private static Angle? DetermineConeAngle(Lumina.Excel.Sheets.Action data)
     {
-        var omen = data.Omen.Value;
+        var omen = data.Omen.ValueNullable;
         if (omen == null)
             return null;
 
-        var path = omen.Path.ToString();
+        var path = omen.Value.Path.ToString();
         var pos = path.IndexOf("fan", StringComparison.Ordinal);
         return pos >= 0 && pos + 6 <= path.Length && int.TryParse(path.AsSpan(pos + 3, 3), out var angle) ? angle.Degrees() : null;
     }
 
-    private static float? DetermineDonutInner(Lumina.Excel.GeneratedSheets.Action data)
+    private static float? DetermineDonutInner(Lumina.Excel.Sheets.Action data)
     {
-        var omen = data.Omen.Value;
+        var omen = data.Omen.ValueNullable;
         if (omen == null)
             return null;
 
-        var path = omen.Path.ToString();
+        var path = omen.Value.Path.ToString();
 
         return ExtractInnerValueFromPath(path, "sircle_", 9)
             ?? ExtractInnerValueFromPath(path, "sicle_", 8)

@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C02AMR.C021Shishio;
 
-class UnnaturalWail(BossModule module) : Components.UniformStackSpread(module, 6, 6, 2, 2, alwaysShowSpreads: true)
+class UnnaturalWail(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 2, 2, alwaysShowSpreads: true)
 {
-    public int NumMechanics { get; private set; }
+    public int NumMechanics;
     private readonly List<Actor> _spreadTargets = [];
     private readonly List<Actor> _stackTargets = [];
     private DateTime _spreadResolve;
@@ -18,14 +18,14 @@ class UnnaturalWail(BossModule module) : Components.UniformStackSpread(module, 6
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.ScatteredWailing:
+            case (uint)SID.ScatteredWailing:
                 _spreadTargets.Add(actor);
                 _spreadResolve = status.ExpireAt;
                 UpdateMechanic();
                 break;
-            case SID.IntensifiedWailing:
+            case (uint)SID.IntensifiedWailing:
                 _stackTargets.Add(actor);
                 _stackResolve = status.ExpireAt;
                 UpdateMechanic();
@@ -35,10 +35,10 @@ class UnnaturalWail(BossModule module) : Components.UniformStackSpread(module, 6
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NUnnaturalAilment:
-            case AID.SUnnaturalAilment:
+            case (uint)AID.NUnnaturalAilment:
+            case (uint)AID.SUnnaturalAilment:
                 if (_spreadResolve != default)
                 {
                     _spreadResolve = default;
@@ -46,8 +46,8 @@ class UnnaturalWail(BossModule module) : Components.UniformStackSpread(module, 6
                     UpdateMechanic();
                 }
                 break;
-            case AID.NUnnaturalForce:
-            case AID.SUnnaturalForce:
+            case (uint)AID.NUnnaturalForce:
+            case (uint)AID.SUnnaturalForce:
                 if (_stackResolve != default)
                 {
                     _stackResolve = default;

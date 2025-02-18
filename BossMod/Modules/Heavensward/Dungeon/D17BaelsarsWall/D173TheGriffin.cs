@@ -75,7 +75,7 @@ class RestraintCollar(BossModule module) : BossComponent(module)
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(ironchain.Position, ironchain.HitboxRadius + 3));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Fetters)
         {
@@ -100,7 +100,7 @@ class BigBoot(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
             yield return new(Module.PrimaryActor.Position, 15);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Knockback)
             _target = actor;
@@ -116,7 +116,7 @@ class BigBoot(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
 class Corrosion(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(9);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(9);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.Enemies(OID.BladeOfTheGriffin).Count(x => !x.IsDead) < 9 ? _aoes : [];
 
@@ -133,7 +133,7 @@ class Corrosion(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SanguineBlade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SanguineBlade), new AOEShapeCone(41.5f, 90.Degrees()));
+class SanguineBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SanguineBlade), new AOEShapeCone(41.5f, 90.Degrees()));
 class ClawOfTheGriffin(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ClawOfTheGriffin));
 class BeakOfTheGriffin(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeakOfTheGriffin));
 class Lionshead(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Lionshead));

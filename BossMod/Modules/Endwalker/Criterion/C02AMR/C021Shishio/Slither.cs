@@ -5,27 +5,29 @@ class Slither(BossModule module) : Components.GenericAOEs(module)
     private Actor? _caster;
     private DateTime _predictedActivation;
 
-    private static readonly AOEShapeCone _shape = new(25, 45.Degrees());
+    private static readonly AOEShapeCone _shape = new(25f, 45f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster?.CastInfo != null)
-            yield return new(_shape, _caster.Position, _caster.CastInfo.Rotation, Module.CastFinishAt(_caster.CastInfo));
+            return [new(_shape, _caster.Position, _caster.CastInfo.Rotation, Module.CastFinishAt(_caster.CastInfo))];
         else if (_predictedActivation != default)
-            yield return new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 180.Degrees(), _predictedActivation);
+            return [new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 180f.Degrees(), _predictedActivation)];
+        else
+            return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NSlither:
-            case AID.SSlither:
+            case (uint)AID.NSlither:
+            case (uint)AID.SSlither:
                 _caster = caster;
                 _predictedActivation = default;
                 break;
-            case AID.NSplittingCry:
-            case AID.SSplittingCry:
+            case (uint)AID.NSplittingCry:
+            case (uint)AID.SSplittingCry:
                 _predictedActivation = Module.CastFinishAt(spell, 4.2f);
                 break;
         }
@@ -33,7 +35,7 @@ class Slither(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NSlither or AID.SSlither)
+        if (spell.Action.ID is (uint)AID.NSlither or (uint)AID.SSlither)
         {
             _caster = null;
             ++NumCasts;

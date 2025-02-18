@@ -5,7 +5,7 @@ class P2IntermissionLimitCut(BossModule module) : LimitCut(module, 3.2f);
 class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.HawkBlasterIntermission))
 {
     private Angle _blasterStartingDirection;
-
+    private readonly TEAConfig _config = Service.Config.Get<TEAConfig>();
     private const float _blasterOffset = 14;
     private static readonly AOEShapeCircle _blasterShape = new(10);
 
@@ -74,8 +74,8 @@ class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(modu
             case 3:
                 {
                     var dir = (_blasterStartingDirection - index * 45.Degrees()).ToDirection();
-                    yield return Module.Center + _blasterOffset * dir;
-                    yield return Module.Center - _blasterOffset * dir;
+                    yield return Arena.Center + _blasterOffset * dir;
+                    yield return Arena.Center - _blasterOffset * dir;
                 }
                 break;
             case 5:
@@ -84,13 +84,13 @@ class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(modu
             case 8:
                 {
                     var dir = (_blasterStartingDirection - (index - 5) * 45.Degrees()).ToDirection();
-                    yield return Module.Center + _blasterOffset * dir;
-                    yield return Module.Center - _blasterOffset * dir;
+                    yield return Arena.Center + _blasterOffset * dir;
+                    yield return Arena.Center - _blasterOffset * dir;
                 }
                 break;
             case 4:
             case 9:
-                yield return Module.Center;
+                yield return Arena.Center;
                 break;
         }
     }
@@ -111,11 +111,11 @@ class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(modu
         if (NextBlasterIndex != 1)
             return null;
 
-        var strategy = Service.Config.Get<TEAConfig>().P2IntermissionHints;
+        var strategy = _config.P2IntermissionHints;
         if (strategy == TEAConfig.P2Intermission.None)
             return null;
 
-        var invert = strategy == TEAConfig.P2Intermission.FirstForOddPairs && (Module.FindComponent<LimitCut>()?.PlayerOrder[slot] is 3 or 4 or 7 or 8);
+        var invert = strategy == TEAConfig.P2Intermission.FirstForOddPairs && Module.FindComponent<LimitCut>()?.PlayerOrder[slot] is 3 or 4 or 7 or 8;
         var offset = _blasterOffset * _blasterStartingDirection.ToDirection();
         return Module.Center + (invert ? -offset : offset);
     }

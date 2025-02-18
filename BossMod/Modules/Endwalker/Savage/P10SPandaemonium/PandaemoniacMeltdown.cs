@@ -14,7 +14,7 @@ class PandaemoniacMeltdown(BossModule module) : Components.CastCounter(module, A
         var isSpread = _spreadTargets.Contains(actor);
         if (_spreadTargets.Any(t => t != actor && _shapeSpread.Check(actor.Position, Module.PrimaryActor.Position, Angle.FromDirection(t.Position - Module.PrimaryActor.Position))))
             hints.Add("GTFO from other spreads!");
-        if (isSpread && Raid.WithoutSlot().Exclude(actor).InShape(_shapeSpread, Module.PrimaryActor.Position, Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)).Any())
+        if (isSpread && Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shapeSpread, Module.PrimaryActor.Position, Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)).Any())
             hints.Add("Aim spread away from raid!");
 
         if (_stackTarget == actor)
@@ -59,7 +59,7 @@ class PandaemoniacMeltdown(BossModule module) : Components.CastCounter(module, A
             _stackTarget = WorldState.Actors.Find(spell.MainTargetID);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.PandaemoniacMeltdownSpread)
             _spreadTargets.Add(actor);

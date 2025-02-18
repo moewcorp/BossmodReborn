@@ -25,10 +25,10 @@ public enum AID : uint
 
 class MarineMayhem(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MarineMayhem));
 class ProtolithicPuncture(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.ProtolithicPuncture));
-class PelagicCleaver1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver1), new AOEShapeCone(40, 30.Degrees()));
-class PelagicCleaver2(BossModule module) : Components.LocationTargetedAOEsOther(module, ActionID.MakeSpell(AID.PelagicCleaver2), new AOEShapeCone(50, 30.Degrees()));
-class TidalGuillotine1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine1), new AOEShapeCircle(13));
-class TidalGuillotine2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine2), 13);
+class PelagicCleaver1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver1), new AOEShapeCone(40, 30.Degrees()));
+class PelagicCleaver2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver2), new AOEShapeCone(50, 30.Degrees()));
+class TidalGuillotine1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine1), 13);
+class TidalGuillotine2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine2), 13);
 class AquaticLance(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AquaticLance), 8);
 class AquaticLanceVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Voidzone).Where(x => x.EventState != 7));
 
@@ -45,7 +45,7 @@ class D081CladoselacheStates : StateMachineBuilder
             .ActivateOnEnter<TidalGuillotine2>()
             .ActivateOnEnter<AquaticLance>()
             .ActivateOnEnter<AquaticLanceVoidzone>()
-            .Raw.Update = () => module.Enemies(OID.Doliodus).Concat([module.PrimaryActor]).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(D081Cladoselache.Bosses).All(e => e.IsDeadOrDestroyed);
     }
 }
 
@@ -53,9 +53,10 @@ class D081CladoselacheStates : StateMachineBuilder
 public class D081Cladoselache(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-305, 211.5f), 19.5f * CosPI.Pi60th, 60)]);
+    public static readonly uint[] Bosses = [(uint)OID.Boss, (uint)OID.Doliodus];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Doliodus).Concat([PrimaryActor]));
+        Arena.Actors(Enemies(Bosses));
     }
 }

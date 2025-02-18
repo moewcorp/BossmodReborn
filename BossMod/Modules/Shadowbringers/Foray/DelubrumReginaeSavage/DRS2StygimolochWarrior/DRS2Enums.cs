@@ -3,12 +3,12 @@
 public enum OID : uint
 {
     Boss = 0x30AB, // R4.000, x1
-    Helper = 0x233C, // R0.500, x24, 523 type
     HiddenTrap = 0x18D6, // R0.500, x2, and more spawn during fight
     TrapNormal = 0x1EB0E3, // R0.500, EventObj type, spawn during fight when discovered by perception
     TrapToad = 0x1EB0E4, // R0.500, EventObj type, spawn during fight
     TrapIce = 0x1EB0E5, // R0.500, EventObj type, spawn during fight
     TrapMini = 0x1EB0E6, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint

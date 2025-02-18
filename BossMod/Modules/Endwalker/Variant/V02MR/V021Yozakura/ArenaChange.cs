@@ -2,17 +2,21 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom square1 = new([new Square(V021Yozakura.ArenaCenter1, 23)], [new Square(V021Yozakura.ArenaCenter1, 20)]);
-    private static readonly AOEShapeCustom square2 = new([new Square(V021Yozakura.ArenaCenter3, 23)], [new Square(V021Yozakura.ArenaCenter3, 20)]);
+    private static readonly AOEShapeCustom square1 = new([new Square(V021Yozakura.ArenaCenter1, 23f)], [new Square(V021Yozakura.ArenaCenter1, 20f)]);
+    private static readonly AOEShapeCustom square2 = new([new Square(V021Yozakura.ArenaCenter3, 23f)], [new Square(V021Yozakura.ArenaCenter3, 20f)]);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GloryNeverlasting && Arena.Bounds == V021Yozakura.StartingBounds && Arena.Center == V021Yozakura.ArenaCenter1)
-            _aoe = new(square1, Arena.Center, default, Module.CastFinishAt(spell, 3.7f));
-        else if ((AID)spell.Action.ID == AID.GloryNeverlasting && Arena.Bounds == V021Yozakura.StartingBounds && Arena.Center == V021Yozakura.ArenaCenter3)
-            _aoe = new(square2, Arena.Center, default, Module.CastFinishAt(spell, 3.7f));
+        if (spell.Action.ID == (uint)AID.GloryNeverlasting && Arena.Bounds == V021Yozakura.StartingBounds)
+        {
+            void AddAOE(AOEShape shape) => _aoe = new(shape, Arena.Center, default, Module.CastFinishAt(spell, 3.7f));
+            if (Arena.Center == V021Yozakura.ArenaCenter1)
+                AddAOE(square1);
+            else if (Arena.Center == V021Yozakura.ArenaCenter3)
+                AddAOE(square2);
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)

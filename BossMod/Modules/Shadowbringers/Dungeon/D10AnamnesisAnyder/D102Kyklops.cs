@@ -32,14 +32,14 @@ public enum AID : uint
 class TheFinalVerse(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TheFinalVerse));
 class WanderersPyre(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.WanderersPyre), 5);
 class OpenHearth(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.OpenHearth), 6);
-class EyeOfTheCyclone(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EyeOfTheCyclone), new AOEShapeDonut(8, 25));
-class RagingGlower(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RagingGlower), new AOEShapeRect(45, 3));
-class MinaSwipe2000(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MinaSwipe2000), new AOEShapeCone(12, 60.Degrees()));
-class MinaSwing2000(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MinaSwing2000), new AOEShapeCircle(12));
+class EyeOfTheCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheCyclone), new AOEShapeDonut(8, 25));
+class RagingGlower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingGlower), new AOEShapeRect(45, 3));
+class MinaSwipe2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwipe2000), new AOEShapeCone(12, 60.Degrees()));
+class MinaSwing2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwing2000), 12);
 
 class TerribleBladeHammer(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(5);
     private static readonly WPos[] xPattern = [new(10, -70), new(30, -70), new(20, -80), new(10, -90), new(30, -90)];
     private static readonly WPos[] crossPattern = [new(20, -70), new(10, -80), new(30, -80), new(20, -90)];
     private static readonly AOEShapeRect rect = new(5, 5, 5);
@@ -48,14 +48,16 @@ class TerribleBladeHammer(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count == 0)
-            yield break;
-
-        for (var i = 0; i < _aoes.Count; ++i)
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
         {
             if ((_aoes[i].Activation - _aoes[0].Activation).TotalSeconds <= 1)
-                yield return _aoes[i];
+                aoes.Add(_aoes[i]);
         }
+        return aoes;
     }
 
     public override void OnEventEnvControl(byte index, uint state)

@@ -30,7 +30,7 @@ class WreathOfThorns1(BossModule module) : BossComponent(module)
                     {
                         hints.Add("Soak the tower!");
                     }
-                    else if (Raid.WithoutSlot().Exclude(actor).InRadius(soakedTower.Position, P4S2.WreathTowerRadius).Any())
+                    else if (Raid.WithoutSlot(false, true, true).Exclude(actor).InRadius(soakedTower.Position, P4S2.WreathTowerRadius).Any())
                     {
                         hints.Add("Multiple soakers for the tower!");
                     }
@@ -58,7 +58,7 @@ class WreathOfThorns1(BossModule module) : BossComponent(module)
         {
             foreach (var tower in Towers)
                 Arena.AddCircle(tower.Position, P4S2.WreathTowerRadius, Colors.Safe);
-            foreach (var player in Raid.WithoutSlot())
+            foreach (var player in Raid.WithoutSlot(false, true, true))
                 Arena.Actor(player, Colors.PlayerGeneric);
         }
     }

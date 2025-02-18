@@ -47,18 +47,18 @@ public enum AID : uint
 
 class Hyperdrive(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Hyperdrive));
 
-abstract class BlizzardBlitzDonut(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(10, 40));
+abstract class BlizzardBlitzDonut(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(10, 40));
 class BlizzardBlitzDonut1(BossModule module) : BlizzardBlitzDonut(module, AID.BlizzardBlitzDonut1);
 class BlizzardBlitzDonut2(BossModule module) : BlizzardBlitzDonut(module, AID.BlizzardBlitzDonut2);
 
-abstract class BlizzardBlitzCircle(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(10));
+abstract class BlizzardBlitzCircle(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
 class BlizzardBlitzCircle1(BossModule module) : BlizzardBlitzCircle(module, AID.BlizzardBlitzCircle1);
 class BlizzardBlitzCircle2(BossModule module) : BlizzardBlitzCircle(module, AID.BlizzardBlitzCircle2);
 
 class FlagrantFireSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FlagrantFireSpread), 5);
 class FlagrantFireStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FlagrantFireStack), 6, 8, 8);
 
-abstract class ThrummingThunder(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 5));
+abstract class ThrummingThunder(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 5));
 class ThrummingThunder1(BossModule module) : ThrummingThunder(module, AID.ThrummingThunder1);
 class ThrummingThunder2(BossModule module) : ThrummingThunder(module, AID.ThrummingThunder2);
 
@@ -82,9 +82,9 @@ class Shockwave(BossModule module) : Components.KnockbackFromCastTarget(module, 
     }
 }
 
-class WaveCannon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WaveCannon), new AOEShapeRect(70, 3));
+class WaveCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WaveCannon), new AOEShapeRect(70, 3));
 
-abstract class Cleave(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(100, 90.Degrees()));
+abstract class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(100, 90.Degrees()));
 class GravitationalWave(BossModule module) : Cleave(module, AID.GravitationalWave);
 class IntemperateWill(BossModule module) : Cleave(module, AID.IntemperateWill);
 

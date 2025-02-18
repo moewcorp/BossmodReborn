@@ -23,46 +23,80 @@ public enum AID : uint
     Withdraw = 27847 // 3731->player, 1.0s cast, single-target, pull 30 between centers
 }
 
+class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+{
+    private static readonly AOEShapeDonut donut = new(20f, 30f);
+    private AOEInstance? _aoe;
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.MeaninglessDestruction && Arena.Bounds == D032Wrecker.StartingArena)
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+    }
+
+    public override void OnEventEnvControl(byte index, uint state)
+    {
+        if (state == 0x00020001 && index == 0x06)
+        {
+            Arena.Bounds = D032Wrecker.DefaultArena;
+            Arena.Center = D032Wrecker.DefaultArena.Center;
+            _aoe = null;
+        }
+    }
+}
 class QueerBubble(BossModule module) : Components.GenericAOEs(module)
 {
-    public readonly List<Actor> _aoes = [];
+    private readonly AetherSprayFire _aoe = module.FindComponent<AetherSprayFire>()!;
+    public readonly List<Actor> AOEs = [];
     private static readonly AOEShapeCircle circle = new(2.5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            foreach (var a in _aoes.Where(x => !x.IsDead))
-                yield return new(circle, a.Position, default, default, Module.FindComponent<AetherSprayFire>()!.Active ? Colors.SafeFromAOE : Colors.AOE);
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        var color = Colors.SafeFromAOE;
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var b = AOEs[i];
+            if (!b.IsDead)
+                aoes[index++] = new(circle, b.Position, Color: _aoe.Active ? color : 0);
+        }
+        return aoes[..index];
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.QueerBubble)
-            _aoes.Add(actor);
+        if (actor.OID == (uint)OID.QueerBubble)
+            AOEs.Add(actor);
     }
 
     public override void OnActorDestroyed(Actor actor)
     {
-        if ((OID)actor.OID == OID.QueerBubble && _aoes.Count > 0)
-            _aoes.Remove(actor);
+        if (AOEs.Count != 0 && actor.OID == (uint)OID.QueerBubble)
+            AOEs.Remove(actor);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.Withdraw)
-            _aoes.Remove(caster);
+        if (AOEs.Count != 0 && spell.Action.ID == (uint)AID.Withdraw)
+            AOEs.Remove(caster);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Module.FindComponent<AetherSprayFire>()!.Active)
+        if (_aoe.Active)
         {
-            var forbiddenInverted = new List<Func<WPos, float>>();
-            foreach (var a in _aoes)
-                forbiddenInverted.Add(ShapeDistance.InvertedCircle(a.Position, 2.5f));
-            var activation = Module.CastFinishAt(Module.FindComponent<AetherSprayFire>()!.Casters[0].CastInfo);
-            if (forbiddenInverted.Count > 0)
-                hints.AddForbiddenZone(p => forbiddenInverted.Select(f => f(p)).Max(), activation);
+            var forbidden = new List<Func<WPos, float>>(6);
+            var count = AOEs.Count;
+            for (var i = 0; i < count; ++i)
+                forbidden.Add(ShapeDistance.InvertedCircle(AOEs[i].Position, 2.5f));
+            if (forbidden.Count != 0)
+                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(_aoe.Casters[0].CastInfo));
         }
         else
             base.AddAIHints(slot, actor, assignment, hints);
@@ -70,28 +104,48 @@ class QueerBubble(BossModule module) : Components.GenericAOEs(module)
 }
 
 class MeaninglessDestruction(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MeaninglessDestruction));
-class PoisonHeartStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PoisonHeartStack), 6, 4, 4);
+class PoisonHeartStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PoisonHeartStack), 6f, 4, 4);
 class TotalWreck(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TotalWreck));
 class AetherSprayWater(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AetherSprayWater));
 class AetherSprayFire(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AetherSprayFire), "Go into a bubble! (Raidwide)");
-class AetherSprayWaterKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AetherSprayWater), 13)
+
+class AetherSprayWaterKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AetherSprayWater), 13f)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<QueerBubble>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    private readonly QueerBubble _aoe = module.FindComponent<QueerBubble>()!;
+    private static readonly Angle a60 = 60f.Degrees(), a10 = 10f.Degrees();
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        foreach (var z in _aoe.ActiveAOEs(slot, actor))
+            if (z.Shape.Check(pos, z.Origin, z.Rotation))
+                return true;
+        return !Module.InBounds(pos);
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (Module.FindComponent<QueerBubble>()!.ActiveAOEs(slot, actor).Any() && source != default)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (_aoe.AOEs.Count != 0 && source != null)
         {
-            var forbidden = new List<Func<WPos, float>>
+            var forbidden = new List<Func<WPos, float>>(7)
             {
-                ShapeDistance.InvertedCircle(Arena.Center, 7)
+                ShapeDistance.InvertedCircle(Arena.Center, 7f)
             };
+            var bubbles = Module.Enemies(OID.QueerBubble);
             for (var i = 0; i < 6; ++i)
-                if (Module.Enemies(OID.QueerBubble).Where(x => x.Position.AlmostEqual(WPos.RotateAroundOrigin(i * 60, Arena.Center, x.Position), 1) && Module.FindComponent<QueerBubble>()!._aoes.Contains(x)) != null)
-                    forbidden.Add(ShapeDistance.Cone(Arena.Center, 20, i * 60.Degrees(), 10.Degrees()));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), source.Activation);
+            {
+                var bcount = bubbles.Count;
+                for (var j = 0; j < bcount; ++j)
+                {
+                    var b = bubbles[j];
+                    if (b.Position.AlmostEqual(WPos.RotateAroundOrigin(i * 60f, Arena.Center, b.Position), 1f) && _aoe.AOEs.Contains(b))
+                    {
+                        forbidden.Add(ShapeDistance.Cone(Arena.Center, 20f, i * a60, a10));
+                        break;
+                    }
+                }
+            }
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 }
@@ -101,11 +155,11 @@ class D032WreckerStates : StateMachineBuilder
     public D032WreckerStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
+            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<AetherSprayFire>()
             .ActivateOnEnter<QueerBubble>()
             .ActivateOnEnter<AetherSprayWater>()
             .ActivateOnEnter<AetherSprayWaterKB>()
-            .ActivateOnEnter<AetherSprayFire>()
             .ActivateOnEnter<TotalWreck>()
             .ActivateOnEnter<PoisonHeartStack>()
             .ActivateOnEnter<MeaninglessDestruction>();
@@ -113,4 +167,10 @@ class D032WreckerStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 789, NameID = 10718)]
-public class D032Wrecker(WorldState ws, Actor primary) : BossModule(ws, primary, new(-295, -354), new ArenaBoundsCircle(20));
+public class D032Wrecker(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
+{
+    private static readonly WPos arenaCenter = new(-295f, -354f);
+    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(arenaCenter, 24.5f, 36)],
+    [new Rectangle(new(-295f, -328f), 20f, 2.5f), new Rectangle(new(-295f, -379f), 20f, 1.32f)]);
+    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(arenaCenter, 20, 36)]);
+}

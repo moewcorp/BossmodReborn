@@ -5,13 +5,13 @@ class Lochos(BossModule module, float activationDelay) : Components.GenericAOEs(
     private readonly List<AOEInstance> _aoes = [];
     private readonly float _activationDelay = activationDelay;
 
-    private static readonly AOEShapeRect _shape = new(60, 15);
+    private static readonly AOEShapeRect _shape = new(60f, 15f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.LochosFirst or AID.LochosRest)
+        if (spell.Action.ID is (uint)AID.LochosFirst or (uint)AID.LochosRest)
         {
             if (!_aoes.Any(aoe => aoe.Origin.AlmostEqual(caster.Position, 1) && aoe.Rotation.AlmostEqual(caster.Rotation, 0.1f)))
                 ReportError("Unexpected caster position/rotation");
@@ -33,7 +33,7 @@ class Lochos(BossModule module, float activationDelay) : Components.GenericAOEs(
             };
             if (offset != default)
             {
-                _aoes.Add(new(_shape, Module.Center + offset, dir, WorldState.FutureTime(_activationDelay)));
+                _aoes.Add(new(_shape, Arena.Center + offset, dir, WorldState.FutureTime(_activationDelay)));
             }
         }
     }

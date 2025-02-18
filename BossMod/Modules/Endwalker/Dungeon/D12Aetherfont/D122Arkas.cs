@@ -56,10 +56,14 @@ class BattleCryArenaChange(BossModule module) : Components.GenericAOEs(module)
             if (state == 0x00020001)
             {
                 Arena.Bounds = D122Arkas.SmallerBounds;
+                Arena.Center = D122Arkas.SmallerBounds.Center;
                 _aoe = null;
             }
             else if (state == 0x00080004)
+            {
                 Arena.Bounds = D122Arkas.DefaultBounds;
+                Arena.Center = D122Arkas.DefaultBounds.Center;
+            }
         }
     }
 
@@ -70,7 +74,7 @@ class BattleCryArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SpunLightning(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpunLightning), new AOEShapeRect(30, 4));
+class SpunLightning(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpunLightning), new AOEShapeRect(30, 4));
 class LightningClaw(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.LightningClaw2), 6, 5.2f, 4, 4);
 
 class ForkedFissures(BossModule module) : Components.GenericAOEs(module)
@@ -131,37 +135,47 @@ class ForkedFissures(BossModule module) : Components.GenericAOEs(module)
         })
     };
 
-    private readonly List<WPos> _patternStart = [];
-    private readonly List<WPos> _patternEnd = [];
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(32);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(16);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 16 ? 16 : count;
+        List<AOEInstance> aoes = new(max);
+        for (var i = 0; i < max; ++i)
+        {
+            aoes.Add(_aoes[i]);
+        }
+        return aoes;
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state is 0x00200010 or 0x00020001 && Patterns.TryGetValue(index, out var pattern))
         {
-            _patternStart.AddRange(pattern.Start);
-            _patternEnd.AddRange(pattern.End);
-            for (var i = _patternStart.Count - 1; i >= 0; --i)
+            var starts = pattern.Start;
+            var ends = pattern.End;
+            for (var i = starts.Length - 1; i >= 0; --i)
             {
-                _aoes.Add(new(new AOEShapeRect((_patternEnd[i] - _patternStart[i]).Length(), 2), _patternStart[i], Angle.FromDirection(_patternEnd[i] - _patternStart[i]), WorldState.FutureTime(6)));
-                _patternStart.RemoveAt(i);
-                _patternEnd.RemoveAt(i);
+                var start = starts[i];
+                var end = ends[i];
+                _aoes.Add(new(new AOEShapeRect((start - end).Length(), 2), start, Angle.FromDirection(end - start), WorldState.FutureTime(6)));
             }
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.ForkedFissures)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.ForkedFissures)
             _aoes.RemoveAt(0);
     }
 }
 
 class ElectricEruption(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElectricEruption));
 
-class Leaps(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 10);
+class Leaps(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
 class Electrify(BossModule module) : Leaps(module, AID.Electrify);
 class LightningLeap1(BossModule module) : Leaps(module, AID.LightningLeap1);
 class LightningLeap2(BossModule module) : Leaps(module, AID.LightningLeap2);
@@ -169,8 +183,8 @@ class LightningRampage1(BossModule module) : Leaps(module, AID.LightningRampage1
 class LightningRampage2(BossModule module) : Leaps(module, AID.LightningRampage2);
 
 class RipperClaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RipperClaw));
-class Shock(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Shock), 6);
-class SpinningClaw(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpinningClaw), new AOEShapeCircle(10));
+class Shock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shock), 6);
+class SpinningClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpinningClaw), 10);
 class BattleCry1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BattleCry1));
 class BattleCry2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BattleCry2));
 
@@ -179,7 +193,6 @@ class D122ArkasStates : StateMachineBuilder
     public D122ArkasStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<BattleCryArenaChange>()
             .ActivateOnEnter<LightningClaw>()
             .ActivateOnEnter<SpunLightning>()
@@ -198,9 +211,10 @@ class D122ArkasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12337)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12337, SortOrder = 6)]
 public class D122Arkas(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(425, -440), 14.55f)], [new Rectangle(new(425, -424), 20, 2.4f), new Rectangle(new(425, -455), 10, 1.25f)]);
-    public static readonly ArenaBoundsCircle SmallerBounds = new(10);
+    private static readonly WPos ArenaCenter = new(425, -440);
+    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 14.5f, 48)], [new Rectangle(new(425, -424), 20, 2.4f), new Rectangle(new(425, -455), 10, 1.25f)]);
+    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(ArenaCenter, 10, 48)]);
 }

@@ -3,11 +3,11 @@
 public enum OID : uint
 {
     Boss = 0x7D7, // x1, and more spawn during fight
-    Helper = 0x1B2, // x1
     DarkMatterSlime = 0x7D8, // spawn during fight
     Platform = 0x1E8729, // x13
     Regorge = 0x1E8B20, // EventObj type, spawn during fight
     Syrup = 0x1E88F1, // EventObj type, spawn during fight
+    Helper = 0x1B2
 }
 
 public enum AID : uint
@@ -30,7 +30,7 @@ public enum SID : uint
     SteelScales = 349, // Boss->Boss, extra=1-8 (num stacks)
 }
 
-class HoodSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HoodSwing), new AOEShapeCone(11, 60.Degrees()), (uint)OID.Boss) // TODO: verify angle
+class HoodSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HoodSwing), new AOEShapeCone(11, 60.Degrees())) // TODO: verify angle
 {
     private DateTime _lastBossCast; // assume boss/add cleaves are synchronized?..
     public float SecondsUntilNextCast() => Math.Max(0, 18 - (float)(WorldState.CurrentTime - _lastBossCast).TotalSeconds);
@@ -48,7 +48,7 @@ class HoodSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpel
     }
 }
 
-class WhipBack(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WhipBack), new AOEShapeCone(9, 60.Degrees()));
+class WhipBack(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhipBack), new AOEShapeCone(9, 60.Degrees()));
 class Regorge(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 4, ActionID.MakeSpell(AID.Regorge), m => m.Enemies(OID.Regorge).Where(z => z.EventState != 7), 2.1f);
 class Syrup(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 4, ActionID.MakeSpell(AID.Syrup), m => m.Enemies(OID.Syrup).Where(z => z.EventState != 7), 0.3f);
 
@@ -100,7 +100,7 @@ class T01CaduceusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 93, NameID = 1466, SortOrder = 2, PlanLevel = 50)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 93, NameID = 1466, SortOrder = 2, PlanLevel = 50)]
 public class T01Caduceus : BossModule
 {
     public T01Caduceus(WorldState ws, Actor primary) : base(ws, primary, new(-26, -407), new ArenaBoundsRect(35, 43))

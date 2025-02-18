@@ -5,8 +5,7 @@ public enum OID : uint
     Boss = 0x3190, // R5.999, x1
     Energy = 0x3192, // R1.000, x0 (spawn during fight)
     RedGirl = 0x3191, // R3.450, x0 (spawn during fight)
-    Helper = 0x233C, // R0.500, x21, 523 type
-    Ally2B = 0x31A8, // R0.512, x1
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -63,24 +62,13 @@ public enum AID : uint
 
     // Beams firing across the arena - need to figure out indicators
     RhythmRings = 23563, // Boss->self, 3.0s cast, single-target
-    MagicalInterference = 23509, // Helper->self, no cast, range 50 width 10 rect
-
-    BladeFlurry1 = 23788, // Ally2B->Boss, no cast, single-target
-    BladeFlurry2 = 23789, // Ally2B->Boss, no cast, single-target
-    DancingBlade = 23790, // Ally2B->Boss, no cast, width 2 rect charge
-    BalancedEdge = 23791, // Ally2B->self, 2.0s cast, range 5 circle
-    UnknownAbility1 = 18683, // Ally2B->location, no cast, single-target
-    WhirlingAssault = 23792, // Ally2B->self, 2.0s cast, range 40 width 4 rect
+    MagicalInterference = 23509 // Helper->self, no cast, range 50 width 10 rect
 }
 
 public enum SID : uint
 {
     UnknownStatus = 2056, // none->Boss, extra=0xE1
-    Weakness = 43, // none->player, extra=0x0
-    Transcendent = 418, // none->player, extra=0x0
-    VulnerabilityUp = 1789, // Helper/Boss/Energy->player, extra=0x1/0x2/0x3/0x4/0x5/0x6
-    BrinkOfDeath = 44, // none->player, extra=0x0
-    Distorted = 2535, // Boss->player, extra=0x0
+    Distorted = 2535 // Boss->player, extra=0x0
 }
 
 public enum IconID : uint

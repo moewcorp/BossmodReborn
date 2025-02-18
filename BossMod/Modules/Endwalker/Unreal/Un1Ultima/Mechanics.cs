@@ -58,7 +58,7 @@ class Mechanics(BossModule module) : BossComponent(module)
         //    hints.Add("Move from boss");
         //}
 
-        //if (Raid.WithoutSlot().InRadiusExcluding(actor, _homingLasersRange).Any())
+        //if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _homingLasersRange).Any())
         //{
         //    hints.Add("Spread");
         //}
@@ -93,7 +93,7 @@ class Mechanics(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         var mt = WorldState.Actors.Find(Module.PrimaryActor.TargetID);
-        foreach (var player in Raid.WithoutSlot().Exclude(pc))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
             Arena.Actor(player, _orbKiters.Contains(player.InstanceID) ? Colors.Danger : player == mt ? Colors.PlayerInteresting : Colors.PlayerGeneric);
         if (mt != null)
             Arena.AddCircle(mt.Position, _aoeCleave.Radius, Colors.Danger);

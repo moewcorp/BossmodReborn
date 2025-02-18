@@ -3,16 +3,17 @@
 public enum OID : uint
 {
     Boss = 0x31D0, // R7.500, x1
-    Helper = 0x233C, // R0.500, x18
     AlkonostsShadow = 0x31D1, // R3.750-7.500, spawn during fight
     VorticalOrb1 = 0x3239, // R0.500, spawn during fight
     VorticalOrb2 = 0x323A, // R0.500, spawn during fight
     VorticalOrb3 = 0x31D2, // R0.500, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
+
     Stormcall = 24121, // Boss->self, 5.0s cast, single-target, visual
     Explosion = 24122, // VorticalOrb1/VorticalOrb2/VorticalOrb3->self, 1.5s cast, range 35 circle aoe
     BladedBeak = 24123, // Boss->player, 5.0s cast, single-target, tankbuster
@@ -27,18 +28,12 @@ public enum AID : uint
     PainfulGust = 24132, // Boss->self, 5.0s cast, range 20 circle aoe
     ForeshadowingPulse = 24133, // AlkonostsShadow->self, 5.0s cast, range 8-25 donut
     ForeshadowingStorm = 24134, // AlkonostsShadow->self, 5.0s cast, range 36 130-degree cone aoe
-    ForeshadowingGust = 24135, // AlkonostsShadow->self, 5.0s cast, range 20 circle aoe
+    ForeshadowingGust = 24135 // AlkonostsShadow->self, 5.0s cast, range 20 circle aoe
 }
 
 public enum SID : uint
 {
-    OrbMovement = 2234, // none->VorticalOrb1/VorticalOrb2/VorticalOrb3, extra=0x1E (fast)/0x49 (slow)
-    Transfiguration = 705, // AlkonostsShadow->AlkonostsShadow, extra=0x1A4
-}
-
-public enum TetherID : uint
-{
-    Foreshadowing = 45, // AlkonostsShadow->Boss
+    OrbMovement = 2234 // none->VorticalOrb1/VorticalOrb2/VorticalOrb3, extra=0x1E (fast)/0x49 (slow)
 }
 
 class Stormcall(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Explosion))
@@ -76,7 +71,7 @@ class Stormcall(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
 
 class BladedBeak(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.BladedBeak));
 class NihilitysSong(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.NihilitysSong));
-class Fantod(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FantodAOE), 3);
+class Fantod(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FantodAOE), 3);
 
 class Foreshadowing(BossModule module) : Components.GenericAOEs(module)
 {
@@ -160,5 +155,5 @@ class CE63WornToShadowStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 28)] // bnpcname=9973
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 28)] // bnpcname=9973
 public class CE63WornToShadow(WorldState ws, Actor primary) : BossModule(ws, primary, new(-480, -690), new ArenaBoundsCircle(30));

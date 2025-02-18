@@ -27,7 +27,7 @@ public enum AID : uint
     Judged = 15633, // Helper->self, no cast, range 5 circle, tower success
     FoundWanting = 15632, // Helper->self, no cast, range 40 circle, tower fail
     RiteOfTheSacrament = 15629, // Boss->self, no cast, single-target
-    PerfectContrition = 15630, // Brightsphere->self, 6.0s cast, range 5-15 donut
+    PerfectContrition = 15630 // Brightsphere->self, 6.0s cast, range 5-15 donut
 }
 
 class PerfectContrition(BossModule module) : Components.GenericAOEs(module)
@@ -63,22 +63,14 @@ class JudgmentDay(BossModule module) : Components.GenericTowers(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Towers.Count > 0 && (AID)spell.Action.ID is AID.Judged or AID.FoundWanting)
+        if (Towers.Count != 0 && (AID)spell.Action.ID is AID.Judged or AID.FoundWanting)
             Towers.RemoveAt(0);
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Towers.Count > 0)
-            base.AddAIHints(slot, actor, assignment, hints);
-        if (Towers.Count > 1)
-            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
     }
 }
 
 class Exegesis(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(5);
     private static readonly AOEShapeRect rect = new(5, 5, 5);
     private static readonly AOEShapeCross cross = new(15, 5);
     private static readonly WPos[] diagonalPositions = [new(-240, -50), new(-250, -40), new(-230, -40), new(-250, -60), new(-230, -60)];
@@ -91,8 +83,8 @@ class Exegesis(BossModule module) : Components.GenericAOEs(module)
         switch ((AID)spell.Action.ID)
         {
             case AID.ExegesisA: //diagonal
-                foreach (var p in diagonalPositions)
-                    _aoes.Add(new(rect, p, default, _activation));
+                for (var i = 0; i < diagonalPositions.Length; ++i)
+                    _aoes.Add(new(rect, diagonalPositions[i], default, _activation));
                 break;
             case AID.ExegesisB: //east+west
                 _aoes.Add(new(rect, new(-250, -50), default, _activation));

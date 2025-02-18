@@ -5,8 +5,8 @@
 // TODO: figure out rage target - it is probably a random non-tank non-spread
 class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
 {
-    public bool LeapsDone { get; private set; }
-    public bool RageDone { get; private set; }
+    public bool LeapsDone;
+    public bool RageDone;
     private readonly Actor? _leftCharge;
     private readonly Actor? _rightCharge;
     private Angle _dirToStackPos;
@@ -21,8 +21,8 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
             return;
         }
 
-        var offset1 = c1.Position - Module.Center;
-        var offset2 = c2.Position - Module.Center;
+        var offset1 = c1.Position - Arena.Center;
+        var offset2 = c2.Position - Arena.Center;
         var toStack = -(offset1 + offset2);
         (_leftCharge, _rightCharge) = toStack.OrthoL().Dot(offset1) > 0 ? (c1, c2) : (c2, c1);
         _dirToStackPos = Angle.FromDirection(toStack);
@@ -58,7 +58,7 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.SkywardLeapP2)
             AddSpread(actor);
@@ -94,7 +94,7 @@ class P2StrengthOfTheWard2SpreadStack : Components.UniformStackSpread
 }
 
 // growing voidzones
-class P2StrengthOfTheWard2Voidzones(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9);
+class P2StrengthOfTheWard2Voidzones(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9);
 
 // charges on tethered targets
 class P2StrengthOfTheWard2Charges(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.HolyShieldBash))
@@ -163,7 +163,7 @@ class P2StrengthOfTheWard2Charges(BossModule module) : Components.CastCounter(mo
         var dir = target.Position - source.Position;
         var len = dir.Length();
         dir /= len;
-        return Raid.WithoutSlot().Any(p => p.Role != Role.Tank && p.Position.InRect(source.Position, dir, len, 0, _chargeHalfWidth));
+        return Raid.WithoutSlot(false, true, true).Any(p => p.Role != Role.Tank && p.Position.InRect(source.Position, dir, len, 0, _chargeHalfWidth));
     }
 
     private bool IsInChargeAOE(Actor player)
@@ -185,6 +185,6 @@ class P2StrengthOfTheWard2Towers(BossModule module) : Components.CastTowers(modu
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            Towers.Add(new(spell.LocXZ, Radius, forbiddenSoakers: Raid.WithSlot(true).WhereActor(p => p.Role == Role.Tank).Mask()));
+            Towers.Add(new(spell.LocXZ, Radius, forbiddenSoakers: Raid.WithSlot(true, true, true).WhereActor(p => p.Role == Role.Tank).Mask()));
     }
 }

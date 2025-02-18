@@ -29,12 +29,12 @@ public enum AID : uint
 }
 
 class Eyeshine(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.Eyeshine));
-class AbsoluteZero(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AbsoluteZero), new AOEShapeCone(45.5f, 45.Degrees()));
-class Freezeover(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Freezeover), 6);
-class PlainPound(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PlainPound), new AOEShapeCircle(4.56f));
-class RaucousScritch(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RaucousScritch), new AOEShapeCone(8.42f, 30.Degrees()));
-class Hurl(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Hurl), 6);
-class Spin(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCone(9.42f, 60.Degrees()), (uint)OID.Abharamu);
+class AbsoluteZero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbsoluteZero), new AOEShapeCone(45.5f, 45f.Degrees()));
+class Freezeover(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Freezeover), 6f);
+class PlainPound(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PlainPound), 4.56f);
+class RaucousScritch(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RaucousScritch), new AOEShapeCone(8.42f, 60f.Degrees()));
+class Hurl(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hurl), 6f);
+class Spin(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCone(9.42f, 60f.Degrees()), [(uint)OID.Abharamu]);
 
 class CanalIcebeastStates : StateMachineBuilder
 {
@@ -48,30 +48,43 @@ class CanalIcebeastStates : StateMachineBuilder
             .ActivateOnEnter<Hurl>()
             .ActivateOnEnter<RaucousScritch>()
             .ActivateOnEnter<Spin>()
-            .Raw.Update = () => module.Enemies(OID.CanalIceHomunculus).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.CanalVindthurs))
-            .Concat(module.Enemies(OID.Abharamu)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(CanalIcebeast.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 268, NameID = 6650)]
-public class CanalIcebeast(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -420), new ArenaBoundsCircle(20))
+public class CanalIcebeast(WorldState ws, Actor primary) : FinalRoomArena(ws, primary)
 {
+    private static readonly uint[] trash = [(uint)OID.CanalVindthurs, (uint)OID.CanalIceHomunculus];
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.Abharamu, .. trash];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.CanalIceHomunculus).Concat(Enemies(OID.CanalVindthurs)));
-        Arena.Actors(Enemies(OID.Abharamu), Colors.Vulnerable);
+        Arena.Actors(Enemies(trash));
+        Arena.Actors(Enemies((uint)OID.Abharamu), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.Abharamu => 3,
-                OID.CanalVindthurs or OID.CanalIceHomunculus => 2,
-                OID.Boss => 1,
+                (uint)OID.Abharamu => 2,
+                (uint)OID.CanalVindthurs or (uint)OID.CanalIceHomunculus => 1,
                 _ => 0
             };
         }

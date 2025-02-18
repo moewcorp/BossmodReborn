@@ -8,13 +8,13 @@ class WindblossomWhirl(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.WindblossomWhirlVisual)
+        if (spell.Action.ID == (uint)AID.WindblossomWhirlVisual)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 6.3f));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.WindblossomWhirl1 or AID.WindblossomWhirl2)
+        if (spell.Action.ID is (uint)AID.WindblossomWhirl1 or (uint)AID.WindblossomWhirl2)
         {
             if (++NumCasts == 5 && _aoe != null)
             {

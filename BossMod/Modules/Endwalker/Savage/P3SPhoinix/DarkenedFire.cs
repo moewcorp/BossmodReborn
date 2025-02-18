@@ -11,7 +11,7 @@ class DarkenedFire(BossModule module) : BossComponent(module)
     {
         var haveTooClose = false;
         var numInRange = 0;
-        foreach (var player in Raid.WithoutSlot().Where(player => CanBothBeTargets(player, actor)))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Where(player => CanBothBeTargets(player, actor)))
         {
             haveTooClose |= player.Position.InCircle(actor.Position, _minRange);
             if (player.Position.InCircle(actor.Position, _maxRange))
@@ -32,7 +32,7 @@ class DarkenedFire(BossModule module) : BossComponent(module)
     {
         // draw other potential targets, to simplify positioning
         var healerOrTank = pc.Role is Role.Tank or Role.Healer;
-        foreach (var player in Raid.WithoutSlot().Where(player => CanBothBeTargets(player, pc)))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Where(player => CanBothBeTargets(player, pc)))
         {
             var tooClose = player.Position.InCircle(pc.Position, _minRange);
             var inRange = player.Position.InCircle(pc.Position, _maxRange);

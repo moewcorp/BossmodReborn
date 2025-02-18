@@ -57,10 +57,24 @@ public sealed class ClientState
     public Fate ActiveFate;
     public Pet ActivePet;
     public ulong FocusTargetId;
+    public Angle ForcedMovementDirection; // used for temporary misdirection and spinning states
+    public uint[] ContentKeyValueData = new uint[6]; // used for content-specific persistent player attributes, like bozja resistance rank
+
+    public uint GetContentValue(uint key) => ContentKeyValueData[0] == key
+        ? ContentKeyValueData[1]
+        : ContentKeyValueData[2] == key
+            ? ContentKeyValueData[3]
+            : ContentKeyValueData[4] == key
+                ? ContentKeyValueData[5]
+                : 0;
+
+    public uint ElementalLevel => GetContentValue(4);
+    public uint ElementalLevelSynced => GetContentValue(2);
+    public uint ResistanceRank => GetContentValue(5);
 
     public int ClassJobLevel(Class c)
     {
-        var index = Service.LuminaRow<Lumina.Excel.GeneratedSheets.ClassJob>((uint)c)?.ExpArrayIndex ?? -1;
+        var index = Service.LuminaRow<Lumina.Excel.Sheets.ClassJob>((uint)c)?.ExpArrayIndex ?? -1;
         return index >= 0 && index < ClassJobLevels.Length ? ClassJobLevels[index] : -1;
     }
 
@@ -75,45 +89,97 @@ public sealed class ClientState
     }
     public unsafe T GetGauge<T>() where T : unmanaged => GetGauge<T>(GaugePayload);
 
-    public IEnumerable<WorldState.Operation> CompareToInitial()
+    public List<WorldState.Operation> CompareToInitial()
     {
+        List<WorldState.Operation> ops = new(13);
         if (CountdownRemaining != null)
-            yield return new OpCountdownChange(CountdownRemaining);
+            ops.Add(new OpCountdownChange(CountdownRemaining));
 
-        if (AnimationLock > 0)
-            yield return new OpAnimationLockChange(AnimationLock);
+        if (AnimationLock != 0)
+            ops.Add(new OpAnimationLockChange(AnimationLock));
 
-        if (ComboState.Remaining > 0)
-            yield return new OpComboChange(ComboState);
+        if (ComboState.Remaining != 0)
+            ops.Add(new OpComboChange(ComboState));
 
         if (PlayerStats != default)
-            yield return new OpPlayerStatsChange(PlayerStats);
+            ops.Add(new OpPlayerStatsChange(PlayerStats));
 
-        var cooldowns = Cooldowns.Select((v, i) => (i, v)).Where(iv => iv.v.Total > 0).ToList();
-        if (cooldowns.Count > 0)
-            yield return new OpCooldown(false, cooldowns);
+        var cdlen = Cooldowns.Length;
+        if (cdlen != 0)
+        {
+            var cooldowns = new List<(int, Cooldown)>(cdlen);
 
+            for (var i = 0; i < cdlen; ++i)
+            {
+                var cds = Cooldowns[i];
+                if (cds.Total != 0)
+                    cooldowns.Add((i, cds));
+            }
+            if (cooldowns.Count != 0)
+                ops.Add(new OpCooldown(false, cooldowns));
+        }
         if (DutyActions.Any(a => a != default))
-            yield return new OpDutyActionsChange(DutyActions[0], DutyActions[1]);
+            ops.Add(new OpDutyActionsChange(DutyActions[0], DutyActions[1]));
 
-        var bozjaHolster = BozjaHolster.Select((v, i) => ((BozjaHolsterID)i, v)).Where(iv => iv.v > 0).ToList();
-        if (BozjaHolster.Any(count => count != 0))
-            yield return new OpBozjaHolsterChange(bozjaHolster);
+        var holsterlen = BozjaHolster.Length;
+        if (holsterlen != 0)
+        {
+            var bozjaHolster = new List<(BozjaHolsterID, byte)>(holsterlen);
+            for (var i = 0; i < holsterlen; ++i)
+            {
+                var holster = BozjaHolster[i];
+                if (holster != 0)
+                    bozjaHolster.Add(((BozjaHolsterID)i, holster));
+            }
+            var hasNonZeroHolster = false;
+            for (var i = 0; i < holsterlen; ++i)
+            {
+                if (BozjaHolster[i] != 0)
+                {
+                    hasNonZeroHolster = true;
+                    break;
+                }
+            }
+            if (hasNonZeroHolster)
+                ops.Add(new OpBozjaHolsterChange(bozjaHolster));
+        }
 
-        if (BlueMageSpells.Any(a => a != 0))
-            yield return new OpBlueMageSpellsChange(BlueMageSpells);
+        var hasNonZeroBMSpell = false;
+        for (var i = 0; i < BlueMageSpells.Length; ++i)
+        {
+            if (BlueMageSpells[i] != 0)
+            {
+                hasNonZeroBMSpell = true;
+                break;
+            }
+        }
+        if (hasNonZeroBMSpell)
+            ops.Add(new OpBlueMageSpellsChange(BlueMageSpells));
 
-        if (ClassJobLevels.Any(a => a != 0))
-            yield return new OpClassJobLevelsChange(ClassJobLevels);
+        var hasNonZeroLevels = false;
+        for (var i = 0; i < ClassJobLevels.Length; ++i)
+        {
+            if (ClassJobLevels[i] != 0)
+            {
+                hasNonZeroLevels = true;
+                break;
+            }
+        }
+        if (hasNonZeroLevels)
+            ops.Add(new OpClassJobLevelsChange(ClassJobLevels));
 
         if (ActiveFate.ID != 0)
-            yield return new OpActiveFateChange(ActiveFate);
+            ops.Add(new OpActiveFateChange(ActiveFate));
 
         if (ActivePet.InstanceID != 0)
-            yield return new OpActivePetChange(ActivePet);
+            ops.Add(new OpActivePetChange(ActivePet));
 
         if (FocusTargetId != 0)
-            yield return new OpFocusTargetChange(FocusTargetId);
+            ops.Add(new OpFocusTargetChange(FocusTargetId));
+
+        if (ForcedMovementDirection != default)
+            ops.Add(new OpForcedMovementDirectionChange(ForcedMovementDirection));
+        return ops;
     }
 
     public void Tick(float dt)
@@ -144,7 +210,7 @@ public sealed class ClientState
     public Event<OpActionRequest> ActionRequested = new();
     public sealed record class OpActionRequest(ClientActionRequest Request) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws) => ws.Client.ActionRequested.Fire(this);
+        protected override void Exec(ref WorldState ws) => ws.Client.ActionRequested.Fire(this);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLAR"u8)
             .Emit(Request.Action)
             .EmitActor(Request.TargetID)
@@ -158,7 +224,7 @@ public sealed class ClientState
     public Event<OpActionReject> ActionRejected = new();
     public sealed record class OpActionReject(ClientActionReject Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws) => ws.Client.ActionRejected.Fire(this);
+        protected override void Exec(ref WorldState ws) => ws.Client.ActionRejected.Fire(this);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLRJ"u8)
             .Emit(Value.Action)
             .Emit(Value.SourceSequence)
@@ -169,7 +235,7 @@ public sealed class ClientState
     public Event<OpCountdownChange> CountdownChanged = new();
     public sealed record class OpCountdownChange(float? Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.CountdownRemaining = Value;
             ws.Client.CountdownChanged.Fire(this);
@@ -186,7 +252,7 @@ public sealed class ClientState
     public Event<OpAnimationLockChange> AnimationLockChanged = new();
     public sealed record class OpAnimationLockChange(float Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.AnimationLock = Value;
             ws.Client.AnimationLockChanged.Fire(this);
@@ -197,7 +263,7 @@ public sealed class ClientState
     public Event<OpComboChange> ComboChanged = new();
     public sealed record class OpComboChange(Combo Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.ComboState = Value;
             ws.Client.ComboChanged.Fire(this);
@@ -208,7 +274,7 @@ public sealed class ClientState
     public Event<OpPlayerStatsChange> PlayerStatsChanged = new();
     public sealed record class OpPlayerStatsChange(Stats Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.PlayerStats = Value;
             ws.Client.PlayerStatsChanged.Fire(this);
@@ -219,28 +285,36 @@ public sealed class ClientState
     public Event<OpCooldown> CooldownsChanged = new();
     public sealed record class OpCooldown(bool Reset, List<(int group, Cooldown value)> Cooldowns) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             if (Reset)
                 Array.Fill(ws.Client.Cooldowns, default);
-            foreach (var cd in Cooldowns)
+            var count = Cooldowns.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var cd = Cooldowns[i];
                 ws.Client.Cooldowns[cd.group] = cd.value;
+            }
             ws.Client.CooldownsChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output)
         {
+            var count = Cooldowns.Count;
             output.EmitFourCC("CLCD"u8);
             output.Emit(Reset);
-            output.Emit((byte)Cooldowns.Count);
-            foreach (var e in Cooldowns)
-                output.Emit((byte)e.group).Emit(e.value.Elapsed).Emit(e.value.Total);
+            output.Emit((byte)count);
+            for (var i = 0; i < count; ++i)
+            {
+                var cd = Cooldowns[i];
+                output.Emit((byte)cd.group).Emit(cd.value.Elapsed).Emit(cd.value.Total);
+            }
         }
     }
 
     public Event<OpDutyActionsChange> DutyActionsChanged = new();
     public sealed record class OpDutyActionsChange(DutyAction Slot0, DutyAction Slot1) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.DutyActions[0] = Slot0;
             ws.Client.DutyActions[1] = Slot1;
@@ -252,19 +326,26 @@ public sealed class ClientState
     public Event<OpBozjaHolsterChange> BozjaHolsterChanged = new();
     public sealed record class OpBozjaHolsterChange(List<(BozjaHolsterID entry, byte count)> Contents) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             Array.Fill(ws.Client.BozjaHolster, (byte)0);
-            foreach (var e in Contents)
+            for (var i = 0; i < Contents.Count; ++i)
+            {
+                var e = Contents[i];
                 ws.Client.BozjaHolster[(int)e.entry] = e.count;
+            }
             ws.Client.BozjaHolsterChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output)
         {
+            var count = Contents.Count;
             output.EmitFourCC("CLBH"u8);
-            output.Emit((byte)Contents.Count);
-            foreach (var e in Contents)
+            output.Emit((byte)count);
+            for (var i = 0; i < count; ++i)
+            {
+                var e = Contents[i];
                 output.Emit((byte)e.entry).Emit(e.count);
+            }
         }
     }
 
@@ -273,17 +354,20 @@ public sealed class ClientState
     {
         public readonly uint[] Values = Values;
 
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             Array.Copy(Values, ws.Client.BlueMageSpells, NumBlueMageSpells);
             ws.Client.BlueMageSpellsChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output)
         {
+            var len = Values.Length;
             output.EmitFourCC("CBLU"u8);
             output.Emit((byte)Values.Length);
-            foreach (var e in Values)
-                output.Emit(e);
+            for (var i = 0; i < len; ++i)
+            {
+                output.Emit(Values[i]);
+            }
         }
     }
 
@@ -292,7 +376,7 @@ public sealed class ClientState
     {
         public readonly short[] Values = Values;
 
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             Array.Fill(ws.Client.ClassJobLevels, (short)0);
             for (var i = 0; i < Values.Length; ++i)
@@ -301,17 +385,20 @@ public sealed class ClientState
         }
         public override void Write(ReplayRecorder.Output output)
         {
+            var len = Values.Length;
             output.EmitFourCC("CLVL"u8);
-            output.Emit((byte)Values.Length);
-            foreach (var e in Values)
-                output.Emit(e);
+            output.Emit((byte)len);
+            for (var i = 0; i < len; ++i)
+            {
+                output.Emit(Values[i]);
+            }
         }
     }
 
     public Event<OpActiveFateChange> ActiveFateChanged = new();
     public sealed record class OpActiveFateChange(Fate Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.ActiveFate = Value;
             ws.Client.ActiveFateChanged.Fire(this);
@@ -322,7 +409,7 @@ public sealed class ClientState
     public Event<OpActivePetChange> ActivePetChanged = new();
     public sealed record class OpActivePetChange(Pet Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.ActivePet = Value;
             ws.Client.ActivePetChanged.Fire(this);
@@ -333,11 +420,39 @@ public sealed class ClientState
     public Event<OpFocusTargetChange> FocusTargetChanged = new();
     public sealed record class OpFocusTargetChange(ulong Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Client.FocusTargetId = Value;
             ws.Client.FocusTargetChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLFT"u8).Emit(Value, "X8");
+    }
+
+    public Event<OpForcedMovementDirectionChange> ForcedMovementDirectionChanged = new();
+    public sealed record class OpForcedMovementDirectionChange(Angle Value) : WorldState.Operation
+    {
+        protected override void Exec(ref WorldState ws)
+        {
+            ws.Client.ForcedMovementDirection = Value;
+            ws.Client.ForcedMovementDirectionChanged.Fire(this);
+        }
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLFD"u8).Emit(Value);
+    }
+
+    public Event<OpContentKVDataChange> ContentKVDataChanged = new();
+    public sealed record class OpContentKVDataChange(uint[] Value) : WorldState.Operation
+    {
+        public readonly uint[] Value = Value;
+        protected override void Exec(ref WorldState ws)
+        {
+            ws.Client.ContentKeyValueData = Value;
+            ws.Client.ContentKVDataChanged.Fire(this);
+        }
+        public override void Write(ReplayRecorder.Output output)
+        {
+            output.EmitFourCC("CLKV"u8);
+            foreach (var val in Value)
+                output.Emit(val);
+        }
     }
 }

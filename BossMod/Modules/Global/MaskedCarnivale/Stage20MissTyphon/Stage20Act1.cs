@@ -7,13 +7,13 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Fungah = 14705, // 272A->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
-    Fireball = 14706, // 272A->location, 3.5s cast, range 8 circle
-    Snort = 14704, // 272A->self, 7.0s cast, range 50+R circle, stun, knockback 30 away from source
-    Fireball2 = 14707, // 272A->player, no cast, range 8 circle, 3 casts after snort
+    Fungah = 14705, // Boss->self, no cast, range 8+R ?-degree cone, knockback 20 away from source
+    Fireball = 14706, // Boss->location, 3.5s cast, range 8 circle
+    Snort = 14704, // Boss->self, 7.0s cast, range 50+R circle, stun, knockback 30 away from source
+    Fireball2 = 14707, // Boss->player, no cast, range 8 circle, 3 casts after snort
 }
 
-class Fireball(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
 class Snort(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Snort), "Use Diamondback!");
 class SnortKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Snort), 30, kind: Kind.AwayFromOrigin, stopAtWall: true); // knockback actually delayed by 0.7s
 
@@ -45,7 +45,7 @@ class Stage20Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 3046, SortOrder = 1)]
 public class Stage20Act1 : BossModule
 {
-    public Stage20Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage20Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }

@@ -14,8 +14,8 @@ class Dialogos(BossModule module) : Components.UniformStackSpread(module, 6, 6, 
         Spreads.Clear();
         if (_type != Type.None && NumCasts < 2)
         {
-            var closest = Raid.WithoutSlot().Closest(Module.PrimaryActor.Position);
-            var farthest = Raid.WithoutSlot().Farthest(Module.PrimaryActor.Position);
+            var closest = Raid.WithoutSlot(false, true, true).Closest(Module.PrimaryActor.Position);
+            var farthest = Raid.WithoutSlot(false, true, true).Farthest(Module.PrimaryActor.Position);
             if (closest != null && farthest != null)
             {
                 if (NumCasts == 0)

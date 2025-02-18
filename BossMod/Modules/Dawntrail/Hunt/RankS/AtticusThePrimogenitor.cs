@@ -27,86 +27,118 @@ public enum NPCYell : ushort
     AttackThreeTimes1 = 16904,
     AttackSixTimes1 = 16905,
     Brutality = 16906,
-    FrontHead1 = 16881,
-    FrontHead2 = 16882,
-    FrontHead3 = 16888,
-    FrontHead4 = 16889,
-    FrontHead5 = 16874,
-    FrontHead6 = 16896,
-    FrontHead7 = 16885,
-    FrontHead8 = 16900,
-    FrontHead9 = 16897,
+    FrontHead1 = 16874,
+    FrontHead2 = 16881,
+    FrontHead3 = 16882,
+    FrontHead4 = 16885,
+    FrontHead5 = 16888,
+    FrontHead6 = 16889,
+    FrontHead7 = 16896,
+    FrontHead8 = 16897,
+    FrontHead9 = 16900,
     FrontHead10 = 16903,
-    RightHead1 = 16879,
-    RightHead2 = 16887,
-    RightHead3 = 16893,
-    RightHead4 = 16875,
-    RightHead5 = 16894,
-    RightHead6 = 16886,
-    RightHead7 = 16901,
-    RightHead8 = 16878,
-    RightHead9 = 16902,
-    RightHead10 = 16890,
-    LeftHead1 = 16883,
-    LeftHead2 = 16880,
-    LeftHead3 = 16884,
-    LeftHead4 = 16892,
-    LeftHead5 = 16876,
-    LeftHead6 = 16895,
-    LeftHead7 = 16899,
-    LeftHead8 = 16877,
+    RightHead1 = 16875,
+    RightHead2 = 16878,
+    RightHead3 = 16879,
+    RightHead4 = 16886,
+    RightHead5 = 16887,
+    RightHead6 = 16890,
+    RightHead7 = 16893,
+    RightHead8 = 16894,
+    RightHead9 = 16901,
+    RightHead10 = 16902,
+    LeftHead1 = 16876,
+    LeftHead2 = 16877,
+    LeftHead3 = 16880,
+    LeftHead4 = 16883,
+    LeftHead5 = 16884,
+    LeftHead6 = 16891,
+    LeftHead7 = 16892,
+    LeftHead8 = 16895,
     LeftHead9 = 16898,
-    LeftHead10 = 16891
+    LeftHead10 = 16899
 }
 
-class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PyricBlast), 6, 8);
+class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PyricBlast), 6f, 8);
 class Intimidation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Intimidation));
 class Brutality(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Brutality), "Applies Haste");
 
 class BreathSequence(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly Angle angle = 120.Degrees();
-    private static readonly AOEShapeCone cone = new(40, 60.Degrees());
-    private static readonly HashSet<ushort> frontHead = new(
-        new[] { NPCYell.FrontHead1, NPCYell.FrontHead2, NPCYell.FrontHead3, NPCYell.FrontHead4,
-                NPCYell.FrontHead5, NPCYell.FrontHead6, NPCYell.FrontHead7, NPCYell.FrontHead8, NPCYell.FrontHead9, NPCYell.FrontHead10 }
-        .Select(x => (ushort)x));
-    private static readonly HashSet<ushort> leftHead = new(
-        new[] { NPCYell.LeftHead1, NPCYell.LeftHead2, NPCYell.LeftHead3, NPCYell.LeftHead4,
-                NPCYell.LeftHead5, NPCYell.LeftHead6, NPCYell.LeftHead7, NPCYell.LeftHead8, NPCYell.LeftHead9, NPCYell.LeftHead10 }
-        .Select(x => (ushort)x));
-    private static readonly HashSet<ushort> rightHead = new(
-        new[] { NPCYell.RightHead1, NPCYell.RightHead2, NPCYell.RightHead3, NPCYell.RightHead4,
-                NPCYell.RightHead5, NPCYell.RightHead6, NPCYell.RightHead7, NPCYell.RightHead8, NPCYell.RightHead9, NPCYell.RightHead10 }
-        .Select(x => (ushort)x));
-    private static readonly HashSet<AID> castEnd = [AID.BreathSequenceFirstFront, AID.BreathSequenceFirstLeft, AID.BreathSequenceFirstRight,
-               AID.BreathSequenceRestFront, AID.BreathSequenceRestLeft, AID.BreathSequenceRestRight];
+    private readonly List<AOEInstance> _aoes = new(6);
+    private static readonly Angle angle = 120f.Degrees();
+    private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (count > 1)
-            yield return _aoes[1];
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        {
+            for (var i = 0; i < max; ++i)
+            {
+                var aoe = _aoes[i];
+                if (i == 0)
+                    aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+                else
+                    aoes[i] = aoe;
+            }
+        }
+        return aoes;
     }
 
     public override void OnActorNpcYell(Actor actor, ushort id)
     {
-        var activation = WorldState.FutureTime(10.5f); // placeholder, gets replaced when sequence starts
-        if (frontHead.Contains(id))
-            _aoes.Add(new(cone, actor.Position, actor.Rotation, activation));
-        else if (leftHead.Contains(id))
-            _aoes.Add(new(cone, actor.Position, actor.Rotation + angle, activation));
-        else if (rightHead.Contains(id))
-            _aoes.Add(new(cone, actor.Position, actor.Rotation - angle, activation));
+        if (id > 16903)
+            return;
+        void AddAOE(Angle offset = default) => _aoes.Add(new(cone, actor.Position, actor.Rotation + offset, WorldState.FutureTime(10.5d))); // activation is a placeholder, gets replaced when sequence starts
+        switch (id)
+        {
+            case (ushort)NPCYell.FrontHead1:
+            case (ushort)NPCYell.FrontHead2:
+            case (ushort)NPCYell.FrontHead3:
+            case (ushort)NPCYell.FrontHead4:
+            case (ushort)NPCYell.FrontHead5:
+            case (ushort)NPCYell.FrontHead6:
+            case (ushort)NPCYell.FrontHead7:
+            case (ushort)NPCYell.FrontHead8:
+            case (ushort)NPCYell.FrontHead9:
+            case (ushort)NPCYell.FrontHead10:
+                AddAOE();
+                break;
+            case (ushort)NPCYell.LeftHead1:
+            case (ushort)NPCYell.LeftHead2:
+            case (ushort)NPCYell.LeftHead3:
+            case (ushort)NPCYell.LeftHead4:
+            case (ushort)NPCYell.LeftHead5:
+            case (ushort)NPCYell.LeftHead6:
+            case (ushort)NPCYell.LeftHead7:
+            case (ushort)NPCYell.LeftHead8:
+            case (ushort)NPCYell.LeftHead9:
+            case (ushort)NPCYell.LeftHead10:
+                AddAOE(angle);
+                break;
+            case (ushort)NPCYell.RightHead1:
+            case (ushort)NPCYell.RightHead2:
+            case (ushort)NPCYell.RightHead3:
+            case (ushort)NPCYell.RightHead4:
+            case (ushort)NPCYell.RightHead5:
+            case (ushort)NPCYell.RightHead6:
+            case (ushort)NPCYell.RightHead7:
+            case (ushort)NPCYell.RightHead8:
+            case (ushort)NPCYell.RightHead9:
+            case (ushort)NPCYell.RightHead10:
+                AddAOE(-angle);
+                break;
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var count = _aoes.Count;
-        if (count > 0)
+        if (count != 0)
             switch ((AID)spell.Action.ID)
             {
                 case AID.BreathSequenceFirstFront:
@@ -120,8 +152,18 @@ class BreathSequence(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && castEnd.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.BreathSequenceFirstFront:
+                case (uint)AID.BreathSequenceFirstLeft:
+                case (uint)AID.BreathSequenceFirstRight:
+                case (uint)AID.BreathSequenceRestFront:
+                case (uint)AID.BreathSequenceRestLeft:
+                case (uint)AID.BreathSequenceRestRight:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 

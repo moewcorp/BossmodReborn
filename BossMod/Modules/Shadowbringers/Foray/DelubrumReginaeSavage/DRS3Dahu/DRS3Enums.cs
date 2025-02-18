@@ -5,12 +5,13 @@ public enum OID : uint
     Boss = 0x30A8, // R4.600, x1
     Marchosias = 0x30A9, // R2.500, spawn during fight
     CrownedMarchosias = 0x30AA, // R2.500, spawn during fight
-    Helper = 0x233C, // R0.500, x20
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss/CrownedMarchosias->player, no cast, single-target
+
     ReverberatingRoar = 22381, // Boss->self, no cast, single-target, visual (falling rocks)
     FallingRock = 22382, // Helper->location, 3.0s cast, range 4 circle puddle
     HotCharge = 22387, // Boss->location, 3.0s cast, width 8 rect charge

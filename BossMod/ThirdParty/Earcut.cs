@@ -6,7 +6,7 @@ namespace EarcutNet;
 
 public class Earcut
 {
-    public static List<int> Tessellate(ReadOnlySpan<double> data, IList<int> holeIndices)
+    public static List<int> Tessellate(ReadOnlySpan<double> data, List<int> holeIndices)
     {
         var hasHoles = holeIndices.Count > 0;
         var outerLen = hasHoles ? holeIndices[0] * 2 : data.Length;
@@ -18,10 +18,10 @@ public class Earcut
             return triangles;
         }
 
-        var minX = double.PositiveInfinity;
-        var minY = double.PositiveInfinity;
-        var maxX = double.NegativeInfinity;
-        var maxY = double.NegativeInfinity;
+        var minX = double.MaxValue;
+        var minY = double.MaxValue;
+        var maxX = double.MinValue;
+        var maxY = double.MinValue;
         var invSize = default(double);
 
         if (hasHoles)
@@ -30,7 +30,7 @@ public class Earcut
         }
 
         // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-        if (data.Length > 80 * 2)
+        if (data.Length > 160)
         {
             for (int i = 0; i < outerLen; i += 2)
             {
@@ -139,7 +139,7 @@ public class Earcut
     }
 
     // main ear slicing loop which triangulates a polygon (given as a linked list)
-    static void EarcutLinked(Node ear, IList<int> triangles, double minX, double minY, double invSize, int pass = 0)
+    static void EarcutLinked(Node ear, List<int> triangles, double minX, double minY, double invSize, int pass = 0)
     {
         if (ear == null)
         {
@@ -312,7 +312,7 @@ public class Earcut
     }
 
     // go through all polygon nodes and cure small local self-intersections
-    static Node CureLocalIntersections(Node start, IList<int> triangles)
+    static Node CureLocalIntersections(Node start, List<int> triangles)
     {
         var p = start;
         do
@@ -340,7 +340,7 @@ public class Earcut
     }
 
     // try splitting polygon into two and triangulate them independently
-    static void SplitEarcut(Node start, IList<int> triangles, double minX, double minY, double invSize)
+    static void SplitEarcut(Node start, List<int> triangles, double minX, double minY, double invSize)
     {
         // look for a valid diagonal that divides the polygon into two
         var a = start;
@@ -370,7 +370,7 @@ public class Earcut
     }
 
     // link every hole into the outer loop, producing a single-ring polygon without holes
-    static Node EliminateHoles(ReadOnlySpan<double> data, IList<int> holeIndices, Node outerNode)
+    static Node EliminateHoles(ReadOnlySpan<double> data, List<int> holeIndices, Node outerNode)
     {
         var queue = new List<Node>();
 

@@ -3,14 +3,14 @@ namespace BossMod.Global.MaskedCarnivale.Stage07.Act3;
 public enum OID : uint
 {
     Boss = 0x2706, //R=5.0
-    Slime = 0x2707, //R=0.8
+    Slime = 0x2707 //R=0.8
 }
 
 public enum AID : uint
 {
-    LowVoltage = 14710, // 2706->self, 12.0s cast, range 30+R circle - can be line of sighted by barricade
-    Detonation = 14696, // 2707->self, no cast, range 6+R circle
-    Object130 = 14711, // 2706->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
+    LowVoltage = 14710, // Boss->self, 12.0s cast, range 30+R circle - can be line of sighted by barricade
+    Detonation = 14696, // Slime->self, no cast, range 6+R circle
+    Object130 = 14711 // Boss->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
 
 class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.LowVoltage), 35, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
@@ -45,20 +45,21 @@ class Stage07Act3States : StateMachineBuilder
     {
         TrivialPhase()
             // .ActivateOnEnter<LowVoltage>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Slime).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage07Act3.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8095, SortOrder = 3)]
 public class Stage07Act3 : BossModule
 {
-    public Stage07Act3(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), Layouts.Layout2Corners)
+    public Stage07Act3(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.Layout2Corners)
     {
         ActivateComponent<Hints>();
         ActivateComponent<SlimeExplosion>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Slime];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Slime).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

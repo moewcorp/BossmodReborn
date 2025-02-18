@@ -4,7 +4,7 @@
 // TODO: combine with BaitAway
 public abstract class GenericProtean(BossModule module, ActionID aid, AOEShape shape) : CastCounter(module, aid)
 {
-    public AOEShape Shape { get; init; } = shape;
+    public readonly AOEShape Shape = shape;
 
     public abstract IEnumerable<(Actor source, Actor target)> ActiveAOEs();
 

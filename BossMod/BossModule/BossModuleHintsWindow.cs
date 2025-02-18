@@ -16,10 +16,13 @@ public class BossModuleHintsWindow : UIWindow
 
     public override void PreOpenCheck()
     {
-        IsOpen = _mgr.Config.HintsInSeparateWindow && (_mgr.ActiveModule != null || ShowZoneModule());
+        IsOpen = BossModuleManager.Config.HintsInSeparateWindow && (_mgr.ActiveModule != null || ShowZoneModule());
         Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-        if (_mgr.Config.Lock)
+        if (BossModuleManager.Config.Lock)
             Flags |= ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoInputs;
+        if (BossModuleManager.Config.HintsInSeparateWindowTransparent)
+            Flags |= ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground;
+        ForceMainWindow = BossModuleManager.Config.HintsInSeparateWindowTransparent; // NoBackground flag without ForceMainWindow works incorrectly for whatever reason
     }
 
     public override void Draw()
@@ -42,5 +45,5 @@ public class BossModuleHintsWindow : UIWindow
         }
     }
 
-    private bool ShowZoneModule() => _mgr.ActiveModule?.StateMachine.ActivePhase == null && (_zmm.ActiveModule?.WantToBeDrawn() ?? false);
+    private bool ShowZoneModule() => _mgr.ActiveModule?.StateMachine.ActivePhase == null && (_zmm.ActiveModule?.WantDrawHints() ?? false);
 }

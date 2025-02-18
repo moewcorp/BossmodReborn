@@ -42,7 +42,7 @@ class MustardBomb(BossModule module) : Components.UniformStackSpread(module, 0, 
         base.DrawArenaForeground(pcSlot, pc);
 
         if (CurMechanic == Mechanic.Tethers && _tetherTarget != null)
-            foreach (var (_, p) in Raid.WithSlot().IncludedInMask(_bombTargets))
+            foreach (var (_, p) in Raid.WithSlot(false, true, true).IncludedInMask(_bombTargets))
                 Arena.AddLine(_tetherTarget.Position, p.Position, Colors.Danger);
     }
 
@@ -55,7 +55,7 @@ class MustardBomb(BossModule module) : Components.UniformStackSpread(module, 0, 
             {
                 CurMechanic = Mechanic.Tethers;
                 _tetherTarget = WorldState.Actors.Find(tether.Target);
-                AddSpreads(Raid.WithoutSlot(true), WorldState.FutureTime(8.8f));
+                AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(8.8f));
             }
         }
     }

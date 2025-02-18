@@ -4,12 +4,13 @@ public enum OID : uint
 {
     Boss = 0x30F5, //R=2.0
     Imitation = 0x30F6, // R=2.0
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6499, // 30F5->player, no cast, single-target
+
     Mimic = 23097, // 30F5->self, 5.0s cast, single-target, stop everything that does dmg
     MimickedFlameThrower = 23116, // 30F5->self, no cast, range 8 90-degree cone, unavoidable
     MimickedSap0 = 23104, // 30F5->self, 3.5s cast, single-target
@@ -27,25 +28,21 @@ public enum AID : uint
     MimickedFlare = 23098, // Boss->player, 3.0s cast, range 80 circle, possible punishment for ignoring Mimic
     MimickedHoly = 23100, // Boss->player, 3.0s cast, range 6 circle, possible punishment for ignoring Mimic
     MimickedPowerfulHit = 23103, // Boss->player, 3.0s cast, single-target, possible punishment for ignoring Mimic
-    MimickedCriticalHit = 23102, // Boss->player, 3.0s cast, single-target, possible punishment for ignoring Mimic
+    MimickedCriticalHit = 23102 // Boss->player, 3.0s cast, single-target, possible punishment for ignoring Mimic
 }
 
 public enum SID : uint
 {
     Mimicry = 2450, // none->Boss, extra=0x0
-    Doom = 1769, // Boss->player, extra=0x0
-    Incurable = 1488, // Boss->player, extra=0x0
-    CriticalStrikes = 1797, // Boss->Boss, extra=0x0
-    DamageUp = 443, // none->Boss, extra=0x1
-    Imp = 1103, // Boss->player, extra=0x2E
+    CriticalStrikes = 1797 // Boss->Boss, extra=0x0
 }
 
 class Mimic(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Mimic), "Stop attacking when cast ends");
-class MimickedSap1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MimickedSap1), 8);
-class MimickedSap2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MimickedSap3), 8);
+class MimickedSap1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MimickedSap1), 8);
+class MimickedSap2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MimickedSap3), 8);
 class MimickedDoomImpending(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MimickedDoomImpending), "Heal to full before cast ends!");
-class MimickedProteanWave(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MimickedProteanWave2), new AOEShapeCone(50, 15.Degrees()));
-class MimickedFireBlast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MimickedFireBlast2), new AOEShapeRect(70.5f, 2));
+class MimickedProteanWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MimickedProteanWave2), new AOEShapeCone(50, 15.Degrees()));
+class MimickedFireBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MimickedFireBlast2), new AOEShapeRect(70.5f, 2));
 class MimickedImpSong(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.MimickedImpSong));
 class MimickedRawInstinct(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MimickedRawInstinct), "Applies buff, dispel it");
 class MimickedFlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MimickedFlare), "Use Diamondback!");
@@ -105,7 +102,7 @@ class Stage31Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 754, NameID = 9908, SortOrder = 1)]
 public class Stage31Act1 : BossModule
 {
-    public Stage31Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage31Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }

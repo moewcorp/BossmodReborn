@@ -12,8 +12,9 @@ class ChillingCataclysm(BossModule module) : Components.GenericAOEs(module)
     {
         if ((OID)actor.OID == OID.ArcaneSphere2)
         {
-            AOEs.Add(new(_shape, actor.Position, -0.003f.Degrees(), WorldState.FutureTime(7.1f)));
-            AOEs.Add(new(_shape, actor.Position, 44.998f.Degrees(), WorldState.FutureTime(7.1f)));
+            var activation = WorldState.FutureTime(7.1f);
+            AOEs.Add(new(_shape, actor.Position, -0.003f.Degrees(), activation));
+            AOEs.Add(new(_shape, actor.Position, 44.998f.Degrees(), activation));
         }
     }
 

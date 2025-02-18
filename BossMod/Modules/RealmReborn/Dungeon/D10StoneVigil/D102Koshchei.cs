@@ -4,24 +4,25 @@ public enum OID : uint
 {
     Boss = 0x38C7, // x1
     MaelstromVisual = 0x38C8, // spawn during fight
-    MaelstromHelper = 0x38D0, // x4
+    MaelstromHelper = 0x38D0 // x4
 }
 
 public enum AID : uint
 {
-    AutoAttack = 870, // Boss->player, no cast
-    SpikedTail = 28732, // Boss->player, 5.0s cast, tankbuster
-    SonicStorm = 29053, // Boss->location, 3.0s cast, range 6 aoe
-    Typhoon = 28730, // Boss->self, 3.0s cast, visual
-    TyphoonAOE = 28731, // MaelstromHelper->self, no cast, range 3 aoe
+    AutoAttack = 870, // Boss->player, no cast, single-target
+
+    SpikedTail = 28732, // Boss->player, 5.0s cast, single-target, tankbuster
+    SonicStorm = 29053, // Boss->location, 3.0s cast, range 6 circle
+    Typhoon = 28730, // Boss->self, 3.0s cast, single-target, visual
+    TyphoonAOE = 28731, // MaelstromHelper->self, no cast, range 3 circle
 }
 
 class SpikedTail(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SpikedTail));
-class SonicStorm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SonicStorm), 6);
+class SonicStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SonicStorm), 6);
 
 class Typhoon(BossModule module) : Components.Exaflare(module, 3)
 {
-    private readonly IReadOnlyList<Actor> _maelstroms = module.Enemies(OID.MaelstromVisual);
+    private readonly List<Actor> _maelstroms = module.Enemies(OID.MaelstromVisual);
 
     public override void Update()
     {
@@ -70,7 +71,7 @@ class D102KoshcheiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1678)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1678)]
 public class D102Koshchei(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly Shape[] union = [new Rectangle(new(44, -80), 13.5f, 10.5f), new Rectangle(new(30.1f, -80), 4.5f, 0.4f, 90.Degrees()),

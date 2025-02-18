@@ -83,12 +83,12 @@ class HeartOfNatureConcentric(BossModule module) : Components.ConcentricAOEs(mod
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.NaturesPulse1)
-            AddSequence(caster.Position, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -97,14 +97,14 @@ class HeartOfNatureConcentric(BossModule module) : Components.ConcentricAOEs(mod
                 AID.NaturesPulse3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position);
+            AdvanceSequence(order, spell.LocXZ);
         }
     }
 }
 
-class CagedHeartOfNature(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CagedHeartOfNature), new AOEShapeCircle(6));
+class CagedHeartOfNature(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CagedHeartOfNature), 6);
 
-class WindsPeak(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WindsPeak1), new AOEShapeCircle(5));
+class WindsPeak(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindsPeak1), 5);
 
 class WindsPeakKB(BossModule module) : Components.Knockback(module)
 {
@@ -129,7 +129,7 @@ class WindsPeakKB(BossModule module) : Components.Knockback(module)
     }
 }
 
-class SplittingRage(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SplittingRage), "Applies temporary misdirection");
+class SplittingRage(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.SplittingRage));
 
 class NaturesBlood(BossModule module) : Components.Exaflare(module, 4)
 {
@@ -167,7 +167,7 @@ class NaturesBlood(BossModule module) : Components.Exaflare(module, 4)
     }
 }
 
-class MoveMountains(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MoveMountains3), new AOEShapeRect(40, 3))
+class MoveMountains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoveMountains3), new AOEShapeRect(40, 3))
 {
     // TODO predict rotation
 }

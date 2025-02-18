@@ -1,17 +1,9 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
-class Rokujos(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(30, 7, 30))
+class Rokujos : Components.SimpleAOEs
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        var aoes = ActiveCasters.Select((c, index) =>
-            new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo),
-            index < 1 ? Colors.Danger : Colors.AOE));
-
-        return aoes;
-    }
+    public Rokujos(BossModule module, AID aid) : base(module, ActionID.MakeSpell(aid), new AOEShapeRect(60, 7)) { MaxDangerColor = 1; }
 }
-
 class OnceOnRokujo(BossModule module) : Rokujos(module, AID.OnceOnRokujo);
 class TwiceOnRokujo(BossModule module) : Rokujos(module, AID.TwiceOnRokujo);
 class ThriceOnRokujo(BossModule module) : Rokujos(module, AID.ThriceOnRokujo);
@@ -23,7 +15,22 @@ class Rokujo(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Actor> _clouds = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    => _aoes.Skip(2).Take(4).Concat(_aoes.Take(2).Select(a => a with { Color = _aoes.Count > 2 ? Colors.Danger : Colors.AOE }));
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 6 ? 6 : count;
+        List<AOEInstance> aoes = new(max);
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 2 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
+    }
 
     public override void OnActorDestroyed(Actor actor)
     {
@@ -88,7 +95,7 @@ class Rokujo(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0)
+        if (_aoes.Count != 0)
             switch ((AID)spell.Action.ID)
             {
                 case AID.LeapingLevin1:

@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Endwalker.Extreme.Ex7Zeromus;
 
-class FlowOfTheAbyssDimensionalSurge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlowOfTheAbyssDimensionalSurge), new AOEShapeRect(60, 7));
+class FlowOfTheAbyssDimensionalSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlowOfTheAbyssDimensionalSurge), new AOEShapeRect(60, 7));
 
 class FlowOfTheAbyssSpreadStack(BossModule module) : Components.GenericStackSpread(module)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {

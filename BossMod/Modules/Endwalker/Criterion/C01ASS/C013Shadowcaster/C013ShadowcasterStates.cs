@@ -7,7 +7,8 @@ class C013ShadowcasterStates : StateMachineBuilder
     public C013ShadowcasterStates(BossModule module, bool savage) : base(module)
     {
         _savage = savage;
-        DeathPhase(0, SinglePhase);
+        DeathPhase(0, SinglePhase)
+            .ActivateOnEnter<ArenaChange>();
     }
 
     private void SinglePhase(uint id)

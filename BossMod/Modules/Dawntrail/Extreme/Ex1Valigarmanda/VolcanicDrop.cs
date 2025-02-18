@@ -17,9 +17,9 @@ class VolcanicDrop(BossModule module) : Components.GenericAOEs(module, ActionID.
         // 02000100 - active volcano, eruption end after puddles
         if (index is 14 or 15 && state == 0x00200010)
         {
-            AOE = new(_shape, Module.Center + new WDir(index == 14 ? 13 : -13, 0), default, WorldState.FutureTime(7.8f));
+            AOE = new(_shape, Arena.Center + new WDir(index == 14 ? 13 : -13, 0), default, WorldState.FutureTime(7.8f));
         }
     }
 }
 
-class VolcanicDropPuddle(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VolcanicDropPuddle), 2);
+class VolcanicDropPuddle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VolcanicDropPuddle), 2);

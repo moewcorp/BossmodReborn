@@ -1,16 +1,9 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C03AAI.C030Trash1;
 
-class LeadHook(BossModule module) : Components.CastCounter(module, default)
-{
-    private static readonly HashSet<AID> castEnd = [AID.NLeadHook, AID.NLeadHookAOE1, AID.NLeadHookAOE2, AID.SLeadHook, AID.SLeadHookAOE1, AID.SLeadHookAOE2];
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (castEnd.Contains((AID)spell.Action.ID))
-            ++NumCasts;
-    }
-}
+class LeadHook(BossModule module) : Components.CastCounterMulti(module, [ActionID.MakeSpell(AID.NLeadHook), ActionID.MakeSpell(AID.NLeadHookAOE1),
+ActionID.MakeSpell(AID.NLeadHookAOE2), ActionID.MakeSpell(AID.SLeadHook), ActionID.MakeSpell(AID.SLeadHookAOE1), ActionID.MakeSpell(AID.SLeadHookAOE2)]);
 
-abstract class TailScrew(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 4);
+abstract class TailScrew(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 4f);
 class NTailScrew(BossModule module) : TailScrew(module, AID.NTailScrew);
 class STailScrew(BossModule module) : TailScrew(module, AID.STailScrew);
 
@@ -54,20 +47,20 @@ class C030KiwakinStates : StateMachineBuilder
 
     private void SharpStrike(uint id, float delay)
     {
-        Cast(id, _savage ? AID.SSharpStrike : AID.NSharpStrike, delay, 5, "Tankbuster")
+        Cast(id, _savage ? AID.SSharpStrike : AID.NSharpStrike, delay, 5f, "Tankbuster")
             .SetHint(StateMachine.StateHint.Tankbuster);
     }
 
     private void TailScrew(uint id, float delay)
     {
-        Cast(id, _savage ? AID.STailScrew : AID.NTailScrew, delay, 5, "AOE");
+        Cast(id, _savage ? AID.STailScrew : AID.NTailScrew, delay, 5f, "AOE");
     }
 }
 class C030NKiwakinStates(BossModule module) : C030KiwakinStates(module, false);
 class C030SKiwakinStates(BossModule module) : C030KiwakinStates(module, true);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.NKiwakin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12632, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NKiwakin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12632, SortOrder = 1)]
 public class C030NKiwakin(WorldState ws, Actor primary) : C030Trash1(ws, primary);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.SKiwakin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12632, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SKiwakin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12632, SortOrder = 1)]
 public class C030SKiwakin(WorldState ws, Actor primary) : C030Trash1(ws, primary);

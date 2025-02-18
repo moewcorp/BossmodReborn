@@ -82,13 +82,13 @@ class WreathOfThorns2(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         // draw players
-        foreach (var player in Raid.WithoutSlot().Exclude(pc))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
             Arena.Actor(player, Colors.PlayerGeneric);
 
         // draw pc's tether
         var pcPartner = pc.Tether.Target != 0
             ? WorldState.Actors.Find(pc.Tether.Target)
-            : Raid.WithoutSlot().FirstOrDefault(p => p.Tether.Target == pc.InstanceID);
+            : Raid.WithoutSlot(false, true, true).FirstOrDefault(p => p.Tether.Target == pc.InstanceID);
         if (pcPartner != null)
         {
             var tetherColor = _playerIcons[pcSlot] switch
@@ -140,7 +140,7 @@ class WreathOfThorns2(BossModule module) : BossComponent(module)
             CurState = State.Done;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot == -1)

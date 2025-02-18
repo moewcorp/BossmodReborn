@@ -67,14 +67,14 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
 {
     private enum MagneticPole { None, Plus, Minus }
     private enum Shape { None, Rect, Circle }
-    private MagneticPole CurrentPole { get; set; }
-    private Shape CurrentShape { get; set; }
+    private MagneticPole CurrentPole;
+    private Shape CurrentShape;
     private readonly HashSet<(Actor, uint)> iconOnActor = [];
     private DateTime activation;
     private Angle rotation;
     private const int RectDistance = 9;
     private const int CircleDistance = 5;
-    private readonly Angle offset = 90.Degrees();
+    private static readonly Angle offset = 90.Degrees();
     private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
 
     private bool IsKnockback(Actor actor, Shape shape, MagneticPole pole)
@@ -104,7 +104,7 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<ElectromagneticRelease1>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
         (Module.FindComponent<ElectromagneticRelease2>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is ((uint)IconID.Plus) or ((uint)IconID.Minus))
         {
@@ -158,18 +158,18 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
         else if (IsPull(actor, Shape.Rect, MagneticPole.Plus) || IsPull(actor, Shape.Rect, MagneticPole.Minus))
             forbidden.Add(ShapeDistance.Rect(Arena.Center, rotation, 15, 15, 12));
         if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)), activation);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), activation);
     }
 }
 
-class Cleave(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
+class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
 class ElectromagneticRelease1(BossModule module) : Cleave(module, AID.ElectromagneticRelease1);
 class GroundAndPound1(BossModule module) : Cleave(module, AID.GroundAndPound1);
 class GroundAndPound2(BossModule module) : Cleave(module, AID.GroundAndPound2);
 class DynamicPoundMinus(BossModule module) : Cleave(module, AID.DynamicPoundMinus);
 class DynamicPoundPlus(BossModule module) : Cleave(module, AID.DynamicPoundPlus);
 
-class Circles(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(8));
+class Circles(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
 class ElectromagneticRelease2(BossModule module) : Circles(module, AID.ElectromagneticRelease2);
 class DynamicScraplineMinus(BossModule module) : Circles(module, AID.DynamicScraplineMinus);
 class DynamicScraplinePlus(BossModule module) : Circles(module, AID.DynamicScraplinePlus);
@@ -183,7 +183,6 @@ class D021BarnabasStates : StateMachineBuilder
     public D021BarnabasStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<Magnetism>()
             .ActivateOnEnter<ElectromagneticRelease1>()

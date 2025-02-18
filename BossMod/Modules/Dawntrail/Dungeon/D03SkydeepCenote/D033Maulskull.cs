@@ -48,7 +48,8 @@ public enum AID : uint
     DeepThunderVisual1 = 36687, // Boss->self, 6.0s cast, single-target
     DeepThunderVisual2 = 36691, // Boss->self, no cast, single-target
     DeepThunderVisual3 = 36692, // Boss->self, no cast, single-target
-    DeepThunder2 = 36690, // Helper->self, no cast, range 6 circle
+    DeepThunderRepeat = 36690, // Helper->self, no cast, range 6 circle
+    BigBurst = 36693, // Helper->self, no cast, range 60 circle, tower fail
 
     RingingBlows1 = 36694, // Boss->self, 7.0+2.0s cast, single-target
     RingingBlows2 = 36695, // Boss->self, 7.0+2.0s cast, single-target
@@ -66,138 +67,155 @@ public enum AID : uint
     Ashlayer = 36712 // Helper->self, no cast, range 60 circle
 }
 
-class StayInBounds(BossModule module) : BossComponent(module)
-{
-    private static readonly WDir offset = new(0, 19);
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center + offset, Arena.Center - offset, 19));
-    }
-}
-
 class Stonecarver(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40, 10);
-    private static readonly HashSet<AID> aids = [AID.Stonecarver1, AID.Stonecarver2, AID.Stonecarver3, AID.Stonecarver4];
-    private static readonly WDir offset = new(0, 20);
+    public readonly List<AOEInstance> AOEs = new(2);
+    private static readonly AOEShapeRect rect = new(40f, 10f);
+    private static readonly WDir offset = new(0f, 20f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
-            yield return _aoes[1] with { Risky = false };
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = AOEs[i];
+            if (i == 0)
+                aoes[i] = count != 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (aids.Contains((AID)spell.Action.ID))
+        switch (spell.Action.ID)
         {
-            _aoes.Add(new(rect, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.SortBy(x => x.Activation);
+            case (uint)AID.Stonecarver1:
+            case (uint)AID.Stonecarver2:
+            case (uint)AID.Stonecarver3:
+            case (uint)AID.Stonecarver4:
+                AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+                if (AOEs.Count == 2)
+                    AOEs.SortBy(x => x.Activation);
+                break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && aids.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (AOEs.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.Stonecarver1:
+                case (uint)AID.Stonecarver2:
+                case (uint)AID.Stonecarver3:
+                case (uint)AID.Stonecarver4:
+                    AOEs.RemoveAt(0);
+                    break;
+            }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (_aoes.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center + offset, Arena.Center - offset, 2), _aoes[0].Activation);
+        if (AOEs.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center + offset, Arena.Center - offset, 2f), AOEs[0].Activation);
     }
 }
 
 class Shatter(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-
-    private static readonly AOEShapeRect rectCenter = new(40, 10);
-    private static readonly AOEShapeRect rectSides = new(42, 11, 4);
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeRect rectCenter = new(40f, 10f), rectSides = new(42f, 11f, 4f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in _aoes)
-            yield return new(c.Shape, c.Origin, c.Rotation, c.Activation, Risky: c.Activation.AddSeconds(-6) <= WorldState.CurrentTime);
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var a = _aoes[i];
+            aoes[i] = new(a.Shape, a.Origin, a.Rotation, a.Activation, Risky: a.Activation.AddSeconds(-6d) <= WorldState.CurrentTime);
+        }
+        return aoes;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        var activation = Module.CastFinishAt(spell, 15.1f);
-        switch ((AID)spell.Action.ID)
+        void AddAOE(AOEShape shape, WPos pos, Angle rot) => _aoes.Add(new(shape, WPos.ClampToGrid(pos), rot, Module.CastFinishAt(spell, 15.1f)));
+        switch (spell.Action.ID)
         {
-            case AID.MaulworkFirstCenter:
-            case AID.MaulworkSecondCenter:
-                _aoes.Add(new(rectCenter, caster.Position, spell.Rotation, activation));
+            case (uint)AID.MaulworkFirstCenter:
+            case (uint)AID.MaulworkSecondCenter:
+                AddAOE(rectCenter, caster.Position, spell.Rotation);
                 break;
-            case AID.MaulworkFirstSides:
-            case AID.MaulworkSecondSides:
-                _aoes.Add(new(rectSides, new(91.564f, caster.Position.Z), -17.004f.Degrees(), activation));
-                _aoes.Add(new(rectSides, new(108.436f, caster.Position.Z), 16.999f.Degrees(), activation));
+            case (uint)AID.MaulworkFirstSides:
+            case (uint)AID.MaulworkSecondSides:
+                AddAOE(rectSides, new(91.564f, caster.Position.Z), -17.004f.Degrees());
+                AddAOE(rectSides, new(108.436f, caster.Position.Z), 16.999f.Degrees());
                 break;
-            case AID.ShatterCenter:
-            case AID.ShatterLR1:
-            case AID.ShatterLR2:
+            case (uint)AID.ShatterCenter:
+            case (uint)AID.ShatterLR1:
+            case (uint)AID.ShatterLR2:
                 _aoes.Clear();
                 break;
         }
     }
 }
 
-abstract class Impact(BossModule module, AID aid, int distance) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), distance, stopAfterWall: true);
+abstract class Impact(BossModule module, AID aid, float distance) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), distance, stopAfterWall: true);
 
-class Impact1(BossModule module) : Impact(module, AID.Impact1, 18)
+class Impact1(BossModule module) : Impact(module, AID.Impact1, 18f)
 {
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, 10, 12, default, 30.Degrees()), source.Activation);
-    }
-}
-
-class Impact2(BossModule module) : Impact(module, AID.Impact2, 18)
-{
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Stonecarver>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation) && z.Risky) ?? false) || !Arena.InBounds(pos);
+    private static readonly Angle halfAngle = 30f.Degrees();
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, 10, 12, default, 20.Degrees()), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 12f, default, halfAngle), Module.CastFinishAt(source.CastInfo));
     }
 }
 
-class Impact3(BossModule module) : Impact(module, AID.Impact3, 20)
+class Impact2(BossModule module) : Impact(module, AID.Impact2, 18f)
 {
-    private static readonly Angle halfAngle = 10.Degrees();
-    private static readonly Angle direction = 135.Degrees();
+    private static readonly Angle halfAngle = 20f.Degrees();
+    private readonly Stonecarver _aoe = module.FindComponent<Stonecarver>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _aoe.AOEs.Count != 0 && _aoe.AOEs[0].Check(pos) || !Module.InBounds(pos);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-        {
-            if (source.Origin.X == 90)
-                hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, 10, 15, direction, halfAngle), source.Activation);
-            else if (source.Origin.X == 110)
-                hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, 10, 15, -direction, halfAngle), source.Activation);
-        }
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 12f, default, halfAngle), Module.CastFinishAt(source.CastInfo));
     }
 }
 
-abstract class Crush(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(10));
+class Impact3(BossModule module) : Impact(module, AID.Impact3, 20f)
+{
+    private static readonly Angle halfAngle = 10f.Degrees(), direction = 135f.Degrees();
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 15f, (source.Position.X == 90f ? 1f : -1f) * direction, halfAngle), Module.CastFinishAt(source.CastInfo));
+    }
+}
+
+abstract class Crush(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10f);
 class ColossalImpact(BossModule module) : Crush(module, AID.ColossalImpact);
 class Skullcrush1(BossModule module) : Crush(module, AID.Skullcrush1);
 class Skullcrush2(BossModule module) : Crush(module, AID.Skullcrush2);
 
-class DestructiveHeat(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DestructiveHeat), 6)
+class DestructiveHeat(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DestructiveHeat), 6f)
 {
     private WPos origin;
     private readonly Impact1 _kb1 = module.FindComponent<Impact1>()!;
@@ -206,22 +224,22 @@ class DestructiveHeat(BossModule module) : Components.SpreadFromCastTargets(modu
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveSpreads.Any())
+        if (Spreads.Count != 0)
         {
-            var source1 = _kb1.Sources(slot, actor).FirstOrDefault();
-            var source2 = _kb2.Sources(slot, actor).FirstOrDefault();
-            var source3 = _kb3.Sources(slot, actor).FirstOrDefault();
-            var knockback = source1 != default || source2 != default || source3 != default;
+            var source1 = _kb1.Casters.Count != 0 ? _kb1.Casters[0] : null;
+            var source2 = _kb2.Casters.Count != 0 ? _kb2.Casters[0] : null;
+            var source3 = _kb3.Casters.Count != 0 ? _kb3.Casters[0] : null;
+            var knockback = source1 != null || source2 != null || source3 != null;
             if (source1 != default)
-                origin = actor.Role is Role.Melee or Role.Ranged ? new(100, -400) : source1.Origin;
+                origin = new(100f, -400f);
             else if (source2 != default)
-                origin = source2.Origin;
+                origin = source2.Position;
             else if (source3 != default)
-                origin = source3.Origin;
+                origin = source3.Position;
             if (!knockback)
             {
                 base.AddAIHints(slot, actor, assignment, hints);
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(origin, 15), ActiveSpreads.FirstOrDefault().Activation);
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(origin, 15f), Spreads[0].Activation);
             }
             else
             { }
@@ -229,13 +247,13 @@ class DestructiveHeat(BossModule module) : Components.SpreadFromCastTargets(modu
     }
 }
 
-class Landing(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Landing), 8);
+class Landing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landing), 8f);
 
-abstract class DeepThunder(BossModule module, AID aid) : Components.CastTowers(module, ActionID.MakeSpell(aid), 6, 4, 4);
+abstract class DeepThunder(BossModule module, AID aid) : Components.CastTowers(module, ActionID.MakeSpell(aid), 6f, 4, 4);
 class DeepThunder1(BossModule module) : DeepThunder(module, AID.DeepThunderTower1);
 class DeepThunder2(BossModule module) : DeepThunder(module, AID.DeepThunderTower2);
 
-class WroughtFire(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.WroughtFire), new AOEShapeCircle(6), true)
+class WroughtFire(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.WroughtFire), new AOEShapeCircle(6f), true)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -244,7 +262,7 @@ class WroughtFire(BossModule module) : Components.BaitAwayCast(module, ActionID.
     }
 }
 
-class BuildingHeat(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BuildingHeat), 6, 4);
+class BuildingHeat(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BuildingHeat), 6f, 4, 4);
 class Ashlayer(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Ashlayer));
 
 class D033MaulskullStates : StateMachineBuilder
@@ -252,7 +270,6 @@ class D033MaulskullStates : StateMachineBuilder
     public D033MaulskullStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<StayInBounds>()
             .ActivateOnEnter<Stonecarver>()
             .ActivateOnEnter<Impact1>()
             .ActivateOnEnter<Impact2>()
@@ -272,4 +289,4 @@ class D033MaulskullStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 829, NameID = 12728)]
-public class D033Maulskull(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, -430), new ArenaBoundsSquare(20));
+public class D033Maulskull(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, -430f), new ArenaBoundsSquare(20f));

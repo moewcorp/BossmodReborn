@@ -2,7 +2,7 @@
 
 class AeroIII(BossModule module) : Components.Knockback(module, ignoreImmunes: true)
 {
-    public readonly IReadOnlyList<Actor> Voidzones = module.Enemies(OID.BitingWind);
+    public readonly List<Actor> Voidzones = module.Enemies(OID.BitingWind);
 
     private static readonly AOEShapeCircle _shape = new(4);
 

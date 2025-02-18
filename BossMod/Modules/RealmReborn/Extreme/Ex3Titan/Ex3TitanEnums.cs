@@ -3,18 +3,19 @@
 public enum OID : uint
 {
     Boss = 0xF8, // R5.250, x1
-    Helper = 0x1B2, // R0.500, x14
     GaolMarkerHelper = 0x8EE, // R0.500, x1
     BombBoulder = 0x5E0, // R1.300, spawn during fight
     GraniteGaol = 0x5E2, // R1.800, spawn during fight
     GraniteGaoler = 0x8F2, // R1.900, spawn during fight
     TitansHeart = 0x5E5, // R5.250, Part type, spawn during fight
     GaolerVoidzone = 0x1E8F8F, // R0.500, EventObj type, spawn during fight (voidzone left by killed gaolers)
+    Helper = 0x1B2
 }
 
 public enum AID : uint
 {
     AutoAttackBoss = 872, // Boss->player, no cast, single-target
+
     RockBuster = 1463, // Boss->self, no cast, range 6+R ?-degree cone cleave (during heart phase)
     MountainBuster = 1464, // Boss->self, no cast, range 16+R ?-degree cone cleave applying stacking vuln (outside heart phase)
     TumultBoss = 1465, // Boss->self, no cast, raidwide (x4)
@@ -36,16 +37,16 @@ public enum AID : uint
 
     AutoAttackGaoler = 1651, // GraniteGaoler->player, no cast, single-target
     LandslideGaoler = 1475, // GraniteGaoler->self, 2.2s cast, range 35+R width 6 rect aoe, knockback 15
-    TumultGaoler = 1476, // GraniteGaoler->self, no cast, raidwide
+    TumultGaoler = 1476 // GraniteGaoler->self, no cast, raidwide
 }
 
 public enum SID : uint
 {
     PhysicalVulnerabilityUp = 126, // Boss->player, extra=0x1/0x2/0x3/0x4/0x5/0x6/0x7
-    Fetters = 292, // none->player, extra=0x0
+    Fetters = 292 // none->player, extra=0x0
 }
 
 public enum TetherID : uint
 {
-    Gaol = 7, // player->player
+    Gaol = 7 // player->player
 }

@@ -15,7 +15,7 @@ sealed class AIExperiment(RotationModuleManager manager, Actor player) : AIRotat
 
     public static RotationModuleDefinition Definition()
     {
-        var res = new RotationModuleDefinition("AI Experiment", "Experimental encounter-specific rotation", "Encounter AI", "veyn", RotationModuleQuality.WIP, new(~1ul), 100, 1, typeof(M02SHoneyBLovely));
+        var res = new RotationModuleDefinition("AI Experiment", "Experimental encounter-specific rotation", "Encounter AI", "veyn", RotationModuleQuality.WIP, new(~1ul), 100, 1, RotationModuleOrder.Movement, typeof(M02SHoneyBLovely));
         res.Define(Track.DragBoss).As<DragBossStrategy>("DragBoss", "Drag")
             .AddOption(DragBossStrategy.None, "None", "Do nothing")
             .AddOption(DragBossStrategy.SCenterFaceN, "SCenterFaceN", "Position boss in center or slightly to the south, then face north")
@@ -90,7 +90,7 @@ sealed class AIExperiment(RotationModuleManager manager, Actor player) : AIRotat
         if (aoes == null || dropSplash == null)
             return ClosestInMelee(Player.Position, module.PrimaryActor);
 
-        if (aoes.Any(c => (c.Position - module.Center).LengthSq() < 8 * 8))
+        if (aoes.Any(c => (c.Origin - module.Center).LengthSq() < 8 * 8))
         {
             // center unsafe
             var angle = -135.Degrees(); // TODO: intercard
@@ -155,13 +155,10 @@ sealed class AIExperiment(RotationModuleManager manager, Actor player) : AIRotat
                 break; // too early, we might have a previous set of aoes active
 
             // find the orientation of the next set of aoes; each set has 4 casters with 90 degrees between them
-            var nextCaster = aoe1.Casters.Concat(aoe2.Casters).MinBy(c => c.CastInfo?.RemainingTime);
-            if (nextCaster == null)
-                break;
-
-            var orientation = nextCaster.CastInfo?.Rotation ?? nextCaster.Rotation;
+            var nextCaster = aoe1.Casters.Concat(aoe2.Casters).MinBy(c => c.Activation);
+            var orientation = nextCaster.Rotation;
             var castDir = orientation.ToDirection();
-            var casterOffset = Math.Abs(castDir.OrthoL().Dot(nextCaster.Position - module.Center));
+            var casterOffset = Math.Abs(castDir.OrthoL().Dot(nextCaster.Origin - module.Center));
             var playerOffset = Player.Position - module.Center;
             var dirToPlayer = Angle.FromDirection(playerOffset);
             var relDir = (dirToPlayer - orientation).Normalized();

@@ -42,8 +42,10 @@ public sealed class ConfigUI : IDisposable
         _tabs.Add("About", _about.Draw);
 
         Dictionary<Type, UINode> nodes = [];
-        foreach (var n in config.Nodes)
+        var nodes2 = _root.Nodes;
+        for (var i = 0; i < nodes2.Count; ++i)
         {
+            var n = nodes2[i];
             nodes[n.GetType()] = new(n);
         }
 
@@ -86,6 +88,8 @@ public sealed class ConfigUI : IDisposable
         { "forbidactions on/off", "Sets forbid actions to on or off. (only for autorotation)" },
         { "forbidmovement", "Toggles the forbidding of movement." },
         { "forbidmovement on/off", "Sets forbid movement to on or off." },
+        { "idlewhilemounted", "Toggles the idling while mounted." },
+        { "idlewhilemounted on/off", "Sets idle while mounted to on or off." },
         { "followcombat", "Toggles following during combat." },
         { "followcombat on/off", "Sets following following during combat to on or off." },
         { "followmodule", "Toggles following during active boss module." },
@@ -97,6 +101,9 @@ public sealed class ConfigUI : IDisposable
         { "positional X", "Switch to positional when following targets. (any, rear, flank, front)" },
         { "maxdistancetarget X", "Sets max distance to target. (default = 2.6)" },
         { "maxdistanceslot X", "Sets max distance to slot. (default = 1)" },
+        { "movedelay X", "Sets AI movement decision delay. (default = 0)" },
+        { "obstaclemaps", "Toggles loading obstacle maps." },
+        { "obstaclemaps on/off", "Sets the loading of obstacle maps to on or off." },
         { "setpresetname X", "Sets an autorotation preset for the AI, eg. setpresetname vbm default." }
     };
 

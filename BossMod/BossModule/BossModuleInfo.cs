@@ -38,6 +38,7 @@ public static class BossModuleInfo
         Ultimate,
         Unreal,
         Alliance,
+        Chaotic,
         Foray,
         VariantCriterion,
         DeepDungeon,
@@ -58,6 +59,7 @@ public static class BossModuleInfo
         CFC, // group id is ContentFinderCondition row
         MaskedCarnivale, // group id is ContentFinderCondition row
         RemovedUnreal, // group id is ContentFinderCondition row
+        BaldesionArsenal, // group id is ContentFinderCondition row
         Quest, // group id is Quest row
         Fate, // group id is Fate row
         Hunt, // group id is HuntRank

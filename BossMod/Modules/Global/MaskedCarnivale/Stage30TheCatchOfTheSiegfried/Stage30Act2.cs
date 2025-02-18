@@ -5,12 +5,12 @@ public enum OID : uint
     Boss = 0x2C6A, //R=2.0
     IceBoulder = 0x2CC6, // R=2.0
     FireVoidzone = 0x1E8D9B,
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    LawOfTheTorch = 18838, // Boss->self, 3.0s cast, range 34 20-degree cone
+    LawOfTheTorch1 = 18838, // Boss->self, 3.0s cast, range 34 20-degree cone
     LawOfTheTorch2 = 18839, // Helper->self, 3.0s cast, range 34 20-degree cone
     Teleport = 18848, // Boss->location, no cast, ???
     Swiftsteel = 18842, // Boss->self, 5.0s cast, range 100 circle, knockback 10, away from source
@@ -21,21 +21,23 @@ public enum AID : uint
     Sparksteel2 = 18841, // Helper->location, 4.0s cast, range 8 circle
     Sparksteel3 = 18897, // Helper->location, 6.0s cast, range 8 circle
     Shattersteel = 19027, // Boss->self, 5.0s cast, range 8 circle
-    SphereShatter = 18986, // IceBoulder->self, no cast, range 10 circle
+    SphereShatter = 18986 // IceBoulder->self, no cast, range 10 circle
 }
 
-class LawOfTheTorch(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LawOfTheTorch), new AOEShapeCone(34, 10.Degrees()));
-class LawOfTheTorch2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LawOfTheTorch2), new AOEShapeCone(34, 10.Degrees()));
+abstract class LawOfTheTorch(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(34, 10.Degrees()));
+class LawOfTheTorch1(BossModule module) : LawOfTheTorch(module, AID.LawOfTheTorch1);
+class LawOfTheTorch2(BossModule module) : LawOfTheTorch(module, AID.LawOfTheTorch2);
+
 class Swiftsteel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Swiftsteel), 10)
 {
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Swiftsteel2>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || (Module.FindComponent<Swiftsteel3>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 }
 
-class Swiftsteel2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Swiftsteel2), 4);
-class Swiftsteel3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Swiftsteel3), new AOEShapeDonut(8, 20));
+class Swiftsteel2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Swiftsteel2), 4);
+class Swiftsteel3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Swiftsteel3), new AOEShapeDonut(8, 20));
 class Sparksteel1(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.Sparksteel1), m => m.Enemies(OID.FireVoidzone).Where(e => e.EventState != 7), 0.8f);
 
-public class Sparksteel2 : Components.LocationTargetedAOEs
+public class Sparksteel2 : Components.SimpleAOEs
 {
     public Sparksteel2(BossModule module) : base(module, ActionID.MakeSpell(AID.Sparksteel2), 8)
     {
@@ -43,7 +45,7 @@ public class Sparksteel2 : Components.LocationTargetedAOEs
     }
 }
 
-class Sparksteel3(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Sparksteel3), 8)
+class Sparksteel3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sparksteel3), 8)
 {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
@@ -52,7 +54,7 @@ class Sparksteel3(BossModule module) : Components.LocationTargetedAOEs(module, A
     }
 }
 
-class Shattersteel(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Shattersteel), new AOEShapeCircle(5));
+class Shattersteel(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shattersteel), 5);
 class SphereShatter(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(10);
@@ -92,4 +94,4 @@ class Stage30Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 699, NameID = 9245, SortOrder = 2)]
-public class Stage30Act2(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(16));
+public class Stage30Act2(WorldState ws, Actor primary) : BossModule(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall);

@@ -3,7 +3,7 @@
 class Crystallize : BossComponent
 {
     public enum Element { None, Water, Earth, Ice }
-    public Element CurElement { get; private set; }
+    public Element CurElement;
 
     private const float _waterRadius = 6;
     private const float _earthRadius = 6;
@@ -27,18 +27,18 @@ class Crystallize : BossComponent
         switch (CurElement)
         {
             case Element.Water:
-                var healersInRange = Raid.WithoutSlot().Where(a => a.Role == Role.Healer).InRadius(actor.Position, _waterRadius).Count();
+                var healersInRange = Raid.WithoutSlot(false, true, true).Where(a => a.Role == Role.Healer).InRadius(actor.Position, _waterRadius).Count();
                 if (healersInRange > 1)
                     hints.Add("Hit by two aoes!");
                 else if (healersInRange == 0)
                     hints.Add("Stack with healer!");
                 break;
             case Element.Earth:
-                if (Raid.WithoutSlot().OutOfRadius(actor.Position, _earthRadius).Any())
+                if (Raid.WithoutSlot(false, true, true).OutOfRadius(actor.Position, _earthRadius).Any())
                     hints.Add("Stack!");
                 break;
             case Element.Ice:
-                if (Raid.WithoutSlot().InRadiusExcluding(actor, _iceRadius).Any())
+                if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _iceRadius).Any())
                     hints.Add("Spread!");
                 break;
         }
@@ -62,7 +62,7 @@ class Crystallize : BossComponent
         switch (CurElement)
         {
             case Element.Water:
-                foreach (var player in Raid.WithoutSlot())
+                foreach (var player in Raid.WithoutSlot(false, true, true))
                 {
                     if (player.Role == Role.Healer)
                     {
@@ -77,12 +77,12 @@ class Crystallize : BossComponent
                 break;
             case Element.Earth:
                 Arena.AddCircle(pc.Position, _earthRadius, Colors.Safe);
-                foreach (var player in Raid.WithoutSlot().Exclude(pc))
+                foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
                     Arena.Actor(player, player.Position.InCircle(pc.Position, _earthRadius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
                 break;
             case Element.Ice:
                 Arena.AddCircle(pc.Position, _iceRadius, Colors.Danger);
-                foreach (var player in Raid.WithoutSlot().Exclude(pc))
+                foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
                     Arena.Actor(player, player.Position.InCircle(pc.Position, _iceRadius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
                 break;
         }

@@ -11,8 +11,8 @@ class P2SanctityOfTheWard1Gaze : DragonsGaze
 // sacred sever - distance-based shared damage on 1/2/1/2 markers
 class P2SanctityOfTheWard1Sever(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4)
 {
-    public int NumCasts { get; private set; }
-    public Actor? Source { get; private set; } = module.Enemies(OID.SerZephirin).FirstOrDefault();
+    public int NumCasts;
+    public Actor? Source = module.Enemies(OID.SerZephirin).FirstOrDefault();
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -31,7 +31,7 @@ class P2SanctityOfTheWard1Sever(BossModule module) : Components.UniformStackSpre
             Stacks.Clear();
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {
@@ -56,7 +56,7 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
     }
 
     public List<ChargeInfo> Charges = [];
-    public Angle ChargeAngle { get; private set; } // 0 if charges are not active or on failure, <0 if CW, >0 if CCW
+    public Angle ChargeAngle; // 0 if charges are not active or on failure, <0 if CW, >0 if CCW
 
     private const float _chargeHalfWidth = 3;
     private static readonly AOEShapeCircle _brightflareShape = new(9);
@@ -95,7 +95,7 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
     }
 
     // note: currently we initialize charges when we get sever icons, but we should be able to do that a bit earlier: PATE 1E43 happens ~1.1s before icons
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID != (uint)IconID.SacredSever1)
             return;
@@ -203,7 +203,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
                     if (_groupEast.NumSetBits() != 4)
                     {
                         // to balance, unmarked player of designated role should swap
-                        var (swapSlot, swapper) = Raid.WithSlot(true).FirstOrDefault(sa => sa.Item2 != _sever.Stacks[0].Target && sa.Item2 != _sever.Stacks[1].Target && effRoles[sa.Item1] == config.P2SanctitySwapRole);
+                        var (swapSlot, swapper) = Raid.WithSlot(true, true, true).FirstOrDefault(sa => sa.Item2 != _sever.Stacks[0].Target && sa.Item2 != _sever.Stacks[1].Target && effRoles[sa.Item1] == config.P2SanctitySwapRole);
                         if (swapper != null)
                         {
                             _groupEast.Toggle(swapSlot);
@@ -234,7 +234,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
             var color = Colors.Safe;
             foreach (var safespot in MovementHintOffsets(slot))
             {
-                var to = Module.Center + safespot;
+                var to = Arena.Center + safespot;
                 movementHints.Add(from, to, color);
                 from = to;
                 color = Colors.Danger;
@@ -256,9 +256,9 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
     {
         foreach (var safespot in MovementHintOffsets(pcSlot).Take(1))
         {
-            Arena.AddCircle(Module.Center + safespot, 1, Colors.Safe);
+            Arena.AddCircle(Arena.Center + safespot, 1, Colors.Safe);
             if (_groupEast.None())
-                Arena.AddCircle(Module.Center - safespot, 1, Colors.Safe); // if there are no valid assignments, draw spots for both groups
+                Arena.AddCircle(Arena.Center - safespot, 1, Colors.Safe); // if there are no valid assignments, draw spots for both groups
         }
     }
 
@@ -276,7 +276,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
         if (shouldGoEast == _groupEast[slot])
             return; // target is already assigned to correct position, no need to swap
         var role = effRoles[slot];
-        var (partnerSlot, partner) = Raid.WithSlot(true).Exclude(slot).FirstOrDefault(sa => effRoles[sa.Item1] == role);
+        var (partnerSlot, partner) = Raid.WithSlot(true, true, true).Exclude(slot).FirstOrDefault(sa => effRoles[sa.Item1] == role);
         if (partner == null)
             return;
 

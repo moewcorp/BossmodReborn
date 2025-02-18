@@ -125,7 +125,7 @@ public static class BossModuleRegistry
             }
 
             var sortOrder = infoAttr?.SortOrder ?? 0;
-            if (sortOrder == 0 && int.TryParse(module.Name.SkipWhile(c => !char.IsAsciiDigit(c)).TakeWhile(char.IsAsciiDigit).ToArray(), out var inferredSortOrder))
+            if (sortOrder == 0 && int.TryParse([.. module.Name.SkipWhile(c => !char.IsAsciiDigit(c)).TakeWhile(char.IsAsciiDigit)], out var inferredSortOrder))
             {
                 sortOrder = inferredSortOrder;
             }
@@ -164,7 +164,7 @@ public static class BossModuleRegistry
         }
     }
 
-    private static readonly Dictionary<uint, Info> _modulesByOID = []; // [primary-actor-oid] = module info
+    public static readonly Dictionary<uint, Info> RegisteredModules = []; // [primary-actor-oid] = module info
     private static readonly Dictionary<Type, Info> _modulesByType = []; // [module-type] = module info
 
     static BossModuleRegistry()
@@ -175,14 +175,12 @@ public static class BossModuleRegistry
             if (info == null)
                 continue;
             _modulesByType[t] = info;
-            if (!_modulesByOID.TryAdd(info.PrimaryActorOID, info))
-                Service.Log($"Two boss modules have same primary actor OID: {t.Name} and {_modulesByOID[info.PrimaryActorOID].ModuleType.Name}");
+            if (!RegisteredModules.TryAdd(info.PrimaryActorOID, info))
+                Service.Log($"[ModuleRegistry] Two boss modules have same primary actor OID: {t.FullName} and {RegisteredModules[info.PrimaryActorOID].ModuleType.FullName}");
         }
     }
 
-    public static IReadOnlyDictionary<uint, Info> RegisteredModules => _modulesByOID;
-
-    public static Info? FindByOID(uint oid) => _modulesByOID.GetValueOrDefault(oid);
+    public static Info? FindByOID(uint oid) => RegisteredModules.GetValueOrDefault(oid);
     public static Info? FindByType(Type type) => _modulesByType.GetValueOrDefault(type);
 
     public static BossModule? CreateModule(Info? info, WorldState ws, Actor primary) => info?.ModuleFactory(ws, primary);

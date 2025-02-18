@@ -28,10 +28,10 @@ public enum IconID : uint
 }
 
 class Leafstorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Leafstorm));
-class Phytobeam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Phytobeam), new AOEShapeRect(48.68f, 6));
-class AcidRain(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AcidRain), 6);
+class Phytobeam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Phytobeam), new AOEShapeRect(48.68f, 6));
+class AcidRain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AcidRain), 6);
 class FloralTap(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(48.68f, 22.5f.Degrees()), (uint)IconID.FloralTap, ActionID.MakeSpell(AID.FloralTrap), 8.5f);
-class FlowerDevour(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlowerDevour), new AOEShapeCircle(8));
+class FlowerDevour(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlowerDevour), 8);
 class BloodyCaress(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.BloodyCaress), new AOEShapeCone(11.68f, 60.Degrees()));
 
 class D021RaskovnikStates : StateMachineBuilder
@@ -81,12 +81,12 @@ public class D021Raskovnik(WorldState ws, Actor primary) : BossModule(ws, primar
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.DravanianHornet => 2,
-                OID.Boss => 1,
+                OID.DravanianHornet => 1,
                 _ => 0
             };
         }

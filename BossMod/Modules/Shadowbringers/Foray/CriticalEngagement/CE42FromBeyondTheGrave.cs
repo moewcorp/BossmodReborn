@@ -4,7 +4,6 @@ public enum OID : uint
 {
     Boss = 0x2E35, // R8.250, x1
     Deathwall = 0x2EE8, // R0.500, x1
-    Helper = 0x233C, // R0.500, x6, and more spawn during fight
     ShockSphere = 0x3232, // R1.000, spawn during fight
     WarWraith = 0x3233, // R1.800, spawn during fight
     HernaisTheTenacious = 0x3234, // R0.500, spawn during fight
@@ -13,6 +12,7 @@ public enum OID : uint
     Monoceros = 0x3237, // R1.800, x1
     PurifyingLight = 0x1EB173, // R0.500, EventObj type, spawn during fight
     LivingCorpseSpawn = 0x1EB07A, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -51,7 +51,7 @@ public enum AID : uint
     PurifyingLightAOE = 24116, // Helper->location, no cast, range 12 circle, cleanse doom
     Ruin = 24119, // LlofiiTheForthright->Boss, 2.5s cast, single-target, autoattack
     Cleanse = 24969, // LlofiiTheForthright->location, 5.0s cast, range 6 circle, damages boss
-    SoothingGlimmer = 24970, // LlofiiTheForthright->self, 2.5s cast, single-target, heal
+    SoothingGlimmer = 24970 // LlofiiTheForthright->self, 2.5s cast, single-target, heal
 }
 
 public enum SID : uint
@@ -60,7 +60,7 @@ public enum SID : uint
     AboutFace = 2162, // Boss->player, extra=0x0
     LeftFace = 2163, // Boss->player, extra=0x0
     RightFace = 2164, // Boss->player, extra=0x0
-    ForcedMarch = 1257, // Boss->player, extra=0x2/0x1/0x8/0x4
+    ForcedMarch = 1257 // Boss->player, extra=0x2/0x1/0x8/0x4
 }
 
 class DevourSoul(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.DevourSoul));
@@ -122,16 +122,16 @@ class SoulPurge(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class CrimsonBlade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CrimsonBlade), new AOEShapeCone(50, 90.Degrees()));
-class BloodCyclone(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BloodCyclone), new AOEShapeCircle(5));
+class CrimsonBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrimsonBlade), new AOEShapeCone(50, 90.Degrees()));
+class BloodCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BloodCyclone), 5);
 class Aethertide(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AethertideAOE), 8);
 class MarchingBreath(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.MarchingBreath), showNameInHint: true); // heals all allies by 20% of max health (raidwide)
-class TacticalAero(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TacticalAero), new AOEShapeRect(40, 4));
-class EntropicFlame(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(60, 4));
-class DarkFlare(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DarkFlare), 8);
+class TacticalAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TacticalAero), new AOEShapeRect(40, 4));
+class EntropicFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(60, 4));
+class DarkFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkFlare), 8);
 class SoulSacrifice(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.SoulSacrifice), showNameInHint: true); // WarWraith sacrifices itself to give boss a damage buff
 
-class PurifyingLight : Components.LocationTargetedAOEs
+class PurifyingLight : Components.SimpleAOEs
 {
     public PurifyingLight(BossModule module) : base(module, ActionID.MakeSpell(AID.PurifyingLight), 12)
     {
@@ -162,7 +162,7 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)] // bnpcname=9931
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)] // bnpcname=9931
 public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, new(-60, 800), new ArenaBoundsCircle(30))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

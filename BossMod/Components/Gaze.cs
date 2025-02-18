@@ -9,7 +9,8 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
         WPos Position,
         DateTime Activation = new(),
         Angle Forward = new(), // if non-zero, treat specified side as 'forward' for hit calculations
-        float Range = 10000);
+        float Range = 10000,
+        ulong? ActorID = null);
 
     public bool Inverted = inverted; // if inverted, player should face eyes instead of averting
 
@@ -35,12 +36,12 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
         if (Inverted)
         {
             foreach (var eye in ActiveEyes(slot, actor).Where(eye => actor.Position.InCircle(eye.Position, eye.Range)))
-                hints.ForbiddenDirections.Add((Angle.FromDirection(actor.Position - eye.Position) - eye.Forward, 135.Degrees(), eye.Activation));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(actor.Position - eye.Position) - eye.Forward, 135f.Degrees(), eye.Activation));
         }
         else
         {
             foreach (var eye in ActiveEyes(slot, actor).Where(eye => actor.Position.InCircle(eye.Position, eye.Range)))
-                hints.ForbiddenDirections.Add((Angle.FromDirection(eye.Position - actor.Position) - eye.Forward, 45.Degrees(), eye.Activation));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(eye.Position - actor.Position) - eye.Forward, 45f.Degrees(), eye.Activation));
         }
     }
 
@@ -50,26 +51,31 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
         {
             var danger = HitByEye(pc, eye) != Inverted;
             var eyeCenter = IndicatorScreenPos(eye.Position);
-            var dl = ImGui.GetWindowDrawList();
-            dl.PathArcTo(eyeCenter - offset, _eyeOuterR, halfPIHalfAngleP, halfPIHalfAngleM);
-            dl.PathArcTo(eyeCenter + offset, _eyeOuterR, -halfPIHalfAngleP, -halfPIHalfAngleM);
-            dl.PathFillConvex(danger ? Colors.Enemy : Colors.PC);
-            dl.AddCircleFilled(eyeCenter, _eyeInnerR, Colors.Border);
+            DrawEye(eyeCenter, danger);
 
             if (pc.Position.InCircle(eye.Position, eye.Range))
             {
-                var (min, max) = Inverted ? (45, 315) : (-45, 45);
+                var (min, max) = Inverted ? (45f, 315f) : (-45f, 45f);
                 Arena.PathArcTo(pc.Position, 1, (pc.Rotation + eye.Forward + min.Degrees()).Rad, (pc.Rotation + eye.Forward + max.Degrees()).Rad);
                 MiniArena.PathStroke(false, Colors.Enemy);
             }
         }
     }
 
-    private static bool HitByEye(Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
+    public static void DrawEye(Vector2 eyeCenter, bool danger)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        dl.PathArcTo(eyeCenter - offset, _eyeOuterR, halfPIHalfAngleP, halfPIHalfAngleM);
+        dl.PathArcTo(eyeCenter + offset, _eyeOuterR, -halfPIHalfAngleP, -halfPIHalfAngleM);
+        dl.PathFillConvex(danger ? Colors.Enemy : Colors.PC);
+        dl.AddCircleFilled(eyeCenter, _eyeInnerR, Colors.Border);
+    }
+
+    public static bool HitByEye(Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
 
     private Vector2 IndicatorScreenPos(WPos eye)
     {
-        if (Arena.InBounds(eye))
+        if (Arena.InBounds(eye) || Arena.Bounds is not ArenaBoundsCircle && Arena.Bounds is ArenaBoundsComplex circle && !circle.IsCircle)
         {
             return Arena.WorldPositionToScreenPosition(eye);
         }
@@ -84,23 +90,32 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
 // gaze that happens on cast end
 public class CastGaze(BossModule module, ActionID aid, bool inverted = false, float range = 10000) : GenericGaze(module, aid, inverted)
 {
-    public readonly List<Actor> _casters = [];
+    public readonly List<Eye> Eyes = [];
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Where(c => c.CastInfo?.TargetID != actor.InstanceID).Select(c => new Eye(EyePosition(c), Module.CastFinishAt(c.CastInfo), Range: range));
+    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => Eyes;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _casters.Add(caster);
+            Eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), default, range, caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _casters.Remove(caster);
+        {
+            var count = Eyes.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var eye = Eyes[i];
+                if (eye.ActorID == caster.InstanceID)
+                {
+                    Eyes.Remove(eye);
+                    break;
+                }
+            }
+        }
     }
-
-    protected WPos EyePosition(Actor caster) => caster.CastInfo == null || caster.CastInfo.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(caster.CastInfo.TargetID)?.Position ?? caster.CastInfo.LocXZ;
 }
 
 // cast weakpoint component: a number of casts (with supposedly non-intersecting shapes), player should face specific side determined by active status to the caster for aoe he's in

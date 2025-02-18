@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x2C67, //R=2.0
     Bomb = 0x2C68, // R=0.4
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -17,19 +17,19 @@ public enum AID : uint
     Teleport = 18848, // Boss->location, no cast, ???
     MagitekExplosive = 18849, // Boss->self, 3.0s cast, single-target
     RubberBullet = 18847, // Boss->player, 4.0s cast, single-target, knockback 20 away from source
-    Explosion = 18888, // Bomb->self, 3.5s cast, range 8 circle
+    Explosion = 18888 // Bomb->self, 3.5s cast, range 8 circle
 }
 
 public enum SID : uint
 {
     MagitekField = 2166, // Boss->Boss, extra=0x64, reflects magic damage
     MagicVulnerabilityDown = 812, // Boss->Boss, extra=0x0, invulnerable to magic
-    Bind = 564, // Boss->player, extra=0x0, dispellable
+    Bind = 564 // Boss->player, extra=0x0, dispellable
 }
 
 class MagicDrain(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MagicDrain), "Reflect magic damage for 30s");
-class HyperdriveFirst(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5);
-class HyperdriveRest(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5);
+class HyperdriveFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5);
+class HyperdriveRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5);
 class AnkleGraze(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AnkleGraze), "Applies bind, prepare to use Excuviation!");
 
 class RubberBullet(BossModule module) : Components.Knockback(module)
@@ -122,7 +122,7 @@ class Stage30Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 699, NameID = 9245, SortOrder = 1)]
 public class Stage30Act1 : BossModule
 {
-    public Stage30Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage30Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }

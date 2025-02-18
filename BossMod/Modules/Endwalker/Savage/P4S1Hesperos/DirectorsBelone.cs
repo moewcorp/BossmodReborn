@@ -19,13 +19,13 @@ class DirectorsBelone(BossModule module) : BossComponent(module)
             if (coils == null)
             {
                 // assign from bloodrake tethers
-                _debuffForbidden = Raid.WithSlot().Tethered(TetherID.Bloodrake).Mask();
+                _debuffForbidden = Raid.WithSlot(false, true, true).Tethered(TetherID.Bloodrake).Mask();
                 _assigned = true;
             }
             else if (coils.ActiveSoakers != BeloneCoils.Soaker.Unknown)
             {
                 // assign from coils (note that it happens with some delay)
-                _debuffForbidden = Raid.WithSlot().WhereActor(coils.IsValidSoaker).Mask();
+                _debuffForbidden = Raid.WithSlot(false, true, true).WhereActor(coils.IsValidSoaker).Mask();
                 _assigned = true;
             }
         }
@@ -42,7 +42,7 @@ class DirectorsBelone(BossModule module) : BossComponent(module)
             if (_debuffTargets.None())
             {
                 // debuffs not assigned yet => spread and prepare to grab
-                var stacked = Raid.WithoutSlot().InRadiusExcluding(actor, _debuffPassRange).Any();
+                var stacked = Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _debuffPassRange).Any();
                 hints.Add("Debuffs: spread and prepare to handle!", stacked);
             }
             else if (_debuffImmune[slot])
@@ -63,7 +63,7 @@ class DirectorsBelone(BossModule module) : BossComponent(module)
             // we should be passing debuff
             if (_debuffTargets.None())
             {
-                var badStack = Raid.WithSlot().Exclude(slot).IncludedInMask(_debuffForbidden).OutOfRadius(actor.Position, _debuffPassRange).Any();
+                var badStack = Raid.WithSlot(false, true, true).Exclude(slot).IncludedInMask(_debuffForbidden).OutOfRadius(actor.Position, _debuffPassRange).Any();
                 hints.Add("Debuffs: stack and prepare to pass!", badStack);
             }
             else if (_debuffTargets[slot])
@@ -79,7 +79,7 @@ class DirectorsBelone(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var forbidden = Raid.WithSlot(true).IncludedInMask(_debuffForbidden).FirstOrDefault().Item2;
+        var forbidden = Raid.WithSlot(true, true, true).IncludedInMask(_debuffForbidden).FirstOrDefault().Item2;
         if (forbidden != null)
         {
             hints.Add($"Stack: {(forbidden.Role is Role.Tank or Role.Healer ? "Tanks/Healers" : "DD")}");
@@ -92,7 +92,7 @@ class DirectorsBelone(BossModule module) : BossComponent(module)
             return;
 
         var failingPlayers = _debuffForbidden & _debuffTargets;
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             Arena.Actor(player, failingPlayers[i] ? Colors.Danger : Colors.PlayerGeneric);
         }

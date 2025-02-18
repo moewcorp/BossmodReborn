@@ -22,9 +22,9 @@ public enum IconID : uint
     Stackmarker = 62
 }
 
-class ConcussiveOscillationBoss(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ConcussiveOscillationBoss), 7);
-class ConcussiveOscillation(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ConcussiveOscillation), 8);
-class AmorphousApplause(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AmorphousApplause), new AOEShapeCone(24.5f, 90.Degrees()));
+class ConcussiveOscillationBoss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ConcussiveOscillationBoss), 7);
+class ConcussiveOscillation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ConcussiveOscillation), 8);
+class AmorphousApplause(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AmorphousApplause), new AOEShapeCone(24.5f, 90.Degrees()));
 class Hydroball(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.Hydroball), 5, 5, 4, 4);
 class SeaSwallowsAll(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SeaSwallowsAll));
 class Overtow(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Overtow));

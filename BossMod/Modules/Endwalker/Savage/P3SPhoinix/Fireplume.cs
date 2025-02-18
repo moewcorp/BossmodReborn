@@ -1,58 +1,22 @@
 ﻿namespace BossMod.Endwalker.Savage.P3SPhoinix;
 
 // state related to 'single' and 'multi' fireplumes (normal or parts of gloryplume)
-class Fireplume(BossModule module) : BossComponent(module)
+class Fireplume(BossModule module) : Components.GenericAOEs(module)
 {
-    private WPos? _singlePos;
-    private Angle _multiStartingDirection;
-    private int _multiStartedCasts;
-    private int _multiFinishedCasts;
+    private static readonly AOEShapeCircle circleBig = new(15);
+    private static readonly AOEShapeCircle circleSmall = new(10);
+    private readonly List<AOEInstance> _aoes = [];
 
-    private const float _singleRadius = 15;
-    private const float _multiRadius = 10;
-    private const float _multiPairOffset = 15;
-
-    public override void AddHints(int slot, Actor actor, TextHints hints)
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_singlePos != null && actor.Position.InCircle(_singlePos.Value, _singleRadius))
+        var count = _aoes.Count;
+        for (var i = 0; i < count; ++i)
         {
-            hints.Add("GTFO from plume!");
-        }
-
-        if (_multiStartedCasts > _multiFinishedCasts)
-        {
-            if (_multiFinishedCasts > 0 && actor.Position.InCircle(Module.Center, _multiRadius) ||
-                _multiFinishedCasts < 8 && InPair(_multiStartingDirection + 45.Degrees(), actor) ||
-                _multiFinishedCasts < 6 && InPair(_multiStartingDirection - 90.Degrees(), actor) ||
-                _multiFinishedCasts < 4 && InPair(_multiStartingDirection - 45.Degrees(), actor) ||
-                _multiFinishedCasts < 2 && InPair(_multiStartingDirection, actor))
-            {
-                hints.Add("GTFO from plume!");
-            }
-        }
-    }
-
-    public override void DrawArenaBackground(int pcSlot, Actor pc)
-    {
-        if (_singlePos != null)
-        {
-            Arena.ZoneCircle(_singlePos.Value, _singleRadius, Colors.AOE);
-        }
-
-        if (_multiStartedCasts > _multiFinishedCasts)
-        {
-            if (_multiFinishedCasts > 0) // don't draw center aoe before first explosion, it's confusing - but start drawing it immediately after first explosion, to simplify positioning
-                Arena.ZoneCircle(Module.Center, _multiRadius, _multiFinishedCasts >= 6 ? Colors.Danger : Colors.AOE);
-
-            // don't draw more than two next pairs
-            if (_multiFinishedCasts < 8)
-                DrawPair(_multiStartingDirection + 45.Degrees(), _multiStartedCasts > 6 && _multiFinishedCasts >= 4);
-            if (_multiFinishedCasts < 6)
-                DrawPair(_multiStartingDirection - 90.Degrees(), _multiStartedCasts > 4 && _multiFinishedCasts >= 2);
-            if (_multiFinishedCasts < 4)
-                DrawPair(_multiStartingDirection - 45.Degrees(), _multiStartedCasts > 2);
-            if (_multiFinishedCasts < 2)
-                DrawPair(_multiStartingDirection, true);
+            var aoe = _aoes[i];
+            if (i < 2)
+                yield return count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else if (i is > 1 and < 8)
+                yield return aoe with { Risky = false };
         }
     }
 
@@ -62,42 +26,37 @@ class Fireplume(BossModule module) : BossComponent(module)
         {
             case AID.ExperimentalFireplumeSingleAOE:
             case AID.ExperimentalGloryplumeSingleAOE:
-                _singlePos = caster.Position;
+                _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell)));
                 break;
             case AID.ExperimentalFireplumeMultiAOE:
             case AID.ExperimentalGloryplumeMultiAOE:
-                if (_multiStartedCasts++ == 0)
-                    _multiStartingDirection = Angle.FromDirection(caster.Position - Module.Center);
+                if (_aoes.Count == 0)
+                {
+                    var startingDirection = Angle.FromDirection(caster.Position - Arena.Center);
+                    for (var i = 0; i < 4; ++i)
+                    {
+                        var activation = Module.CastFinishAt(spell, i * 1);
+                        var dir = 15 * (startingDirection - i * 45.Degrees()).ToDirection();
+                        _aoes.Add(new(circleSmall, Arena.Center + dir, default, activation));
+                        _aoes.Add(new(circleSmall, Arena.Center - dir, default, activation));
+                    }
+                    _aoes.Add(new(circleSmall, Arena.Center, default, Module.CastFinishAt(spell, 4)));
+                }
                 break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
-        {
-            case AID.ExperimentalFireplumeSingleAOE:
-            case AID.ExperimentalGloryplumeSingleAOE:
-                _singlePos = null;
-                break;
-            case AID.ExperimentalFireplumeMultiAOE:
-            case AID.ExperimentalGloryplumeMultiAOE:
-                ++_multiFinishedCasts;
-                break;
-        }
-    }
-
-    private bool InPair(Angle direction, Actor actor)
-    {
-        var offset = _multiPairOffset * direction.ToDirection();
-        return actor.Position.InCircle(Module.Center - offset, _multiRadius)
-            || actor.Position.InCircle(Module.Center + offset, _multiRadius);
-    }
-
-    private void DrawPair(Angle direction, bool imminent)
-    {
-        var offset = _multiPairOffset * direction.ToDirection();
-        Arena.ZoneCircle(Module.Center + offset, _multiRadius, imminent ? Colors.Danger : Colors.AOE);
-        Arena.ZoneCircle(Module.Center - offset, _multiRadius, imminent ? Colors.Danger : Colors.AOE);
+        if (_aoes.Count != 0)
+            switch ((AID)spell.Action.ID)
+            {
+                case AID.ExperimentalFireplumeSingleAOE:
+                case AID.ExperimentalGloryplumeSingleAOE:
+                case AID.ExperimentalFireplumeMultiAOE:
+                case AID.ExperimentalGloryplumeMultiAOE:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }

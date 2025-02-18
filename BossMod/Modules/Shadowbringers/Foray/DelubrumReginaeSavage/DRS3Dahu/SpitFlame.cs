@@ -3,7 +3,7 @@
 class SpitFlame(BossModule module) : Components.UniformStackSpread(module, 0, 4, alwaysShowSpreads: true, raidwideOnResolve: false)
 {
     private readonly Actor?[] _targets = [null, null, null, null];
-    private readonly IReadOnlyList<Actor> _adds = module.Enemies(OID.Marchosias);
+    private readonly List<Actor> _adds = module.Enemies(OID.Marchosias);
 
     public override void Update()
     {
@@ -28,7 +28,7 @@ class SpitFlame(BossModule module) : Components.UniformStackSpread(module, 0, 4,
         base.DrawArenaForeground(pcSlot, pc);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var order = (IconID)iconID switch
         {

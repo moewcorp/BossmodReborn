@@ -58,9 +58,9 @@ class Heatstroke(BossModule module) : Components.StayMove(module, 3)
     {
         if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
-            if ((SID)status.ID == SID.Heatstroke)
+            if (status.ID == (uint)SID.Heatstroke)
                 _heatstroke.Clear(Raid.FindSlot(actor.InstanceID));
-            else if ((SID)status.ID == SID.Pyretic)
+            else if (status.ID == (uint)SID.Pyretic)
                 PlayerStates[slot] = default;
         }
     }
@@ -79,7 +79,7 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.ColdSweats && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.ColdSweats && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             PlayerStates[slot] = new(Requirement.Move, status.ExpireAt);
             _coldsweats.Set(Raid.FindSlot(actor.InstanceID));
@@ -90,9 +90,9 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
     {
         if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
-            if ((SID)status.ID == SID.ColdSweats)
+            if (status.ID == (uint)SID.ColdSweats)
                 _coldsweats.Clear(Raid.FindSlot(actor.InstanceID));
-            else if ((SID)status.ID == SID.FreezingUp)
+            else if (status.ID == (uint)SID.FreezingUp)
                 PlayerStates[slot] = default;
         }
     }
@@ -110,61 +110,83 @@ class Aethermodynamics2(BossModule module) : Components.RaidwideCast(module, Act
 class Aethermodynamics3(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Aethermodynamics3));
 class Aethermodynamics4(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Aethermodynamics4));
 
-class Obliterate(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Obliterate), 6, 8);
-class Meltdown(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Meltdown), new AOEShapeRect(40, 5));
+class Obliterate(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Obliterate), 6f, 8);
+class Meltdown(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Meltdown), new AOEShapeRect(40f, 5f));
 
-class Blizzard(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(6, 40));
+class Blizzard(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(6f, 40f));
 class BlizzardIV1(BossModule module) : Blizzard(module, AID.BlizzardIV1);
 class BlizzardIV5(BossModule module) : Blizzard(module, AID.BlizzardIV5);
 
-class Fire(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(15));
+class Fire(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15f);
 class FireIV1(BossModule module) : Fire(module, AID.FireIV1);
 class FireIV5(BossModule module) : Fire(module, AID.FireIV5);
 
 class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCone cone = new(40, 90.Degrees());
-    private static readonly AOEShapeDonut donut = new(6, 40);
-    private static readonly AOEShapeCircle circle = new(15);
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly HashSet<AID> castEnd = [AID.SoullessStream1, AID.SoullessStream2, AID.SoullessStream3, AID.SoullessStream4,
-    AID.BlizzardIV2, AID.BlizzardIV3, AID.BlizzardIV4, AID.FireIV2, AID.FireIV3, AID.FireIV4];
+    private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
+    private static readonly AOEShapeDonut donut = new(6f, 40f);
+    private static readonly AOEShapeCircle circle = new(15f);
+    private readonly List<AOEInstance> _aoes = new(2);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (count > 1)
-            yield return _aoes[1];
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        {
+            for (var i = 0; i < count; ++i)
+            {
+                var aoe = _aoes[i];
+                if (i == 0)
+                    aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+                else
+                    aoes[i] = aoe;
+            }
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.SoullessStream1:
-            case AID.SoullessStream4:
-                AddAOEs(cone, circle, spell);
+            case (uint)AID.SoullessStream1:
+            case (uint)AID.SoullessStream4:
+                AddAOEs(cone, circle);
                 break;
-            case AID.SoullessStream2:
-            case AID.SoullessStream3:
-                AddAOEs(cone, donut, spell);
+            case (uint)AID.SoullessStream2:
+            case (uint)AID.SoullessStream3:
+                AddAOEs(cone, donut);
                 break;
         }
-    }
 
-    private void AddAOEs(AOEShape primaryShape, AOEShape secondaryShape, ActorCastInfo spell)
-    {
-        var position = Module.PrimaryActor.Position;
-        _aoes.Add(new(primaryShape, position, spell.Rotation, Module.CastFinishAt(spell)));
-        _aoes.Add(new(secondaryShape, position, default, Module.CastFinishAt(spell, 2.5f)));
+        void AddAOEs(AOEShape primaryShape, AOEShape secondaryShape)
+        {
+            var position = Module.PrimaryActor.Position;
+            _aoes.Add(new(primaryShape, position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(secondaryShape, position, default, Module.CastFinishAt(spell, 2.5f)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && castEnd.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.SoullessStream1:
+                case (uint)AID.SoullessStream2:
+                case (uint)AID.SoullessStream3:
+                case (uint)AID.SoullessStream4:
+                case (uint)AID.BlizzardIV2:
+                case (uint)AID.BlizzardIV3:
+                case (uint)AID.BlizzardIV4:
+                case (uint)AID.FireIV2:
+                case (uint)AID.FireIV3:
+                case (uint)AID.FireIV4:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 

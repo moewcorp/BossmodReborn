@@ -5,7 +5,7 @@ class P4Hatebound(BossModule module) : BossComponent(module)
 {
     public enum Color { None, Red, Blue }
 
-    public bool ColorsAssigned { get; private set; }
+    public bool ColorsAssigned;
     private readonly List<(Actor orb, Color color, bool exploded)> _orbs = []; // 'red' is actually 'yellow orb'
     private readonly Color[] _playerColors = new Color[PartyState.MaxPartySize];
 
@@ -82,10 +82,10 @@ class P4MirageDive(BossModule module) : Components.CastCounter(module, ActionID.
             // note: not showing this hint, since typically pc will wait until someone swaps the color
             //if (_forbidden[slot])
             //    hints.Add("Pass the tether!");
-            if (!_forbidden[slot] && Raid.WithoutSlot().InRadiusExcluding(actor, _radius).Any())
+            if (!_forbidden[slot] && Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius).Any())
                 hints.Add("GTFO from raid!");
         }
-        else if (Raid.WithSlot(true).IncludedInMask(_baiters).ExcludedFromMask(_forbidden).InRadius(actor.Position, _radius).Any())
+        else if (Raid.WithSlot(true, true, true).IncludedInMask(_baiters).ExcludedFromMask(_forbidden).InRadius(actor.Position, _radius).Any())
         {
             hints.Add("GTFO from baiters!");
         }
@@ -96,7 +96,7 @@ class P4MirageDive(BossModule module) : Components.CastCounter(module, ActionID.
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         var pcCanSwap = !_forbidden[pcSlot] && !_baiters[pcSlot];
-        foreach (var (slot, player) in Raid.WithSlot(true).IncludedInMask(_baiters))
+        foreach (var (slot, player) in Raid.WithSlot(true, true, true).IncludedInMask(_baiters))
         {
             var canSwap = pcCanSwap && _forbidden[slot];
             Arena.AddCircle(player.Position, _radius, canSwap ? Colors.Safe : Colors.Danger);

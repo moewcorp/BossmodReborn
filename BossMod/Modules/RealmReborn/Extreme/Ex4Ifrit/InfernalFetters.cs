@@ -9,7 +9,7 @@ class InfernalFetters(BossModule module) : BossComponent(module)
     {
         if (Fetters[slot] && actor.Role != Role.Tank)
         {
-            var partner = Raid.WithSlot().Exclude(slot).IncludedInMask(Fetters).FirstOrDefault().Item2;
+            var partner = Raid.WithSlot(false, true, true).Exclude(slot).IncludedInMask(Fetters).FirstOrDefault().Item2;
             if (partner != null)
                 hints.AddForbiddenZone(ShapeDistance.InvertedCircle(partner.Position, 10)); // TODO: tweak range...
         }

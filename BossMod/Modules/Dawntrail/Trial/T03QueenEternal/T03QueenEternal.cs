@@ -4,9 +4,9 @@ class ProsecutionOfWar(BossModule module) : Components.SingleTargetCast(module, 
 class VirtualShift1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.VirtualShift1));
 class VirtualShift2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.VirtualShift2));
 class VirtualShift3(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.VirtualShift3));
-class BrutalCrown(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BrutalCrown), new AOEShapeDonut(5, 60));
+class BrutalCrown(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrutalCrown), new AOEShapeDonut(5, 60));
 class RoyalDomain(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.RoyalDomain));
-class DynasticDiadem(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DynasticDiadem), new AOEShapeDonut(6, 70));
+class DynasticDiadem(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DynasticDiadem), new AOEShapeDonut(6, 70));
 
 abstract class RaidwideMulti(BossModule module, AID aid) : Components.RaidwideCast(module, ActionID.MakeSpell(aid), "multiple Raidwides");
 class RoyalBanishmentRaidwide(BossModule module) : RaidwideMulti(module, AID.RoyalBanishmentVisual);
@@ -52,6 +52,9 @@ public class T03QueenEternal(WorldState ws, Actor primary) : BossModule(ws, prim
     public static readonly WPos ArenaCenter = new(100, 100), FinalCenter = new(100, 105), LeftSplitCenter = new(108, 94), RightSplitCenter = new(92, 94);
     public static readonly ArenaBoundsRect FinalBounds = new(20, 15), SplitGravityBounds = new(12, 8);
     public static readonly ArenaBoundsSquare DefaultBounds = new(20);
-    public static readonly ArenaBoundsComplex XArena = new([new Rectangle(new(100, 82.5f), 12.5f, 2.5f), new Rectangle(new(100, 102.5f), 12.5f, 2.5f), new Cross(new(100, 92.5f), 15, 2.5f, 45.Degrees())], Offset: -0.5f);
-    public static readonly ArenaBoundsComplex SplitArena = new([new Rectangle(LeftSplitCenter, 4, 8), new Rectangle(RightSplitCenter, 4, 8)]);
+    public static readonly Shape[] XArenaRects = [new Rectangle(new(100, 82.5f), 12.5f, 2.5f), new Rectangle(new(100, 102.5f), 12.5f, 2.5f),
+    new Cross(new(100, 92.5f), 15, 2.5f, 45.Degrees())];
+    public static readonly ArenaBoundsComplex XArena = new(XArenaRects);
+    public static readonly Rectangle[] SplitArenaRects = [new Rectangle(LeftSplitCenter, 4, 8), new Rectangle(RightSplitCenter, 4, 8)];
+    public static readonly ArenaBoundsComplex SplitArena = new(SplitArenaRects);
 }

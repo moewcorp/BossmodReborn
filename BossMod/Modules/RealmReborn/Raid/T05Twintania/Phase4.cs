@@ -3,7 +3,7 @@
 // P4 mechanics
 class P4Twisters(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _twisters = module.Enemies(OID.Twister);
+    private readonly List<Actor> _twisters = module.Enemies(OID.Twister);
     private readonly List<WPos> _predictedPositions = [];
     private IEnumerable<Actor> ActiveTwisters => _twisters.Where(t => t.EventState != 7);
 
@@ -14,7 +14,7 @@ class P4Twisters(BossModule module) : BossComponent(module)
     public override void Update()
     {
         if (_predictedPositions.Count == 0 && (Module.PrimaryActor.CastInfo?.IsSpell(AID.Twister) ?? false) && Module.PrimaryActor.CastInfo.NPCRemainingTime <= PredictBeforeCastFinish)
-            _predictedPositions.AddRange(Raid.WithoutSlot().Select(a => a.Position));
+            _predictedPositions.AddRange(Raid.WithoutSlot(false, true, true).Select(a => a.Position));
         if (_twisters.Count > 0)
             _predictedPositions.Clear();
     }
@@ -43,7 +43,7 @@ class P4Twisters(BossModule module) : BossComponent(module)
 class P4Dreadknights(BossModule module) : BossComponent(module)
 {
     private Actor? _target;
-    private readonly IReadOnlyList<Actor> _dreadknights = module.Enemies(OID.Dreadknight);
+    private readonly List<Actor> _dreadknights = module.Enemies(OID.Dreadknight);
     public IEnumerable<Actor> ActiveDreadknights => _dreadknights.Where(a => !a.IsDead);
 
     public override void Update()

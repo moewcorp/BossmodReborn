@@ -13,7 +13,7 @@ public enum AID : uint
     IncendiaryRing = 38452 // Aerostat2->self, 4.8s cast, range 3-12 donut
 }
 
-class IncendiaryRing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IncendiaryRing), new AOEShapeDonut(3, 12));
+class IncendiaryRing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IncendiaryRing), new AOEShapeDonut(3, 12));
 
 class D040VanguardAerostat1States : StateMachineBuilder
 {
@@ -21,16 +21,29 @@ class D040VanguardAerostat1States : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<IncendiaryRing>()
-            .Raw.Update = () => module.Enemies(OID.Aerostat2).Concat([module.PrimaryActor]).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(D040VanguardAerostat1.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12780, SortOrder = 3)]
-public class D040VanguardAerostat1(WorldState ws, Actor primary) : BossModule(ws, primary, new(-50, -15), new ArenaBoundsRect(7.7f, 25))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12780, SortOrder = 4)]
+public class D040VanguardAerostat1(WorldState ws, Actor primary) : BossModule(ws, primary, new(-50f, -15f), new ArenaBoundsRect(7.7f, 25f))
 {
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Aerostat2];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Aerostat2));
+        Arena.Actors(Enemies((uint)OID.Aerostat2));
     }
 }

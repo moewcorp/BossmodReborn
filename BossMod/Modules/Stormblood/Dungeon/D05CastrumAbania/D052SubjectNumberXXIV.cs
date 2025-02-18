@@ -59,8 +59,8 @@ class SparkingCurrent(BossModule module) : Components.GenericBaitAway(module)
 class ThunderII(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.ThunderII), 5);
 class FireII(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FireII), 5, 4, 4);
 class BlizzardII(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BlizzardII), 5);
-class IceGrid(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IceGrid), new AOEShapeRect(40, 2), 10);
-class Triflame(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Triflame), new AOEShapeCone(60, 30.Degrees()), 3);
+class IceGrid(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IceGrid), new AOEShapeRect(40, 2), 10);
+class Triflame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Triflame), new AOEShapeCone(60, 30.Degrees()), 3);
 class ElementalOverload1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElementalOverload1));
 class ElementalOverload2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElementalOverload2));
 class ElementalOverload3(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElementalOverload3));

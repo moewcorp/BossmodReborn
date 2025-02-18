@@ -26,32 +26,34 @@ public enum AID : uint
 class ChitinousTrace(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _active;
+    private static readonly AOEShapeCircle circle = new(8f);
+    private static readonly AOEShapeDonut donut = new(8f, 40f);
     private readonly List<AOEShape> _pendingShapes = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_active && _pendingShapes.Count > 0)
-            yield return new(_pendingShapes[0], Module.PrimaryActor.Position); // TODO: activation
+        if (_active && _pendingShapes.Count != 0)
+            return [new(_pendingShapes[0], Module.PrimaryActor.Position)]; // TODO: activation
+        else
+            return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ChitinousTraceCircle:
-                _pendingShapes.Add(new AOEShapeCircle(8));
+            case (uint)AID.ChitinousTraceCircle:
+                _pendingShapes.Add(circle);
                 break;
-            case AID.ChitinousTraceDonut:
-                _pendingShapes.Add(new AOEShapeDonut(8, 40));
+            case (uint)AID.ChitinousTraceDonut:
+                _pendingShapes.Add(donut);
                 break;
-            case AID.ChitinousAdvanceCircleFirst:
-            case AID.ChitinousAdvanceDonutFirst:
+            case (uint)AID.ChitinousAdvanceCircleFirst:
+            case (uint)AID.ChitinousAdvanceDonutFirst:
                 _active = true;
                 break;
-            case AID.ChitinousReversalCircleFirst:
-            case AID.ChitinousReversalDonutFirst:
+            case (uint)AID.ChitinousReversalCircleFirst:
+            case (uint)AID.ChitinousReversalDonutFirst:
                 _pendingShapes.Reverse();
                 _active = true;
                 break;
@@ -60,13 +62,21 @@ class ChitinousTrace(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (caster == Module.PrimaryActor && _pendingShapes.Count > 0 &&
-            (AID)spell.Action.ID is AID.ChitinousAdvanceCircleFirst or AID.ChitinousAdvanceCircleRest or AID.ChitinousAdvanceDonutFirst or AID.ChitinousAdvanceDonutRest
-                                 or AID.ChitinousReversalCircleFirst or AID.ChitinousReversalCircleRest or AID.ChitinousReversalDonutFirst or AID.ChitinousReversalDonutRest)
-        {
-            _pendingShapes.RemoveAt(0);
-            _active = _pendingShapes.Count > 0;
-        }
+        if (_pendingShapes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.ChitinousAdvanceCircleFirst:
+                case (uint)AID.ChitinousAdvanceDonutFirst:
+                case (uint)AID.ChitinousAdvanceCircleRest:
+                case (uint)AID.ChitinousAdvanceDonutRest:
+                case (uint)AID.ChitinousReversalCircleFirst:
+                case (uint)AID.ChitinousReversalDonutFirst:
+                case (uint)AID.ChitinousReversalCircleRest:
+                case (uint)AID.ChitinousReversalDonutRest:
+                    _pendingShapes.RemoveAt(0);
+                    _active = _pendingShapes.Count > 0;
+                    break;
+            }
     }
 }
 
@@ -82,5 +92,5 @@ class RuminatorStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10620)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10620)]
 public class Ruminator(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

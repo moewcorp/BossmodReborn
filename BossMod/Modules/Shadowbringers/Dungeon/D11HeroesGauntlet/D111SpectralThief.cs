@@ -2,7 +2,6 @@ namespace BossMod.Shadowbringers.Dungeon.D11HeroesGauntlet.D111SpectralThief;
 
 public enum OID : uint
 {
-
     Boss = 0x2DEC, // R0.875
     SpectralThief = 0x2DED, // R0.875
     Marker = 0x1EAED9,
@@ -44,7 +43,7 @@ public enum SID : uint
 class SpectralWhirlwind(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SpectralWhirlwind));
 class SpectralDream(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.SpectralDream));
 class SpectralGust(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.SpectralGust), 5);
-class CowardsCunning(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CowardsCunning), new AOEShapeRect(55, 1, 5));
+class CowardsCunning(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CowardsCunning), new AOEShapeRect(60, 1));
 
 class VacuumBladePapercutter(BossModule module) : Components.GenericAOEs(module)
 {
@@ -61,8 +60,10 @@ class VacuumBladePapercutter(BossModule module) : Components.GenericAOEs(module)
         if ((OID)actor.OID == OID.Boss && (SID)status.ID == SID.Dash)
         {
             var activation = WorldState.FutureTime(8.1f);
-            foreach (var e in Module.Enemies(OID.Marker))
+            var marker = Module.Enemies(OID.Marker);
+            for (var i = 0; i < marker.Count; ++i)
             {
+                var e = marker[i];
                 switch (status.Extra)
                 {
                     case 0xB0:
@@ -87,7 +88,7 @@ class VacuumBladePapercutter(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.ActiveCasters.Any())
+        if (_aoe.ActiveCasters.Count != 0)
         { }
         else
             base.AddAIHints(slot, actor, assignment, hints);

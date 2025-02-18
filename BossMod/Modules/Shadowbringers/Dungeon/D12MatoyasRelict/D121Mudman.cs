@@ -48,7 +48,7 @@ public enum TetherID : uint
 class StoneAge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StoneAge));
 class HardRock(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HardRock));
 class MudVoidzone(BossModule module) : Components.PersistentVoidzone(module, 5, m => m.Enemies(OID.MudVoidzone));
-class Quagmire(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Quagmire), 6);
+class Quagmire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quagmire), 6);
 class FallingRock(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FallingRock), 6, 4, 4);
 
 class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _shapes)
@@ -58,12 +58,12 @@ class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _sha
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.BrittleBreccia1)
-            AddSequence(caster.Position, Module.CastFinishAt(spell), spell.Rotation);
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell), spell.Rotation);
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -72,16 +72,14 @@ class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _sha
                 AID.BrittleBreccia3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(1.5f), spell.Rotation);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f), spell.Rotation);
         }
     }
 }
 
 class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect1 = new(60, 2);
-    private static readonly AOEShapeRect rect2 = new(60, 3);
-    private static readonly AOEShapeRect rect3 = new(60, 4);
+    private static readonly AOEShapeRect rect1 = new(60, 2), rect2 = new(60, 3), rect3 = new(60, 4);
     private readonly List<WPos> activeHoles = [];
 
     private static readonly Dictionary<byte, WPos> holePositions = new()
@@ -118,8 +116,8 @@ class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        foreach (var h in activeHoles)
-            Arena.AddCircle(h, 5, Colors.Safe, 5);
+        for (var i = 0; i < activeHoles.Count; ++i)
+            Arena.AddCircle(activeHoles[i], 5, Colors.Safe, 5);
     }
 
     public override void Update()
@@ -155,12 +153,12 @@ class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        var forbidden = new List<Func<WPos, float>>();
+        var forbidden = new List<Func<WPos, float>>(4);
         foreach (var b in ActiveBaitsOn(actor))
-            foreach (var h in activeHoles)
-                forbidden.Add(ShapeDistance.InvertedRect(b.Source.Position, h, 1));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)));
+            for (var i = 0; i < activeHoles.Count; ++i)
+                forbidden.Add(ShapeDistance.InvertedRect(b.Source.Position, activeHoles[i], 1));
+        if (forbidden.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
     }
 }
 

@@ -10,8 +10,9 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 872, // Boss->player, no cast, single-target
+    AutoAttack1 = 872, // Boss->player, no cast, single-target
     AutoAttack2 = 870, // Leyak->player, no cast, single-target
+
     ElectricPredation = 3887, // Boss->self, no cast, range 8+R 90-degree cone
     ElectricCachexia = 3889, // Boss->self, 7.0s cast, range 8-60 donut
     IonosphericCharge = 3888, // Boss->self, 3.0s cast, single-target
@@ -24,10 +25,11 @@ public enum AID : uint
 
 public enum TetherID : uint
 {
-    Lightning = 6, // Boss->player/BlackenedStatue
+    Lightning = 6 // Boss->player/BlackenedStatue
 }
 
 class ElectricPredation(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ElectricPredation), new AOEShapeCone(12.9f, 60.Degrees()));
+
 class Electrocution(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeRect rect = new(64.9f, 2.5f);
@@ -35,7 +37,7 @@ class Electrocution(BossModule module) : Components.GenericBaitAway(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ElectrocutionVisual)
-            foreach (var p in Module.Raid.WithoutSlot())
+            foreach (var p in Module.Raid.WithoutSlot(false, true, true))
                 CurrentBaits.Add(new(caster, p, rect, Module.CastFinishAt(spell, 0.9f)));
     }
 
@@ -45,12 +47,15 @@ class Electrocution(BossModule module) : Components.GenericBaitAway(module)
         {
             ++NumCasts;
             if (NumCasts == 3 || NumCasts == CurrentBaits.Count) // hits upto 3 random players
+            {
                 CurrentBaits.Clear();
+                NumCasts = 0;
+            }
         }
     }
 }
 
-class IonosphericCharge(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCircle(0), (uint)TetherID.Lightning, activationDelay: 10.1f)
+class IonosphericCharge(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCircle(default), (uint)TetherID.Lightning, activationDelay: 10.1f)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -66,8 +71,8 @@ class IonosphericCharge(BossModule module) : Components.BaitAwayTethers(module, 
         var forbidden = new List<Func<WPos, float>>();
         foreach (var a in Module.Enemies(OID.BlackenedStatue))
             forbidden.Add(ShapeDistance.InvertedCircle(a.Position, 4));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Max(f => f(p)), ActiveBaits.FirstOrDefault().Activation);
+        if (forbidden.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveBaits.FirstOrDefault().Activation);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -82,8 +87,8 @@ class IonosphericCharge(BossModule module) : Components.BaitAwayTethers(module, 
     }
 }
 
-class ElectricCachexia(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ElectricCachexia), new AOEShapeDonut(8, 60));
-class LightningBolt(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.LightningBolt), 3);
+class ElectricCachexia(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ElectricCachexia), new AOEShapeDonut(8, 60));
+class LightningBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightningBolt), 3);
 
 class D031RangdaStates : StateMachineBuilder
 {
@@ -124,12 +129,12 @@ public class D031Rangda(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.Leyak => 2,
-                OID.Boss => 1,
+                OID.Leyak => 1,
                 _ => 0
             };
         }

@@ -48,7 +48,7 @@ public enum SID : uint
 
 class CleanCut(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.CleanCut), 4);
 class DelayActionCharge(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.DelayActionCharge), 6, 4);
-class ThermobaricCharge(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 30);
+class ThermobaricCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 30);
 
 class Chainsaw(BossModule module) : Components.GenericAOEs(module)
 {
@@ -145,7 +145,7 @@ class Gunsaw(BossModule module) : Components.GenericBaitAway(module)
     {
         if ((AID)spell.Action.ID == AID.GunsawFirst)
         {
-            var target = Raid.WithoutSlot().FirstOrDefault(x => x.Position.InRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f));
+            var target = Raid.WithoutSlot(false, true, true).FirstOrDefault(x => x.Position.InRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f));
             if (target != default)
                 CurrentBaits.Add(new(caster, target, rect));
         }

@@ -9,7 +9,7 @@ class NorthernCross(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var component = Module.FindComponent<ChillingCataclysm>(); // prevent NotherCross from hiding the safespot
-        return component == null || !component.ActiveAOEs(slot, actor).Any() ? Utils.ZeroOrOne(AOE) : ([]);
+        return component == null || !component.ActiveAOEs(slot, actor).Any() ? Utils.ZeroOrOne(AOE) : [];
     }
 
     public override void OnEventEnvControl(byte index, uint state)

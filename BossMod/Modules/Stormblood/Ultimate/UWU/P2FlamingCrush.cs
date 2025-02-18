@@ -4,7 +4,7 @@ class FlamingCrush(BossModule module) : Components.UniformStackSpread(module, 4,
 {
     protected BitMask Avoid;
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.FlamingCrush)
         {
@@ -40,6 +40,6 @@ class P5FlamingCrush : FlamingCrush
 {
     public P5FlamingCrush(BossModule module) : base(module)
     {
-        Avoid = Raid.WithSlot(true).WhereActor(p => p.FindStatus(SID.ThermalLow) != null && p.Role != Role.Healer).Mask();
+        Avoid = Raid.WithSlot(true, true, true).WhereActor(p => p.FindStatus(SID.ThermalLow) != null && p.Role != Role.Healer).Mask();
     }
 }

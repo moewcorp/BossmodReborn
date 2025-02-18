@@ -41,7 +41,7 @@ class Boiling(BossModule module) : Components.StayMove(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Boiling && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.Boiling && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             _boiling.Set(Raid.FindSlot(actor.InstanceID));
             PlayerStates[slot] = new(Requirement.Stay, status.ExpireAt);
@@ -52,9 +52,9 @@ class Boiling(BossModule module) : Components.StayMove(module)
     {
         if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
-            if ((SID)status.ID == SID.Boiling)
+            if (status.ID == (uint)SID.Boiling)
                 _boiling.Clear(Raid.FindSlot(actor.InstanceID));
-            else if ((SID)status.ID == SID.Pyretic)
+            else if (status.ID == (uint)SID.Pyretic)
                 PlayerStates[slot] = default;
         }
     }
@@ -69,61 +69,77 @@ class Boiling(BossModule module) : Components.StayMove(module)
 
 class TwinscorchedHaloVeil(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCone cone = new(40, 90.Degrees());
-    private static readonly AOEShapeDonut donut = new(10, 40);
-    private static readonly AOEShapeCircle circle = new(15);
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly HashSet<AID> castEnd = [AID.HaloOfHeat2, AID.VeilOfHeat2, AID.ScorchingLeft1,
-    AID.ScorchingLeft2, AID.ScorchingRight1, AID.ScorchingRight2];
+    private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
+    private static readonly AOEShapeDonut donut = new(10f, 40f);
+    private static readonly AOEShapeCircle circle = new(15f);
+    private readonly List<AOEInstance> _aoes = new(3);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (count > 1)
-            yield return _aoes[1] with { Risky = _aoes[1].Shape != cone };
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = aoe.Shape != cone };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.TwinscorchedVeil1:
-            case AID.TwinscorchedVeil2:
-                AddAOEs(circle, spell);
+            case (uint)AID.TwinscorchedVeil1:
+            case (uint)AID.TwinscorchedVeil2:
+                AddAOEs(circle);
                 break;
-            case AID.TwinscorchedHalo1:
-            case AID.TwinscorchedHalo2:
-                AddAOEs(donut, spell);
+            case (uint)AID.TwinscorchedHalo1:
+            case (uint)AID.TwinscorchedHalo2:
+                AddAOEs(donut);
                 break;
-            case AID.Twinscorch1:
-            case AID.Twinscorch2:
-                AddAOEs(null, spell);
+            case (uint)AID.Twinscorch1:
+            case (uint)AID.Twinscorch2:
+                AddAOEs(null);
                 break;
         }
-    }
-
-    private void AddAOEs(AOEShape? secondaryShape, ActorCastInfo spell)
-    {
-        var position = Module.PrimaryActor.Position;
-        _aoes.Add(new(cone, position, spell.Rotation, Module.CastFinishAt(spell)));
-        _aoes.Add(new(cone, position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.3f)));
-        if (secondaryShape != null)
-            _aoes.Add(new(secondaryShape, position, default, Module.CastFinishAt(spell, 4.5f)));
+        void AddAOEs(AOEShape? secondaryShape)
+        {
+            var position = Module.PrimaryActor.Position;
+            _aoes.Add(new(cone, position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(cone, position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.3f)));
+            if (secondaryShape != null)
+                _aoes.Add(new(secondaryShape, position, default, Module.CastFinishAt(spell, 4.5f)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && castEnd.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.HaloOfHeat2:
+                case (uint)AID.VeilOfHeat2:
+                case (uint)AID.ScorchingLeft1:
+                case (uint)AID.ScorchingLeft2:
+                case (uint)AID.ScorchingRight1:
+                case (uint)AID.ScorchingRight2:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 
-class HaloOfHeat1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HaloOfHeat1), new AOEShapeDonut(10, 40));
-class VeilOfHeat1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.VeilOfHeat1), new AOEShapeCircle(15));
+class HaloOfHeat1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HaloOfHeat1), new AOEShapeDonut(10f, 40f));
+class VeilOfHeat1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeilOfHeat1), 15f);
 class FiresDomain(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.FiresDomain), 3);
-class CaptiveBolt(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.CaptiveBolt), 6, 8);
+class CaptiveBolt(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.CaptiveBolt), 6f, 8);
 class PyreOfRebirth(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PyreOfRebirth));
 class CullingBlade(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CullingBlade));
 

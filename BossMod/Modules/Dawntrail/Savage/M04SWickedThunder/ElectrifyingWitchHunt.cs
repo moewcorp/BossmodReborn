@@ -1,13 +1,13 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class ElectrifyingWitchHuntBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ElectrifyingWitchHuntBurst), new AOEShapeRect(40, 8));
+class ElectrifyingWitchHuntBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ElectrifyingWitchHuntBurst), new AOEShapeRect(40, 8));
 
 class ElectrifyingWitchHuntSpread(BossModule module) : Components.UniformStackSpread(module, 0, 6)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ElectrifyingWitchHunt)
-            AddSpreads(Raid.WithoutSlot(true), Module.CastFinishAt(spell, 0.1f));
+            AddSpreads(Raid.WithoutSlot(true, true, true), Module.CastFinishAt(spell, 0.1f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -30,13 +30,13 @@ class ElectrifyingWitchHuntResolve(BossModule module) : Components.GenericStackS
     {
         _baits = CurMechanic switch
         {
-            Mechanic.Near => Raid.WithSlot().SortedByRange(Module.Center).Take(4).Mask(),
-            Mechanic.Far => Raid.WithSlot().SortedByRange(Module.Center).TakeLast(4).Mask(),
+            Mechanic.Near => Raid.WithSlot(false, true, true).SortedByRange(Arena.Center).Take(4).Mask(),
+            Mechanic.Far => Raid.WithSlot(false, true, true).SortedByRange(Arena.Center).TakeLast(4).Mask(),
             _ => default
         };
 
         Spreads.Clear();
-        foreach (var (i, p) in Raid.WithSlot(true))
+        foreach (var (i, p) in Raid.WithSlot(true, true, true))
         {
             if (ForbidBait[i])
                 Spreads.Add(new(p, 5, _activation));

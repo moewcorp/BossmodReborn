@@ -32,13 +32,13 @@ public enum AID : uint
 
 class HydroRing(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(12, 24);
+    private static readonly AOEShapeDonut donut = new(12f, 24f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HydroRing)
+        if (spell.Action.ID == (uint)AID.HydroRing)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell));
     }
 
@@ -60,90 +60,125 @@ class HydroRing(BossModule module) : Components.GenericAOEs(module)
 class AiryBubble(BossModule module) : Components.GenericAOEs(module)
 {
     private const float Radius = 1.1f;
-    private const int Length = 3;
+    private const float Length = 3f;
     private static readonly AOEShapeCapsule capsule = new(Radius, Length);
-    private readonly IReadOnlyList<Actor> _orbs = module.Enemies(OID.AiryBubble);
-    private IEnumerable<Actor> Orbs => _orbs.Where(x => x.HitboxRadius == Radius);
-    private readonly List<Actor> _aoes = [];
+    private readonly List<Actor> bubbles = module.Enemies(OID.AiryBubble);
+    private readonly List<Actor> _aoes = new(36);
+    private bool active;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var o in _aoes)
-            yield return new(capsule, o.Position, o.Rotation);
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var o = _aoes[i];
+            aoes[i] = new(capsule, o.Position, o.Rotation);
+        }
+        return aoes;
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.TroubleBubbles or (uint)AID.BlowingBubbles)
+            active = true;
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.TroubleBubbles or (uint)AID.BlowingBubbles)
+            active = false;
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E46 && Orbs.Contains(actor))
-            _aoes.Add(actor);
-        else if (id == 0x1E3C && Orbs.Contains(actor))
-            _aoes.Remove(actor);
+        if (bubbles.Any(x => x.HitboxRadius == 1.1f && x == actor))
+            if (id == 0x1E46)
+                _aoes.Add(actor);
+            else if (id == 0x1E3C)
+                _aoes.Remove(actor);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoes.Count == 0)
+        var count = _aoes.Count;
+        if (active)
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius));
+        if (count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var o in _aoes)
-            forbidden.Add(ShapeDistance.Capsule(o.Position, o.Rotation, Length, Radius));
-        forbidden.Add(ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius));
-        hints.AddForbiddenZone(p => forbidden.Min(f => f(p)));
+        var forbidden = new Func<WPos, float>[count + 1];
+        for (var i = 0; i < count; ++i)
+        {
+            var o = _aoes[i];
+            forbidden[i] = ShapeDistance.Capsule(o.Position, o.Rotation, Length, Radius);
+        }
+        forbidden[count] = ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius);
+
+        hints.AddForbiddenZone(ShapeDistance.Union(forbidden), WorldState.FutureTime(1.1d));
     }
 }
 
 class Burst(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly IReadOnlyList<Actor> _orbs = module.Enemies(OID.AiryBubble);
-    private IEnumerable<Actor> Orbs => _orbs.Where(x => x.HitboxRadius != 1.1f);
-    private static readonly AOEShapeCircle circle = new(6);
-    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circle = new(6f);
+    private readonly List<Actor> bubbles = module.Enemies(OID.AiryBubble);
+    private readonly List<AOEInstance> _aoes = new(18);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var activation = Module.CastFinishAt(spell, 3.4f);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.RollingCurrentWest:
-                AddAOEs(8, activation);
+            case (uint)AID.RollingCurrentWest:
+                AddAOEs(8f, activation);
                 break;
-            case AID.RollingCurrentEast:
-                AddAOEs(-8, activation);
+            case (uint)AID.RollingCurrentEast:
+                AddAOEs(-8f, activation);
                 break;
         }
     }
 
     private void AddAOEs(float offset, DateTime activation)
     {
-        foreach (var orb in Orbs)
-            _aoes.Add(new(circle, orb.Position + new WDir(offset, 0), default, activation));
+        foreach (var orb in bubbles.Where(x => x.HitboxRadius != 1.1f))
+            _aoes.Add(new(circle, orb.Position + new WDir(offset, 0f), default, activation));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Burst)
+        if (spell.Action.ID == (uint)AID.Burst)
             _aoes.Clear();
     }
 }
 
 class Immersion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Immersion));
-class WorrisomeWaveBoss(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WorrisomeWave1), new AOEShapeCone(24, 15.Degrees()));
+class WorrisomeWaveBoss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WorrisomeWave1), WorrisomeWavePlayer.Cone);
 
 class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
-    private static readonly AOEShapeCone cone = new(24, 15.Degrees());
+    public static readonly AOEShapeCone Cone = new(24f, 15f.Degrees());
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.WorrisomeWave1)
-            CurrentBaits.AddRange(Raid.WithoutSlot().Select(p => new Bait(p, p, cone, WorldState.FutureTime(6.3f))));
+        if (spell.Action.ID == (uint)AID.WorrisomeWave1)
+        {
+            var party = Raid.WithoutSlot(false, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                var p = party[i];
+                CurrentBaits.Add(new(p, p, Cone, WorldState.FutureTime(6.3d)));
+            }
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WorrisomeWave2)
+        if (spell.Action.ID == (uint)AID.WorrisomeWave2)
             CurrentBaits.Clear();
     }
 
@@ -156,10 +191,21 @@ class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway(module
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        if (CurrentBaits.Count == 0)
+            return;
         base.AddAIHints(slot, actor, assignment, hints);
-        foreach (var b in ActiveBaitsOn(actor))
-            foreach (var p in Raid.WithoutSlot().Exclude(actor))
-                hints.ForbiddenDirections.Add((Angle.FromDirection(p.Position - actor.Position), 15.Degrees(), b.Activation));
+        var activeBaits = ActiveBaitsOn(actor);
+        foreach (var b in activeBaits)
+        {
+            var party = Raid.WithoutSlot(false, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                var p = party[i];
+                var direction = Angle.FromDirection(p.Position - actor.Position);
+                hints.ForbiddenDirections.Add((direction, 15f.Degrees(), b.Activation));
+            }
+        }
     }
 }
 
@@ -178,8 +224,9 @@ class D031FeatherRayStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 829, NameID = 12755)]
-public class D031FeatherRay(WorldState ws, Actor primary) : BossModule(ws, primary, new(-105, -160), NormalBounds)
+public class D031FeatherRay(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, NormalBounds)
 {
+    private static readonly WPos arenaCenter = new(-105f, -160f);
     public static readonly ArenaBoundsSquare NormalBounds = new(15.5f);
-    public static readonly ArenaBoundsCircle CircleBounds = new(12);
+    public static readonly ArenaBoundsComplex CircleBounds = new([new Polygon(arenaCenter, 12f, 48)]);
 }

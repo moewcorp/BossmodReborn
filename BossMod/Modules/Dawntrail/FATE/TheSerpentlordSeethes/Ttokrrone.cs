@@ -76,7 +76,7 @@ public enum AID : uint
     RightwardSandspoutDDVisual = 37325 // Boss->self, no cast, single-target
 }
 
-class Devour(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Devour), 8);
+class Devour(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Devour), 8);
 class Touchdown(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Touchdown));
 
 class TtokrroneStates : StateMachineBuilder
@@ -96,9 +96,9 @@ class TtokrroneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1871, NameID = 12733)]
-public class Ttokrrone(WorldState ws, Actor primary) : BossModule(ws, primary, new(53, -820), new ArenaBoundsCircle(29.5f))
+public class Ttokrrone(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    // if boss is pulled when player is really far away and helpers aren't loaded, some components might never see resolve casts and get stuck forever
-    protected override bool CheckPull() => base.CheckPull() && Enemies(OID.Helper).Any();
-}
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(53, -820), 29.5f, 48)]);
 
+    protected override bool CheckPull() => base.CheckPull() && (arena.Center - Raid.Player()!.Position).LengthSq() < 900;
+}

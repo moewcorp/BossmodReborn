@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Helper = 0x19A, // x3
     Boss = 0x283, // x1
-    Pollen = 0x1E86B1, // x1, EventObj type
+    Pollen = 0x1E86B1 // x1, EventObj type
 }
 
 public enum AID : uint
@@ -12,11 +12,11 @@ public enum AID : uint
     MurderHole = 1044, // Boss->player, no cast, range 6 circle cleaving autoattack at random target
     LiquefyCenter = 1045, // Helper->self, 3.0s cast, range 50+R width 8 rect
     LiquefySides = 1046, // Helper->self, 2.0s cast, range 50+R width 7 rect
-    Repel = 1047, // Boss->self, 3.0s cast, range 40+R 180?-degree cone knockback 20 (non-immunable)
+    Repel = 1047 // Boss->self, 3.0s cast, range 40+R 180?-degree cone knockback 20 (non-immunable)
 }
 
-class LiquefyCenter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LiquefyCenter), new AOEShapeRect(50, 4));
-class LiquefySides(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LiquefySides), new AOEShapeRect(50, 3.5f));
+class LiquefyCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefyCenter), new AOEShapeRect(50, 4));
+class LiquefySides(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefySides), new AOEShapeRect(50, 3.5f));
 
 class Repel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Repel), 20, true)
 {
@@ -58,5 +58,5 @@ class D162DemonWallStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1694)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1694)]
 public class D162DemonWall(WorldState ws, Actor primary) : BossModule(ws, primary, new(200, -131), new ArenaBoundsRect(10, 21));

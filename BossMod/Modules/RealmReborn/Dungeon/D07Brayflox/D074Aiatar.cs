@@ -3,23 +3,24 @@
 public enum OID : uint
 {
     Boss = 0x38C5, // x1
-    Helper = 0x233C, // x14
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast
+
     SalivousSnap = 28659, // Boss->player, 5.0s cast, tankbuster
     ToxicVomit = 28656, // Boss->self, 3.0s cast, visual
     ToxicVomitAOE = 28657, // Helper->self, 5.0s cast, range 2 aoe
     Burst = 28658, // Helper->self, 9.0s cast, range 10 aoe
-    DragonBreath = 28660, // Boss->self, 3.0s cast, range 30 width 8 rect
+    DragonBreath = 28660 // Boss->self, 3.0s cast, range 30 width 8 rect
 }
 
 class SalivousSnap(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SalivousSnap));
-class ToxicVomit(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ToxicVomitAOE), new AOEShapeCircle(2));
-class Burst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Burst), new AOEShapeCircle(10), 4);
-class DragonBreath(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(module, ActionID.MakeSpell(AID.DragonBreath), new AOEShapeRect(30, 4));
+class ToxicVomit(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ToxicVomitAOE), 2);
+class Burst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Burst), 10, 4);
+class DragonBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DragonBreath), new AOEShapeRect(30, 4));
 
 class D074AiatarStates : StateMachineBuilder
 {
@@ -33,7 +34,7 @@ class D074AiatarStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 8, NameID = 1279)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 8, NameID = 1279)]
 public class D074Aiatar(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly ArenaBoundsComplex arena = new([new Circle(new(-26, -236), 19.5f)], [new Rectangle(new(-46.75f, -236), 20, 2, 90.Degrees())]);

@@ -5,6 +5,7 @@ class DRN1TrinitySeekerStates : StateMachineBuilder
     public DRN1TrinitySeekerStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<MercifulBreeze>()
             .ActivateOnEnter<MercifulBlooms>()
             .ActivateOnEnter<MercifulArc>()

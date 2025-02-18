@@ -2,7 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x41C,
+    Boss = 0x41C
 }
 
 public enum AID : uint
@@ -12,7 +12,7 @@ public enum AID : uint
     MoldySneeze = 1090, // Boss->self, no cast, range 6+R 90-degree frontal cone
     Inhale = 950, // Boss->self, 2.5s cast, range 20+R 90-degree cone
     GoobbuesGrief = 942, // Boss->self, 0.5s cast, range 6+R circle
-    MoldyPhlegm = 941, // Boss->location, 2.5s cast, range 6 circle
+    MoldyPhlegm = 941 // Boss->location, 2.5s cast, range 6 circle
 }
 
 class MoldySneeze(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.MoldySneeze), new AOEShapeCone(8.85f, 45.Degrees()));
@@ -62,7 +62,7 @@ class InhaleGoobbuesGrief(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MoldyPhlegm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MoldyPhlegm), 6);
+class MoldyPhlegm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoldyPhlegm), 6);
 
 class D151KeeperOfHalidomStates : StateMachineBuilder
 {
@@ -75,5 +75,5 @@ class D151KeeperOfHalidomStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1548)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1548)]
 public class D151KeeperOfHalidom(WorldState ws, Actor primary) : BossModule(ws, primary, new(125, 108), new ArenaBoundsSquare(20));

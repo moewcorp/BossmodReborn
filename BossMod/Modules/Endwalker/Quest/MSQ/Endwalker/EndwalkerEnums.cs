@@ -2,11 +2,11 @@
 
 public enum OID : uint
 {
-    Helpers = 0x233C, // R0.500, x28, 523 type
-    AvatarVisual = 0x3366, // R0.920, x1
     ZenosP1 = 0x3364, // R2.001, x1
     ZenosP2 = 0x3365, // R2.001, x1
+    AvatarVisual = 0x3366, // R0.920, x1
     Puddles = 0x1E950D, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -54,7 +54,7 @@ public enum AID : uint
     SilveredEdgeVisual = 26947, // Helpers->self, no cast, range 40 width 6 rect
     SwiftAsShadow = 26948, // ZenosP2->location, 2.5s cast, width 2 rect charge
     CandlewickPointBlank = 26949, // ZenosP2->self, 5.0s cast, range 10 circle
-    CandlewickDonut = 26950, // Helpers->self, 5.0s cast, range ?-30 donut
+    CandlewickDonut = 26950, // Helpers->self, 5.0s cast, range 10-30 donut
     Exconcentrativity = 26953, // ZenosP2->self, no cast, single-target
     ExconcentrativityHelper = 26954, // Helpers->self, no cast, range 60 circle
     Extinguishment = 26951, // ZenosP2->self, 4.0s cast, single-target

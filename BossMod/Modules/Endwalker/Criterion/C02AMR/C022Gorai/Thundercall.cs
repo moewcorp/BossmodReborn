@@ -7,8 +7,8 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     private Actor? _miniTarget;
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shapeSmall = new(8);
-    private static readonly AOEShapeCircle _shapeLarge = new(18);
+    private static readonly AOEShapeCircle _shapeSmall = new(8f);
+    private static readonly AOEShapeCircle _shapeLarge = new(18f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
@@ -16,41 +16,41 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     {
         Arena.Actors(_orbs, Colors.Object, true);
         if (_miniTarget != null)
-            Arena.AddCircle(_miniTarget.Position, 3, Colors.Danger);
+            Arena.AddCircle(_miniTarget.Position, 3f, Colors.Danger);
         if (_safeOrb != null)
-            Arena.AddCircle(_safeOrb.Position, 1, Colors.Safe);
+            Arena.AddCircle(_safeOrb.Position, 1f, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NHumbleHammerAOE or AID.SHumbleHammerAOE)
+        if (spell.Action.ID is (uint)AID.NHumbleHammerAOE or (uint)AID.SHumbleHammerAOE)
         {
-            _orbs.AddRange(Module.Enemies(OID.NBallOfLevin));
-            _orbs.AddRange(Module.Enemies(OID.SBallOfLevin));
+            _orbs.AddRange(Module.Enemies((uint)OID.NBallOfLevin));
+            _orbs.AddRange(Module.Enemies((uint)OID.SBallOfLevin));
             WDir center = new();
             foreach (var o in _orbs)
-                center += o.Position - Module.Center;
-            _safeOrb = _orbs.Farthest(Module.Center + center);
+                center += o.Position - Arena.Center;
+            _safeOrb = _orbs.Farthest(Arena.Center + center);
             _miniTarget = WorldState.Actors.Find(spell.TargetID);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NHumbleHammerAOE:
-            case AID.SHumbleHammerAOE:
+            case (uint)AID.NHumbleHammerAOE:
+            case (uint)AID.SHumbleHammerAOE:
                 _miniTarget = null;
                 _safeOrb = null;
                 foreach (var o in _orbs)
-                    _aoes.Add(new(spell.Targets.Any(t => t.ID == o.InstanceID) ? _shapeSmall : _shapeLarge, o.Position, default, WorldState.FutureTime(4.2f)));
+                    _aoes.Add(new(spell.Targets.Any(t => t.ID == o.InstanceID) ? _shapeSmall : _shapeLarge, o.Position, default, WorldState.FutureTime(4.2d)));
                 break;
-            case AID.NShockSmall:
-            case AID.NShockLarge:
-            case AID.SShockSmall:
-            case AID.SShockLarge:
-                _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
+            case (uint)AID.NShockSmall:
+            case (uint)AID.NShockLarge:
+            case (uint)AID.SShockSmall:
+            case (uint)AID.SShockLarge:
+                _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1f));
                 ++NumCasts;
                 break;
         }
@@ -61,16 +61,16 @@ class Flintlock(BossModule module) : Components.GenericWildCharge(module, 4)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NHumbleHammerAOE:
-            case AID.SHumbleHammerAOE:
+            case (uint)AID.NHumbleHammerAOE:
+            case (uint)AID.SHumbleHammerAOE:
                 Source = Module.PrimaryActor;
-                foreach (var (slot, player) in Raid.WithSlot(true))
+                foreach (var (slot, player) in Raid.WithSlot(true, true, true))
                     PlayerRoles[slot] = spell.MainTargetID == player.InstanceID ? PlayerRole.Target : player.Role == Role.Tank ? PlayerRole.Share : PlayerRole.ShareNotFirst; // TODO: or should it be 'avoid'?
                 break;
-            case AID.NFlintlockAOE:
-            case AID.SFlintlockAOE:
+            case (uint)AID.NFlintlockAOE:
+            case (uint)AID.SFlintlockAOE:
                 ++NumCasts;
                 Source = null;
                 break;

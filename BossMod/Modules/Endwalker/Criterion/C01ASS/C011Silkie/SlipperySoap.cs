@@ -4,11 +4,11 @@ static class SlipperySoap
 {
     public enum Color { None, Green, Blue, Yellow }
 
-    public static Color ColorForStatus(uint sid) => (SID)sid switch
+    public static Color ColorForStatus(uint sid) => sid switch
     {
-        SID.BracingSudsBoss => Color.Green,
-        SID.ChillingSudsBoss => Color.Blue,
-        SID.FizzlingSudsBoss => Color.Yellow,
+        (uint)SID.BracingSudsBoss => Color.Green,
+        (uint)SID.ChillingSudsBoss => Color.Blue,
+        (uint)SID.FizzlingSudsBoss => Color.Yellow,
         _ => Color.None
     };
 }
@@ -17,7 +17,7 @@ class SlipperySoapCharge(BossModule module) : Components.Knockback(module)
 {
     private Actor? _chargeTarget;
     private Angle _chargeDir;
-    private AOEShapeRect _chargeShape = new(0, 5);
+    private AOEShapeRect _chargeShape = new(default, 5f);
     private SlipperySoap.Color _color;
     private DateTime _chargeResolve;
 
@@ -26,7 +26,9 @@ class SlipperySoapCharge(BossModule module) : Components.Knockback(module)
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         if (_chargeTarget != null && _color == SlipperySoap.Color.Green)
-            yield return new(Module.PrimaryActor.Position, 15, _chargeResolve, _chargeShape, _chargeDir, Kind.DirForward);
+            return [new(Module.PrimaryActor.Position, 15f, _chargeResolve, _chargeShape, _chargeDir, Kind.DirForward)];
+        else
+            return [];
     }
 
     public override void Update()
@@ -80,18 +82,18 @@ class SlipperySoapCharge(BossModule module) : Components.Knockback(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.SlipperySoapTargetSelection:
+            case (uint)AID.SlipperySoapTargetSelection:
                 _chargeTarget = WorldState.Actors.Find(spell.MainTargetID);
-                _chargeResolve = WorldState.FutureTime(5.5f);
+                _chargeResolve = WorldState.FutureTime(5.5d);
                 break;
-            case AID.NSlipperySoapAOEBlue:
-            case AID.NSlipperySoapAOEGreen:
-            case AID.NSlipperySoapAOEYellow:
-            case AID.SSlipperySoapAOEBlue:
-            case AID.SSlipperySoapAOEGreen:
-            case AID.SSlipperySoapAOEYellow:
+            case (uint)AID.NSlipperySoapAOEBlue:
+            case (uint)AID.NSlipperySoapAOEGreen:
+            case (uint)AID.NSlipperySoapAOEYellow:
+            case (uint)AID.SSlipperySoapAOEBlue:
+            case (uint)AID.SSlipperySoapAOEGreen:
+            case (uint)AID.SSlipperySoapAOEYellow:
                 _chargeTarget = null;
                 break;
         }
@@ -107,20 +109,22 @@ class SlipperySoapAOE(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: activation
+
         switch (_color)
         {
             case SlipperySoap.Color.Green:
-                yield return new(C011Silkie.ShapeGreen, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation);
-                break;
+                return [new(C011Silkie.ShapeGreen, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation)];
             case SlipperySoap.Color.Blue:
-                yield return new(C011Silkie.ShapeBlue, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation);
-                break;
+                return [new(C011Silkie.ShapeBlue, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation)];
             case SlipperySoap.Color.Yellow:
-                yield return new(C011Silkie.ShapeYellow, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 45.Degrees());
-                yield return new(C011Silkie.ShapeYellow, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 135.Degrees());
-                yield return new(C011Silkie.ShapeYellow, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation - 135.Degrees());
-                yield return new(C011Silkie.ShapeYellow, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation - 45.Degrees());
-                break;
+                var aoes = new AOEInstance[4];
+                var primaryPos = Module.PrimaryActor.Position;
+                var primaryRot = Module.PrimaryActor.Rotation;
+                for (var i = 0; i < 4; ++i)
+                    aoes[i] = new AOEInstance(C011Silkie.ShapeYellow, primaryPos, primaryRot + (45f + i + 90f).Degrees());
+                return aoes;
+            default:
+                return [];
         }
     }
 
@@ -136,8 +140,17 @@ class SlipperySoapAOE(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        if ((AID)spell.Action.ID is AID.NChillingDusterBoss or AID.NBracingDusterBoss or AID.NFizzlingDusterBoss or AID.SChillingDusterBoss or AID.SBracingDusterBoss or AID.SFizzlingDusterBoss)
-            _color = SlipperySoap.Color.None;
+
+        _color = spell.Action.ID switch
+        {
+            (uint)AID.NChillingDusterBoss or
+            (uint)AID.NBracingDusterBoss or
+            (uint)AID.NFizzlingDusterBoss or
+            (uint)AID.SChillingDusterBoss or
+            (uint)AID.SBracingDusterBoss or
+            (uint)AID.SFizzlingDusterBoss => SlipperySoap.Color.None,
+            _ => _color
+        };
     }
 }
 
@@ -147,6 +160,6 @@ class SoapsudStatic(BossModule module) : Components.UniformStackSpread(module, 0
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (actor == Module.PrimaryActor && SlipperySoap.ColorForStatus(status.ID) == SlipperySoap.Color.Yellow)
-            AddSpreads(Raid.WithoutSlot(true));
+            AddSpreads(Raid.WithoutSlot(true, true, true));
     }
 }

@@ -3,7 +3,6 @@
 public enum OID : uint
 {
     Boss = 0x34ED, // R=5.04, x1
-    Helper = 0x233C, // R=0.5, x31
     Parhelion = 0x34F2, // R=3.0, x15
     Echo = 0x34EE, // R=5.04, big adds: x2 at start, after death they despawn, 2 more spawn and do nothing
     CrystalOfLight = 0x34F0, // R=2.50, x12, spawn in intermission in pairs (normal/glowing versions??)
@@ -13,6 +12,7 @@ public enum OID : uint
     RefulgenceHexagon = 0x1EB24C, // R=0.5, EventObj type
     RefulgenceTriangle = 0x1EB24D, // R=0.5, EventObj type
     MysticRefulgence2 = 0x34CA, // R=2.0, x1 spawn during parhelic circle, stays in center and does nothing interesting
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -85,7 +85,7 @@ public enum AID : uint
     LightwaveStaff = 26260, // Boss->self, 4.0s cast, single-target
     LightwaveChakram = 26261, // Boss->self, 4.0s cast, single-target
 
-    HerosRadianceEnrage = 24571, // Boss->self, 10.0s cast, range 40 circle
+    HerosRadianceEnrage = 24571 // Boss->self, 10.0s cast, range 40 circle
 }
 
 public enum SID : uint
@@ -94,10 +94,10 @@ public enum SID : uint
     HydaelynsWeapon = 2273, // Boss->Boss, extra=0x1B4/0x1B5, (n/a for sword, 1B4 for staff, 1B5 for chakram)
     MagosMantle = 2877, // none->Boss, extra=0x0
     MousaMantle = 2878, // none->Boss, extra=0x0
-    HerosMantle = 2876, // none->Boss/Echo, extra=0x0
+    HerosMantle = 2876 // none->Boss/Echo, extra=0x0
 }
 
 public enum IconID : uint
 {
-    Echoes = 305,
+    Echoes = 305
 }

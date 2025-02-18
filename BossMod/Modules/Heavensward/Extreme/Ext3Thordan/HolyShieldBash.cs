@@ -10,7 +10,7 @@ class HolyShieldBash(BossModule module) : Components.GenericWildCharge(module, 3
         switch ((AID)spell.Action.ID)
         {
             case AID.HolyShieldBash:
-                foreach (var (i, p) in Raid.WithSlot(true))
+                foreach (var (i, p) in Raid.WithSlot(true, true, true))
                 {
                     // TODO: we don't really account for possible MT changes...
                     PlayerRoles[i] = p.InstanceID == spell.TargetID ? PlayerRole.Target : p.Role != Role.Tank ? PlayerRole.ShareNotFirst : p.InstanceID != Module.PrimaryActor.TargetID ? PlayerRole.Share : PlayerRole.Avoid;

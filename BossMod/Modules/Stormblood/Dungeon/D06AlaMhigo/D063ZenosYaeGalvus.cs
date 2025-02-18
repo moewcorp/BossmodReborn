@@ -125,15 +125,15 @@ class UnmovingTroikaFirst(BossModule module) : Components.Cleave(module, ActionI
     }
 }
 
-abstract class UnmovingTroika(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.96f, 60.Degrees()));
+abstract class UnmovingTroika(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.96f, 60.Degrees()));
 class UnmovingTroikaSecond(BossModule module) : UnmovingTroika(module, AID.UnmovingTroikaSecond);
 class UnmovingTroikaLast(BossModule module) : UnmovingTroika(module, AID.UnmovingTroikaLast);
 
-abstract class ArtOfTheStorm(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(8));
+abstract class ArtOfTheStorm(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
 class ArtOfTheStorm1(BossModule module) : ArtOfTheStorm(module, AID.ArtOfTheStorm1);
 class ArtOfTheStorm2(BossModule module) : ArtOfTheStorm(module, AID.ArtOfTheStorm2);
 
-abstract class VeinSplitter(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(10));
+abstract class VeinSplitter(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
 class VeinSplitter1(BossModule module) : VeinSplitter(module, AID.VeinSplitter1);
 class VeinSplitter2(BossModule module) : VeinSplitter(module, AID.VeinSplitter2);
 
@@ -155,7 +155,7 @@ class ArtOfTheSword(BossModule module) : Components.GenericBaitAway(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.ArtOfTheSwordVisual1 or AID.ArtOfTheSwordVisual2)
-            foreach (var a in Raid.WithoutSlot())
+            foreach (var a in Raid.WithoutSlot(false, true, true))
                 CurrentBaits.Add(new(caster, a, rect, WorldState.FutureTime(6.3f)));
     }
 
@@ -180,7 +180,7 @@ class LightlessSparkBaitaway(BossModule module) : Components.BaitAwayTethers(mod
     }
 }
 
-class LightlessSparkAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.96f, 45.Degrees()));
+class LightlessSparkAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.96f, 45.Degrees()));
 
 class Concentrativity(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Concentrativity));
 
@@ -189,7 +189,6 @@ class D063ZenosYaeGalvusStates : StateMachineBuilder
     public D063ZenosYaeGalvusStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<ArtOfTheSwell1>()
             .ActivateOnEnter<ArtOfTheSwell2>()

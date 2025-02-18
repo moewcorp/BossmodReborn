@@ -11,9 +11,9 @@ class TyrantsUnholyDarkness(BossModule module) : Components.CastCounter(module, 
     {
         if (IsTarget(actor))
         {
-            hints.Add("GTFO from raid!", Raid.WithoutSlot().InRadiusExcluding(actor, _radius).Any());
+            hints.Add("GTFO from raid!", Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius).Any());
         }
-        else if (Raid.WithoutSlot().InRadiusExcluding(actor, _radius).Any(IsTarget))
+        else if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _radius).Any(IsTarget))
         {
             hints.Add("GTFO from tanks!");
         }
@@ -23,7 +23,7 @@ class TyrantsUnholyDarkness(BossModule module) : Components.CastCounter(module, 
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var target in Raid.WithoutSlot().Where(IsTarget))
+        foreach (var target in Raid.WithoutSlot(false, true, true).Where(IsTarget))
             Arena.AddCircle(target.Position, _radius, Colors.Danger);
     }
 }

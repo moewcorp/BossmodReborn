@@ -2,8 +2,8 @@
 
 class P5NearDistantWorld(BossModule module) : Components.GenericStackSpread(module, true)
 {
-    public int NumNearJumpsDone { get; private set; }
-    public int NumDistantJumpsDone { get; private set; }
+    public int NumNearJumpsDone;
+    public int NumDistantJumpsDone;
     public Actor? NearWorld;
     public Actor? DistantWorld;
     private BitMask _completedJumps;
@@ -84,13 +84,13 @@ class P5NearDistantWorld(BossModule module) : Components.GenericStackSpread(modu
         }
         if (numDone <= 1 && start != null)
         {
-            start = close ? Raid.WithoutSlot().Exclude(start).Closest(start.Position) : Raid.WithoutSlot().Exclude(start).Farthest(start.Position);
+            start = close ? Raid.WithoutSlot(false, true, true).Exclude(start).Closest(start.Position) : Raid.WithoutSlot(false, true, true).Exclude(start).Farthest(start.Position);
             if (start != null)
                 AddSpread(start, 4, 1);
         }
         if (numDone <= 2 && start != null)
         {
-            start = close ? Raid.WithoutSlot().Exclude(start).Closest(start.Position) : Raid.WithoutSlot().Exclude(start).Farthest(start.Position);
+            start = close ? Raid.WithoutSlot(false, true, true).Exclude(start).Closest(start.Position) : Raid.WithoutSlot(false, true, true).Exclude(start).Farthest(start.Position);
             if (start != null)
                 AddSpread(start, 4, 2);
         }

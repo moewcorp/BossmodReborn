@@ -12,9 +12,9 @@ class P7Trinity(BossModule module) : Components.GenericBaitAway(module, centerAt
         CurrentBaits.Clear();
         if (_source != null)
         {
-            foreach (var target in Raid.WithoutSlot().Where(p => p.Role == Role.Tank))
+            foreach (var target in Raid.WithoutSlot(false, true, true).Where(p => p.Role == Role.Tank))
                 CurrentBaits.Add(new(_source, target, _shape));
-            var closest = Raid.WithoutSlot().Where(p => p.Role != Role.Tank).Closest(_source.Position);
+            var closest = Raid.WithoutSlot(false, true, true).Where(p => p.Role != Role.Tank).Closest(_source.Position);
             if (closest != null)
                 CurrentBaits.Add(new(_source, closest, _shape));
         }

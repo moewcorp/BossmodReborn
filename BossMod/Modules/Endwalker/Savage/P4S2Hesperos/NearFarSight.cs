@@ -29,11 +29,11 @@ class NearFarSight : BossComponent
         if (CurState == State.Done)
             return;
 
-        var playersByRange = Raid.WithSlot().SortedByRange(Module.PrimaryActor.Position);
+        var playersByRange = Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position);
         foreach ((var i, var player) in CurState == State.Near ? playersByRange.Take(2) : playersByRange.TakeLast(2))
         {
             _targets.Set(i);
-            _inAOE |= Raid.WithSlot().InRadiusExcluding(player, _aoeRadius).Mask();
+            _inAOE |= Raid.WithSlot(false, true, true).InRadiusExcluding(player, _aoeRadius).Mask();
         }
     }
 
@@ -58,7 +58,7 @@ class NearFarSight : BossComponent
         if (_targets.None())
             return;
 
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             if (_targets[i])
             {

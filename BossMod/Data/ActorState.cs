@@ -4,56 +4,137 @@
 // TODO: consider indexing by spawnindex?..
 public sealed class ActorState : IEnumerable<Actor>
 {
-    private readonly Dictionary<ulong, Actor> _actors = [];
+    public readonly Dictionary<ulong, Actor> Actors = [];
 
-    public IEnumerator<Actor> GetEnumerator() => _actors.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => _actors.Values.GetEnumerator();
+    public IEnumerator<Actor> GetEnumerator() => Actors.Values.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => Actors.Values.GetEnumerator();
 
-    public Actor? Find(ulong instanceID) => instanceID is not 0 and not 0xE0000000 ? _actors.GetValueOrDefault(instanceID) : null;
+    public Actor? Find(ulong instanceID) => instanceID is not 0 and not 0xE0000000 ? Actors.GetValueOrDefault(instanceID) : null;
 
     // all actor-related operations have instance ID to which they are applied
     // in addition to worldstate's modification event, extra event with actor pointer is dispatched for all actor events
     public abstract record class Operation(ulong InstanceID) : WorldState.Operation
     {
-        protected abstract void ExecActor(WorldState ws, Actor actor);
-        protected override void Exec(WorldState ws) => ExecActor(ws, ws.Actors._actors[InstanceID]);
-    }
-
-    public IEnumerable<Operation> CompareToInitial()
-    {
-        foreach (var act in this)
+        protected abstract void ExecActor(ref WorldState ws, ref Actor actor);
+        protected override void Exec(ref WorldState ws)
         {
-            yield return new OpCreate(act.InstanceID, act.OID, act.SpawnIndex, act.Name, act.NameID, act.Type, act.Class, act.Level, act.PosRot, act.HitboxRadius, act.HPMP, act.IsTargetable, act.IsAlly, act.OwnerID, act.FateID);
-            if (act.IsDead)
-                yield return new OpDead(act.InstanceID, true);
-            if (act.InCombat)
-                yield return new OpCombat(act.InstanceID, true);
-            if (act.ModelState != default)
-                yield return new OpModelState(act.InstanceID, act.ModelState);
-            if (act.EventState != 0)
-                yield return new OpEventState(act.InstanceID, act.EventState);
-            if (act.TargetID != 0)
-                yield return new OpTarget(act.InstanceID, act.TargetID);
-            if (act.MountId != 0)
-                yield return new OpMount(act.InstanceID, act.MountId);
-            if (act.Tether.ID != 0)
-                yield return new OpTether(act.InstanceID, act.Tether);
-            if (act.CastInfo != null)
-                yield return new OpCastInfo(act.InstanceID, act.CastInfo);
-            for (var i = 0; i < act.Statuses.Length; ++i)
-                if (act.Statuses[i].ID != 0)
-                    yield return new OpStatus(act.InstanceID, i, act.Statuses[i]);
+            if (ws.Actors.Actors.TryGetValue(InstanceID, out var actor))
+                ExecActor(ref ws, ref actor);
         }
     }
 
-    public void Tick(float dt)
+    public List<Operation> CompareToInitial()
     {
-        foreach (var act in this)
+        List<Operation> ops = new(Actors.Count * 5);
+        foreach (var act in Actors.Values)
+        {
+            ref var instanceID = ref act.InstanceID;
+            ops.Add(new OpCreate(instanceID, act.OID, act.SpawnIndex, act.Name, act.NameID, act.Type, act.Class, act.Level, act.PosRot, act.HitboxRadius, act.HPMP, act.IsTargetable, act.IsAlly, act.OwnerID, act.FateID));
+            if (act.IsDead)
+                ops.Add(new OpDead(instanceID, true));
+            if (act.InCombat)
+                ops.Add(new OpCombat(instanceID, true));
+            if (act.ModelState != default)
+                ops.Add(new OpModelState(instanceID, act.ModelState));
+            if (act.EventState != 0)
+                ops.Add(new OpEventState(instanceID, act.EventState));
+            if (act.TargetID != 0)
+                ops.Add(new OpTarget(instanceID, act.TargetID));
+            if (act.MountId != 0)
+                ops.Add(new OpMount(instanceID, act.MountId));
+            if (act.Tether.ID != 0)
+                ops.Add(new OpTether(instanceID, act.Tether));
+            if (act.CastInfo != null)
+                ops.Add(new OpCastInfo(instanceID, act.CastInfo));
+            var statuslen = act.Statuses.Length;
+            for (var i = 0; i < statuslen; ++i)
+            {
+                ref var status = ref act.Statuses[i];
+                if (status.ID != 0)
+                    ops.Add(new OpStatus(instanceID, i, status));
+            }
+            var effectlen = act.IncomingEffects.Length;
+            for (var i = 0; i < effectlen; ++i)
+            {
+                ref var effect = ref act.IncomingEffects[i];
+                if (effect.GlobalSequence != 0)
+                    ops.Add(new OpIncomingEffect(act.InstanceID, i, effect));
+            }
+        }
+        return ops;
+    }
+
+    public void Tick(in FrameState frame)
+    {
+        var ts = frame.Timestamp;
+        foreach (var act in Actors.Values)
         {
             act.PrevPosRot = act.PosRot;
-            if (act.CastInfo != null)
-                act.CastInfo.ElapsedTime += dt;
+            ref var castinfo = ref act.CastInfo;
+            if (castinfo != null)
+                castinfo.ElapsedTime = Math.Min(castinfo.ElapsedTime + frame.Duration, castinfo.AdjustedTotalTime);
+            RemovePendingEffects(act, (in PendingEffect p) => p.Expiration < ts);
         }
+    }
+
+    private void AddPendingEffects(ref Actor source, ActorCastEvent ev, DateTime timestamp)
+    {
+        var expiration = timestamp.AddSeconds(3);
+        var count = ev.Targets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var targeti = ev.Targets[i];
+            var targetID = targeti.ID;
+            var target = targetID == source.InstanceID ? source : Find(targetID); // most common case by far is self-target
+            if (target == null)
+                continue;
+
+            foreach (var eff in targeti.Effects)
+            {
+                var effSource = eff.FromTarget ? target : source;
+                var effTarget = eff.AtSource ? source : target;
+                var header = new PendingEffect(ev.GlobalSequence, i, effSource.InstanceID, expiration);
+                switch (eff.Type)
+                {
+                    case ActionEffectType.Damage:
+                    case ActionEffectType.BlockedDamage:
+                    case ActionEffectType.ParriedDamage:
+                        // note: if actual damage will not result in hp change (eg overkill by other pending effects, invulnerability effects), we won't get confirmation
+                        effTarget.PendingHPDifferences.Add(new(header, -eff.DamageHealValue));
+                        break;
+                    case ActionEffectType.Heal:
+                        // note: if actual heal will not result in hp change (eg 100% overheal), we won't get confirmation
+                        effTarget.PendingHPDifferences.Add(new(header, +eff.DamageHealValue));
+                        break;
+                    case ActionEffectType.MpLoss:
+                        effTarget.PendingMPDifferences.Add(new(header, -eff.Value));
+                        break;
+                    case ActionEffectType.MpGain:
+                        effTarget.PendingMPDifferences.Add(new(header, +eff.Value));
+                        break;
+                    case ActionEffectType.ApplyStatusEffectTarget:
+                    case ActionEffectType.ApplyStatusEffectSource:
+                        // note: effect reapplication (eg kardia) or some 'instant' effects (eg ast draw/earthly star) won't get confirmations
+                        effTarget.PendingStatuses.Add(new(header, eff.Value, eff.Param2));
+                        break;
+                    case ActionEffectType.RecoveredFromStatusEffect:
+                    case ActionEffectType.LoseStatusEffectTarget:
+                    case ActionEffectType.LoseStatusEffectSource:
+                        effTarget.PendingDispels.Add(new(header, eff.Value));
+                        break;
+                }
+            }
+        }
+    }
+
+    private delegate bool RemovePendingEffectPredicate(in PendingEffect effect);
+    private void RemovePendingEffects(Actor target, RemovePendingEffectPredicate predicate)
+    {
+        target.PendingHPDifferences.RemoveAll(e => predicate(e.Effect));
+        target.PendingMPDifferences.RemoveAll(e => predicate(e.Effect));
+        target.PendingStatuses.RemoveAll(e => predicate(e.Effect));
+        target.PendingDispels.RemoveAll(e => predicate(e.Effect));
+        target.PendingKnockbacks.RemoveAll(e => predicate(e));
     }
 
     // implementation of operations
@@ -62,10 +143,10 @@ public sealed class ActorState : IEnumerable<Actor>
         ActorHPMP HPMP, bool IsTargetable, bool IsAlly, ulong OwnerID, uint FateID)
         : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) { }
-        protected override void Exec(WorldState ws)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) { }
+        protected override void Exec(ref WorldState ws)
         {
-            var actor = ws.Actors._actors[InstanceID] = new Actor(InstanceID, OID, SpawnIndex, Name, NameID, Type, Class, Level, PosRot, HitboxRadius, HPMP, IsTargetable, IsAlly, OwnerID, FateID);
+            var actor = ws.Actors.Actors[InstanceID] = new Actor(InstanceID, OID, SpawnIndex, Name, NameID, Type, Class, Level, PosRot, HitboxRadius, HPMP, IsTargetable, IsAlly, OwnerID, FateID);
             ws.Actors.Added.Fire(actor);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ACT+"u8)
@@ -93,34 +174,37 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> Removed = new();
     public sealed record class OpDestroy(ulong InstanceID) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.IsDestroyed = true;
+            var wsactors = ws.Actors;
             if (actor.InCombat) // exit combat
             {
                 actor.InCombat = false;
-                ws.Actors.InCombatChanged.Fire(actor);
+                wsactors.InCombatChanged.Fire(actor);
             }
             if (actor.Tether.Target != 0) // untether
             {
-                ws.Actors.Untethered.Fire(actor);
+                wsactors.Untethered.Fire(actor);
                 actor.Tether = default;
             }
             if (actor.CastInfo != null) // stop casting
             {
-                ws.Actors.CastFinished.Fire(actor);
+                wsactors.CastFinished.Fire(actor);
                 actor.CastInfo = null;
             }
-            for (var i = 0; i < actor.Statuses.Length; ++i)
+            var len = actor.Statuses.Length;
+            for (var i = 0; i < len; ++i)
             {
-                if (actor.Statuses[i].ID != 0) // clear statuses
+                ref var status = ref actor.Statuses[i];
+                if (status.ID != 0) // clear statuses
                 {
-                    ws.Actors.StatusLose.Fire(actor, i);
-                    actor.Statuses[i] = default;
+                    wsactors.StatusLose.Fire(actor, i);
+                    status = default;
                 }
             }
-            ws.Actors.Removed.Fire(actor);
-            ws.Actors._actors.Remove(InstanceID);
+            wsactors.Removed.Fire(actor);
+            wsactors.Actors.Remove(InstanceID);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ACT-"u8).Emit(InstanceID, "X8");
     }
@@ -128,7 +212,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> Renamed = new();
     public sealed record class OpRename(ulong InstanceID, string Name, uint NameID) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.Name = Name;
             actor.NameID = NameID;
@@ -140,7 +224,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> ClassChanged = new();
     public sealed record class OpClassChange(ulong InstanceID, Class Class, int Level) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.Class = Class;
             actor.Level = Level;
@@ -152,7 +236,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> Moved = new();
     public sealed record class OpMove(ulong InstanceID, Vector4 PosRot) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.PosRot = PosRot;
             ws.Actors.Moved.Fire(actor);
@@ -163,7 +247,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> SizeChanged = new();
     public sealed record class OpSizeChange(ulong InstanceID, float HitboxRadius) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.HitboxRadius = HitboxRadius;
             ws.Actors.SizeChanged.Fire(actor);
@@ -174,7 +258,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> HPMPChanged = new();
     public sealed record class OpHPMP(ulong InstanceID, ActorHPMP HPMP) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.HPMP = HPMP;
             ws.Actors.HPMPChanged.Fire(actor);
@@ -185,7 +269,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> IsTargetableChanged = new();
     public sealed record class OpTargetable(ulong InstanceID, bool Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.IsTargetable = Value;
             ws.Actors.IsTargetableChanged.Fire(actor);
@@ -196,7 +280,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> IsAllyChanged = new();
     public sealed record class OpAlly(ulong InstanceID, bool Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.IsAlly = Value;
             ws.Actors.IsAllyChanged.Fire(actor);
@@ -207,7 +291,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> IsDeadChanged = new();
     public sealed record class OpDead(ulong InstanceID, bool Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.IsDead = Value;
             ws.Actors.IsDeadChanged.Fire(actor);
@@ -218,7 +302,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> InCombatChanged = new();
     public sealed record class OpCombat(ulong InstanceID, bool Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.InCombat = Value;
             ws.Actors.InCombatChanged.Fire(actor);
@@ -229,7 +313,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> AggroPlayerChanged = new();
     public sealed record class OpAggroPlayer(ulong InstanceID, bool Has) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.AggroPlayer = Has;
             ws.Actors.AggroPlayerChanged.Fire(actor);
@@ -240,7 +324,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> ModelStateChanged = new();
     public sealed record class OpModelState(ulong InstanceID, ActorModelState Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.ModelState = Value;
             ws.Actors.ModelStateChanged.Fire(actor);
@@ -251,7 +335,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> EventStateChanged = new();
     public sealed record class OpEventState(ulong InstanceID, byte Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.EventState = Value;
             ws.Actors.EventStateChanged.Fire(actor);
@@ -262,7 +346,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> TargetChanged = new();
     public sealed record class OpTarget(ulong InstanceID, ulong Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.TargetID = Value;
             ws.Actors.TargetChanged.Fire(actor);
@@ -273,7 +357,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> MountChanged = new();
     public sealed record class OpMount(ulong InstanceID, uint Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             actor.MountId = Value;
             ws.Actors.MountChanged.Fire(actor);
@@ -286,7 +370,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> Untethered = new(); // note that actor structure still contains previous tether info when this is invoked; invoked if actor disappears without untethering
     public sealed record class OpTether(ulong InstanceID, ActorTetherInfo Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             if (actor.Tether.Target != 0)
                 ws.Actors.Untethered.Fire(actor);
@@ -301,13 +385,15 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> CastFinished = new(); // note that actor structure still contains cast details when this is invoked; invoked if actor disappears without finishing cast
     public sealed record class OpCastInfo(ulong InstanceID, ActorCastInfo? Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
-            if (actor.CastInfo != null)
-                ws.Actors.CastFinished.Fire(actor);
-            actor.CastInfo = Value != null ? Value with { } : null;
+            ref var castinfo = ref actor.CastInfo;
+            var wsactors = ws.Actors;
+            if (castinfo != null)
+                wsactors.CastFinished.Fire(actor);
+            castinfo = Value != null ? Value with { } : null;
             if (Value != null)
-                ws.Actors.CastStarted.Fire(actor);
+                wsactors.CastStarted.Fire(actor);
         }
         public override void Write(ReplayRecorder.Output output)
         {
@@ -322,11 +408,14 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor, ActorCastEvent> CastEvent = new();
     public sealed record class OpCastEvent(ulong InstanceID, ActorCastEvent Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
-            if (actor.CastInfo?.Action == Value.Action)
-                actor.CastInfo.EventHappened = true;
-            ws.Actors.CastEvent.Fire(actor, Value);
+            ref var castinfo = ref actor.CastInfo;
+            var wsactors = ws.Actors;
+            if (castinfo?.Action == Value.Action)
+                castinfo.EventHappened = true;
+            wsactors.AddPendingEffects(ref actor, Value, ws.CurrentTime);
+            wsactors.CastEvent.Fire(actor, Value);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CST!"u8)
             .EmitActor(InstanceID)
@@ -345,7 +434,11 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor, uint, int> EffectResult = new();
     public sealed record class OpEffectResult(ulong InstanceID, uint Seq, int TargetIndex) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.EffectResult.Fire(actor, Seq, TargetIndex);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
+        {
+            ws.Actors.RemovePendingEffects(actor, (in PendingEffect p) => p.GlobalSequence == Seq && p.TargetIndex == TargetIndex);
+            ws.Actors.EffectResult.Fire(actor, Seq, TargetIndex);
+        }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ER  "u8).EmitActor(InstanceID).Emit(Seq).Emit(TargetIndex);
     }
 
@@ -353,14 +446,16 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor, int> StatusLose = new(); // note that status structure still contains details when this is invoked; invoked if actor disappears
     public sealed record class OpStatus(ulong InstanceID, int Index, ActorStatus Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor)
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
         {
             ref var prev = ref actor.Statuses[Index];
+            var wsactors = ws.Actors;
             if (prev.ID != 0 && (prev.ID != Value.ID || prev.SourceID != Value.SourceID))
-                ws.Actors.StatusLose.Fire(actor, Index);
+                wsactors.StatusLose.Fire(actor, Index);
             actor.Statuses[Index] = Value;
+            actor.PendingStatuses.RemoveAll(s => s.StatusId == Value.ID && s.Effect.SourceInstanceId == Value.SourceID);
             if (Value.ID != 0)
-                ws.Actors.StatusGain.Fire(actor, Index);
+                wsactors.StatusGain.Fire(actor, Index);
         }
         public override void Write(ReplayRecorder.Output output)
         {
@@ -371,19 +466,51 @@ public sealed class ActorState : IEnumerable<Actor>
         }
     }
 
-    // TODO: this should really be an actor field, but I have no idea what triggers icon clear...
-    public Event<Actor, uint> IconAppeared = new();
-    public sealed record class OpIcon(ulong InstanceID, uint IconID) : Operation(InstanceID)
+    public Event<Actor, int> IncomingEffectAdd = new();
+    public Event<Actor, int> IncomingEffectRemove = new();
+    public sealed record class OpIncomingEffect(ulong InstanceID, int Index, ActorIncomingEffect Value) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.IconAppeared.Fire(actor, IconID);
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ICON"u8).EmitActor(InstanceID).Emit(IconID);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
+        {
+            ref var prev = ref actor.IncomingEffects[Index];
+            var prevSeq = prev.GlobalSequence;
+            var prevIdx = prev.TargetIndex;
+            if (prevSeq != 0 && (prevSeq != Value.GlobalSequence || prevIdx != Value.TargetIndex))
+            {
+                if (prev.Effects.Any(eff => eff.Type is >= ActionEffectType.Knockback and <= ActionEffectType.AttractCustom3))
+                    actor.PendingKnockbacks.RemoveAll(e => e.GlobalSequence == prevSeq && e.TargetIndex == prevIdx);
+                ws.Actors.IncomingEffectRemove.Fire(actor, Index);
+            }
+            actor.IncomingEffects[Index] = Value;
+            if (Value.GlobalSequence != 0)
+            {
+                if (prev.Effects.Any(eff => eff.Type is >= ActionEffectType.Knockback and <= ActionEffectType.AttractCustom3))
+                    actor.PendingKnockbacks.Add(new(Value.GlobalSequence, Value.TargetIndex, Value.SourceInstanceId, ws.FutureTime(3))); // note: sometimes effect can never be applied (eg if source dies shortly after actioneffect), so we need a timeout
+                ws.Actors.IncomingEffectAdd.Fire(actor, Index);
+            }
+        }
+        public override void Write(ReplayRecorder.Output output)
+        {
+            if (Value.GlobalSequence != 0)
+                output.EmitFourCC("AIE+"u8).EmitActor(InstanceID).Emit(Index).Emit(Value.GlobalSequence).Emit(Value.TargetIndex).EmitActor(Value.SourceInstanceId).Emit(Value.Action).Emit(Value.Effects);
+            else
+                output.EmitFourCC("AIE-"u8).EmitActor(InstanceID).Emit(Index);
+        }
+    }
+
+    // TODO: this should really be an actor field, but I have no idea what triggers icon clear...
+    public Event<Actor, uint, ulong> IconAppeared = new();
+    public sealed record class OpIcon(ulong InstanceID, uint IconID, ulong TargetID) : Operation(InstanceID)
+    {
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.IconAppeared.Fire(actor, IconID, TargetID);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ICON"u8).EmitActor(InstanceID).Emit(IconID).EmitActor(TargetID);
     }
 
     // TODO: this should be an actor field (?)
     public Event<Actor, ushort> EventObjectStateChange = new();
     public sealed record class OpEventObjectStateChange(ulong InstanceID, ushort State) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.EventObjectStateChange.Fire(actor, State);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.EventObjectStateChange.Fire(actor, State);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ESTA"u8).EmitActor(InstanceID).Emit(State, "X4");
     }
 
@@ -391,7 +518,7 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor, ushort, ushort> EventObjectAnimation = new();
     public sealed record class OpEventObjectAnimation(ulong InstanceID, ushort Param1, ushort Param2) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.EventObjectAnimation.Fire(actor, Param1, Param2);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.EventObjectAnimation.Fire(actor, Param1, Param2);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("EANM"u8).EmitActor(InstanceID).Emit(Param1, "X4").Emit(Param2, "X4");
     }
 
@@ -399,14 +526,21 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor, ushort> PlayActionTimelineEvent = new();
     public sealed record class OpPlayActionTimelineEvent(ulong InstanceID, ushort ActionTimelineID) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.PlayActionTimelineEvent.Fire(actor, ActionTimelineID);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.PlayActionTimelineEvent.Fire(actor, ActionTimelineID);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PATE"u8).EmitActor(InstanceID).Emit(ActionTimelineID, "X4");
     }
 
     public Event<Actor, ushort> EventNpcYell = new();
     public sealed record class OpEventNpcYell(ulong InstanceID, ushort Message) : Operation(InstanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.EventNpcYell.Fire(actor, Message);
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.EventNpcYell.Fire(actor, Message);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("NYEL"u8).EmitActor(InstanceID).Emit(Message);
+    }
+
+    public Event<Actor> EventOpenTreasure = new();
+    public sealed record class OpEventOpenTreasure(ulong InstanceID) : Operation(InstanceID)
+    {
+        protected override void ExecActor(ref WorldState ws, ref Actor actor) => ws.Actors.EventOpenTreasure.Fire(actor);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("OPNT"u8).EmitActor(InstanceID);
     }
 }

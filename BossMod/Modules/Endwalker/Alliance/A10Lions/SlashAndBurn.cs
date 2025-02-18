@@ -2,32 +2,40 @@
 
 class SlashAndBurn(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCircle _shapeOut = new(14f);
+    private static readonly AOEShapeDonut _shapeIn = new(6f, 30f);
 
-    private static readonly AOEShapeCircle _shapeOut = new(14);
-    private static readonly AOEShapeDonut _shapeIn = new(6, 30);
-    private static readonly HashSet<AID> castEnd = [AID.SlashAndBurnOutFirst, AID.SlashAndBurnOutSecond, AID.SlashAndBurnInFirst, AID.SlashAndBurnInSecond, AID.TrialByFire, AID.SpinningSlash];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        AOEShape? shape = (AID)spell.Action.ID switch
+        AOEShape? shape = spell.Action.ID switch
         {
-            AID.SlashAndBurnOutFirst or AID.SlashAndBurnOutSecond or AID.TrialByFire => _shapeOut,
-            AID.SlashAndBurnInFirst or AID.SlashAndBurnInSecond or AID.SpinningSlash => _shapeIn,
+            (uint)AID.SlashAndBurnOutFirst or (uint)AID.SlashAndBurnOutSecond or (uint)AID.TrialByFire => _shapeOut,
+            (uint)AID.SlashAndBurnInFirst or (uint)AID.SlashAndBurnInSecond or (uint)AID.SpinningSlash => _shapeIn,
             _ => null
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             _aoes.SortBy(x => x.Activation);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (castEnd.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.SlashAndBurnOutFirst:
+                case (uint)AID.SlashAndBurnOutSecond:
+                case (uint)AID.SlashAndBurnInFirst:
+                case (uint)AID.SlashAndBurnInSecond:
+                case (uint)AID.TrialByFire:
+                case (uint)AID.SpinningSlash:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }

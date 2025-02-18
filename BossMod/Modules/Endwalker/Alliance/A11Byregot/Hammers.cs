@@ -2,8 +2,8 @@
 
 class HammersCells(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.DestroySideTiles), "GTFO from dangerous cell!")
 {
-    public bool Active { get; private set; }
-    public bool MovementPending { get; private set; }
+    public bool Active;
+    public bool MovementPending;
     private readonly int[] _lineOffset = new int[5];
     private readonly int[] _lineMovement = new int[5];
 
@@ -92,5 +92,5 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, ActionID.
     }
 }
 
-class HammersLevinforge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Levinforge), new AOEShapeRect(50, 5));
-class HammersSpire(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ByregotSpire), new AOEShapeRect(50, 15, 2));
+class HammersLevinforge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Levinforge), new AOEShapeRect(50, 5));
+class HammersSpire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ByregotSpire), new AOEShapeRect(50, 15));

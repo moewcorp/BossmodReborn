@@ -11,6 +11,7 @@ public enum OID : uint
     MagickedBroom5 = 0x3015, // R=3.125
     MagickedBroom6 = 0x30F0, // R=3.125
     KeeperOfKeys = 0x3034, // R3.23
+    FuathTrickster = 0x3033, // R0.75
     SecretQueen = 0x3021, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
     SecretGarlic = 0x301F, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     SecretTomato = 0x3020, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
@@ -25,8 +26,8 @@ public enum AID : uint
 
     BrewingStorm = 21670, // Boss->self, 2.5s cast, range 5 60-degree cone, knockback 10 away from source
     HarrowingDream = 21671, // Boss->self, 3.0s cast, range 6 circle, applies sleep
-    BecloudingDust = 22935, // Boss->self, 3.0s cast, single-target
-    BecloudingDust2 = 22936, // BossHelper->location, 3.0s cast, range 6 circle
+    BecloudingDustVisual = 22935, // Boss->self, 3.0s cast, single-target
+    BecloudingDust = 22936, // BossHelper->location, 3.0s cast, range 6 circle
     SweepStart = 22937, // Brooms>self, 4.0s cast, range 6 circle
     SweepRest = 21672, // Brooms->self, no cast, range 6 circle
     SweepVisual = 22508, // Brooms->self, no cast, single-target, visual
@@ -41,26 +42,28 @@ public enum AID : uint
     TearyTwirl = 6448, // SecretOnion->self, 3.5s cast, range 6+R circle
     HeirloomScream = 6451, // SecretTomato->self, 3.5s cast, range 6+R circle
     PluckAndPrune = 6449, // SecretEgg->self, 3.5s cast, range 6+R circle
-    PungentPirouette = 6450, // SecretGarlic->self, 3.5s cast, range 6+R circle
+    PungentPirouette = 6450 // SecretGarlic->self, 3.5s cast, range 6+R circle
 }
 
-class BrewingStorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BrewingStorm), new AOEShapeCone(5, 30.Degrees()));
-class HarrowingDream(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HarrowingDream), new AOEShapeCircle(6));
-class BecloudingDust(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BecloudingDust2), 6);
+class BrewingStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrewingStorm), new AOEShapeCone(5f, 30f.Degrees()));
+class HarrowingDream(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HarrowingDream), 6f);
+class BecloudingDust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BecloudingDust), 6f);
 
-class Sweep(BossModule module) : Components.Exaflare(module, 6)
+class Sweep(BossModule module) : Components.Exaflare(module, 6f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SweepStart)
-            Lines.Add(new() { Next = caster.Position, Advance = 12 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 0.9f), TimeToMove = 4.5f, ExplosionsLeft = 4, MaxShownExplosions = 3 });
+        if (spell.Action.ID == (uint)AID.SweepStart)
+            Lines.Add(new() { Next = caster.Position, Advance = 12f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 0.9f), TimeToMove = 4.5f, ExplosionsLeft = 4, MaxShownExplosions = 3 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Lines.Count > 0 && (AID)spell.Action.ID == AID.SweepRest)
+        if (Lines.Count != 0 && spell.Action.ID == (uint)AID.SweepRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
+            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
+            if (index == -1)
+                return;
             AdvanceLine(Lines[index], caster.Position);
             if (Lines[index].ExplosionsLeft == 0)
                 Lines.RemoveAt(index);
@@ -68,11 +71,11 @@ class Sweep(BossModule module) : Components.Exaflare(module, 6)
     }
 }
 
-class Spin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCircle(11));
-class Mash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Mash), new AOEShapeRect(13, 2));
-class Scoop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Scoop), new AOEShapeCone(15, 60.Degrees()));
+class Spin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spin), 11f);
+class Mash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mash), new AOEShapeRect(13f, 2f));
+class Scoop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Scoop), new AOEShapeCone(15f, 60f.Degrees()));
 
-abstract class Mandragoras(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(6.84f));
+abstract class Mandragoras(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6.84f);
 class PluckAndPrune(BossModule module) : Mandragoras(module, AID.PluckAndPrune);
 class TearyTwirl(BossModule module) : Mandragoras(module, AID.TearyTwirl);
 class HeirloomScream(BossModule module) : Mandragoras(module, AID.HeirloomScream);
@@ -96,33 +99,46 @@ class SecretPorxieStates : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () => module.Enemies(OID.KeeperOfKeys).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.SecretEgg)).Concat(module.Enemies(OID.SecretQueen))
-            .Concat(module.Enemies(OID.SecretOnion)).Concat(module.Enemies(OID.SecretGarlic)).Concat(module.Enemies(OID.SecretTomato)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(SecretPorxie.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9795)]
-public class SecretPorxie(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class SecretPorxie(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.SecretEgg, (uint)OID.SecretGarlic, (uint)OID.SecretOnion, (uint)OID.SecretTomato,
+    (uint)OID.SecretQueen, (uint)OID.KeeperOfKeys];
+    public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SecretEgg).Concat(Enemies(OID.SecretTomato)).Concat(Enemies(OID.SecretQueen)).Concat(Enemies(OID.SecretGarlic)).Concat(Enemies(OID.SecretOnion))
-        .Concat(Enemies(OID.KeeperOfKeys)), Colors.Vulnerable);
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.SecretOnion => 6,
-                OID.SecretEgg => 5,
-                OID.SecretGarlic => 4,
-                OID.SecretTomato => 3,
-                OID.KeeperOfKeys or OID.SecretQueen => 2,
-                OID.Boss => 1,
+                (uint)OID.SecretOnion => 5,
+                (uint)OID.SecretEgg => 4,
+                (uint)OID.SecretGarlic => 3,
+                (uint)OID.SecretTomato => 2,
+                (uint)OID.SecretQueen or (uint)OID.KeeperOfKeys => 1,
                 _ => 0
             };
         }

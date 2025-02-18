@@ -40,19 +40,19 @@ public enum AID : uint
     ChimneySmack = 38468, // Helper->player, 5.0s cast, single-target, tankbuster
 }
 
-class Anthrabomb(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 10);
+class Anthrabomb(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10f);
 class Anthrabomb1(BossModule module) : Anthrabomb(module, AID.Anthrabomb1);
 class Anthrabomb2(BossModule module) : Anthrabomb(module, AID.Anthrabomb2);
 
-class AnthrabombSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AnthrabombSpread), 6);
+class AnthrabombSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AnthrabombSpread), 6f);
 
-class HotBlast(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
+class HotBlast(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 3f));
 class HotBlast1(BossModule module) : HotBlast(module, AID.HotBlast1);
 class HotBlast2(BossModule module) : HotBlast(module, AID.HotBlast2);
 
 class CarbonaceousCombustion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CarbonaceousCombustion));
 class ChimneySmack(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ChimneySmack));
-class BurningCoals(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BurningCoals), 6, 4, 4);
+class BurningCoals(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BurningCoals), 6f, 4, 4);
 
 class D072AnthraciteStates : StateMachineBuilder
 {
@@ -71,13 +71,12 @@ class D072AnthraciteStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12853)]
-public class D072Anthracite(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, arena)
+public class D072Anthracite(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private const float Radius = 3.75f;
-    private static readonly Square square1 = new(new(-118, -57), Radius);
-    private static readonly Square square2 = new(new(-142, -45), Radius);
-    private static readonly Circle circle1 = new(new(-124, -39), Radius);
-    private static readonly Circle circle2 = new(new(-136, -63), Radius);
-    private static readonly WPos arenaCenter = new(-130, -51);
-    private static readonly ArenaBoundsComplex arena = new([new Square(arenaCenter, 17.5f)], [square1, square2, circle1, circle2]);
+    private static readonly Square square1 = new(new(-118f, -57f), Radius);
+    private static readonly Square square2 = new(new(-142f, -45f), Radius);
+    private static readonly Circle circle1 = new(new(-124f, -39f), Radius);
+    private static readonly Circle circle2 = new(new(-136f, -63f), Radius);
+    private static readonly ArenaBoundsComplex arena = new([new Square(new(-130f, -51f), 17.5f)], [square1, square2, circle1, circle2]);
 }

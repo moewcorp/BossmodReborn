@@ -36,9 +36,9 @@ class ArenaChanges(BossModule module) : BossComponent(module)
     {
         if (Arena.Center != T03QueenEternal.SplitArena.Center)
             return;
-        if (Raid.WithoutSlot().Any(p => p.FindStatus((uint)SID.GravitationalAnomaly) != null))
+        if (Raid.WithoutSlot(false, true, true).Any(p => p.FindStatus((uint)SID.GravitationalAnomaly) != null))
             SetArena(T03QueenEternal.SplitGravityBounds, T03QueenEternal.SplitArena.Center);
-        else if (Raid.WithoutSlot().All(p => p.FindStatus((uint)SID.GravitationalAnomaly) == null))
+        else if (Raid.WithoutSlot(false, true, true).All(p => p.FindStatus((uint)SID.GravitationalAnomaly) == null))
             SetArena(T03QueenEternal.SplitArena, T03QueenEternal.SplitArena.Center);
     }
 }

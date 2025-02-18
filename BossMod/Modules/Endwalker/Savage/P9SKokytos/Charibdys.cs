@@ -16,8 +16,8 @@ class Comet(BossModule module) : Components.Adds(module, (uint)OID.Comet)
     }
 }
 
-class CometImpact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CometImpact), new AOEShapeCircle(10)); // TODO: verify falloff
-class CometBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CometBurstLong), new AOEShapeCircle(10));
+class CometImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometImpact), 10); // TODO: verify falloff
+class CometBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometBurstLong), 10);
 
 class BeastlyBile(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4)
 {
@@ -41,7 +41,7 @@ class BeastlyBile(BossModule module) : Components.UniformStackSpread(module, 6, 
     public override void Update()
     {
         Stacks.Clear();
-        var target = NumCasts < 2 ? Raid.WithoutSlot().Farthest(Module.PrimaryActor.Position) : null;
+        var target = NumCasts < 2 ? Raid.WithoutSlot(false, true, true).Farthest(Module.PrimaryActor.Position) : null;
         if (target != null)
             AddStack(target, _activation, _forbiddenPlayers);
         base.Update();
@@ -68,7 +68,7 @@ class Thunderbolt(BossModule module) : Components.GenericBaitAway(module, Action
     public override void Update()
     {
         CurrentBaits.Clear();
-        foreach (var p in Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position).Take(4))
+        foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(4))
             CurrentBaits.Add(new(Module.PrimaryActor, p, _shape));
     }
 
@@ -93,7 +93,7 @@ class Thunderbolt(BossModule module) : Components.GenericBaitAway(module, Action
 
 class EclipticMeteor(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.EclipticMeteorAOE), 60, safeInsideHitbox: false)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.EclipticMeteor)
         {

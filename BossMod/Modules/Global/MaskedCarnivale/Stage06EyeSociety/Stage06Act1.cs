@@ -3,20 +3,20 @@ namespace BossMod.Global.MaskedCarnivale.Stage06.Act1;
 public enum OID : uint
 {
     Boss = 0x25CD, //R=2.53
-    Mandragora = 0x2700, //R=0.3
+    Mandragora = 0x2700 //R=0.3
 }
 
 public enum AID : uint
 {
-    TearyTwirl = 14693, // 2700->self, 3.0s cast, range 6+R circle
-    DemonEye = 14691, // 25CD->self, 5.0s cast, range 50+R circle
-    Attack = 6499, // 2700/25CD->player, no cast, single-target
-    ColdStare = 14692, // 25CD->self, 2.5s cast, range 40+R 90-degree cone
+    TearyTwirl = 14693, // Mandragora->self, 3.0s cast, range 6+R circle
+    DemonEye = 14691, // Boss->self, 5.0s cast, range 50+R circle
+    Attack = 6499, // Mandragora/Boss->player, no cast, single-target
+    ColdStare = 14692 // Boss->self, 2.5s cast, range 40+R 90-degree cone
 }
 
 public enum SID : uint
 {
-    Blind = 571, // Mandragora->player, extra=0x0
+    Blind = 571 // Mandragora->player, extra=0x0
 }
 
 class DemonEye(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DemonEye))
@@ -41,7 +41,7 @@ class DemonEye(BossModule module) : Components.CastGaze(module, ActionID.MakeSpe
     }
 }
 
-class ColdStare(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ColdStare), new AOEShapeCone(42.53f, 45.Degrees())) //TODO: cone based gaze
+class ColdStare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColdStare), new AOEShapeCone(42.53f, 45.Degrees())) //TODO: cone based gaze
 {
     private readonly BitMask _blinded;
 
@@ -103,21 +103,22 @@ class Stage06Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<ColdStare>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Mandragora).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage06Act1.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8090, SortOrder = 1)]
 public class Stage06Act1 : BossModule
 {
-    public Stage06Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), Layouts.LayoutBigQuad)
+    public Stage06Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.LayoutBigQuad)
     {
         ActivateComponent<Hints>();
         ActivateComponent<TearyTwirl>();
         ActivateComponent<DemonEye>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Mandragora];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Mandragora).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -127,8 +128,9 @@ public class Stage06Act1 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.Boss => 1,

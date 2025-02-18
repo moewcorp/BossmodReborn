@@ -4,7 +4,7 @@ class ChasmOfVollokFangSmall(BossModule module) : Components.GenericAOEs(module,
 {
     public readonly List<AOEInstance> AOEs = [];
     private static readonly float platformOffset = 30 / MathF.Sqrt(2);
-    private static readonly AOEShapeRect _shape = new(2.5f, 2.5f, 2.5f);
+    private static readonly AOEShapeRect _shape = new(5, 2.5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
@@ -13,8 +13,9 @@ class ChasmOfVollokFangSmall(BossModule module) : Components.GenericAOEs(module,
         if ((AID)spell.Action.ID == AID.ChasmOfVollokFangSmall)
         {
             // the visual cast happens on one of the side platforms at intercardinals, offset by 30
-            var offset = new WDir(caster.Position.X > Arena.Center.X ? -platformOffset : +platformOffset, caster.Position.Z > Arena.Center.Z ? -platformOffset : +platformOffset);
-            AOEs.Add(new(_shape, caster.Position + offset, spell.Rotation, Module.CastFinishAt(spell)));
+            var pos = spell.LocXZ;
+            var offset = new WDir(pos.X > Arena.Center.X ? -platformOffset : +platformOffset, pos.Z > Arena.Center.Z ? -platformOffset : +platformOffset);
+            AOEs.Add(new(_shape, pos + offset, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 }
@@ -24,7 +25,7 @@ class ChasmOfVollokFangLarge(BossModule module) : Components.GenericAOEs(module,
 {
     public readonly List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeRect _shape = new(5, 5, 5);
+    private static readonly AOEShapeRect _shape = new(10, 5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
@@ -33,11 +34,11 @@ class ChasmOfVollokFangLarge(BossModule module) : Components.GenericAOEs(module,
         if ((AID)spell.Action.ID == AID.VollokLargeAOE)
         {
             AOEs.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-
+            var pos = spell.LocXZ;
             var mainOffset = Trial.T02ZoraalJa.ZoraalJa.ArenaCenter - Arena.Center;
-            var fangOffset = caster.Position - Module.Center;
+            var fangOffset = pos - Arena.Center;
             var mirrorOffset = fangOffset.Dot(mainOffset) > 0 ? -2 * mainOffset : 2 * mainOffset;
-            AOEs.Add(new(_shape, caster.Position + mirrorOffset, spell.Rotation, Module.CastFinishAt(spell)));
+            AOEs.Add(new(_shape, pos + mirrorOffset, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 }
@@ -56,7 +57,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
     {
         if (!Active)
             yield break;
-        var platformOffset = 2 * (Module.Center - Trial.T02ZoraalJa.ZoraalJa.ArenaCenter);
+        var platformOffset = 2 * (Arena.Center - Trial.T02ZoraalJa.ZoraalJa.ArenaCenter);
         foreach (var t in _targets.Exclude(actor))
         {
             var playerOffset = t.Position - Trial.T02ZoraalJa.ZoraalJa.ArenaCenter;
@@ -86,7 +87,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => PlayerPriority.Normal;
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.ChasmOfVollok)
         {
@@ -95,7 +96,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
         }
     }
 
-    private int CoordinateToCell(float x) => x switch
+    private static int CoordinateToCell(float x) => x switch
     {
         < -5 => 0,
         < 0 => 1,
@@ -103,5 +104,5 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
         _ => 3
     };
 
-    private float CellCenterCoordinate(int c) => -7.5f + c * 5;
+    private static float CellCenterCoordinate(int c) => -7.5f + c * 5;
 }

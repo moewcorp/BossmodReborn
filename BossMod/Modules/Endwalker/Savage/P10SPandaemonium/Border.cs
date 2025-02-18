@@ -2,8 +2,8 @@
 
 class Border(BossModule module) : BossComponent(module)
 {
-    public bool LBridgeActive { get; private set; }
-    public bool RBridgeActive { get; private set; }
+    public bool LBridgeActive;
+    public bool RBridgeActive;
 
     public override void OnEventEnvControl(byte index, uint state)
     {

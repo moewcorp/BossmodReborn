@@ -54,7 +54,7 @@ class Voidzone(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if (actor.OID == (uint)OID.Voidzone && state == 0x0004)
+        if ((OID)actor.OID == OID.Voidzone && state == 0x0004)
             _aoe = null;
     }
 
@@ -75,13 +75,26 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(30, 45.Degrees());
     private static readonly AOEShapeRect rectShort = new(28, 4);
     private static readonly AOEShapeRect rectLong = new(40, 4);
-    private static readonly HashSet<WPos> cornerPositions = [new(-20.5f, -202.5f), new(20.5f, -161.5f), new(-20.5f, -161.5f), new(20.5f, -202.5f)];
+    private static readonly WPos[] cornerPositions = [new(-20.5f, -202.5f), new(20.5f, -161.5f), new(-20.5f, -161.5f), new(20.5f, -202.5f)];
     private int numCastsReflections;
     private int numCastsCannons;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return currentType == Type.TwoWaves ? _aoesCones.Take(2).Concat(_aoesRects.Take(2)) : _aoesCones.Concat(_aoesRects);
+        var countCones = _aoesCones.Count;
+        var countRects = _aoesRects.Count;
+        var total = countCones + countRects;
+        if (total == 0)
+            return [];
+        List<AOEInstance> aoes = new(total);
+        var type = currentType == Type.TwoWaves;
+        var maxCone = type && countCones > 2 ? 2 : countCones;
+        var maxRect = type && countRects > 2 ? 2 : countRects;
+        for (var i = 0; i < maxCone; ++i)
+            aoes.Add(_aoesCones[i]);
+        for (var i = 0; i < maxRect; ++i)
+            aoes.Add(_aoesRects[i]);
+        return aoes;
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -137,8 +150,8 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
 
     private void AddConeAOEs(DateTime activation, params Angle[] angles)
     {
-        foreach (var angle in angles)
-            _aoesCones.Add(new(cone, Arena.Center, angle, activation));
+        for (var i = 0; i < 2; ++i)
+            _aoesCones.Add(new(cone, Arena.Center, angles[i], activation));
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)

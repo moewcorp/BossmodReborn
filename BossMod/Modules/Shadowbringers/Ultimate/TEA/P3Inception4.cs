@@ -10,6 +10,6 @@ class P3Inception4Cleaves(BossModule module) : Components.GenericBaitAway(module
         CurrentBaits.Clear();
         var source = ((TEA)Module).CruiseChaser();
         if (source != null)
-            CurrentBaits.AddRange(Raid.WithoutSlot().SortedByRange(source.Position).Take(3).Select(t => new Bait(source, t, _shape)));
+            CurrentBaits.AddRange(Raid.WithoutSlot(false, true, true).SortedByRange(source.Position).Take(3).Select(t => new Bait(source, t, _shape)));
     }
 }

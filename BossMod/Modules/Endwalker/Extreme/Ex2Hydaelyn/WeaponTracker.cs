@@ -2,10 +2,10 @@
 
 class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
 {
-    public bool AOEImminent { get; private set; }
+    public bool AOEImminent;
     private AOEInstance? _aoe;
     public enum Stance { None, Sword, Staff, Chakram }
-    public Stance CurStance { get; private set; }
+    public Stance CurStance;
     private static readonly AOEShapeDonut donut = new(5, 40);
     private static readonly AOEShapeCircle circle = new(10);
     private static readonly AOEShapeCross cross = new(40, 5);

@@ -15,235 +15,202 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 872, // Boss->player, no cast, single-target
+
     Drumbeat = 26510, // Boss->player, 5.0s cast, single-target
     LeftwardTrisula = 26508, // Boss->self, 7.0s cast, range 65 180-degree cone
     RightwardParasu = 26509, // Boss->self, 7.0s cast, range 65 180-degree cone
     Lamplight = 26497, // Boss->self, 2.0s cast, single-target
-    LoyalFlame = 26499, // Boss->self, 5.0s cast, single-target, blue first
-    LoyalFlame2 = 26498, // Boss->self, 5.0s cast, single-target, red first
-    LitPath1 = 26501, // OrbOfImmolation->self, 1.0s cast, range 50 width 10 rect, blue orb
-    LitPath2 = 26500, // OrbOfImmolation2->self, 1.0s cast, range 50 width 10 rect, red orbs
+    LoyalFlameBlue = 26499, // Boss->self, 5.0s cast, single-target, blue first
+    LoyalFlameRed = 26498, // Boss->self, 5.0s cast, single-target, red first
+    LitPathBlue = 26501, // OrbOfImmolation->self, 1.0s cast, range 50 width 10 rect, blue orb
+    LitPathRed = 26500, // OrbOfImmolation2->self, 1.0s cast, range 50 width 10 rect, red orbs
     CosmicWeave = 26513, // Boss->self, 4.0s cast, range 18 circle
-    YawningHells = 26511, // Boss->self, no cast, single-target
-    YawningHells2 = 26512, // Helper1->location, 3.0s cast, range 8 circle
+    YawningHellsVisual = 26511, // Boss->self, no cast, single-target
+    YawningHells = 26512, // Helper1->location, 3.0s cast, range 8 circle
     ErrantAkasa = 26514, // Boss->self, 5.0s cast, range 60 90-degree cone
-    InfernalRedemption = 26517, // Boss->self, 5.0s cast, single-target
-    InfernalRedemption2 = 26518, // Helper3->location, no cast, range 60 circle
-    IgnitingLights = 26503, // Boss->self, 2.0s cast, single-target
+    InfernalRedemptionVisual = 26517, // Boss->self, 5.0s cast, single-target
+    InfernalRedemption = 26518, // Helper3->location, no cast, range 60 circle
+    IgnitingLights1 = 26503, // Boss->self, 2.0s cast, single-target
     IgnitingLights2 = 26502, // Boss->self, 2.0s cast, single-target
-    Burn = 26507, // OrbOfConflagration->self, 1.0s cast, range 10 circle, blue orbs
-    Burn2 = 26506, // OrbOfConflagration2->self, 1.0s cast, range 10 circle, red orbs   
-    KarmicFlames = 26515, // Boss->self, 5.5s cast, single-target
-    KarmicFlames2 = 26516, // Helper2->location, 5.0s cast, range 50 circle, damage fall off, safe distance should be about 20
-    DivineCall = 27080, // Boss->self, 4.0s cast, range 65 circle, forced backwards march
+    BurnBlue = 26507, // OrbOfConflagration->self, 1.0s cast, range 10 circle, blue orbs
+    BurnRed = 26506, // OrbOfConflagration2->self, 1.0s cast, range 10 circle, red orbs   
+    KarmicFlamesVisual = 26515, // Boss->self, 5.5s cast, single-target
+    KarmicFlames = 26516, // Helper2->location, 5.0s cast, range 50 circle, damage fall off, safe distance should be about 20
+    DivineCall1 = 27080, // Boss->self, 4.0s cast, range 65 circle, forced backwards march
     DivineCall2 = 26520, // Boss->self, 4.0s cast, range 65 circle, forced right march
     DivineCall3 = 27079, // Boss->self, 4.0s cast, range 65 circle, forced forward march
-    DivineCall4 = 26519, // Boss->self, 4.0s cast, range 65 circle, forced left march
+    DivineCall4 = 26519 // Boss->self, 4.0s cast, range 65 circle, forced left march
 }
 
 public enum SID : uint
 {
-    Hover = 1515, // none->OrbOfImmolation, extra=0x64
     AboutFace = 1959, // Boss->player, extra=0x0
     RightFace = 1961, // Boss->player, extra=0x0
     ForwardMarch = 1958, // Boss->player, extra=0x0
     LeftFace = 1960, // Boss->player, extra=0x0
-    ForcedMarch = 1257, // Boss->player, extra=0x2/0x8/0x1/0x4
 }
 
 class LitPath(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(50, 5);
-    private DateTime _activation;
-    private bool redblue1;
-    private bool redblue2;
-    private bool bluered1;
-    private bool bluered2;
+    public readonly List<AOEInstance> AOEs = new(5);
+    private static readonly AOEShapeRect rect = new(50f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_activation != default)
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var max = count > 3 ? 3 : count;
+        var firstact = AOEs[0].Activation;
+        List<AOEInstance> aoes = new(max);
+        for (var i = 0; i < max; ++i) // either 2 or 3 AOEs in a wave, no need to iterate on all 5
         {
-            foreach (var o in Module.Enemies(OID.OrbOfImmolationBlue))
-            {
-                if (bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
-                    yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(1.9f));
-                if (redblue2 && !redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
-                    yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(4));
-            }
-            foreach (var o in Module.Enemies(OID.OrbOfImmolationRed))
-            {
-                if (bluered2 && !bluered1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
-                    yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(4));
-                if (redblue1 && (o.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad) || o.Rotation.AlmostEqual(180.Degrees(), Angle.DegToRad)))
-                    yield return new(rect, o.Position, o.Rotation, _activation.AddSeconds(1.9f));
-            }
+            var aoe = AOEs[i];
+            if ((aoe.Activation - firstact).TotalSeconds < 1d)
+                aoes.Add(aoe);
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (!Module.Enemies(OID.OrbOfImmolationRed).All(x => x.IsDead) && !Module.Enemies(OID.OrbOfImmolationBlue).All(x => x.IsDead))
+        if (spell.Action.ID is (uint)AID.LoyalFlameBlue or (uint)AID.LoyalFlameRed)
         {
-            if ((AID)spell.Action.ID == AID.LoyalFlame)
-            {
-                _activation = Module.CastFinishAt(spell);
-                bluered1 = true;
-                bluered2 = true;
-            }
-            else if ((AID)spell.Action.ID == AID.LoyalFlame2)
-            {
-                _activation = Module.CastFinishAt(spell);
-                redblue1 = true;
-                redblue2 = true;
-            }
+            var isBlue = spell.Action.ID == (uint)AID.LoyalFlameBlue;
+            AddAOEs(Module.Enemies((uint)OID.OrbOfImmolationBlue), spell, isBlue ? 2.2f : 4.4f);
+            AddAOEs(Module.Enemies((uint)OID.OrbOfImmolationRed), spell, isBlue ? 4.4f : 2.2f);
+            if (!isBlue)
+                AOEs.Reverse();
+        }
+    }
+
+    private void AddAOEs(List<Actor> orbs, ActorCastInfo spell, float delay)
+    {
+        for (var i = 0; i < orbs.Count; ++i)
+        {
+            var orb = orbs[i];
+            AOEs.Add(new(rect, WPos.ClampToGrid(orb.Position), orb.Position.X < -632f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[2], Module.CastFinishAt(spell, delay)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LitPath1)
-        {
-            bluered1 = false;
-            redblue2 = false;
-            if (++NumCasts == 5)
-            {
-                NumCasts = 0;
-                _activation = default;
-            }
-        }
-        else if ((AID)spell.Action.ID == AID.LitPath2)
-        {
-            bluered2 = false;
-            redblue1 = false;
-            if (++NumCasts == 5)
-            {
-                NumCasts = 0;
-                _activation = default;
-            }
-        }
+        if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.LitPathBlue or (uint)AID.LitPathRed)
+            AOEs.RemoveAt(0);
     }
 }
 
 class Burn(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(10);
-    private DateTime _activation;
-    private bool redblue1;
-    private bool redblue2;
-    private bool bluered1;
-    private bool bluered2;
+    private readonly List<AOEInstance> _aoes = new(16);
+    private static readonly AOEShapeCircle circle = new(10f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_activation != default)
-        {
-            foreach (var o in Module.Enemies(OID.OrbOfConflagrationBlue))
-            {
-                if (bluered1)
-                    yield return new(circle, o.Position, default, _activation.AddSeconds(2.1f));
-                if (redblue2 && !redblue1)
-                    yield return new(circle, o.Position, default, _activation.AddSeconds(6.1f));
-            }
-            foreach (var o in Module.Enemies(OID.OrbOfConflagrationRed))
-            {
-                if (bluered2 && !bluered1)
-                    yield return new(circle, o.Position, default, _activation.AddSeconds(6.1f));
-                if (redblue1)
-                    yield return new(circle, o.Position, default, _activation.AddSeconds(2.1f));
-            }
-        }
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 8 ? 8 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i) // 8 AOEs in a wave, no need to iterate on all 16
+            aoes[i] = _aoes[i];
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (!Module.Enemies(OID.OrbOfConflagrationRed).All(x => x.IsDead) && !Module.Enemies(OID.OrbOfConflagrationBlue).All(x => x.IsDead))
+        if (spell.Action.ID is (uint)AID.LoyalFlameBlue or (uint)AID.LoyalFlameRed)
         {
-            if ((AID)spell.Action.ID == AID.LoyalFlame)
-            {
-                _activation = Module.CastFinishAt(spell);
-                bluered1 = true;
-                bluered2 = true;
-            }
-            else if ((AID)spell.Action.ID == AID.LoyalFlame2)
-            {
-                _activation = Module.CastFinishAt(spell);
-                redblue1 = true;
-                redblue2 = true;
-            }
+            var isBlue = spell.Action.ID == (uint)AID.LoyalFlameBlue;
+            AddAOEs(Module.Enemies((uint)OID.OrbOfConflagrationBlue), spell, isBlue ? 2.2f : 6.2f);
+            AddAOEs(Module.Enemies((uint)OID.OrbOfConflagrationRed), spell, isBlue ? 6.2f : 2.2f);
+            if (!isBlue)
+                _aoes.Reverse();
+        }
+    }
+
+    private void AddAOEs(List<Actor> orbs, ActorCastInfo spell, float delay)
+    {
+        for (var i = 0; i < orbs.Count; ++i)
+        {
+            var orb = orbs[i];
+            _aoes.Add(new(circle, WPos.ClampToGrid(orb.Position), default, Module.CastFinishAt(spell, delay)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Burn)
-        {
-            bluered1 = false;
-            redblue2 = false;
-            if (++NumCasts == 16)
-            {
-                NumCasts = 0;
-                _activation = default;
-            }
-        }
-        else if ((AID)spell.Action.ID == AID.Burn2)
-        {
-            bluered2 = false;
-            redblue1 = false;
-            ++NumCasts;
-            if (++NumCasts == 16)
-            {
-                NumCasts = 0;
-                _activation = default;
-            }
-        }
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.BurnBlue or (uint)AID.BurnRed)
+            _aoes.RemoveAt(0);
     }
 }
 
 class Drumbeat(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Drumbeat));
-class LeftwardTrisula(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LeftwardTrisula), new AOEShapeCone(65, 90.Degrees()));
-class RightwardParasu(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightwardParasu), new AOEShapeCone(65, 90.Degrees()));
-class ErrantAkasa(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ErrantAkasa), new AOEShapeCone(60, 45.Degrees()));
-class CosmicWeave(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CosmicWeave), new AOEShapeCircle(18));
-class KarmicFlames(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.KarmicFlames2), new AOEShapeCircle(20));
-class YawningHells(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.YawningHells2), 8);
-class InfernalRedemption(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.InfernalRedemption), ActionID.MakeSpell(AID.InfernalRedemption2), 1);
 
-class DivineCall(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
+abstract class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(65f, 90f.Degrees()));
+class LeftwardTrisula(BossModule module) : Cleave(module, AID.LeftwardTrisula);
+class RightwardParasu(BossModule module) : Cleave(module, AID.RightwardParasu);
+
+class ErrantAkasa(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ErrantAkasa), new AOEShapeCone(60f, 45f.Degrees()));
+class CosmicWeave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmicWeave), 18f);
+class KarmicFlames(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KarmicFlames), 20f);
+class YawningHells(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.YawningHells), 8f);
+class InfernalRedemption(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.InfernalRedemptionVisual), ActionID.MakeSpell(AID.InfernalRedemption), 1f);
+
+class DivineCall(BossModule module) : Components.StatusDrivenForcedMarch(module, 2f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
+    private readonly LitPath _lit = module.FindComponent<LitPath>()!;
+    private readonly LeftwardTrisula _aoe1 = module.FindComponent<LeftwardTrisula>()!;
+    private readonly RightwardParasu _aoe2 = module.FindComponent<RightwardParasu>()!;
+
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        return (Module.FindComponent<LeftwardTrisula>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
-        (Module.FindComponent<RightwardParasu>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
-        Module.FindComponent<Burn>() is var burn && burn != null && burn.ActiveAOEs(slot, actor).Any() && !burn.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ||
-        Module.FindComponent<LitPath>() is var lit && lit != null && lit.ActiveAOEs(slot, actor).Any() && !lit.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation));
+        if (_aoe1.Casters.Count != 0 && _aoe1.Casters[0].Check(pos))
+            return true;
+        if (_aoe2.Casters.Count != 0 && _aoe2.Casters[0].Check(pos))
+            return true;
+        var count = _lit.AOEs.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _lit.AOEs[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
     }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Module.PrimaryActor.CastInfo?.IsSpell(AID.DivineCall) ?? false)
-            hints.Add("Apply backwards march debuff");
-        else if (Module.PrimaryActor.CastInfo?.IsSpell(AID.DivineCall2) ?? false)
-            hints.Add("Apply right march debuff");
-        else if (Module.PrimaryActor.CastInfo?.IsSpell(AID.DivineCall3) ?? false)
-            hints.Add("Apply forwards march debuff");
-        else if (Module.PrimaryActor.CastInfo?.IsSpell(AID.DivineCall4) ?? false)
-            hints.Add("Apply left march debuff");
+        switch (Module.PrimaryActor.CastInfo?.Action.ID)
+        {
+            case (uint)AID.DivineCall1:
+                hints.Add("Apply backwards march debuff");
+                break;
+            case (uint)AID.DivineCall2:
+                hints.Add("Apply right march debuff");
+                break;
+            case (uint)AID.DivineCall3:
+                hints.Add("Apply fowards march debuff");
+                break;
+            case (uint)AID.DivineCall4:
+                hints.Add("Apply left march debuff");
+                break;
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var forward = actor.FindStatus(SID.ForwardMarch) != null;
-        var left = actor.FindStatus(SID.LeftFace) != null;
-        var right = actor.FindStatus(SID.RightFace) != null;
-        var backwards = actor.FindStatus(SID.AboutFace) != null;
-        var marching = actor.FindStatus(SID.ForcedMarch) != null;
-        var last = ForcedMovements(actor).LastOrDefault();
-        if (DestinationUnsafe(slot, actor, last.to) && !marching && (forward || left || right || backwards) && ((Module.FindComponent<LitPath>()?.ActiveAOEs(slot, actor).Any() ?? false) || (Module.FindComponent<Burn>()?.ActiveAOEs(slot, actor).Any() ?? false)))
-            hints.Add("Aim into AOEs!");
-        else if (!marching)
+        const string hint = "Aim into AOEs!";
+        var movements = ForcedMovements(actor).ToList();
+        if (movements.Count == 0)
+            return;
+        if (_aoe1.Casters.Count != 0 || _aoe2.Casters.Count != 0)
             base.AddHints(slot, actor, hints);
-
+        else if (_lit.AOEs.Count != 0)
+            if (DestinationUnsafe(slot, actor, movements.LastOrDefault().to))
+                hints.Add(hint);
+            else
+                hints.Add(hint, false);
     }
 }
 
@@ -255,16 +222,19 @@ class DaivadipaStates : StateMachineBuilder
             .ActivateOnEnter<Drumbeat>()
             .ActivateOnEnter<LeftwardTrisula>()
             .ActivateOnEnter<RightwardParasu>()
-            .ActivateOnEnter<DivineCall>()
             .ActivateOnEnter<InfernalRedemption>()
             .ActivateOnEnter<CosmicWeave>()
             .ActivateOnEnter<YawningHells>()
             .ActivateOnEnter<ErrantAkasa>()
             .ActivateOnEnter<KarmicFlames>()
             .ActivateOnEnter<LitPath>()
-            .ActivateOnEnter<Burn>();
+            .ActivateOnEnter<Burn>()
+            .ActivateOnEnter<DivineCall>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1763, NameID = 10269)]
-public class Daivadipa(WorldState ws, Actor primary) : BossModule(ws, primary, new(-608, 811), new ArenaBoundsSquare(24.5f));
+public class Daivadipa(WorldState ws, Actor primary) : BossModule(ws, primary, new(-608f, 811f), new ArenaBoundsSquare(24.5f))
+{
+    protected override bool CheckPull() => base.CheckPull() && (Center - Raid.Player()!.Position).LengthSq() < 625f;
+}

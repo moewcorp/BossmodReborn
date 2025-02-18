@@ -4,21 +4,31 @@ class StrewnBubbles(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape = new(20, 5);
+    private static readonly AOEShapeRect _shape = new(20f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(4);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 4 ? 4 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+            aoes[i] = _aoes[i];
+        return aoes;
+    }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.BubbleStrewer)
+        if (actor.OID == (uint)OID.BubbleStrewer)
         {
-            _aoes.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(10.7f)));
+            _aoes.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(10.7d)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NSphereShatter or AID.SSphereShatter)
+        if (spell.Action.ID is (uint)AID.NSphereShatter or (uint)AID.SSphereShatter)
         {
             var count = _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
             if (count != 1)
@@ -30,34 +40,48 @@ class StrewnBubbles(BossModule module) : Components.GenericAOEs(module)
 
 class RecedingEncroachingTwintides(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly HashSet<AID> castEnd = [AID.NRecedingTwintides, AID.NEncroachingTwintides, AID.NFarTide, AID.NNearTide,
-    AID.SRecedingTwintides, AID.SEncroachingTwintides, AID.SFarTide, AID.SNearTide];
-    private static readonly AOEShapeCircle _shapeOut = new(14);
-    private static readonly AOEShapeDonut _shapeIn = new(8, 60);
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCircle _shapeOut = new(14f);
+    private static readonly AOEShapeDonut _shapeIn = new(8f, 60f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Skip(NumCasts).Take(1);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NRecedingTwintides:
-            case AID.SRecedingTwintides:
-                _aoes.Add(new(_shapeOut, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(_shapeIn, caster.Position, default, Module.CastFinishAt(spell, 3.1f)));
+            case (uint)AID.NRecedingTwintides:
+            case (uint)AID.SRecedingTwintides:
+                AddAOEs(_shapeOut, _shapeIn);
                 break;
-            case AID.NEncroachingTwintides:
-            case AID.SEncroachingTwintides:
-                _aoes.Add(new(_shapeIn, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(_shapeOut, caster.Position, default, Module.CastFinishAt(spell, 3.1f)));
+            case (uint)AID.NEncroachingTwintides:
+            case (uint)AID.SEncroachingTwintides:
+                AddAOEs(_shapeIn, _shapeOut);
                 break;
+        }
+        void AddAOEs(AOEShape shape1, AOEShape shape2)
+        {
+            _aoes.Add(new(shape1, spell.LocXZ, default, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape2, spell.LocXZ, default, Module.CastFinishAt(spell, 3.1f)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (castEnd.Contains((AID)spell.Action.ID))
-            ++NumCasts;
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.NRecedingTwintides:
+            case (uint)AID.NNearTide:
+            case (uint)AID.NEncroachingTwintides:
+            case (uint)AID.NFarTide:
+            case (uint)AID.SRecedingTwintides:
+            case (uint)AID.SNearTide:
+            case (uint)AID.SEncroachingTwintides:
+            case (uint)AID.SFarTide:
+                if (_aoes.Count != 0)
+                    _aoes.RemoveAt(0);
+                ++NumCasts;
+                break;
+        }
     }
 }

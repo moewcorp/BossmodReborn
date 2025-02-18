@@ -2,9 +2,9 @@
 
 // TODO: is it baited on farthest dps or any roles? can subsequent eruptions bait on other targets?
 // casts are 3s long and 2s apart (overlapping)
-class P2Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8)
+class P2Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8)
 {
-    public int NumCastsStarted { get; private set; }
+    public int NumCastsStarted;
     private BitMask _baiters;
 
     public override void Update()
@@ -13,14 +13,14 @@ class P2Eruption(BossModule module) : Components.LocationTargetedAOEs(module, Ac
         {
             var source = ((UWU)Module).Ifrit();
             if (source != null)
-                _baiters = Raid.WithSlot().WhereActor(a => a.Class.IsDD()).SortedByRange(source.Position).TakeLast(2).Mask();
+                _baiters = Raid.WithSlot(false, true, true).WhereActor(a => a.Class.IsDD()).SortedByRange(source.Position).TakeLast(2).Mask();
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_baiters[pcSlot])
-            Arena.AddCircle(pc.Position, Shape.Radius, Colors.Safe);
+            Arena.AddCircle(pc.Position, 8, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -32,7 +32,7 @@ class P2Eruption(BossModule module) : Components.LocationTargetedAOEs(module, Ac
             {
                 if (NumCastsStarted == 0)
                     _baiters.Reset();
-                var (baiterSlot, baiter) = Raid.WithSlot().ExcludedFromMask(_baiters).Closest(spell.LocXZ);
+                var (baiterSlot, baiter) = Raid.WithSlot(false, true, true).ExcludedFromMask(_baiters).Closest(spell.LocXZ);
                 if (baiter != null)
                     _baiters.Set(baiterSlot);
             }

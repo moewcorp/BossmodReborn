@@ -10,6 +10,7 @@ class DRS7States : StateMachineBuilder
         SimplePhase(1, PhaseAdds, "Adds")
             .ActivateOnEnter<Border>()
             .OnExit(() => Module.Arena.Bounds = Border.DefaultBounds)
+            .OnExit(() => Module.Arena.Center = Border.DefaultBounds.Center)
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.IsTargetable;
         DeathPhase(2, PhaseAfterAdds)
             .ActivateOnEnter<RapidBoltsAOE>();

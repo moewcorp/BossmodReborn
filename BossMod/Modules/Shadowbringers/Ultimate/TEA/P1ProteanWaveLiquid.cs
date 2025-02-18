@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
-class P1ProteanWaveLiquidVisBoss(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidVisBoss), new AOEShapeCone(40, 15.Degrees()));
-class P1ProteanWaveLiquidVisHelper(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidVisHelper), new AOEShapeCone(40, 15.Degrees()));
+class P1ProteanWaveLiquidVisBoss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidVisBoss), new AOEShapeCone(40, 15.Degrees()));
+class P1ProteanWaveLiquidVisHelper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidVisHelper), new AOEShapeCone(40, 15.Degrees()));
 
 // single protean ("shadow") that fires in the direction the boss is facing
 class P1ProteanWaveLiquidInvisFixed(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidInvisBoss))
@@ -28,7 +28,7 @@ class P1ProteanWaveLiquidInvisBaited(BossModule module) : Components.GenericBait
     {
         CurrentBaits.Clear();
         if (_source != null)
-            foreach (var target in Raid.WithoutSlot().SortedByRange(_source.Position).Take(4))
+            foreach (var target in Raid.WithoutSlot(false, true, true).SortedByRange(_source.Position).Take(4))
                 CurrentBaits.Add(new(_source, target, _shape));
     }
 }

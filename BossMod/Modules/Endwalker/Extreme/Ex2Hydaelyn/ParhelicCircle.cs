@@ -2,7 +2,7 @@
 
 class ParhelicCircle(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(10);
     private static readonly AOEShapeCircle _circle = new(6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;

@@ -2,7 +2,7 @@
 
 class ChimericSuccession(BossModule module) : Components.UniformStackSpread(module, 6, 20, 4, alwaysShowSpreads: true)
 {
-    public int NumCasts { get; private set; }
+    public int NumCasts;
     private readonly Actor?[] _baitOrder = [null, null, null, null];
     private BitMask _forbiddenStack;
     private DateTime _jumpActivation;
@@ -12,7 +12,7 @@ class ChimericSuccession(BossModule module) : Components.UniformStackSpread(modu
     public override void Update()
     {
         Stacks.Clear();
-        var target = JumpActive ? Raid.WithSlot().ExcludedFromMask(_forbiddenStack).Actors().Farthest(Module.PrimaryActor.Position) : null;
+        var target = JumpActive ? Raid.WithSlot(false, true, true).ExcludedFromMask(_forbiddenStack).Actors().Farthest(Module.PrimaryActor.Position) : null;
         if (target != null)
             AddStack(target, _jumpActivation, _forbiddenStack);
         base.Update();
@@ -42,7 +42,7 @@ class ChimericSuccession(BossModule module) : Components.UniformStackSpread(modu
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var order = (IconID)iconID switch
         {
@@ -70,5 +70,6 @@ class ChimericSuccession(BossModule module) : Components.UniformStackSpread(modu
 }
 
 // TODO: think of a way to show baits before cast start to help aiming outside...
-class SwingingKickFront(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SwingingKickFront), new AOEShapeCone(40, 90.Degrees()));
-class SwingingKickRear(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SwingingKickRear), new AOEShapeCone(40, 90.Degrees()));
+abstract class SwingingKick(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
+class SwingingKickFront(BossModule module) : SwingingKick(module, AID.SwingingKickFront);
+class SwingingKickRear(BossModule module) : SwingingKick(module, AID.SwingingKickRear);

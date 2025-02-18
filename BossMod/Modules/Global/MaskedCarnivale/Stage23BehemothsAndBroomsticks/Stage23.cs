@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x2732, //R=5.8
     Maelstrom = 0x2733, //R=1.0
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -15,13 +15,13 @@ public enum AID : uint
     Trounce = 15256, // Boss->self, 3.5s cast, range 50+R 60-degree cone
     Comet = 15260, // Boss->self, 5.0s cast, single-target
     Comet2 = 15261, // Helper->location, 4.0s cast, range 10 circle
-    EclipticMeteor = 15257, // Boss->location, 10.0s cast, range 50 circle
+    EclipticMeteor = 15257 // Boss->location, 10.0s cast, range 50 circle
 }
 
-class Charybdis(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Charybdis), 6);
+class Charybdis(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charybdis), 6);
 class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Maelstrom));
-class Trounce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(55.8f, 30.Degrees()));
-class Comet(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Comet2), 10);
+class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(55.8f, 30.Degrees()));
+class Comet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Comet2), 10);
 class EclipticMeteor(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.EclipticMeteor), "Use Diamondback!");
 
 class Hints(BossModule module) : BossComponent(module)
@@ -49,7 +49,7 @@ class Stage23States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 633, NameID = 8124)]
 public class Stage23 : BossModule
 {
-    public Stage23(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage23(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }

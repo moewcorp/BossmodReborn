@@ -30,9 +30,9 @@ public enum AID : uint
 }
 
 class GarleanFire(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 8, ActionID.MakeSpell(AID.GarleanFire), m => m.Enemies(OID.FireVoidzone).Where(z => z.EventState != 7), 0.2f);
-class DrillCannons(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DrillCannons), new AOEShapeRect(32.8f, 2.5f));
-class CarpetBomb(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CarpetBomb), 5);
-class Overcharge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Overcharge), new AOEShapeCone(10.8f, 60.Degrees()));
+class DrillCannons(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DrillCannons), new AOEShapeRect(32.8f, 2.5f));
+class CarpetBomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CarpetBomb), 5);
+class Overcharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Overcharge), new AOEShapeCone(10.8f, 60.Degrees()));
 
 class Flamethrower(BossModule module) : Components.GenericAOEs(module)
 {
@@ -88,20 +88,22 @@ public class D292MagitekGunship(WorldState ws, Actor primary) : BossModule(ws, p
     new(-2.84f, -165.86f), new(1.22f, -167.76f), new(15.79f, -167.88f)];
     private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
 
+    private static readonly uint[] trash = [(uint)OID.SixthCohortEques, (uint)OID.SixthCohortLaquearius, (uint)OID.SixthCohortSecutor, (uint)OID.SixthCohortSignifer, (uint)OID.SixthCohortVanguard];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.SixthCohortEques).Concat([PrimaryActor]).Concat(Enemies(OID.SixthCohortLaquearius)).Concat(Enemies(OID.SixthCohortSecutor))
-        .Concat(Enemies(OID.SixthCohortSignifer)).Concat(Enemies(OID.SixthCohortVanguard)));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(trash));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.SixthCohortLaquearius or OID.SixthCohortEques or OID.SixthCohortVanguard or OID.SixthCohortSignifer or OID.SixthCohortSecutor => 2,
-                OID.Boss => 1,
+                OID.SixthCohortLaquearius or OID.SixthCohortEques or OID.SixthCohortVanguard or OID.SixthCohortSignifer or OID.SixthCohortSecutor => 1,
                 _ => 0
             };
         }

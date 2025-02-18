@@ -87,12 +87,13 @@ internal sealed unsafe class DebugInput : IDisposable
 
     private readonly UITree _tree = new();
     private readonly WorldState _ws;
-    //private readonly ActionManagerEx _amex;
+    private readonly AIHints _hints;
+    private readonly MovementOverride _move;
     //private readonly AI.AIController _navi;
-    private Vector2 _dest;
-    private Vector3 _prevPos;
+    private Vector4 _prevPosRot;
     private float _prevSpeed;
-    private bool _jump;
+    private bool _wannaMove;
+    private float _moveDir;
     private bool _gamepadAxisOverrideEnable;
     private float _gamepadAxisOverrideAngle;
     private int _gamepadButtonOverride = -1;
@@ -106,11 +107,13 @@ internal sealed unsafe class DebugInput : IDisposable
     //private float _pmcCameraSpeedH;
     //private float _pmcCameraSpeedV;
 
-    public DebugInput(RotationModuleManager autorot)
+    public DebugInput(RotationModuleManager autorot, MovementOverride move)
     {
         _convertVirtualKey = Service.KeyState.GetType().GetMethod("ConvertVirtualKey", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<ConvertVirtualKeyDelegate>(Service.KeyState);
         _getKeyRef = Service.KeyState.GetType().GetMethod("GetRefValue", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<GetRefValueDelegate>(Service.KeyState);
         _ws = autorot.Bossmods.WorldState;
+        _hints = autorot.Hints;
+        _move = move;
         //_amex = autorot.ActionManager;
         //_navi = new(_amex);
 
@@ -140,38 +143,38 @@ internal sealed unsafe class DebugInput : IDisposable
         var dt = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->FrameDeltaTime;
 
         var player = _ws.Party.Player();
-        var curPos = player?.PosRot.XYZ() ?? new();
-        var speed = (curPos - _prevPos) / dt;
+        var curPosRot = player?.PosRot ?? new();
+        var speed = (curPosRot.XYZ() - _prevPosRot.XYZ()) / dt;
         var speedAbs = speed.Length();
         var accel = (speedAbs - _prevSpeed) / dt;
-        _prevPos = curPos;
+        var rotSpeed = (curPosRot.W - _prevPosRot.W).Radians().Normalized() / dt;
+        //if (curPosRot.W != _prevPosRot.W)
+        //    Service.Log($"ROT: {_prevPosRot.W.Radians()} -> {curPosRot.W.Radians()} over {dt} (s={rotSpeed})");
+        _prevPosRot = curPosRot;
         _prevSpeed = speedAbs;
-        ImGui.TextUnformatted($"Speed={speedAbs:f3}, SpeedH={speed.XZ().Length():f3}, SpeedV={speed.Y:f3}, Accel={accel:f3}, Azimuth={Angle.FromDirection(new(speed.XZ()))}, Altitude={Angle.FromDirection(new(speed.Y, speed.XZ().Length()))}");
+        ImGui.TextUnformatted($"Speed={speedAbs:f3}, SpeedH={speed.XZ().Length():f3}, SpeedV={speed.Y:f3}, RSpeed={rotSpeed}, Accel={accel:f3}, Azimuth={Angle.FromDirection(new(speed.XZ()))}, Altitude={Angle.FromDirection(new(speed.Y, speed.XZ().Length()))}");
+        ImGui.TextUnformatted($"MO: desired={_move.DesiredDirection}, user={_move.UserMove}, actual={_move.ActualMove}");
         //Service.Log($"Speed: {speedAbs:f3}, accel: {accel:f3}");
 
-        ImGui.Checkbox("Jump!", ref _jump);
-        ImGui.InputFloat2("Destination", ref _dest);
+        ImGui.SliderFloat("Move direction", ref _moveDir, -180, 180);
         ImGui.SameLine();
-        if (ImGui.Button("Move!"))
+        if (ImGui.Button(_wannaMove ? "Cancel move" : "Move!"))
         {
-            //_navi.NaviTargetPos = new(_dest);
+            _wannaMove ^= true;
+            //var toTarget = _navi.NaviTargetPos.Value - curPos;
+            //_navi.NaviTargetRot = toTarget.Normalized();
 
-            ////var toTarget = _navi.NaviTargetPos.Value - curPos;
-            ////_navi.NaviTargetRot = toTarget.Normalized();
-
-            ////var cameraFacing = _navi.CameraFacing;
-            ////var dot = cameraFacing.Dot(_navi.NaviTargetRot.Value);
-            ////if (dot < -0.707107f)
-            ////    _navi.NaviTargetRot = -_navi.NaviTargetRot.Value;
-            ////else if (dot < 0.707107f)
-            ////    _navi.NaviTargetRot = cameraFacing.OrthoL().Dot(_navi.NaviTargetRot.Value) > 0 ? _navi.NaviTargetRot.Value.OrthoR() : _navi.NaviTargetRot.Value.OrthoL();
-
+            //var cameraFacing = _navi.CameraFacing;
+            //var dot = cameraFacing.Dot(_navi.NaviTargetRot.Value);
+            //if (dot < -0.707107f)
+            //    _navi.NaviTargetRot = -_navi.NaviTargetRot.Value;
+            //else if (dot < 0.707107f)
+            //    _navi.NaviTargetRot = cameraFacing.OrthoL().Dot(_navi.NaviTargetRot.Value) > 0 ? _navi.NaviTargetRot.Value.OrthoR() : _navi.NaviTargetRot.Value.OrthoL();
             //_navi.WantJump = _jump;
         }
-        ImGui.SameLine();
-        if (ImGui.Button("Cancel move"))
+        if (_wannaMove)
         {
-            //_navi.Clear();
+            _move.DesiredDirection = _moveDir.Degrees().ToDirection().ToVec3();
         }
         //_navi.Update(player);
 

@@ -4,7 +4,6 @@ public sealed class ClassSMNUtility(RotationModuleManager manager, Actor player)
 {
     public enum Track { RadiantAegis = SharedTrack.Count }
     public enum AegisStrategy { None, Use }
-    public bool HasEffect<SID>(SID sid) where SID : Enum => Player.FindStatus((uint)(object)sid, Player.InstanceID) != null; //Checks if Status effect is on self
 
     public static readonly ActionID IDLimitBreak3 = ActionID.MakeSpell(SMN.AID.Teraflare);
 
@@ -17,16 +16,18 @@ public sealed class ClassSMNUtility(RotationModuleManager manager, Actor player)
             .AddOption(AegisStrategy.None, "None", "No use")
             .AddOption(AegisStrategy.Use, "Use", "Use Radiant Aegis", 60, 30, ActionTargets.Self, 2);
 
+        //TODO: Rekindle here or inside own module?
+
         return res;
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
-        ExecuteShared(strategy, IDLimitBreak3);
+        ExecuteShared(strategy, IDLimitBreak3, primaryTarget);
 
         var radi = strategy.Option(Track.RadiantAegis);
-        var hasAegis = HasEffect(SMN.SID.RadiantAegis);
+        var hasAegis = StatusDetails(Player, SMN.SID.RadiantAegis, Player.InstanceID, 30).Left > 0.1f;
         if (radi.As<AegisStrategy>() != AegisStrategy.None && !hasAegis)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(SMN.AID.RadiantAegis), primaryTarget, radi.Priority(), radi.Value.ExpireIn);
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(SMN.AID.RadiantAegis), Player, radi.Priority(), radi.Value.ExpireIn);
     }
 }

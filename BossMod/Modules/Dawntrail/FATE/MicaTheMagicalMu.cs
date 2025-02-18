@@ -2,16 +2,17 @@
 
 public enum OID : uint
 {
-    Boss = 0x43EB, // R7.999, x1
-    Helper = 0x43EC, // R0.500, x0 (spawn during fight)
-    CardHelper = 0x43ED, // R0.500, x0 (spawn during fight)
-    MagicalHoop = 0x43F4, // R1.000, x0 (spawn during fight)
-    Card1 = 0x43EE, // R1.000, x0 (spawn during fight)
-    Card2 = 0x43EF, // R1.000, x0 (spawn during fight)
-    Card3 = 0x43F0, // R1.000, x0 (spawn during fight)
-    Card4 = 0x43F1, // R1.000, x0 (spawn during fight)
-    Card5 = 0x43F2, // R1.000, x0 (spawn during fight)
-    Card6 = 0x43F3, // R1.000, x0 (spawn during fight)
+    Boss = 0x43EB, // R7.999
+
+    CardHelper = 0x43ED, // R0.5
+    MagicalHoop = 0x43F4, // R1.0
+    Card1 = 0x43EE, // R1.0
+    Card2 = 0x43EF, // R1.0
+    Card3 = 0x43F0, // R1.0
+    Card4 = 0x43F1, // R1.0
+    Card5 = 0x43F2, // R1.0
+    Card6 = 0x43F3, // R1.0
+    Helper = 0x43EC
 }
 
 public enum AID : uint
@@ -76,7 +77,7 @@ public enum AID : uint
 
 class Draw(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly IReadOnlyList<Actor>[] _cards = [
+    private readonly List<Actor>[] _cards = [
         module.Enemies(OID.Card1),
         module.Enemies(OID.Card2),
         module.Enemies(OID.Card3),
@@ -91,11 +92,14 @@ class Draw(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_safeZones.Count > 0)
-            for (int i = 0; i < _cards.Length; ++i)
+        if (_safeZones.Count != 0)
+            for (var i = 0; i < 6; ++i)
+            {
+                var card = _cards[i];
                 if (i != _safeZones[0])
-                    foreach (var a in _cards[i])
-                        yield return new(_shape, a.Position, default, _activation);
+                    for (var j = 0; j < _cards[j].Count; ++j)
+                        yield return new(_shape, card[j].Position, default, _activation);
+            }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -137,7 +141,7 @@ class Draw(BossModule module) : Components.GenericAOEs(module)
         if ((AID)spell.Action.ID == AID.CardTrickAOEFake)
         {
             _activation = DateTime.MaxValue;
-            if (_safeZones.Count > 0)
+            if (_safeZones.Count != 0)
                 _safeZones.RemoveAt(0);
         }
     }
@@ -162,14 +166,14 @@ class FlourishingBow(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             _aoes.SortBy(aoe => aoe.Activation);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.TwinklingFlourishLong or AID.TwinklingFlourishShort or AID.TwinklingRingLong or AID.TwinklingRingShort)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.TwinklingFlourishLong or AID.TwinklingFlourishShort or AID.TwinklingRingLong or AID.TwinklingRingShort)
         {
             _aoes.RemoveAt(0);
         }
@@ -188,14 +192,14 @@ class DoubleMisdirect(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.DoubleMisdirectAOELong or AID.DoubleMisdirectAOEShort)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             _aoes.SortBy(aoe => aoe.Activation);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DoubleMisdirectAOELong or AID.DoubleMisdirectAOEShort && _aoes.Count > 0)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.DoubleMisdirectAOELong or AID.DoubleMisdirectAOEShort)
         {
             _aoes.RemoveAt(0);
         }
@@ -206,10 +210,7 @@ class RollingStarlight(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape1 = new(20, 5);
-    private static readonly AOEShapeRect _shape2 = new(29, 5);
-    private static readonly AOEShapeRect _shape3 = new(43, 5);
-    private static readonly AOEShapeRect _shape4 = new(52, 5);
+    private static readonly AOEShapeRect[] rects = [new(20, 5), new(29, 5), new(43, 5), new(52, 5)];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
@@ -217,15 +218,15 @@ class RollingStarlight(BossModule module) : Components.GenericAOEs(module)
     {
         var shape = (AID)spell.Action.ID switch
         {
-            AID.RollingStarlightVisual1 => _shape1,
-            AID.RollingStarlightVisual2 => _shape2,
-            AID.RollingStarlightVisual3 => _shape3,
-            AID.RollingStarlightVisual4 => _shape4,
+            AID.RollingStarlightVisual1 => rects[0],
+            AID.RollingStarlightVisual2 => rects[1],
+            AID.RollingStarlightVisual3 => rects[2],
+            AID.RollingStarlightVisual4 => rects[3],
             _ => null
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 5 + _aoes.Count * 0.6f)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 5 + _aoes.Count * 0.6f)));
         }
     }
 
@@ -238,8 +239,8 @@ class RollingStarlight(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MagicalHat(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TwinkleToss), new AOEShapeRect(21, 2.5f, 21), 4);
-class Shimmerstorm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ShimmerstormAOE), 6);
+class MagicalHat(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwinkleToss), new AOEShapeRect(42, 2.5f), 4);
+class Shimmerstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ShimmerstormAOE), 6);
 class Shimmerstrike(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.ShimmerstrikeAOE), new AOEShapeCircle(6), true);
 class SparkOfImagination(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SparkOfImaginationAOE));
 
@@ -259,5 +260,8 @@ class MicaTheMagicalMuStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1922, NameID = 13049)]
-public class MicaTheMagicalMu(WorldState ws, Actor primary) : BossModule(ws, primary, new(791, 593), new ArenaBoundsRect(21, 20));
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1922, NameID = 13049)]
+public class MicaTheMagicalMu(WorldState ws, Actor primary) : BossModule(ws, primary, new(791, 593), new ArenaBoundsRect(20.5f, 19.5f))
+{
+    protected override bool CheckPull() => base.CheckPull() && (Center - Raid.Player()!.Position).LengthSq() < 420;
+}

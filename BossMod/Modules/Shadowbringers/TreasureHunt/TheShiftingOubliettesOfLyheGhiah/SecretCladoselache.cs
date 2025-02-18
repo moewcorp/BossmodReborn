@@ -5,6 +5,7 @@ public enum OID : uint
     Boss = 0x3027, //R=2.47
     SecretShark = 0x3028, //R=3.0 
     KeeperOfKeys = 0x3034, // R3.23
+    FuathTrickster = 0x3033, // R0.75
     Helper = 0x233C
 }
 
@@ -32,7 +33,6 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    spreadmarker = 135, // player
     RotateCCW = 168, // Boss
     RotateCW = 167 // Boss
 }
@@ -42,14 +42,14 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
     private Angle _increment;
     private Angle _rotation;
     private DateTime _activation;
-    private static readonly AOEShapeCone _shape = new(40, 30.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 30f.Degrees());
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = (IconID)iconID switch
+        var increment = iconID switch
         {
-            IconID.RotateCW => -60.Degrees(),
-            IconID.RotateCCW => 60.Degrees(),
+            (uint)IconID.RotateCW => -60.Degrees(),
+            (uint)IconID.RotateCCW => 60.Degrees(),
             _ => default
         };
         if (increment != default)
@@ -61,18 +61,17 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.PelagicCleaverFirst)
+        if (spell.Action.ID == (uint)AID.PelagicCleaverFirst)
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell);
-        }
-        if (_rotation != default)
             InitIfReady(caster);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.PelagicCleaverFirst or AID.PelagicCleaverRest)
+        if (spell.Action.ID is (uint)AID.PelagicCleaverFirst or (uint)AID.PelagicCleaverRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 
@@ -87,15 +86,15 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
     }
 }
 
-class PelagicCleaver(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver), new AOEShapeCone(40, 30.Degrees()));
-class TidalGuillotine(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine), new AOEShapeCircle(13));
+class PelagicCleaver(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PelagicCleaver), new AOEShapeCone(40f, 30f.Degrees()));
+class TidalGuillotine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TidalGuillotine), 13f);
 class ProtolithicPuncture(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ProtolithicPuncture));
 class BiteAndRun(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.BiteAndRun), 2.5f);
-class AquaticLance(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AquaticLance), 8);
+class AquaticLance(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AquaticLance), 8f);
 
-class Spin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCircle(11));
-class Mash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Mash), new AOEShapeRect(13, 2));
-class Scoop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Scoop), new AOEShapeCone(15, 60.Degrees()));
+class Spin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spin), 11f);
+class Mash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mash), new AOEShapeRect(13f, 2f));
+class Scoop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Scoop), new AOEShapeCone(15f, 60f.Degrees()));
 
 class SecretCladoselacheStates : StateMachineBuilder
 {
@@ -111,29 +110,44 @@ class SecretCladoselacheStates : StateMachineBuilder
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
-            .Raw.Update = () => module.Enemies(OID.SecretShark).Concat([module.PrimaryActor]).Concat(module.Enemies(OID.KeeperOfKeys)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(SecretCladoselache.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9778)]
-public class SecretCladoselache(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(19))
+public class SecretCladoselache(WorldState ws, Actor primary) : THTemplate(ws, primary)
 {
+    private static readonly uint[] bonusAdds = [(uint)OID.FuathTrickster, (uint)OID.KeeperOfKeys];
+    public static readonly uint[] All = [(uint)OID.Boss, (uint)OID.SecretShark, .. bonusAdds];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SecretShark));
-        Arena.Actors(Enemies(OID.KeeperOfKeys), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.SecretShark));
+        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.KeeperOfKeys => 3,
-                OID.SecretShark => 2,
-                OID.Boss => 1,
+                (uint)OID.FuathTrickster => 3,
+                (uint)OID.KeeperOfKeys => 2,
+                (uint)OID.SecretShark => 1,
                 _ => 0
             };
         }

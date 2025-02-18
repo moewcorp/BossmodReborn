@@ -5,15 +5,15 @@ class ColossalStrike(BossModule module) : Components.SingleTargetCast(module, Ac
 class ColossalCharge1(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.ColossalCharge1), 7);
 class ColossalCharge2(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.ColossalCharge2), 7);
 
-class ColossalLaunch(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ColossalLaunch), new AOEShapeRect(20, 20));
-class ExplosionAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ExplosionAOE), new AOEShapeCircle(15));
-class ExplosionDonut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ExplosionDonut), new AOEShapeDonut(5, 17));
+class ColossalLaunch(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColossalLaunch), new AOEShapeRect(20, 20));
+class ExplosionAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExplosionAOE), 15);
+class ExplosionDonut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExplosionDonut), new AOEShapeDonut(5, 17));
 
-class ColossalSlam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(60, 30.Degrees()));
-class ColossalSwing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ColossalSwing), new AOEShapeCone(60, 180.Degrees()));
+class ColossalSlam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(60, 30.Degrees()));
+class ColossalSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColossalSwing), new AOEShapeCone(60, 180.Degrees()));
 
 class SubterraneanShudder(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SubterraneanShudder));
-class RunawaySludge(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RunawaySludge), 9);
+class RunawaySludge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RunawaySludge), 9);
 
 class Shockwave(BossModule module) : Components.Knockback(module)
 {
@@ -28,8 +28,8 @@ class Shockwave(BossModule module) : Components.Knockback(module)
         {
             _sources.Clear();
             // knockback rect always happens through center, so create two sources with origin at center looking orthogonally
-            _sources.Add(new(Module.Center, 15, Module.CastFinishAt(spell), _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
-            _sources.Add(new(Module.Center, 15, Module.CastFinishAt(spell), _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(Arena.Center, 15, Module.CastFinishAt(spell), _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
+            _sources.Add(new(Arena.Center, 15, Module.CastFinishAt(spell), _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
         }
     }
 

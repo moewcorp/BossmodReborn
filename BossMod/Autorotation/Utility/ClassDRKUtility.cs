@@ -3,12 +3,10 @@
 public sealed class ClassDRKUtility(RotationModuleManager manager, Actor player) : RoleTankUtility(manager, player)
 {
     public enum Track { DarkMind = SharedTrack.Count, ShadowWall, LivingDead, TheBlackestNight, Oblation, DarkMissionary, Shadowstride }
-    public enum WallOption { None, ShadowWall, ShadowedVigil }
-    public enum TBNStrategy { None, Force }
-    public enum OblationStrategy { None, Force }
-    public enum DashStrategy { None, GapClose } //GapCloser strategy
-    public bool InMeleeRange(Actor? target) => Player.DistanceToHitbox(target) <= 3; //Checks if we're inside melee range
-    public bool TargetHasEffect<SID>(Actor target, SID sid) where SID : Enum => target?.FindStatus((uint)(object)sid, Player.InstanceID) != null; //Checks if Status effect is on target
+    public enum WallOption { None, ShadowWall, ShadowedVigil } //ShadowWall strategy
+    public enum TBNStrategy { None, Force } //TheBlackestNight strategy
+    public enum OblationStrategy { None, Force, ForceHold1 } //Oblation strategy
+    public enum DashStrategy { None, GapClose, GapCloseHold1 } //GapCloser strategy
 
     public static readonly ActionID IDLimitBreak3 = ActionID.MakeSpell(DRK.AID.DarkForce);
     public static readonly ActionID IDStanceApply = ActionID.MakeSpell(DRK.AID.Grit);
@@ -37,6 +35,7 @@ public sealed class ClassDRKUtility(RotationModuleManager manager, Actor player)
         res.Define(Track.Oblation).As<OblationStrategy>("Oblation", "", 550) //60s (120s total), 10s duration, 2 charges
             .AddOption(OblationStrategy.None, "None", "Do not use automatically")
             .AddOption(OblationStrategy.Force, "Use", "Use Oblation", 60, 10, ActionTargets.Self | ActionTargets.Party, 82)
+            .AddOption(OblationStrategy.ForceHold1, "UseHold1", "Use Oblation; Holds 1 charge for manual usage", 60, 10, ActionTargets.Self | ActionTargets.Party, 82)
             .AddAssociatedActions(DRK.AID.Oblation);
 
         DefineSimpleConfig(res, Track.DarkMissionary, "DarkMissionary", "Mission", 220, DRK.AID.DarkMissionary, 15); //90s CD, 15s duration
@@ -44,6 +43,7 @@ public sealed class ClassDRKUtility(RotationModuleManager manager, Actor player)
         res.Define(Track.Shadowstride).As<DashStrategy>("Shadowstride", "Dash", 20)
             .AddOption(DashStrategy.None, "None", "No use")
             .AddOption(DashStrategy.GapClose, "GapClose", "Use as gapcloser if outside melee range", 30, 0, ActionTargets.Hostile, 56)
+            .AddOption(DashStrategy.GapCloseHold1, "GapCloseHold1", "Use as gapcloser if outside melee range; conserves 1 charge for manual usage", 60, 0, ActionTargets.Hostile, 84)
             .AddAssociatedActions(DRK.AID.Shadowstride);
 
         return res;
@@ -57,28 +57,27 @@ public sealed class ClassDRKUtility(RotationModuleManager manager, Actor player)
         ExecuteSimple(strategy.Option(Track.DarkMissionary), DRK.AID.DarkMissionary, Player); //Execution of DarkMissionary
 
         //TBN execution
+        var canTBN = ActionUnlocked(ActionID.MakeSpell(DRK.AID.TheBlackestNight)) && Player.HPMP.CurMP >= 3000;
         var tbn = strategy.Option(Track.TheBlackestNight);
         var tbnTarget = ResolveTargetOverride(tbn.Value) ?? CoTank() ?? primaryTarget ?? Player; //Smart-Targets Co-Tank if set to Automatic, if no Co-Tank then targets self
-        var tbnight = tbn.As<TBNStrategy>() switch
-        {
-            TBNStrategy.Force => DRK.AID.TheBlackestNight,
-            _ => default
-        };
-        if (tbnight != default && Player.HPMP.CurMP >= 3000)
+        if (canTBN && tbn.As<TBNStrategy>() == TBNStrategy.Force)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(DRK.AID.TheBlackestNight), tbnTarget, tbn.Priority(), tbn.Value.ExpireIn);
 
         //Oblation execution
-        var obl = strategy.Option(Track.Oblation);
-        var oblTarget = ResolveTargetOverride(obl.Value) ?? primaryTarget ?? Player; //Smart-Targets Co-Tank if set to Automatic, if no Co-Tank then targets self
-        var oblStatus = TargetHasEffect(oblTarget, DRK.SID.Oblation); //Checks if status is present
-        var oblat = obl.As<OblationStrategy>() switch
+        var canObl = ActionUnlocked(ActionID.MakeSpell(DRK.AID.Oblation));
+        var oblation = strategy.Option(Track.Oblation);
+        var oblationStrat = oblation.As<OblationStrategy>();
+        var oblationTarget = ResolveTargetOverride(oblation.Value) ?? primaryTarget ?? Player; //Smart-Targets Co-Tank if set to Automatic, if no Co-Tank then targets self
+        var oblationStatus = StatusDetails(oblationTarget, DRK.SID.Oblation, Player.InstanceID).Left > 0.1f;
+        var oblationCD = World.Client.Cooldowns[ActionDefinitions.Instance.Spell(DRK.AID.Oblation)!.MainCooldownGroup].Remaining;
+        if (canObl && oblationStrat != OblationStrategy.None && !oblationStatus)
         {
-            OblationStrategy.Force => DRK.AID.Oblation,
-            _ => default
-        };
-        if (oblat != default && !oblStatus)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(DRK.AID.Oblation), oblTarget, obl.Priority(), obl.Value.ExpireIn);
+            if ((oblationStrat == OblationStrategy.Force) ||
+                (oblationStrat == OblationStrategy.ForceHold1 && oblationCD < 0.6f))
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(DRK.AID.Oblation), oblationTarget, oblation.Priority(), oblation.Value.ExpireIn);
+        }
 
+        //Shadow Wall / Vigil execution
         var wall = strategy.Option(Track.ShadowWall);
         var wallAction = wall.As<WallOption>() switch
         {
@@ -89,14 +88,20 @@ public sealed class ClassDRKUtility(RotationModuleManager manager, Actor player)
         if (wallAction != default)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(wallAction), Player, wall.Priority(), wall.Value.ExpireIn); //Checking proper use of said option
 
+        //Shadowstride execution
+        var dash = strategy.Option(Track.Shadowstride);
         var dashStrategy = strategy.Option(Track.Shadowstride).As<DashStrategy>();
-        if (ShouldUseDash(dashStrategy, primaryTarget))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(DRK.AID.Shadowstride), primaryTarget, obl.Priority());
+        var dashTarget = ResolveTargetOverride(dash.Value) ?? primaryTarget; //Smart-Targeting
+        var distance = Player.DistanceToHitbox(dashTarget);
+        var dashCD = World.Client.Cooldowns[ActionDefinitions.Instance.Spell(DRK.AID.Shadowstride)!.MainCooldownGroup].Remaining;
+        var shouldDash = dashStrategy switch
+        {
+            DashStrategy.None => false,
+            DashStrategy.GapClose => distance is > 3f and <= 20f && dashCD <= 30.5f,
+            DashStrategy.GapCloseHold1 => distance is > 3f and <= 20f && dashCD < 0.6f,
+            _ => false,
+        };
+        if (shouldDash)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(DRK.AID.Shadowstride), dashTarget, dash.Priority(), dash.Value.ExpireIn);
     }
-    private bool ShouldUseDash(DashStrategy strategy, Actor? primaryTarget) => strategy switch
-    {
-        DashStrategy.None => false,
-        DashStrategy.GapClose => !InMeleeRange(primaryTarget),
-        _ => false,
-    };
 }

@@ -3,7 +3,7 @@
 // both phases use radiant plumes
 class TitanIfrit(BossModule module) : BossComponent(module)
 {
-    private readonly List<(Actor, AOEShapeCircle)> _activeLocationTargetedAOEs = [];
+    private readonly List<(Actor, AOEShapeCircle)> _activeSimpleAOEs = [];
     private readonly List<Actor> _crimsonCyclone = [];
 
     private static readonly AOEShapeCircle _aoeRadiantPlume = new(8);
@@ -13,13 +13,13 @@ class TitanIfrit(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_activeLocationTargetedAOEs.Any(e => e.Item2.Check(actor.Position, e.Item1.CastInfo!.LocXZ)) || _crimsonCyclone.Any(a => _aoeCrimsonCyclone.Check(actor.Position, a)))
+        if (_activeSimpleAOEs.Any(e => e.Item2.Check(actor.Position, e.Item1.CastInfo!.LocXZ)) || _crimsonCyclone.Any(a => _aoeCrimsonCyclone.Check(actor.Position, a)))
             hints.Add("GTFO from aoe!");
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach (var (a, aoe) in _activeLocationTargetedAOEs)
+        foreach (var (a, aoe) in _activeSimpleAOEs)
             aoe.Draw(Arena, a.CastInfo!.LocXZ);
         foreach (var a in _crimsonCyclone)
             _aoeCrimsonCyclone.Draw(Arena, a);
@@ -30,13 +30,13 @@ class TitanIfrit(BossModule module) : BossComponent(module)
         switch ((AID)spell.Action.ID)
         {
             case AID.RadiantPlume:
-                _activeLocationTargetedAOEs.Add((caster, _aoeRadiantPlume));
+                _activeSimpleAOEs.Add((caster, _aoeRadiantPlume));
                 break;
             case AID.WeightOfTheLand:
-                _activeLocationTargetedAOEs.Add((caster, _aoeWeightOfLand));
+                _activeSimpleAOEs.Add((caster, _aoeWeightOfLand));
                 break;
             case AID.Eruption:
-                _activeLocationTargetedAOEs.Add((caster, _aoeEruption));
+                _activeSimpleAOEs.Add((caster, _aoeEruption));
                 break;
             case AID.CrimsonCyclone:
                 _crimsonCyclone.Add(caster);
@@ -51,7 +51,7 @@ class TitanIfrit(BossModule module) : BossComponent(module)
             case AID.RadiantPlume:
             case AID.WeightOfTheLand:
             case AID.Eruption:
-                _activeLocationTargetedAOEs.RemoveAll(e => e.Item1 == caster);
+                _activeSimpleAOEs.RemoveAll(e => e.Item1 == caster);
                 break;
             case AID.CrimsonCyclone:
                 _crimsonCyclone.Remove(caster);

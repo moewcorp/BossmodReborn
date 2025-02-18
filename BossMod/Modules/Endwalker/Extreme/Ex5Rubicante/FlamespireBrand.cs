@@ -27,7 +27,7 @@ class Welts(BossModule module) : Components.GenericStackSpread(module, true)
                 NextMechanic = Mechanic.Spreads;
                 Stacks.Clear();
                 Spreads.Clear();
-                foreach (var t in Raid.WithoutSlot())
+                foreach (var t in Raid.WithoutSlot(false, true, true))
                     Spreads.Add(new(t, 6));
                 break;
             case AID.StingingWelt:

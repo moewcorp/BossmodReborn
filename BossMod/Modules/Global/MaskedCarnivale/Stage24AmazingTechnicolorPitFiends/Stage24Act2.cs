@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x2736, //R=2.0
     ArenaViking = 0x2737, //R=1.0
-    ArenaMagus = 0x2738, //R=1.0
+    ArenaMagus = 0x2738 //R=1.0
 }
 
 public enum AID : uint
@@ -17,12 +17,12 @@ public enum AID : uint
     Fire = 14266, // 2738->player, 1.0s cast, single-target
     Starstorm = 15317, // 2738->location, 3.0s cast, range 5 circle
     RagingAxe = 15316, // 2737->self, 3.0s cast, range 4+R 90-degree cone
-    Silence = 15321, // 2736->player, 5.0s cast, single-target
+    Silence = 15321 // 2736->player, 5.0s cast, single-target
 }
 
-class Starstorm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
-class Mechanogravity(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Mechanogravity), 6);
-class RagingAxe(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
+class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
+class Mechanogravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mechanogravity), 6);
+class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
 class CondensedLibra(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.CondensedLibra), "Use Diamondback!");
 class TripleHit(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TripleHit), "Use Diamondback!");
 class Silence(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.Silence));
@@ -65,7 +65,7 @@ class Stage24Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8128, SortOrder = 2)]
 public class Stage24Act2 : BossModule
 {
-    public Stage24Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage24Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
@@ -79,12 +79,12 @@ public class Stage24Act2 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.ArenaMagus or OID.ArenaViking => 1, //TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
-                OID.Boss => 0,
                 _ => 0
             };
         }

@@ -23,49 +23,60 @@ public enum AID : uint
 
 class FlameBreath(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCone cone = new(50, 15.Degrees());
-    private static readonly float intercardinalDistance = 16 * MathF.Sqrt(2);
+    private readonly List<AOEInstance> _aoes = new(5);
+    private static readonly AOEShapeCone cone = new(50f, 15f.Degrees());
+    private const float IntercardinalDistance = 22.627417f;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            foreach (var a in _aoes)
-                if ((a.Activation - _aoes[0].Activation).TotalSeconds <= 1)
-                    yield return a;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        List<AOEInstance> aoes = new(5);
+        var firstact = _aoes[0].Activation;
+        for (var i = 0; i < count; ++i)
+        {
+            var a = _aoes[i];
+            if ((a.Activation - firstact).TotalSeconds < 1d)
+                aoes.Add(a);
+        }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.FlameBreathVisual3)
+        if (spell.Action.ID == (uint)AID.FlameBreathVisual3)
         {
-            var activation = WorldState.FutureTime(9.6f);
+            var activation = WorldState.FutureTime(9.6d);
 
-            if ((caster.Position - Arena.Center).LengthSq() > 625)
-                _aoes.Add(new(cone, CalculatePosition(caster), caster.Rotation, activation));
+            if ((caster.Position - Arena.Center).LengthSq() > 625f)
+                _aoes.Add(new(cone, WPos.ClampToGrid(CalculatePosition(caster)), caster.Rotation, activation));
             else
-                _aoes.Add(new(cone, RoundPosition(caster.Position), caster.Rotation, activation));
+                _aoes.Add(new(cone, WPos.ClampToGrid(RoundPosition(caster.Position)), caster.Rotation, activation));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.FlameBreath)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.FlameBreath)
             _aoes.RemoveAt(0);
     }
 
     private static WPos CalculatePosition(Actor caster)
     {
         var isIntercardinal = IsCasterIntercardinal(caster);
-        var distance = isIntercardinal ? intercardinalDistance : 22;
+        var distance = isIntercardinal ? IntercardinalDistance : 22;
         var position = caster.Position + distance * caster.Rotation.ToDirection();
-        return RoundPosition(position);
+        var pos = RoundPosition(position);
+        // the top left add is slightly off for some reason
+        return pos == new WPos(-315f, -315f) ? new(-315.5f, -315.5f) : pos;
     }
 
     private static bool IsCasterIntercardinal(Actor caster)
     {
-        foreach (var angle in Angle.AnglesIntercardinals)
-            if (caster.Rotation.AlmostEqual(angle, Angle.DegToRad))
+        for (var i = 0; i < 4; ++i)
+            if (caster.Rotation.AlmostEqual(Angle.AnglesIntercardinals[i], Angle.DegToRad))
                 return true;
         return false;
     }
@@ -73,7 +84,7 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module)
     private static WPos RoundPosition(WPos position) => new(MathF.Round(position.X * 2) * 0.5f, MathF.Round(position.Z * 2) * 0.5f);
 }
 
-class PiercingLaser(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(40, 2.5f));
+class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(40f, 2.5f));
 
 class DD20CloningNodeStates : StateMachineBuilder
 {
@@ -86,4 +97,4 @@ class DD20CloningNodeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 898, NameID = 12261)]
-public class DD20CloningNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300, -300), new ArenaBoundsCircle(19.5f));
+public class DD20CloningNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300f, -300f), new ArenaBoundsCircle(19.5f));

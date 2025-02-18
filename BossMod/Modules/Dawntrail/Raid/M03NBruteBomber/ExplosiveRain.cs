@@ -7,12 +7,12 @@ class ExplosiveRainConcentric(BossModule module) : Components.ConcentricAOEs(mod
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ExplosiveRain1)
-            AddSequence(Module.Center, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -21,9 +21,9 @@ class ExplosiveRainConcentric(BossModule module) : Components.ConcentricAOEs(mod
                 AID.ExplosiveRain3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, Module.Center, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
         }
     }
 }
 
-class ExplosiveRainCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ExplosiveRain4), new AOEShapeCircle(6));
+class ExplosiveRainCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExplosiveRain4), 6);

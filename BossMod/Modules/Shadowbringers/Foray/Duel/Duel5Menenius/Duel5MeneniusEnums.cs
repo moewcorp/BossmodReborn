@@ -11,6 +11,7 @@ public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
     Teleport = 23903, // Boss->location, no cast, single-target
+
     CallousCrossfire = 23901, // Boss->self, 4.0s cast, single-target
     Aethershot = 23902, // MagitekTurret->player, no cast, range 4 circle
     MagitekMinefield = 23887, // Boss->self, 3.0s cast, single-target
@@ -39,7 +40,7 @@ public enum AID : uint
     ProactiveMunitionTrackingStart = 23897,
     ProactiveMunitionTrackingMove = 23898,
     ReactiveMunition = 23894,
-    SenseWeakness = 23893,
+    SenseWeakness = 23893
 }
 
 public enum SID : uint
@@ -50,5 +51,5 @@ public enum SID : uint
     LeftFace = 1295, // none->player, extra=0x0
     RightFace = 1296, // none->player, extra=0x0
     ForcedMarch = 1257, // none->player, extra=0x4/0x1/0x2/0x8
-    AccelerationBomb = 1072,
+    AccelerationBomb = 1072
 }

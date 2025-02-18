@@ -6,7 +6,6 @@ class V021YozakuraStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            .ActivateOnEnter<Components.StayInBounds>()
             //Right No Dogu
             .ActivateOnEnter<RootArrangement>()
             .ActivateOnEnter<AccursedSeedling>()
@@ -15,9 +14,9 @@ class V021YozakuraStates : StateMachineBuilder
             //Left Windy
             .ActivateOnEnter<WindblossomWhirl>()
             .ActivateOnEnter<LevinblossomStrike>()
+            .ActivateOnEnter<Mudrain>()
             .ActivateOnEnter<DriftingPetals>()
             //Left Rainy
-            .ActivateOnEnter<Mudrain>()
             .ActivateOnEnter<Icebloom>()
             .ActivateOnEnter<Shadowflight>()
             .ActivateOnEnter<MudPie>()
@@ -29,7 +28,6 @@ class V021YozakuraStates : StateMachineBuilder
             .ActivateOnEnter<LevinblossomLance>()
             .ActivateOnEnter<TatamiGaeshi>()
             //Standard
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<GloryNeverlasting>()
             .ActivateOnEnter<KugeRantsui>()
             .ActivateOnEnter<OkaRanman>()

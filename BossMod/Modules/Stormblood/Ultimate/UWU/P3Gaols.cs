@@ -4,8 +4,9 @@
 class P3Gaols(BossModule module) : Components.GenericAOEs(module)
 {
     public enum State { None, TargetSelection, Fetters, Done }
+    private readonly UWUConfig _config = Service.Config.Get<UWUConfig>();
 
-    public State CurState { get; private set; }
+    public State CurState;
     private BitMask _targets;
 
     private static readonly AOEShapeCircle _freefireShape = new(6);
@@ -13,7 +14,7 @@ class P3Gaols(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (CurState == State.Fetters && !_targets[slot])
-            foreach (var (_, target) in Raid.WithSlot(true).IncludedInMask(_targets))
+            foreach (var (_, target) in Raid.WithSlot(true, true, true).IncludedInMask(_targets))
                 yield return new(_freefireShape, target.Position);
     }
 
@@ -21,7 +22,7 @@ class P3Gaols(BossModule module) : Components.GenericAOEs(module)
     {
         if (CurState == State.TargetSelection && _targets.Any())
         {
-            var hint = string.Join(" > ", Service.Config.Get<UWUConfig>().P3GaolPriorities.Resolve(Raid).Where(i => _targets[i.slot]).OrderBy(i => i.group).Select(i => Raid[i.slot]?.Name));
+            var hint = string.Join(" > ", _config.P3GaolPriorities.Resolve(Raid).Where(i => _targets[i.slot]).OrderBy(i => i.group).Select(i => Raid[i.slot]?.Name));
             hints.Add($"Gaols: {hint}");
         }
     }
@@ -50,7 +51,7 @@ class P3Gaols(BossModule module) : Components.GenericAOEs(module)
                 _targets.Set(Raid.FindSlot(spell.MainTargetID));
                 break;
             case AID.FreefireGaol:
-                var (closestSlot, closestPlayer) = Raid.WithSlot(true).IncludedInMask(_targets).Closest(caster.Position);
+                var (closestSlot, closestPlayer) = Raid.WithSlot(true, true, true).IncludedInMask(_targets).Closest(caster.Position);
                 if (closestPlayer != null)
                 {
                     _targets.Clear(closestSlot);

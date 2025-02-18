@@ -33,14 +33,7 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    Poison = 18, // Boss->player, extra=0x0
-    ThunderAlchemy = 2753, // Boss->Boss, extra=0x0
-    Burns = 2082, // Boss->player, extra=0x0
-    Frostbite = 2083, // Boss->player, extra=0x0
-    Electrocution = 2086, // Boss->player, extra=0x0
-    IceAlchemy = 2752, // Boss->Boss, extra=0x0
-    ToxicAlchemy = 2754, // Boss->Boss, extra=0x0
-    FireAlchemy = 2751 // Boss->Boss, extra=0x0
+    Poison = 18 // Boss->player, extra=0x0
 }
 
 class ManusyaBio(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ManusyaBio), "Tankbuster + cleansable poison");
@@ -63,25 +56,29 @@ class Poison(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_poisoned.Contains(actor) && !(actor.Role == Role.Healer || actor.Class == Class.BRD)) //theoretically only the tank can ge poisoned, this is just in here incase of bad tanks
-            hints.Add("You were poisoned! Get cleansed fast.");
-        if (_poisoned.Contains(actor) && (actor.Role == Role.Healer || actor.Class == Class.BRD))
-            hints.Add("Cleanse yourself! (Poison).");
-        foreach (var c in _poisoned)
-            if (!_poisoned.Contains(actor) && (actor.Role == Role.Healer || actor.Class == Class.BRD))
-                hints.Add($"Cleanse {c.Name} (Poison)");
+        if (_poisoned.Count != 0)
+            if (_poisoned.Contains(actor))
+            {
+                if (!(actor.Role == Role.Healer || actor.Class == Class.BRD)) // theoretically only the tank can ge poisoned, this is just in here incase of bad tanks
+                    hints.Add("You were poisoned! Get cleansed fast.");
+                else if (actor.Role == Role.Healer || actor.Class == Class.BRD)
+                    hints.Add("Cleanse yourself! (Poison).");
+            }
+            else if (actor.Role == Role.Healer || actor.Class == Class.BRD)
+                foreach (var c in _poisoned)
+                    hints.Add($"Cleanse {c.Name} (Poison)");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.AddAIHints(slot, actor, assignment, hints);
-        foreach (var c in _poisoned)
-        {
-            if (_poisoned.Count > 0 && actor.Role == Role.Healer)
-                hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High);
-            if (_poisoned.Count > 0 && actor.Class == Class.BRD)
-                hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
-        }
+        if (_poisoned.Count != 0)
+            foreach (var c in _poisoned)
+            {
+                if (actor.Role == Role.Healer)
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), c, ActionQueue.Priority.High, castTime: 1);
+                else if (actor.Class == Class.BRD)
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), c, ActionQueue.Priority.High);
+            }
     }
 }
 
@@ -116,10 +113,10 @@ class Dhrupad(BossModule module) : BossComponent(module)
     }
 }
 
-class ManusyaThunderIII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ManusyaThunderIII2), new AOEShapeCircle(3));
-class ManusyaBioIII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ManusyaBioIII2), new AOEShapeCone(40.5f, 90.Degrees()));
-class ManusyaBlizzardIII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ManusyaBlizzardIII2), new AOEShapeCone(40.5f, 10.Degrees()));
-class ManusyaFireIII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ManusyaFireIII2), new AOEShapeDonut(5, 60));
+class ManusyaThunderIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManusyaThunderIII2), 3);
+class ManusyaBioIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManusyaBioIII2), new AOEShapeCone(40.5f, 90.Degrees()));
+class ManusyaBlizzardIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManusyaBlizzardIII2), new AOEShapeCone(40.5f, 10.Degrees()));
+class ManusyaFireIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManusyaFireIII2), new AOEShapeDonut(5, 60));
 
 class D011MinduruvaStates : StateMachineBuilder
 {

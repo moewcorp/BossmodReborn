@@ -10,13 +10,13 @@ class P1ClimbingShot(BossModule module) : Components.Knockback(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ClimbingShot1 or AID.ClimbingShot2 or AID.ClimbingShot3 or AID.ClimbingShot4)
-            _knockback = new(Module.PrimaryActor.Position, 20, Module.CastFinishAt(spell));
+        if (spell.Action.ID is (uint)AID.ClimbingShot1 or (uint)AID.ClimbingShot2 or (uint)AID.ClimbingShot3 or (uint)AID.ClimbingShot4)
+            _knockback = new(spell.LocXZ, 20f, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ClimbingShot1 or AID.ClimbingShot2 or AID.ClimbingShot3 or AID.ClimbingShot4)
+        if (spell.Action.ID is (uint)AID.ClimbingShot1 or (uint)AID.ClimbingShot2 or (uint)AID.ClimbingShot3 or (uint)AID.ClimbingShot4)
             _knockback = null;
     }
 }

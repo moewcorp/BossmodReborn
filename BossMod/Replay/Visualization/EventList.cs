@@ -119,12 +119,22 @@ class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB, Replay
 
         foreach (var n in _tree.Node("Icons", !icons.Any()))
         {
-            _tree.LeafNodes(icons, i => $"{tp(i.Timestamp)}: {i.ID} ({iidType?.GetEnumName(i.ID)}) @ {ReplayUtils.ParticipantString(i.Target, i.Timestamp)}");
+            _tree.LeafNodes(icons, i => $"{tp(i.Timestamp)}: {i.ID} ({iidType?.GetEnumName(i.ID)}) @ {ReplayUtils.ParticipantString(i.Source, i.Timestamp)} -> {ReplayUtils.ParticipantString(i.Target, i.Timestamp)}");
         }
 
         foreach (var n in _tree.Node("EnvControls", !envControls.Any()))
         {
-            _tree.LeafNodes(envControls, ec => $"{tp(ec.Timestamp)}: {ec.Index:X2} = {ec.State:X8}");
+            if (envControls.Any())
+            {
+                foreach (var n2 in _tree.Node("All"))
+                {
+                    _tree.LeafNodes(envControls, ec => $"{tp(ec.Timestamp)}: {ec.Index:X2} = {ec.State:X8}");
+                }
+            }
+            foreach (var index in _tree.Nodes(new SortedSet<byte>(envControls.Select(ec => ec.Index)), index => new($"Index {index:X2}")))
+            {
+                _tree.LeafNodes(envControls.Where(ec => ec.Index == index), ec => $"{tp(ec.Timestamp)}: {ec.Index:X2} = {ec.State:X8}");
+            }
         }
     }
 

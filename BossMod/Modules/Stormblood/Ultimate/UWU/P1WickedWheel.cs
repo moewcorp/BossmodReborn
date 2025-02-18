@@ -4,7 +4,7 @@
 // it is also used during phase 4 as part of some mechanics (ultimate predation, ???) - in such case we typically want to show it earlier (based on PATE)
 class WickedWheel(BossModule module) : Components.GenericAOEs(module)
 {
-    public DateTime AwakenedResolve { get; private set; }
+    public DateTime AwakenedResolve;
     public List<(Actor source, AOEShape shape, DateTime activation)> Sources = [];
 
     public static readonly AOEShapeCircle ShapeWheel = new(8.7f);
@@ -60,7 +60,7 @@ class WickedWheel(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class P1WickedWheel(BossModule module) : WickedWheel(module) { }
+class P1WickedWheel(BossModule module) : WickedWheel(module);
 
 class P4WickedWheel(BossModule module) : WickedWheel(module)
 {

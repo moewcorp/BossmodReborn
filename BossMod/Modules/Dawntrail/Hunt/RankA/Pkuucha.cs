@@ -17,89 +17,74 @@ public enum AID : uint
     PeckingFlurry = 39760, //  Boss->self, 5.0s cast, range 40 circle
     PeckingFlurry2 = 39761, // Boss->self, no cast, range 40 circle
 }
-
-class MesmerizingMarch(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MesmerizingMarch), new AOEShapeCircle(12));
-class StirringSamba(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.StirringSamba), new AOEShapeCone(40, 90.Degrees()));
-class GlidingSwoop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GlidingSwoop), new AOEShapeRect(18, 8));
-class MarchingSambaHint(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MarchingSamba), "Get out, then behind!");
+class GlidingSwoop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GlidingSwoop), new AOEShapeRect(18, 8));
+class PeckingFlurry(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PeckingFlurry), "Raidwide (3x)");
 
 class MarchingSamba(BossModule module) : Components.GenericAOEs(module)
 {
+    private readonly List<AOEInstance> _aoes = [];
     private Actor? _caster;
-    private readonly List<AOEInstance> _activeAOEs = [];
-    private static readonly AOEShapeCircle _shapeCircle = new(12);
-    private static readonly AOEShapeCone _shapeCone = new(40, 90.Degrees());
-    private DateTime _castStartTime;
-    private bool _circleDangerSet;
-    private bool _coneDrawn;
+    private static readonly AOEShapeCircle _circle = new(12);
+    private static readonly AOEShapeCone _cone = new(40, 90.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster == null)
-            yield break;
-
-        if (!_circleDangerSet && WorldState.CurrentTime >= _castStartTime.AddSeconds(4))
+            return _aoes;
+        var updated = new List<AOEInstance>();
+        foreach (var aoe in _aoes)
         {
-            _activeAOEs[0] = new(_shapeCircle, _caster.Position, default, _castStartTime.AddSeconds(4), Colors.Danger);
-            _circleDangerSet = true;
+            if (aoe.Shape == _circle || aoe.Shape == _cone)
+                updated.Add(new(aoe.Shape, _caster.Position, _caster.Rotation, aoe.Activation, aoe.Color, aoe.Risky));
+            else
+                updated.Add(aoe);
         }
-
-        if (!_coneDrawn && WorldState.CurrentTime >= _castStartTime.AddSeconds(7))
-        {
-            _activeAOEs.Add(new(_shapeCone, _caster.Position, _caster.Rotation, _castStartTime.AddSeconds(8), Colors.Danger));
-            _coneDrawn = true;
-        }
-
-        foreach (var aoe in _activeAOEs)
-        {
-            yield return aoe;
-        }
+        return updated;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID != (uint)AID.MarchingSamba)
+        if (caster != Module.PrimaryActor)
             return;
-
-        _caster = caster;
-        _castStartTime = WorldState.CurrentTime;
-        _circleDangerSet = false;
-        _coneDrawn = false;
-        _activeAOEs.Add(new(_shapeCircle, _caster.Position, default, _castStartTime.AddSeconds(10), Risky: false));
+        if ((AID)spell.Action.ID is AID.MarchingSamba or AID.MesmerizingMarch)
+        {
+            _caster = caster;
+            _aoes.Add(new(_circle, caster.Position, caster.Rotation, WorldState.CurrentTime.AddSeconds(6.5f), Colors.Danger));
+            _aoes.Add(new(_cone, caster.Position, caster.Rotation, WorldState.CurrentTime.AddSeconds(8)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.MesmerizingMarch2)
+        if (caster != Module.PrimaryActor)
+            return;
+        if ((AID)spell.Action.ID is AID.MesmerizingMarch or AID.MesmerizingMarch2)
         {
-            _activeAOEs.RemoveAll(aoe => aoe.Shape == _shapeCircle);
+            _aoes.RemoveAll(a => a.Shape == _circle);
+            int idx = _aoes.FindIndex(a => a.Shape == _cone);
+            if (idx != -1)
+            {
+                var c = _aoes[idx];
+                _aoes[idx] = new(_cone, c.Origin, c.Rotation, c.Activation, Colors.Danger, true);
+            }
         }
-        else if (spell.Action.ID == (uint)AID.StirringSamba2)
+        else if ((AID)spell.Action.ID is AID.StirringSamba or AID.StirringSamba2)
         {
-            _activeAOEs.Clear();
-            _caster = null;
-            _circleDangerSet = false;
-            _coneDrawn = false;
-            _castStartTime = DateTime.MinValue;
+            _aoes.RemoveAll(a => a.Shape == _cone);
         }
     }
 }
-
-class PeckingFlurry(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PeckingFlurry), "Raidwide x3!");
 
 class PkuuchaStates : StateMachineBuilder
 {
     public PkuuchaStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<MesmerizingMarch>()
-            .ActivateOnEnter<StirringSamba>()
             .ActivateOnEnter<GlidingSwoop>()
-            .ActivateOnEnter<MarchingSambaHint>()
             .ActivateOnEnter<MarchingSamba>()
             .ActivateOnEnter<PeckingFlurry>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13443)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13443)]
 public class Pkuucha(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

@@ -33,7 +33,7 @@ public enum AID : uint
 class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(21);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(2);
     private readonly Dictionary<byte, Dictionary<uint, WPos>> _statePositions = new()
     {
         {0x11, new Dictionary<uint, WPos>
@@ -57,7 +57,7 @@ class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.CorrosiveVenom or AID.ToxinShower)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.CorrosiveVenom or AID.ToxinShower)
             _aoes.RemoveAt(0);
     }
 }
@@ -65,19 +65,29 @@ class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAOEs(modu
 class ToxicCorrosiveFountain(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(8);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(12);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(10);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 10 ? 10 : count;
+        List<AOEInstance> aoes = new(max);
+        for (var i = 0; i < max; ++i)
+            aoes.Add(_aoes[i]);
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.ToxicFountain or AID.CorrosiveFountain)
-            _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell)));
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.ToxicFountain or AID.CorrosiveFountain)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.ToxicFountain or AID.CorrosiveFountain)
             _aoes.RemoveAt(0);
     }
 }

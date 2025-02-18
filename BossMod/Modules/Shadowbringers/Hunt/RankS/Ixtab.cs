@@ -36,44 +36,49 @@ class DualCastTartareanFlameThunder(BossModule module) : Components.GenericAOEs(
     private static readonly AOEShapeCircle circle = new(20);
     private static readonly AOEShapeDonut donut = new(8, 40);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (_aoes.Count == 0)
+            yield break;
+        yield return _aoes[0];
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var dualcast = Module.PrimaryActor.FindStatus(SID.Dualcast) != null;
         if ((AID)spell.Action.ID == AID.TartareanThunder)
             if (!dualcast)
-                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell)));
             else
             {
-                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell, 5.1f)));
+                _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(donut, spell.LocXZ, default, Module.CastFinishAt(spell, 5.1f)));
             }
-        if ((AID)spell.Action.ID == AID.TartareanFlame)
+        else if ((AID)spell.Action.ID == AID.TartareanFlame)
             if (!dualcast)
-                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(donut, spell.LocXZ, default, Module.CastFinishAt(spell)));
             else
             {
-                _aoes.Add(new(donut, caster.Position, default, Module.CastFinishAt(spell)));
-                _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell, 5.1f)));
+                _aoes.Add(new(donut, spell.LocXZ, default, Module.CastFinishAt(spell)));
+                _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 5.1f)));
             }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.TartareanThunder or AID.TartareanFlame)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.TartareanThunder or AID.TartareanFlame)
             _aoes.RemoveAt(0);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.TartareanThunder2 or AID.TartareanFlame2)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.TartareanThunder2 or AID.TartareanFlame2)
             _aoes.RemoveAt(0);
     }
 }
 
 class TartareanTwister(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.TartareanTwister));
-class TartareanBlizzard(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TartareanBlizzard), new AOEShapeCone(40, 22.5f.Degrees()));
+class TartareanBlizzard(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanBlizzard), new AOEShapeCone(40, 22.5f.Degrees()));
 class TartareanQuake(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TartareanQuake));
 
 class TartareanAbyss(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.TartareanAbyss), new AOEShapeCircle(6), true)
@@ -85,7 +90,7 @@ class TartareanAbyss(BossModule module) : Components.BaitAwayCast(module, Action
     }
 }
 
-class TartareanFlare(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TartareanFlare), 18);
+class TartareanFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanFlare), 18);
 class TartareanMeteor(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.TartareanMeteor), 10, 8);
 class ArchaicDualcast(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.ArchaicDualcast), "Preparing In/Out or Out/In AOE");
 

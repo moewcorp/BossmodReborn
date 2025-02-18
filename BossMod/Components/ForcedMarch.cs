@@ -13,10 +13,10 @@ public class GenericForcedMarch(BossModule module, float activationLimit = float
         public bool Active(BossModule module) => ForcedEnd > module.WorldState.CurrentTime || PendingMoves.Count > 0;
     }
 
-    public int NumActiveForcedMarches { get; private set; }
-    public Dictionary<ulong, PlayerState> State = []; // key = instance ID
+    public int NumActiveForcedMarches;
+    public readonly Dictionary<ulong, PlayerState> State = []; // key = instance ID
     public float MovementSpeed = 6; // default movement speed, can be overridden if necessary
-    public float ActivationLimit = activationLimit; // do not show pending moves that activate later than this limit
+    public readonly float ActivationLimit = activationLimit; // do not show pending moves that activate later than this limit
 
     // called to determine whether we need to show hint
     public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos);
@@ -123,12 +123,12 @@ public class StatusDrivenForcedMarch(BossModule module, float duration, uint sta
 // action driven forced march
 public class ActionDrivenForcedMarch(BossModule module, ActionID aid, float duration, Angle rotation, float actioneffectdelay, uint statusForced = 1257, uint statusForcedNPCs = 3629, float activationLimit = float.MaxValue) : GenericForcedMarch(module, activationLimit)
 {
-    public float Duration = duration;
-    public float Actioneffectdelay = actioneffectdelay;
-    public Angle Rotation = rotation;
-    public uint StatusForced = statusForced;
-    public uint StatusForcedNPCs = statusForcedNPCs;
-    public ActionID Aid = aid;
+    public readonly float Duration = duration;
+    public readonly float Actioneffectdelay = actioneffectdelay;
+    public readonly Angle Rotation = rotation;
+    public readonly uint StatusForced = statusForced;
+    public readonly uint StatusForcedNPCs = statusForcedNPCs;
+    public readonly ActionID Aid = aid;
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {

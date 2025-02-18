@@ -2,16 +2,16 @@
 
 class FiresteelStrike : Components.UniformStackSpread
 {
-    public int NumJumps { get; private set; }
-    public int NumCleaves { get; private set; }
+    public int NumJumps;
+    public int NumCleaves;
     private readonly List<Actor> _jumpTargets = [];
     private readonly List<Actor> _interceptors = [];
 
-    private static readonly AOEShapeRect _cleaveShape = new(65, 4);
+    private static readonly AOEShapeRect _cleaveShape = new(65f, 4f);
 
-    public FiresteelStrike(BossModule module) : base(module, 0, 10, alwaysShowSpreads: true)
+    public FiresteelStrike(BossModule module) : base(module, default, 10f, alwaysShowSpreads: true)
     {
-        AddSpreads(Raid.WithoutSlot(true));
+        AddSpreads(Raid.WithoutSlot(true, true, true));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -50,12 +50,12 @@ class FiresteelStrike : Components.UniformStackSpread
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NFiresteelStrikeAOE1:
-            case AID.NFiresteelStrikeAOE2:
-            case AID.SFiresteelStrikeAOE1:
-            case AID.SFiresteelStrikeAOE2:
+            case (uint)AID.NFiresteelStrikeAOE1:
+            case (uint)AID.NFiresteelStrikeAOE2:
+            case (uint)AID.SFiresteelStrikeAOE1:
+            case (uint)AID.SFiresteelStrikeAOE2:
                 if ((spell.Targets.Count > 0 ? WorldState.Actors.Find(spell.Targets[0].ID) : null) is var target && target != null)
                 {
                     _jumpTargets.Add(target);
@@ -68,10 +68,10 @@ class FiresteelStrike : Components.UniformStackSpread
                     Spreads.Clear();
                 }
                 break;
-            case AID.NBlessedBeaconAOE1:
-            case AID.NBlessedBeaconAOE2:
-            case AID.SBlessedBeaconAOE1:
-            case AID.SBlessedBeaconAOE2:
+            case (uint)AID.NBlessedBeaconAOE1:
+            case (uint)AID.NBlessedBeaconAOE2:
+            case (uint)AID.SBlessedBeaconAOE1:
+            case (uint)AID.SBlessedBeaconAOE2:
                 if (spell.Targets.Count > 0)
                 {
                     _interceptors.RemoveAll(a => a.InstanceID == spell.Targets[0].ID);

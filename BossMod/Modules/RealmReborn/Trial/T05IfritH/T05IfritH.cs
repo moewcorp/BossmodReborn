@@ -4,12 +4,13 @@ public enum OID : uint
 {
     Boss = 0xD1, // x4
     InfernalNail = 0xD2, // spawn during fight
-    Helper = 0x1B2, // x20
+    Helper = 0x1B2
 }
 
 public enum AID : uint
 {
     AutoAttack = 451, // Boss->player, no cast, range 8+R ?-degree cone cleave
+
     Incinerate = 1353, // Boss->self, no cast, range 10+R 120-degree cone cleave
     VulcanBurst = 1354, // Boss->self, no cast, range 16+R circle knockback 10
     Eruption = 1355, // Boss->self, 2.2s cast, single-target, visual
@@ -40,7 +41,7 @@ class Hints(BossModule module) : BossComponent(module)
 }
 
 class Incinerate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Incinerate), new AOEShapeCone(15, 60.Degrees()));
-class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8);
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8);
 
 class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone))
 {
@@ -66,7 +67,7 @@ class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionI
     }
 }
 
-class RadiantPlume(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
+class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
 
 class T05IfritHStates : StateMachineBuilder
 {
@@ -81,13 +82,13 @@ class T05IfritHStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 59, NameID = 1185)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 59, NameID = 1185)]
 public class T05IfritH : BossModule
 {
-    private readonly IReadOnlyList<Actor> _nails;
+    private readonly List<Actor> _nails;
     public IEnumerable<Actor> ActiveNails => _nails.Where(n => n.IsTargetable && !n.IsDead);
 
-    public T05IfritH(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
+    public T05IfritH(WorldState ws, Actor primary) : base(ws, primary, default, new ArenaBoundsCircle(20))
     {
         _nails = Enemies(OID.InfernalNail);
     }

@@ -33,7 +33,7 @@ class Ashplume : BossComponent
             var numStacked = 0;
             var haveTanks = actor.Role == Role.Tank;
             var haveHealers = actor.Role == Role.Healer;
-            foreach (var pair in Raid.WithoutSlot().InRadiusExcluding(actor, _stackRadius))
+            foreach (var pair in Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _stackRadius))
             {
                 ++numStacked;
                 haveTanks |= pair.Role == Role.Tank;
@@ -50,7 +50,7 @@ class Ashplume : BossComponent
         }
         else if (CurState == State.Spread)
         {
-            if (Raid.WithoutSlot().InRadiusExcluding(actor, _spreadRadius).Any())
+            if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _spreadRadius).Any())
             {
                 hints.Add("Spread!");
             }
@@ -72,7 +72,7 @@ class Ashplume : BossComponent
 
         // draw all raid members, to simplify positioning
         var aoeRadius = CurState == State.Stack ? _stackRadius : _spreadRadius;
-        foreach (var player in Raid.WithoutSlot().Exclude(pc))
+        foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
         {
             Arena.Actor(player, player.Position.InCircle(pc.Position, aoeRadius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
         }

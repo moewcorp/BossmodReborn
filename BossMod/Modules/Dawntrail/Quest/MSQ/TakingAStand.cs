@@ -1,9 +1,11 @@
+using BossMod.QuestBattle;
+
 namespace BossMod.Dawntrail.Quest.MSQ.TakingAStand;
 
 public enum OID : uint
 {
     Boss = 0x4211, // R=3.5
-    BakoolJaJaShade = 0x4215, // R3.500, x3
+    BakoolJaJaShade = 0x4215, // R3.5
     Deathwall = 0x1EBA1F,
     MagickedStandardOrange = 0x4212, // R1.0
     MagickedStandardGreen = 0x4213, // R1.0
@@ -24,6 +26,7 @@ public enum AID : uint
     AutoAttack2 = 871, // HoobigoLancer->player, no cast, single-target
     AutoAttack3 = 873, // HiredThug3->player, no cast, single-target
     Teleport = 37089, // Boss->location, no cast, single-target
+
     Roar1 = 37090, // Boss->self, 5.0s cast, range 45 circle, spawns death wall
     Roar2 = 37091, // Boss->self, 5.0s cast, range 45 circle
     LethalSwipe = 37092, // Boss->self, 6.0s cast, range 45 180-degree cone
@@ -68,7 +71,6 @@ public enum AID : uint
 class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20, 25);
-    private static readonly ArenaBoundsCircle smallerBounds = new(20);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
@@ -78,7 +80,7 @@ class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
         if ((OID)actor.OID == OID.Deathwall)
         {
             _aoe = null;
-            Arena.Bounds = smallerBounds;
+            Arena.Bounds = TakingAStand.DefaultArena;
         }
     }
 
@@ -178,27 +180,78 @@ class Kickdown(BossModule module) : Components.Knockback(module)
         if ((AID)spell.Action.ID == AID.Kickdown)
             activation = default;
     }
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (!Sources(slot, actor).Any())
+            return;
+
+        var source = Sources(slot, actor).First();
+        var arenaBounds = ShapeDistance.InvertedCircle(Arena.Center, 20);
+
+        float kbdist(WPos playerPos)
+        {
+            var dir = (playerPos - source.Origin).Normalized();
+            var expected = playerPos + 18 * dir;
+            return arenaBounds(expected);
+        }
+
+        hints.AddForbiddenZone(kbdist, source.Activation);
+    }
 }
+
 class RiotousRampage(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.RiotousRampage), 4);
 class Roar1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Roar1));
 class Roar2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Roar2));
-class LethalSwipe(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LethalSwipe), new AOEShapeCone(45, 90.Degrees()));
-class Fireshower(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Fireshower), new AOEShapeCircle(6));
+class LethalSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LethalSwipe), new AOEShapeCone(45, 90.Degrees()));
+class Fireshower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireshower), 6);
 
-abstract class RunThrough(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(45, 2.5f));
+abstract class RunThrough(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(45, 2.5f));
 class RunThrough1(BossModule module) : RunThrough(module, AID.RunThrough1);
 class RunThrough2(BossModule module) : RunThrough(module, AID.RunThrough2);
 
-class Fireflood(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Fireflood), 18);
-class TuraliStoneIII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TuraliStoneIII), 4);
-class TuraliQuake(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TuraliQuake), 9, maxCasts: 5);
+class Fireflood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireflood), 18);
+class TuraliStoneIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TuraliStoneIII), 4);
+class TuraliQuake(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TuraliQuake), 9, maxCasts: 5);
+
+class AutoWukLamat(WorldState ws) : UnmanagedRotation(ws, 3)
+{
+    protected override void Exec(Actor? primaryTarget)
+    {
+        if (primaryTarget == null)
+            return;
+
+        if (World.Party.LimitBreakCur == 10000)
+            UseAction(Roleplay.AID.DawnlitConviction, primaryTarget, 100);
+
+        var numAOETargets = Hints.PotentialTargets.Count(x => x.Actor.Position.InCircle(primaryTarget.Position, 8));
+
+        var gcd = ComboAction switch
+        {
+            Roleplay.AID.ClawOfTheBraax => Roleplay.AID.FangsOfTheBraax,
+            Roleplay.AID.FangsOfTheBraax => Roleplay.AID.TailOfTheBraax,
+            Roleplay.AID.TuraliFervor => Roleplay.AID.TuraliJudgment,
+            Roleplay.AID.TrialsOfTural => Roleplay.AID.TuraliFervor,
+            _ => numAOETargets > 1 ? Roleplay.AID.TrialsOfTural : Roleplay.AID.ClawOfTheBraax
+        };
+
+        UseAction(gcd, primaryTarget);
+        UseAction(Roleplay.AID.BeakOfTheLuwatena, primaryTarget, -5);
+
+        if (Player.DistanceToHitbox(primaryTarget) < 3)
+            UseAction(Roleplay.AID.RunOfTheRroneek, primaryTarget, -10);
+
+        if (Player.HPMP.CurHP * 2 < Player.HPMP.MaxHP)
+            UseAction(Roleplay.AID.LuwatenaPulse, Player, -10);
+    }
+}
+
+class WukLamatAI(BossModule module) : RotationModule<AutoWukLamat>(module);
 
 class TakingAStandStates : StateMachineBuilder
 {
     public TakingAStandStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<RoarArenaChange>()
             .ActivateOnEnter<Roar1>()
             .ActivateOnEnter<Roar2>()
@@ -213,21 +266,35 @@ class TakingAStandStates : StateMachineBuilder
             .ActivateOnEnter<TuraliStoneIII>()
             .ActivateOnEnter<Fireflood>()
             .ActivateOnEnter<RunThrough1>()
-            .ActivateOnEnter<RunThrough2>();
+            .ActivateOnEnter<RunThrough2>()
+            .ActivateOnEnter<WukLamatAI>()
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.HPMP.CurHP == 1;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70438, NameID = 12677)]
-public class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, primary, new(500, -175), new ArenaBoundsCircle(24.5f))
+public class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, startingArena)
 {
+    private static readonly WPos arenaCenter = new(500, -175);
+    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(arenaCenter, 24.5f, 20)]);
+    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(arenaCenter, 20, 20)]);
+    private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.HiredThug1, (uint)OID.HiredThug2, (uint)OID.HiredThug3, (uint)OID.HiredThug3, (uint)OID.HoobigoGuardian,
+    (uint)OID.HoobigoLancer, (uint)OID.DopproIllusionist];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.HiredThug1));
-        Arena.Actors(Enemies(OID.HiredThug2));
-        Arena.Actors(Enemies(OID.HiredThug3));
-        Arena.Actors(Enemies(OID.HoobigoGuardian));
-        Arena.Actors(Enemies(OID.HoobigoLancer));
-        Arena.Actors(Enemies(OID.DopproIllusionist));
+        Arena.Actors(Enemies(all));
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = (OID)e.Actor.OID switch
+            {
+                OID.BakoolJaJaShade => AIHints.Enemy.PriorityInvincible,
+                _ => 0
+            };
+        }
     }
 }

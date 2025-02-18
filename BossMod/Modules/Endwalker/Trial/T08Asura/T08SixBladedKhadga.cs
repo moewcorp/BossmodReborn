@@ -2,40 +2,53 @@ namespace BossMod.Endwalker.Trial.T08Asura;
 
 class SixBladedKhadga(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<ActorCastInfo> _spell = [];
-    private DateTime _start;
-    private static readonly AOEShapeCone cone = new(20, 90.Degrees());
-    private static readonly HashSet<AID> castEnd = [AID.Khadga1, AID.Khadga2, AID.Khadga3, AID.Khadga4, AID.Khadga5, AID.Khadga6];
+    private readonly List<AOEInstance> _aoes = new(6);
+    private static readonly Angle a180 = 180f.Degrees();
+    private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_spell.Count > 0)
-            yield return new(cone, Module.PrimaryActor.Position, _spell[0].Rotation, _start.AddSeconds(NumCasts * 2), Colors.Danger);
-        if (_spell.Count > 1)
-            yield return new(cone, Module.PrimaryActor.Position, _spell[1].Rotation, _start.AddSeconds(2 + NumCasts * 2), Risky: !_spell[1].Rotation.AlmostEqual(_spell[0].Rotation + 180.Degrees(), Angle.DegToRad));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoes[0].Rotation.AlmostEqual(aoe.Rotation + a180, Angle.DegToRad) ? aoe with { Risky = false } : aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.KhadgaTelegraph1 or AID.KhadgaTelegraph2 or AID.KhadgaTelegraph3)
+        switch (spell.Action.ID)
         {
-            _spell.Add(spell);
-            if (_start == default)
-                _start = WorldState.FutureTime(12.9f);
+            case (uint)AID.KhadgaTelegraph1:
+            case (uint)AID.KhadgaTelegraph2:
+            case (uint)AID.KhadgaTelegraph3:
+                _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 11.9f)));
+                break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (castEnd.Contains((AID)spell.Action.ID))
-        {
-            _spell.RemoveAt(0);
-            _start.AddSeconds(2);
-            if (++NumCasts == 6)
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
             {
-                NumCasts = 0;
-                _start = default;
+                case (uint)AID.Khadga1:
+                case (uint)AID.Khadga2:
+                case (uint)AID.Khadga3:
+                case (uint)AID.Khadga4:
+                case (uint)AID.Khadga5:
+                case (uint)AID.Khadga6:
+                    _aoes.RemoveAt(0);
+                    break;
             }
-        }
     }
 }

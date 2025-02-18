@@ -3,10 +3,10 @@
 public enum OID : uint
 {
     Boss = 0x319C, // R9.996, x1
-    Helper = 0x233C, // R0.500, x18
     IceSprite = 0x319D, // R0.800, spawn during fight
     Icicle = 0x319E, // R3.000, spawn during fight
     Imaginifer = 0x319F, // R0.500, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -42,12 +42,12 @@ public enum AID : uint
 
     TeleportBoss = 23621, // Boss->location, no cast, teleport
     TeleportImaginifer = 23622, // Imaginifer->location, no cast, ???, teleport
-    ActivateImaginifer = 23623, // Imaginifer->self, no cast, single-target, visual
+    ActivateImaginifer = 23623 // Imaginifer->self, no cast, single-target, visual
 }
 
-class IcePillar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IcePillarAOE), new AOEShapeCircle(4));
-class PillarPierce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80, 2));
-class Shatter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Shatter), new AOEShapeCircle(8));
+class IcePillar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IcePillarAOE), 4);
+class PillarPierce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80, 2));
+class Shatter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shatter), 8);
 
 class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BracingWind), 40, false, 1, new AOEShapeRect(60, 6), Kind.DirForward)
 {
@@ -171,9 +171,9 @@ class AgeOfEndlessFrost(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class StormWithout(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.StormWithout), new AOEShapeDonut(10, 40));
-class StormWithin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.StormWithin), new AOEShapeCircle(10));
-class AncientGlacier(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AncientGlacierAOE), 6);
+class StormWithout(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithout), new AOEShapeDonut(10, 40));
+class StormWithin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithin), 10);
+class AncientGlacier(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientGlacierAOE), 6);
 class Glaciation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Glaciation));
 
 class CE54NeverCryWolfStates : StateMachineBuilder
@@ -195,10 +195,10 @@ class CE54NeverCryWolfStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
 public class CE54NeverCryWolf : BossModule
 {
-    private readonly IReadOnlyList<Actor> _adds;
+    private readonly List<Actor> _adds;
 
     public CE54NeverCryWolf(WorldState ws, Actor primary) : base(ws, primary, new(-830, 190), new ArenaBoundsSquare(24))
     {

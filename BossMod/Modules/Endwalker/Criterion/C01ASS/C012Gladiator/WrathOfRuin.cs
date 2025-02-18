@@ -8,7 +8,7 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
 
     public bool Active => _goldenFlames.Count + _silverFlames.Count > 0;
 
-    private static readonly AOEShapeRect _shape = new(60, 5);
+    private static readonly AOEShapeRect _shape = new(60f, 5f);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -24,16 +24,19 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         if (Active)
+        {
+            var color = Colors.SafeFromAOE;
             foreach (var c in SafeCenters(_debuffs[pcSlot]))
-                Arena.ZoneRect(c, new WDir(1, 0), _shape.HalfWidth, _shape.HalfWidth, _shape.HalfWidth, Colors.SafeFromAOE);
+                Arena.ZoneRect(c, new WDir(1f, 0f), _shape.HalfWidth, _shape.HalfWidth, _shape.HalfWidth, color);
+        }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var debuff = (SID)status.ID switch
+        var debuff = status.ID switch
         {
-            SID.GildedFate => status.Extra,
-            SID.SilveredFate => status.Extra << 16,
+            (uint)SID.GildedFate => status.Extra,
+            (uint)SID.SilveredFate => status.Extra << 16,
             _ => 0
         };
 
@@ -54,10 +57,10 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
         CasterList(spell)?.Remove(caster);
     }
 
-    private List<Actor>? CasterList(ActorCastInfo spell) => (AID)spell.Action.ID switch
+    private List<Actor>? CasterList(ActorCastInfo spell) => spell.Action.ID switch
     {
-        AID.NGoldenFlame or AID.SGoldenFlame => _goldenFlames,
-        AID.NSilverFlame or AID.SSilverFlame => _silverFlames,
+        (uint)AID.NGoldenFlame or (uint)AID.SGoldenFlame => _goldenFlames,
+        (uint)AID.NSilverFlame or (uint)AID.SSilverFlame => _silverFlames,
         _ => null
     };
 
@@ -66,7 +69,7 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
 
     private IEnumerable<WPos> SafeCenters(int debuff)
     {
-        var limit = Arena.Center + new WDir(Arena.Bounds.Radius, Module.Bounds.Radius);
+        var limit = Arena.Center + new WDir(Arena.Bounds.Radius, Arena.Bounds.Radius);
         var first = Arena.Center - new WDir(Arena.Bounds.Radius - _shape.HalfWidth, Module.Bounds.Radius - _shape.HalfWidth);
         var advance = 2 * _shape.HalfWidth;
         for (var x = first.X; x < limit.X; x += advance)
@@ -78,10 +81,10 @@ class GoldenSilverFlame(BossModule module) : BossComponent(module)
 
 // note: actual spell targets location, but it seems to be incorrect...
 // note: we can predict cast start during Regret actor spawn...
-abstract class RackAndRuin(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 2.5f), 8);
+abstract class RackAndRuin(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 2.5f), 8);
 class NRackAndRuin(BossModule module) : RackAndRuin(module, AID.NRackAndRuin);
 class SRackAndRuin(BossModule module) : RackAndRuin(module, AID.SRackAndRuin);
 
-abstract class NothingBesideRemains(BossModule module, AID aid) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(aid), 8);
+abstract class NothingBesideRemains(BossModule module, AID aid) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(aid), 8f);
 class NNothingBesideRemains(BossModule module) : NothingBesideRemains(module, AID.NNothingBesideRemainsAOE);
 class SNothingBesideRemains(BossModule module) : NothingBesideRemains(module, AID.SNothingBesideRemainsAOE);

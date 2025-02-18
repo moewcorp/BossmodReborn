@@ -2,14 +2,15 @@ namespace BossMod.RealmReborn.Dungeon.D26Snowcloak.D260NorthernBateleur;
 
 public enum OID : uint
 {
-    IceSprite = 0xD31, // R0.9
     Boss = 0xD1E, // R0.8
+    IceSprite = 0xD31, // R0.9
     Hrimthurs = 0xD1F, // R1.69
     SnowcloakGoobbue = 0xD1B, // R1.9
     WallController1 = 0x1E94F1,
     WindController1 = 0x1E96D4,
     WindController2 = 0x1E94F0,
     WindController3 = 0x1E94F2,
+    Yeti = 0x3977 // R3.8
 }
 
 public enum AID : uint
@@ -22,7 +23,7 @@ public enum AID : uint
     DoubleSmash = 3259, // Hrimthurs->self, 2.5s cast, range 6+R 120-degree cone
     SicklySneeze = 31264, // SnowcloakGoobbue->self, 2.5s cast, range 6+R 90-degree cone
     Peck = 965, // Boss->player, no cast, single-target
-    Beatdown = 575, // SnowcloakGoobbue->player, no cast, single-target
+    Beatdown = 575 // SnowcloakGoobbue->player, no cast, single-target
 }
 
 class WallRemoval(BossModule module) : BossComponent(module)
@@ -72,17 +73,19 @@ class Frostbite(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
+        if (_aoes.Count == 0)
+            return;
         var activeAOEs = ActiveAOEs(slot, actor).ToList();
-        if (activeAOEs.Any(c => c.Risky && c.Check(actor.Position)))
+        if (ActiveAOEs(slot, actor).Any(c => c.Risky && c.Check(actor.Position)))
             hints.Add(RiskHint);
         else if (activeAOEs.Any(c => !c.Risky && c.Check(actor.Position)))
             hints.Add(RiskHint2 + $" {(activeAOEs.FirstOrDefault(c => !c.Risky && c.Check(actor.Position)).Activation - WorldState.CurrentTime).TotalSeconds:F1}s until activation.");
     }
 }
 
-class WingCutter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WingCutter), new AOEShapeCone(6.9f, 30.Degrees()));
-class DoubleSmash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DoubleSmash), new AOEShapeCone(7.69f, 60.Degrees()));
-class SicklySneeze(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SicklySneeze), new AOEShapeCone(7.9f, 45.Degrees()));
+class WingCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingCutter), new AOEShapeCone(6.9f, 30.Degrees()));
+class DoubleSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DoubleSmash), new AOEShapeCone(7.69f, 60.Degrees()));
+class SicklySneeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SicklySneeze), new AOEShapeCone(7.9f, 45.Degrees()));
 
 class D260NorthernBateleurStates : StateMachineBuilder
 {
@@ -94,12 +97,13 @@ class D260NorthernBateleurStates : StateMachineBuilder
             .ActivateOnEnter<WingCutter>()
             .ActivateOnEnter<DoubleSmash>()
             .ActivateOnEnter<SicklySneeze>()
-            .Raw.Update = () => Module.Enemies(OID.IceSprite).Concat(Module.Enemies(OID.Boss)).Concat(Module.Enemies(OID.SnowcloakGoobbue)).All(x => x.IsDeadOrDestroyed);
+            .Raw.Update = () => module.Enemies(D260NorthernBateleur.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(x => x.IsDeadOrDestroyed)
+            || module.Enemies(OID.Yeti).Any(x => x.InCombat);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 27, NameID = 3220, SortOrder = 2)]
-public class D260NorthernBateleur(WorldState ws, Actor primary) : BossModule(ws, primary, Arena1.Center, Arena1)
+public class D260NorthernBateleur(WorldState ws, Actor primary) : BossModule(ws, primary, arena1.Center, arena1)
 {
     private static readonly WPos[] vertices1 = [new(-31.24f, -185.2f), new(-30.26f, -184.84f), new(-29.79f, -184.64f), new(-29.32f, -184.42f), new(-28.88f, -184.17f),
     new(-28.44f, -183.9f), new(-24.36f, -180.74f), new(-21.94f, -179.18f), new(-21.43f, -179.14f), new(-19.93f, -179.49f),
@@ -172,14 +176,13 @@ public class D260NorthernBateleur(WorldState ws, Actor primary) : BossModule(ws,
     new(-45.05f, -153.96f), new(-45.32f, -154.4f), new(-48.66f, -156.18f), new(-48.98f, -156.6f), new(-49.53f, -157.66f),
     new(-49.02f, -157.71f), new(-48.47f, -157.89f), new(-47.9f, -158.01f)];
 
-    public static readonly ArenaBoundsComplex Arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
     public static readonly ArenaBoundsComplex Arena2 = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
-
-    protected override bool CheckPull() => Enemies(OID.IceSprite).Concat(Enemies(OID.Boss))
-    .Concat(Enemies(OID.Hrimthurs)).Concat(Enemies(OID.SnowcloakGoobbue)).Any(x => x.InCombat);
+    public static readonly uint[] Trash = [(uint)OID.IceSprite, (uint)OID.Boss, (uint)OID.Hrimthurs, (uint)OID.SnowcloakGoobbue];
+    protected override bool CheckPull() => Enemies(Trash).Any(x => x.InCombat && x.Position.AlmostEqual(Arena.Center, Bounds.Radius));
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Hrimthurs).Concat(Enemies(OID.Boss)).Concat(Enemies(OID.SnowcloakGoobbue)).Concat(Enemies(OID.IceSprite)));
+        Arena.Actors(Enemies(Trash).Where(x => x.Position.AlmostEqual(Arena.Center, Bounds.Radius)));
     }
 }

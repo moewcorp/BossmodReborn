@@ -8,7 +8,7 @@ class SableThread(BossModule module) : Components.GenericWildCharge(module, 6, A
         if ((AID)spell.Action.ID == AID.SableThreadTarget)
         {
             Source = caster;
-            foreach (var (i, p) in Raid.WithSlot(true))
+            foreach (var (i, p) in Raid.WithSlot(true, true, true))
                 PlayerRoles[i] = p.InstanceID == spell.MainTargetID ? PlayerRole.Target : p.Role == Role.Tank ? PlayerRole.Share : PlayerRole.ShareNotFirst;
         }
     }

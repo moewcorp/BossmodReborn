@@ -7,38 +7,38 @@ class Hieroglyphika(BossModule module) : Components.GenericAOEs(module, ActionID
     public bool BindsAssigned;
     public readonly List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeRect _shape = new(12, 6);
-    private static readonly WDir[] _canonicalSafespots = [new(-18, 18), new(18, -6)];
+    private static readonly AOEShapeRect _shape = new(12f, 6f);
+    private static readonly WDir[] _canonicalSafespots = [new(-18f, 18f), new(18f, -6f)];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Bind)
+        if (status.ID == (uint)SID.Bind)
             BindsAssigned = true;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        WDir dir = (IconID)iconID switch
+        WDir dir = iconID switch
         {
-            IconID.HieroglyphikaCW => new(1, 0),
-            IconID.HieroglyphikaCCW => new(-1, 0),
+            (uint)IconID.HieroglyphikaCW => new(-1f, 0f),
+            (uint)IconID.HieroglyphikaCCW => new(1f, 0f),
             _ => default
         };
         if (dir == default)
             return;
 
         WDir[] safespots = [.. _canonicalSafespots.Select(d => d.Rotate(dir))];
-        var activation = WorldState.FutureTime(17.1f);
+        var activation = WorldState.FutureTime(17.1d);
         for (var z = -3; z <= 3; z += 2)
         {
             for (var x = -3; x <= 3; x += 2)
             {
-                var cellOffset = new WDir(x * 6, z * 6);
-                if (!safespots.Any(s => s.AlmostEqual(cellOffset, 1)))
+                var cellOffset = new WDir(x * 6f, z * 6f);
+                if (!safespots.Any(s => s.AlmostEqual(cellOffset, 1f)))
                 {
-                    AOEs.Add(new(_shape, Arena.Center + cellOffset + new WDir(0, 6), 180.Degrees(), activation));
+                    AOEs.Add(new(_shape, WPos.ClampToGrid(Arena.Center + cellOffset + new WDir(0f, 6f)), 180f.Degrees(), activation));
                 }
             }
         }
@@ -49,7 +49,7 @@ class Hieroglyphika(BossModule module) : Components.GenericAOEs(module, ActionID
         if (spell.Action == WatchedAction)
         {
             ++NumCasts;
-            var cnt = AOEs.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
+            var cnt = AOEs.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1f));
             if (cnt != 1)
                 ReportError($"Incorrect AOE prediction: {caster.Position} matched {cnt} aoes");
         }

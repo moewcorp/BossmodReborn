@@ -46,15 +46,15 @@ class Inscrutability2(BossModule module) : Components.RaidwideCast(module, Actio
 class FetidFang1(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.FetidFang1));
 class FetidFang2(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.FetidFang2));
 
-abstract class Deg120Cone(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9, 60.Degrees()));
+abstract class Deg120Cone(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9, 60.Degrees()));
 class Setback1(BossModule module) : Deg120Cone(module, AID.Setback1);
 class Setback2(BossModule module) : Deg120Cone(module, AID.Setback2);
 class Clearout1(BossModule module) : Deg120Cone(module, AID.Clearout1);
 class Clearout2(BossModule module) : Deg120Cone(module, AID.Clearout2);
 
-class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCircle(8));
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 8);
 
-abstract class LuminousRay(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(50, 4));
+abstract class LuminousRay(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(50, 4));
 class LuminousRay1(BossModule module) : LuminousRay(module, AID.LuminousRay1);
 class LuminousRay2(BossModule module) : LuminousRay(module, AID.LuminousRay2);
 

@@ -2,7 +2,6 @@ namespace BossMod.Shadowbringers.Dungeon.D07Twinning.D071AlphaZaghnal;
 
 public enum OID : uint
 {
-
     Boss = 0x27D1, // R6.0
     IronCage = 0x27D3, // R0.5, hitbox helper for cages
     BetaZaghnal = 0x27D2, // R3.75
@@ -41,7 +40,7 @@ public enum IconID : uint
 }
 
 class BeastlyRoar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeastlyRoar));
-class Augurium(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Augurium), new AOEShapeCone(12, 60.Degrees()));
+class Augurium(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Augurium), new AOEShapeCone(12, 60.Degrees()));
 
 class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.PounceErrant), 10, 4.6f)
 {
@@ -51,12 +50,14 @@ class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)
         if (IsSpreadTarget(actor))
         {
             var spread = Spreads.FirstOrDefault();
-            var forbidden = new List<Func<WPos, float>>();
-            var adjustedRadius = spread.Radius + 1;
-            foreach (var a in Module.Enemies(OID.IronCage))
-                forbidden.Add(ShapeDistance.Circle(a.Position, adjustedRadius));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), spread.Activation);
+            var cages = Module.Enemies(OID.IronCage);
+            var count = cages.Count;
+            if (count == 0)
+                return;
+            var forbidden = new List<Func<WPos, float>>(count);
+            for (var i = 0; i < count; ++i)
+                forbidden.Add(ShapeDistance.Circle(Module.Enemies(OID.IronCage)[i].Position, 11));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), spread.Activation);
         }
     }
 
@@ -65,8 +66,12 @@ class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)
         base.DrawArenaForeground(pcSlot, pc);
         if (!Spreads.Any(x => x.Target == pc))
             return;
-        foreach (var a in Module.Enemies(OID.IronCage))
+        var cages = Module.Enemies(OID.IronCage);
+        for (var i = 0; i < cages.Count; ++i)
+        {
+            var a = cages[i];
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -85,11 +90,11 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (CurrentBaits.Count > 0 && (AID)spell.Action.ID is AID.ForlornImpact1 or AID.ForlornImpact2 or AID.ForlornImpact3 or AID.ForlornImpact4)
+        if (CurrentBaits.Count != 0 && (AID)spell.Action.ID is AID.ForlornImpact1 or AID.ForlornImpact2 or AID.ForlornImpact3 or AID.ForlornImpact4)
             CurrentBaits.RemoveAt(0);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID is >= IconID.Target1 and <= IconID.Target4)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(7.2f)));
@@ -101,12 +106,17 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
         var bait = ActiveBaitsOn(actor).FirstOrDefault();
         if (bait != default)
         {
-            var forbidden = new List<Func<WPos, float>>();
-            var adjustedHalfWidth = rect.HalfWidth + 0.5f;
-            foreach (var a in Module.Enemies(OID.IronCage))
-                forbidden.Add(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(adjustedHalfWidth / (a.Position - bait.Source.Position).Length())));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), bait.Activation);
+            var cages = Module.Enemies(OID.IronCage);
+            var count = cages.Count;
+            if (count == 0)
+                return;
+            var forbidden = new List<Func<WPos, float>>(count);
+            for (var i = 0; i < cages.Count; ++i)
+            {
+                var a = cages[i];
+                forbidden.Add(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(3.5f / (a.Position - bait.Source.Position).Length())));
+            }
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), bait.Activation);
         }
     }
 
@@ -115,8 +125,12 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
         base.DrawArenaForeground(pcSlot, pc);
         if (!ActiveBaits.Any(x => x.Target == pc))
             return;
-        foreach (var a in Module.Enemies(OID.IronCage))
+        var cages = Module.Enemies(OID.IronCage);
+        for (var i = 0; i < cages.Count; ++i)
+        {
+            var a = cages[i];
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -145,6 +159,7 @@ public class D071AlphaZaghnal(WorldState ws, Actor primary) : BossModule(ws, pri
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.BetaZaghnal).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.BetaZaghnal));
     }
 }

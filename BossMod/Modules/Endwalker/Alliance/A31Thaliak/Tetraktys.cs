@@ -2,12 +2,11 @@
 
 class TetraktysBorder(BossModule module) : Components.GenericAOEs(module)
 {
-    public static readonly WPos NormalCenter = new(-945, 945);
-    public static readonly ArenaBoundsSquare NormalBounds = new(24);
-    private static readonly WPos TriangleCenter = new(-945, 941.5f);
-    private static readonly TriangleE triangle = new(TriangleCenter, 48);
-    private static readonly ArenaBoundsComplex TriangleBounds = new([triangle]);
-    private static readonly AOEShapeCustom transition = new([new Square(NormalCenter, 24)], [triangle]);
+    public static readonly WPos NormalCenter = new(-945f, 945f);
+    public static readonly ArenaBoundsSquare NormalBounds = new(24f);
+    private static readonly Polygon[] triangle = [new(new(-945, 948.71267f), 27.71281f, 3, 180.Degrees())];
+    private static readonly ArenaBoundsComplex TriangleBounds = new(triangle);
+    private static readonly AOEShapeCustom transition = new([new Square(NormalCenter, 24f)], triangle);
     private AOEInstance? _aoe;
     public bool Active;
 
@@ -25,7 +24,7 @@ class TetraktysBorder(BossModule module) : Components.GenericAOEs(module)
                 case 0x00020001:
                     _aoe = null;
                     Arena.Bounds = TriangleBounds;
-                    Arena.Center = TriangleCenter;
+                    Arena.Center = TriangleBounds.Center;
                     Active = true;
                     break;
                 case 0x00080004:
@@ -42,8 +41,8 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeTriCone _triSmall = new(16, 30.Degrees());
-    private static readonly AOEShapeTriCone _triLarge = new(32, 30.Degrees());
+    private static readonly AOEShapeTriCone _triSmall = new(16f, 30f.Degrees());
+    private static readonly AOEShapeTriCone _triLarge = new(32f, 30f.Degrees());
     private static readonly Angle _rot1 = -0.003f.Degrees();
     private static readonly Angle _rot2 = -180.Degrees();
     private static readonly Angle _rot3 = 179.995f.Degrees();
@@ -58,43 +57,50 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
         //   5            E
         //  678          F 10
         // 9ABCD
+        void AddAOEs(AOEShapeTriCone shape, ReadOnlySpan<WPos> positions, ReadOnlySpan<Angle> rotations)
+        {
+            for (var i = 0; i < positions.Length; ++i)
+            {
+                var pos = positions[i];
+                var rot = rotations[i];
+                AddAOE(shape, pos, rot);
+            }
+        }
+        void AddAOE(AOEShapeTriCone shape, WPos pos, Angle rot) => AOEs.Add(new(shape, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(3.8d)));
 
-        var _activation = WorldState.FutureTime(3.8f);
         if (state == 0x00020001)
         {
-            if (index == 0x07) //07, 0A, 0D always activate together
+            switch (index)
             {
-                AOEs.Add(new(_triSmall, new(-929, 948.5f), _rot1, _activation));
-                AOEs.Add(new(_triSmall, new(-953, 962.356f), _rot2, _activation));
-                AOEs.Add(new(_triSmall, new(-945, 948.5f), _rot2, _activation));
+                case 0x05: // 05, 08, 0B always activate together
+                    AddAOEs(_triSmall, [new(-945f, 948.5f), new(-937f, 934.644f), new(-945f, 921f)], [_rot1, _rot1, _rot1]);
+                    break;
+                case 0x06: // 06, 09, 0C always activate together
+                    AddAOEs(_triSmall, [new(-937f, 962.356f), new(-961f, 948.5f), new(-953f, 934.644f)], [_rot3, _rot1, _rot1]);
+                    break;
+                case 0x07: // 07, 0A, 0D always activate together
+                    AddAOEs(_triSmall, [new(-929f, 948.5f), new(-953f, 962.356f), new(-945f, 948.5f)], [_rot1, _rot2, _rot2]);
+                    break;
+                case 0x0E:
+                    AddAOE(_triLarge, new(-945f, 921f), _rot1);
+                    break;
+                case 0x0F:
+                    AddAOE(_triLarge, new(-953, 934.644f), _rot1);
+                    break;
+                case 0x10:
+                    AddAOE(_triLarge, new(-937, 934.644f), _rot1);
+                    break;
             }
-            else if (index == 0x05) //05, 08, 0B always activate together
-            {
-                AOEs.Add(new(_triSmall, new(-945, 948.5f), _rot1, _activation));
-                AOEs.Add(new(_triSmall, new(-937, 934.644f), _rot1, _activation));
-                AOEs.Add(new(_triSmall, new(-945, 921), _rot1, _activation));
-            }
-            else if (index == 0x06) //06, 09, 0C always activate together
-            {
-                AOEs.Add(new(_triSmall, new(-937, 962.356f), _rot3, _activation));
-                AOEs.Add(new(_triSmall, new(-961, 948.5f), _rot1, _activation));
-                AOEs.Add(new(_triSmall, new(-953, 934.644f), _rot1, _activation));
-            }
-            else if (index == 0x0E)
-                AOEs.Add(new(_triLarge, new(-945, 921), _rot1, _activation));
-            else if (index == 0x0F)
-                AOEs.Add(new(_triLarge, new(-953, 934.644f), _rot1, _activation));
-            else if (index == 0x10)
-                AOEs.Add(new(_triLarge, new(-937, 934.644f), _rot1, _activation));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TetraktysAOESmall or AID.TetraktysAOELarge)
+        if (spell.Action.ID is (uint)AID.TetraktysAOESmall or (uint)AID.TetraktysAOELarge)
         {
-            AOEs.RemoveAt(0);
             ++NumCasts;
+            if (AOEs.Count != 0)
+                AOEs.RemoveAt(0);
         }
     }
 }
@@ -103,54 +109,54 @@ class TetraktuosKosmosCounter(BossModule module) : Components.CastCounter(module
 
 class TetraktuosKosmos(BossModule module) : Components.GenericAOEs(module)
 {
-    public readonly List<AOEInstance> AOEs = [];
-    private static readonly AOEShapeTriCone _shapeTri = new(16, 30.Degrees());
-    private static readonly AOEShapeRect _shapeRect = new(30, 8);
-    private static readonly List<Angle> Angles =
-    [-0.003f.Degrees(), -180.Degrees(), 179.995f.Degrees(), 59.995f.Degrees(), -60.Degrees(),
-    119.997f.Degrees(), -120.003f.Degrees(), 60.Degrees()];
+    public readonly List<AOEInstance> AOEs = new(6);
+    private static readonly AOEShapeTriCone _shapeTri = new(16f, 30f.Degrees());
+    private static readonly AOEShapeRect _shapeRect = new(30f, 8f);
+    private static readonly Angle[] Angles =
+    [-0.003f.Degrees(), -180f.Degrees(), 179.995f.Degrees(), 59.995f.Degrees(), -60f.Degrees(),
+    119.997f.Degrees(), -120.003f.Degrees(), 60f.Degrees()];
 
-    private static readonly List<(AOEShape shape, WPos pos, int angle)> combos =
+    private static readonly (AOEShape shape, WPos pos, int angle)[] combos =
     [
         // 0x12
-        (_shapeTri, new(-945, 948.5f), 1),
-        (_shapeRect, new(-945, 935), 1),
+        (_shapeTri, new(-945f, 948.5f), 1),
+        (_shapeRect, new(-945f, 935), 1),
         (_shapeRect, new(-948.827f, 941.828f), 4),
         (_shapeRect, new(-941.173f, 941.828f), 7),        
         // 0x14
-        (_shapeTri, new(-953, 962.356f), 1),
-        (_shapeRect, new(-949, 955.428f), 3),
-        (_shapeRect, new(-957, 955.428f), 4),
-        (_shapeRect, new(-953, 948.5f), 1),
+        (_shapeTri, new(-953f, 962.356f), 1),
+        (_shapeRect, new(-949f, 955.428f), 3),
+        (_shapeRect, new(-957f, 955.428f), 4),
+        (_shapeRect, new(-953f, 948.5f), 1),
         // 0x15
-        (_shapeTri, new(-937, 962.356f), 2),
-        (_shapeRect, new(-937, 948.5f), 1),
-        (_shapeRect, new(-933, 955.428f), 3),
-        (_shapeRect, new(-941, 955.428f), 4),      
+        (_shapeTri, new(-937f, 962.356f), 2),
+        (_shapeRect, new(-937f, 948.5f), 1),
+        (_shapeRect, new(-933f, 955.428f), 3),
+        (_shapeRect, new(-941f, 955.428f), 4),      
 
         // pair 0x13 + 0x15
-        (_shapeTri, new(-961, 948.7f), 0),
-        (_shapeTri, new(-937, 962.356f), 2),
-        (_shapeRect, new(-933, 955.428f), 3),
-        (_shapeRect, new(-941, 955.428f), 4),
-        (_shapeRect, new(-937, 948.5f), 1),
-        (_shapeRect, new(-957, 955.428f), 5),
+        (_shapeTri, new(-961f, 948.7f), 0),
+        (_shapeTri, new(-937f, 962.356f), 2),
+        (_shapeRect, new(-933f, 955.428f), 3),
+        (_shapeRect, new(-941f, 955.428f), 4),
+        (_shapeRect, new(-937f, 948.5f), 1),
+        (_shapeRect, new(-957f, 955.428f), 5),
 
         // pair 0x12 + 0x16
-        (_shapeTri, new(-945, 948.5f), 1),
+        (_shapeTri, new(-945f, 948.5f), 1),
         (_shapeTri, new(-929, 948.7f), 0),
-        (_shapeRect, new(-933, 955.428f), 6),
+        (_shapeRect, new(-933f, 955.428f), 6),
         (_shapeRect, new(-941.173f, 941.828f), 7),
         (_shapeRect, new(-948.827f, 941.828f), 4),
-        (_shapeRect, new(-945, 935), 1),
+        (_shapeRect, new(-945f, 935f), 1),
 
         // //pair 0x11 + 0x14
-        (_shapeTri, new(-945, 921), 0),
-        (_shapeTri, new(-953, 962.356f), 1),
-        (_shapeRect, new(-945, 934.8f), 0),
-        (_shapeRect, new(-953, 948.5f), 1),
-        (_shapeRect, new(-957, 955.428f), 4),
-        (_shapeRect, new(-949, 955.428f), 3)
+        (_shapeTri, new(-945f, 921f), 0),
+        (_shapeTri, new(-953f, 962.356f), 1),
+        (_shapeRect, new(-945f, 934.8f), 0),
+        (_shapeRect, new(-953f, 948.5f), 1),
+        (_shapeRect, new(-957f, 955.428f), 4),
+        (_shapeRect, new(-949f, 955.428f), 3)
     ];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
@@ -166,59 +172,58 @@ class TetraktuosKosmos(BossModule module) : Components.GenericAOEs(module)
 
         if (state != 0x00020001)
             return;
-        var tutorialDone = Module.FindComponent<TetraktuosKosmosCounter>()?.NumCasts > 0;
-        var activationTime = WorldState.FutureTime(7.9f);
+        var tutorialDone = Module.FindComponent<TetraktuosKosmosCounter>()?.NumCasts != 0;
 
         if (!tutorialDone)
-            HandleTutorial(index, activationTime);
+            HandleTutorial(index);
         else
-            HandleRest(index, activationTime);
+            HandleRest(index);
     }
 
-    private void HandleTutorial(byte index, DateTime activationTime)
+    private void HandleTutorial(byte index)
     {
         switch (index)
         {
+            case 0x12:
+                AddAOEs([0, 1, 2, 3]);
+                break;
             case 0x14:
-                AddAOEs([0, 1, 2, 3], activationTime);
+                AddAOEs([4, 5, 6, 7]);
                 break;
             case 0x15:
-                AddAOEs([4, 5, 6, 7], activationTime);
-                break;
-            case 0x12:
-                AddAOEs([8, 9, 10, 11], activationTime);
+                AddAOEs([8, 9, 10, 11]);
                 break;
         }
     }
 
-    private void HandleRest(byte index, DateTime activationTime)
+    private void HandleRest(byte index)
     {
         switch (index)
         {
             case 0x13:
-                AddAOEs([12, 13, 14, 15, 16, 17], activationTime);
+                AddAOEs([12, 13, 14, 15, 16, 17]);
                 break;
             case 0x12:
-                AddAOEs([18, 19, 20, 21, 22, 23], activationTime);
+                AddAOEs([18, 19, 20, 21, 22, 23]);
                 break;
             case 0x11:
-                AddAOEs([24, 25, 26, 27, 28, 29], activationTime);
+                AddAOEs([24, 25, 26, 27, 28, 29]);
                 break;
         }
     }
 
-    private void AddAOEs(int[] indices, DateTime activationTime)
+    private void AddAOEs(int[] indices)
     {
-        foreach (var index in indices)
+        for (var i = 0; i < indices.Length; ++i)
         {
-            var (shape, pos, angle) = combos[index];
-            AOEs.Add(new(shape, pos, Angles[angle], activationTime));
+            var (shape, pos, angle) = combos[indices[i]];
+            AOEs.Add(new(shape, WPos.ClampToGrid(pos), Angles[angle], WorldState.FutureTime(7.9d)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.TetraktuosKosmosAOETri)
+        if (spell.Action.ID == (uint)AID.TetraktuosKosmosAOETri)
         {
             AOEs.Clear();
             ++NumCasts;

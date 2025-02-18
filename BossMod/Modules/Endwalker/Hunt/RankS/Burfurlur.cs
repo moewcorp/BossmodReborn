@@ -69,8 +69,8 @@ class QuintupleSneeze(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Uppercut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Uppercut), new AOEShapeCone(15, 60.Degrees()));
-class RottenSpores(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RottenSpores), 6);
+class Uppercut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Uppercut), new AOEShapeCone(15, 60.Degrees()));
+class RottenSpores(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RottenSpores), 6);
 
 class BurfurlurStates : StateMachineBuilder
 {
@@ -83,5 +83,5 @@ class BurfurlurStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10617)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10617)]
 public class Burfurlur(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

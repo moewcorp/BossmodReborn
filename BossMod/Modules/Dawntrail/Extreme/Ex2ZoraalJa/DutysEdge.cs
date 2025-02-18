@@ -9,7 +9,7 @@ class DutysEdge(BossModule module) : Components.GenericWildCharge(module, 4, Act
         {
             case AID.DutysEdgeTarget:
                 Source = caster;
-                foreach (var (i, p) in Raid.WithSlot(true))
+                foreach (var (i, p) in Raid.WithSlot(true, true, true))
                     PlayerRoles[i] = p.InstanceID == spell.MainTargetID ? PlayerRole.Target : PlayerRole.Share;
                 break;
             case AID.DutysEdgeAOE:

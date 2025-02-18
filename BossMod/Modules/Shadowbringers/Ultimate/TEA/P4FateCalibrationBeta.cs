@@ -126,7 +126,7 @@ class P4FateCalibrationBetaJJump(BossModule module) : Components.GenericBaitAway
 
         foreach (var source in _jumpers)
         {
-            var target = Raid.WithoutSlot().Farthest(source.Position);
+            var target = Raid.WithoutSlot(false, true, true).Farthest(source.Position);
             if (target != null)
                 CurrentBaits.Add(new(source, target, _shape));
         }
@@ -163,7 +163,7 @@ class P4FateCalibrationBetaOpticalSight(BossModule module) : Components.UniformS
                 AddStacks(_stackTargets, WorldState.FutureTime(6.1f));
                 break;
             case Mechanic.Spread:
-                AddSpreads(Raid.WithoutSlot(true), WorldState.FutureTime(6.1f));
+                AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(6.1f));
                 break;
         }
     }

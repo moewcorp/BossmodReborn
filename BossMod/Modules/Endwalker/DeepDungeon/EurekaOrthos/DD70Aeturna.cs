@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
+
     FallingRock = 31441, // Helper->self, 2.5s cast, range 3 circle
     Ferocity = 31442, // Boss->self, 5.0s cast, single-target
     FerocityTetherStretchSuccess = 31443, // Boss->player, no cast, single-target
@@ -25,56 +26,55 @@ public enum AID : uint
 }
 
 class SteelClaw(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.SteelClaw));
-class Ferocity(BossModule module) : Components.StretchTetherDuo(module, 15, 5.7f);
-class PreternaturalTurnCircle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PreternaturalTurnCircle), new AOEShapeCircle(15));
-class PreternaturalTurnDonut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PreternaturalTurnDonut), new AOEShapeDonut(6, 30));
+class Ferocity(BossModule module) : Components.StretchTetherDuo(module, 15f, 5.7f);
+class PreternaturalTurnCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PreternaturalTurnCircle), 15f);
+class PreternaturalTurnDonut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PreternaturalTurnDonut), new AOEShapeDonut(6f, 30f));
 
 class Shatter(BossModule module) : Components.GenericAOEs(module)
 {
-    private bool FerocityCasted;
-    private readonly List<Actor> _crystals = [];
-    private readonly List<AOEInstance> _aoes = [];
+    private bool ferocityCasted;
+    private readonly List<AOEInstance> _aoes = new(4);
 
     private static readonly AOEShapeCone cone = new(23.95f, 75.Degrees());
     private static readonly AOEShapeCircle circle = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(4);
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var s in _crystals)
-            Arena.Actor(s, Colors.Object, true);
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Impact)
-            _crystals.Add(caster);
-        else if ((AID)spell.Action.ID == AID.Ferocity)
-            FerocityCasted = true;
-        else if (!FerocityCasted && (AID)spell.Action.ID == AID.PreternaturalTurnDonut)
-            foreach (var c in Module.Enemies(OID.AllaganCrystal))
-                _aoes.Add(new(circle, c.Position, default, Module.CastFinishAt(spell, 0.5f)));
-        else if (!FerocityCasted && (AID)spell.Action.ID == AID.PreternaturalTurnCircle)
-            foreach (var c in Module.Enemies(OID.AllaganCrystal))
-                _aoes.Add(new(cone, c.Position, c.Rotation, Module.CastFinishAt(spell, 0.5f)));
+        void AddAOEs(AOEShape shape)
+        {
+            var crystals = Module.Enemies((uint)OID.AllaganCrystal);
+            var count = crystals.Count;
+            for (var i = 0; i < count; ++i)
+                _aoes.Add(new(shape, WPos.ClampToGrid(crystals[i].Position), default, Module.CastFinishAt(spell, 0.5f)));
+        }
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.Ferocity:
+                ferocityCasted = true;
+                break;
+            case (uint)AID.PreternaturalTurnCircle when !ferocityCasted:
+                AddAOEs(cone);
+                break;
+            case (uint)AID.PreternaturalTurnDonut when !ferocityCasted:
+                AddAOEs(circle);
+                break;
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ShatterCircle or AID.ShatterCone)
-        {
+        if (spell.Action.ID is (uint)AID.ShatterCircle or (uint)AID.ShatterCone)
             _aoes.Clear();
-            _crystals.Clear();
-        }
-        if ((AID)spell.Action.ID is AID.PreternaturalTurnCircle or AID.PreternaturalTurnDonut)
-            FerocityCasted = false;
+        else if (spell.Action.ID is (uint)AID.PreternaturalTurnCircle or (uint)AID.PreternaturalTurnDonut)
+            ferocityCasted = false;
     }
 }
 
 class Roar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Roar));
-class FallingRock(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FallingRock), new AOEShapeCircle(3));
-class Impact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Impact), new AOEShapeCircle(5));
+class FallingRock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FallingRock), 3f);
+class Impact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Impact), 5f);
 
 class DD70AeturnaStates : StateMachineBuilder
 {
@@ -93,4 +93,4 @@ class DD70AeturnaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 903, NameID = 12246)]
-public class DD70Aeturna(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300, -300), new ArenaBoundsCircle(20));
+public class DD70Aeturna(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300f, -300f), new ArenaBoundsCircle(20f));

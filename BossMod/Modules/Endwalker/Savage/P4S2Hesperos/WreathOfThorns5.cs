@@ -24,7 +24,7 @@ class WreathOfThorns5(BossModule module) : BossComponent(module)
 
         if (_playersOrder.Count < 8)
         {
-            hints.Add("Spread!", Raid.WithoutSlot().InRadiusExcluding(actor, _impulseAOERadius).Any());
+            hints.Add("Spread!", Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _impulseAOERadius).Any());
         }
     }
 
@@ -48,7 +48,7 @@ class WreathOfThorns5(BossModule module) : BossComponent(module)
         if (_playersOrder.Count < 8)
         {
             Arena.AddCircle(pc.Position, _impulseAOERadius, Colors.Danger);
-            foreach (var player in Raid.WithoutSlot().Exclude(pc))
+            foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
                 Arena.Actor(player, player.Position.InCircle(pc.Position, _impulseAOERadius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
         }
     }

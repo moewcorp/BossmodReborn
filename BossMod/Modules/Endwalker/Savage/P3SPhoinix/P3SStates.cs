@@ -46,19 +46,21 @@ class P3SStates : StateMachineBuilder
 
     private void ScorchedExaltation(uint id, float delay)
     {
-        Cast(id, AID.ScorchedExaltation, delay, 5, "AOE")
+        Cast(id, AID.ScorchedExaltation, delay, 5, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
     private void DeadRebirth(uint id, float delay)
     {
-        Cast(id, AID.DeadRebirth, delay, 10, "DeadRebirth")
+        Cast(id, AID.DeadRebirth, delay, 10, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
     private void FirestormsOfAsphodelos(uint id, float delay)
     {
-        Cast(id, AID.FirestormsOfAsphodelos, delay, 5, "Firestorm")
+        Cast(id, AID.FirestormsOfAsphodelos, delay, 5, "Raidwide")
+            .ActivateOnExit<FlamesOfAsphodelos>()
+            .ActivateOnExit<TwisterVoidzone>()
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
@@ -66,7 +68,7 @@ class P3SStates : StateMachineBuilder
     {
         Cast(id, AID.HeatOfCondemnation, delay, 6)
             .ActivateOnEnter<HeatOfCondemnation>();
-        ComponentCondition<HeatOfCondemnation>(id + 2, 1.1f, comp => comp.NumCasts > 0, "Tether")
+        ComponentCondition<HeatOfCondemnation>(id + 2, 1.1f, comp => comp.NumCasts > 0, "Tankbuster tethers")
             .DeactivateOnExit<HeatOfCondemnation>()
             .SetHint(StateMachine.StateHint.Tankbuster);
     }
@@ -81,7 +83,7 @@ class P3SStates : StateMachineBuilder
         //    first pair starts cast almost immediately, then pairs 2-4 and finally central start their cast with 1 sec between them; each cast lasts 2 sec
         // so center (last/only) plume hits around 6s after cast end
         // note that our helpers rely on 233C casts rather than states
-        CastStartMulti(id, new AID[] { AID.ExperimentalFireplumeSingle, AID.ExperimentalFireplumeMulti }, delay)
+        CastStartMulti(id, [AID.ExperimentalFireplumeSingle, AID.ExperimentalFireplumeMulti], delay)
             .SetHint(StateMachine.StateHint.PositioningStart);
         return CastEnd(id + 1, 5, "Fireplume")
             .ActivateOnEnter<Fireplume>();
@@ -91,13 +93,13 @@ class P3SStates : StateMachineBuilder
     // note - since it resolves in a complex way, make sure to add a resolve state!
     private void AshplumeCast(uint id, float delay)
     {
-        CastMulti(id, new AID[] { AID.ExperimentalAshplumeStack, AID.ExperimentalAshplumeSpread }, delay, 5, "Ashplume")
+        CastMulti(id, [AID.ExperimentalAshplumeStack, AID.ExperimentalAshplumeSpread], delay, 5, "Stack/Spread")
             .ActivateOnEnter<Ashplume>();
     }
 
     private State AshplumeResolve(uint id, float delay)
     {
-        return ComponentCondition<Ashplume>(id, delay, comp => comp.CurState == Ashplume.State.Done, "Ashplume resolve")
+        return ComponentCondition<Ashplume>(id, delay, comp => comp.CurState == Ashplume.State.Done, "Stack/Spread resolve")
             .DeactivateOnExit<Ashplume>()
             .SetHint(StateMachine.StateHint.Raidwide);
     }
@@ -107,10 +109,10 @@ class P3SStates : StateMachineBuilder
         // first part for this mechanic always seems to be "multi-plume", works just like fireplume
         // 9 helpers teleport to position, first pair almost immediately starts casting 26315s, 1 sec stagger between pairs, 7 sec for each cast
         // ~3 sec after cast ends, boss makes an instant cast that determines stack/spread (26316/26312), ~10 sec after that hits with real AOE (26317/26313)
-        Cast(id, AID.ExperimentalGloryplumeMulti, delay, 5, "GloryplumeMulti")
+        Cast(id, AID.ExperimentalGloryplumeMulti, delay, 5, "Circles")
             .ActivateOnEnter<Ashplume>()
             .SetHint(StateMachine.StateHint.PositioningStart);
-        ComponentCondition<Ashplume>(id + 0x10, 13.2f, comp => comp.CurState == Ashplume.State.Done, "Gloryplume resolve")
+        ComponentCondition<Ashplume>(id + 0x10, 13.2f, comp => comp.CurState == Ashplume.State.Done, "Circles resolve")
             .ActivateOnEnter<Fireplume>()
             .DeactivateOnExit<Fireplume>()
             .DeactivateOnExit<Ashplume>()
@@ -123,10 +125,10 @@ class P3SStates : StateMachineBuilder
         // helper teleports to position, almost immediately starts casting 26311, 6 sec for cast
         // ~3 sec after cast ends, boss makes an instant cast that determines stack/spread (26316/26312), ~4 sec after that hits with real AOE (26317/26313)
         // note that our helpers rely on casts rather than states
-        Cast(id, AID.ExperimentalGloryplumeSingle, delay, 5, "GloryplumeSingle")
+        Cast(id, AID.ExperimentalGloryplumeSingle, delay, 5, "Circle")
             .ActivateOnEnter<Ashplume>()
             .SetHint(StateMachine.StateHint.PositioningStart);
-        ComponentCondition<Ashplume>(id + 0x10, 7.2f, comp => comp.CurState == Ashplume.State.Done, "Gloryplume resolve")
+        ComponentCondition<Ashplume>(id + 0x10, 7.2f, comp => comp.CurState == Ashplume.State.Done, "Circle resolves")
             .ActivateOnEnter<Fireplume>()
             .DeactivateOnExit<Fireplume>()
             .DeactivateOnExit<Ashplume>()
@@ -135,9 +137,11 @@ class P3SStates : StateMachineBuilder
 
     private State Cinderwing(uint id, float delay)
     {
-        return CastMulti(id, new AID[] { AID.RightCinderwing, AID.LeftCinderwing }, delay, 5, "Wing")
-            .ActivateOnEnter<Cinderwing>()
-            .DeactivateOnExit<Cinderwing>();
+        return CastMulti(id, [AID.RightCinderwing, AID.LeftCinderwing], delay, 5, "Side cleave")
+            .ActivateOnEnter<LeftCinderwing>()
+            .ActivateOnEnter<RightCinderwing>()
+            .DeactivateOnExit<LeftCinderwing>()
+            .DeactivateOnExit<RightCinderwing>();
     }
 
     private void FireplumeCinderwing(uint id, float delay)
@@ -150,14 +154,16 @@ class P3SStates : StateMachineBuilder
 
     private void DevouringBrandFireplumeBreezeCinderwing(uint id, float delay)
     {
-        Cast(id, AID.DevouringBrand, delay, 3, "DevouringBrand");
+        Cast(id, AID.DevouringBrand, delay, 3, "Devouring Brand");
         Fireplume(id + 0x1000, 2.1f); // pos-start
         CastStart(id + 0x2000, AID.SearingBreeze, 7.2f)
+            .ActivateOnEnter<SearingBreeze>()
             .ActivateOnEnter<DevouringBrand>() // start showing brand aoe after fireplume cast is done
             .DeactivateOnExit<Fireplume>();
-        CastEnd(id + 0x2001, 3, "SearingBreeze");
+        CastEnd(id + 0x2001, 3, "Baited AOEs");
         Cinderwing(id + 0x3000, 3.2f)
             .SetHint(StateMachine.StateHint.PositioningEnd)
+            .DeactivateOnExit<SearingBreeze>()
             .OnEnter(Module.DeactivateComponent<DevouringBrand>); // TODO: stop showing brand when aoes finish...
     }
 
@@ -166,15 +172,17 @@ class P3SStates : StateMachineBuilder
         // 3s after cast ends, adds start casting 26299
         CastStart(id, AID.DarkenedFire, delay)
             .SetHint(StateMachine.StateHint.PositioningStart);
-        CastEnd(id + 0x1000, 6, "DarkenedFire adds")
+        CastEnd(id + 0x1000, 6, "Darkened Fire phase")
             .ActivateOnEnter<DarkenedFire>()
             .DeactivateOnExit<DarkenedFire>();
         CastStart(id + 0x2000, AID.BrightenedFire, 5.2f)
             .ActivateOnEnter<BrightenedFire>(); // icons appear just before cast start
-        CastEnd(id + 0x2001, 5, "Numbers"); // at the end boss starts shooting 1-8
+        CastEnd(id + 0x2001, 5, "Numbers") // at the end boss starts shooting 1-8
+            .ActivateOnEnter<DarkenedFireAdd>();
         ComponentCondition<BrightenedFire>(id + 0x3000, 8.4f, comp => comp.NumCasts == 8)
             .DeactivateOnExit<BrightenedFire>();
-        Timeout(id + 0x4000, 6.6f, "DarkenedFire resolve") // this timer is max time to kill adds before enrage, timeout is ok here
+        Timeout(id + 0x4000, 6.6f, "Darkened Fire resolve") // this timer is max time to kill adds before enrage, timeout is ok here
+            .DeactivateOnExit<DarkenedFireAdd>()
             .SetHint(StateMachine.StateHint.PositioningEnd);
     }
 
@@ -182,36 +190,40 @@ class P3SStates : StateMachineBuilder
     {
         // at this point boss teleports to one of the cardinals
         // parallel to this one of the helpers casts 26365 (actual aoe fire trails)
-        CastMulti(id, new AID[] { AID.TrailOfCondemnationCenter, AID.TrailOfCondemnationSides }, delay, 6)
+        CastMulti(id, [AID.TrailOfCondemnationCenter, AID.TrailOfCondemnationSides], delay, 6)
+            .ActivateOnEnter<TrailOfCondemnationAOE>()
             .ActivateOnEnter<TrailOfCondemnation>();
-        return ComponentCondition<TrailOfCondemnation>(id + 2, 1.5f, comp => comp.Done, "Trail")
-            .DeactivateOnExit<TrailOfCondemnation>();
+        return ComponentCondition<TrailOfCondemnation>(id + 2, 1.5f, comp => comp.Done, "Sides/Center AOE")
+            .DeactivateOnExit<TrailOfCondemnation>()
+            .DeactivateOnExit<TrailOfCondemnationAOE>();
     }
 
     // note: expects downtime at enter, clears when birds spawn, reset when birds die
     private void SmallBirdsPhase(uint id, float delay)
     {
-        var birds = Module.Enemies(OID.SunbirdSmall);
-        Condition(id, delay, () => birds.Any(x => x.IsTargetable), "Small birds", 10000)
+        ComponentCondition<SunBirdSmall>(id, delay, comp => comp.ActiveActors.Any(), "Small birds", 10000)
+            .ActivateOnEnter<SunBirdSmall>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        Condition(id + 0x10, 25, () => birds.All(x => x.IsDead), "Small birds enrage", 10000)
+        ComponentCondition<SunBirdSmall>(id + 0x010, 25, comp => !comp.ActiveActors.Any(), "Small birds enrage", 10000)
             .ActivateOnEnter<SmallBirdDistance>()
             .DeactivateOnExit<SmallBirdDistance>()
+            .DeactivateOnExit<SunBirdSmall>()
             .SetHint(StateMachine.StateHint.Raidwide | StateMachine.StateHint.DowntimeStart); // raidwide (26326) happens ~3sec after last bird death
     }
 
     // note: expects downtime at enter, clears when birds spawn, reset when birds die
     private void LargeBirdsPhase(uint id, float delay)
     {
-        var birds = Module.Enemies(OID.SunbirdLarge);
-        Condition(id, delay, () => birds.Any(x => x.IsTargetable), "Large birds", 10000)
+        ComponentCondition<SunBirdLarge>(id, delay, comp => comp.ActiveActors.Any(), "Large birds", 10000)
+            .ActivateOnEnter<SunBirdLarge>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        ComponentCondition<BirdTether>(id + 0x1000, 18.2f, comp => comp.NumFinishedChains == 4 || birds.All(x => x.IsDead), "", 10000)
+        ComponentCondition<SunBirdLarge>(id + 0x1000, 18.2f, comp => comp.FinishedTethers >= 4 || !comp.ActiveActors.Any(), "", 10000)
             .ActivateOnEnter<BirdTether>() // note that first tethers appear ~5s after this
             .DeactivateOnExit<BirdTether>();
-        Condition(id + 0x2000, 36.8f, () => birds.All(x => x.IsDead), "Large birds enrage", 10000) // enrage is ~55sec after spawn
+        ComponentCondition<SunBirdLarge>(id + 0x2000, 36.8f, comp => !comp.ActiveActors.Any(), "Large birds enrage", 10000) // enrage is ~55sec after spawn
             .ActivateOnEnter<LargeBirdDistance>()
             .DeactivateOnExit<LargeBirdDistance>()
+            .DeactivateOnExit<SunBirdLarge>()
             .SetHint(StateMachine.StateHint.Raidwide | StateMachine.StateHint.DowntimeStart); // raidwide (26326) happens ~3sec after last bird death
     }
 
@@ -222,7 +234,7 @@ class P3SStates : StateMachineBuilder
         TrailOfCondemnation(id + 0x20000, 3.8f)
             .DeactivateOnExit<Fireplume>();
         SmallBirdsPhase(id + 0x30000, 7.3f);
-        LargeBirdsPhase(id + 0x40000, 4.2f);
+        LargeBirdsPhase(id + 0x40000, 4.3f);
         Targetable(id + 0x50000, true, 5.2f, "Boss reappears")
             .SetHint(StateMachine.StateHint.PositioningEnd);
     }
@@ -242,7 +254,7 @@ class P3SStates : StateMachineBuilder
         // 8s 3540's teleport to players
         // 10s 3540's start casting 26342
         // 14s 3540's finish casting 26342
-        // note that helper does relies on icons and cast events rather than states
+        // note that helper relies on icons and cast events rather than states
         Cast(id, AID.FledglingFlight, delay, 3)
             .ActivateOnEnter<FledglingFlight>();
         ComponentCondition<FledglingFlight>(id + 0x10, 10.3f, comp => comp.PlacementDone, "Eyes place");
@@ -255,17 +267,17 @@ class P3SStates : StateMachineBuilder
         // notes on mechanics:
         // - on 26349 cast end, debuffs with 25sec appear
         // - 12-15sec after 26350 cast starts, eyes finish casting their cones - at this point, there's about 5sec left on debuffs
-        Cast(id, AID.DeathToll, delay, 6, "DeathToll");
+        Cast(id, AID.DeathToll, delay, 6, "Death Toll");
         Cast(id + 0x1000, AID.FledglingFlight, 3.2f, 3, "Eyes")
             .ActivateOnEnter<FledglingFlight>();
-        Cast(id + 0x2000, AID.LifesAgonies, 2.1f, 24, "LifeAgonies")
+        Cast(id + 0x2000, AID.LifesAgonies, 2.1f, 24, "Life Agonies")
             .DeactivateOnExit<FledglingFlight>();
     }
 
     private void FountainOfFire(uint id, float delay)
     {
         // TODO: healer component - not even sure, mechanic looks so simple...
-        Cast(id, AID.FountainOfFire, delay, 6, "FountainOfFire")
+        Cast(id, AID.FountainOfFire, delay, 6, "Fountain of Fire")
             .SetHint(StateMachine.StateHint.PositioningStart);
         Cast(id + 0x1000, AID.SunsPinion, 2.1f, 6, "First birds");
         ComponentCondition<SunshadowTether>(id + 0x2000, 16.1f, comp => comp.NumCharges == 6, "Charges")
@@ -277,18 +289,15 @@ class P3SStates : StateMachineBuilder
     private void ConesAshplume(uint id, float delay)
     {
         Cast(id, AID.FlamesOfAsphodelos, delay, 3, "Cones")
-            .ActivateOnEnter<FlamesOfAsphodelos>()
             .SetHint(StateMachine.StateHint.PositioningStart);
         AshplumeCast(id + 0x1000, 2.1f);
         AshplumeResolve(id + 0x2000, 6.1f)
-            .DeactivateOnExit<FlamesOfAsphodelos>()
             .SetHint(StateMachine.StateHint.PositioningEnd);
     }
 
     private void ConesStorms(uint id, float delay)
     {
         Cast(id, AID.FlamesOfAsphodelos, delay, 3, "Cones")
-            .ActivateOnEnter<FlamesOfAsphodelos>()
             .SetHint(StateMachine.StateHint.PositioningStart);
         Cast(id + 0x1000, AID.StormsOfAsphodelos, 10.2f, 8, "Storms")
             .ActivateOnEnter<StormsOfAsphodelos>()
@@ -300,15 +309,20 @@ class P3SStates : StateMachineBuilder
     private void DarkblazeTwister(uint id, float delay)
     {
         Cast(id, AID.DarkblazeTwister, delay, 4, "Twister")
-            .ActivateOnEnter<DarkblazeTwister>()
+            .ActivateOnEnter<DarkTwister>()
+            .ActivateOnEnter<BurningTwister>()
             .SetHint(StateMachine.StateHint.PositioningStart);
-        Cast(id + 0x1000, AID.SearingBreeze, 4.1f, 3, "SearingBreeze");
+        Cast(id + 0x1000, AID.SearingBreeze, 4.1f, 3, "Searing Breeze")
+            .ActivateOnEnter<SearingBreeze>();
         AshplumeCast(id + 0x2000, 4.1f);
-        ComponentCondition<DarkblazeTwister>(id + 0x3000, 2.8f, comp => comp.DarkTwister() == null, "Knockback")
+        ComponentCondition<DarkTwister>(id + 0x3000, 2.8f, comp => comp.Casters.Count == 0, "Knockback")
+            .DeactivateOnEnter<SearingBreeze>()
+            .DeactivateOnExit<DarkTwister>()
             .SetHint(StateMachine.StateHint.Knockback);
-        ComponentCondition<DarkblazeTwister>(id + 0x4000, 2, comp => !comp.BurningTwisters().Any(), "AOE")
-            .DeactivateOnExit<DarkblazeTwister>();
+        ComponentCondition<BurningTwister>(id + 0x4000, 2, comp => comp.NumCasts == 2, "AOE")
+            .DeactivateOnExit<BurningTwister>();
         AshplumeResolve(id + 0x5000, 2.3f)
+            .DeactivateOnExit<TwisterVoidzone>()
             .SetHint(StateMachine.StateHint.PositioningEnd);
     }
 }

@@ -11,35 +11,36 @@ class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (requireHint[slot])
+        if (!requireHint[slot])
+            return [];
+        var highlightLevitate = requireLevitating[slot];
+        List<AOEInstance> aoes = new(10);
+        for (var x = 0; x < 2; ++x)
         {
-            var highlightLevitate = requireLevitating[slot];
-            for (var x = 0; x < 2; ++x)
+            for (var z = 0; z < 3; ++z)
             {
-                for (var z = 0; z < 3; ++z)
+                var cellLevitating = ((x ^ z) & 1) != 0;
+                if (cellLevitating != highlightLevitate)
                 {
-                    var cellLevitating = ((x ^ z) & 1) != 0;
-                    if (cellLevitating != highlightLevitate)
-                    {
-                        yield return new(rect, Arena.Center + new WDir(-5 - 10 * x, -10 + 10 * z), default, activation);
-                        yield return new(rect, Arena.Center + new WDir(+5 + 10 * x, -10 + 10 * z), default, activation);
-                    }
+                    aoes.Add(new(rect, Arena.Center + new WDir(-5 - 10 * x, -10 + 10 * z), default, activation));
+                    aoes.Add(new(rect, Arena.Center + new WDir(+5 + 10 * x, -10 + 10 * z), default, activation));
                 }
             }
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ThunderousBreath)
         {
-            foreach (var (i, _) in Raid.WithSlot(true))
+            foreach (var (i, _) in Raid.WithSlot(true, true, true))
                 requireHint[i] = requireLevitating[i] = true;
             activation = Module.CastFinishAt(spell);
         }
         else if ((AID)spell.Action.ID == AID.BlightedBoltVisual)
         {
-            foreach (var (i, _) in Raid.WithSlot(true))
+            foreach (var (i, _) in Raid.WithSlot(true, true, true))
             {
                 requireHint[i] = true;
                 requireLevitating[i] = false;
@@ -84,13 +85,16 @@ class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (active)
-            foreach (var p in Raid.WithSlot().Exclude(actor))
-            {
-                var pos = p.Item2.Position;
-                if (_levitate.ActiveAOEs(slot, actor).Any(c => c.Check(pos)))
-                    yield return new(circle, pos);
-            }
+        if (!active)
+            return [];
+        List<AOEInstance> aoes = new(10);
+        foreach (var p in Raid.WithSlot(false, true, true).Exclude(actor))
+        {
+            var pos = p.Item2.Position;
+            if (_levitate.ActiveAOEs(slot, actor).Any(c => c.Check(pos)))
+                aoes.Add(new(circle, pos));
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -106,4 +110,4 @@ class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BlightedBolt2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedBolt2), 7);
+class BlightedBolt2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlightedBolt2), 7);

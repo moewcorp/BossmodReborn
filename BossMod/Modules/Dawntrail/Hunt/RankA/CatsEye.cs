@@ -17,20 +17,12 @@ public enum AID : uint
     BloodshotGaze2 = 39668, // Boss->players, 5.0s cast, range 8 circle, inverted.
 }
 
-class CatsEye1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CatsEye1), 40);
+class CatsEye1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CatsEye1), 40);
 
-class CatsEye2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CatsEye2), 40);
+class CatsEye2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CatsEye2), 40);
 
-class CatsEye1Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye1))
-{
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Select(c => new Eye(c.CastInfo!.LocXZ, Module.CastFinishAt(c.CastInfo)));
-}
-
-class CatsEye2Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye2), true)
-{
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Select(c => new Eye(c.CastInfo!.LocXZ, Module.CastFinishAt(c.CastInfo)));
-}
-
+class CatsEye1Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye1));
+class CatsEye2Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye2), true);
 class GravitationalWave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GravitationalWave), "Raidwide!");
 
 class BloodshotGaze1(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.BloodshotGaze1))
@@ -41,7 +33,7 @@ class BloodshotGaze1(BossModule module) : Components.CastGaze(module, ActionID.M
 
         var targetPosition = stackComponent?.ActiveStackTargets.FirstOrDefault()?.Position;
 
-        return _casters.Select(c => new Eye(targetPosition ?? c.Position, Module.CastFinishAt(c.CastInfo)));
+        return Eyes.Select(c => new Eye(targetPosition ?? c.Position, c.Activation));
     }
 }
 
@@ -53,7 +45,7 @@ class BloodshotGaze2(BossModule module) : Components.CastGaze(module, ActionID.M
 
         var targetPosition = stackComponent?.ActiveStackTargets.FirstOrDefault()?.Position;
 
-        return _casters.Select(c => new Eye(targetPosition ?? c.Position, Module.CastFinishAt(c.CastInfo)));
+        return Eyes.Select(c => new Eye(targetPosition ?? c.Position, c.Activation));
     }
 }
 
@@ -77,5 +69,5 @@ class CatsEyeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13436)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13436)]
 public class CatsEye(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

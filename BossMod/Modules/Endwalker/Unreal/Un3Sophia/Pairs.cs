@@ -29,13 +29,13 @@ class Pairs(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var p in Raid.WithSlot().IncludedInMask(_players1).Exclude(pc))
+        foreach (var p in Raid.WithSlot(false, true, true).IncludedInMask(_players1).Exclude(pc))
             Arena.AddCircle(p.Item2.Position, _radius, _players1[pcSlot] ? Colors.Danger : Colors.Safe);
-        foreach (var p in Raid.WithSlot().IncludedInMask(_players2).Exclude(pc))
+        foreach (var p in Raid.WithSlot(false, true, true).IncludedInMask(_players2).Exclude(pc))
             Arena.AddCircle(p.Item2.Position, _radius, _players2[pcSlot] ? Colors.Danger : Colors.Safe);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {
@@ -52,6 +52,6 @@ class Pairs(BossModule module) : BossComponent(module)
 
     private bool AtRisk(Actor actor, BitMask same, BitMask opposite)
     {
-        return Raid.WithSlot().IncludedInMask(opposite).InRadius(actor.Position, _radius).Any() || !Raid.WithSlot().IncludedInMask(same).InRadiusExcluding(actor, _radius).Any();
+        return Raid.WithSlot(false, true, true).IncludedInMask(opposite).InRadius(actor.Position, _radius).Any() || !Raid.WithSlot(false, true, true).IncludedInMask(same).InRadiusExcluding(actor, _radius).Any();
     }
 }

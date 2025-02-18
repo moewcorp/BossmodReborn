@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
-class YokiUzu(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.YokiUzu), new AOEShapeCircle(23));
+class YokiUzu(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.YokiUzu), 23);
 
 class FocusedTremor(BossModule module) : Components.GenericAOEs(module)
 {
@@ -14,17 +14,17 @@ class FocusedTremor(BossModule module) : Components.GenericAOEs(module)
         if (_aoe == default)
             yield break;
 
-        var isCasterActive = _yokiUzu.ActiveCasters.Any();
+        var isCasterActive = _yokiUzu.ActiveCasters.Count != 0;
         var firstAOEActivation = _yokiUzu.ActiveAOEs(slot, actor).FirstOrDefault().Activation;
         var sixFulmsUnderStatus = actor.FindStatus(SID.SixFulmsUnder);
         var expireAt = sixFulmsUnderStatus?.ExpireAt ?? DateTime.MaxValue;
         var extra = circle != null ? 10 : 0;
-        List<Shape> rectShape = [new RectangleSE(_aoe.Origin, _aoe.Origin + (rect.LengthFront + extra) * _aoe.Rotation.ToDirection(), rect.HalfWidth)];
-        var circleShape = circle != null ? [circle] : new List<Shape>();
+        RectangleSE[] rectShape = [new(_aoe.Origin, _aoe.Origin + (rect.LengthFront + extra) * _aoe.Rotation.ToDirection(), rect.HalfWidth)];
+        Circle[] circleShape = circle != null ? [circle] : [];
         var aoeInstance = _aoe with
         {
             Origin = Arena.Center,
-            Shape = new AOEShapeCustom(rectShape, [], circleShape, false, circle != null ? OperandType.Xor : OperandType.Union) with { InvertForbiddenZone = isCasterActive },
+            Shape = new AOEShapeCustom(rectShape, null, circleShape, false, circle != null ? OperandType.Xor : OperandType.Union) with { InvertForbiddenZone = isCasterActive },
             Color = isCasterActive ? Colors.SafeFromAOE : Colors.AOE,
             Activation = !isCasterActive ? expireAt : firstAOEActivation
         };

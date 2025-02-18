@@ -38,8 +38,8 @@ class P3Divebomb(BossModule module) : Components.GenericAOEs(module)
 
 class P3Adds(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _hygieia = module.Enemies(OID.Hygieia);
-    public IReadOnlyList<Actor> Asclepius { get; private set; } = module.Enemies(OID.Asclepius);
+    private readonly List<Actor> _hygieia = module.Enemies(OID.Hygieia);
+    public readonly List<Actor> Asclepius = module.Enemies(OID.Asclepius);
     public IEnumerable<Actor> ActiveHygieia => _hygieia.Where(a => !a.IsDead);
 
     private const float _explosionRadius = 8;
@@ -54,7 +54,7 @@ class P3Adds(BossModule module) : BossComponent(module)
             switch ((OID)e.Actor.OID)
             {
                 case OID.Hygieia:
-                    var predictedHP = e.Actor.HPMP.CurHP + WorldState.PendingEffects.PendingHPDifference(e.Actor.InstanceID);
+                    var predictedHP = e.Actor.PredictedHPRaw;
                     e.Priority = e.Actor.HPMP.CurHP == 1 ? 0
                         : killHygieia && e.Actor == nextHygieia ? 2
                         : predictedHP < 0.3f * e.Actor.HPMP.MaxHP ? -1
@@ -108,12 +108,12 @@ class P3AethericProfusion(BossModule module) : Components.CastCounter(module, Ac
         }
 
         // let MT taunt boss if needed
-        var boss = hints.PotentialTargets.Find(e => e.Actor == Module.PrimaryActor);
+        var boss = hints.FindEnemy(Module.PrimaryActor);
         if (boss != null)
             boss.PreferProvoking = true;
 
         // mitigate heavy raidwide
-        hints.PredictedDamage.Add((Raid.WithSlot().Mask(), _activation));
+        hints.PredictedDamage.Add((Raid.WithSlot(false, true, true).Mask(), _activation));
         if (actor.Role == Role.Ranged)
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Addle), Module.PrimaryActor, ActionQueue.Priority.High, (float)(_activation - WorldState.CurrentTime).TotalSeconds);
     }

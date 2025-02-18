@@ -10,12 +10,12 @@ public enum OID : uint
 public enum AID : uint
 {
     RepellingSpray = 14768, // Boss->self, 2.0s cast, single-target, boss reflectss magic attacks
-    ApocalypticBolt = 14766, // 267F->self, 3.0s cast, range 50+R width 8 rect
-    BlazingAngon = 14769, // 267F->location, 1.0s cast, single-target
-    Burn = 14776, // 2682->self, 6.0s cast, range 50+R circle
-    TheRamsVoice = 14763, // 267F->self, 3.5s cast, range 8 circle
-    TheDragonsVoice = 14764, // 267F->self, 3.5s cast, range 6-30 donut
-    ApocalypticRoar = 14767, // 267F->self, 5.0s cast, range 35+R 120-degree cone
+    ApocalypticBolt = 14766, // Boss->self, 3.0s cast, range 50+R width 8 rect
+    BlazingAngon = 14769, // Boss->location, 1.0s cast, single-target
+    Burn = 14776, // BlazingAngon->self, 6.0s cast, range 50+R circle
+    TheRamsVoice = 14763, // Boss->self, 3.5s cast, range 8 circle
+    TheDragonsVoice = 14764, // Boss->self, 3.5s cast, range 6-30 donut
+    ApocalypticRoar = 14767, // Boss->self, 5.0s cast, range 35+R 120-degree cone
 }
 
 public enum SID : uint
@@ -24,10 +24,10 @@ public enum SID : uint
     Doom = 910, // Boss->player, extra=0x0
 }
 
-class ApocalypticBolt(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4));
-class ApocalypticRoar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60.Degrees()));
-class TheRamsVoice(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), new AOEShapeCircle(8));
-class TheDragonsVoice(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6, 30));
+class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4));
+class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60.Degrees()));
+class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8);
+class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6, 30));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -73,19 +73,20 @@ class Stage25Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 635, NameID = 8129, SortOrder = 2)]
 public class Stage25Act2 : BossModule
 {
-    public Stage25Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage25Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.BlazingAngon => 1, //TODO: ideally Magus should only be attacked with ranged physical abilities
-                OID.Boss => 0, //TODO: ideally Azulmagia should only be attacked with physical abilities in this act
+                OID.BlazingAngon => 1,
+                OID.Boss => 0, // TODO: ideally Azulmagia should only be attacked with physical abilities in this act
                 _ => 0
             };
         }

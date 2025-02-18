@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Ultimate.TOP;
 
-class P6WaveCannonPuddle(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.P6WaveCannonPuddle), new AOEShapeCircle(6));
+class P6WaveCannonPuddle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.P6WaveCannonPuddle), 6);
 
 class P6WaveCannonExaflare(BossModule module) : Components.Exaflare(module, 8)
 {
@@ -8,7 +8,7 @@ class P6WaveCannonExaflare(BossModule module) : Components.Exaflare(module, 8)
     {
         if ((AID)spell.Action.ID is AID.P6WaveCannonExaflareFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 7, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = spell.LocXZ, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 7, MaxShownExplosions = 2 });
         }
     }
 
@@ -38,7 +38,7 @@ class P6WaveCannonProteans(BossModule module) : Components.GenericBaitAway(modul
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.P6WaveCannonProtean)
-            foreach (var p in Raid.WithoutSlot(true))
+            foreach (var p in Raid.WithoutSlot(true, true, true))
                 CurrentBaits.Add(new(caster, p, _shape));
     }
 
@@ -62,7 +62,7 @@ class P6WaveCannonWildCharge(BossModule module) : Components.GenericWildCharge(m
             Source = caster;
             // TODO: find out how it selects target...
             var targetAssigned = false;
-            foreach (var (i, p) in Raid.WithSlot(true))
+            foreach (var (i, p) in Raid.WithSlot(true, true, true))
             {
                 PlayerRoles[i] = p.Role == Role.Tank ? PlayerRole.Share : targetAssigned ? PlayerRole.ShareNotFirst : PlayerRole.Target;
                 targetAssigned |= PlayerRoles[i] == PlayerRole.Target;

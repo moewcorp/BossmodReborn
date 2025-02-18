@@ -41,8 +41,131 @@ public enum AID : uint
     SMountainBreeze = 34442, // SYamabiko->self, 6.0s cast, range 40 width 8 rect
 }
 
-class MountainBreeze(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(38, 4, 2));
+class BladeOfTheTengu(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = new(2);
+
+    private static readonly AOEShapeCone _shape = new(50f, 45f.Degrees()); // TODO: verify angle
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var secondAngle = spell.Action.ID switch
+        {
+            (uint)AID.NBackwardBlows or (uint)AID.SBackwardBlows => 180f.Degrees(),
+            (uint)AID.NLeftwardBlows or (uint)AID.SLeftwardBlows => 90f.Degrees(),
+            (uint)AID.NRightwardBlows or (uint)AID.SRightwardBlows => -90f.Degrees(),
+            _ => default
+        };
+        if (secondAngle != default)
+        {
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 0.1f)));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation + secondAngle, Module.CastFinishAt(spell, 1.9f)));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.NBladeOfTheTengu or (uint)AID.SBladeOfTheTengu)
+            _aoes.RemoveAt(0);
+    }
+}
+
+abstract class WrathOfTheTengu(BossModule module, AID aid) : Components.RaidwideCast(module, ActionID.MakeSpell(aid), "Raidwide with bleed");
+class NWrathOfTheTengu(BossModule module) : WrathOfTheTengu(module, AID.NWrathOfTheTengu);
+class SWrathOfTheTengu(BossModule module) : WrathOfTheTengu(module, AID.SWrathOfTheTengu);
+
+abstract class GazeOfTheTengu(BossModule module, AID aid) : Components.CastGaze(module, ActionID.MakeSpell(aid));
+class NGazeOfTheTengu(BossModule module) : GazeOfTheTengu(module, AID.NGazeOfTheTengu);
+class SGazeOfTheTengu(BossModule module) : GazeOfTheTengu(module, AID.SGazeOfTheTengu);
+
+abstract class MountainBreeze(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 4f));
 class NMountainBreeze(BossModule module) : MountainBreeze(module, AID.NMountainBreeze);
 class SMountainBreeze(BossModule module) : MountainBreeze(module, AID.SMountainBreeze);
 
-public abstract class C020Trash2(WorldState ws, Actor primary) : BossModule(ws, primary, new(300, 0), new ArenaBoundsRect(20, 40));
+abstract class Issen(BossModule module, AID aid) : Components.SingleTargetCast(module, ActionID.MakeSpell(aid));
+class NIssen(BossModule module) : Issen(module, AID.NIssen);
+class SIssen(BossModule module) : Issen(module, AID.SIssen);
+
+abstract class Huton(BossModule module, AID aid) : Components.SingleTargetCast(module, ActionID.MakeSpell(aid), "Cast speed buff");
+class NHuton(BossModule module) : Huton(module, AID.NHuton);
+class SHuton(BossModule module) : Huton(module, AID.SHuton);
+
+abstract class JujiShuriken(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 1.5f));
+class NJujiShuriken(BossModule module) : JujiShuriken(module, AID.NJujiShuriken);
+class SJujiShuriken(BossModule module) : JujiShuriken(module, AID.SJujiShuriken);
+class NJujiShurikenFast(BossModule module) : JujiShuriken(module, AID.NJujiShurikenFast);
+class SJujiShurikenFast(BossModule module) : JujiShuriken(module, AID.SJujiShurikenFast);
+
+class C020Trash2States : StateMachineBuilder
+{
+    public C020Trash2States(BossModule module, bool savage) : base(module)
+    {
+        TrivialPhase()
+            .ActivateOnEnter<BladeOfTheTengu>()
+            .ActivateOnEnter<NWrathOfTheTengu>(!savage)
+            .ActivateOnEnter<NGazeOfTheTengu>(!savage)
+            .ActivateOnEnter<SWrathOfTheTengu>(savage)
+            .ActivateOnEnter<SGazeOfTheTengu>(savage)
+            .ActivateOnEnter<NIssen>(!savage)
+            .ActivateOnEnter<NHuton>(!savage)
+            .ActivateOnEnter<NJujiShuriken>(!savage)
+            .ActivateOnEnter<NJujiShurikenFast>(!savage)
+            .ActivateOnEnter<SIssen>(savage)
+            .ActivateOnEnter<SHuton>(savage)
+            .ActivateOnEnter<SJujiShuriken>(savage)
+            .ActivateOnEnter<SJujiShurikenFast>(savage)
+            .ActivateOnEnter<NMountainBreeze>(!savage) // for yamabiko
+            .ActivateOnEnter<SMountainBreeze>(savage)
+            .Raw.Update = () =>
+            {
+                var allDeadOrDestroyed = true;
+                var enemies = module.Enemies(savage ? C020Trash2.TrashSavage : C020Trash2.TrashNormal);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                    {
+                        allDeadOrDestroyed = false;
+                        break;
+                    }
+                }
+                return allDeadOrDestroyed;
+            };
+    }
+}
+
+class C020NTrash2States(BossModule module) : C020Trash2States(module, false);
+class C020STrash2States(BossModule module) : C020Trash2States(module, true);
+
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.NOnmitsugashira, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 946, NameID = 12424, SortOrder = 3)]
+public class C020NTrash2(WorldState ws, Actor primary) : C020Trash2(ws, primary, false);
+
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.SOnmitsugashira, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 947, NameID = 12424, SortOrder = 3)]
+public class C020STrash2(WorldState ws, Actor primary) : C020Trash2(ws, primary, true);
+
+public abstract class C020Trash2(WorldState ws, Actor primary, bool savage) : BossModule(ws, primary, new(300f, 0f), new ArenaBoundsRect(19.5f, 39.5f))
+{
+    public static readonly uint[] TrashNormal = [(uint)OID.NKotengu, (uint)OID.NOnmitsugashira, (uint)OID.NYamabiko];
+    public static readonly uint[] TrashSavage = [(uint)OID.SKotengu, (uint)OID.SOnmitsugashira, (uint)OID.SYamabiko];
+
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(savage ? TrashSavage : TrashNormal);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
+
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actors(Enemies(savage ? TrashSavage : TrashNormal));
+    }
+}

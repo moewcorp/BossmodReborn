@@ -51,7 +51,8 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
             ImGui.SameLine();
             if (ImGui.Button("Reload"))
             {
-                CheckpointNoClone(new(owner.Obstacles.RootPath + e.Filename));
+                using var stream = File.OpenRead(owner.Obstacles.RootPath + e.Filename);
+                CheckpointNoClone(new(stream));
             }
 
             ImGui.SetNextItemWidth(100);
@@ -96,7 +97,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 var py = (int)playerOffset.Z;
                 var playerDeepInObstacle = px >= 0 && py >= 0 && px < Bitmap.Width && py < Bitmap.Height && Bitmap[px, py]
                     && (px == 0 || Bitmap[px - 1, py]) && (py == 0 || Bitmap[px, py - 1]) && (px == (Bitmap.Width - 1) || Bitmap[px + 1, py]) && (py == (Bitmap.Height - 1) || Bitmap[px, py + 1]);
-                using var color = ImRaii.PushColor(ImGuiCol.Text, 0xff0000ff, playerDeepInObstacle);
+                using var color = ImRaii.PushColor(ImGuiCol.Text, Colors.TextColor3, playerDeepInObstacle);
                 ImGui.TextUnformatted($"Player cell: {px}x{py}");
                 if (playerDeepInObstacle)
                 {
@@ -110,10 +111,10 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 var y = player?.PosRot.Y ?? 0;
                 var tl = e.Origin + new WDir(HoveredPixel.x, HoveredPixel.y) * Bitmap.PixelSize;
                 var br = tl + new WDir(Bitmap.PixelSize, Bitmap.PixelSize);
-                Camera.Instance?.DrawWorldLine(new(tl.X, y, tl.Z), new(tl.X, y, br.Z), 0xff00ffff);
-                Camera.Instance?.DrawWorldLine(new(tl.X, y, br.Z), new(br.X, y, br.Z), 0xff00ffff);
-                Camera.Instance?.DrawWorldLine(new(br.X, y, br.Z), new(br.X, y, tl.Z), 0xff00ffff);
-                Camera.Instance?.DrawWorldLine(new(br.X, y, tl.Z), new(tl.X, y, tl.Z), 0xff00ffff);
+                Camera.Instance?.DrawWorldLine(new(tl.X, y, tl.Z), new(tl.X, y, br.Z), Colors.TextColor2);
+                Camera.Instance?.DrawWorldLine(new(tl.X, y, br.Z), new(br.X, y, br.Z), Colors.TextColor2);
+                Camera.Instance?.DrawWorldLine(new(br.X, y, br.Z), new(br.X, y, tl.Z), Colors.TextColor2);
+                Camera.Instance?.DrawWorldLine(new(br.X, y, tl.Z), new(tl.X, y, tl.Z), Colors.TextColor2);
             }
         }
 
@@ -123,7 +124,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
             if (player != null)
             {
                 var playerOffset = ((player.Position - e.Origin) / Bitmap.PixelSize).Floor();
-                yield return ((int)playerOffset.X, (int)playerOffset.Z, new(0xff00ff00));
+                yield return ((int)playerOffset.X, (int)playerOffset.Z, new(Colors.Safe));
             }
         }
     }
@@ -162,6 +163,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
     private void DrawEntries(List<ObstacleMapDatabase.Entry> entries)
     {
         Action? modifications = null;
+        using var disableScope = ImRaii.Disabled(!Obstacles.CanEditDatabase());
         for (int i = 0; i < entries.Count; ++i)
         {
             using var id = ImRaii.PushId(i);
@@ -174,9 +176,8 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 if (ImGui.Button("Move down"))
                     modifications += () => (entries[index], entries[index + 1]) = (entries[index + 1], entries[index]);
             ImGui.SameLine();
-            using (ImRaii.Disabled(!Obstacles.CanEditDatabase()))
-                if (ImGui.Button("Delete"))
-                    modifications += () => DeleteMap(entries, index);
+            if (ImGui.Button("Delete"))
+                modifications += () => DeleteMap(entries, index);
             ImGui.SameLine();
             if (ImGui.Button("Edit"))
                 OpenEditor(entries[index]);
@@ -230,7 +231,8 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
 
     private void OpenEditor(ObstacleMapDatabase.Entry entry)
     {
-        var editor = new Editor(this, new(Obstacles.RootPath + entry.Filename), entry);
+        using var stream = File.OpenRead(Obstacles.RootPath + entry.Filename);
+        var editor = new Editor(this, new(stream), entry);
         _ = new UISimpleWindow($"Obstacle map {entry.Filename}", editor.Draw, true, new(1000, 1000));
     }
 }

@@ -1,5 +1,4 @@
 using ImGuiNET;
-using System.Text;
 
 namespace BossMod;
 
@@ -58,7 +57,7 @@ public class StateMachine(List<StateMachine.Phase> phases)
         public PhaseHint Hint = PhaseHint.None; // special flags for phase
     }
 
-    public List<Phase> Phases { get; private init; } = phases;
+    public readonly List<Phase> Phases = phases;
 
     private DateTime _curTime;
     private DateTime _activation;
@@ -69,14 +68,14 @@ public class StateMachine(List<StateMachine.Phase> phases)
     public float TimeSinceTransition => (float)(_curTime - _lastTransition).TotalSeconds;
     public float TimeSinceTransitionClamped => Math.Min(TimeSinceTransition, ActiveState?.Duration ?? 0);
 
-    public int ActivePhaseIndex { get; private set; } = -1;
+    public int ActivePhaseIndex = -1;
     public Phase? ActivePhase => Phases.ElementAtOrDefault(ActivePhaseIndex);
-    public State? ActiveState { get; private set; }
+    public State? ActiveState;
 
     public void Start(DateTime now)
     {
         _activation = _curTime = now;
-        if (Phases.Count > 0)
+        if (Phases.Count != 0)
             TransitionToPhase(0);
     }
 

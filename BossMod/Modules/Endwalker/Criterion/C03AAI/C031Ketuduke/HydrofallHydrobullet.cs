@@ -23,9 +23,9 @@ class HydrofallHydrobullet(BossModule module) : Components.UniformStackSpread(mo
         {
             ref var m = ref Mechanics.AsSpan()[index];
             if (m.Spread)
-                AddSpreads(Raid.WithSlot(true).IncludedInMask(m.Targets).Actors(), m.Activation);
+                AddSpreads(Raid.WithSlot(true, true, true).IncludedInMask(m.Targets).Actors(), m.Activation);
             else
-                AddStacks(Raid.WithSlot(true).IncludedInMask(m.Targets).Actors(), m.Activation);
+                AddStacks(Raid.WithSlot(true, true, true).IncludedInMask(m.Targets).Actors(), m.Activation);
         }
     }
 

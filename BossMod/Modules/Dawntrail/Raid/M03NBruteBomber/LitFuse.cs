@@ -2,74 +2,75 @@ namespace BossMod.Dawntrail.Raid.M03NBruteBomber;
 
 public class LitFuse(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(8);
+    private readonly BarbarousBarrageTower _tower = module.FindComponent<BarbarousBarrageTower>()!;
     private static readonly AOEShapeCircle circle = new(8);
-    private bool sorted;
     private bool fusesOfFury;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var towers = Module.FindComponent<BarbarousBarrageTower>()!.Towers;
         var count = _aoes.Count;
-        if (count > 3)
-            for (var i = 0; i < 4; ++i)
-                yield return _aoes[i] with { Color = Colors.Danger, Risky = towers.Count == 0 };
-        if (count > 7)
-            for (var i = 4; i < 8; ++i)
-                yield return _aoes[i] with { Risky = false };
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 4)
+                aoes[i] = count > 4 ? aoe with { Color = Colors.Danger, Risky = _tower.Towers.Count == 0 } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FusesOfFury)
+        if (spell.Action.ID == (uint)AID.FusesOfFury)
             fusesOfFury = true;
     }
 
     public override void Update()
     {
-        var towers = Module.FindComponent<BarbarousBarrageTower>()!.Towers;
         var count = _aoes.Count;
-        if (towers.Count > 0 && fusesOfFury && count == 8)
+        if (fusesOfFury && _tower!.Towers.Count != 0 && count == 8)
         {
-            var updatedAOEs = new List<AOEInstance>();
             for (var i = 0; i < count; ++i)
             {
                 var a = _aoes[i];
-                var updatedAOE = new AOEInstance(a.Shape, a.Origin, default, a.Activation.AddSeconds(3));
-                updatedAOEs.Add(updatedAOE);
+                _aoes[i] = a with { Activation = a.Activation.AddSeconds(3d) };
             }
-            _aoes = updatedAOEs;
             fusesOfFury = false;
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        void AddAOE(DateTime activation)
         {
-            case SID.LitFuseLong:
-                _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(10.4f)));
-                break;
-            case SID.LitFuseShort:
-                _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(7.4f)));
-                break;
+            _aoes.Add(new(circle, actor.Position, default, activation));
+            if (_aoes.Count == 8)
+                _aoes.SortBy(x => x.Activation);
         }
-        if (_aoes.Count == 8 && !sorted)
+        switch (status.ID)
         {
-            _aoes.SortBy(x => x.Activation);
-            sorted = true;
+            case (uint)SID.LitFuseLong:
+                AddAOE(WorldState.FutureTime(10.4d));
+                break;
+            case (uint)SID.LitFuseShort:
+                AddAOE(WorldState.FutureTime(7.4d));
+                break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0)
-            switch ((AID)spell.Action.ID)
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
             {
-                case AID.SelfDestruct1:
-                case AID.SelfDestruct2:
+                case (uint)AID.SelfDestruct1:
+                case (uint)AID.SelfDestruct2:
                     _aoes.RemoveAt(0);
-                    sorted = false;
                     fusesOfFury = false;
                     break;
             }
@@ -77,8 +78,7 @@ public class LitFuse(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var towers = Module.FindComponent<BarbarousBarrageTower>()!.Towers;
-        if (_aoes.Count > 0 && towers.Count > 0)
+        if (_aoes.Count != 0 && _tower!.Towers.Count != 0)
             hints.Add("Don't panic! AOEs start resolving 3.8s after towers.");
     }
 }

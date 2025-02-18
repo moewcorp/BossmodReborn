@@ -42,10 +42,10 @@ abstract class PuffTethers(BossModule module, bool originAtBoss) : BossComponent
         var moveAngle = Angle.FromDirection(moveDir);
         if (yellow)
         {
-            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle + 45.Degrees(), Colors.Other6);
-            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle + 135.Degrees(), Colors.Other6);
-            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle - 135.Degrees(), Colors.Other6);
-            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle - 45.Degrees(), Colors.Other6);
+            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle + 45f.Degrees(), Colors.Other6);
+            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle + 135f.Degrees(), Colors.Other6);
+            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle - 135f.Degrees(), Colors.Other6);
+            C011Silkie.ShapeYellow.Draw(Arena, movePos, moveAngle - 45f.Degrees(), Colors.Other6);
         }
         else
         {

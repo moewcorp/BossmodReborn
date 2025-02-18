@@ -19,7 +19,7 @@ class Transmission(BossModule module) : Components.CastCounter(module, ActionID.
         _clippedByOthers.Reset();
         foreach (var e in ActiveAOEs())
         {
-            _clippedByOthers |= _clips[e.slot] = Raid.WithSlot().Exclude(e.player).InShape(_shape, e.player.Position, e.direction).Mask();
+            _clippedByOthers |= _clips[e.slot] = Raid.WithSlot(false, true, true).Exclude(e.player).InShape(_shape, e.player.Position, e.direction).Mask();
         }
     }
 
@@ -88,7 +88,7 @@ class Transmission(BossModule module) : Components.CastCounter(module, ActionID.
 
     private IEnumerable<(int slot, Actor player, Angle direction)> ActiveAOEs()
     {
-        foreach (var (slot, player) in Raid.WithSlot(true))
+        foreach (var (slot, player) in Raid.WithSlot(true, true, true))
         {
             if (_snakeInfection[slot])
                 yield return (slot, player, player.Rotation);

@@ -5,7 +5,7 @@ class P2StrengthOfTheWard1LightningStorm : Components.UniformStackSpread
 {
     public P2StrengthOfTheWard1LightningStorm(BossModule module) : base(module, 0, 5)
     {
-        AddSpreads(Raid.WithoutSlot(true));
+        AddSpreads(Raid.WithoutSlot(true, true, true));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

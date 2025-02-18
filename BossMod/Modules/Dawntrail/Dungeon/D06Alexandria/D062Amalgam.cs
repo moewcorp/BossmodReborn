@@ -40,13 +40,13 @@ public enum AID : uint
 
 class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom square = new([new Square(D062Amalgam.ArenaCenter, 23)], [new Square(D062Amalgam.ArenaCenter, 20)]);
+    private static readonly AOEShapeCustom square = new([new Square(D062Amalgam.ArenaCenter, 23f)], [new Square(D062Amalgam.ArenaCenter, 20f)]);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Electrowave && Arena.Bounds == D062Amalgam.StartingBounds)
+        if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == D062Amalgam.StartingBounds)
             _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.5f));
     }
 
@@ -62,38 +62,41 @@ class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
 
 class Electrowave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Electrowave));
 class Disassembly(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Disassembly));
-class CentralizedCurrent(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CentralizedCurrent), new AOEShapeRect(45, 7.5f, 45));
-class SplitCurrent1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SplitCurrent1), new AOEShapeRect(20, 20, -5, -90.Degrees()));
-class SplitCurrent2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SplitCurrent2), new AOEShapeRect(20, 20, -5, 90.Degrees()));
-class SupercellMatrix1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SupercellMatrix1), new AOEShapeTriCone(40, 45.Degrees()));
-class SupercellMatrix2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SupercellMatrix2), new AOEShapeRect(55, 4));
-class StaticSpark(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.StaticSpark), 6);
+class CentralizedCurrent(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CentralizedCurrent), new AOEShapeRect(90f, 7.5f));
+
+abstract class SplitCurrent(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(90f, 12.5f));
+class SplitCurrent1(BossModule module) : SplitCurrent(module, AID.SplitCurrent1);
+class SplitCurrent2(BossModule module) : SplitCurrent(module, AID.SplitCurrent2);
+
+class SupercellMatrix1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SupercellMatrix1), new AOEShapeTriCone(40f, 45.Degrees()));
+class SupercellMatrix2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SupercellMatrix2), new AOEShapeRect(55f, 4f));
+class StaticSpark(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.StaticSpark), 6f);
 class Amalgamight(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Amalgamight));
-class Voltburst(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Voltburst), 6);
-class Superbolt(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Superbolt), 6, 4, 4);
+class Voltburst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Voltburst), 6f);
+class Superbolt(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Superbolt), 6f, 4, 4);
 
 class TernaryCharge(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 20), new AOEShapeDonut(20, 30)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TernaryCharge1)
-            AddSequence(Arena.Center, Module.CastFinishAt(spell));
+        if (spell.Action.ID == (uint)AID.TernaryCharge1)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.TernaryCharge1 => 0,
-                AID.TernaryCharge2 => 1,
-                AID.TernaryCharge3 => 2,
+                (uint)AID.TernaryCharge1 => 0,
+                (uint)AID.TernaryCharge2 => 1,
+                (uint)AID.TernaryCharge3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }

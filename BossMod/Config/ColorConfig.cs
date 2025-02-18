@@ -44,7 +44,7 @@ public sealed class ColorConfig : ConfigNode
     public Color ArenaMeleeRangeIndicator = new(0xffff0000);
 
     [PropertyDisplay("Arena: other")]
-    public Color[] ArenaOther = [new(0xffff0080), new(0xff8080ff), new(0xff80ff80), new(0xffff8040), new(0xff40c0c0), new(0x40008080)];
+    public Color[] ArenaOther = [new(0xffff0080), new(0xff8080ff), new(0xff80ff80), new(0xffff8040), new(0xff40c0c0), new(0x40008080), new(0xffffff00), new(0xffff8000), new(0xffffa080)];
 
     [PropertyDisplay("Arena: interesting player, important for a mechanic")]
     public Color ArenaPlayerInteresting = new(0xffc0c0c0);
@@ -139,5 +139,10 @@ public sealed class ColorConfig : ConfigNode
      new(0x80ffffff), new(0x8000ff00), new(0xffffff00), new(0x800000ff), new(0xff404040),
      new(0xffff0000), new(0xff000000), new(0x80008080), new(0x8080ff80), new(0xffc0c0c0)];
 
+    [PropertyDisplay("Collision debug colors")]
+    public Color[] CollisionColors = [new(0xff00ff00), new(0xff00ffff), new(0xff0000ff)];
+
+    [PropertyDisplay("Pathfinding debug colors")]
+    public Color[] PathfindingColors = [new(0xff007fff), new(0xff808080), new(0xff0000ff), new(0xffff0080)];
     public static ColorConfig DefaultConfig => new();
 }

@@ -1,8 +1,17 @@
 ﻿namespace BossMod.Autorotation;
 
+public interface IRotationModuleData
+{
+    public Type Type { get; }
+    public RotationModuleDefinition Definition { get; }
+    public Func<RotationModuleManager, Actor, RotationModule> Builder { get; }
+}
+
 // the manager contains a set of rotation module instances corresponding to the selected preset/plan
 public sealed class RotationModuleManager : IDisposable
 {
+    private readonly record struct ActiveModule(int DataIndex, RotationModuleDefinition Definition, RotationModule Module);
+
 #pragma warning disable IDE0032
     private Preset? _preset; // if non-null, this preset overrides the configuration
 #pragma warning restore IDE0032
@@ -24,7 +33,7 @@ public sealed class RotationModuleManager : IDisposable
     public PlanExecution? Planner { get; private set; }
     private readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
     private readonly EventSubscriptions _subscriptions;
-    public List<(RotationModuleDefinition Definition, RotationModule Module)>? ActiveModules;
+    private List<ActiveModule>? ActiveModules;
 
     public static readonly Preset ForceDisable = new(""); // empty preset, so if it's activated, rotation is force disabled
 
@@ -44,6 +53,10 @@ public sealed class RotationModuleManager : IDisposable
         (uint)Roleplay.SID.BorrowedFlesh, // used specifically for In from the Cold (Endwalker)
         (uint)Roleplay.SID.FreshPerspective, // sapphire weapon quest
         565, // "Transfiguration" from certain pomanders in Palace of the Dead
+        439, // "Toad", palace of the dead
+        1546, // "Odder", heaven-on-high
+        3502, // "Owlet", EO
+        404, // "Transporting", not a transformation but prevents actions
     ];
 
     public static bool IsTransformStatus(ActorStatus st) => TransformationStatuses.Contains(st.ID);
@@ -62,8 +75,8 @@ public sealed class RotationModuleManager : IDisposable
             WorldState.Actors.InCombatChanged.Subscribe(OnCombatChanged),
             WorldState.Actors.IsDeadChanged.Subscribe(OnDeadChanged),
             WorldState.Actors.CastEvent.Subscribe(OnCastEvent),
-            WorldState.Actors.StatusGain.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && a.Statuses[idx].ID == (uint)Roleplay.SID.RolePlaying)),
-            WorldState.Actors.StatusLose.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && a.Statuses[idx].ID == (uint)Roleplay.SID.RolePlaying)),
+            WorldState.Actors.StatusGain.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsTransformStatus(a.Statuses[idx]))),
+            WorldState.Actors.StatusLose.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsTransformStatus(a.Statuses[idx]))),
             WorldState.Party.Modified.Subscribe(op => DirtyActiveModules(op.Slot == PlayerSlot)),
             WorldState.Client.ActionRequested.Subscribe(OnActionRequested),
             WorldState.Client.CountdownChanged.Subscribe(OnCountdownChanged),
@@ -84,26 +97,26 @@ public sealed class RotationModuleManager : IDisposable
         {
             Service.Log($"[RMM] Changing active plan: '{Planner?.Plan?.Guid}' -> '{expectedPlan?.Guid}'");
             Planner = Bossmods.ActiveModule != null ? new(Bossmods.ActiveModule, expectedPlan) : null;
-            DirtyActiveModules(Preset == null);
+            DirtyActiveModules(_preset == null);
         }
 
         // rebuild modules if needed
-        ActiveModules ??= Preset != null ? RebuildActiveModules(Preset.Modules.Keys) : Planner?.Plan != null ? RebuildActiveModules(Planner.Plan.Modules.Keys) : [];
+        ActiveModules ??= _preset != null ? RebuildActiveModules(_preset.Modules) : Planner?.Plan != null ? RebuildActiveModules(Planner.Plan.Modules) : [];
 
         // forced target update
-        if (Hints.ForcedTarget == null && Preset == null && Planner?.ActiveForcedTarget() is var forced && forced != null)
+        if (Hints.ForcedTarget == null && _preset == null && Planner?.ActiveForcedTarget() is var forced && forced != null)
         {
             Hints.ForcedTarget = forced.Value.Target != StrategyTarget.Automatic
                 ? ResolveTargetOverride(forced.Value.Target, forced.Value.TargetParam)
-                : (ResolveTargetOverride(StrategyTarget.EnemyWithHighestPriority, 0) ?? Bossmods.ActiveModule?.PrimaryActor);
+                : (ResolveTargetOverride(StrategyTarget.EnemyWithHighestPriority, 0) ?? (Bossmods.ActiveModule?.PrimaryActor is var primary && primary != null && !primary.IsDeadOrDestroyed && primary.IsTargetable ? primary : null));
         }
 
         // auto actions
         var target = Hints.ForcedTarget ?? WorldState.Actors.Find(Player?.TargetID ?? 0);
-        foreach (var m in ActiveModules)
+        for (var i = 0; i < ActiveModules.Count; ++i)
         {
-            var mt = m.Module.GetType();
-            var values = Preset?.ActiveStrategyOverrides(mt) ?? Planner?.ActiveStrategyOverrides(mt) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
+            var m = ActiveModules[i];
+            var values = _preset?.ActiveStrategyOverrides(m.DataIndex) ?? Planner?.ActiveStrategyOverrides(m.DataIndex) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
             m.Module.Execute(values, target, estimatedAnimLockDelay, isMoving);
         }
     }
@@ -112,10 +125,59 @@ public sealed class RotationModuleManager : IDisposable
     {
         StrategyTarget.Self => Player,
         StrategyTarget.PartyByAssignment => _prc.SlotsPerAssignment(WorldState.Party) is var spa && param < spa.Length ? WorldState.Party[spa[param]] : null,
-        StrategyTarget.PartyWithLowestHP => WorldState.Party.WithoutSlot().Exclude(param != 0 ? null : Player).MinBy(a => a.HPMP.CurHP),
-        StrategyTarget.EnemyWithHighestPriority => Player != null ? Hints.PriorityTargets.MinBy(e => (e.Actor.Position - Player.Position).LengthSq())?.Actor : null,
+        StrategyTarget.PartyWithLowestHP => FilteredPartyMembers((StrategyPartyFiltering)param).MinBy(a => a.HPMP.CurHP),
+        StrategyTarget.EnemyWithHighestPriority => Hints.PriorityTargets.MaxBy(RateEnemy((StrategyEnemySelection)param))?.Actor,
         StrategyTarget.EnemyByOID => Player != null && (uint)param is var oid && oid != 0 ? Hints.PotentialTargets.Where(e => e.Actor.OID == oid).MinBy(e => (e.Actor.Position - Player.Position).LengthSq())?.Actor : null,
         _ => null
+    };
+
+    public WPos ResolveTargetLocation(StrategyTarget strategy, int param, float off1, float off2) => strategy switch
+    {
+        StrategyTarget.PointAbsolute => new(off1, off2),
+        StrategyTarget.PointWaymark => WorldState.Waymarks[(Waymark)param] is var wm && wm != null ? new WPos(wm.Value.XZ()) + off1 * off2.Degrees().ToDirection() : default,
+        StrategyTarget.PointCenter or StrategyTarget.Automatic => (Bossmods.ActiveModule?.Center + off1 * off2.Degrees().ToDirection()) ?? Player?.Position ?? default,
+        _ => (ResolveTargetOverride(strategy, param)?.Position + off1 * off2.Degrees().ToDirection()) ?? Player?.Position ?? default,
+    };
+
+    public override string ToString() => string.Join(", ", ActiveModules?.Select(m => m.Module.GetType().Name) ?? []);
+
+    private IEnumerable<Actor> FilteredPartyMembers(StrategyPartyFiltering filter)
+    {
+        var fullMask = new BitMask(~0ul);
+        var allowedMask = fullMask;
+        if (!filter.HasFlag(StrategyPartyFiltering.IncludeSelf))
+            allowedMask.Clear(PlayerSlot);
+        if (filter.HasFlag(StrategyPartyFiltering.ExcludeNoPredictedDamage))
+        {
+            var predictedDamage = Hints.PredictedDamage.Aggregate(default(BitMask), (s, p) => s | p.players);
+            allowedMask &= predictedDamage;
+        }
+
+        if (allowedMask.None())
+            return [];
+        var players = allowedMask != fullMask ? WorldState.Party.WithSlot().IncludedInMask(allowedMask).Actors() : WorldState.Party.WithoutSlot();
+        if ((filter & (StrategyPartyFiltering.ExcludeTanks | StrategyPartyFiltering.ExcludeHealers | StrategyPartyFiltering.ExcludeMelee | StrategyPartyFiltering.ExcludeRanged)) != StrategyPartyFiltering.None)
+        {
+            players = players.Where(p => p.Role switch
+            {
+                Role.Tank => !filter.HasFlag(StrategyPartyFiltering.ExcludeTanks),
+                Role.Healer => !filter.HasFlag(StrategyPartyFiltering.ExcludeHealers),
+                Role.Melee => !filter.HasFlag(StrategyPartyFiltering.ExcludeMelee),
+                Role.Ranged => !filter.HasFlag(StrategyPartyFiltering.ExcludeRanged),
+                _ => true,
+            });
+        }
+        return players;
+    }
+
+    private Func<AIHints.Enemy, float> RateEnemy(StrategyEnemySelection criterion) => criterion switch
+    {
+        StrategyEnemySelection.Closest => Player != null ? e => -(e.Actor.Position - Player.Position).LengthSq() : _ => 0,
+        StrategyEnemySelection.LowestCurHP => e => -e.Actor.HPMP.CurHP,
+        StrategyEnemySelection.HighestCurHP => e => e.Actor.HPMP.CurHP,
+        StrategyEnemySelection.LowestMaxHP => e => -e.Actor.HPMP.MaxHP,
+        StrategyEnemySelection.HighestMaxHP => e => e.Actor.HPMP.MaxHP,
+        _ => _ => 0
     };
 
     private Plan? CalculateExpectedPlan()
@@ -129,25 +191,22 @@ public sealed class RotationModuleManager : IDisposable
         return plans.SelectedIndex >= 0 ? plans.Plans[plans.SelectedIndex] : null;
     }
 
-    public override string ToString() => string.Join(", ", ActiveModules?.Select(m => m.Module.GetType().Name) ?? []);
-
     // TODO: consider not recreating modules that were active and continue to be active?
-    private List<(RotationModuleDefinition Definition, RotationModule Module)> RebuildActiveModules(IEnumerable<Type> types)
+    private List<ActiveModule> RebuildActiveModules<T>(List<T> modules) where T : IRotationModuleData
     {
-        List<(RotationModuleDefinition Definition, RotationModule Module)> res = [];
+        List<ActiveModule> res = [];
         var player = Player;
         if (player != null)
         {
             var isRPMode = player.Statuses.Any(IsTransformStatus);
-            foreach (var m in types)
+            for (int i = 0; i < modules.Count; ++i)
             {
-                if (!RotationModuleRegistry.Modules.TryGetValue(m, out var def))
+                var def = modules[i].Definition;
+                if (!def.Classes[(int)player.Class] || player.Level < def.MinLevel || player.Level > def.MaxLevel)
                     continue;
-                if (!def.Definition.Classes[(int)player.Class] || player.Level < def.Definition.MinLevel || player.Level > def.Definition.MaxLevel)
+                if (!def.CanUseWhileRoleplaying && isRPMode)
                     continue;
-                if (!def.Definition.CanUseWhileRoleplaying && isRPMode)
-                    continue;
-                res.Add((def.Definition, def.Builder(this, player)));
+                res.Add(new(i, def, modules[i].Builder(this, player)));
             }
         }
         return res;
@@ -166,16 +225,16 @@ public sealed class RotationModuleManager : IDisposable
 
         CombatStart = actor.InCombat ? WorldState.CurrentTime : default; // keep track of combat time in case rotation modules want to do something special in openers
 
-        if (!actor.InCombat && (Preset == ForceDisable || Config.ClearPresetOnCombatEnd))
+        if (!actor.InCombat && (_preset == ForceDisable || Config.ClearPresetOnCombatEnd))
         {
             // player exits combat => clear manual overrides
-            Service.Log($"[RMM] Player exits combat => clear preset '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player exits combat => clear preset '{_preset?.Name ?? "<n/a>"}'");
             Preset = null;
         }
         else if (actor.InCombat && WorldState.Client.CountdownRemaining > Config.EarlyPullThreshold)
         {
             // player enters combat while countdown is in progress => force disable
-            Service.Log($"[RMM] Player ninja pulled => force-disabling from '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player ninja pulled => force-disabling from '{_preset?.Name ?? "<n/a>"}'");
             Preset = ForceDisable;
         }
         // if player enters combat when countdown is either not active or around zero, proceed normally - if override is queued, let it run, otherwise let plan run
@@ -190,7 +249,7 @@ public sealed class RotationModuleManager : IDisposable
         if (actor.IsDead && actor.InCombat)
         {
             // player died in combat => force disable (otherwise there's a risk of dying immediately after rez)
-            Service.Log($"[RMM] Player died in combat => force-disabling from '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Player died in combat => force-disabling from '{_preset?.Name ?? "<n/a>"}'");
             Preset = ForceDisable;
         }
         // else: player either died outside combat (no need to touch anything) or rez'd (unless player cleared override, we stay in force disable mode)
@@ -202,14 +261,14 @@ public sealed class RotationModuleManager : IDisposable
         {
             // countdown ended and player is not in combat - so either it was cancelled, or pull didn't happen => clear manual overrides
             // note that if pull will happen regardless after this, we'll start executing plan normally (without prepull part)
-            Service.Log($"[RMM] Countdown expired or aborted => clear preset '{Preset?.Name ?? "<n/a>"}'");
+            Service.Log($"[RMM] Countdown expired or aborted => clear preset '{_preset?.Name ?? "<n/a>"}'");
             Preset = null;
         }
     }
 
     private void OnPresetModified(Preset? prev, Preset? curr)
     {
-        if (prev != null && prev == Preset)
+        if (prev != null && prev == _preset)
             Preset = curr;
     }
 

@@ -44,7 +44,7 @@ class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module)
 {
     public static readonly AOEShapeCircle Circle = new(8);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.VoidSpark)
             CurrentBaits.Add(new(actor, actor, Circle, WorldState.FutureTime(5.1f)));
@@ -84,18 +84,18 @@ class VoidSpark(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.VoidSpark)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.VoidSpark)
             _aoes.RemoveAt(0);
     }
 }
 
-class DeepDarkness(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeepDarkness), new AOEShapeDonut(12, 25));
-class MagicBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagicBurst), new AOEShapeCircle(15));
-class VoidBlizzardIIIAOE(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidBlizzardIIIAOE), 5);
-class AbyssalSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssalSwing), new AOEShapeCone(7.5f, 45.Degrees()), (uint)OID.Biblioklept);
-class AbyssalCharge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AbyssalCharge), new AOEShapeRect(41, 2));
+class DeepDarkness(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepDarkness), new AOEShapeDonut(12, 25));
+class MagicBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagicBurst), 15);
+class VoidBlizzardIIIAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidBlizzardIIIAOE), 5);
+class AbyssalSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssalSwing), new AOEShapeCone(7.5f, 45.Degrees()), [(uint)OID.Biblioklept]);
+class AbyssalCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalCharge), new AOEShapeRect(41, 2));
 
-class VoidCall(BossModule module) : Components.GenericTowers(module)
+class VoidCall(BossModule module) : Components.GenericTowers(module, prioritizeInsufficient: true)
 {
     public override void OnActorCreated(Actor actor)
     {
@@ -147,21 +147,23 @@ class D053EverlivingBibliotaphStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 31, NameID = 3930)]
 public class D053EverlivingBibliotaph(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(377.8f, -59.7f), 24.5f)], [new Rectangle(new(353.541f, -59.553f), 20, 1.25f, 89.977f.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(377.8f, -59.7f), 24.5f, 80)], [new Rectangle(new(353.541f, -59.553f), 20, 1.25f, 89.977f.Degrees())]);
+    private static readonly uint[] adds = [(uint)OID.Bibliophile, (uint)OID.Biblioklept, (uint)OID.Bibliomancer];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Bibliophile).Concat([PrimaryActor]).Concat(Enemies(OID.Biblioklept)).Concat(Enemies(OID.Bibliomancer)));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(adds));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.Biblioklept or OID.Bibliophile or OID.Bibliomancer => 2,
-                OID.Boss => 1,
+                OID.Biblioklept or OID.Bibliophile or OID.Bibliomancer => 1,
                 _ => 0
             };
         }

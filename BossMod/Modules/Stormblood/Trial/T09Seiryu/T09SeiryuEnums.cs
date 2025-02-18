@@ -56,7 +56,7 @@ public enum AID : uint
 
     KanaboVisual1 = 14316, // IwaNoShiki->location, no cast, ???
     KanaboVisual2 = 15392, // IwaNoShiki->self, 6.0s cast, single-target
-    Kanabo2 = 15391, // IwaNoShiki->self, 3.0s cast, range 40+R 60-degree cone
+    Kanabo = 15391, // IwaNoShiki->self, 3.0s cast, range 40+R 60-degree cone
 
     KujiKiri = 14305, // Boss->self, 4.0s cast, single-target
 
@@ -84,10 +84,10 @@ public enum AID : uint
 
     YamaKagura = 14355, // TenNoShiki->self, 5.0s cast, range 60+R width 6 rect
 
-    Handprint1 = 14309, // YamaNoShiki->self, no cast, single-target
-    Handprint2 = 14310, // YamaNoShiki->self, no cast, single-target
-    Handprint3 = 14343, // Helper->self, 4.5s cast, range 20 180-degree cone, handprint 3 and 4 happen at exactly the same time and spot
-    Handprint4 = 14344, // Helper->self, 4.5s cast, range 40 180-degree cone
+    HandprintVisual1 = 14309, // YamaNoShiki->self, no cast, single-target
+    HandprintVisual2 = 14310, // YamaNoShiki->self, no cast, single-target
+    Handprint1 = 14343, // Helper->self, 4.5s cast, range 20 180-degree cone, handprint 3 and 4 happen at exactly the same time and spot
+    Handprint2 = 14344, // Helper->self, 4.5s cast, range 40 180-degree cone
 
     ForceOfNature1 = 14346, // Helper->self, 5.0s cast, range 21 circle, knockback 10 AwayFromOrigin
     ForceOfNature2 = 14345, // Helper->self, 5.0s cast, range 5 circle

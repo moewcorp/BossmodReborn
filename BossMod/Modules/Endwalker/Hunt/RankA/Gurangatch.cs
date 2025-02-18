@@ -2,12 +2,13 @@
 
 public enum OID : uint
 {
-    Boss = 0x361B, // R6.000, x1
+    Boss = 0x361B // R6.000, x1
 }
 
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
+
     LeftHammerSlammer = 27493, // Boss->self, 5.0s cast, range 30 180-degree cone
     RightHammerSlammer = 27494, // Boss->self, 5.0s cast, range 30 180-degree cone
     LeftHammerSecond = 27495, // Boss->self, 1.0s cast, range 30 180-degree cone
@@ -19,41 +20,51 @@ public enum AID : uint
     OctupleSlammerRestL = 27499, // Boss->self, 1.0s cast, range 30 180-degree cone
     OctupleSlammerRestR = 27500, // Boss->self, 1.0s cast, range 30 180-degree cone
     WildCharge = 27511, // Boss->players, no cast, width 8 rect charge
-    BoneShaker = 27512, // Boss->self, 4.0s cast, range 30 circle
+    BoneShaker = 27512 // Boss->self, 4.0s cast, range 30 circle
 }
 
 class Slammer(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
+    private static readonly AOEShapeCone _shape = new(30f, 90f.Degrees());
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.OctupleSlammerLCW:
-            case AID.OctupleSlammerRCW:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 90.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
+            case (uint)AID.OctupleSlammerLCW:
+            case (uint)AID.OctupleSlammerRCW:
+                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 90f.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
                 ImminentColor = Colors.Danger;
                 break;
-            case AID.OctupleSlammerLCCW:
-            case AID.OctupleSlammerRCCW:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, -90.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
+            case (uint)AID.OctupleSlammerLCCW:
+            case (uint)AID.OctupleSlammerRCCW:
+                Sequences.Add(new(_shape, caster.Position, spell.Rotation, -90f.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
                 ImminentColor = Colors.Danger;
                 break;
-            case AID.LeftHammerSlammer:
-            case AID.RightHammerSlammer:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 180.Degrees(), Module.CastFinishAt(spell), 3.6f, 2, 1));
-                ImminentColor = Colors.AOE;
+            case (uint)AID.LeftHammerSlammer:
+            case (uint)AID.RightHammerSlammer:
+                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 180f.Degrees(), Module.CastFinishAt(spell), 3.6f, 2, 1));
+                ImminentColor = 0;
                 break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0 && caster == Module.PrimaryActor && (AID)spell.Action.ID is AID.LeftHammerSlammer or AID.RightHammerSlammer or AID.LeftHammerSecond or AID.RightHammerSecond
-            or AID.OctupleSlammerLCW or AID.OctupleSlammerRCW or AID.OctupleSlammerRestL or AID.OctupleSlammerRestR or AID.OctupleSlammerLCCW or AID.OctupleSlammerRCCW)
+        switch (spell.Action.ID)
         {
-            AdvanceSequence(0, WorldState.CurrentTime);
+            case (uint)AID.LeftHammerSlammer:
+            case (uint)AID.RightHammerSlammer:
+            case (uint)AID.LeftHammerSecond:
+            case (uint)AID.RightHammerSecond:
+            case (uint)AID.OctupleSlammerLCW:
+            case (uint)AID.OctupleSlammerRCW:
+            case (uint)AID.OctupleSlammerRestL:
+            case (uint)AID.OctupleSlammerRestR:
+            case (uint)AID.OctupleSlammerLCCW:
+            case (uint)AID.OctupleSlammerRCCW:
+                AdvanceSequence(0, WorldState.CurrentTime);
+                break;
         }
     }
 }
@@ -70,5 +81,5 @@ class GurangatchStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10631)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10631)]
 public class Gurangatch(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

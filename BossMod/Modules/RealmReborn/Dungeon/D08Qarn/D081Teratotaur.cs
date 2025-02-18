@@ -18,17 +18,17 @@ public enum AID : uint
     MortalRay = 934, // Boss->self, 1.5s cast, raidwide doom debuff
 
     AutoAttackWespe = 871, // DungWespe->player, no cast
-    FinalSting = 919, // DungWespe->player, 3.0s cast
+    FinalSting = 919 // DungWespe->player, 3.0s cast
 }
 
 public enum SID : uint
 {
-    Doom = 210, // Boss->player, extra=0x0
+    Doom = 210 // Boss->player, extra=0x0
 }
 
-class Triclip(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Triclip), new AOEShapeRect(5.25f, 2));
-class Mow(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(module, ActionID.MakeSpell(AID.Mow), new AOEShapeCone(8.25f, 60.Degrees()));
-class FrightfulRoar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FrightfulRoar), new AOEShapeCircle(8.25f));
+class Triclip(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Triclip), new AOEShapeRect(5.25f, 2f));
+class Mow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mow), new AOEShapeCone(8.25f, 60f.Degrees()));
+class FrightfulRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrightfulRoar), 8.25f);
 
 class MortalRay(BossModule module) : BossComponent(module)
 {
@@ -41,9 +41,9 @@ class MortalRay(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        _platforms[0] ??= Module.Enemies(OID.Platform1).FirstOrDefault();
-        _platforms[1] ??= Module.Enemies(OID.Platform2).FirstOrDefault();
-        _platforms[2] ??= Module.Enemies(OID.Platform3).FirstOrDefault();
+        _platforms[0] ??= Module.Enemies((uint)OID.Platform1)[0];
+        _platforms[1] ??= Module.Enemies((uint)OID.Platform2)[0];
+        _platforms[2] ??= Module.Enemies((uint)OID.Platform3)[0];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -72,13 +72,13 @@ class MortalRay(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _dooms.Set(Raid.FindSlot(actor.InstanceID));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _dooms.Clear(Raid.FindSlot(actor.InstanceID));
     }
 }
@@ -95,22 +95,23 @@ class D081TeratotaurStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1567)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1567)]
 public class D081Teratotaur(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly PolygonCustom[] shape = [new ([new(-94.9f, -59), new(-70.2f, -46.1f), new(-55.3f, -46.6f),
+    private static readonly PolygonCustom[] shape = [new ([new(-94.9f, -59f), new(-70.2f, -46.1f), new(-55.3f, -46.6f),
     new(-55.7f, -55.6f), new(-51.1f, -60.9f), new(-51.2f, -65), new(-58.1f, -67.7f),
     new(-64.7f, -70.6f), new(-88.4f, -72.2f), new(-89, -66.2f), new(-94.9f, -65.5f)])];
     public static readonly ArenaBoundsComplex arena = new(shape);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.DungWespe => 2,
-                OID.Boss => 1,
+                (uint)OID.DungWespe => 1,
                 _ => 0
             };
         }
@@ -119,6 +120,6 @@ public class D081Teratotaur(WorldState ws, Actor primary) : BossModule(ws, prima
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.DungWespe));
+        Arena.Actors(Enemies((uint)OID.DungWespe));
     }
 }

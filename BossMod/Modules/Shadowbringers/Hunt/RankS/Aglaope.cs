@@ -29,41 +29,35 @@ class SongOfTorment(BossModule module) : Components.CastInterruptHint(module, Ac
 //not sure how to do this though considering there can be anywhere from 0-32 targets with different time for effect results each
 class SeductiveSonata(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _activation;
     private DateTime _time;
-    private bool casting;
+    private AOEInstance? _aoe;
     private static readonly AOEShapeCircle circle = new(16.2f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (casting || (_time != default && _time > WorldState.CurrentTime))
-            yield return new(circle, Module.PrimaryActor.Position, default, _activation);
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _time > WorldState.CurrentTime ? Utils.ZeroOrOne(_aoe) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.SeductiveSonata)
         {
-            casting = true;
-            _activation = Module.CastFinishAt(spell);
+            _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
             _time = Module.CastFinishAt(spell, 2.2f);
         }
     }
 
     public override void Update()
     {
-        if (_time != default && _time < WorldState.CurrentTime)
+        if (_time < WorldState.CurrentTime)
         {
             _time = default;
-            casting = false;
+            _aoe = null;
         }
     }
 }
 
-class DeathlyVerse(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeathlyVerse), new AOEShapeCircle(6));
-class Tornado(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Tornado), 6);
-class FourfoldSuffering(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FourfoldSuffering), new AOEShapeDonut(5, 50));
-class AncientAero(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AncientAero), new AOEShapeRect(42.4f, 3));
+class DeathlyVerse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathlyVerse), 6);
+class Tornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tornado), 6);
+class FourfoldSuffering(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FourfoldSuffering), new AOEShapeDonut(5, 50));
+class AncientAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientAero), new AOEShapeRect(42.4f, 3));
 class AncientAeroIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AncientAeroIII));
 class AncientAeroIIIKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AncientAeroIII), 10, shape: new AOEShapeCircle(30));
 

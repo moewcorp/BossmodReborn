@@ -2,7 +2,7 @@
 
 class SpinyShield(BossModule module) : BossComponent(module)
 {
-    private readonly IReadOnlyList<Actor> _shield = module.Enemies(OID.SpinyShield);
+    private readonly List<Actor> _shield = module.Enemies(OID.SpinyShield);
     public Actor? ActiveShield => _shield.FirstOrDefault(a => a.EventState != 7);
 
     private const float _radius = 6; // TODO: verify

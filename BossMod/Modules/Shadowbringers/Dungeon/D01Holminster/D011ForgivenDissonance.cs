@@ -23,10 +23,10 @@ public enum AID : uint
 
 class Thumbscrew(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Thumbscrew), 4);
 class ThePathofLight(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ThePathOfLight));
-class GibbetCage(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GibbetCage), new AOEShapeCircle(8));
-class HereticsFork(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HereticsFork), new AOEShapeCross(40, 3));
-class LightShot(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LightShot), new AOEShapeRect(40, 2));
-class WoodenHorse(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WoodenHorse), new AOEShapeCone(40, 45.Degrees()));
+class GibbetCage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GibbetCage), 8);
+class HereticsFork(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HereticsFork), new AOEShapeCross(40f, 3f));
+class LightShot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightShot), new AOEShapeRect(40f, 2f));
+class WoodenHorse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WoodenHorse), new AOEShapeCone(40f, 45f.Degrees()));
 class Pillory(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.Pillory));
 
 class D011ForgivenDissonanceStates : StateMachineBuilder

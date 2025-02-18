@@ -2,11 +2,11 @@ namespace BossMod.Global.GoldSaucer.SliceIsRight;
 
 public enum OID : uint
 {
-    Boss = 0x25AB, //R=1.80 Yojimbo
-    Daigoro = 0x25AC, //R=2.50
-    Bamboo = 0x25AD, //R=0.50
+    Boss = 0x25AB, //R=1.8
+    Daigoro = 0x25AC, //R=2.5
+    Bamboo = 0x25AD, //R=0.5
     Helper = 0x1EAEDF,
-    Somethingoutsidethearena = 0x2BC8, //not sure what this does, spawns multiple times before the minigame starts, but casts something during the minigame, probably just for visuals
+    VisualOutsideArena = 0x2BC8,
     HelperCupPhase1 = 0x1EAEB7,
     HelperCupPhase2 = 0x1EAEB6,
     HelperCupPhase3 = 0x1EAE9D,
@@ -18,106 +18,82 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Yoyimbodoesstuff1 = 19070, // 25AB->self, no cast, single-target
-    Yoyimbodoesstuff2 = 18331, // 25AB->self, no cast, single-tat
-    Yoyimbodoesstuff3 = 18329, // 25AB->self, no cast, single-target
-    Yoyimbodoesstuff4 = 18332, // 25AB->self, no cast, single-target
-    Yoyimbodoesstuff5 = 18328, // 25AB->location, no cast, single-target
-    Yoyimbodoesstuff6 = 18326, // 25AB->self, 3.0s cast, single-target
-    Yoyimbodoesstuff7 = 18339, // 25AB->self, 3.0s cast, single-target
-    Yoyimbodoesstuff8 = 18340, // 25AB->self, no cast, single-target
-    Yoyimbodoesstuff9 = 19026, // 25AB->self, no cast, single-target
-    Somethingoutsidethearena = 18338, // 2BC8->self, no cast, single-target
-    BambooSplit = 18333, // 25AD->self, 0.7s cast, range 28 width 5 rect
-    BambooCircleFall = 18334, // 25AD->self, 0.7s cast, range 11 circle 
-    BambooSpawn = 18327, // 25AD->self, no cast, range 3 circle
-    FirstGilJump = 18335, // 25AC->location, 2.5s cast, width 7 rect charge
-    NextGilJump = 18336, // 25AC->location, 1.5s cast, width 7 rect charge
-    BadCup = 18337, // 25AC->self, 1.0s cast, range 15+R 120-degree cone
+    YojimboVisual1 = 19070, // Boss->self, no cast, single-target
+    YojimboVisual2 = 18331, // Boss->self, no cast, single-tat
+    YojimboVisual3 = 18329, // Boss->self, no cast, single-target
+    YojimboVisual4 = 18332, // Boss->self, no cast, single-target
+    YojimboVisual5 = 18328, // Boss->location, no cast, single-target
+    YojimboVisual6 = 18326, // Boss->self, 3.0s cast, single-target
+    YojimboVisual7 = 18339, // Boss->self, 3.0s cast, single-target
+    YojimboVisual8 = 18340, // Boss->self, no cast, single-target
+    YojimboVisual9 = 19026, // Boss->self, no cast, single-target
+    VisualOutsideArena = 18338, // VisualOutsideArena->self, no cast, single-target
+
+    BambooSplit = 18333, // Bamboo->self, 0.7s cast, range 28 width 5 rect
+    BambooCircleFall = 18334, // Bamboo->self, 0.7s cast, range 11 circle 
+    BambooSpawn = 18327, // Bamboo->self, no cast, range 3 circle
+    FirstGilJump = 18335, // Daigoro->location, 2.5s cast, width 7 rect charge
+    NextGilJump = 18336, // Daigoro->location, 1.5s cast, width 7 rect charge
+    BadCup = 18337, // Daigoro->self, 1.0s cast, range 15+R 120-degree cone
 }
 
 class BambooSplits(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _doublesidedsplit = [];
-    private readonly List<Actor> _singlesplit = [];
-    private readonly List<Actor> _circle = [];
-    private readonly List<Actor> _doublesidedsplitToberemoved = [];
-    private readonly List<Actor> _singlesplitToberemoved = [];
-    private readonly List<Actor> _circleToberemoved = [];
-    private readonly List<Actor> _bamboospawn = [];
-    private static readonly AOEShapeRect rectdouble = new(28, 2.5f, 28);
-    private static readonly AOEShapeRect rectsingle = new(28, 2.5f);
+    private readonly List<AOEInstance> _aoes = new(8);
+    private static readonly AOEShapeRect rect = new(28, 2.5f);
     private static readonly AOEShapeCircle circle = new(11);
     private static readonly AOEShapeCircle bamboospawn = new(3);
-    private DateTime _activation;
-    private DateTime _time;
+    private static readonly Angle a90 = 90.Degrees();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        foreach (var b in _doublesidedsplit)
-            yield return new(rectdouble, b.Position, b.Rotation + 90.Degrees(), _activation.AddSeconds(7));
-        foreach (var b in _singlesplit)
-            yield return new(rectsingle, b.Position, b.Rotation + 90.Degrees(), _activation.AddSeconds(7));
-        foreach (var b in _circle)
-            yield return new(circle, b.Position, b.Rotation, _activation.AddSeconds(7));
-        foreach (var b in _bamboospawn)
-            yield return new(bamboospawn, b.Position); //activation time varies a lot (depending on the set?), just avoid entirely
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnActorCreated(Actor actor)
     {
         if ((OID)actor.OID is OID.HelperCircle or OID.HelperDoubleRect or OID.HelperSingleRect)
-            _bamboospawn.Add(actor);
-    }
-
-    public override void Update()
-    {
-        if (_time != default && WorldState.CurrentTime > _time)
-        {
-            _time = default;
-            _circle.RemoveAll(_circleToberemoved.Contains);
-            _circleToberemoved.Clear();
-            _singlesplit.RemoveAll(_singlesplitToberemoved.Contains);
-            _singlesplitToberemoved.Clear();
-            _doublesidedsplit.RemoveAll(_doublesidedsplitToberemoved.Contains);
-            _doublesidedsplitToberemoved.Clear();
-        }
+            _aoes.Add(new(bamboospawn, actor.Position, default, WorldState.FutureTime(2.7f)));
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00010002) //bamboo gets activated, technically we could draw the AOEs before, but then we could see different sets overlap
+        if (state == 0x00010002)
         {
-            if ((OID)actor.OID == OID.HelperCircle && !_circle.Contains(actor))
-                _circle.Add(actor);
-            else if ((OID)actor.OID == OID.HelperSingleRect && !_singlesplit.Contains(actor))
-                _singlesplit.Add(actor);
-            else if ((OID)actor.OID == OID.HelperDoubleRect && !_doublesidedsplit.Contains(actor))
-                _doublesidedsplit.Add(actor);
-            _activation = WorldState.FutureTime(7);
-        }
-        else if (state == 0x00040008) //bamboo deactivation animation, spell casts end about 0.75s later
-        {
+            var activation = WorldState.FutureTime(7); // activation varies per set, taking the lowest we can find
             if ((OID)actor.OID == OID.HelperCircle)
-                _circleToberemoved.Add(actor);
+                _aoes.Add(new(circle, actor.Position, actor.Rotation, activation));
             else if ((OID)actor.OID == OID.HelperSingleRect)
-                _singlesplitToberemoved.Add(actor);
+                _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, activation));
             else if ((OID)actor.OID == OID.HelperDoubleRect)
-                _doublesidedsplitToberemoved.Add(actor);
-            _time = WorldState.FutureTime(0.75f);
+            {
+                _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, activation));
+                _aoes.Add(new(rect, actor.Position, actor.Rotation - a90, activation));
+            }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_bamboospawn.Count > 0 && (AID)spell.Action.ID == AID.BambooSpawn)
-            _bamboospawn.RemoveAt(0);
+        if (_aoes.Count != 0)
+        {
+            switch ((AID)spell.Action.ID)
+            {
+                case AID.BambooSpawn:
+                    _aoes.RemoveAll(x => x.Origin == caster.Position && x.Shape == bamboospawn);
+                    break;
+                case AID.BambooSplit:
+                case AID.BambooCircleFall:
+                    AOEInstance[] aoesToRemove = [.. _aoes.Where((aoe, index) => aoe.Origin == caster.Position).Take(2)];
+                    if (aoesToRemove.Length >= 1)
+                        _aoes.Remove(aoesToRemove[0]);
+                    if (aoesToRemove.Length == 2 && aoesToRemove[0].Activation == aoesToRemove[1].Activation)
+                        _aoes.Remove(aoesToRemove[1]);
+                    break;
+            }
+        }
     }
 }
 
 class DaigoroFirstGilJump(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.FirstGilJump), 3.5f);
 class DaigoroNextGilJump(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.NextGilJump), 3.5f);
-class DaigoroBadCup(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BadCup), new AOEShapeCone(17.5f, 60.Degrees()));
 
 class TheSliceIsRightStates : StateMachineBuilder
 {
@@ -131,7 +107,8 @@ class TheSliceIsRightStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.GoldSaucer, GroupID = 181, NameID = 9066)]
-public class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, new(70.5f, -36), new ArenaBoundsCircle(15))
+public class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    protected override bool CheckPull() { return PrimaryActor != null; }
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(70.5f, -36), 15 * CosPI.Pi28th, 28)]);
+    protected override bool CheckPull() => PrimaryActor != null;
 }

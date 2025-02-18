@@ -5,7 +5,6 @@ class T09SeiryuStates : StateMachineBuilder
     public T09SeiryuStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<BlueBolt>()
             .ActivateOnEnter<RedRush>()

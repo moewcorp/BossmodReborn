@@ -4,24 +4,24 @@ public enum OID : uint
 {
     Boss = 0x2C58, //R=3.6
     Thunderhead = 0x2C59, //R=1.0
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    AutoAttack = 6499, // 2C58->player, no cast, single-target
-    RawInstinct = 18604, // 2C58->self, 3.0s cast, single-target
-    BodyBlow = 18601, // 2C58->player, 4.0s cast, single-target
-    VoidThunderII = 18602, // 2C58->location, 3.0s cast, range 4 circle
-    LightningBolt = 18606, // 2C59->self, no cast, range 8 circle
-    DadJoke = 18605, // 2C58->self, no cast, range 25+R 120-degree cone, knockback 15, dir forward
-    VoidThunderIII = 18603, // 2C58->player, 4.0s cast, range 20 circle
+    AutoAttack = 6499, // Boss->player, no cast, single-target
+    RawInstinct = 18604, // Boss->self, 3.0s cast, single-target
+    BodyBlow = 18601, // Boss->player, 4.0s cast, single-target
+    VoidThunderII = 18602, // Boss->location, 3.0s cast, range 4 circle
+    LightningBolt = 18606, // Thunderhead->self, no cast, range 8 circle
+    DadJoke = 18605, // Boss->self, no cast, range 25+R 120-degree cone, knockback 15, dir forward
+    VoidThunderIII = 18603 // Boss->player, 4.0s cast, range 20 circle
 }
 
 public enum SID : uint
 {
     CriticalStrikes = 1797, // Boss->Boss, extra=0x0
-    Electrocution = 271, // Boss/2C59->player, extra=0x0
+    Electrocution = 271 // Boss/2C59->player, extra=0x0
 }
 
 public enum IconID : uint
@@ -41,7 +41,7 @@ class DadJoke(BossModule module) : Components.Knockback(module)
             yield return new(Module.PrimaryActor.Position, 15, _activation, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position), Kind: Kind.DirForward);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.BaitKnockback)
             _activation = WorldState.FutureTime(5);
@@ -56,7 +56,7 @@ class DadJoke(BossModule module) : Components.Knockback(module)
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Thunderhead>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 }
 
-class VoidThunderII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidThunderII), 4);
+class VoidThunderII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidThunderII), 4);
 class RawInstinct(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.RawInstinct), "Prepare to dispel buff");
 class VoidThunderIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.VoidThunderIII), "Raidwide + Electrocution");
 class BodyBlow(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.BodyBlow), "Soft Tankbuster");
@@ -105,7 +105,7 @@ class Stage26Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9231, SortOrder = 2)]
 public class Stage26Act2 : BossModule
 {
-    public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }

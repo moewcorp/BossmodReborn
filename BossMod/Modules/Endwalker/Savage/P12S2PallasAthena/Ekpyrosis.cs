@@ -1,7 +1,8 @@
 ﻿namespace BossMod.Endwalker.Savage.P12S2PallasAthena;
 
-class EkpyrosisProximityV(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EkpyrosisProximityV), 19); // TODO: verify falloff
-class EkpyrosisProximityH(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EkpyrosisProximityH), new AOEShapeCircle(19)); // TODO: verify falloff
+abstract class Ekpyrosis(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 19); // TODO: verify falloff
+class EkpyrosisProximityV(BossModule module) : Ekpyrosis(module, AID.EkpyrosisProximityV);
+class EkpyrosisProximityH(BossModule module) : Ekpyrosis(module, AID.EkpyrosisProximityH);
 
 class EkpyrosisExaflare(BossModule module) : Components.Exaflare(module, 6)
 {
@@ -9,7 +10,7 @@ class EkpyrosisExaflare(BossModule module) : Components.Exaflare(module, 6)
     {
         if ((AID)spell.Action.ID is AID.EkpyrosisExaflareFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = spell.LocXZ, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
         }
     }
 
@@ -36,7 +37,7 @@ class EkpyrosisSpread : Components.UniformStackSpread
 {
     public EkpyrosisSpread(BossModule module) : base(module, 0, 6)
     {
-        foreach (var p in Raid.WithoutSlot(true))
+        foreach (var p in Raid.WithoutSlot(true, true, true))
             AddSpread(p, module.StateMachine.NextTransitionWithFlag(StateMachine.StateHint.Raidwide));
     }
 

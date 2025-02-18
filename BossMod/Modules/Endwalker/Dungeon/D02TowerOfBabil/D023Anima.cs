@@ -57,10 +57,7 @@ public enum AID : uint
 
 public enum TetherID : uint
 {
-    PhantomPain = 162, // Helper->Helper
-    AetherialPullBad = 57, // MegaGraviton->player
-    AetherialPullGood = 17, // MegaGraviton->player
-    AnimaDrawsPower = 22 // Helper->Boss
+    AetherialPullGood = 17 // MegaGraviton->player
 }
 
 public enum IconID : uint
@@ -145,7 +142,7 @@ class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(module, 
         if (Actors.Contains(actor))
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(19, 0), Arena.Center + new WDir(-19, 0), 20), Activation);
         else if (Chasers.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(actor.Position, 90.Degrees(), 40, 40, 3));
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(actor.Position, new WDir(1, 0), 40, 40, 3));
     }
 
     public override void Update()
@@ -156,11 +153,11 @@ class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(module, 
     }
 }
 
-class PhantomPain(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PhantomPain2), new AOEShapeRect(10, 10, 10));
-class PaterPatriaeAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PaterPatriaeAOE), new AOEShapeRect(60, 4));
-class CharnelClaw(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CharnelClaw), new AOEShapeRect(40, 2.5f), 5);
+class PhantomPain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomPain2), new AOEShapeRect(20, 10));
+class PaterPatriaeAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PaterPatriaeAOE), new AOEShapeRect(60, 4));
+class CharnelClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CharnelClaw), new AOEShapeRect(40, 2.5f), 5);
 class ErruptingPain(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.EruptingPain), 6);
-class ObliviatingClawSpawnAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ObliviatingClawSpawnAOE), new AOEShapeCircle(3));
+class ObliviatingClawSpawnAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ObliviatingClawSpawnAOE), 3);
 class Oblivion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OblivionVisual), "Raidwide x16");
 class MegaGraviton(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MegaGraviton));
 

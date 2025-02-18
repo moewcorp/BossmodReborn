@@ -28,7 +28,7 @@ public enum AID : uint
 
 class HighTensionDischarger(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HighTensionDischarger));
 class RailCannon(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RailCannon));
-class HighGravity(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HighGravity), new AOEShapeCircle(8));
+class HighGravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HighGravity), 8);
 class ShatteredCrystal(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ShatteredCrystal), 5);
 
 class TemporalParadoxMagitekRay(BossModule module) : Components.GenericAOEs(module)

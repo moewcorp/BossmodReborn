@@ -18,8 +18,8 @@ public enum AID : uint
 }
 
 class GrandSlam(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.GrandSlam));
-class LumberingLeap(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LumberingLeapAOE), new AOEShapeCircle(12));
-class ColossalSlam(BossModule module) : Components.SelfTargetedLegacyRotationAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(30, 30.Degrees()));
+class LumberingLeap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LumberingLeapAOE), 12);
+class ColossalSlam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColossalSlam), new AOEShapeCone(30, 30.Degrees()));
 class Catapult(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Catapult), "Single-target damage");
 
 class D031KottosStates : StateMachineBuilder
@@ -34,7 +34,7 @@ class D031KottosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
 public class D031Kottos(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly ArenaBoundsComplex arena = new([new Circle(new(43, -89.8f), 14.75f)], [new Rectangle(new(42.9f, -105.9f), 20, 2), new Circle(new(39.5f, -74.4f), 1.5f), new Circle(new(47.5f, -74.4f), 1.8f)]);

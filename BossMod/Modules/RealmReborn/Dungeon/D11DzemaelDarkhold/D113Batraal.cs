@@ -4,23 +4,24 @@ public enum OID : uint
 {
     Boss = 0x60A, // x1
     CorruptedCrystal = 0x60C, // spawn during fight
-    VoidPitch = 0x6B4, // spawn during fight
+    VoidPitch = 0x6B4 // spawn during fight
 }
 
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
+
     GrimCleaver = 620, // Boss->player, no cast, single-target, random
     GrimFate = 624, // Boss->self, no cast, range 8+4.6 ?-degree cone cleave
     Desolation = 958, // Boss->self, 2.3s cast, range 55+4.6 width 6 rect aoe
     Hellssend = 1132, // Boss->self, no cast, damage up buff
     AetherialSurge = 1167, // CorruptedCrystal->self, 3.0s cast, range 5+1 circle aoe
-    SeaOfPitch = 962, // VoidPitch->location, no cast, range 4 circle
+    SeaOfPitch = 962 // VoidPitch->location, no cast, range 4 circle
 }
 
 class GrimFate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.GrimFate), new AOEShapeCone(12.6f, 60.Degrees())); // TODO: verify angle
-class Desolation(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Desolation), new AOEShapeRect(60, 3));
-class AetherialSurge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherialSurge), new AOEShapeCircle(6));
+class Desolation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Desolation), new AOEShapeRect(60, 3));
+class AetherialSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSurge), 6);
 
 // note: actor 'dies' immediately after casting
 class SeaOfPitch(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SeaOfPitch))
@@ -46,7 +47,7 @@ class D113BatraalStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 13, NameID = 1396)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 13, NameID = 1396)]
 public class D113Batraal(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly PolygonCustom[] shape = [new([new(69.7f, -150.8f), new(84.3f, -160.6f), new(100.8f, -150.9f),

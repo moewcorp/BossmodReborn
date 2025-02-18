@@ -40,7 +40,7 @@ class ConductionPoint : Components.UniformStackSpread
 {
     public ConductionPoint(BossModule module) : base(module, 0, 6)
     {
-        AddSpreads(Raid.WithoutSlot(true), WorldState.FutureTime(12));
+        AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(12));
     }
 }
 

@@ -20,13 +20,14 @@ class BogBody(BossModule module) : Components.SpreadFromCastTargets(module, Acti
 class Spite(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
+    private static readonly AOEShapeCircle circle = new(8);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Gallop)
-            _aoe = new(new AOEShapeCircle(8), spell.LocXZ, default, Module.CastFinishAt(spell));
+            _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

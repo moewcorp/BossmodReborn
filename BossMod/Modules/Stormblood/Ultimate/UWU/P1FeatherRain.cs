@@ -15,9 +15,9 @@ class P1FeatherRain(BossModule module) : Components.GenericAOEs(module, ActionID
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var p in _predicted)
-            yield return new(_shape, p, new(), _activation);
+            yield return new(_shape, p, default, _activation);
         foreach (var c in _casters)
-            yield return new(_shape, c.CastInfo!.LocXZ, new(), Module.CastFinishAt(c.CastInfo!));
+            yield return new(_shape, c.CastInfo!.LocXZ, default, Module.CastFinishAt(c.CastInfo!));
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -25,7 +25,7 @@ class P1FeatherRain(BossModule module) : Components.GenericAOEs(module, ActionID
         if (id == 0x1E3A && (OID)actor.OID is OID.Garuda or OID.GarudaSister)
         {
             _predicted.Clear();
-            _predicted.AddRange(Raid.WithoutSlot().Select(p => p.Position));
+            _predicted.AddRange(Raid.WithoutSlot(false, true, true).Select(p => p.Position));
             _activation = WorldState.FutureTime(2.5f);
         }
     }

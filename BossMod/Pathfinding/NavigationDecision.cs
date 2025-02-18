@@ -1,4 +1,6 @@
-﻿namespace BossMod.Pathfinding;
+﻿using System.Threading;
+
+namespace BossMod.Pathfinding;
 
 // utility for selecting player's navigation target
 // there are several goals that navigation has to meet, in following rough priority
@@ -11,334 +13,383 @@ public struct NavigationDecision
     // context that allows reusing large memory allocations
     public class Context
     {
+        public float[] Scratch = [];
         public Map Map = new();
-        public Map Map2 = new();
         public ThetaStar ThetaStar = new();
     }
 
-    public enum Decision
-    {
-        None,
-        ImminentToSafe,
-        ImminentToClosest,
-        UnsafeToPositional,
-        UnsafeToUptime,
-        UnsafeToSafe,
-        SafeToUptime,
-        SafeToCloser,
-        SafeBlocked,
-        UptimeToPositional,
-        UptimeBlocked,
-        Optimal
-    }
-
     public WPos? Destination;
+    public WPos? NextWaypoint;
     public float LeewaySeconds; // can be used for finishing casts / slidecasting etc.
     public float TimeToGoal;
-    public Map? Map;
-    public int MapGoal;
-    public Decision DecisionType;
 
-    public const float DefaultForbiddenZoneCushion = 0.15f;
+    public const float ActivationTimeCushion = 1f; // reduce time between now and activation by this value in seconds; increase for more conservativeness
 
-    public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, WPos? targetPos, float targetRadius, Angle targetRot, Positional positional, float playerSpeed = 6, float forbiddenZoneCushion = DefaultForbiddenZoneCushion)
+    public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, float playerSpeed = 6)
     {
-        if (targetRadius < 1)
-            targetRadius = 1; // ensure targetRadius is at least 1 to prevent game from freezing
+        // build a pathfinding map: rasterize all forbidden zones and goals
+        hints.InitPathfindMap(ctx.Map);
+        // local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
+        (Func<WPos, float>, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
+        Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
+        if (hints.ForbiddenZones.Count != 0)
+            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
+        if (hints.GoalZones.Count != 0 && player.CastInfo == null)
+            RasterizeGoalZones(ctx.Map, localGoalZones);
 
-        // TODO: skip pathfinding if there are no forbidden zones, just find closest point in circle/cone...
+        // execute pathfinding
+        ctx.ThetaStar.Start(ctx.Map, player.Position, 1.0f / playerSpeed);
+        var bestNodeIndex = ctx.ThetaStar.Execute();
+        ref var bestNode = ref ctx.ThetaStar.NodeByIndex(bestNodeIndex);
+        var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, player.Position);
+        return new() { Destination = waypoints.first, NextWaypoint = waypoints.second, LeewaySeconds = bestNode.PathLeeway, TimeToGoal = bestNode.GScore };
+    }
 
-        var imminent = ImminentExplosionTime(ws.CurrentTime);
-        var numImminentZones = hints.ForbiddenZones.FindIndex(z => z.activation > imminent);
-        if (numImminentZones < 0)
-            numImminentZones = hints.ForbiddenZones.Count;
-
-        // check whether player is inside each forbidden zone
-        var inZone = hints.ForbiddenZones.Select(f => f.shapeDistance(player.Position) <= forbiddenZoneCushion - 0.1f).ToList(); // we might have a situation where player's cell center is outside, but player is not, yet player is too close to center for navigation to work...
-        if (inZone.Any(inside => inside))
+    public static void RasterizeForbiddenZones(Map map, (Func<WPos, float> shapeDistance, DateTime activation, ulong source)[] zones, DateTime current, float[] scratch)
+    {
+        // 1) Cluster activation times
+        // very slight difference in activation times cause issues for pathfinding - cluster them together
+        var zonesFixed = new (Func<WPos, float> shapeDistance, float g)[zones.Length];
+        DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120);
+        float clusterG = 0;
+        var lenZonesFixed = zonesFixed.Length;
+        for (var i = 0; i < lenZonesFixed; i++)
         {
-            // we're in forbidden zone => find path to safety (and ideally to uptime zone)
-            // if such a path can't be found (that's always the case if we're inside imminent forbidden zone, but can also happen in other cases), try instead to find a path to safety that doesn't enter any other zones that we're not inside
-            // first build a map with zones that we're outside of as blockers
-            hints.PathfindMapBounds.PathfindMap(ctx.Map, hints.PathfindMapCenter);
-            foreach (var (zf, inside) in hints.ForbiddenZones.Zip(inZone))
-                if (!inside)
-                    AddBlockerZone(ctx.Map, imminent, zf.activation, zf.shapeDistance, forbiddenZoneCushion);
-
-            var inImminentForbiddenZone = inZone.Take(numImminentZones).Any(inside => inside);
-            if (!inImminentForbiddenZone)
+            ref var zone = ref zones[i];
+            var activation = zone.activation.Clamp(globalStart, globalEnd);
+            if (activation > clusterEnd)
             {
-                ctx.Map2.Init(ctx.Map, ctx.Map.Center);
-                foreach (var (zf, inside) in hints.ForbiddenZones.Zip(inZone))
-                    if (inside)
-                        AddBlockerZone(ctx.Map2, imminent, zf.activation, zf.shapeDistance, forbiddenZoneCushion);
-                var maxGoal = targetPos != null ? AddTargetGoal(ctx.Map2, targetPos.Value, targetRadius, targetRot, positional, 0) : 0;
-                var res = FindPathFromUnsafe(ctx.ThetaStar, ctx.Map2, player.Position, 0, maxGoal, targetPos, targetRot, positional, playerSpeed);
-                if (res != null)
-                    return res.Value;
-
-                // pathfind to any spot outside aoes we're in that doesn't enter new aoes
-                foreach (var (zf, inside) in hints.ForbiddenZones.Zip(inZone))
-                    if (inside)
-                        ctx.Map.AddGoal(zf.shapeDistance, forbiddenZoneCushion, 0, -1);
-                return FindPathFromImminent(ctx.ThetaStar, ctx.Map, player.Position, playerSpeed);
+                clusterG = ActivationToG(activation, current);
+                clusterEnd = activation.AddSeconds(0.5d);
             }
-            else
-            {
-                // try to find a path out of imminent aoes that we're in, while remaining in non-imminent aoes that we're already in - it might be worth it...
-                foreach (var (zf, inside) in hints.ForbiddenZones.Zip(inZone).Take(numImminentZones))
-                    if (inside)
-                        ctx.Map.AddGoal(zf.shapeDistance, forbiddenZoneCushion, 0, -1);
-                return FindPathFromImminent(ctx.ThetaStar, ctx.Map, player.Position, playerSpeed);
-            }
+            zonesFixed[i] = (zone.shapeDistance, clusterG);
         }
 
-        // we're safe, see if we can improve our position
-        if (targetPos != null)
+        var width = map.Width;
+        var height = map.Height;
+        var lenPixelMaxG = map.PixelMaxG.Length;
+
+        var resolution = map.Resolution;
+        var cushion = resolution * 0.5f;
+        map.MaxG = clusterG;
+
+        if (scratch.Length < lenPixelMaxG)
+            scratch = new float[lenPixelMaxG];
+        Array.Fill(scratch, float.MaxValue);
+
+        var dy = map.LocalZDivRes * resolution * resolution;
+        var dx = dy.OrthoL();
+        var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
+
+        // note that a zone can partially intersect a pixel; so what we do is check each corner and set the maxg value of a pixel equal to the minimum of 4 corners
+        // to avoid 4x calculations, we do a slightly tricky loop:
+        // - outer loop fills row i to with g values corresponding to the 'upper edge' of cell i
+        // - inner loop calculates the g value at the left border, then iterates over all right corners and fills minimums of two g values to the cells
+        // - second outer loop calculates values at 'bottom' edge and then updates the values of all cells to correspond to the cells rather than edges
+        // - third loops checks center and surrounding circle until cell edge to counter small cones not intersecting corners of a cell
+
+        // --------------------------------------------------------------
+        // PASS #1 (Parallel over rows): compute min corner G in scratch
+        // --------------------------------------------------------------
+
+        // This pass sets: scratch[iCell] = min(G-of-left-corner, G-of-right-corner)
+        // for each pixel in row y, from x=0..width-1.
+        Parallel.For(0, height, y =>
         {
-            if (!player.Position.InCircle(targetPos.Value, targetRadius))
+            var rowStart = y * width;
+            var rowCorner = topLeft + y * dy;
+
+            var leftPos = rowCorner;
+            var leftG = CalculateMaxG(ref zonesFixed, leftPos);
+
+            for (var x = 0; x < width; ++x)
             {
-                // we're not in uptime zone, just run to it, avoiding any aoes
-                hints.PathfindMapBounds.PathfindMap(ctx.Map, hints.PathfindMapCenter);
-                foreach (var (shape, activation) in hints.ForbiddenZones)
-                    AddBlockerZone(ctx.Map, imminent, activation, shape, forbiddenZoneCushion);
-                var maxGoal = AddTargetGoal(ctx.Map, targetPos.Value, targetRadius, targetRot, Positional.Any, 0);
-                if (maxGoal != 0)
-                {
-                    // try to find a path to target
-                    ctx.ThetaStar.Start(ctx.Map, maxGoal, player.Position, 1.0f / playerSpeed);
-                    var res = ctx.ThetaStar.Execute();
-                    if (res >= 0)
-                        return new() { Destination = GetFirstWaypoint(ctx.ThetaStar, res), LeewaySeconds = float.MaxValue, TimeToGoal = ctx.ThetaStar.NodeByIndex(res).GScore, Map = ctx.Map, MapGoal = maxGoal, DecisionType = Decision.SafeToUptime };
-                }
+                var rightPos = leftPos + dx;
+                var rightG = CalculateMaxG(ref zonesFixed, rightPos);
+                scratch[rowStart + x] = Math.Min(leftG, rightG);
+                leftPos = rightPos;
+                leftG = rightG;
+            }
+        });
 
-                // goal is not reachable, but we can try getting as close to the target as we can until first aoe
-                var start = ctx.Map.ClampToGrid(ctx.Map.WorldToGrid(player.Position));
-                var end = ctx.Map.ClampToGrid(ctx.Map.WorldToGrid(targetPos.Value));
-                var best = start;
-                foreach (var (x, y) in ctx.Map.EnumeratePixelsInLine(start.x, start.y, end.x, end.y))
-                {
-                    if (ctx.Map[x, y].MaxG != float.MaxValue)
-                        break;
-                    best = (x, y);
-                }
-                if (best != start)
-                {
-                    var dest = ctx.Map.GridToWorld(best.x, best.y, 0.5f, 0.5f);
-                    return new() { Destination = dest, LeewaySeconds = float.MaxValue, TimeToGoal = (dest - player.Position).Length() / playerSpeed, Map = ctx.Map, MapGoal = maxGoal, DecisionType = Decision.SafeToCloser };
-                }
+        // --------------------------------------------------------------
+        // PASS #2 (Parallel over columns): combine top corners with bottom
+        // --------------------------------------------------------------
+        //
+        // This takes the 'top' corners from scratch[] and merges them with
+        // the 'bottom' corners for each column. We can parallelize
+        // by letting each thread handle one column of pixels. Since each
+        // column is independent of others, there's no write collision.
+        //
+        // We'll track how many cells become blocked in a thread-local counter
+        // and aggregate it with Interlocked.Add.
 
-                return new() { Destination = null, LeewaySeconds = float.MaxValue, TimeToGoal = 0, Map = ctx.Map, MapGoal = maxGoal, DecisionType = Decision.SafeBlocked };
+        var numBlockedCells = 0;
+
+        Parallel.For(0, width, x =>
+        {
+            // Each column starts from the same 'bottom corner' approach:
+            // But we can compute "bottom corners" for this column now.
+            // The bottom row's corner is topLeft + height*dy + x*dx
+            // because at the end of pass #1, 'cy' was top-left + (height)*dy.
+            var cyBottom = topLeft + height * dy + x * dx;
+            var bleftG = CalculateMaxG(ref zonesFixed, cyBottom);
+
+            var columnStart = x;
+            var localBlocked = 0; // local aggregator
+
+            var bottomG = bleftG;
+            for (var y = height - 1; y >= 0; y--)
+            {
+                var jCell = columnStart + y * width;
+                // top corner from pass #1
+                var topG = scratch[jCell];
+                ref var pixelMaxG = ref map.PixelMaxG[jCell];
+                var cellG = Math.Min(Math.Min(topG, bottomG), pixelMaxG);
+
+                pixelMaxG = cellG;
+                if (cellG != float.MaxValue)
+                {
+                    map.PixelPriority[jCell] = float.MinValue;
+                    localBlocked++;
+                }
+                bottomG = topG;
             }
 
-            var playerOrientationToTarget = (player.Position - targetPos.Value).Normalized().Dot(targetRot.ToDirection());
+            // Merge local count
+            Interlocked.Add(ref numBlockedCells, localBlocked);
+        });
 
-            var inPositional = positional switch
+        // --------------------------------------------------------------
+        // PASS #3 (Parallel): check each pixel center to catch partial overlaps, this is needed because small cones might not intersect corners
+        // with a cushion of cellsize / 2 this ensures the entire inner circle until the edge will be safe
+        // --------------------------------------------------------------
+        Parallel.For(0, lenPixelMaxG, idx =>
+        {
+            var (px, py) = map.IndexToGrid(idx);
+            var centerPos = map.GridToWorld(px, py, 0.5f, 0.5f);
+
+            var centerG = CalculateMaxG(ref zonesFixed, centerPos, cushion);
+            var oldVal = map.PixelMaxG[idx];
+            if (centerG < oldVal)
             {
-                Positional.Rear => playerOrientationToTarget < -0.7071068f,
-                Positional.Flank => MathF.Abs(playerOrientationToTarget) < 0.7071068f,
-                Positional.Front => playerOrientationToTarget > 0.999f, // ~2.5 degrees - assuming max position error of 0.1, this requires us to stay at least at R=~2.25
-                _ => true
-            };
-            if (!inPositional)
-            {
-                // we're in uptime zone, but not in correct quadrant - move there, avoiding all aoes and staying within uptime zone
-                hints.PathfindMapBounds.PathfindMap(ctx.Map, hints.PathfindMapCenter);
-                ctx.Map.BlockPixelsInside(ShapeDistance.InvertedCircle(targetPos.Value, targetRadius), 0, 0);
-                foreach (var (shape, activation) in hints.ForbiddenZones)
-                    AddBlockerZone(ctx.Map, imminent, activation, shape, forbiddenZoneCushion);
-                var maxGoal = AddPositionalGoal(ctx.Map, targetPos.Value, targetRadius, targetRot, positional, 0);
-                if (maxGoal > 0)
+                map.PixelMaxG[idx] = centerG;
+                if (oldVal == float.MaxValue)
                 {
-                    // try to find a path to quadrant
-                    ctx.ThetaStar.Start(ctx.Map, maxGoal, player.Position, 1.0f / playerSpeed);
-                    var res = ctx.ThetaStar.Execute();
-                    if (res >= 0)
+                    map.PixelPriority[idx] = float.MinValue;
+                    Interlocked.Increment(ref numBlockedCells);
+                }
+            }
+        });
+
+        // --------------------------------------------------------------
+        // PASS #4: if absolutely everything is blocked, free the "least dangerous"
+        // --------------------------------------------------------------
+        //  - We need the actual max of map.PixelMaxG to know which ones to free
+        //  - First parallel pass: find max
+        //  - Second parallel pass: free cells with that max
+
+        if (numBlockedCells == width * height)
+        {
+            // 4a) find the real max
+            var realMaxG = float.MinValue;
+            // parallel reduction
+            Parallel.For(0, lenPixelMaxG, () => float.MinValue,
+                (i, loopState, localMax) =>
+                {
+                    ref var val = ref map.PixelMaxG[i];
+                    return (val > localMax) ? val : localMax;
+                },
+                localMax =>
+                {
+                    // Merge local maxima with an atomic
+                    float initVal, computedVal;
+                    do
                     {
-                        var dest = IncreaseDestinationPrecision(GetFirstWaypoint(ctx.ThetaStar, res), targetPos, targetRot, positional);
-                        return new() { Destination = dest, LeewaySeconds = float.MaxValue, TimeToGoal = ctx.ThetaStar.NodeByIndex(res).GScore, Map = ctx.Map, MapGoal = maxGoal, DecisionType = Decision.UptimeToPositional };
+                        initVal = realMaxG;
+                        computedVal = Math.Max(initVal, localMax);
                     }
+                    while (initVal != Interlocked.CompareExchange(
+                        ref realMaxG, computedVal, initVal));
                 }
+            );
 
-                // fail
-                return new() { Destination = null, LeewaySeconds = float.MaxValue, TimeToGoal = 0, Map = ctx.Map, MapGoal = maxGoal, DecisionType = Decision.UptimeBlocked };
-            }
-        }
-
-        return new() { Destination = null, LeewaySeconds = float.MaxValue, TimeToGoal = 0, DecisionType = Decision.Optimal };
-    }
-
-    public static DateTime ImminentExplosionTime(DateTime currentTime) => currentTime.AddSeconds(1);
-
-    public static void AddBlockerZone(Map map, DateTime imminent, DateTime activation, Func<WPos, float> shape, float threshold) => map.BlockPixelsInside(shape, MathF.Max(0, (float)(activation - imminent).TotalSeconds), threshold);
-
-    public static int AddTargetGoal(Map map, WPos targetPos, float targetRadius, Angle targetRot, Positional positional, int minPriority)
-    {
-        var adjPrio = map.AddGoal(ShapeDistance.Circle(targetPos, targetRadius), 0, minPriority, 1);
-        if (adjPrio == minPriority)
-            return minPriority;
-        return AddPositionalGoal(map, targetPos, targetRadius, targetRot, positional, minPriority + 1);
-    }
-
-    public static Func<WPos, float> ShapeDistanceFlank(WPos targetPos, Angle targetRot)
-    {
-        var n1 = (targetRot + 45.Degrees()).ToDirection();
-        var n2 = n1.OrthoL();
-        return p =>
-        {
-            var off = p - targetPos;
-            var d1 = n1.Dot(off);
-            var d2 = n2.Dot(off);
-            var dr = Math.Max(d1, d2);
-            var dl = Math.Max(-d1, -d2);
-            return Math.Min(dr, dl);
-        };
-    }
-
-    public static Func<WPos, float> ShapeDistanceRear(WPos targetPos, Angle targetRot)
-    {
-        var n1 = (targetRot - 45.Degrees()).ToDirection();
-        var n2 = n1.OrthoL();
-        return p =>
-        {
-            var off = p - targetPos;
-            var d1 = n1.Dot(off);
-            var d2 = n2.Dot(off);
-            return Math.Max(d1, d2);
-        };
-    }
-
-    public static int AddPositionalGoal(Map map, WPos targetPos, float targetRadius, Angle targetRot, Positional positional, int minPriority)
-    {
-        var adjPrio = minPriority;
-        switch (positional)
-        {
-            case Positional.Flank:
-                adjPrio = map.AddGoal(ShapeDistanceFlank(targetPos, targetRot), 0, minPriority, 1);
-                break;
-            case Positional.Rear:
-                adjPrio = map.AddGoal(ShapeDistanceRear(targetPos, targetRot), 0, minPriority, 1);
-                break;
-            case Positional.Front:
-                Func<int, int, bool> suitable = (x, y) =>
-                {
-                    if (!map.InBounds(x, y))
-                        return false;
-                    var pixel = map[x, y];
-                    return pixel.Priority >= minPriority && pixel.MaxG == float.MaxValue;
-                };
-
-                var dir = targetRot.ToDirection();
-                var maxRange = map.WorldToGrid(targetPos + dir * targetRadius);
-                if (suitable(maxRange.x, maxRange.y))
-                {
-                    adjPrio = map.AddGoal(maxRange.x, maxRange.y, 1);
-                }
-                else if (targetRadius > 3)
-                {
-                    var minRange = map.WorldToGrid(targetPos + dir * 3);
-                    if (minRange != maxRange)
-                    {
-                        foreach (var p in map.EnumeratePixelsInLine(maxRange.x, maxRange.y, minRange.x, minRange.y))
-                        {
-                            if (suitable(p.x, p.y))
-                            {
-                                adjPrio = map.AddGoal(p.x, p.y, 1);
-                                break;
-                            }
-                        }
-                    }
-                }
-                break;
-        }
-        return adjPrio;
-    }
-
-    public static NavigationDecision? FindPathFromUnsafe(ThetaStar pathfind, Map map, WPos startPos, int safeGoal, int maxGoal, WPos? targetPos, Angle targetRot, Positional positional, float speed = 6)
-    {
-        if (maxGoal - safeGoal == 2)
-        {
-            // try finding path to flanking position
-            pathfind.Start(map, maxGoal, startPos, 1.0f / speed);
-            var res = pathfind.Execute();
-            if (res >= 0)
+            // 4b) free pixels that match that max
+            Parallel.For(0, lenPixelMaxG, i =>
             {
-                var dest = IncreaseDestinationPrecision(GetFirstWaypoint(pathfind, res), targetPos, targetRot, positional);
-                return new() { Destination = dest, LeewaySeconds = pathfind.NodeByIndex(res).PathLeeway, TimeToGoal = pathfind.NodeByIndex(res).GScore, Map = map, MapGoal = maxGoal, DecisionType = Decision.UnsafeToPositional };
-            }
-            --maxGoal;
-        }
-
-        if (maxGoal - safeGoal == 1)
-        {
-            // try finding path to uptime position
-            pathfind.Start(map, maxGoal, startPos, 1.0f / speed);
-            var res = pathfind.Execute();
-            if (res >= 0)
-                return new() { Destination = GetFirstWaypoint(pathfind, res), LeewaySeconds = pathfind.NodeByIndex(res).PathLeeway, TimeToGoal = pathfind.NodeByIndex(res).GScore, Map = map, MapGoal = maxGoal, DecisionType = Decision.UnsafeToUptime };
-            --maxGoal;
-        }
-
-        if (maxGoal - safeGoal == 0)
-        {
-            // try finding path to any safe spot
-            pathfind.Start(map, maxGoal, startPos, 1.0f / speed);
-            var res = pathfind.Execute();
-            if (res >= 0)
-                return new() { Destination = GetFirstWaypoint(pathfind, res), LeewaySeconds = pathfind.NodeByIndex(res).PathLeeway, TimeToGoal = pathfind.NodeByIndex(res).GScore, Map = map, MapGoal = maxGoal, DecisionType = Decision.UnsafeToSafe };
-        }
-
-        return null;
-    }
-
-    public static NavigationDecision FindPathFromImminent(ThetaStar pathfind, Map map, WPos startPos, float speed = 6)
-    {
-        pathfind.Start(map, 0, startPos, 1.0f / speed);
-        var res = pathfind.Execute();
-        if (res >= 0)
-        {
-            return new() { Destination = GetFirstWaypoint(pathfind, res), LeewaySeconds = 0, TimeToGoal = pathfind.NodeByIndex(res).GScore, Map = map, MapGoal = 0, DecisionType = Decision.ImminentToSafe };
-        }
-
-        // just run to closest safe spot, if no good path can be found
-        WPos? closest = null;
-        var closestDistance = float.MaxValue;
-        foreach (var p in map.EnumeratePixels())
-        {
-            var px = map[p.x, p.y];
-            if (px.Priority == 0 && px.MaxG == float.MaxValue)
-            {
-                // safe pixel, candidate
-                var distance = (p.center - startPos).LengthSq();
-                if (distance < closestDistance)
+                ref var pixelMaxG = ref map.PixelMaxG[i];
+                if (pixelMaxG == realMaxG)
                 {
-                    closest = p.center;
-                    closestDistance = distance;
+                    pixelMaxG = float.MaxValue;
+                    map.PixelPriority[i] = 0f;
                 }
-            }
+            });
         }
-        return new() { Destination = closest, LeewaySeconds = 0, TimeToGoal = MathF.Sqrt(closestDistance) / speed, Map = map, DecisionType = Decision.ImminentToClosest };
     }
 
-    public static WPos? GetFirstWaypoint(ThetaStar pf, int cell)
+    public static void RasterizeGoalZones(Map map, Func<WPos, float>[] goals)
     {
+        var resolution = map.Resolution;
+        var width = map.Width;
+        var height = map.Height;
+        var dy = map.LocalZDivRes * resolution * resolution;
+        var dx = dy.OrthoL();
+        var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
+        var len = goals.Length;
+
+        // We'll do two passes:
+        //    Pass #1: row-by-row (parallel over y)
+        //    Pass #2: column-by-column (parallel over x)
+
+        //------------------------------------------------------------------------
+        // PASS #1 (row-based) - fill in partial priorities in map.PixelPriority
+        //------------------------------------------------------------------------
+        Parallel.For(0, height, y =>
+        {
+            // For row y, compute the position of the 'left corner' in world coords
+            var cy = topLeft + y * dy;
+
+            // Sum up all goals at the left corner (x=0)
+            float leftP = 0;
+            for (var i = 0; i < len; ++i)
+            {
+                leftP += goals[i](cy);
+            }
+
+            // Now walk across the row from x=0..(width-1), computing right corner
+            var rowStart = y * width;
+            for (var x = 0; x < width; ++x)
+            {
+                // Right corner for this pixel is cx = cy + x*dx
+                var cx = cy + x * dx;
+                float rightP = 0;
+                for (var i = 0; i < len; ++i)
+                {
+                    rightP += goals[i](cx);
+                }
+
+                // Store the min in PixelPriority
+                map.PixelPriority[rowStart + x] = Math.Min(leftP, rightP);
+
+                // Shift left -> right
+                leftP = rightP;
+            }
+        });
+
+        //------------------------------------------------------------------------
+        // PASS #2 (column-based) - combine top (in PixelPriority) with bottom corners
+        //------------------------------------------------------------------------
+        // We also update map.MaxPriority here. Each thread will keep a local maximum
+        // and we'll merge them in a thread-safe way.
+        var globalMaxPriority = float.MinValue;
+
+        // We'll compute the bottom-left corner *once* per column. The bottom row is
+        // topLeft + height*dy. Then we move right by x*dx for each column.
+        var bottomRowLeft = topLeft + height * dy;  // world coords for left corner of the *bottom* row
+
+        Parallel.For(0, width, () => float.MinValue,
+        (x, loopState, localMax) =>
+        {
+            // For column x, compute the bottom-left corner
+            var cyBottom = bottomRowLeft + x * dx;
+
+            // The 'left' bottom corner's priority
+            float bleftP = 0;
+            for (var i = 0; i < len; i++)
+            {
+                bleftP += goals[i](cyBottom);
+            }
+
+            var bottomP = bleftP;
+            var iCell = (height - 1) * width + x;
+
+            for (var y = height - 1; y >= 0; --y, iCell -= width)
+            {
+                var topP = map.PixelPriority[iCell];
+
+                // If this pixel is not blocked (PixelMaxG == float.MaxValue),
+                // we keep the min of topP and bottomP. Otherwise, we set it to float.MinValue.
+                if (map.PixelMaxG[iCell] == float.MaxValue)
+                {
+                    var cellP = Math.Min(topP, bottomP);
+                    map.PixelPriority[iCell] = cellP;
+
+                    // Update local max
+                    if (cellP > localMax)
+                        localMax = cellP;
+                }
+                else
+                {
+                    // Mark blocked areas
+                    map.PixelPriority[iCell] = float.MinValue;
+                }
+
+                // Shift bottom -> top for next iteration
+                bottomP = topP;
+            }
+
+            // Return thread-local max for final merge
+            return localMax;
+        },
+        // Final merge across threads:
+        localMax =>
+        {
+            float initVal, newVal;
+            do
+            {
+                initVal = globalMaxPriority;
+                newVal = Math.Max(initVal, localMax);
+            }
+            while (initVal != Interlocked.CompareExchange(
+                ref globalMaxPriority, newVal, initVal));
+        });
+
+        // Finally store the global maximum in map.MaxPriority
+        map.MaxPriority = globalMaxPriority;
+    }
+    private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
+
+    private static float CalculateMaxG(ref (Func<WPos, float> shapeDistance, float g)[] zones, WPos p, float cushion = 0f)
+    {
+        var len = zones.Length;
+        var threshold = cushion;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var z = ref zones[i];
+            if (z.shapeDistance(p) <= threshold)
+                return z.g;
+        }
+        return float.MaxValue;
+    }
+
+    private static (WPos? first, WPos? second) GetFirstWaypoints(ThetaStar pf, Map map, int cell, WPos startingPos)
+    {
+        ref var startingNode = ref pf.NodeByIndex(cell);
+        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
+        var maxIterations = map.Width * map.Height;
+
+        if (startingNode.GScore == 0f && startingNode.PathMinG == float.MaxValue)
+            return (null, null); // we're already in safe zone
+
+        var nextCell = cell;
         do
         {
             ref var node = ref pf.NodeByIndex(cell);
-            var parent = pf.CellIndex(node.ParentX, node.ParentY);
-            if (pf.NodeByIndex(parent).GScore == 0)
-                return pf.CellCenter(cell);
-            cell = parent;
+            if (pf.NodeByIndex(node.ParentIndex).GScore == 0f || iterations++ == maxIterations)
+            {
+                //var dest = pf.CellCenter(cell);
+                // if destination coord matches player coord, do not move along that coordinate, this is used for precise positioning
+                var destCoord = map.IndexToGrid(cell);
+                var playerCoordFrac = map.WorldToGridFrac(startingPos);
+                var playerCoord = Map.FracToGrid(playerCoordFrac);
+                var dest = map.GridToWorld(destCoord.x, destCoord.y, destCoord.x == playerCoord.x ? playerCoordFrac.X - playerCoord.x : 0.5f, destCoord.y == playerCoord.y ? playerCoordFrac.Y - playerCoord.y : 0.5f);
+
+                var next = pf.CellCenter(nextCell);
+                return (dest, next);
+            }
+            nextCell = cell;
+            cell = node.ParentIndex;
         }
         while (true);
-    }
-
-    public static WPos? IncreaseDestinationPrecision(WPos? dest, WPos? targetPos, Angle targetRot, Positional positional)
-    {
-        if (dest == null || targetPos == null || positional != Positional.Front)
-            return dest;
-        var dir = targetRot.ToDirection();
-        var adjDest = targetPos.Value + dir * dir.Dot(dest.Value - targetPos.Value);
-        return (dest.Value - adjDest).LengthSq() < 1 ? adjDest : dest;
     }
 }

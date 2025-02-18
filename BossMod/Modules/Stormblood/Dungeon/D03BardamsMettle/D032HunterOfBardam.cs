@@ -18,8 +18,6 @@ public enum AID : uint
     Visual3 = 9611, // StarShard->self, no cast, single-target
 
     Magnetism = 7944, // Boss->self, no cast, range 40+R circle, pull 40 between hitboxes
-    Tremblor1 = 9596, // Helper->self, 4.0s cast, range 10 circle
-    Tremblor2 = 9595, // Helper->self, 4.0s cast, range 10-20 donut
     EmptyGaze = 7940, // Boss->self, 6.5s cast, range 40+R circle
     Travail = 7935, // Bardam->self, no cast, single-target
     Charge = 9599, // ThrowingSpear->self, 2.5s cast, range 45+R width 5 rect
@@ -41,6 +39,8 @@ public enum AID : uint
     Reconstruct = 7934, // Helper->location, 4.0s cast, range 5 circle
 
     Tremblor = 9605, // Boss->self, 3.5s cast, single-target
+    Tremblor1 = 9596, // Helper->self, 4.0s cast, range 10 circle
+    Tremblor2 = 9595, // Helper->self, 4.0s cast, range 10-20 donut
     MeteorImpact = 9602 // LoomingShadow->self, 30.0s cast, ???
 }
 
@@ -51,8 +51,8 @@ public enum IconID : uint
 }
 
 class Comet(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4), ActionID.MakeSpell(AID.CometFirst), ActionID.MakeSpell(AID.CometRest), 10, 1.5f, 9, true, (uint)IconID.ChasingAOE);
-class CometFirst(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CometFirst), 4);
-class CometRest(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CometRest), 4);
+class CometFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometFirst), 4);
+class CometRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometRest), 4);
 
 class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.MeteorImpact), 50, safeInsideHitbox: false)
 {
@@ -83,11 +83,11 @@ class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, Ac
     }
 }
 
-class Charge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Charge), new AOEShapeRect(41.25f, 2.5f, 5));
+class Charge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charge), new AOEShapeRect(46.25f, 2.5f));
 class EmptyGaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.EmptyGaze));
 class Sacrifice(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Sacrifice), 3);
-class Reconstruct(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Reconstruct), 5);
-class CometImpact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CometImpact), new AOEShapeCircle(9));
+class Reconstruct(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Reconstruct), 5);
+class CometImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometImpact), 9);
 class BardamsRing(BossModule module) : Components.DonutStack(module, ActionID.MakeSpell(AID.BardamsRing), (uint)IconID.BardamsRing, 10, 20, 3.5f, 4, 4);
 
 class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
@@ -97,12 +97,12 @@ class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Tremblor1)
-            AddSequence(caster.Position, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -110,12 +110,12 @@ class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
                 AID.Tremblor2 => 1,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(1.5f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f));
         }
     }
 }
 
-class TremblorFinal(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Tremblor2), new AOEShapeDonut(10, 20))
+class TremblorFinal(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor2), new AOEShapeDonut(10, 20))
 {
     private readonly Tremblor _aoe = module.FindComponent<Tremblor>()!;
 
@@ -135,7 +135,7 @@ class HeavyStrike(BossModule module) : Components.ConcentricAOEs(module, _shapes
             AddSequence(caster.Position, Module.CastFinishAt(spell, 1), spell.Rotation);
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (Sequences.Count > 0)
         {
@@ -146,7 +146,7 @@ class HeavyStrike(BossModule module) : Components.ConcentricAOEs(module, _shapes
                 AID.HeavyStrike3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(1.3f), caster.Rotation);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.3f), spell.Rotation);
         }
     }
 }

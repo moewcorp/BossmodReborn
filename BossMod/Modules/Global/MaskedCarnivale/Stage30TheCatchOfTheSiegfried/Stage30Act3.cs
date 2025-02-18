@@ -9,7 +9,7 @@ public enum OID : uint
     IceBoulder = 0x2CC6, // R=2.0
     FireVoidzone = 0x1E8D9B,
     Bomb = 0x2C68, // R=0.4
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -21,7 +21,7 @@ public enum AID : uint
     Swiftsteel = 18842, // SiegfriedCloneIce/Boss->self, 5.0s cast, range 100 circle
     Swiftsteel2 = 18843, // Helper->location, 8.8s cast, range 4 circle
     Swiftsteel3 = 18844, // Helper->self, 8.8s cast, range 8-20 donut
-    LawOfTheTorch = 18838, // Boss/SiegfriedCloneIce/SiegfriedCloneWind/SiegfriedCloneFire->self, 3.0s cast, range 34 20-degree cone
+    LawOfTheTorch1 = 18838, // Boss/SiegfriedCloneIce/SiegfriedCloneWind/SiegfriedCloneFire->self, 3.0s cast, range 34 20-degree cone
     LawOfTheTorch2 = 18839, // Helper->self, 3.0s cast, range 34 20-degree cone
     AnkleGraze = 18846, // Boss->player, 3.0s cast, single-target
     Hyperdrive = 18893, // Boss/SiegfriedCloneWind/SiegfriedCloneFire->self, no cast, single-target
@@ -33,7 +33,7 @@ public enum AID : uint
     SphereShatter = 18986, // IceBoulder->self, no cast, range 10 circle
     MagitekExplosive = 18849, // Boss->self, 3.0s cast, single-target
     RubberBullet = 18847, // Boss->player, 4.0s cast, single-target
-    Explosion = 18888, // Bomb->self, 3.5s cast, range 8 circle
+    Explosion = 18888 // Bomb->self, 3.5s cast, range 8 circle
 }
 
 public enum SID : uint
@@ -44,21 +44,24 @@ public enum SID : uint
 }
 
 class MagicDrain(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MagicDrain), "Reflect magic damage for 30s");
-class HyperdriveFirst(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5);
-class HyperdriveRest(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5);
+class HyperdriveFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5);
+class HyperdriveRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5);
 class AnkleGraze(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AnkleGraze), "Applies bind, prepare to use Excuviation!");
-class LawOfTheTorch(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LawOfTheTorch), new AOEShapeCone(34, 10.Degrees()));
-class LawOfTheTorch2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LawOfTheTorch2), new AOEShapeCone(34, 10.Degrees()));
+
+abstract class LawOfTheTorch(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(34, 10.Degrees()));
+class LawOfTheTorch1(BossModule module) : LawOfTheTorch(module, AID.LawOfTheTorch1);
+class LawOfTheTorch2(BossModule module) : LawOfTheTorch(module, AID.LawOfTheTorch2);
+
 class Swiftsteel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Swiftsteel), 10)
 {
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Swiftsteel2>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || (Module.FindComponent<Swiftsteel3>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 }
 
-class Swiftsteel2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Swiftsteel2), 4);
-class Swiftsteel3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Swiftsteel3), new AOEShapeDonut(8, 20));
+class Swiftsteel2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Swiftsteel2), 4);
+class Swiftsteel3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Swiftsteel3), new AOEShapeDonut(8, 20));
 class Sparksteel1(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.Sparksteel1), m => m.Enemies(OID.FireVoidzone).Where(e => e.EventState != 7), 0.8f);
 
-public class Sparksteel2 : Components.LocationTargetedAOEs
+public class Sparksteel2 : Components.SimpleAOEs
 {
     public Sparksteel2(BossModule module) : base(module, ActionID.MakeSpell(AID.Sparksteel2), 8)
     {
@@ -66,16 +69,16 @@ public class Sparksteel2 : Components.LocationTargetedAOEs
     }
 }
 
-class Sparksteel3(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Sparksteel3), 8)
+class Sparksteel3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sparksteel3), 8)
 {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         base.OnCastFinished(caster, spell);
-        Color = (AID)spell.Action.ID == AID.Sparksteel2 ? Colors.Danger : Colors.AOE;
+        Color = (AID)spell.Action.ID == AID.Sparksteel2 ? Colors.Danger : 0;
     }
 }
 
-class Shattersteel(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Shattersteel), new AOEShapeCircle(5));
+class Shattersteel(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shattersteel), 5);
 class SphereShatter(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(10);
@@ -180,7 +183,7 @@ class Stage30Act3States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 699, NameID = 9245, SortOrder = 3)]
-public class Stage30Act3(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+public class Stage30Act3(WorldState ws, Actor primary) : BossModule(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

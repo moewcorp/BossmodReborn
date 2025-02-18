@@ -74,7 +74,7 @@ class GhostlyGuise(BossModule module) : Components.GenericAOEs(module)
     private readonly IllIntentMaliciousMist _seek = module.FindComponent<IllIntentMaliciousMist>()!;
 
     private static readonly WPos[] positions = [new(137.5f, -443.5f), new(158.5f, -443.5f), new(137.5f, -422.5f), new(158.5f, -422.5f)];
-    private static readonly Circle[] circles = positions.Select(pos => new Circle(pos, 3)).ToArray();
+    private static readonly Circle[] circles = [.. positions.Select(pos => new Circle(pos, 3))];
     private static readonly AOEShapeCustom circlesInverted = new(circles, InvertForbiddenZone: true);
     private static readonly AOEShapeCustom circlesAvoid = new(circles, []);
     private bool activated;
@@ -93,20 +93,20 @@ class GhostlyGuise(BossModule module) : Components.GenericAOEs(module)
         var shape = circlesAvoid;
         DateTime activation = default;
 
-        if (_avoid.ActiveSpreads.Any())
+        if (_avoid.ActiveSpreads.Count != 0)
         {
             shape = IsGhostly(actor) ? circlesInverted : circlesAvoid;
-            activation = _avoid.ActiveSpreads.First().Activation;
+            activation = _avoid.ActiveSpreads[0].Activation;
         }
         else if (fleshbuster.isActive)
         {
             shape = IsGhostly(actor) ? circlesAvoid : circlesInverted;
             activation = fleshbuster.activation;
         }
-        else if (_seek.ActiveBaits.Any())
+        else if (_seek.ActiveBaits.Count != 0)
             shape = IsGhostly(actor) ? circlesAvoid : circlesInverted;
 
-        yield return new(shape, Module.Center, default, activation, shape == circlesInverted ? Colors.SafeFromAOE : Colors.AOE);
+        yield return new(shape, Module.Center, default, activation, shape == circlesInverted ? Colors.SafeFromAOE : 0);
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -130,9 +130,9 @@ class GhostlyGuise(BossModule module) : Components.GenericAOEs(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         var isGhostly = IsGhostly(actor);
-        if (fleshbuster.isActive || _seek.ActiveBaits.Any())
+        if (fleshbuster.isActive || _seek.ActiveBaits.Count != 0)
             hints.Add(GhostHint, !isGhostly);
-        else if (_avoid.ActiveSpreads.Any())
+        else if (_avoid.ActiveSpreads.Count != 0)
             hints.Add(FleshHint, isGhostly);
     }
 }
@@ -148,10 +148,10 @@ class IllIntentMaliciousMist(BossModule module) : Components.StretchTetherDuo(mo
     }
 }
 
-class BitterRegret1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BitterRegret1), new AOEShapeRect(50, 8));
-class BitterRegret2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BitterRegret2), new AOEShapeRect(50, 6));
-class BitterRegret3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BitterRegret3), new AOEShapeRect(40, 2), 5);
-class Impact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Impact), new AOEShapeRect(40, 2));
+class BitterRegret1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitterRegret1), new AOEShapeRect(50, 8));
+class BitterRegret2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitterRegret2), new AOEShapeRect(50, 6));
+class BitterRegret3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitterRegret3), new AOEShapeRect(40, 2), 5);
+class Impact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Impact), new AOEShapeRect(40, 2));
 class Ghostcrusher(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.GhostcrusherMarker), ActionID.MakeSpell(AID.Ghostcrusher), 5, 80, maxStackSize: 4);
 class Ghostduster(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Ghostduster), 8)
 {

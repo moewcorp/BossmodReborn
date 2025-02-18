@@ -6,12 +6,17 @@ namespace BossMod.Components;
 // TODO: typically sources are either eventobj's with eventstate != 7 or normal actors that are non dead; other conditions are much rarer
 public class PersistentVoidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, float moveHintLength = 0) : GenericAOEs(module, default, "GTFO from voidzone!")
 {
-    public AOEShape Shape { get; init; } = moveHintLength == 0 ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
-    public Func<BossModule, IEnumerable<Actor>> Sources { get; init; } = sources;
+    public readonly AOEShape Shape = moveHintLength == 0 ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
+    public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Sources(Module).Select(s => new AOEInstance(Shape, s.Position, s.Rotation));
+        var aoes = new List<AOEInstance>();
+        foreach (var source in Sources(Module))
+        {
+            aoes.Add(new(Shape, WPos.ClampToGrid(source.Position), source.Rotation));
+        }
+        return aoes;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -20,8 +25,8 @@ public class PersistentVoidzone(BossModule module, float radius, Func<BossModule
             return;
         var forbidden = new List<Func<WPos, float>>();
         foreach (var s in Sources(Module))
-            forbidden.Add(Shape.Distance(s.Position, s.Rotation));
-        hints.AddForbiddenZone(p => forbidden.Min(f => f(p)));
+            forbidden.Add(Shape.Distance(WPos.ClampToGrid(s.Position), s.Rotation));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
     }
 }
 
@@ -31,9 +36,9 @@ public class PersistentVoidzone(BossModule module, float radius, Func<BossModule
 // TODO: this has problems if voidzone never actually spawns after castevent, eg because of phase changes
 public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, ActionID aid, Func<BossModule, IEnumerable<Actor>> sources, float castEventToSpawn) : GenericAOEs(module, aid, "GTFO from voidzone!")
 {
-    public AOEShapeCircle Shape { get; init; } = new(radius);
-    public Func<BossModule, IEnumerable<Actor>> Sources { get; init; } = sources;
-    public float CastEventToSpawn { get; init; } = castEventToSpawn;
+    public readonly AOEShapeCircle Shape = new(radius);
+    public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
+    public readonly float CastEventToSpawn = castEventToSpawn;
     private readonly List<(WPos pos, DateTime time)> _predictedByEvent = [];
     private readonly List<(Actor caster, DateTime time)> _predictedByCast = [];
 
@@ -42,11 +47,11 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var p in _predictedByEvent)
-            yield return new(Shape, p.pos, default, p.time);
+            yield return new(Shape, WPos.ClampToGrid(p.pos), default, p.time);
         foreach (var p in _predictedByCast)
-            yield return new(Shape, WorldState.Actors.Find(p.caster.CastInfo!.TargetID)?.Position ?? p.caster.CastInfo.LocXZ, default, p.time);
+            yield return new(Shape, p.caster.CastInfo!.LocXZ, default, p.time);
         foreach (var z in Sources(Module))
-            yield return new(Shape, z.Position);
+            yield return new(Shape, WPos.ClampToGrid(z.Position));
     }
 
     public override void Update()
@@ -72,7 +77,7 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
     {
         base.OnEventCast(caster, spell);
         if (spell.Action == WatchedAction)
-            _predictedByEvent.Add((WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ, WorldState.FutureTime(CastEventToSpawn)));
+            _predictedByEvent.Add((spell.TargetXZ, WorldState.FutureTime(CastEventToSpawn)));
     }
 }
 
@@ -81,8 +86,8 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
 // TODO: might want to have per-player invertability
 public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, ActionID aid = default) : CastCounter(module, aid)
 {
-    public AOEShapeCircle Shape { get; init; } = new(radius);
-    public Func<BossModule, IEnumerable<Actor>> Sources { get; init; } = sources;
+    public readonly AOEShapeCircle Shape = new(radius);
+    public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
     public DateTime InvertResolveAt;
 
     public bool Inverted => InvertResolveAt != default;
@@ -98,22 +103,23 @@ public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var shapes = Sources(Module).Select(s => Shape.Distance(s.Position, s.Rotation)).ToList();
+        var shapes = new List<Func<WPos, float>>();
+
+        foreach (var source in Sources(Module))
+        {
+            var shape = Shape.Distance(WPos.ClampToGrid(source.Position), source.Rotation);
+            shapes.Add(shape);
+        }
         if (shapes.Count == 0)
             return;
 
-        float distance(WPos p)
-        {
-            var dist = shapes.Select(s => s(p)).Min();
-            return Inverted ? -dist : dist;
-        }
-        hints.AddForbiddenZone(distance, InvertResolveAt);
+        hints.AddForbiddenZone(Inverted ? ShapeDistance.InvertedUnion(shapes) : ShapeDistance.Union(shapes), InvertResolveAt);
     }
 
     // TODO: reconsider - draw foreground circles instead?
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        var color = Inverted ? Colors.SafeFromAOE : Colors.AOE;
+        var color = Inverted ? Colors.SafeFromAOE : 0;
         foreach (var s in Sources(Module))
             Shape.Draw(Arena, s.Position, s.Rotation, color);
     }

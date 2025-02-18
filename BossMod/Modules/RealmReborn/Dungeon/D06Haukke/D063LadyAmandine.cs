@@ -4,12 +4,13 @@ public enum OID : uint
 {
     Boss = 0x38A8, // R=1.8
     Sentry = 0x38A9, // R=1.35
-    Handmaiden = 0x38AA, // R=1.0
+    Handmaiden = 0x38AA // R=1.0
 }
 
 public enum AID : uint
 {
     AutoAttackBoss = 28647, // Boss->player, no cast
+
     Teleport = 28644, // Boss->location, no cast
     VoidCall = 28640, // Boss->self, 4.0s cast, visual (summons add)
     DarkMist = 28646, // Boss->self, 4.0s cast, range 9 circle
@@ -21,10 +22,10 @@ public enum AID : uint
 
     AutoAttackAdd = 870, // Handmaiden->player, no cast
     ColdCaress = 28642, // Handmaiden->player, no cast
-    Stoneskin = 28641, // Handmaiden->Boss, 5.0s cast, buff target
+    Stoneskin = 28641 // Handmaiden->Boss, 5.0s cast, buff target
 }
 
-class DarkMist(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DarkMist), new AOEShapeCircle(9));
+class DarkMist(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkMist), 9);
 class BeguilingMist(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BeguilingMist), "Forced movement towards boss");
 class VoidThunder(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.VoidThunder3));
 class VoidThunderInterruptHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.VoidThunder3));
@@ -43,7 +44,7 @@ class D063LadyAmandineStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 6, NameID = 422)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 6, NameID = 422)]
 public class D063LadyAmandine(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly PolygonCustom[] shape = [new([new(20.5f, -3.4f), new(17.4f, -11.9f), new(-15.9f, -11.1f), new(-22.3f, -10.5f),

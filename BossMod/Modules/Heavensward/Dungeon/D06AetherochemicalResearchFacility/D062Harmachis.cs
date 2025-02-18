@@ -33,57 +33,53 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    Transfiguration = 705, // Boss->Boss, extra=0x1D/0x1E/0x1F
-    DamageUp = 443, // Boss->Boss, extra=0x1
-    Poison = 2104, // Boss->player, extra=0x0
     Bind = 2518 // Boss->player, extra=0x0
 }
 
 public enum IconID : uint
 {
-    Enumeration = 382, // Helper
     Stack = 93 // player
 }
 
-class Paradox(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Paradox), 5);
+class Paradox(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Paradox), 5f);
 class Petrifaction(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.Petrifaction));
-class Ka(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Ka), new AOEShapeCone(45, 30.Degrees()));
-class GaseousBomb(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stack, ActionID.MakeSpell(AID.GaseousBomb), 5, 4.1f, 4, 4);
-class BallisticMissile(BossModule module) : Components.UniformStackSpread(module, 4, 0, 2, 2)
+class Ka(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ka), new AOEShapeCone(45f, 30f.Degrees()));
+class GaseousBomb(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stack, ActionID.MakeSpell(AID.GaseousBomb), 5f, 4.1f, 4, 4);
+class BallisticMissile(BossModule module) : Components.UniformStackSpread(module, 4f, default, 2, 2)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Bind)
-            AddStack(actor, WorldState.FutureTime(6.2f));
+        if (status.ID == (uint)SID.Bind)
+            AddStack(actor, WorldState.FutureTime(6.2d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.BallisticMissile2)
+        if (spell.Action.ID == (uint)AID.BallisticMissile2)
             Stacks.Clear();
     }
 }
 
-class ChthonicHush(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ChthonicHush), new AOEShapeCone(13.3f, 60.Degrees()))
+class ChthonicHush(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ChthonicHush), new AOEShapeCone(13.3f, 60f.Degrees()))
 {
     private readonly GaseousBomb _stack1 = module.FindComponent<GaseousBomb>()!;
     private readonly BallisticMissile _stack2 = module.FindComponent<BallisticMissile>()!;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_stack1.ActiveStacks.Any() && !_stack2.ActiveStacks.Any())
+        if (_stack1.ActiveStacks.Count == 0 && _stack2.ActiveStacks.Count == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_stack1.ActiveStacks.Any() && !_stack2.ActiveStacks.Any())
+        if (_stack1.ActiveStacks.Count == 0 && _stack2.ActiveStacks.Count == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!_stack1.ActiveStacks.Any() && !_stack2.ActiveStacks.Any())
+        if (_stack1.ActiveStacks.Count == 0 && _stack2.ActiveStacks.Count == 0)
             base.DrawArenaForeground(pcSlot, pc);
     }
 }
@@ -102,8 +98,9 @@ class D062HarmachisStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3821)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3821, SortOrder = 6)]
 public class D062Harmachis(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Circle(new(248, 272), 19.5f)], [new Rectangle(new(228, 272), 20, 1.8f, 90.Degrees()), new Rectangle(new(268.25f, 272), 20, 2, 90.Degrees())]);
+    public static readonly ArenaBoundsComplex arena = new([new Polygon(new(248f, 272f), 19.25f, 44)], [new Rectangle(new(228f, 272f), 20f, 1.8f, 90f.Degrees()),
+    new Rectangle(new(268.25f, 272f), 20f, 2f, 90f.Degrees())]);
 }

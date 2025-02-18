@@ -3,6 +3,7 @@ namespace BossMod.Endwalker.Dungeon.D11LapisManalis.D112GalateaMagna;
 public enum OID : uint
 {
     Boss = 0x3971, //R=5.0
+    Helper2 = 0x3D06, // R3.5
     Helper = 0x233C
 }
 
@@ -32,77 +33,73 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Icon1 = 336, // 3D06
-    Icon2 = 337, // 3D06
-    Icon3 = 338, // 3D06
-    Icon4 = 339, // 3D06
-    PlayerGaze = 73 // player
+    Icon1 = 336, // Helper2
+    Icon2 = 337, // Helper2
+    Icon3 = 338, // Helper2
+    Icon4 = 339 // Helper2
 }
 
 public enum SID : uint
 {
-    SustainedDamage = 2935, // Helper->player, extra=0x0
-    ScarecrowChase = 2056, // none->Boss, extra=0x22B
     Doom = 3364, // Helper->player, extra=0x0
     GlassyEyed = 3511 // Boss->player, extra=0x0, takes possession of the player after status ends and does a petrifying attack in all direction
 }
 
 class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<(Actor actor, uint icon)> _casters = [];
-    private List<Actor> _casterssorted = [];
     private static readonly AOEShapeCross cross = new(40, 5);
-    private DateTime _activation;
-    private static readonly Angle a45 = 44.998f.Degrees();
+    private readonly List<AOEInstance> _aoes = new(4);
+    private bool first = true;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var activation = 3 * (_casters.Count - _casterssorted.Count);
-        if (_casterssorted.Count > 0)
-            yield return new(cross, _casterssorted[0].Position, a45, _activation.AddSeconds(activation), Colors.Danger);
-        if (_casterssorted.Count > 1)
-            yield return new(cross, _casterssorted[1].Position, a45, _activation.AddSeconds(3 + activation));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        List<AOEInstance> aoes = new(max);
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe with { Risky = false });
+        }
+        return aoes;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var icon = (IconID)iconID;
-        if (icon is >= IconID.Icon1 and <= IconID.Icon4)
+        if ((IconID)iconID is >= IconID.Icon1 and <= IconID.Icon4)
         {
-            _casters.Add((actor, iconID));
-            if (_activation == default)
-                _activation = WorldState.FutureTime(9.9f);
+            _aoes.Add(new(cross, actor.Position, Angle.AnglesIntercardinals[1], WorldState.FutureTime(9.9f).AddSeconds((-(int)IconID.Icon1 + iconID) * 3)));
+            if (_aoes.Count is var count && (count == 4 || count == 2 && first))
+            {
+                first = false;
+                _aoes.SortBy(x => x.Activation);
+            }
         }
-        _casterssorted = _casters.OrderBy(x => x.icon).Select(x => x.actor).ToList();
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_casters.Count > 0 && _casterssorted.Count > 0 && (AID)spell.Action.ID == AID.ScarecrowChase)
-        {
-            _casterssorted.RemoveAt(0);
-            if (_casterssorted.Count == 0)
-            {
-                _casters.Clear();
-                _activation = default;
-            }
-        }
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.ScarecrowChase)
+            _aoes.RemoveAt(0);
     }
 }
 
-class WaxingCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+class WaxingCycle(BossModule module) : Components.ConcentricAOEs(module, [new AOEShapeCircle(10), new AOEShapeDonut(10, 40)])
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 40)];
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.WaxingCycle1)
-            AddSequence(Arena.Center, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -110,24 +107,22 @@ class WaxingCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes
                 AID.WaxingCycle2 => 1,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(2.7f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.7f));
         }
     }
 }
 
-class WaningCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+class WaningCycle(BossModule module) : Components.ConcentricAOEs(module, [new AOEShapeDonut(10, 40), new AOEShapeCircle(10)])
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(10, 40), new AOEShapeCircle(10)];
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.WaningCycle1)
-            AddSequence(Arena.Center, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -135,7 +130,7 @@ class WaningCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes
                 AID.WaningCycle2 => 1,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
         }
     }
 }
@@ -143,13 +138,17 @@ class WaningCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes
 class GlassyEyed(BossModule module) : Components.GenericGaze(module)
 {
     private DateTime _activation;
-    private readonly List<Actor> _affected = [];
+    private readonly List<Actor> _affected = new(4);
 
     public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
     {
-        foreach (var a in _affected)
-            if (_affected.Count > 0 && WorldState.CurrentTime > _activation.AddSeconds(-10))
-                yield return new(a.Position, _activation);
+        var count = _affected.Count;
+        if (count == 0 || WorldState.CurrentTime < _activation.AddSeconds(-10))
+            return [];
+        List<Eye> eyes = new(count);
+        for (var i = 0; i < count; ++i)
+            eyes.Add(new(_affected[i].Position, _activation));
+        return eyes;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -170,41 +169,41 @@ class GlassyEyed(BossModule module) : Components.GenericGaze(module)
 
 public class TenebrismTowers(BossModule module) : Components.GenericTowers(module)
 {
-    private WPos position;
-
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00010008)
         {
-            switch (index)
+            WPos position = index switch
             {
-                case 0x07:
-                    position = new(350, -404);
-                    break;
-                case 0x08:
-                    position = new(360, -394);
-                    break;
-                case 0x09:
-                    position = new(350, -384);
-                    break;
-                case 0x0A:
-                    position = new(340, -394);
-                    break;
-            }
-            Towers.Add(new(position, 5, activation: WorldState.FutureTime(6)));
+                0x07 => new(350, -404),
+                0x08 => new(360, -394),
+                0x09 => new(350, -384),
+                0x0A => new(340, -394),
+                _ => default
+            };
+            if (position != default)
+                Towers.Add(new(position, 5, activation: WorldState.FutureTime(6)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if ((AID)spell.Action.ID == AID.Burst)
-            Towers.RemoveAll(t => t.Position.AlmostEqual(caster.Position, 1));
+            for (var i = 0; i < Towers.Count; ++i)
+            {
+                var tower = Towers[i];
+                if (tower.Position == caster.Position)
+                {
+                    Towers.Remove(tower);
+                    break;
+                }
+            }
     }
 }
 
 class Doom(BossModule module) : BossComponent(module)
 {
-    private readonly List<Actor> _doomed = [];
+    private readonly List<Actor> _doomed = new(4);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -245,14 +244,14 @@ class Doom(BossModule module) : BossComponent(module)
             {
                 var doom = _doomed[i];
                 if (actor.Role == Role.Healer)
-                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), doom, ActionQueue.Priority.High);
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Esuna), doom, ActionQueue.Priority.High, castTime: 1);
                 else if (actor.Class == Class.BRD)
                     hints.ActionsToExecute.Push(ActionID.MakeSpell(BRD.AID.WardensPaean), doom, ActionQueue.Priority.High);
             }
     }
 }
 
-class SoulScythe(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SoulScythe), 18);
+class SoulScythe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SoulScythe), 18);
 
 class D112GalateaMagnaStates : StateMachineBuilder
 {

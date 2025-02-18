@@ -1,23 +1,22 @@
 ﻿namespace BossMod.Stormblood.Alliance.A22Belias;
 
 class FireIV(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FireIV));
-class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Eruption), 8);
-class TimeBomb2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TimeBomb2), new AOEShapeCone(60, 45.Degrees()));
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption), 8);
+class TimeBomb2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TimeBomb2), new AOEShapeCone(60, 45.Degrees()));
 
 class TimeEruption(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.TimeEruptionVisual))
 {
     private readonly List<Actor> _castersEruptionAOEFirst = [];
     private readonly List<Actor> _castersEruptionAOESecond = [];
 
-    private static readonly AOEShape _shapeEruptionAOEFirst = new AOEShapeRect(10, 10, 10);
-    private static readonly AOEShape _shapeEruptionAOESecond = new AOEShapeRect(10, 10, 10);
+    private static readonly AOEShape _shapeEruptionAOE = new AOEShapeRect(10, 10, 10);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_castersEruptionAOEFirst.Count > 0)
-            return _castersEruptionAOEFirst.Select(c => new AOEInstance(_shapeEruptionAOEFirst, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+            return _castersEruptionAOEFirst.Select(c => new AOEInstance(_shapeEruptionAOE, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
         else
-            return _castersEruptionAOESecond.Select(c => new AOEInstance(_shapeEruptionAOESecond, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+            return _castersEruptionAOESecond.Select(c => new AOEInstance(_shapeEruptionAOE, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

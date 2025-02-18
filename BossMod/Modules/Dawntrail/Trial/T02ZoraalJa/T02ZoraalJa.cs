@@ -4,7 +4,7 @@ class SoulOverflow1(BossModule module) : Components.RaidwideCast(module, ActionI
 class SoulOverflow2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SoulOverflow2));
 class PatricidalPique(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.PatricidalPique));
 class CalamitysEdge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CalamitysEdge));
-class Burst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Burst), new AOEShapeCircle(8));
+class Burst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Burst), 8);
 
 abstract class VorpalTrail(BossModule module, AID aid) : Components.ChargeAOEs(module, ActionID.MakeSpell(aid), 2);
 class VorpalTrail1(BossModule module) : VorpalTrail(module, AID.VorpalTrail1);

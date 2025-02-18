@@ -3,8 +3,8 @@
 // shows all three demiurges + handles directional parry from first; the reason is to simplify condition checks
 class Demiurges(BossModule module) : Components.DirectionalParry(module, [(uint)OID.Demiurge1])
 {
-    private readonly IReadOnlyList<Actor> _second = module.Enemies(OID.Demiurge2);
-    private readonly IReadOnlyList<Actor> _third = module.Enemies(OID.Demiurge3);
+    private readonly List<Actor> _second = module.Enemies(OID.Demiurge2);
+    private readonly List<Actor> _third = module.Enemies(OID.Demiurge3);
 
     public bool AddsActive => ActiveActors.Any() || _second.Any(a => a.IsTargetable && !a.IsDead) || _third.Any(a => a.IsTargetable && !a.IsDead);
 
@@ -29,8 +29,8 @@ class Demiurges(BossModule module) : Components.DirectionalParry(module, [(uint)
 }
 
 class DivineSpark(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DivineSpark));
-class GnosticRant(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GnosticRant), new AOEShapeCone(40, 135.Degrees()));
-class GnosticSpear(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GnosticSpear), new AOEShapeRect(20.75f, 2, 0.75f));
+class GnosticRant(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GnosticRant), new AOEShapeCone(40, 135.Degrees()));
+class GnosticSpear(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GnosticSpear), new AOEShapeRect(20.75f, 2));
 class RingOfPain(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.RingOfPain), m => m.Enemies(OID.RingOfPain).Where(z => z.EventState != 7), 1.7f);
 
 class Infusion(BossModule module) : Components.GenericWildCharge(module, 5, ActionID.MakeSpell(AID.Infusion))
@@ -40,7 +40,7 @@ class Infusion(BossModule module) : Components.GenericWildCharge(module, 5, Acti
         if (spell.Action == WatchedAction)
         {
             Source = caster;
-            foreach (var (slot, player) in Raid.WithSlot())
+            foreach (var (slot, player) in Raid.WithSlot(false, true, true))
             {
                 PlayerRoles[slot] = player.InstanceID == spell.TargetID ? PlayerRole.Target : PlayerRole.Share;
             }

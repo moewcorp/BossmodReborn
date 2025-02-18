@@ -6,8 +6,8 @@ class A14EchidnaStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<SickleStrike>()
+            .ActivateOnEnter<SickleSlash1>()
             .ActivateOnEnter<SickleSlash2>()
-            .ActivateOnEnter<SickleSlash3>()
             .ActivateOnEnter<AbyssalReaper>()
             .ActivateOnEnter<AbyssalReaperKnockback>()
             .ActivateOnEnter<Petrifaction1>()

@@ -7,41 +7,37 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 872, // 1AC0->player, no cast, single-target
-    ScytheTail = 8190, // 1AC0->self, 3.0s cast, range 4+R circle, knockback 10, away from source + stun
-    RockThrow = 8193, // 1AC0->location, 3.0s cast, range 6 circle
-    Butcher = 8191, // 1AC0->self, 3.0s cast, range 6+R 120-degree cone
-    Rip = 8192, // 1AC0->self, no cast, range 6+R 120-degree cone, always happens directly after Butcher
+    AutoAttack = 872, // Boss->player, no cast, single-target
+    ScytheTail = 8190, // Boss->self, 3.0s cast, range 4+R circle, knockback 10, away from source + stun
+    RockThrow = 8193, // Boss->location, 3.0s cast, range 6 circle
+    Butcher = 8191, // Boss->self, 3.0s cast, range 6+R 120-degree cone
+    Rip = 8192, // Boss->self, no cast, range 6+R 120-degree cone, always happens directly after Butcher
 }
 
-class ScytheTail(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScytheTail), new AOEShapeCircle(9.4f));
-class Butcher(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Butcher), new AOEShapeCone(11.4f, 60.Degrees()));
+class ScytheTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheTail), 9.4f);
+class Butcher(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Butcher), new AOEShapeCone(11.4f, 60.Degrees()));
 
 class Rip(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _activation;
+    private AOEInstance? _aoe;
     private static readonly AOEShapeCone cone = new(11.4f, 60.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_activation != default)
-            yield return new(cone, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, _activation);
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Butcher) // boss can move after cast started, so we can't use aoe instance, since that would cause outdated position data to be used
-            _activation = Module.CastFinishAt(spell, 1.1f);
+        if ((AID)spell.Action.ID == AID.Butcher)
+            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if ((AID)spell.Action.ID == AID.Rip)
-            _activation = default;
+            _aoe = null;
     }
 }
 
-class RockThrow(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RockThrow), 6);
+class RockThrow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RockThrow), 6);
 
 class AngadaStates : StateMachineBuilder
 {

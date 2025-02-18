@@ -27,9 +27,9 @@ public enum TetherID : uint
 }
 
 class GyratingGlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GyratingGlare));
-class MysticLight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MysticLight), new AOEShapeCircle(12));
-class DeepFracture(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeepFracture), new AOEShapeCircle(11));
-class JitteringGlare(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.JitteringGlare), new AOEShapeCone(40, 15.Degrees()));
+class MysticLight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MysticLight), 12);
+class DeepFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepFracture), 11);
+class JitteringGlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.JitteringGlare), new AOEShapeCone(40, 15.Degrees()));
 class JitteringJab(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.JitteringJab));
 
 class JitteringJounceBait(BossModule module) : Components.BaitAwayChargeTether(module, 3, 0, ActionID.MakeSpell(AID.JitteringJounce), tetherIDBad: (uint)TetherID.JitteringJounce)
@@ -67,7 +67,7 @@ class JitteringJounceLOS(BossModule module) : Components.GenericAOEs(module)
             {
                 cones.Add(new(D112Ziggy.ArenaCenter, 11.1f, 20, Angle.FromDirection(Module.PrimaryActor.DirectionTo(c)), halfAngle));
             }
-            yield return new(new AOEShapeCustom(cones, InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE);
+            yield return new(new AOEShapeCustom([.. cones], InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE);
         }
     }
 

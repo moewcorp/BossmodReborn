@@ -87,7 +87,7 @@ class AethericBoom(BossModule module) : Components.CastHint(module, ActionID.Mak
         {
             // run to pop next orb
             var nextOrb = _orbsToPop[0];
-            if (actor.Role is Role.Melee or Role.Tank && Raid.WithoutSlot().InRadius(nextOrb.Position, _explosionRadius).Count() > 5)
+            if (actor.Role is Role.Melee or Role.Tank && Raid.WithoutSlot(false, true, true).InRadius(nextOrb.Position, _explosionRadius).Count() > 5)
             {
                 // pop the orb
                 hints.AddForbiddenZone(ShapeDistance.InvertedCircle(nextOrb.Position, 1.5f));

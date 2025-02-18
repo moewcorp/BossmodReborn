@@ -3,7 +3,7 @@ namespace BossMod.Endwalker.Trial.T08Asura;
 class Laceration(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(9);
-    private readonly List<AOEInstance> aoes = [];
+    private readonly List<AOEInstance> aoes = new(5);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoes;
 

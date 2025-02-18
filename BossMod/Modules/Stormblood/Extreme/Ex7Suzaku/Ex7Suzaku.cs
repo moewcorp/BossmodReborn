@@ -116,7 +116,7 @@ class ScreamsOfTheDamned(BossModule module) : Components.RaidwideCast(module, Ac
 class AshesToAshes(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AshesToAshes));
 class ScarletFever(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ScarletFever));
 class SouthronStar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SouthronStar));
-class Rout(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Rout), new AOEShapeRect(55, 3));
+class Rout(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rout), new AOEShapeRect(55, 3));
 class RekindleSpread(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.RekindleSpread), 6, 5.1f)
 {
     private bool _firstSpread = true;
@@ -133,7 +133,7 @@ class RekindleSpread(BossModule module) : Components.SpreadFromIcon(module, (uin
         base.AddAIHints(slot, actor, assignment, hints);
         foreach (var scarletLady in Module.Enemies(OID.ScarletLady))
         {
-            if (_firstSpread && ActiveSpreads.Any() && scarletLady.IsDead)
+            if (_firstSpread && ActiveStacks.Count != 0 && scarletLady.IsDead)
                 hints.AddForbiddenZone(ShapeDistance.Circle(scarletLady.Position, 6));
         }
     }
@@ -143,13 +143,13 @@ class RekindleSpread(BossModule module) : Components.SpreadFromIcon(module, (uin
         base.DrawArenaBackground(pcSlot, pc);
         foreach (var scarletLady in Module.Enemies(OID.ScarletLady))
         {
-            if (_firstSpread && ActiveSpreads.Any() && scarletLady.IsDead)
+            if (_firstSpread && ActiveStacks.Count != 0 && scarletLady.IsDead)
                 Arena.AddCircle(scarletLady.Position, 6, Colors.Vulnerable);
         }
     }
 }
 
-class FleetingSummer(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FleetingSummer), new AOEShapeCone(40, 45.Degrees()));
+class FleetingSummer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FleetingSummer), new AOEShapeCone(40, 45.Degrees()));
 
 class RapturousEcho(BossModule module) : BossComponent(module)
 {
@@ -291,8 +291,8 @@ class RapturousEchoDance(BossModule module) : BossComponent(module)
     }
 }
 
-// class WingAndAPrayerTailFeather(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WingAndAPrayerTailFeather), new AOEShapeCircle(9));
-// class WingAndAPrayerPlume(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WingAndAPrayerPlume), new AOEShapeCircle(9));
+// class WingAndAPrayerTailFeather(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingAndAPrayerTailFeather), 9);
+// class WingAndAPrayerPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingAndAPrayerPlume), 9);
 
 class ScarletFeverArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
@@ -304,7 +304,7 @@ class ScarletFeverArenaChange(BossModule module) : Components.GenericAOEs(module
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ScarletFever && Module.Arena.Bounds == Ex7Suzaku.Phase1Bounds)
-            _aoe = new(circle, Module.Center, default, Module.CastFinishAt(spell, 7));
+            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 7));
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
@@ -422,11 +422,11 @@ class PayThePiper(BossModule module) : BossComponent(module)
         }
     }
 }
-class WellOfFlame(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41, 10));
+class WellOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41, 10));
 class ScathingNetStack(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.ScathingNetStack), 6, 5.1f, 8);
-class PhantomFlurryCombo(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryCombo), new AOEShapeCone(41, 90.Degrees()));
-class PhantomFlurryKnockback(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryKnockback), new AOEShapeCone(41, 90.Degrees()));
-class Hotspot(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21, 45.Degrees()));
+class PhantomFlurryCombo(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryCombo), new AOEShapeCone(41, 90.Degrees()));
+class PhantomFlurryKnockback(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryKnockback), new AOEShapeCone(41, 90.Degrees()));
+class Hotspot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21, 45.Degrees()));
 
 class Ex7SuzakuStates : StateMachineBuilder
 {

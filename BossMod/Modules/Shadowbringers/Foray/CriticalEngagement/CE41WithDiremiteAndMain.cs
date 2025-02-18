@@ -2,16 +2,17 @@
 
 public enum OID : uint
 {
-    Helper = 0x233C, // R0.500, x6
     Boss = 0x31CC, // R7.200, x1
     DimCrystal = 0x31CD, // R1.600, spawn during fight
     CorruptedCrystal = 0x31CE, // R1.600, spawn during fight
     SandSphere = 0x31CF, // R4.000, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
+    Teleport = 24090, // Boss->location, no cast, single-target
 
     Shardfall = 24071, // Boss->self, 2.0s cast, single-target, visual
     CrystallineFracture = 24072, // CorruptedCrystal/DimCrystal->self, 3.0s cast, range 4 circle aoe (cast on spawn)
@@ -32,8 +33,7 @@ public enum AID : uint
     Shardstrike = 24086, // Boss->self, 2.0s cast, single-target, visual
     ShardstrikeAOE = 24087, // Helper->players, 5.0s cast, range 5 circle spread
     Hailfire = 24088, // Boss->self, 8.0s cast, single-target, visual
-    HailfireAOE = 24089, // Boss->self, no cast, range 40 width 4 rect aoe
-    Teleport = 24090, // Boss->location, no cast, single-target
+    HailfireAOE = 24089 // Boss->self, no cast, range 40 width 4 rect aoe
 }
 
 public enum IconID : uint
@@ -45,9 +45,9 @@ public enum IconID : uint
     Hailfire4 = 82, // player
 }
 
-class CrystallineFracture(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), new AOEShapeCircle(4));
-class ResonantFrequencyDim(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ResonantFrequencyDim), new AOEShapeCircle(6));
-class ResonantFrequencyCorrupted(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ResonantFrequencyCorrupted), new AOEShapeCircle(6));
+class CrystallineFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), 4);
+class ResonantFrequencyDim(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ResonantFrequencyDim), 6);
+class ResonantFrequencyCorrupted(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ResonantFrequencyCorrupted), 6);
 
 class CrystallineStingers(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.CrystallineStingers), 60)
 {
@@ -59,7 +59,7 @@ class AetherialStingers(BossModule module) : Components.CastLineOfSightAOE(modul
     public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.CorruptedCrystal).Where(a => !a.IsDead);
 }
 
-class Subduction(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Subduction), new AOEShapeCircle(8));
+class Subduction(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Subduction), 8);
 
 // next aoe starts casting slightly before previous, so use a custom component
 class Earthbreaker(BossModule module) : Components.GenericAOEs(module)
@@ -125,7 +125,7 @@ class Hailfire(BossModule module) : Components.GenericAOEs(module, ActionID.Make
         base.OnEventCast(caster, spell);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var order = (IconID)iconID switch
         {
@@ -162,11 +162,11 @@ class CE41WithDiremiteAndMainStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
 public class CE41WithDiremiteAndMain : BossModule
 {
-    private readonly IReadOnlyList<Actor> _dimCrystals;
-    private readonly IReadOnlyList<Actor> _corruptedCrystals;
+    private readonly List<Actor> _dimCrystals;
+    private readonly List<Actor> _corruptedCrystals;
 
     public CE41WithDiremiteAndMain(WorldState ws, Actor primary) : base(ws, primary, new(-220, 530), new ArenaBoundsCircle(30))
     {

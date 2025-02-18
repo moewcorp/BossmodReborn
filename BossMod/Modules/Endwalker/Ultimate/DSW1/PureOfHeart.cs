@@ -9,7 +9,7 @@ class PureOfHeartBrightwing(BossModule module) : Components.GenericBaitAway(modu
         CurrentBaits.Clear();
         if (NumCasts < 8)
             foreach (var source in Module.Enemies(OID.SerCharibert))
-                foreach (var target in Raid.WithoutSlot().SortedByRange(source.Position).Take(2))
+                foreach (var target in Raid.WithoutSlot(false, true, true).SortedByRange(source.Position).Take(2))
                     CurrentBaits.Add(new(source, target, _shape));
     }
 
@@ -32,7 +32,7 @@ class PureOfHeartSkyblindBait(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_baiters[slot] && Raid.WithSlot().ExcludedFromMask(_baiters).InRadius(actor.Position, _radius).Any())
+        if (_baiters[slot] && Raid.WithSlot(false, true, true).ExcludedFromMask(_baiters).InRadius(actor.Position, _radius).Any())
             hints.Add("GTFO from raid!");
     }
 
@@ -43,7 +43,7 @@ class PureOfHeartSkyblindBait(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var (_, player) in Raid.WithSlot().IncludedInMask(_baiters))
+        foreach (var (_, player) in Raid.WithSlot(false, true, true).IncludedInMask(_baiters))
             Arena.AddCircle(player.Position, _radius, Colors.Danger);
     }
 
@@ -60,4 +60,4 @@ class PureOfHeartSkyblindBait(BossModule module) : BossComponent(module)
     }
 }
 
-class PureOfHeartSkyblind(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Skyblind), 3);
+class PureOfHeartSkyblind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Skyblind), 3);

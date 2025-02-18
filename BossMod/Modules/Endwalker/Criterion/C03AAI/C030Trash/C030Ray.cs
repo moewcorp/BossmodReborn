@@ -1,14 +1,14 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C03AAI.C030Trash1;
 
-abstract class Hydrocannon(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(15, 3));
+abstract class Hydrocannon(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(15, 3));
 class NHydrocannon(BossModule module) : Hydrocannon(module, AID.NHydrocannon);
 class SHydrocannon(BossModule module) : Hydrocannon(module, AID.SHydrocannon);
 
-abstract class Expulsion(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCircle(8));
+abstract class Expulsion(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
 class NExpulsion(BossModule module) : Expulsion(module, AID.NExpulsion);
 class SExpulsion(BossModule module) : Expulsion(module, AID.SExpulsion);
 
-abstract class ElectricWhorl(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(8, 60));
+abstract class ElectricWhorl(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(8, 60));
 class NElectricWhorl(BossModule module) : ElectricWhorl(module, AID.NElectricWhorl);
 class SElectricWhorl(BossModule module) : ElectricWhorl(module, AID.SElectricWhorl);
 
@@ -50,7 +50,7 @@ class C030RayStates : StateMachineBuilder
 class C030NRayStates(BossModule module) : C030RayStates(module, false);
 class C030SRayStates(BossModule module) : C030RayStates(module, true);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.NRay, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12541, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NRay, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 979, NameID = 12541, SortOrder = 3)]
 public class C030NRay(WorldState ws, Actor primary) : C030Trash1(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
@@ -60,7 +60,7 @@ public class C030NRay(WorldState ws, Actor primary) : C030Trash1(ws, primary)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.SRay, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12541, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SRay, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 980, NameID = 12541, SortOrder = 3)]
 public class C030SRay(WorldState ws, Actor primary) : C030Trash1(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

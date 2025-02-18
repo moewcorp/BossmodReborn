@@ -2,7 +2,7 @@
 
 class CrypticFlames(BossModule module) : BossComponent(module)
 {
-    public bool ReadyToBreak { get; private set; }
+    public bool ReadyToBreak;
     private readonly int[] _playerOrder = new int[4];
     private readonly List<(Actor laser, int order)> _lasers = [];
     private int _numBrokenLasers;
@@ -16,39 +16,43 @@ class CrypticFlames(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
+        var count = _lasers.Count;
+        if (count == 0)
+            return;
         var order = _playerOrder[pcSlot];
-        foreach (var l in _lasers)
+        for (var i = 0; i < count; ++i)
         {
+            var l = _lasers[i];
             var dir = l.laser.Rotation.ToDirection();
-            var extent = 2 * dir * dir.Dot(Module.Center - l.laser.Position);
+            var extent = 2f * dir * dir.Dot(Module.Center - l.laser.Position);
             var color = l.order != _playerOrder[pcSlot] ? Colors.Enemy : order == CurrentBreakOrder ? Colors.Safe : Colors.Danger;
-            Arena.AddLine(l.laser.Position, l.laser.Position + extent, color, 2);
+            Arena.AddLine(l.laser.Position, l.laser.Position + extent, color, 2f);
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.FirstBrand:
+            case (uint)SID.FirstBrand:
                 SetPlayerOrder(actor, 1);
                 break;
-            case SID.SecondBrand:
+            case (uint)SID.SecondBrand:
                 SetPlayerOrder(actor, 2);
                 break;
-            case SID.ThirdBrand:
+            case (uint)SID.ThirdBrand:
                 SetPlayerOrder(actor, 3);
                 break;
-            case SID.FourthBrand:
+            case (uint)SID.FourthBrand:
                 SetPlayerOrder(actor, 4);
                 break;
-            case SID.FirstFlame:
-            case SID.SecondFlame:
-            case SID.ThirdFlame:
-            case SID.FourthFlame:
+            case (uint)SID.FirstFlame:
+            case (uint)SID.SecondFlame:
+            case (uint)SID.ThirdFlame:
+            case (uint)SID.FourthFlame:
                 ReadyToBreak = true;
                 break;
-            case SID.Counter:
+            case (uint)SID.Counter:
                 var order = status.Extra switch
                 {
                     0x1C1 => -1, // unbreakable
@@ -66,7 +70,7 @@ class CrypticFlames(BossModule module) : BossComponent(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Counter)
+        if (status.ID == (uint)SID.Counter)
         {
             _numBrokenLasers += _lasers.RemoveAll(l => l.laser == actor);
         }

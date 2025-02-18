@@ -2,7 +2,7 @@
 
 class P3Burst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Burst))
 {
-    private readonly IReadOnlyList<Actor> _bombs = module.Enemies(OID.BombBoulder);
+    private readonly List<Actor> _bombs = module.Enemies(OID.BombBoulder);
     private readonly Dictionary<ulong, DateTime?> _bombActivation = [];
 
     private static readonly AOEShape _shape = new AOEShapeCircle(6.3f);

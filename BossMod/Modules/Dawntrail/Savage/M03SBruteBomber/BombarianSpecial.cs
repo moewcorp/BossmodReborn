@@ -11,11 +11,11 @@ class BombarianSpecial(BossModule module) : Components.UniformStackSpread(module
         switch (CurMechanic)
         {
             case Mechanic.Spread:
-                AddSpreads(Raid.WithoutSlot(true), WorldState.FutureTime(delay));
+                AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(delay));
                 break;
             case Mechanic.Pairs:
                 // TODO: can target any role
-                AddStacks(Raid.WithoutSlot(true).Where(p => p.Class.IsSupport()), WorldState.FutureTime(delay));
+                AddStacks(Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), WorldState.FutureTime(delay));
                 break;
         }
     }
@@ -49,21 +49,20 @@ class BombarianSpecial(BossModule module) : Components.UniformStackSpread(module
     }
 }
 
-class BombarianSpecialRaidwide(BossModule module) : Components.CastCounter(module, default)
-{
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if ((AID)spell.Action.ID is AID.BombarianSpecialRaidwide1 or AID.BombarianSpecialRaidwide2 or AID.BombarianSpecialRaidwide3 or AID.BombarianSpecialRaidwide4 or AID.BombarianSpecialRaidwide5 or AID.BombarianSpecialRaidwide6
-            or AID.SpecialBombarianSpecialRaidwide1 or AID.SpecialBombarianSpecialRaidwide2 or AID.SpecialBombarianSpecialRaidwide3 or AID.SpecialBombarianSpecialRaidwide4 or AID.SpecialBombarianSpecialRaidwide5 or AID.SpecialBombarianSpecialRaidwide6)
-        {
-            ++NumCasts;
-        }
-    }
-}
+class BombarianSpecialRaidwide(BossModule module) : Components.CastCounterMulti(module, [ActionID.MakeSpell(AID.BombarianSpecialRaidwide1),
+ActionID.MakeSpell(AID.BombarianSpecialRaidwide2), ActionID.MakeSpell(AID.BombarianSpecialRaidwide3), ActionID.MakeSpell(AID.BombarianSpecialRaidwide4),
+ActionID.MakeSpell(AID.BombarianSpecialRaidwide5), ActionID.MakeSpell(AID.BombarianSpecialRaidwide6), ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide1),
+ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide2), ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide3),
+ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide4), ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide5), ActionID.MakeSpell(AID.SpecialBombarianSpecialRaidwide6)]);
 
-class BombarianSpecialOut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BombarianSpecialOut), new AOEShapeCircle(10));
-class BombarianSpecialIn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BombarianSpecialIn), new AOEShapeDonut(6, 40));
-class BombarianSpecialAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BombarianSpecialAOE), new AOEShapeCircle(8));
+abstract class SpecialOut(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
+class BombarianSpecialOut(BossModule module) : SpecialOut(module, AID.BombarianSpecialOut);
+class SpecialBombarianSpecialOut(BossModule module) : SpecialOut(module, AID.SpecialBombarianSpecialOut);
+
+abstract class SpecialIn(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeDonut(6, 40));
+class BombarianSpecialIn(BossModule module) : SpecialIn(module, AID.BombarianSpecialIn);
+class SpecialBombarianSpecialIn(BossModule module) : SpecialIn(module, AID.SpecialBombarianSpecialIn);
+
+class BombarianSpecialAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BombarianSpecialAOE), 8);
 class BombarianSpecialKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BombarianSpecialKnockback), 10);
-class SpecialBombarianSpecialOut(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpecialBombarianSpecialOut), new AOEShapeCircle(10));
-class SpecialBombarianSpecialIn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpecialBombarianSpecialIn), new AOEShapeDonut(6, 40));
+

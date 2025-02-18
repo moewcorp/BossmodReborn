@@ -1,12 +1,11 @@
-﻿using System.Xml.Linq;
-
-namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS1TrinitySeeker;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS1TrinitySeeker;
 
 class DRS1States : StateMachineBuilder
 {
     public DRS1States(BossModule module) : base(module)
     {
         SimplePhase(0, Phase1, "P1")
+            .ActivateOnEnter<ArenaChange>()
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1 || (Module.PrimaryActor.CastInfo?.IsSpell(AID.VerdantPathSword) ?? false);
         SimplePhase(1, Phase2, "P2")
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1 || (Module.PrimaryActor.CastInfo?.IsSpell(AID.VerdantPathFist) ?? false);

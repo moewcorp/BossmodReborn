@@ -8,9 +8,9 @@ class DualityOfDeath(BossModule module) : Components.GenericBaitAway(module, Act
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveBaitsOn(actor).Any())
+        if (ActiveBaitsOn(actor).Count != 0)
         {
-            if (Raid.WithoutSlot().InRadiusExcluding(actor, _shape.Radius).Any())
+            if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _shape.Radius).Any())
                 hints.Add("GTFO from raid!");
             if (Module.PrimaryActor.TargetID == _firstFireTarget)
                 hints.Add(actor.InstanceID != _firstFireTarget ? "Taunt!" : "Pass aggro!");
@@ -21,7 +21,7 @@ class DualityOfDeath(BossModule module) : Components.GenericBaitAway(module, Act
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DualityOfDeath)
         {

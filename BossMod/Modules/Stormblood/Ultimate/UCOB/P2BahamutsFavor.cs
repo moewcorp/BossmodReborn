@@ -58,7 +58,7 @@ class P2BahamutsFavorChainLightning(BossModule module) : Components.UniformStack
     private BitMask _pendingTargets;
     private DateTime _expectedStatuses;
 
-    public bool ActiveOrSkipped() => Active || _pendingTargets.Any() && WorldState.CurrentTime >= _expectedStatuses && Raid.WithSlot(true).IncludedInMask(_pendingTargets).All(ip => ip.Item2.IsDead);
+    public bool ActiveOrSkipped() => Active || _pendingTargets.Any() && WorldState.CurrentTime >= _expectedStatuses && Raid.WithSlot(true, true, true).IncludedInMask(_pendingTargets).All(ip => ip.Item2.IsDead);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -155,4 +155,4 @@ class P2BahamutsFavorDeathstorm(BossModule module) : BossComponent(module)
     }
 }
 
-class P2BahamutsFavorWingsOfSalvation(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.WingsOfSalvation), 4);
+class P2BahamutsFavorWingsOfSalvation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingsOfSalvation), 4);

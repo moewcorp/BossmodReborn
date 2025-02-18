@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using System.Text.Json.Nodes;
 
 namespace BossMod.ReplayAnalysis;
 
@@ -14,6 +15,7 @@ class StateTransitionTimings
 
     class TransitionMetrics
     {
+        public bool Expected;
         public double MinTime = double.MaxValue;
         public double MaxTime;
         public double AvgTime;
@@ -32,6 +34,7 @@ class StateTransitionTimings
     private readonly List<(Replay, Replay.Encounter, Replay.EncounterError)> _errors = [];
     private readonly List<(Replay, Replay.Encounter)> _encounters = [];
     private float _lastSecondsToIgnore;
+    private bool _showTransitionsToEnd;
     private object? _selected;
 
     public StateTransitionTimings(List<Replay> replays, uint oid)
@@ -46,7 +49,11 @@ class StateTransitionTimings
                 {
                     if (!_metrics.ContainsKey(s.ID))
                     {
-                        _metrics[s.ID] = new StateMetrics(s.FullName, Math.Round(s.ExpectedDuration, 1));
+                        var metric = _metrics[s.ID] = new StateMetrics(s.FullName, Math.Round(s.ExpectedDuration, 1));
+                        foreach (var succ in s.ExpectedSuccessors)
+                        {
+                            metric.Transitions[succ] = new() { Expected = true };
+                        }
                     }
                 }
 
@@ -54,7 +61,8 @@ class StateTransitionTimings
                 for (var i = 0; i < enc.States.Count; ++i)
                 {
                     var from = enc.States[i];
-                    _metrics[from.ID].Transitions.GetOrAdd(i < enc.States.Count - 1 ? enc.States[i + 1].ID : uint.MaxValue).Instances.Add(new TransitionMetric((from.Exit - enter).TotalSeconds, replay, enc, enter));
+                    var to = i < enc.States.Count - 1 ? enc.States[i + 1].ID : uint.MaxValue;
+                    _metrics[from.ID].Transitions.GetOrAdd(to).Instances.Add(new TransitionMetric((from.Exit - enter).TotalSeconds, replay, enc, enter));
                     enter = from.Exit;
                 }
 
@@ -78,9 +86,11 @@ class StateTransitionTimings
 
     public void Draw(UITree tree)
     {
+        Action? actions = null;
+        ImGui.Checkbox("Show transitions to end", ref _showTransitionsToEnd);
         foreach (var n in tree.Node("Encounters", _encounters.Count == 0))
         {
-            tree.LeafNodes(_encounters, e => $"{e.Item1.Path} @ {e.Item2.Time.Start:O} ({e.Item2.Time.Duration:f3}s)");
+            tree.LeafNodes(_encounters, e => $"{e.Item1.Path} @ {e.Item2.Time.Start:O} ({e.Item2.Time.Duration:f3}s)", e => EncounterContextMenu(e.Item2, ref actions));
         }
 
         foreach (var n in tree.Node("Errors", _errors.Count == 0))
@@ -89,19 +99,23 @@ class StateTransitionTimings
             tree.LeafNodes(_errors.Where(e => (e.Item2.Time.End - e.Item3.Timestamp).TotalSeconds >= _lastSecondsToIgnore), error => $"{LocationString(error.Item1, error.Item2, error.Item3.Timestamp)} [{error.Item3.CompType}] {error.Item3.Message}");
         }
 
-        Action? actions = null;
         foreach (var from in _metrics.Values)
         {
             UITree.NodeProperties map(KeyValuePair<uint, TransitionMetrics> kv)
             {
-                var destName = kv.Key != uint.MaxValue ? _metrics[kv.Key].Name : "<end>";
+                var destName = kv.Key != uint.MaxValue ? _metrics.GetValueOrDefault(kv.Key)?.Name ?? $"{kv.Key:X} ???" : "<end>";
                 var name = $"{from.Name} -> {destName}";
-                var value = $"avg={kv.Value.AvgTime:f2}-{from.ExpectedTime:f2}={kv.Value.AvgTime - from.ExpectedTime:f2} +- {kv.Value.StdDev:f2}, [{kv.Value.MinTime:f2}, {kv.Value.MaxTime:f2}] range, {kv.Value.Instances.Count} seen";
+                var value = kv.Value.Instances.Count > 0
+                    ? $"avg={kv.Value.AvgTime:f2}-{from.ExpectedTime:f2}={kv.Value.AvgTime - from.ExpectedTime:f2} +- {kv.Value.StdDev:f2}, [{kv.Value.MinTime:f2}, {kv.Value.MaxTime:f2}] range, {kv.Value.Instances.Count} seen"
+                    : $"never seen ({from.ExpectedTime:f2} expected)";
+                var color = !kv.Value.Expected ? Colors.TextColor5
+                    : kv.Value.Instances.Count > 0 && Math.Abs(from.ExpectedTime - kv.Value.AvgTime) > Math.Ceiling(kv.Value.StdDev * 10) / 10 ? Colors.TextColor2
+                    : Colors.TextColor1;
                 //bool warn = from.ExpectedTime < Math.Round(m.MinTime, 1) || from.ExpectedTime > Math.Round(m.MaxTime, 1);
-                var warn = Math.Abs(from.ExpectedTime - kv.Value.AvgTime) > Math.Ceiling(kv.Value.StdDev * 10) / 10;
-                return new($"{name}: {value}###{name}", false, warn ? Colors.TextColor2 : Colors.TextColor1);
+                return new($"{name}: {value}###{name}", kv.Value.Instances.Count == 0, color);
             }
-            foreach (var (toID, m) in tree.Nodes(from.Transitions, map, kv => TransitionContextMenu(from, kv.Key, kv.Value, tree, ref actions), select: kv => _selected = kv.Value))
+            var transitions = _showTransitionsToEnd ? from.Transitions : from.Transitions.Where(kv => kv.Key != uint.MaxValue);
+            foreach (var (toID, m) in tree.Nodes(transitions, map, kv => TransitionContextMenu(from, kv.Key, kv.Value, tree, ref actions), select: kv => _selected = kv.Value))
             {
                 foreach (var inst in m.Instances)
                 {
@@ -117,17 +131,46 @@ class StateTransitionTimings
 
     private void RecalculateMetrics(TransitionMetrics trans)
     {
-        trans.Instances.SortBy(e => e.Duration);
-        trans.MinTime = trans.Instances[0].Duration;
-        trans.MaxTime = trans.Instances[^1].Duration;
-        double sum = 0, sumSq = 0;
-        foreach (var inst in trans.Instances)
+        if (trans.Instances.Count > 0)
         {
-            sum += inst.Duration;
-            sumSq += inst.Duration * inst.Duration;
+            trans.Instances.SortBy(e => e.Duration);
+            trans.MinTime = trans.Instances[0].Duration;
+            trans.MaxTime = trans.Instances[^1].Duration;
+            double sum = 0, sumSq = 0;
+            foreach (var inst in trans.Instances)
+            {
+                sum += inst.Duration;
+                sumSq += inst.Duration * inst.Duration;
+            }
+            trans.AvgTime = sum / trans.Instances.Count;
+            trans.StdDev = trans.Instances.Count > 0 ? Math.Sqrt((sumSq - sum * sum / trans.Instances.Count) / (trans.Instances.Count - 1)) : 0;
         }
-        trans.AvgTime = sum / trans.Instances.Count;
-        trans.StdDev = trans.Instances.Count > 0 ? Math.Sqrt((sumSq - sum * sum / trans.Instances.Count) / (trans.Instances.Count - 1)) : 0;
+        else
+        {
+            trans.MinTime = trans.MaxTime = trans.AvgTime = trans.StdDev = 0;
+        }
+    }
+
+    private void EncounterContextMenu(Replay.Encounter enc, ref Action? actions)
+    {
+        if (ImGui.MenuItem("Ignore this encounter"))
+        {
+            actions += () =>
+            {
+                foreach (var (from, metrics) in _metrics)
+                {
+                    foreach (var (to, metric) in metrics.Transitions)
+                    {
+                        if (metric.Instances.RemoveAll(i => i.Encounter == enc) > 0)
+                        {
+                            RecalculateMetrics(metric);
+                        }
+                    }
+                }
+                _errors.RemoveAll(e => e.Item2 == enc);
+                _encounters.RemoveAll(e => e.Item2 == enc);
+            };
+        }
     }
 
     private void TransitionContextMenu(StateMetrics state, uint to, TransitionMetrics trans, UITree tree, ref Action? actions)

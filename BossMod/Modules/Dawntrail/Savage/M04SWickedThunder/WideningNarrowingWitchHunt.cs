@@ -47,7 +47,7 @@ class WideningNarrowingWitchHuntBait(BossModule module) : Components.GenericBait
         CurrentBaits.Clear();
         if (CurMechanic != Mechanic.None)
         {
-            var targets = Raid.WithoutSlot().SortedByRange(Module.Center);
+            var targets = Raid.WithoutSlot(false, true, true).SortedByRange(Module.Center);
             targets = CurMechanic == Mechanic.Near ? targets.Take(2) : targets.TakeLast(2);
             foreach (var t in targets)
                 CurrentBaits.Add(new(Module.PrimaryActor, t, _shape, _activation));

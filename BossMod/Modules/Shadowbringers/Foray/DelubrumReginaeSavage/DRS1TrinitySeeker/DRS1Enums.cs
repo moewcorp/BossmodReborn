@@ -2,10 +2,10 @@
 
 public enum OID : uint
 {
-    Boss = 0x3135, // R4.000, x1
-    SeekerAvatar = 0x3136, // R4.000, x7
-    Helper = 0x233C, // R0.500, x16
-    AetherialOrb = 0x3137, // R2.000, spawn during fight
+    Boss = 0x3135, // R4.0
+    SeekerAvatar = 0x3136, // R4.0
+    AetherialOrb = 0x3137, // R2.0
+    Helper = 0x233C
 }
 
 public enum AID : uint

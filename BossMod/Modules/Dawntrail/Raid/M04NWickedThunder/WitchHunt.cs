@@ -2,16 +2,25 @@ namespace BossMod.Dawntrail.Raid.M04NWickedThunder;
 
 class WitchHunt(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(25);
     private static readonly AOEShapeCircle circle = new(6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            for (var i = 0; i < _aoes.Count / 2; ++i)
-                yield return _aoes[i] with { Color = Colors.Danger };
-        for (var i = _aoes.Count / 2; i < _aoes.Count; ++i)
-            yield return _aoes[i] with { Risky = _aoes.Count < 12 };
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        var countH = count / 2;
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < countH)
+                aoes.Add(aoe with { Color = count > 2 ? Colors.Danger : 0 });
+            else if (i >= countH)
+                aoes.Add(aoe with { Risky = count < 12 });
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -22,7 +31,7 @@ class WitchHunt(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.WitchHunt)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.WitchHunt)
             _aoes.RemoveAt(0);
     }
 }

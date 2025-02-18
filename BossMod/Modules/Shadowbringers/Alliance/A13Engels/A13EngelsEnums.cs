@@ -60,22 +60,22 @@ public enum AID : uint
     MarxActivation = 18600, // Boss->self, 3.0s cast, single-target
     DemolishStructure1 = 18244, // Boss->self, no cast, single-target
     DemolishStructure2 = 18245, // EngelsHelper1->self, 9.3s cast, range 50 circle
-    MarxCrush1 = 18246, // Boss->self, 6.0s cast, single-target
-    MarxCrush2 = 18247, // EngelsHelper1->self, 6.0s cast, range 15 width 30 rect
+    MarxCrushVisual = 18246, // Boss->self, 6.0s cast, single-target
+    MarxCrush = 18247, // EngelsHelper1->self, 6.0s cast, range 15 width 30 rect
 
-    MarxSmash1 = 18214, // Boss->self, 6.0s cast, single-target
-    MarxSmash2 = 18215, // Boss->self, 6.0s cast, single-target
-    MarxSmash3 = 18216, // EngelsHelper1->self, 1.6s cast, range 60 width 30 rect // Half room right side
-    MarxSmash4 = 18217, // EngelsHelper1->self, 1.6s cast, range 60 width 30 rect // Half room left side
-    MarxSmash5 = 18218, // Boss->self, 6.0s cast, single-target
-    MarxSmash6 = 18219, // EngelsHelper1->self, 1.5s cast, range 30 width 60 rect // Half room front side
-    MarxSmash7 = 18220, // Boss->self, no cast, single-target
-    MarxSmash8 = 18221, // EngelsHelper1->self, 0.5s cast, range 60 width 30 rect // Middle of arena front to back cleave
-    MarxSmash9 = 18222, // Boss->self, 6.0s cast, single-target
-    MarxSmash10 = 18223, // EngelsHelper1->self, 1.5s cast, range 35 width 60 rect // Half room back side
-    MarxSmash11 = 18224, // Boss->self, no cast, single-target
-    MarxSmash12 = 18225, // EngelsHelper1->self, 0.5s cast, range 60 width 20 rect // Side of arena cleave
-    MarxSmash13 = 18226, // EngelsHelper1->self, 0.5s cast, range 60 width 20 rect // Side of arena cleave
+    MarxSmashVisual1 = 18214, // Boss->self, 6.0s cast, single-target
+    MarxSmashVisual2 = 18215, // Boss->self, 6.0s cast, single-target
+    MarxSmashVisual3 = 18218, // Boss->self, 6.0s cast, single-target
+    MarxSmashVisual4 = 18220, // Boss->self, no cast, single-target
+    MarxSmashVisual5 = 18222, // Boss->self, 6.0s cast, single-target
+    MarxSmashVisual6 = 18224, // Boss->self, no cast, single-target
+    MarxSmash1 = 18216, // EngelsHelper1->self, 1.6s cast, range 60 width 30 rect // Half room right side
+    MarxSmash2 = 18217, // EngelsHelper1->self, 1.6s cast, range 60 width 30 rect // Half room left side
+    MarxSmash3 = 18221, // EngelsHelper1->self, 0.5s cast, range 60 width 30 rect // Middle of arena front to back cleave
+    MarxSmash4 = 18219, // EngelsHelper1->self, 1.5s cast, range 30 width 60 rect // Half room front side
+    MarxSmash5 = 18223, // EngelsHelper1->self, 1.5s cast, range 35 width 60 rect // Half room back side
+    MarxSmash6 = 18225, // EngelsHelper1->self, 0.5s cast, range 60 width 20 rect // Side of arena cleave
+    MarxSmash7 = 18226, // EngelsHelper1->self, 0.5s cast, range 60 width 20 rect // Side of arena cleave
 
     MarxThrust1 = 18262, // MarxHelper2/MarxHelper1->self, 5.0s cast, single-target
     MarxThrust2 = 18684, // EngelsHelper1->self, 5.5s cast, range 30 width 20 rect

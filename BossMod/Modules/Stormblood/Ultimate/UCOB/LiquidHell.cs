@@ -5,7 +5,7 @@ class LiquidHell(BossModule module) : Components.PersistentVoidzoneAtCastTarget(
     public void Reset() => NumCasts = 0;
 }
 
-class P1LiquidHell : LiquidHell
+class P1LiquidHell(BossModule module) : LiquidHell(module)
 {
-    public P1LiquidHell(BossModule module) : base(module) { KeepOnPhaseChange = true; }
+    public override bool KeepOnPhaseChange => true;
 }

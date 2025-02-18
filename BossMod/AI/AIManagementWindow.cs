@@ -6,7 +6,7 @@ namespace BossMod.AI;
 
 sealed class AIManagementWindow : UIWindow
 {
-    private readonly AIConfig _config;
+    private static readonly AIConfig _config = Service.Config.Get<AIConfig>();
     private readonly AIManager _manager;
     private readonly EventSubscriptions _subscriptions;
     private const string _title = $"AI: off{_windowID}";
@@ -15,7 +15,6 @@ sealed class AIManagementWindow : UIWindow
     public AIManagementWindow(AIManager manager) : base(_windowID, false, new(100, 100))
     {
         WindowName = _title;
-        _config = Service.Config.Get<AIConfig>();
         _manager = manager;
         _subscriptions = new
         (
@@ -41,8 +40,28 @@ sealed class AIManagementWindow : UIWindow
 
     public override void Draw()
     {
+        var configModified = false;
+
         ImGui.TextUnformatted($"Navi={_manager.Controller.NaviTargetPos}");
-        _manager.Beh?.DrawDebug();
+
+        configModified |= ImGui.Checkbox("Forbid actions", ref _config.ForbidActions);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Forbid movement", ref _config.ForbidMovement);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Idle while mounted", ref _config.ForbidAIMovementMounted);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Follow during combat", ref _config.FollowDuringCombat);
+        ImGui.Spacing();
+        configModified |= ImGui.Checkbox("Follow during active boss module", ref _config.FollowDuringActiveBossModule);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Follow out of combat", ref _config.FollowOutOfCombat);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Follow target", ref _config.FollowTarget);
+        ImGui.Spacing();
+        configModified |= ImGui.Checkbox("Manual targeting", ref _config.ManualTarget);
+        ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Disable loading obstacle maps", ref _config.DisableObstacleMaps);
+
         ImGui.Text("Follow party slot");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(250);
@@ -57,19 +76,21 @@ sealed class AIManagementWindow : UIWindow
                 {
                     _manager.SwitchToFollow(i);
                     _config.FollowSlot = i;
-                    _config.Modified.Fire();
+                    configModified = true;
                 }
             }
+            ImGui.EndCombo();
         }
+        ImGui.Separator();
         ImGui.Text("Desired positional");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
         var positionalOptions = Enum.GetNames(typeof(Positional));
         var positionalIndex = (int)_config.DesiredPositional;
-        if (ImGui.Combo("##DesiredPositional", ref positionalIndex, positionalOptions, positionalOptions.Length))
+        if (ImGui.Combo("##DesiredPositional", ref positionalIndex, positionalOptions, 4))
         {
             _config.DesiredPositional = (Positional)positionalIndex;
-            _config.Modified.Fire();
+            configModified = true;
         }
         ImGui.SameLine();
         ImGui.Text("Max distance - to targets");
@@ -82,7 +103,7 @@ sealed class AIManagementWindow : UIWindow
             if (float.TryParse(maxDistanceTargetStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
             {
                 _config.MaxDistanceToTarget = maxDistance;
-                _config.Modified.Fire();
+                configModified = true;
             }
         }
         ImGui.SameLine();
@@ -96,38 +117,62 @@ sealed class AIManagementWindow : UIWindow
             if (float.TryParse(maxDistanceSlotStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
             {
                 _config.MaxDistanceToSlot = maxDistance;
-                _config.Modified.Fire();
+                configModified = true;
             }
         }
+
+        ImGui.Text("Movement decision delay");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(100);
+        var movementDelayStr = _config.MoveDelay.ToString(CultureInfo.InvariantCulture);
+        if (ImGui.InputText("##MovementDelay", ref movementDelayStr, 64))
+        {
+            movementDelayStr = movementDelayStr.Replace(',', '.');
+            if (float.TryParse(movementDelayStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var delay))
+            {
+                _config.MoveDelay = delay;
+                configModified = true;
+            }
+        }
+        ImGui.SameLine();
         ImGui.Text("Autorotation AI preset");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(250);
         ImGui.SetNextWindowSizeConstraints(default, new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50));
         var aipreset = _config.AIAutorotPresetName;
         var presets = _manager.Autorot.Database.Presets.VisiblePresets;
-        var presetNames = presets.Select(p => p.Name).ToList();
+
+        var count = presets.Count;
+        List<string> presetNames = new(count + 1);
+        for (var i = 0; i < count; ++i)
+        {
+            presetNames.Add(presets[i].Name);
+        }
+
         if (aipreset != null)
             presetNames.Add("Deactivate");
-
+        var countnames = presetNames.Count;
         var selectedIndex = presetNames.IndexOf(aipreset ?? "");
-        if (selectedIndex == -1 && _manager.AiPreset == null)
-            selectedIndex = -1;
-        if (ImGui.Combo("##AI preset", ref selectedIndex, [.. presetNames], presetNames.Count))
+
+        if (ImGui.Combo("##AI preset", ref selectedIndex, [.. presetNames], countnames))
         {
-            if (selectedIndex == presetNames.Count - 1 && aipreset != null)
+            if (selectedIndex == countnames - 1 && aipreset != null)
             {
                 _manager.SetAIPreset(null);
                 _config.AIAutorotPresetName = null;
+                configModified = true;
                 selectedIndex = -1;
             }
-            else if (selectedIndex >= 0 && selectedIndex < presets.Count())
+            else if (selectedIndex >= 0 && selectedIndex < count)
             {
-                var selectedPreset = presets.ElementAt(selectedIndex);
+                var selectedPreset = presets[selectedIndex];
                 _manager.SetAIPreset(selectedPreset);
                 _config.AIAutorotPresetName = selectedPreset.Name;
+                configModified = true;
             }
-            _config.Modified.Fire();
         }
+        if (configModified)
+            _config.Modified.Fire();
     }
 
     public override void OnClose() => SetVisible(false);

@@ -66,7 +66,7 @@ class ElectronStream(BossModule module) : Components.GenericAOEs(module)
 
         // wild charge
         var offZ = actor.Position.Z - Module.PrimaryActor.Position.Z;
-        var sameSideCloser = Raid.WithoutSlot().Where(p => p != actor && p.Position.Z - Module.PrimaryActor.Position.Z is var off && off * offZ > 0 && Math.Abs(off) < Math.Abs(offZ));
+        var sameSideCloser = Raid.WithoutSlot(false, true, true).Where(p => p != actor && p.Position.Z - Module.PrimaryActor.Position.Z is var off && off * offZ > 0 && Math.Abs(off) < Math.Abs(offZ));
         if (actor.Role == Role.Tank)
         {
             if (sameSideCloser.Any())
@@ -131,7 +131,7 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var actorOffset = actor.Position.Z - Module.PrimaryActor.Position.Z;
-        foreach (var (i, p) in Raid.WithSlot().Exclude(slot))
+        foreach (var (i, p) in Raid.WithSlot(false, true, true).Exclude(slot))
         {
             switch (_status[i])
             {
@@ -228,13 +228,13 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
             SID.ProximateCurrent => (actor.Position.Z - Module.PrimaryActor.Position.Z) * targetOffset > 0,
             _ => false
         };
-        return Raid.WithSlot().FirstOrDefault(ip => isBaiter(ip.Item1, ip.Item2));
+        return Raid.WithSlot(false, true, true).FirstOrDefault(ip => isBaiter(ip.Item1, ip.Item2));
     }
 
     private Actor? FindBaitTarget(int slot, Actor source) => _status[slot] switch
     {
-        SID.RemoteCurrent => Raid.WithoutSlot().Exclude(source).Farthest(source.Position),
-        SID.ProximateCurrent => Raid.WithoutSlot().Exclude(source).Closest(source.Position),
+        SID.RemoteCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Farthest(source.Position),
+        SID.ProximateCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Closest(source.Position),
         _ => null
     };
 

@@ -51,15 +51,15 @@ class RahuRay(BossModule module) : Components.SpreadFromIcon(module, (uint)IconI
 class KetuSlash1(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash1));
 class KetuSlash2(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash2));
 class KetuSlash3(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash3));
-class KetuCutter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.KetuCutter), new AOEShapeCone(20.5f, 10.Degrees()));
-class KetuWave(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.KetuWave), 10);
+class KetuCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuCutter), new AOEShapeCone(20.5f, 10.Degrees()));
+class KetuWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuWave), 10);
 
-class RahuBlaster(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 3));
+class RahuBlaster(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 3));
 class RahuBlaster1(BossModule module) : RahuBlaster(module, AID.RahuBlaster1);
 class RahuBlaster2(BossModule module) : RahuBlaster(module, AID.RahuBlaster2);
 class RahuBlaster3(BossModule module) : RahuBlaster(module, AID.RahuBlaster3);
 
-class RahuComet(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 15);
+class RahuComet(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15);
 class RahuComet1(BossModule module) : RahuComet(module, AID.RahuComet1);
 class RahuComet2(BossModule module) : RahuComet(module, AID.RahuComet2);
 class RahuComet3(BossModule module) : RahuComet(module, AID.RahuComet3);
@@ -71,7 +71,7 @@ class RahuCometKB(BossModule module, AID aid, int distance) : Components.Knockba
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && !_aoe.ActiveCasters.Any())
+        if (source != default && _aoe.ActiveCasters.Count == 0)
             hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 20, Angle.FromDirection(Arena.Center - source.Origin), 20.Degrees()), source.Activation);
     }
 

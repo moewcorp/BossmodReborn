@@ -27,17 +27,19 @@ public sealed class WaymarkState
         private set => this[(int)wm] = value;
     }
 
-    public IEnumerable<WorldState.Operation> CompareToInitial()
+    public List<WorldState.Operation> CompareToInitial()
     {
+        List<WorldState.Operation> waymarks = new(8);
         foreach (var i in _setMarkers.SetBits())
-            yield return new OpWaymarkChange((Waymark)i, _positions[i]);
+            waymarks.Add(new OpWaymarkChange((Waymark)i, _positions[i]));
+        return waymarks;
     }
 
     // implementation of operations
     public Event<OpWaymarkChange> Changed = new();
     public sealed record class OpWaymarkChange(Waymark ID, Vector3? Pos) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Waymarks[ID] = Pos;
             ws.Waymarks.Changed.Fire(this);

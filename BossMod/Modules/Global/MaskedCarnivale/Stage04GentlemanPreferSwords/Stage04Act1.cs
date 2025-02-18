@@ -8,10 +8,10 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 6497, // 25C8->player, no cast, single-target
-    AutoAttack2 = 6499, // 25D2->player, no cast, single-target
-    BloodDrain = 14360, // 25D2->player, no cast, single-target
-    SanguineBite = 14361, // 25C8->self, no cast, range 3+R width 2 rect
+    AutoAttack = 6497, // Boss->player, no cast, single-target
+    AutoAttack2 = 6499, // Bat->player, no cast, single-target
+    BloodDrain = 14360, // Bat->player, no cast, single-target
+    SanguineBite = 14361, // Boss->self, no cast, range 3+R width 2 rect
 }
 
 class Hints(BossModule module) : BossComponent(module)
@@ -37,19 +37,20 @@ class Stage04Act1States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Bat).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage04Act1.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 614, NameID = 8086, SortOrder = 1)]
 public class Stage04Act1 : BossModule
 {
-    public Stage04Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage04Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Bat];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Bat).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

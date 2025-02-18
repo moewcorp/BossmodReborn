@@ -3,20 +3,21 @@ namespace BossMod.Global.MaskedCarnivale.Stage24.Act1;
 public enum OID : uint
 {
     Boss = 0x2735, //R=1.0
-    ArenaViking = 0x2734, //R=1.0
+    ArenaViking = 0x2734 //R=1.0
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // ArenaViking->player, no cast, single-target
+
     Fire = 14266, // Boss->player, 1.0s cast, single-target
     Starstorm = 15317, // Boss->location, 3.0s cast, range 5 circle
     RagingAxe = 15316, // ArenaViking->self, 3.0s cast, range 4+R 90-degree cone
-    LightningSpark = 15318, // Boss->player, 6.0s cast, single-target
+    LightningSpark = 15318 // Boss->player, 6.0s cast, single-target
 }
 
-class Starstorm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
-class RagingAxe(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
+class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
+class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
 class LightningSpark(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.LightningSpark));
 
 class Hints2(BossModule module) : BossComponent(module)
@@ -55,7 +56,7 @@ class Stage24Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8127, SortOrder = 1)]
 public class Stage24Act1 : BossModule
 {
-    public Stage24Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage24Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }
@@ -70,11 +71,12 @@ public class Stage24Act1 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.Boss or OID.ArenaViking => 0, //TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
+                OID.Boss or OID.ArenaViking => 0, // TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
                 _ => 0
             };
         }

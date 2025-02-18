@@ -1,7 +1,7 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V025Enenra;
 
 class PipeCleaner(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(60, 5), (uint)TetherID.PipeCleaner);
-class Uplift(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Uplift), 6);
+class Uplift(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Uplift), 6);
 class Snuff(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Snuff), new AOEShapeCircle(6), true)
 {
     public override void AddGlobalHints(GlobalHints hints)
@@ -11,9 +11,9 @@ class Snuff(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSp
     }
 }
 
-class Smoldering(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Smoldering), new AOEShapeCircle(8), 8);
+class Smoldering(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Smoldering), 8, 8);
 class FlagrantCombustion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FlagrantCombustion));
-class SmokeRings(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SmokeRings), new AOEShapeCircle(16));
+class SmokeRings(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SmokeRings), 16);
 class ClearingSmoke(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.ClearingSmoke), 16, stopAfterWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -37,7 +37,7 @@ class StringRock(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -47,7 +47,7 @@ class StringRock(BossModule module) : Components.ConcentricAOEs(module, _shapes)
                 AID.BedrockUplift3 => 3,
                 _ => -1
             };
-            AdvanceSequence(order, spell.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
         }
     }
 }

@@ -85,7 +85,6 @@ public enum AID : uint
 public enum SID : uint
 {
     SixFulmsUnder = 567, // none->player, extra=0xC27/0xC28/0xC29/0xC2A/0xC2B/0xC2C/0xC2D/0xC2E/0xC2F/0xC30/0xC31/0xC32
-    Unknown = 2056, // none->3F46, extra=0xE1
 }
 
 public enum IconID : uint

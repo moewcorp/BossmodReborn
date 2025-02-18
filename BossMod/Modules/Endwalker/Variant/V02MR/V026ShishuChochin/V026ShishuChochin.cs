@@ -15,13 +15,15 @@ public enum AID : uint
 
 class Lanterns(BossModule module) : Components.GenericAOEs(module)
 {
+    private readonly V026ShishuChochinConfig _config = Service.Config.Get<V026ShishuChochinConfig>();
+
     private static readonly Circle lantern1 = new(new(723.5f, 57.5f), 1);
     private static readonly Circle lantern2 = new(new(690.5f, 57.5f), 1);
     private static readonly Circle lantern3 = new(new(681.2f, 51.6f), 1);
     private readonly List<Circle> lanterns = [lantern1, lantern2, lantern3];
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(new AOEShapeCustom(lanterns, InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE);
+        return [new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99), Colors.SafeFromAOE)];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -45,21 +47,54 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!Service.Config.Get<V026ShishuChochinConfig>().P12LanternAI)
+        if (!_config.P12LanternAI)
             return;
         var count = (3 - NumCasts) == lanterns.Count;
         if (count)
             base.AddAIHints(slot, actor, assignment, hints);
         var lanternPriorityCount = 0;
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
             if (e.Actor.OID == (uint)OID.Boss)
-                if (lanternPriorityCount == 0 && ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position)) && count && Module.Enemies(OID.Boss).Closest(actor.Position) == e.Actor)
+            {
+                var hasActiveAOE = false;
+                foreach (var c in ActiveAOEs(slot, actor))
                 {
-                    e.Priority = 1;
-                    lanternPriorityCount++;
+                    if (c.Check(actor.Position))
+                    {
+                        hasActiveAOE = true;
+                        break;
+                    }
+                }
+
+                if (lanternPriorityCount == 0 && hasActiveAOE && count)
+                {
+                    Actor? closestBoss = null;
+                    var closestDistance = float.MaxValue;
+                    var boss = Module.Enemies(OID.Boss);
+                    var countBoss = boss.Count;
+                    for (var j = 0; j < countBoss; ++j)
+                    {
+                        var b = boss[i];
+                        var distance = (b.Position - actor.Position).LengthSq();
+                        if (distance < closestDistance)
+                        {
+                            closestDistance = distance;
+                            closestBoss = b;
+                        }
+                    }
+
+                    if (closestBoss == e.Actor)
+                    {
+                        e.Priority = 1;
+                        ++lanternPriorityCount;
+                    }
                 }
                 else
-                    e.Priority = -1;
+                    e.Priority = AIHints.Enemy.PriorityUndesirable;
+            }
+        }
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -76,7 +111,7 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Illume(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Illume), new AOEShapeCone(6, 45.Degrees()));
+class Illume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Illume), new AOEShapeCone(6, 45.Degrees()));
 
 class V026ShishuChochinStates : StateMachineBuilder
 {

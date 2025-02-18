@@ -15,11 +15,11 @@ class Coherence(BossModule module) : Components.CastCounter(module, ActionID.Mak
     public override void Update()
     {
         _inRay.Reset();
-        _rayTarget = Raid.WithoutSlot().Exclude(_tetherTarget).Closest(Module.PrimaryActor.Position);
+        _rayTarget = Raid.WithoutSlot(false, true, true).Exclude(_tetherTarget).Closest(Module.PrimaryActor.Position);
         if (_rayTarget != null)
         {
             _rayDirection = Angle.FromDirection(_rayTarget.Position - Module.PrimaryActor.Position);
-            _inRay = Raid.WithSlot().InShape(_rayShape, Module.PrimaryActor.Position, _rayDirection).Mask();
+            _inRay = Raid.WithSlot(false, true, true).InShape(_rayShape, Module.PrimaryActor.Position, _rayDirection).Mask();
         }
     }
 
@@ -31,7 +31,7 @@ class Coherence(BossModule module) : Components.CastCounter(module, ActionID.Mak
             {
                 hints.Add("Pass tether to tank!");
             }
-            else if (Raid.WithoutSlot().InRadiusExcluding(actor, _aoeRadius).Any())
+            else if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _aoeRadius).Any())
             {
                 hints.Add("GTFO from raid!");
             }
@@ -70,7 +70,7 @@ class Coherence(BossModule module) : Components.CastCounter(module, ActionID.Mak
     {
         // TODO: i'm not sure what are the exact mechanics - flare is probably distance-based, and ray is probably shared damage cast at closest target?..
         var head = Module.Enemies(OID.CataractHead).FirstOrDefault();
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             if (head?.Tether.Target == player.InstanceID)
             {

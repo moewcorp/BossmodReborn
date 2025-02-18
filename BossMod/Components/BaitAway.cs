@@ -7,7 +7,7 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
 {
     public record struct Bait(Actor Source, Actor Target, AOEShape Shape, DateTime Activation = default)
     {
-        public Angle? CustomRotation { get; init; }
+        public Angle? CustomRotation;
 
         public readonly Angle Rotation => CustomRotation ?? (Source != Target ? Angle.FromDirection(Target.Position - Source.Position) : Source.Rotation);
 
@@ -18,8 +18,8 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
         }
     }
 
-    public bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player
-    public bool CenterAtTarget = centerAtTarget; // if true, aoe source is at target
+    public readonly bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player
+    public readonly bool CenterAtTarget = centerAtTarget; // if true, aoe source is at target
     public bool AllowDeadTargets = true; // if false, baits with dead targets are ignored
     public bool EnableHints = true;
     public bool IgnoreOtherBaits; // if true, don't show hints/aoes for baits by others
@@ -28,9 +28,51 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
     public List<Bait> CurrentBaits = [];
     public const string BaitAwayHint = "Bait away from raid!";
 
-    public IEnumerable<Bait> ActiveBaits => AllowDeadTargets ? CurrentBaits.Where(b => !b.Source.IsDead) : CurrentBaits.Where(b => !b.Source.IsDead && !b.Target.IsDead);
-    public IEnumerable<Bait> ActiveBaitsOn(Actor target) => ActiveBaits.Where(b => b.Target == target);
-    public IEnumerable<Bait> ActiveBaitsNotOn(Actor target) => ActiveBaits.Where(b => b.Target != target);
+    public List<Bait> ActiveBaits
+    {
+        get
+        {
+            var count = CurrentBaits.Count;
+            List<Bait> activeBaits = new(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var bait = CurrentBaits[i];
+                if (!bait.Source.IsDead)
+                {
+                    if (AllowDeadTargets || !bait.Target.IsDead)
+                        activeBaits.Add(bait);
+                }
+            }
+            return activeBaits;
+        }
+    }
+
+    public List<Bait> ActiveBaitsOn(Actor target)
+    {
+        var count = CurrentBaits.Count;
+        List<Bait> activeBaitsOnTarget = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var bait = CurrentBaits[i];
+            if (!bait.Source.IsDead && bait.Target == target)
+                activeBaitsOnTarget.Add(bait);
+        }
+        return activeBaitsOnTarget;
+    }
+
+    public List<Bait> ActiveBaitsNotOn(Actor target)
+    {
+        var count = CurrentBaits.Count;
+        List<Bait> activeBaitsNotOnTarget = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var bait = CurrentBaits[i];
+            if (!bait.Source.IsDead && bait.Target != target)
+                activeBaitsNotOnTarget.Add(bait);
+        }
+        return activeBaitsNotOnTarget;
+    }
+
     public WPos BaitOrigin(Bait bait) => (CenterAtTarget ? bait.Target : bait.Source).Position;
     public bool IsClippedBy(Actor actor, Bait bait) => bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation);
     public IEnumerable<Actor> PlayersClippedBy(Bait bait) => Raid.WithoutSlot().Exclude(bait.Target).InShape(bait.Shape, BaitOrigin(bait), bait.Rotation);
@@ -42,7 +84,7 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
 
         if (ForbiddenPlayers[slot])
         {
-            if (ActiveBaitsOn(actor).Any())
+            if (ActiveBaitsOn(actor).Count != 0)
                 hints.Add("Avoid baiting!");
         }
         else
@@ -57,7 +99,7 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!ActiveBaits.Any())
+        if (ActiveBaits.Count == 0)
             return;
 
         foreach (var bait in ActiveBaitsNotOn(actor))
@@ -81,7 +123,6 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
                 case AOEShapeCone cone:
                     hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
                     break;
-
                 case AOEShapeRect rect:
                     hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
                     break;
@@ -91,7 +132,7 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
             }
     }
 
-    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => ActiveBaitsOn(player).Any() ? BaiterPriority : PlayerPriority.Irrelevant;
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => ActiveBaitsOn(player).Count != 0 ? BaiterPriority : PlayerPriority.Irrelevant;
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
@@ -122,12 +163,12 @@ public class BaitAwayEveryone : GenericBaitAway
 }
 
 // component for mechanics requiring tether targets to bait their aoe away from raid
-public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, ActionID aid = default, uint enemyOID = default, float activationDelay = default) : GenericBaitAway(module, aid)
+public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, ActionID aid = default, uint enemyOID = default, float activationDelay = default, bool centerAtTarget = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget)
 {
     public AOEShape Shape = shape;
     public uint TID = tetherID;
     public bool DrawTethers = true;
-    public readonly IReadOnlyList<Actor> _enemies = module.Enemies(enemyOID);
+    public readonly List<Actor> _enemies = module.Enemies(enemyOID);
     public float ActivationDelay = activationDelay;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -186,7 +227,7 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, Action
 
     public virtual Actor? BaitSource(Actor target) => source ?? Module.PrimaryActor;
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == IID && BaitSource(actor) is var source && source != null)
             CurrentBaits.Add(new(source, actor, Shape, WorldState.FutureTime(ActivationDelay)));
@@ -290,7 +331,7 @@ public class BaitAwayChargeTether(BossModule module, float halfWidth, float acti
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!ActiveBaits.Any())
+        if (ActiveBaits.Count == 0)
             return;
         base.AddHints(slot, actor, hints);
         if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Any()))

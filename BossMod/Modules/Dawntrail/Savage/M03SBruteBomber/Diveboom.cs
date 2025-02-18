@@ -1,9 +1,12 @@
 ﻿namespace BossMod.Dawntrail.Savage.M03SBruteBomber;
 
-class OctoboomDiveProximity(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OctoboomDiveProximityAOE), new AOEShapeCircle(20)); // TODO: verify falloff
-class OctoboomDiveKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.OctoboomDiveKnockbackAOE), 25);
-class QuadroboomDiveProximity(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.QuadroboomDiveProximityAOE), new AOEShapeCircle(20)); // TODO: verify falloff
-class QuadroboomDiveKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.QuadroboomDiveKnockbackAOE), 25);
+abstract class Proximity(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 20);  // TODO: verify falloff
+class OctoboomDiveProximity(BossModule module) : Proximity(module, AID.OctoboomDiveProximityAOE);
+class QuadroboomDiveProximity(BossModule module) : Proximity(module, AID.QuadroboomDiveProximityAOE);
+
+abstract class DiveKB(BossModule module, AID aid) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), 25);
+class OctoboomDiveKnockback(BossModule module) : DiveKB(module, AID.OctoboomDiveKnockbackAOE);
+class QuadroboomDiveKnockback(BossModule module) : DiveKB(module, AID.QuadroboomDiveKnockbackAOE);
 
 class Diveboom(BossModule module) : Components.UniformStackSpread(module, 5, 5, 2, 2, alwaysShowSpreads: true)
 {
@@ -13,12 +16,12 @@ class Diveboom(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
         {
             case AID.OctoboomDiveProximityAOE:
             case AID.OctoboomDiveKnockbackAOE:
-                AddSpreads(Raid.WithoutSlot(true), Module.CastFinishAt(spell));
+                AddSpreads(Raid.WithoutSlot(true, true, true), Module.CastFinishAt(spell));
                 break;
             case AID.QuadroboomDiveProximityAOE:
             case AID.QuadroboomDiveKnockbackAOE:
                 // TODO: can target any role
-                AddStacks(Raid.WithoutSlot(true).Where(p => p.Class.IsSupport()), Module.CastFinishAt(spell));
+                AddStacks(Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), Module.CastFinishAt(spell));
                 break;
         }
     }

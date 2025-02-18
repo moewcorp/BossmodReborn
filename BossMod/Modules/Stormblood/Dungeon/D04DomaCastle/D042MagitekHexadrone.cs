@@ -32,7 +32,7 @@ public enum IconID : uint
 }
 
 class MagitekMissile(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.MagitekMissiles), 6);
-class CircleOfDeath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CircleOfDeath), new AOEShapeCircle(8.24f));
+class CircleOfDeath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfDeath), 8.24f);
 class TwoTonzeMagitekMissile(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.TwoTonzeMagitekMissile), 6, 5.1f, 4, 4);
 class ChainMine(BossModule module) : Components.GenericAOEs(module)
 {

@@ -6,7 +6,7 @@ public enum OID : uint
     BossP2 = 0x5D0, // spawn during fight
     StoneMarionette = 0x5D2, // x1
     MarbleMarionette = 0x5D3, // x1
-    MegalithMarionette = 0x5D4, // x1
+    MegalithMarionette = 0x5D4 // x1
 }
 
 public enum AID : uint
@@ -24,17 +24,17 @@ public enum AID : uint
     AutoAttack = 872, // StoneMarionette/MarbleMarionette->player, no cast, single-target
     Rockslide = 1086, // StoneMarionette->self, 2.5s cast, range 11+R width 8 rect
     Obliterate = 1088, // MarbleMarionette->self, 3.0s cast, raidwide
-    Plaincracker = 1087, // MegalithMarionette->self, 7.0s cast, range 25+R circle
+    Plaincracker = 1087 // MegalithMarionette->self, 7.0s cast, range 25+R circle
 }
 
 class VoidFireCleave(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.VoidFireCleave), new AOEShapeCircle(5), originAtTarget: true);
-class VoidFireAOE(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidFireAOE), 5);
+class VoidFireAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireAOE), 5);
 class VoidThunder(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.VoidThunder), "Interruptible tankbuster");
 class MindMelt(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MindMelt), "Interruptible raidwide");
 class Canker(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Canker), "Interruptible debuff");
-class Rockslide(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Rockslide), new AOEShapeRect(12.76f, 4));
+class Rockslide(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rockslide), new AOEShapeRect(12.76f, 4));
 class Obliterate(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Obliterate));
-class Plaincracker(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Plaincracker), new AOEShapeCircle(30.5f));
+class Plaincracker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plaincracker), 30.5f);
 
 class D161PsycheflayerStates : StateMachineBuilder
 {
@@ -53,7 +53,7 @@ class D161PsycheflayerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1689)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1689)]
 public class D161Psycheflayer(WorldState ws, Actor primary) : BossModule(ws, primary, new(-29, 0), new ArenaBoundsCircle(40))
 {
     private Actor? _bossP2;

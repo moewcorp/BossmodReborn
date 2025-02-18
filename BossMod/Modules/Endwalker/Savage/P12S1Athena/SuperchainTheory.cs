@@ -66,12 +66,12 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                         hints.Add("GTFO from aoe!");
                     break;
                 case Shape.Spread:
-                    hints.Add("Spread!", Raid.WithoutSlot().Exclude(actor).InShape(_shapeSpread, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)).Any());
+                    hints.Add("Spread!", Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shapeSpread, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)).Any());
                     break;
                 case Shape.Pairs:
                     var actorIsSupport = actor.Class.IsSupport();
                     int sameRole = 0, diffRole = 0;
-                    foreach (var p in Raid.WithoutSlot().Exclude(actor).InShape(_shapePair, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)))
+                    foreach (var p in Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shapePair, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)))
                         if (p.Class.IsSupport() == actorIsSupport)
                             ++sameRole;
                         else
@@ -97,12 +97,12 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                     _shapeDonut.Draw(Arena, c.Origin);
                     break;
                 case Shape.Spread:
-                    foreach (var p in Raid.WithoutSlot().Exclude(pc))
+                    foreach (var p in Raid.WithoutSlot(false, true, true).Exclude(pc))
                         _shapeSpread.Draw(Arena, c.Origin.Position, Angle.FromDirection(p.Position - c.Origin.Position));
                     break;
                 case Shape.Pairs:
                     var pcIsSupport = pc.Class.IsSupport();
-                    foreach (var p in Raid.WithoutSlot().Where(p => p != pc && p.Class.IsSupport() == pcIsSupport))
+                    foreach (var p in Raid.WithoutSlot(false, true, true).Where(p => p != pc && p.Class.IsSupport() == pcIsSupport))
                         _shapePair.Draw(Arena, c.Origin.Position, Angle.FromDirection(p.Position - c.Origin.Position));
                     break;
             }

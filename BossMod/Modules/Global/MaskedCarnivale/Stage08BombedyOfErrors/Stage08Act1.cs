@@ -9,9 +9,9 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    SelfDestruct = 14687, // 2708->self, no cast, range 10 circle
-    HypothermalCombustion = 14689, // 270A->self, no cast, range 6 circle
-    SelfDestruct2 = 14688, // 2709->self, no cast, range 6 circle
+    SelfDestruct = 14687, // Boss->self, no cast, range 10 circle
+    HypothermalCombustion = 14689, // Snoll->self, no cast, range 6 circle
+    SelfDestruct2 = 14688, // Bomb->self, no cast, range 6 circle
 }
 
 class Selfdetonations(BossModule module) : BossComponent(module)
@@ -64,20 +64,21 @@ class Stage08Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Bomb).All(e => e.IsDead) && module.Enemies(OID.Snoll).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(Stage08Act1.Trash).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 618, NameID = 8140, SortOrder = 1)]
 public class Stage08Act1 : BossModule
 {
-    public Stage08Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage08Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
         ActivateComponent<Selfdetonations>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Bomb, (uint)OID.Snoll];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Bomb).Any(e => e.InCombat) || Enemies(OID.Snoll).Any(e => e.InCombat);
+    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -88,12 +89,12 @@ public class Stage08Act1 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.Boss => 1,
-                OID.Snoll or OID.Bomb => 0,
                 _ => 0
             };
         }

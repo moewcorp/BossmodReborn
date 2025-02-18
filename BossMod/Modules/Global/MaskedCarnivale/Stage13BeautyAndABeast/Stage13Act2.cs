@@ -4,34 +4,34 @@ public enum OID : uint
 {
     Boss = 0x26F8, // R=2.0
     Succubus = 0x26F7, //R=1.0
-    Helper = 0x233C, //R=0.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    Attack = 6497, // 26F8/26F7->player, no cast, single-target
-    VoidFireII = 14880, // 26F8->location, 3.0s cast, range 5 circle
-    VoidAero = 14881, // 26F8->self, 3.0s cast, range 40+R width 8 rect
-    DarkSabbath = 14951, // 26F8->self, 3.0s cast, range 60 circle, gaze
-    DarkMist = 14884, // 26F8->self, 3.0s cast, range 8+R circle
-    CircleOfBlood = 15043, // 26F8->self, 3.0s cast, single-target
-    CircleOfBlood2 = 14887, // 233C->self, 3.0s cast, range 10-20 donut
-    VoidFireIV = 14888, // 26F8->location, 4.0s cast, range 10 circle
-    VoidFireIV2 = 14886, // 26F8->self, no cast, single-target
-    VoidFireIV3 = 14889, // 233C->location, 3.0s cast, range 6 circle
-    SummonDarkness = 14885, // 26F8->self, no cast, single-target, summons succubus add
-    BeguilingMist = 15045, // 26F7->self, 7.0s cast, range 50+R circle, interruptable, applies hysteria
-    FatalAllure = 14952, // 26F8->self, no cast, range 50+R circle, attract, applies terror
-    BloodRain = 14882, // 26F8->location, 3.0s cast, range 50 circle
+    Attack = 6497, // Boss/Succubus->player, no cast, single-target
+    VoidFireII = 14880, // Boss->location, 3.0s cast, range 5 circle
+    VoidAero = 14881, // Boss->self, 3.0s cast, range 40+R width 8 rect
+    DarkSabbath = 14951, // Boss->self, 3.0s cast, range 60 circle, gaze
+    DarkMist = 14884, // Boss->self, 3.0s cast, range 8+R circle
+    CircleOfBlood = 15043, // Boss->self, 3.0s cast, single-target
+    CircleOfBlood2 = 14887, // Helper->self, 3.0s cast, range 10-20 donut
+    VoidFireIV = 14888, // Boss->location, 4.0s cast, range 10 circle
+    VoidFireIV2 = 14886, // Boss->self, no cast, single-target
+    VoidFireIV3 = 14889, // Helper->location, 3.0s cast, range 6 circle
+    SummonDarkness = 14885, // Boss->self, no cast, single-target, summons succubus add
+    BeguilingMist = 15045, // Succubus->self, 7.0s cast, range 50+R circle, interruptable, applies hysteria
+    FatalAllure = 14952, // Boss->self, no cast, range 50+R circle, attract, applies terror
+    BloodRain = 14882 // Boss->location, 3.0s cast, range 50 circle
 }
 
-class VoidFireII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidFireII), 5);
-class VoidFireIV(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidFireIV), 10);
-class VoidFireIV3(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidFireIV3), 6);
-class VoidAero(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.VoidAero), new AOEShapeRect(42, 4));
+class VoidFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireII), 5);
+class VoidFireIV(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV), 10);
+class VoidFireIV3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV3), 6);
+class VoidAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidAero), new AOEShapeRect(42, 4));
 class DarkSabbath(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DarkSabbath));
-class DarkMist(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DarkMist), new AOEShapeCircle(10));
-class CircleOfBlood(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CircleOfBlood2), new AOEShapeDonut(10, 20));
+class DarkMist(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkMist), 10);
+class CircleOfBlood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfBlood2), new AOEShapeDonut(10, 20));
 class BeguilingMist(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.BeguilingMist));
 class BloodRain(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BloodRain), "Harmless raidwide unless you failed to kill succubus in time");
 
@@ -64,7 +64,7 @@ class Stage13Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 623, NameID = 8107, SortOrder = 2)]
 public class Stage13Act2 : BossModule
 {
-    public Stage13Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage13Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }

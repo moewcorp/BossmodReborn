@@ -139,15 +139,16 @@ class EvilScheme(BossModule module) : Components.Exaflare(module, 4)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.EvilSchemeFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = 4 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 1.6f), TimeToMove = 1.5f, ExplosionsLeft = 5, MaxShownExplosions = 5 });
+            Lines.Add(new() { Next = spell.LocXZ, Advance = 4 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 1.6f), TimeToMove = 1.5f, ExplosionsLeft = 5, MaxShownExplosions = 5 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if ((AID)spell.Action.ID is AID.EvilSchemeFirst or AID.EvilSchemeRest)
         {
-            ++NumCasts;
             var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
+            if (index < 0)
+                return;
             AdvanceLine(Lines[index], caster.Position);
             if (Lines[index].ExplosionsLeft == 0)
                 Lines.RemoveAt(index);
@@ -156,9 +157,10 @@ class EvilScheme(BossModule module) : Components.Exaflare(module, 4)
 }
 
 class MaliciousMist(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MaliciousMist));
-class Scream(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Scream), new AOEShapeCone(20, 30.Degrees()), 4)
+
+class Scream : Components.SimpleAOEs
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select((c, i) => new AOEInstance(Shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), i < 2 ? Colors.Danger : Colors.AOE));
+    public Scream(BossModule module) : base(module, ActionID.MakeSpell(AID.Scream), new AOEShapeCone(20, 30.Degrees()), 4) { MaxDangerColor = 2; }
 }
 
 class D081HisRoyalHeadnessLeonoggIStates : StateMachineBuilder

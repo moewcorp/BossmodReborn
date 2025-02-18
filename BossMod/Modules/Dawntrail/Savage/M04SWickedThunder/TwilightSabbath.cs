@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class WickedFire(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.WickedFireAOE), 10);
+class WickedFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WickedFireAOE), 10);
 
 class TwilightSabbath(BossModule module) : Components.GenericAOEs(module)
 {

@@ -7,14 +7,14 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 872, // 1ABF->player, no cast, single-target
-    Spin = 8188, // 1ABF->self, 3.0s cast, range 5+R 120-degree cone
-    Hurl = 8187, // 1ABF->location, 3.0s cast, range 6 circle
-    Buffet = 8189, // 1ABF->none, 3.0s cast, single-target, randomly hits a target that isn't tanking, only happens when at least 2 actors are in combat with Gajasura (chocobos count)
+    AutoAttack = 872, // Boss->player, no cast, single-target
+    Spin = 8188, // Boss->self, 3.0s cast, range 5+R 120-degree cone
+    Hurl = 8187, // Boss->location, 3.0s cast, range 6 circle
+    Buffet = 8189, // Boss->none, 3.0s cast, single-target, randomly hits a target that isn't tanking, only happens when at least 2 actors are in combat with Gajasura (chocobos count)
 }
 
-class Spin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCone(8.23f, 60.Degrees()));
-class Hurl(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Hurl), 6);
+class Spin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spin), new AOEShapeCone(8.23f, 60.Degrees()));
+class Hurl(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hurl), 6);
 class Buffet(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Buffet), "Heavy damage on random target (except tank)");
 
 class GajasuraStates : StateMachineBuilder

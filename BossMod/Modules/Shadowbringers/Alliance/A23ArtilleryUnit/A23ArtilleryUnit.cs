@@ -2,17 +2,17 @@
 
 class ManeuverVoltArray(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ManeuverVoltArray));
 
-class LowerLaser1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LowerLaser1), new AOEShapeCone(30, 30.Degrees()));
-class UpperLaser1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.UpperLaser1), new AOEShapeDonutSector(6, 16, 30.Degrees()));
-class UpperLaser2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.UpperLaser2), new AOEShapeDonutSector(16, 23, 30.Degrees()));
-class UpperLaser3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.UpperLaser3), new AOEShapeDonutSector(23, 30, 30.Degrees()));
+class LowerLaser1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LowerLaser1), new AOEShapeCone(30, 30.Degrees()));
+class UpperLaser1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser1), new AOEShapeDonutSector(6, 16, 30.Degrees()));
+class UpperLaser2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser2), new AOEShapeDonutSector(16, 23, 30.Degrees()));
+class UpperLaser3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser3), new AOEShapeDonutSector(23, 30, 30.Degrees()));
 
-class EnergyBombardment2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EnergyBombardment2), 4);
-class UnknownWeaponskill(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.UnknownWeaponskill), 8);
-class ManeuverRevolvingLaser(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ManeuverRevolvingLaser), new AOEShapeDonut(4, 60));
+class EnergyBombardment2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EnergyBombardment2), 4);
+class UnknownWeaponskill(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UnknownWeaponskill), 8);
+class ManeuverRevolvingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManeuverRevolvingLaser), new AOEShapeDonut(4, 60));
 
-class R010Laser(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.R010Laser), new AOEShapeRect(60, 6));
-class R030Hammer(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.R030Hammer), new AOEShapeCircle(18));
+class R010Laser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R010Laser), new AOEShapeRect(60, 6));
+class R030Hammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R030Hammer), 18);
 
 class UpperLaser(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.UpperLaser4))
 {

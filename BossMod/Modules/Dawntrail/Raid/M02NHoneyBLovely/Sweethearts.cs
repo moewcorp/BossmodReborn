@@ -4,12 +4,20 @@ abstract class Sweethearts(BossModule module, uint oid, uint aid) : Components.G
 {
     private const int Radius = 1, Length = 3;
     private static readonly AOEShapeCapsule capsule = new(Radius, Length);
-    private readonly HashSet<Actor> _hearts = [];
+    private readonly List<Actor> _hearts = new(34);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var h in _hearts)
-            yield return new(capsule, h.Position, h.Rotation);
+        var count = _hearts.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < _hearts.Count; ++i)
+        {
+            var h = _hearts[i];
+            aoes[i] = new(capsule, h.Position, h.Rotation);
+        }
+        return aoes;
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
@@ -32,13 +40,19 @@ abstract class Sweethearts(BossModule module, uint oid, uint aid) : Components.G
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_hearts.Count == 0)
+        var count = _hearts.Count;
+        if (count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var h in _hearts)
-            forbidden.Add(ShapeDistance.Capsule(h.Position, h.Rotation, Length, Radius)); // merging all forbidden zones into one to make pathfinding less demanding
-        forbidden.Add(ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius));
-        hints.AddForbiddenZone(p => forbidden.Min(f => f(p)));
+        var forbidden = new Func<WPos, float>[count + 1];
+        for (var i = 0; i < count; ++i)
+        {
+            var h = _hearts[i];
+            forbidden[i] = ShapeDistance.Capsule(h.Position, h.Rotation, Length, Radius); // merging all forbidden zones into one to make pathfinding less demanding
+        }
+
+        forbidden[count] = ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius);
+
+        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
     }
 }
 

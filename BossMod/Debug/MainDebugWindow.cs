@@ -1,13 +1,16 @@
 ﻿using BossMod.Autorotation;
+using BossMod.Autorotation.xan.AI;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
 
 namespace BossMod;
 
-class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleManager zmm, ActionManagerEx amex, AIHintsBuilder hintBuilder, IDalamudPluginInterface dalamud) : UIWindow("Boss mod debug UI", false, new(300, 200))
+class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleManager zmm, ActionManagerEx amex, MovementOverride move, AIHintsBuilder hintBuilder, IDalamudPluginInterface dalamud) : UIWindow("Boss mod debug UI", false, new(300, 200))
 {
     private readonly DebugObstacles _debugObstacles = new(hintBuilder.Obstacles, dalamud);
     private readonly DebugObjects _debugObjects = new();
@@ -16,22 +19,20 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
     private readonly DebugGraphics _debugGraphics = new();
     private readonly DebugAction _debugAction = new(ws, amex);
     private readonly DebugHate _debugHate = new();
-    private readonly DebugInput _debugInput = new(autorot);
+    private readonly DebugInput _debugInput = new(autorot, move);
     private readonly DebugAutorotation _debugAutorot = new(autorot);
-    private readonly DebugClassDefinitions _debugClassDefinitions = new(ws);
     private readonly DebugAddon _debugAddon = new();
     private readonly DebugTiming _debugTiming = new();
-    // private readonly DebugCollision _debugCollision = new();
-    //private readonly DebugVfx _debugVfx = new();
+    private readonly DebugTeleport _debugTeleport = new();
+    private readonly DebugCollision _debugCollision = new();
+    private readonly DebugQuests _debugQuests = new();
 
     protected override void Dispose(bool disposing)
     {
         _debugAction.Dispose();
         _debugInput.Dispose();
-        _debugClassDefinitions.Dispose();
         _debugAddon.Dispose();
-        // _debugCollision.Dispose();
-        // _debugVfx.Dispose();
+        _debugCollision.Dispose();
         base.Dispose(disposing);
     }
 
@@ -89,6 +90,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
         {
             _debugAutorot.Draw();
         }
+        if (ImGui.CollapsingHeader("Party health"))
+        {
+            DrawPartyHealth();
+        }
         if (ImGui.CollapsingHeader("Solo duty module"))
         {
             if (zmm.ActiveModule is QuestBattle.QuestBattle qb)
@@ -138,10 +143,6 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
         {
             _debugInput.Draw();
         }
-        if (ImGui.CollapsingHeader("Class definitions"))
-        {
-            _debugClassDefinitions.Draw();
-        }
         if (ImGui.CollapsingHeader("Player attributes"))
         {
             DrawPlayerAttributes();
@@ -162,22 +163,40 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
         {
             DrawWindowSystem();
         }
-        // if (ImGui.CollapsingHeader("Collision"))
-        // {
-        //     _debugCollision.Draw();
-        // }
-        //if (ImGui.CollapsingHeader("VFX"))
-        //{
-        //    _debugVfx.Draw();
-        //}
+        if (ImGui.CollapsingHeader("Collision"))
+        {
+            _debugCollision.Draw();
+        }
         if (ImGui.CollapsingHeader("Limit break"))
         {
             DrawLimitBreak();
         }
+        if (ImGui.CollapsingHeader("Quests"))
+        {
+            _debugQuests.Draw();
+        }
+        if (ImGui.CollapsingHeader("Teleport"))
+        {
+            _debugTeleport.Draw();
+        }
     }
 
-    private void DrawStatuses()
+    private unsafe void DrawStatuses()
     {
+        ImGui.TextUnformatted($"Forced movement direction: {MovementOverride.ForcedMovementDirection->Radians()}");
+        ImGui.SameLine();
+        if (ImGui.Button("Add misdirection"))
+        {
+            var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
+            player->GetStatusManager()->SetStatus(20, 3909, 20.0f, 100, 0xE0000000, true);
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Add thin ice"))
+        {
+            var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
+            player->GetStatusManager()->SetStatus(20, 911, 20.0f, 50, 0xE0000000, true); // param = distance * 10
+        }
+
         foreach (var elem in ws.Actors)
         {
             var obj = (elem.InstanceID >> 32) == 0 ? Service.ObjectTable.SearchById((uint)elem.InstanceID) : null;
@@ -188,7 +207,7 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
                     foreach (var status in chara.StatusList)
                     {
                         var src = status.SourceObject != null ? Utils.ObjectString(status.SourceObject) : "none";
-                        ImGui.TextUnformatted($"{status.StatusId} '{status.GameData.Name}': param={status.Param}, stacks={status.StackCount}, time={status.RemainingTime:f2}, source={src}");
+                        ImGui.TextUnformatted($"{status.StatusId} '{status.GameData.Value.Name}': param={status.Param}, stacks={status.StackCount}, time={status.RemainingTime:f2}, source={src}");
                     }
                 }
                 ImGui.TreePop();
@@ -227,6 +246,35 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
             ImGui.TextUnformatted(elem.Position.ToString());
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(elem.CastInfo.Rotation.ToString());
+        }
+        ImGui.EndTable();
+    }
+
+    private readonly TrackPartyHealth _partyHealth = new(ws);
+
+    private void DrawPartyHealth()
+    {
+        _partyHealth.Update(autorot.Hints);
+
+        var overall = _partyHealth.PartyHealth;
+
+        ImGui.TextUnformatted($"Avg: {overall.Avg * 100:f1}");
+        ImGui.TextUnformatted($"StD: {overall.StdDev:f3}");
+
+        ImGui.BeginTable("partyhealth", 4, ImGuiTableFlags.Resizable);
+        ImGui.TableSetupColumn("Name");
+        ImGui.TableSetupColumn("HP");
+        ImGui.TableSetupColumn("Type");
+        ImGui.TableHeadersRow();
+        foreach (var (_, actor) in _partyHealth.TrackedMembers)
+        {
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(actor.Name);
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted($"{actor.HPMP.CurHP} ({actor.PendingHPDiffence}) / {actor.HPMP.MaxHP} ({actor.HPRatio * 100:f1}% / {actor.PredictedHPRatio * 100:f1}%)");
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted($"{actor.Type}");
+            ImGui.TableNextRow();
         }
         ImGui.EndTable();
     }
@@ -278,14 +326,14 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneModuleMa
 
         var uiState = UIState.Instance();
         var level = (uint)uiState->PlayerState.CurrentLevel;
-        var paramGrow = Service.LuminaRow<Lumina.Excel.GeneratedSheets.ParamGrow>(level);
+        var paramGrow = Service.LuminaRow<Lumina.Excel.Sheets.ParamGrow>(level);
         if (paramGrow != null)
         {
-            ImGui.TextUnformatted($"Level: {level}, baseSpeed={paramGrow.BaseSpeed}, levelMod={paramGrow.LevelModifier}");
+            ImGui.TextUnformatted($"Level: {level}, baseSpeed={paramGrow.Value.BaseSpeed}, levelMod={paramGrow.Value.LevelModifier}");
             var sksValue = uiState->PlayerState.Attributes[45];
             var spsValue = uiState->PlayerState.Attributes[46];
-            var sksMod = 130 * (paramGrow.BaseSpeed - sksValue) / paramGrow.LevelModifier + 1000;
-            var spsMod = 130 * (paramGrow.BaseSpeed - spsValue) / paramGrow.LevelModifier + 1000;
+            var sksMod = 130 * (paramGrow.Value.BaseSpeed - sksValue) / paramGrow.Value.LevelModifier + 1000;
+            var spsMod = 130 * (paramGrow.Value.BaseSpeed - spsValue) / paramGrow.Value.LevelModifier + 1000;
             var hasteValue = uiState->PlayerState.Attributes[47];
             ImGui.TextUnformatted($"SKS: value={sksValue}, mod={sksMod}, gcd={2500 * sksMod / 1000}");
             ImGui.TextUnformatted($"SPS: value={spsValue}, mod={spsMod}, gcd={2500 * spsMod / 1000}");

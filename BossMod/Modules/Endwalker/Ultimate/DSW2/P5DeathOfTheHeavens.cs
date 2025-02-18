@@ -28,7 +28,7 @@ class P5DeathOfTheHeavensLightningStorm : Components.UniformStackSpread
 {
     public P5DeathOfTheHeavensLightningStorm(BossModule module) : base(module, 0, 5)
     {
-        AddSpreads(Raid.WithoutSlot(true));
+        AddSpreads(Raid.WithoutSlot(true, true, true));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -59,7 +59,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
 
     public override void Update()
     {
-        foreach (var (slot, player) in Raid.WithSlot())
+        foreach (var (slot, player) in Raid.WithSlot(false, true, true))
             _playerAdjustedPositions[slot] = !KnockbackDone ? AwayFromSource(player.Position, Module.Center, _knockbackDistance) : player.Position;
     }
 
@@ -75,7 +75,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
         if (!Module.InBounds(actorAdjPos))
             hints.Add("About to be knocked into wall!");
 
-        if (Raid.WithSlot().Exclude(actor).WhereSlot(s => _playerAdjustedPositions[s].InCircle(actorAdjPos, _aoeRadius)).Any())
+        if (Raid.WithSlot(false, true, true).Exclude(actor).WhereSlot(s => _playerAdjustedPositions[s].InCircle(actorAdjPos, _aoeRadius)).Any())
             hints.Add("Spread!");
 
         var partner = FindTetheredPartner(slot);
@@ -104,7 +104,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
 
         DrawKnockback(pc, _playerAdjustedPositions[pcSlot], Arena);
 
-        foreach (var (slot, _) in Raid.WithSlot().Exclude(pc))
+        foreach (var (slot, _) in Raid.WithSlot(false, true, true).Exclude(pc))
             Arena.AddCircle(_playerAdjustedPositions[slot], _aoeRadius, Colors.Danger);
     }
 
@@ -136,7 +136,7 @@ class P5DeathOfTheHeavensHeavensflame(BossModule module) : Components.Knockback(
         _brokenTethers.Set(Raid.FindSlot(tether.Target));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var icon = (IconID)iconID switch
         {

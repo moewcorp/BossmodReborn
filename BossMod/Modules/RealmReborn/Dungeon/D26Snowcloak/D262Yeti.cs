@@ -28,24 +28,23 @@ public enum AID : uint
 }
 
 class FrozenSpike(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FrozenSpike), 5);
-class HeavySnow(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HeavySnow), new AOEShapeCircle(15));
-class LightSnow(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LightSnow), new AOEShapeCircle(2));
-class Buffet(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Buffet), new AOEShapeCone(12, 60.Degrees()));
+class HeavySnow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavySnow), 15);
+class LightSnow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightSnow), 2);
+class Buffet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Buffet), new AOEShapeCone(12, 60.Degrees()));
 
 class SpinFrozenCircle(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(11), new AOEShapeDonut(10, 40)];
-    private static readonly WPos origin = new(-98.528f, -115.526f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Spin)
-            AddSequence(origin, Module.CastFinishAt(spell));
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (Sequences.Count > 0)
+        if (Sequences.Count != 0)
         {
             var order = (AID)spell.Action.ID switch
             {
@@ -53,7 +52,7 @@ class SpinFrozenCircle(BossModule module) : Components.ConcentricAOEs(module, _s
                 AID.FrozenCircle => 1,
                 _ => -1
             };
-            AdvanceSequence(order, caster.Position, WorldState.FutureTime(3));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(3));
         }
     }
 }

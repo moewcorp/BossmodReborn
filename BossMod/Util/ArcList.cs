@@ -26,6 +26,7 @@ public class ArcList(WPos center, float radius)
         if (min.Rad < -MathF.PI)
         {
             Forbidden.Add(min.Rad + Angle.DoublePI, MathF.PI);
+            min = -MathF.PI.Radians();
         }
         var max = center + halfWidth;
         if (max.Rad > MathF.PI)
@@ -40,8 +41,22 @@ public class ArcList(WPos center, float radius)
     {
         var oo = origin - Center;
         var center = Angle.FromDirection(oo);
-        var halfWidth = MathF.Acos((oo.LengthSq() + Radius * Radius - radius * radius) / (2 * oo.Length() * Radius));
-        ForbidArcByLength(center, halfWidth.Radians());
+        var cos = (oo.LengthSq() + Radius * Radius - radius * radius) / (2 * oo.Length() * Radius);
+        if (cos is <= 1 and >= -1)
+        {
+            ForbidArcByLength(center, Angle.Acos(cos));
+        }
+    }
+
+    public void ForbidInverseCircle(WPos origin, float radius)
+    {
+        var oo = origin - Center;
+        var center = Angle.FromDirection(oo);
+        var cos = (oo.LengthSq() + Radius * Radius - radius * radius) / (2 * oo.Length() * Radius);
+        if (cos is <= 1 and >= -1)
+        {
+            ForbidArcByLength((center + 180.Degrees()).Normalized(), Angle.Acos(-cos));
+        }
     }
 
     public void ForbidInfiniteRect(WPos origin, Angle dir, float halfWidth)
@@ -55,7 +70,14 @@ public class ArcList(WPos center, float radius)
         ForbidArc(i2.Item2, i1.Item2);
     }
 
-    public IEnumerable<(Angle, Angle)> Allowed(Angle cushion)
+    public void ForbidInfiniteCone(WPos origin, Angle dir, Angle halfAngle)
+    {
+        var min = IntersectLine(origin, (dir - halfAngle).ToDirection()).Item2;
+        var max = IntersectLine(origin, (dir + halfAngle).ToDirection()).Item2;
+        ForbidArc(min, max);
+    }
+
+    public IEnumerable<(Angle min, Angle max)> Allowed(Angle cushion)
     {
         if (Forbidden.Segments.Count == 0)
         {
@@ -69,6 +91,37 @@ public class ArcList(WPos center, float radius)
             var maxAdj = max - cushion;
             if (minAdj.Rad < maxAdj.Rad)
                 yield return (minAdj, maxAdj);
+        }
+    }
+
+    public (Angle min, Angle max) NextAllowed(Angle dir, bool ccw)
+    {
+        if (Forbidden.Count == 0)
+            return (dir - 180.Degrees(), dir + 180.Degrees()); // everything is allowed
+
+        (Angle, Angle) boundsBefore(int index)
+        {
+            var min = index == 0 ? Forbidden.Segments[^1].Max.Radians() - 2 * MathF.PI.Radians() : Forbidden.Segments[index - 1].Max.Radians();
+            var max = index >= Forbidden.Segments.Count ? Forbidden.Segments[0].Min.Radians() + 2 * MathF.PI.Radians() : Forbidden.Segments[index].Min.Radians();
+            return (min, max);
+        }
+
+        var forbidden = Forbidden.Intersect(dir.Rad, dir.Rad);
+        if (forbidden.count == 0)
+        {
+            // current direction is not forbidden, find bounds
+            // note: since we did not find intersection, the returned bounds are guaranteed to be non-empty
+            return boundsBefore(forbidden.first);
+        }
+        else if (ccw)
+        {
+            var (min, max) = boundsBefore(forbidden.first + 1);
+            return forbidden.first == Forbidden.Segments.Count - 1 && min.Rad >= max.Rad && Forbidden.Count > 1 ? boundsBefore(1) : (min, max);
+        }
+        else
+        {
+            var (min, max) = boundsBefore(forbidden.first);
+            return forbidden.first == 0 && min.Rad >= max.Rad && Forbidden.Count > 1 ? boundsBefore(forbidden.first - 1) : (min, max);
         }
     }
 

@@ -40,13 +40,13 @@ public enum TetherID : uint
     HolyChain = 9 // player->player
 }
 
-class KnightsTour(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 2));
+class KnightsTour(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 2));
 class WhiteKnightsTour(BossModule module) : KnightsTour(module, AID.WhiteKnightsTour);
 class BlackKnightsTour(BossModule module) : KnightsTour(module, AID.BlackKnightsTour);
 
 class AltarPyre(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AltarPyre));
 
-class HeavensflameAOE(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HeavensflameAOE), 5);
+class HeavensflameAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavensflameAOE), 5);
 class HolyChain(BossModule module) : Components.Chains(module, (uint)TetherID.HolyChain, ActionID.MakeSpell(AID.HolyChainPlayerTether));
 class TurretTour(BossModule module) : Components.PersistentVoidzone(module, 2, m => m.Enemies(OID.DawnKnight).Concat(m.Enemies(OID.DuskKnight)).Where(x => x.ModelState.ModelState == 8), 10);
 class TurretTourHint(BossModule module) : Components.PersistentVoidzone(module, 2, m => m.Enemies(OID.DawnKnight).Concat(m.Enemies(OID.DuskKnight)).Where(x => x.ModelState.ModelState != 8 && !x.Position.AlmostEqual(module.Center, 10)), 3);

@@ -6,7 +6,7 @@ class P3EarthShaker(BossModule module) : Components.GenericBaitAway(module, Acti
 
     private static readonly AOEShapeCone _shape = new(60, 45.Degrees());
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Earthshaker && Module.Enemies(OID.BahamutPrime).FirstOrDefault() is var source && source != null)
         {
@@ -28,7 +28,7 @@ class P3EarthShaker(BossModule module) : Components.GenericBaitAway(module, Acti
 
 class P3EarthShakerVoidzone(BossModule module) : Components.GenericAOEs(module, default, "GTFO from voidzone!")
 {
-    private readonly IReadOnlyList<Actor> _voidzones = module.Enemies(OID.VoidzoneEarthShaker);
+    private readonly List<Actor> _voidzones = module.Enemies(OID.VoidzoneEarthShaker);
     private readonly List<AOEInstance> _predicted = [];
     private BitMask _targets;
 
@@ -48,7 +48,7 @@ class P3EarthShakerVoidzone(BossModule module) : Components.GenericAOEs(module, 
             _predicted.Clear();
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Earthshaker)
             _targets.Set(Raid.FindSlot(actor.InstanceID));
@@ -57,7 +57,7 @@ class P3EarthShakerVoidzone(BossModule module) : Components.GenericAOEs(module, 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if ((AID)spell.Action.ID == AID.EarthShaker)
-            foreach (var (_, p) in Raid.WithSlot().IncludedInMask(_targets))
+            foreach (var (_, p) in Raid.WithSlot(false, true, true).IncludedInMask(_targets))
                 _predicted.Add(new(_shape, p.Position, default, WorldState.FutureTime(1.4f)));
     }
 }

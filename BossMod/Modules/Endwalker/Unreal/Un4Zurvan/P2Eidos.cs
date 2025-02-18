@@ -1,14 +1,10 @@
 ﻿namespace BossMod.Endwalker.Unreal.Un4Zurvan;
 
 // this is used purely for tracking phase transitions
-class P2Eidos : BossComponent
+class P2Eidos(BossModule module) : BossComponent(module)
 {
     public int PhaseIndex { get; private set; }
-
-    public P2Eidos(BossModule module) : base(module)
-    {
-        KeepOnPhaseChange = true;
-    }
+    public override bool KeepOnPhaseChange => true;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

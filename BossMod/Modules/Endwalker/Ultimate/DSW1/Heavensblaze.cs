@@ -7,7 +7,7 @@ class HolyShieldBash : Components.BaitAwayTethers
     {
         BaiterPriority = PlayerPriority.Danger;
         // TODO: consider selecting specific tank rather than any
-        ForbiddenPlayers = Raid.WithSlot(true).WhereActor(a => a.Role != Role.Tank).Mask();
+        ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(a => a.Role != Role.Tank).Mask();
     }
 }
 

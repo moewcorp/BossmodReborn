@@ -9,7 +9,7 @@ class CurtainCall(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        _playersInBreakOrder ??= [.. Raid.WithSlot(true).WhereSlot(i => _playerOrder[i] != 0).OrderBy(ip => _playerOrder[ip.Item1]).Actors()];
+        _playersInBreakOrder ??= [.. Raid.WithSlot(true, true, true).WhereSlot(i => _playerOrder[i] != 0).OrderBy(ip => _playerOrder[ip.Item1]).Actors()];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -30,7 +30,7 @@ class CurtainCall(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         // draw other players
-        foreach ((var slot, var player) in Raid.WithSlot().Exclude(pc))
+        foreach ((var slot, var player) in Raid.WithSlot(false, true, true).Exclude(pc))
             Arena.Actor(player, _playerOrder[slot] == _numCasts + 1 ? Colors.Danger : Colors.PlayerGeneric);
 
         // tether

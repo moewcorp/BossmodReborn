@@ -16,7 +16,6 @@ sealed class AIController(WorldState ws, ActionManagerEx amex, MovementOverride 
 
     private readonly ActionManagerEx _amex = amex;
     private readonly MovementOverride _movement = movement;
-    private DateTime _nextInteract;
 
     public bool IsVerticalAllowed => Service.Condition[ConditionFlag.InFlight];
     public Angle CameraFacing => (Camera.Instance?.CameraAzimuth ?? 0).Radians() + 180.Degrees();
@@ -49,31 +48,16 @@ sealed class AIController(WorldState ws, ActionManagerEx amex, MovementOverride 
         var moveRequested = _movement.IsMoveRequested();
         var castInProgress = player.CastInfo != null && !player.CastInfo.EventHappened;
         var forbidMovement = moveRequested || !AllowInterruptingCastByMovement && _amex.MoveMightInterruptCast;
-        if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.01f)
+        if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.001f)
         {
-            var y = NaviTargetVertical != null && IsVerticalAllowed ? NaviTargetVertical.Value : player.PosRot.Y;
-            desiredPosition = new(NaviTargetPos.Value.X, y, NaviTargetPos.Value.Z);
+            desiredPosition = NaviTargetPos.Value.ToVec3(NaviTargetVertical != null && IsVerticalAllowed ? NaviTargetVertical.Value : player.PosRot.Y);
         }
         else
         {
-            _amex.ForceCancelCastNextFrame |= ForceCancelCast && castInProgress;
+            hints.ForceCancelCast |= ForceCancelCast && castInProgress;
         }
 
         if (hints.ForcedMovement == null && desiredPosition != null)
             hints.ForcedMovement = desiredPosition.Value - player.PosRot.XYZ();
-
-        if (hints.InteractWithTarget is Actor tar && player.DistanceToHitbox(tar) <= 3)
-            ExecuteInteract(now, tar);
-    }
-
-    private unsafe void ExecuteInteract(DateTime now, Actor target)
-    {
-        if (_amex.EffectiveAnimationLock > 0 || now < _nextInteract)
-            return;
-        var obj = GameObjectManager.Instance()->Objects.IndexSorted[target.SpawnIndex].Value;
-        if (obj == null || obj->GetGameObjectId() != target.InstanceID)
-            return;
-        TargetSystem.Instance()->OpenObjectInteraction(obj);
-        _nextInteract = now.AddMilliseconds(100);
     }
 }

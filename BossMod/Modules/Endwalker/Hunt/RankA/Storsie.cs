@@ -24,6 +24,9 @@ class Aspect(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEShape? _imminentAOE;
     private DateTime _activation;
+    private static readonly AOEShapeCone cone = new(30, 135.Degrees());
+    private static readonly AOEShapeDonut donut = new(10, 40);
+    private static readonly AOEShapeCircle circle = new(22);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -33,13 +36,11 @@ class Aspect(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
         AOEShape? shape = (AID)spell.Action.ID switch
         {
-            AID.AspectEarth => new AOEShapeCone(30, 135.Degrees()),
-            AID.AspectWind => new AOEShapeDonut(10, 40),
-            AID.AspectLightning => new AOEShapeCircle(22),
+            AID.AspectEarth => cone,
+            AID.AspectWind => donut,
+            AID.AspectLightning => circle,
             _ => null
         };
         if (shape != null)
@@ -51,7 +52,7 @@ class Aspect(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster == Module.PrimaryActor && (AID)spell.Action.ID is AID.Whorlstorm or AID.Defibrillate or AID.EarthenAugur)
+        if ((AID)spell.Action.ID is AID.Whorlstorm or AID.Defibrillate or AID.EarthenAugur)
             _imminentAOE = null;
     }
 }
@@ -68,5 +69,5 @@ class StorsieStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10623)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10623)]
 public class Storsie(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

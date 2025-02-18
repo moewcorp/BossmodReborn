@@ -3,16 +3,16 @@ namespace BossMod.Global.MaskedCarnivale.Stage26.Act1;
 public enum OID : uint
 {
     Boss = 0x2C84, //R=2.55
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    AutoAttack = 6498, // 2C84->player, no cast, single-target
-    AlternatePlumage = 18686, // 2C84->self, 3.0s cast, single-target, armor up, needs dispel
-    RuffledFeathers = 18685, // 2C84->player, no cast, single-target
-    Gust = 18687, // 2C84->location, 2.5s cast, range 3 circle
-    CaberToss = 18688, // 2C84->player, 5.0s cast, single-target, interrupt or wipe
+    AutoAttack = 6498, // Boss->player, no cast, single-target
+    AlternatePlumage = 18686, // Boss->self, 3.0s cast, single-target, armor up, needs dispel
+    RuffledFeathers = 18685, // Boss->player, no cast, single-target
+    Gust = 18687, // Boss->location, 2.5s cast, range 3 circle
+    CaberToss = 18688, // Boss->player, 5.0s cast, single-target, interrupt or wipe
 }
 
 public enum SID : uint
@@ -21,7 +21,7 @@ public enum SID : uint
     Windburn = 269, // Boss->player, extra=0x0
 }
 
-class Gust(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Gust), 3);
+class Gust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Gust), 3);
 class AlternatePlumage(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AlternatePlumage), "Prepare to dispel buff");
 class CaberToss(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.CaberToss));
 
@@ -66,7 +66,7 @@ class Stage26Act1States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9230, SortOrder = 1)]
 public class Stage26Act1 : BossModule
 {
-    public Stage26Act1(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage26Act1(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }

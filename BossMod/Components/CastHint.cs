@@ -4,7 +4,7 @@ namespace BossMod.Components;
 public class CastHint(BossModule module, ActionID aid, string hint, bool showCastTimeLeft = false) : CastCounter(module, aid)
 {
     public string Hint = hint;
-    public bool ShowCastTimeLeft = showCastTimeLeft; // if true, show cast time left until next instance
+    public readonly bool ShowCastTimeLeft = showCastTimeLeft; // if true, show cast time left until next instance
     public readonly List<Actor> Casters = [];
 
     public bool Active => Casters.Count > 0;
@@ -30,10 +30,10 @@ public class CastHint(BossModule module, ActionID aid, string hint, bool showCas
 
 public class CastInterruptHint : CastHint
 {
-    public bool CanBeInterrupted { get; init; }
-    public bool CanBeStunned { get; init; }
-    public bool ShowNameInHint { get; init; } // important if there are several targets
-    public string HintExtra { get; init; }
+    public readonly bool CanBeInterrupted;
+    public readonly bool CanBeStunned;
+    public readonly bool ShowNameInHint; // important if there are several targets
+    public readonly string HintExtra;
 
     public CastInterruptHint(BossModule module, ActionID aid, bool canBeInterrupted = true, bool canBeStunned = false, string hintExtra = "", bool showNameInHint = false) : base(module, aid, "")
     {
@@ -49,7 +49,7 @@ public class CastInterruptHint : CastHint
         for (var i = 0; i < Casters.Count; ++i)
         {
             var c = Casters[i];
-            var e = hints.PotentialTargets.Find(e => e.Actor == c);
+            var e = hints.FindEnemy(c);
             if (e != null)
             {
                 e.ShouldBeInterrupted |= CanBeInterrupted;

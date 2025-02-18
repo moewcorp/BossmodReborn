@@ -75,7 +75,7 @@ class Fracture2(BossModule module) : Fracture(module)
         return forbidden;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         // spread targets should never take towers
         if (iconID == (uint)IconID.Heartsore)
@@ -93,15 +93,15 @@ class Fracture3 : Fracture
         if (bigBurst != null)
         {
             var order = bigBurst.NumCasts == 0 ? 1 : 2;
-            _defamations = Raid.WithSlot(true).WhereSlot(i => bigBurst.Order[i] == order).Mask();
+            _defamations = Raid.WithSlot(true, true, true).WhereSlot(i => bigBurst.Order[i] == order).Mask();
         }
     }
 
     protected override BitMask UpdateForbidden() => _defamations;
 }
 
-class Loveseeker(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LoveseekerAOE), new AOEShapeCircle(10));
-class HeartStruck(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HeartStruck), 6);
+class Loveseeker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LoveseekerAOE), 10);
+class HeartStruck(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeartStruck), 6);
 class Heartsore(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Heartsore, ActionID.MakeSpell(AID.Heartsore), 6, 7.1f);
 class SweetheartsS(BossModule module) : Raid.M02NHoneyBLovely.Sweethearts(module, (uint)OID.Sweetheart, (uint)AID.SweetheartTouch);
 
@@ -158,7 +158,7 @@ class HoneyBLiveBeat3BigBurst(BossModule module) : Components.UniformStackSpread
         if ((AID)spell.Action.ID == AID.Fracture && Spreads.Count == 0)
         {
             var order = NumCasts == 0 ? 1 : 2;
-            AddSpreads(Raid.WithSlot(true).WhereSlot(i => Order[i] == order).Actors(), Activation[order - 1]);
+            AddSpreads(Raid.WithSlot(true, true, true).WhereSlot(i => Order[i] == order).Actors(), Activation[order - 1]);
         }
     }
 

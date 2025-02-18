@@ -25,10 +25,10 @@ class ArenaBounds(BossModule module) : Components.GenericAOEs(module)
 }
 
 class FloralHaze(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, activationLimit: 8);
-class SummerShade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SummerShade), new AOEShapeDonut(12, 40));
-class SpringFlowers(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SpringFlowers), new AOEShapeCircle(12));
-class ReapersGale(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ReapersGaleAOE), new AOEShapeRect(36, 4, 36), 9);
-class Landwaker(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.LandwakerAOE), 10);
+class SummerShade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SummerShade), new AOEShapeDonut(12, 40));
+class SpringFlowers(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpringFlowers), 12);
+class ReapersGale(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ReapersGaleAOE), new AOEShapeRect(72, 4), 9);
+class Landwaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LandwakerAOE), 10);
 class Furrow(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Furrow), 6, 8);
 class HeavensEarth(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.HeavensEarthAOE), new AOEShapeCircle(5), true);
 

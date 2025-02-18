@@ -10,21 +10,21 @@ class SurgingWaveCorridor(BossModule module) : BossComponent(module)
         {
             CorridorDir = state switch
             {
-                0x00800040 => new(-1, 0),
-                0x08000400 => new(+1, 0),
+                0x00800040 => new(-1f, default),
+                0x08000400 => new(1f, default),
                 _ => default
             };
         }
     }
 }
 
-class SurgingWaveAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SurgingWaveAOE), new AOEShapeCircle(6));
-class SurgingWaveShockwave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.SurgingWaveShockwave), 68, true);
+class SurgingWaveAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SurgingWaveAOE), 6f);
+class SurgingWaveShockwave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.SurgingWaveShockwave), 68f, true);
 class SurgingWaveSeaFoam(BossModule module) : Components.PersistentVoidzone(module, 1.5f, m => m.Enemies(OID.SeaFoam).Where(x => !x.IsDead));
 
 public class SurgingWaveFrothingSea : Components.Exaflare
 {
-    public SurgingWaveFrothingSea(BossModule module) : base(module, new AOEShapeRect(6, 20, 80))
+    public SurgingWaveFrothingSea(BossModule module) : base(module, new AOEShapeRect(6f, 20f, 80f))
     {
         ImminentColor = Colors.AOE;
         FutureColor = Colors.Danger;
@@ -35,7 +35,7 @@ public class SurgingWaveFrothingSea : Components.Exaflare
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        var _activation = WorldState.FutureTime(30);
+        var _activation = WorldState.FutureTime(30d);
         if (index == 0x49)
         {
             if (state == 0x00800040)
@@ -47,10 +47,10 @@ public class SurgingWaveFrothingSea : Components.Exaflare
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SurgingWaveFrothingSea)
+        if (spell.Action.ID == (uint)AID.SurgingWaveFrothingSea)
         {
             ++NumCasts;
-            if (Lines.Count > 0)
+            if (Lines.Count != 0)
             {
                 AdvanceLine(Lines[0], Lines[0].Next + 2.3f * Lines[0].Rotation.ToDirection());
                 if (Lines[0].ExplosionsLeft == 0)
@@ -60,5 +60,6 @@ public class SurgingWaveFrothingSea : Components.Exaflare
     }
 }
 
-class LeftStrait(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LeftStrait), new AOEShapeCone(100, 90.Degrees()));
-class RightStrait(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightStrait), new AOEShapeCone(100, 90.Degrees()));
+abstract class Strait(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(100f, 90f.Degrees()));
+class LeftStrait(BossModule module) : Strait(module, AID.LeftStrait);
+class RightStrait(BossModule module) : Strait(module, AID.RightStrait);

@@ -5,12 +5,13 @@ public enum OID : uint
     Boss = 0x30F7, //R=2.0
     Maelstrom = 0x30F9, //R=1.0
     Voidzone = 0x1E9684,
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
+
     Teleport = 23108, // Boss->location, no cast, single-target
     GogoFireIII = 23117, // Boss->self, 3.0s cast, range 60 circle, applies pyretic
     GogoBlizzardIII = 23118, // Boss->self, 3.0s cast, range 6+R circle
@@ -29,25 +30,25 @@ public enum AID : uint
     Charybdis2 = 20056, // Helper->self, 4.0s cast, range 8 circle
     Icestorm = 23126, // Boss->self, 3.0s cast, single-target
     Icestorm2 = 23127, // Helper->self, no cast, range 60 circle, applies frostbite + heavy, should be removed with exuviation
-    AetherialPull = 23125, // Maelstrom->self, 1.0s cast, range 8 circle, pull 40 between centers
+    AetherialPull = 23125 // Maelstrom->self, 1.0s cast, range 8 circle, pull 40 between centers
 }
 
 public enum SID : uint
 {
     Pyretic = 960, // Boss->player, extra=0x0
     Frostbite = 268, // Helper->player, extra=0x0
-    Heavy = 1107, // Helper->player, extra=0x50
+    Heavy = 1107 // Helper->player, extra=0x50
 }
 
-class Charybdis(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Charybdis), 8);
+class Charybdis(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charybdis), 8);
 class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Maelstrom));
 class GogoFlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoFlare));
 class GogoHoly(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoHoly));
-class GogoMeteor1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GogoMeteor1), 5);
-class GogoMeteor2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GogoMeteor2), 16);
-class GogoMeteor3(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GogoMeteor3), 8);
-class GogoMeteor4(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GogoMeteor4), 8);
-class GogoMeteor5(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.GogoMeteor5), 16);
+class GogoMeteor1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor1), 5);
+class GogoMeteor2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor2), 16);
+class GogoMeteor3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor3), 8);
+class GogoMeteor4(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor4), 8);
+class GogoMeteor5(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor5), 16);
 class GogoMeteorBig(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoMeteor6), "Use Diamondback!");
 class Icestorm(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.Icestorm), ActionID.MakeSpell(AID.Icestorm2), 0.9f, "Raidwide + Frostbite + Heavy");
 class ThunderIII(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.GogoThunderIII), m => m.Enemies(OID.Voidzone).Where(e => e.EventState != 7), 0.8f);
@@ -128,4 +129,4 @@ class Stage31Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 754, NameID = 9908, SortOrder = 2)]
-public class Stage31Act2(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(16));
+public class Stage31Act2(WorldState ws, Actor primary) : BossModule(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall);

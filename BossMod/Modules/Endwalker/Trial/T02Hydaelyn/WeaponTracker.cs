@@ -3,33 +3,36 @@ namespace BossMod.Endwalker.Trial.T02Hydaelyn;
 class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeDonut donut = new(5, 40);
-    private static readonly AOEShapeCircle circle = new(10);
-    private static readonly AOEShapeCross cross = new(40, 5);
+    private static readonly AOEShapeDonut donut = new(5f, 40f);
+    private static readonly AOEShapeCircle circle = new(10f);
+    private static readonly AOEShapeCross cross = new(40f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.HydaelynsWeapon)
+        if (status.ID == (uint)SID.HydaelynsWeapon)
         {
-            var activation = WorldState.FutureTime(6);
-            if (status.Extra == 0x1B4)
-                _aoe = new(circle, Module.PrimaryActor.Position, default, activation);
-            else if (status.Extra == 0x1B5)
-                _aoe = new(donut, Module.PrimaryActor.Position, default, activation);
+            AOEShape? shape = status.Extra switch
+            {
+                0x1B4 => circle,
+                0x1B5 => donut,
+                _ => null
+            };
+            if (shape != null)
+                _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(6d));
         }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.HydaelynsWeapon)
-            _aoe = new(cross, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(6.9f));
+        if (status.ID == (uint)SID.HydaelynsWeapon)
+            _aoe = new(cross, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(6.9d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.Equinox2 or AID.HighestHoly or AID.Anthelion)
+        if (spell.Action.ID is (uint)AID.Equinox2 or (uint)AID.HighestHoly or (uint)AID.Anthelion)
             _aoe = null;
     }
 }

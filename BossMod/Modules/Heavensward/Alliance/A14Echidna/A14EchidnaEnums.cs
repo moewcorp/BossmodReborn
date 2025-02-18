@@ -26,9 +26,9 @@ public enum AID : uint
     Petrifaction1 = 5154, // Boss->self, 3.0s cast, range 100 circle
     Petrifaction2 = 5374, // Echidna->self, 3.0s cast, range 60 circle
     SerpentineStrike = 5150, // Sinister/Dexter->self, 3.0s cast, range 20 circle
-    SickleSlash1 = 5142, // Boss->self, 4.0s cast, single-target
-    SickleSlash2 = 5143, // EchidnaHelper->self, 4.0s cast, range 18+R width 60 rect
-    SickleSlash3 = 5341, // EchidnaHelper->self, 4.0s cast, range 18+R width 60 rect
+    SickleSlashVisual = 5142, // Boss->self, 4.0s cast, single-target
+    SickleSlash1 = 5143, // EchidnaHelper->self, 4.0s cast, range 18+R width 60 rect
+    SickleSlash2 = 5341, // EchidnaHelper->self, 4.0s cast, range 18+R width 60 rect
     SickleStrike = 5153, // Boss->player, 3.5s cast, single-target
     Unknown = 5151, // EchidnaHelper->EchidnaHelper, no cast, single-target
 }

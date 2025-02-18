@@ -1,13 +1,13 @@
 ﻿namespace BossMod.Endwalker.Savage.P12S2PallasAthena;
 
-class Gaiaochos(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GaiaochosTransition), new AOEShapeDonut(7, 30));
+class Gaiaochos(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GaiaochosTransition), new AOEShapeDonut(7, 30));
 
 // TODO: we could show it earlier, casters do PATE 11D2 ~4s before starting cast
-class UltimaRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.UltimaRay), new AOEShapeRect(20, 3));
+class UltimaRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UltimaRay), new AOEShapeRect(20, 3));
 
 class MissingLink(BossModule module) : Components.Chains(module, (uint)TetherID.MissingLink, ActionID.MakeSpell(AID.MissingLink));
 
-class DemiParhelion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DemiParhelionAOE), new AOEShapeCircle(2));
+class DemiParhelion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DemiParhelionAOE), new AOEShapeCircle(2));
 
 class Geocentrism(BossModule module) : Components.GenericAOEs(module)
 {
@@ -53,7 +53,7 @@ class Geocentrism(BossModule module) : Components.GenericAOEs(module)
 
 class DivineExcoriation(BossModule module) : Components.UniformStackSpread(module, 0, 1)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DivineExcoriation)
             AddSpread(actor, WorldState.FutureTime(3.1f));
@@ -91,7 +91,7 @@ class UltimaBlow(BossModule module) : Components.CastCounter(module, ActionID.Ma
         if (_vulnerable[slot])
         {
             var source = _tethers.Find(t => t.target == actor).source;
-            var numHit = source != null ? Raid.WithoutSlot().Exclude(actor).InShape(_shape, source.Position, Angle.FromDirection(actor.Position - source.Position)).Count() : 0;
+            var numHit = source != null ? Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, source.Position, Angle.FromDirection(actor.Position - source.Position)).Count() : 0;
             if (numHit == 0)
                 hints.Add("Hide behind partner!");
             else if (numHit > 1)

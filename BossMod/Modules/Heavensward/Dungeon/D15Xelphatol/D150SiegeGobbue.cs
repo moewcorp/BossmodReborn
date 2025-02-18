@@ -23,16 +23,16 @@ public enum AID : uint
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private const int Vertices = 8;
-    private const int InnerRadius = 11;
-    private const int OuterRadius = 16; // 15.5 if adjusted for hitbox radius, but not needed here
+    private const float InnerRadius = 11f;
+    private const float OuterRadius = 16f; // 15.5 if adjusted for hitbox radius, but not needed here
     private static readonly Angle a225 = 22.5f.Degrees();
-    private static readonly WPos arena1center = new(70.5f, -56);
+    private static readonly WPos arena1center = new(70.5f, -56f);
     private static readonly WPos arena2center = new(178.083f, -4.225f);
     private static readonly PolygonCustom verticesDiff1 = new([new(62.562f, -68.197f), new(58.33f, -63.967f), new(59.195f, -63.239f),
     new(63.214f, -63.273f), new(63.267f, -67.123f)]);
     private static readonly PolygonCustom verticesDiff2 = new([new(181.034f, -18.5f), new(175.119f, -18.5f), new(175.522f, -17.112f),
     new(178.095f, -14.489f), new(180.889f, -17.318f)]);
-    private static readonly Shape[] difference1 = [new Polygon(arena1center, InnerRadius, Vertices, a225), verticesDiff1, new Rectangle(new(59, -67.5f), 10, 2.1f, 135.Degrees())];
+    private static readonly Shape[] difference1 = [new Polygon(arena1center, InnerRadius, Vertices, a225), verticesDiff1, new Rectangle(new(59f, -67.5f), 10f, 2.1f, 135f.Degrees())];
     private static readonly Shape[] difference2 = [new Polygon(arena2center, InnerRadius, Vertices, a225), verticesDiff2];
     private static readonly AOEShapeCustom poly1 = new([new Polygon(arena1center, OuterRadius, Vertices, a225)], difference1);
     private static readonly AOEShapeCustom poly2 = new([new Polygon(arena2center, OuterRadius, Vertices, a225)], difference2);
@@ -42,19 +42,19 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorNpcYell(Actor actor, ushort id)
     {
-        if (_aoe == null && actor.Position.Z < -10)
-            _aoe = new(poly1, Arena.Center, default, WorldState.FutureTime(4));
+        if (_aoe == null && actor.Position.Z < -10f)
+            _aoe = new(poly1, Arena.Center, default, WorldState.FutureTime(4d));
     }
 
     public override void Update()
     {
-        if (_aoe == null && Module.PrimaryActor.Position.Z > -10) // for some reason NPC yells that are exactly at the start of a module do not get recognized despite appearing in replay?
-            _aoe = new(poly2, Arena.Center, default, WorldState.FutureTime(4));
+        if (_aoe == null && Module.PrimaryActor.Position.Z > -10f) // for some reason NPC yells that are exactly at the start of a module do not get recognized despite appearing in replay?
+            _aoe = new(poly2, Arena.Center, default, WorldState.FutureTime(4d));
     }
 }
 
-class Overpower(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Overpower), new AOEShapeCone(7.08f, 45.Degrees()));
-class Sneeze(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Sneeze), new AOEShapeCone(20.85f, 45.Degrees()));
+class Overpower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Overpower), new AOEShapeCone(7.08f, 45f.Degrees()));
+class Sneeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sneeze), new AOEShapeCone(20.85f, 45f.Degrees()));
 class SneezeHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.Sneeze), true, true, showNameInHint: true);
 
 class D150SiegeGobbueStates : StateMachineBuilder
@@ -66,14 +66,27 @@ class D150SiegeGobbueStates : StateMachineBuilder
             .ActivateOnEnter<Sneeze>()
             .ActivateOnEnter<SneezeHint>()
             .ActivateOnEnter<Overpower>()
-            .Raw.Update = () => Module.WorldState.Actors.Where(x => x.IsTargetable && !x.IsAlly && x.Position.AlmostEqual(Module.Arena.Center, Module.Bounds.Radius)).All(x => x.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(D150SiegeGobbue.Trash);
+                var center = module.Arena.Center;
+                var radius = module.Bounds.Radius;
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed && enemy.Position.AlmostEqual(center, radius))
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 182, NameID = 5254, SortOrder = 3)]
 public class D150SiegeGobbue(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
-    private static bool IsArena1(Actor primary) => primary.Position.Z < -10;
+    private static bool IsArena1(Actor primary) => primary.Position.Z < -10f;
     private static readonly WPos[] vertices1 = [new(37.14f, -107.01f), new(38.84f, -105.21f), new(39.33f, -104.79f), new(41.89f, -104.55f), new(42.35f, -104.03f),
     new(42.82f, -103.73f), new(43.26f, -103.23f), new(43.91f, -102.16f), new(44.17f, -101.58f), new(44.63f, -100.24f),
     new(45.31f, -97.65f), new(45.54f, -97.07f), new(46.05f, -96.92f), new(47.88f, -96.82f), new(48.35f, -96.39f),
@@ -110,14 +123,38 @@ public class D150SiegeGobbue(WorldState ws, Actor primary) : BossModule(ws, prim
     new(192.03f, 2.15f), new(184.37f, 9.81f), new(182.97f, 10.14f), new(182.41f, 9.79f), new(178.41f, 5.79f),
     new(177.9f, 5.66f), new(173.72f, 9.83f), new(173.06f, 10.15f), new(172.22f, 10.15f), new(171.69f, 9.74f),
     new(163.7f, 1.69f), new(163.72f, -10.19f), new(171.84f, -18.26f), new(174.94f, -18.6f), new(177.66f, -18.69f)];
-
     private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
     private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.XelphatolWhirltalon, (uint)OID.XelphatolStrongbeak, (uint)OID.XelphatolBravewing];
 
-    protected override bool CheckPull() => WorldState.Actors.Any(x => x.InCombat && x.Position.AlmostEqual(Arena.Center, Bounds.Radius));
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        var center = Arena.Center;
+        var radius = Bounds.Radius;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly && x.Position.AlmostEqual(Arena.Center, Bounds.Radius)));
+        var filteredEnemies = new List<Actor>();
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        var center = Arena.Center;
+        var radius = Bounds.Radius;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.Position.AlmostEqual(center, radius))
+                filteredEnemies.Add(enemy);
+        }
+        Arena.Actors(filteredEnemies);
     }
 }

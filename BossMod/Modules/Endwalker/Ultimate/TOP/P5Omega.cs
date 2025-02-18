@@ -2,7 +2,8 @@
 
 class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
 {
-    public List<AOEInstance> AOEs = [];
+    public static readonly AOEShape[] Shapes = [new AOEShapeDonut(10, 40), new AOEShapeCircle(10), new AOEShapeRect(40, 40, -4), new AOEShapeCross(100, 5)];
+    public readonly List<AOEInstance> AOEs = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -20,27 +21,28 @@ class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
     {
         if (id != 0x1E43)
             return;
+        var activation = WorldState.FutureTime(13.2f);
         switch ((OID)actor.OID)
         {
             case OID.OmegaMP5:
                 if (actor.ModelState.ModelState == 4)
                 {
-                    AOEs.Add(new(new AOEShapeDonut(10, 40), actor.Position, actor.Rotation, WorldState.FutureTime(13.2f)));
+                    AOEs.Add(new(Shapes[0], actor.Position, actor.Rotation, activation));
                 }
                 else
                 {
-                    AOEs.Add(new(new AOEShapeCircle(10), actor.Position, actor.Rotation, WorldState.FutureTime(13.2f)));
+                    AOEs.Add(new(Shapes[1], actor.Position, actor.Rotation, activation));
                 }
                 break;
             case OID.OmegaFP5:
                 if (actor.ModelState.ModelState == 4)
                 {
-                    AOEs.Add(new(new AOEShapeRect(40, 40, -4), actor.Position, actor.Rotation + 90.Degrees(), WorldState.FutureTime(13.2f)));
-                    AOEs.Add(new(new AOEShapeRect(40, 40, -4), actor.Position, actor.Rotation - 90.Degrees(), WorldState.FutureTime(13.2f)));
+                    AOEs.Add(new(Shapes[2], actor.Position, actor.Rotation + 90.Degrees(), activation));
+                    AOEs.Add(new(Shapes[2], actor.Position, actor.Rotation - 90.Degrees(), activation));
                 }
                 else
                 {
-                    AOEs.Add(new(new AOEShapeCross(100, 5), actor.Position, actor.Rotation, WorldState.FutureTime(13.2f)));
+                    AOEs.Add(new(Shapes[3], actor.Position, actor.Rotation, activation));
                 }
                 break;
         }
@@ -130,7 +132,7 @@ class P5OmegaOversampledWaveCannon(BossModule module) : Components.UniformStackS
     {
         Spreads.Clear();
         if (_boss != null)
-            AddSpreads(Raid.WithoutSlot().InShape(_shape, _boss.Position, _boss.Rotation + _bossAngle));
+            AddSpreads(Raid.WithoutSlot(false, true, true).InShape(_shape, _boss.Position, _boss.Rotation + _bossAngle));
         base.Update();
     }
 
@@ -170,29 +172,30 @@ class P5OmegaOversampledWaveCannon(BossModule module) : Components.UniformStackS
         }
     }
 
-    private IEnumerable<WPos> SafeSpots(int slot, Actor actor)
+    private List<WPos> SafeSpots(int slot, Actor actor)
     {
         if (_ndw == null || _boss == null)
-            yield break;
-
+            return [];
+        List<WPos> spots = new(6);
         if (actor == _ndw.NearWorld)
         {
-            yield return Module.Center + 10 * (_boss.Rotation - _bossAngle).ToDirection();
+            spots.Add(Arena.Center + 10 * (_boss.Rotation - _bossAngle).ToDirection());
         }
         else if (actor == _ndw.DistantWorld)
         {
-            yield return Module.Center + 10 * (_boss.Rotation + 2.05f * _bossAngle).ToDirection();
+            spots.Add(Arena.Center + 10 * (_boss.Rotation + 2.05f * _bossAngle).ToDirection());
         }
         else
         {
             // TODO: assignments...
-            yield return Module.Center + 19 * (_boss.Rotation - 0.05f * _bossAngle).ToDirection(); // '1' - first distant
-            yield return Module.Center + 19 * (_boss.Rotation - 0.95f * _bossAngle).ToDirection(); // '2' - first near
-            yield return Module.Center + 19 * (_boss.Rotation - 1.05f * _bossAngle).ToDirection(); // '3' - second near
-            yield return Module.Center + 19 * (_boss.Rotation - 1.95f * _bossAngle).ToDirection(); // '4' - second distant
-            yield return Module.Center + 15 * (_boss.Rotation + 0.50f * _bossAngle).ToDirection(); // first soaker
-            yield return Module.Center + 15 * (_boss.Rotation + 1.50f * _bossAngle).ToDirection(); // second soaker
+            spots.Add(Arena.Center + 19 * (_boss.Rotation - 0.05f * _bossAngle).ToDirection()); // '1' - first distant
+            spots.Add(Arena.Center + 19 * (_boss.Rotation - 0.95f * _bossAngle).ToDirection()); // '2' - first near
+            spots.Add(Arena.Center + 19 * (_boss.Rotation - 1.05f * _bossAngle).ToDirection()); // '3' - second near
+            spots.Add(Arena.Center + 19 * (_boss.Rotation - 1.95f * _bossAngle).ToDirection()); // '4' - second distant
+            spots.Add(Arena.Center + 15 * (_boss.Rotation + 0.50f * _bossAngle).ToDirection()); // first soaker
+            spots.Add(Arena.Center + 15 * (_boss.Rotation + 1.50f * _bossAngle).ToDirection()); // second soaker
         }
+        return spots;
     }
 }
 
@@ -201,9 +204,8 @@ class P5OmegaBlaster : Components.BaitAwayTethers
 {
     private readonly P5OmegaNearDistantWorld? _ndw;
 
-    public P5OmegaBlaster(BossModule module) : base(module, new AOEShapeCircle(15), (uint)TetherID.Blaster, ActionID.MakeSpell(AID.OmegaBlasterAOE))
+    public P5OmegaBlaster(BossModule module) : base(module, new AOEShapeCircle(15), (uint)TetherID.Blaster, ActionID.MakeSpell(AID.OmegaBlasterAOE), centerAtTarget: true)
     {
-        CenterAtTarget = true;
         ForbiddenPlayers = new(0xFF);
         _ndw = module.FindComponent<P5OmegaNearDistantWorld>();
     }
@@ -221,35 +223,37 @@ class P5OmegaBlaster : Components.BaitAwayTethers
             ForbiddenPlayers.Clear(Raid.FindSlot(actor.InstanceID));
     }
 
-    private IEnumerable<WPos> SafeSpots(int slot, Actor actor)
+    private List<WPos> SafeSpots(int slot, Actor actor)
     {
         if (_ndw == null || CurrentBaits.Count == 0)
-            yield break;
+            return [];
 
-        var toBoss = (CurrentBaits[0].Source.Position - Module.Center).Normalized();
+        List<WPos> spots = new(4);
+        var toBoss = (CurrentBaits[0].Source.Position - Arena.Center).Normalized();
         if (actor == _ndw.NearWorld)
         {
-            yield return Module.Center - 10 * toBoss;
+            spots.Add(Arena.Center - 10 * toBoss);
         }
         else if (actor == _ndw.DistantWorld)
         {
             // TODO: select one of the spots...
-            yield return Module.Center + 10 * toBoss.OrthoL();
-            yield return Module.Center + 10 * toBoss.OrthoR();
+            spots.Add(Arena.Center + 10 * toBoss.OrthoL());
+            spots.Add(Arena.Center + 10 * toBoss.OrthoR());
         }
         else if (CurrentBaits.Any(b => b.Target == actor))
         {
-            var p = Module.Center + 16 * toBoss;
-            yield return p + 10 * toBoss.OrthoL();
-            yield return p + 10 * toBoss.OrthoR();
+            var p = Arena.Center + 16 * toBoss;
+            spots.Add(p + 10 * toBoss.OrthoL());
+            spots.Add(p + 10 * toBoss.OrthoR());
         }
         else
         {
             // TODO: assignments...
-            yield return Module.Center + 19 * toBoss.OrthoL(); // '1' - first distant
-            yield return Module.Center - 18 * toBoss + 5 * toBoss.OrthoL(); // '2' - first near
-            yield return Module.Center - 18 * toBoss + 5 * toBoss.OrthoR(); // '3' - second near
-            yield return Module.Center + 19 * toBoss.OrthoR(); // '4' - second distant
+            spots.Add(Arena.Center + 19 * toBoss.OrthoL()); // '1' - first distant
+            spots.Add(Arena.Center - 18 * toBoss + 5 * toBoss.OrthoL()); // '2' - first near
+            spots.Add(Arena.Center - 18 * toBoss + 5 * toBoss.OrthoR()); // '3' - second near
+            spots.Add(Arena.Center + 19 * toBoss.OrthoR()); // '4' - second distant
         }
+        return spots;
     }
 }

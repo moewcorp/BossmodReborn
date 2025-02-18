@@ -20,12 +20,12 @@ class P3Inception1(BossModule module) : Components.CastCounter(module, ActionID.
         var sphere = _tetherSources[slot];
         if (sphere != null)
         {
-            if (!sphere.IsDead && Raid.WithSlot(true).WhereSlot(s => _tetherSources[s] != null).InRadiusExcluding(actor, _sphereRadius * 2).Any())
+            if (!sphere.IsDead && Raid.WithSlot(true, true, true).WhereSlot(s => _tetherSources[s] != null).InRadiusExcluding(actor, _sphereRadius * 2).Any())
                 hints.Add("GTFO from other tethers!");
         }
         else if (!CrystalsDone)
         {
-            if (Raid.WithSlot(true).WhereSlot(s => _tetherSources[s] == null).InRadiusExcluding(actor, _crystalRadius * 2).Any())
+            if (Raid.WithSlot(true, true, true).WhereSlot(s => _tetherSources[s] == null).InRadiusExcluding(actor, _crystalRadius * 2).Any())
                 hints.Add("GTFO from other crystals!");
         }
     }
@@ -35,7 +35,7 @@ class P3Inception1(BossModule module) : Components.CastCounter(module, ActionID.
         if (!AllSpheresSpawned)
             return;
 
-        foreach (var (slot, player) in Raid.WithSlot(true))
+        foreach (var (slot, player) in Raid.WithSlot(true, true, true))
         {
             var sphere = _tetherSources[slot];
             if (sphere != null)

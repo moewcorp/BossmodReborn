@@ -10,12 +10,13 @@ public enum OID : uint
     ClockworkDreadnaught = 0x7E4, // R3.000, spawn during fight
     DriveCylinder = 0x1B2, // R0.500, x1
     TerminalEnd = 0x1E86FA,
-    TerminalStart = 0x1E86F9,
+    TerminalStart = 0x1E86F9
 }
 
 public enum AID : uint
 {
     AutoAttack = 872, // ClockworkBugP1/ClockworkBug/ClockworkSoldier/ClockworkKnight/SpinnerRook/ClockworkDreadnaught->player, no cast, single-target
+
     Leech = 1230, // ClockworkBugP1/ClockworkBug->player, no cast, single-target
     HeadspinSoldier = 1231, // ClockworkSoldier->self, 0.5s cast, range 4+R circle cleave
     HeadspinKnight = 1233, // ClockworkKnight->self, 0.5s cast, range 4+R circle cleave
@@ -24,10 +25,10 @@ public enum AID : uint
     Rotoswipe = 1238, // ClockworkDreadnaught->self, no cast, range 8+R ?-degree cone cleave
     GravityThrust = 1236, // SpinnerRook->player, 1.5s cast, single-target damage (avoidable by moving to the back)
     Pox = 1237, // SpinnerRook->player, 3.0s cast, single-target debuff (avoidable by moving to the back)
-    EmergencyOverride = 1258, // DriveCylinder->self, no cast, soft enrage raidwide
+    EmergencyOverride = 1258 // DriveCylinder->self, no cast, soft enrage raidwide
 }
 
-class Rotoswipe(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Rotoswipe), new AOEShapeCone(11, 60.Degrees()), (uint)OID.ClockworkDreadnaught); // TODO: verify angle
+class Rotoswipe(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Rotoswipe), new AOEShapeCone(11, 60.Degrees()), [(uint)OID.ClockworkDreadnaught]); // TODO: verify angle
 
 class GravityThrustPox(BossModule module) : Components.GenericAOEs(module, default, "Move behind rook!")
 {
@@ -67,15 +68,15 @@ class T04GauntletStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.TerminalStart, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 96)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.TerminalStart, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 96)]
 public class T04Gauntlet : BossModule
 {
-    public IReadOnlyList<Actor> P1Bugs;
-    public IReadOnlyList<Actor> Bugs;
-    public IReadOnlyList<Actor> Soldiers;
-    public IReadOnlyList<Actor> Knights;
-    public IReadOnlyList<Actor> Rooks;
-    public IReadOnlyList<Actor> Dreadnaughts;
+    public readonly List<Actor> P1Bugs;
+    public readonly List<Actor> Bugs;
+    public readonly List<Actor> Soldiers;
+    public readonly List<Actor> Knights;
+    public readonly List<Actor> Rooks;
+    public readonly List<Actor> Dreadnaughts;
 
     public T04Gauntlet(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(25))
     {

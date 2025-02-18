@@ -25,7 +25,7 @@ class Pinax(BossModule module) : BossComponent(module)
             {
                 hints.Add("GTFO from acid square!");
             }
-            hints.Add("Spread!", Raid.WithoutSlot().InRadiusExcluding(actor, _acidAOERadius).Any());
+            hints.Add("Spread!", Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _acidAOERadius).Any());
         }
         if (_fire != null)
         {
@@ -33,7 +33,7 @@ class Pinax(BossModule module) : BossComponent(module)
             {
                 hints.Add("GTFO from fire square!");
             }
-            hints.Add("Stack in fours!", Raid.WithoutSlot().Where(x => x.Role == Role.Healer).InRadius(actor.Position, _fireAOERadius).Count() != 1);
+            hints.Add("Stack in fours!", Raid.WithoutSlot(false, true, true).Where(x => x.Role == Role.Healer).InRadius(actor.Position, _fireAOERadius).Count() != 1);
         }
         if (_water != null)
         {
@@ -97,12 +97,12 @@ class Pinax(BossModule module) : BossComponent(module)
         if (_acid != null)
         {
             Arena.AddCircle(pc.Position, _acidAOERadius, Colors.Danger);
-            foreach (var player in Raid.WithoutSlot().Exclude(pc))
+            foreach (var player in Raid.WithoutSlot(false, true, true).Exclude(pc))
                 Arena.Actor(player, player.Position.InCircle(pc.Position, _acidAOERadius) ? Colors.PlayerInteresting : Colors.PlayerGeneric);
         }
         if (_fire != null)
         {
-            foreach (var player in Raid.WithoutSlot())
+            foreach (var player in Raid.WithoutSlot(false, true, true))
             {
                 if (player.Role == Role.Healer)
                 {

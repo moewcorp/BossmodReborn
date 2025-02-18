@@ -10,12 +10,14 @@ public enum OID : uint
     Twister = 0x27B2, // R1.000, spawn during fight
     IceBoulder = 0x2A8D, // R2.200, spawn during fight
     AncientAevis = 0x2A8E, // R4.200, spawn during fight
-    Aether = 0x2A8F, // R2.000, spawn during fight
+    Aether = 0x2A8F // R2.000, spawn during fight
 }
 
 public enum AID : uint
 {
     AutoAttackBoss = 17085, // Boss->player, no cast, single-target
+    AutoAttackAdd = 870, // AncientAevis->player, no cast, single-target
+
     BlizzardBreath = 16445, // Boss->self, 3.0s cast, range 60 45-degree cone
     FlamesOfTheApocalypse = 16448, // Boss->self, 2.8s cast, range 15-30 donut
     MindBlast = 16447, // Boss->self, 2.8s cast, range 21 circle
@@ -38,9 +40,8 @@ public enum AID : uint
     Touchdown = 16442, // Boss->self, 7.0s cast, range 60 circle with ~30 falloff
     PillarImpact = 16455, // IceBoulder->self, 7.0s cast, range 7 circle
     PillarPierce = 16456, // IceBoulder->self, 3.0s cast, range 65 width 8 rect
-    AutoAttackAdd = 870, // AncientAevis->player, no cast, single-target
     HeadlongRush = 17042, // AncientAevis->self, 3.0s cast, range 9+R width 10 rect
-    Gigaflare = 16451, // Boss->self, 120.0s cast, range 80 circle
+    Gigaflare = 16451 // Boss->self, 120.0s cast, range 80 circle
 }
 
 public enum IconID : uint
@@ -48,9 +49,9 @@ public enum IconID : uint
     Megaflare = 62, // player
 }
 
-class BlizzardBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlizzardBreath), new AOEShapeCone(60, 22.5f.Degrees()));
-class FlamesOfTheApocalypse(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlamesOfTheApocalypse), new AOEShapeDonut(15, 30));
-class MindBlast(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MindBlast), new AOEShapeCircle(21));
+class BlizzardBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlizzardBreath), new AOEShapeCone(60, 22.5f.Degrees()));
+class FlamesOfTheApocalypse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlamesOfTheApocalypse), new AOEShapeDonut(15, 30));
+class MindBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MindBlast), 21);
 
 // note: helpers target their corresponding target for the duration of their life
 class Megaflare(BossModule module) : Components.UniformStackSpread(module, 6, 0)
@@ -64,7 +65,7 @@ class Megaflare(BossModule module) : Components.UniformStackSpread(module, 6, 0)
         base.Update();
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Megaflare)
             AddStack(actor, WorldState.FutureTime(5));
@@ -78,15 +79,18 @@ class Megaflare(BossModule module) : Components.UniformStackSpread(module, 6, 0)
 }
 
 class TidalWave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.TidalWaveVisual), 48, kind: Kind.DirForward);
-class WindSlash(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.WindSlashAOE), 8);
+class WindSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindSlashAOE), 8);
 class Windwinder(BossModule module) : Components.PersistentVoidzone(module, 5, m => m.Enemies(OID.Twister).Where(a => !a.IsDead));
-class CivilizationBuster1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CivilizationBuster1), new AOEShapeRect(62, 7.5f));
-class CivilizationBuster2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CivilizationBuster2), new AOEShapeRect(62, 7.5f));
-class Touchdown(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Touchdown), new AOEShapeCircle(30)); // TODO: verify falloff
-class PillarImpact(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarImpact), new AOEShapeCircle(7));
-class PillarPierce(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(65, 4));
+
+abstract class CivilizationBuster(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(62, 7.5f));
+class CivilizationBuster1(BossModule module) : CivilizationBuster(module, AID.CivilizationBuster1);
+class CivilizationBuster2(BossModule module) : CivilizationBuster(module, AID.CivilizationBuster2);
+
+class Touchdown(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Touchdown), 30); // TODO: verify falloff
+class PillarImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarImpact), 7);
+class PillarPierce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(65, 4));
 class AncientAevis(BossModule module) : Components.Adds(module, (uint)OID.AncientAevis);
-class HeadlongRush(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HeadlongRush), new AOEShapeRect(13.2f, 5, 4.2f));
+class HeadlongRush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeadlongRush), new AOEShapeRect(13.2f, 5));
 class Aether(BossModule module) : Components.Adds(module, (uint)OID.Aether);
 
 class ArchaeotaniaStates : StateMachineBuilder
@@ -112,5 +116,8 @@ class ArchaeotaniaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1432, NameID = 8234)]
-public class Archaeotania(WorldState ws, Actor primary) : BossModule(ws, primary, new(279, 249), new ArenaBoundsSquare(29));
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1432, NameID = 8234)]
+public class Archaeotania(WorldState ws, Actor primary) : BossModule(ws, primary, new(279, 249), new ArenaBoundsSquare(29))
+{
+    protected override bool CheckPull() => base.CheckPull() && (Center - Raid.Player()!.Position).LengthSq() < 900;
+}

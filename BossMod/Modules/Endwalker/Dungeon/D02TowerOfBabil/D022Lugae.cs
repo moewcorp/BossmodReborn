@@ -27,14 +27,13 @@ public enum SID : uint
 {
     Minimum = 2504, // none->player, extra=0x14
     Breathless = 2672, // none->player, extra=0x1/0x2/0x3/0x4/0x5/0x6
-    Heavy = 2391, // none->player, extra=0x32
     Toad = 2671 // none->player, extra=0x1B1
 }
 
 class DownpourMagitekChakram(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Mechanic { None, Downpour, Chakram }
-    private Mechanic CurrentMechanic { get; set; }
+    private Mechanic CurrentMechanic;
     private static readonly AOEShapeRect square = new(4, 4, 4);
     private static readonly WPos toad = new(213, 306);
     private static readonly WPos mini = new(229, 306);
@@ -91,9 +90,9 @@ class DownpourMagitekChakram(BossModule module) : Components.GenericAOEs(module)
 }
 
 class ThermalSuppression(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ThermalSuppression));
-class MightyRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(50, 3));
-class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCross(40, 4));
-class SurfaceMissile(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.SurfaceMissile), 6);
+class MightyRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(50, 3));
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCross(40, 4));
+class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SurfaceMissile), 6);
 
 class D022LugaeStates : StateMachineBuilder
 {

@@ -67,9 +67,10 @@ class Hailfire(BossModule module) : Components.GenericAOEs(module)
                 var dir = boss.DirectionTo(c);
                 rects.Add(new(c.Position + 0.1f * dir, c.Position + Length * dir, 1.6f));
             }
+            RectangleSE[] rectsA = [.. rects];
             yield return _target == actor
-                ? new(new AOEShapeCustom(rects, InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE)
-                : new(new AOEShapeCustom([new RectangleSE(boss.Position, boss.Position + Length * boss.DirectionTo(_target), 2)], rects), Arena.Center);
+                ? new(new AOEShapeCustom([.. rects], InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE)
+                : new(new AOEShapeCustom([new RectangleSE(boss.Position, boss.Position + Length * boss.DirectionTo(_target), 2)], rectsA), Arena.Center);
         }
     }
 
@@ -104,9 +105,9 @@ class Shardfall(BossModule module) : Components.CastLineOfSightAOE(module, Actio
 {
     public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.DimCrystal).Where(e => !e.IsDead);
 }
-class CrystallineFracture(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), new AOEShapeCircle(3));
-class ResonantFrequency(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ResonantFrequency), new AOEShapeCircle(6));
-class Dissonance(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Dissonance), new AOEShapeDonut(5, 40));
+class CrystallineFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), 3);
+class ResonantFrequency(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ResonantFrequency), 6);
+class Dissonance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dissonance), new AOEShapeDonut(5, 40));
 
 class D131HedetetStates : StateMachineBuilder
 {

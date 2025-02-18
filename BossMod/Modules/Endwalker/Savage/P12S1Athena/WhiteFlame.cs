@@ -16,7 +16,7 @@ class WhiteFlame(BossModule module) : Components.GenericBaitAway(module)
         CurrentBaits.Clear();
         if (_enabled)
             foreach (var s in _sources.Take(2))
-                foreach (var t in Raid.WithoutSlot().SortedByRange(s.Position).Take(2))
+                foreach (var t in Raid.WithoutSlot(false, true, true).SortedByRange(s.Position).Take(2))
                     CurrentBaits.Add(new(s, t, _shape));
     }
 

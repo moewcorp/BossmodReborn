@@ -3,7 +3,6 @@
 public enum OID : uint
 {
     Boss = 0x30DC, // R3.400, x1
-    Helper = 0x233C, // R0.500, x19, and more spawn during fight
     SparkArrow = 0x30DD, // R2.000, spawn during fight (gives +1 temperature)
     FlameArrow = 0x30DE, // R2.000, spawn during fight (gives +2 temperature)
     FrostArrow = 0x30DF, // R2.000, spawn during fight (gives -1 temperature)
@@ -13,6 +12,7 @@ public enum OID : uint
     BlazingOrb = 0x30E3, // R1.500, spawn during fight (gives +1 temperature)
     RoaringOrb = 0x30E4, // R1.500, spawn during fight (gives +2 temperature)
     AvowedAvatar = 0x30E5, // R3.400, x11
+    Helper = 0x233C
 }
 
 public enum AID : uint

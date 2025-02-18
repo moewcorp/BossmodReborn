@@ -5,11 +5,24 @@ class CastShadow(BossModule module) : Components.GenericAOEs(module)
     public List<Actor> FirstAOECasters = [];
     public List<Actor> SecondAOECasters = [];
 
-    private static readonly AOEShape _shape = new AOEShapeCone(65, 15.Degrees());
+    private static readonly AOEShape _shape = new AOEShapeCone(65f, 15f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return (FirstAOECasters.Count > 0 ? FirstAOECasters : SecondAOECasters).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var countFirst = FirstAOECasters.Count;
+        var countSecond = SecondAOECasters.Count;
+        var total = countFirst + countSecond;
+        if (total == 0)
+            return [];
+        var casters = countFirst != 0 ? FirstAOECasters : SecondAOECasters;
+        var current = countFirst != 0 ? countFirst : countSecond;
+        var aoes = new AOEInstance[current];
+        for (var i = 0; i < current; ++i)
+        {
+            var caster = casters[i];
+            aoes[i] = new AOEInstance(_shape, caster.Position, caster.CastInfo!.Rotation, Module.CastFinishAt(caster.CastInfo));
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -22,10 +35,10 @@ class CastShadow(BossModule module) : Components.GenericAOEs(module)
         ListForAction(spell.Action)?.Remove(caster);
     }
 
-    private List<Actor>? ListForAction(ActionID action) => (AID)action.ID switch
+    private List<Actor>? ListForAction(ActionID action) => action.ID switch
     {
-        AID.NCastShadowAOE1 or AID.SCastShadowAOE1 => FirstAOECasters,
-        AID.NCastShadowAOE2 or AID.SCastShadowAOE2 => SecondAOECasters,
+        (uint)AID.NCastShadowAOE1 or (uint)AID.SCastShadowAOE1 => FirstAOECasters,
+        (uint)AID.NCastShadowAOE2 or (uint)AID.SCastShadowAOE2 => SecondAOECasters,
         _ => null
     };
 }

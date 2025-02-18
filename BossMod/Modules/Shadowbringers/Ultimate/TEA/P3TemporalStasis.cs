@@ -14,9 +14,9 @@ class P3TemporalStasis(BossModule module) : Components.GenericBaitAway(module, A
     {
         CurrentBaits.Clear();
         if (BJ() is var bj && bj != null)
-            CurrentBaits.AddRange(Raid.WithoutSlot().SortedByRange(bj.Position).Take(2).Select(t => new Bait(bj, t, _shapeBJ)));
+            CurrentBaits.AddRange(Raid.WithoutSlot(false, true, true).SortedByRange(bj.Position).Take(2).Select(t => new Bait(bj, t, _shapeBJ)));
         if (CC() is var cc && cc != null)
-            CurrentBaits.AddRange(Raid.WithoutSlot().SortedByRange(cc.Position).Take(3).Select(t => new Bait(cc, t, _shapeCC)));
+            CurrentBaits.AddRange(Raid.WithoutSlot(false, true, true).SortedByRange(cc.Position).Take(3).Select(t => new Bait(cc, t, _shapeCC)));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -26,11 +26,11 @@ class P3TemporalStasis(BossModule module) : Components.GenericBaitAway(module, A
         switch (_playerMechanics[slot])
         {
             case Mechanic.StayClose:
-                if (FindPartner(slot) is var partner1 && partner1 != null && (partner1.Position - actor.Position).LengthSq() > 5 * 5)
+                if (FindPartner(slot) is var partner1 && partner1 != null && (partner1.Position - actor.Position).LengthSq() > 25f)
                     hints.Add("Stay closer to partner!");
                 break;
             case Mechanic.StayFar:
-                if (FindPartner(slot) is var partner2 && partner2 != null && (partner2.Position - actor.Position).LengthSq() < 30 * 30)
+                if (FindPartner(slot) is var partner2 && partner2 != null && (partner2.Position - actor.Position).LengthSq() < 900f)
                     hints.Add("Stay farther from partner!");
                 break;
         }
@@ -49,11 +49,11 @@ class P3TemporalStasis(BossModule module) : Components.GenericBaitAway(module, A
         {
             case Mechanic.StayClose:
                 if (FindPartner(pcSlot) is var partner1 && partner1 != null)
-                    Arena.AddLine(pc.Position, partner1.Position, (partner1.Position - pc.Position).LengthSq() > 5 * 5 ? Colors.Danger : Colors.Safe);
+                    Arena.AddLine(pc.Position, partner1.Position, (partner1.Position - pc.Position).LengthSq() > 25f ? Colors.Danger : Colors.Safe);
                 break;
             case Mechanic.StayFar:
                 if (FindPartner(pcSlot) is var partner2 && partner2 != null)
-                    Arena.AddLine(pc.Position, partner2.Position, (partner2.Position - pc.Position).LengthSq() < 30 * 30 ? Colors.Danger : Colors.Safe);
+                    Arena.AddLine(pc.Position, partner2.Position, (partner2.Position - pc.Position).LengthSq() < 300f ? Colors.Danger : Colors.Safe);
                 break;
         }
 
@@ -64,19 +64,19 @@ class P3TemporalStasis(BossModule module) : Components.GenericBaitAway(module, A
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.AggravatedAssault:
+            case (uint)SID.AggravatedAssault:
                 AssignMechanic(actor, Mechanic.AvoidDamage);
                 ForbiddenPlayers.Set(Raid.FindSlot(actor.InstanceID));
                 break;
-            case SID.HouseArrest:
+            case (uint)SID.HouseArrest:
                 AssignMechanic(actor, Mechanic.StayClose);
                 break;
-            case SID.RestrainingOrder:
+            case (uint)SID.RestrainingOrder:
                 AssignMechanic(actor, Mechanic.StayFar);
                 break;
-            case SID.TemporalDisplacement:
+            case (uint)SID.TemporalDisplacement:
                 Frozen = true;
                 break;
         }

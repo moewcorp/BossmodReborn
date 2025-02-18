@@ -3,11 +3,9 @@
 public enum OID : uint
 {
     Boss = 0x31C9, // R5.950, x1
-    Helper = 0x233C, // R0.500, x16
     PurpleLevin = 0x31CA, // R1.000-2.000, spawn during fight
     BallOfFire = 0x31CB, // R1.000, spawn during fight
-    //_Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x2, EventObj type
-    //_Gen_Actor1eb180 = 0x1EB180, // R0.500, x0, EventObj type, and more spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -35,7 +33,7 @@ public enum AID : uint
     Levinbolt = 23983, // Boss->self, no cast, single-target, visual (spread)
     LevinboltAOE = 23984, // Helper->players, 5.0s cast, range 6 circle spread
     SerpentsEdge = 23985, // Boss->player, 5.0s cast, single-target, tankbuster
-    Deathwall = 24711, // Helper->self, no cast, range 20-30 donut
+    Deathwall = 24711 // Helper->self, no cast, range 20-30 donut
 }
 
 class Thundercall(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Thundercall), "Raidwide + summon lighting orbs");
@@ -70,7 +68,7 @@ class LightningBoltDistantClap(BossModule module) : Components.GenericAOEs(modul
     }
 }
 
-class TwistingWinds(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(40, 5, 40));
+class TwistingWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(40, 5, 40));
 
 class CloudToGround(BossModule module) : Components.Exaflare(module, 5)
 {
@@ -104,7 +102,7 @@ class Flame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSp
 
 class Burn(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly IReadOnlyList<Actor> _flames = module.Enemies(OID.BallOfFire);
+    private readonly List<Actor> _flames = module.Enemies(OID.BallOfFire);
     private readonly List<(Actor actor, AOEInstance? aoe)> _casters = [];
 
     private static readonly AOEShapeCircle _shape = new(8);
@@ -138,8 +136,10 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Forelash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Forelash), new AOEShapeCone(40, 90.Degrees()));
-class Backlash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Backlash), new AOEShapeCone(40, 90.Degrees()));
+abstract class Lash(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
+class Forelash(BossModule module) : Lash(module, AID.Forelash);
+class Backlash(BossModule module) : Lash(module, AID.Backlash);
+
 class Charybdis(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Charybdis), "Set hp to 1");
 class Roar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Roar));
 class Levinbolt(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.LevinboltAOE), 6);
@@ -165,5 +165,5 @@ class CE62LooksToDieForStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)] // bnpcname=9925
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)] // bnpcname=9925
 public class CE62LooksToDieFor(WorldState ws, Actor primary) : BossModule(ws, primary, new(-200, -580), new ArenaBoundsCircle(20));

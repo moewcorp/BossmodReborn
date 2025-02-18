@@ -4,7 +4,7 @@ class AzdajasShadow(BossModule module) : BossComponent(module)
 {
     public enum Mechanic { Unknown, CircleStack, DonutSpread }
 
-    public Mechanic CurMechanic { get; private set; }
+    public Mechanic CurMechanic;
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -45,7 +45,7 @@ class FlamesOfEventide(BossModule module) : Components.GenericBaitAway(module, A
         {
             if (_playerStacks[slot] >= 2)
                 hints.Add("Pass aggro!");
-            if (Raid.WithoutSlot().Exclude(actor).InShape(_shape, Module.PrimaryActor.Position, Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)).Any())
+            if (Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, Module.PrimaryActor.Position, Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)).Any())
                 hints.Add("GTFO from raid!");
         }
         else if (CurrentBaits.Count > 0)

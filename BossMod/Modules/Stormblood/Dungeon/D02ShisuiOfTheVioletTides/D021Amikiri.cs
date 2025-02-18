@@ -35,7 +35,7 @@ class DigestiveFluidBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCircle circle = new(5);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DigestiveFluid)
             CurrentBaits.Add(new(actor, actor, circle, WorldState.FutureTime(7.2f)));
@@ -71,7 +71,7 @@ class BindBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCircle circle = new(3);
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Bind)
             CurrentBaits.Add(new(actor, actor, circle));

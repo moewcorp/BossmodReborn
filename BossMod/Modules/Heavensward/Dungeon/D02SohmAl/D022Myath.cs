@@ -27,24 +27,24 @@ class ThirdLegForward(BossModule module) : Components.Cleave(module, ActionID.Ma
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_stack.ActiveStacks.Any())
+        if (_stack.ActiveStacks.Count == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_stack.ActiveStacks.Any())
+        if (_stack.ActiveStacks.Count == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!_stack.ActiveStacks.Any())
+        if (_stack.ActiveStacks.Count == 0)
             base.DrawArenaForeground(pcSlot, pc);
     }
 }
 
-class RazorScales(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RazorScales), new AOEShapeCone(64.9f, 30.Degrees()));
+class RazorScales(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RazorScales), new AOEShapeCone(64.9f, 30.Degrees()));
 class PrimordialRoar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PrimordialRoar));
 class MadDashSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MadDash), 6);
 class MadDashStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.MadDashStack), 6, 4, 4);
@@ -94,12 +94,12 @@ public class D022Myath(WorldState ws, Actor primary) : BossModule(ws, primary, a
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.ChymeOfTheMountain => 2,
-                OID.Boss => 1,
+                OID.ChymeOfTheMountain => 1,
                 _ => 0
             };
         }

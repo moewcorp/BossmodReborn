@@ -156,9 +156,9 @@ class M03SBruteBomberStates : StateMachineBuilder
     private void Fusefield(uint id, float delay)
     {
         Cast(id, AID.Fusefield, delay, 4)
+            .ActivateOnEnter<FusefieldVoidzone>()
             .ActivateOnEnter<Fusefield>();
-        Cast(id + 0x10, AID.BombarianFlame, 3.2f, 3)
-            .ActivateOnEnter<FusefieldVoidzone>();
+        Cast(id + 0x10, AID.BombarianFlame, 3.2f, 3);
         ComponentCondition<FusefieldVoidzone>(id + 0x20, 3.9f, comp => comp.Active, "Fuses start");
         ComponentCondition<FusefieldVoidzone>(id + 0x30, 40, comp => !comp.Active, "Fuses resolve")
             .DeactivateOnExit<FusefieldVoidzone>()

@@ -1,814 +1,618 @@
-// using Dalamud.Memory;
-// using Dalamud.Utility;
-// using FFXIVClientStructs.FFXIV.Client.System.Framework;
-// using ImGuiNET;
-// using System.Runtime.InteropServices;
-// using System.Text;
+using Dalamud.Interface.Utility.Raii;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision.Math;
+using ImGuiNET;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
-// namespace BossMod;
+namespace BossMod;
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x30)]
-// public unsafe struct Mat4x3
-// {
-//     [FieldOffset(0x00)] public Vector3 Row0;
-//     [FieldOffset(0x0C)] public Vector3 Row1;
-//     [FieldOffset(0x18)] public Vector3 Row2;
-//     [FieldOffset(0x24)] public Vector3 Row3;
+public sealed unsafe class DebugCollision() : IDisposable
+{
+    private readonly UITree _tree = new();
+    private BitMask _shownLayers = new(1);
+    private BitMask _materialMask;
+    private BitMask _materialId;
+    private bool _showZeroLayer = true;
+    private bool _showOnlyFlagRaycast;
+    private bool _showOnlyFlagVisit;
 
-//     public readonly SharpDX.Matrix M => new(Row0.X, Row0.Y, Row0.Z, 0, Row1.X, Row1.Y, Row1.Z, 0, Row2.X, Row2.Y, Row2.Z, 0, Row3.X, Row3.Y, Row3.Z, 1);
-// }
+    private readonly HashSet<nint> _streamedMeshes = [];
+    private BitMask _availableLayers;
+    private BitMask _availableMaterials;
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x20)]
-// public unsafe struct CollisionNode
-// {
-//     [FieldOffset(0x00)] public void** Vtbl;
-//     [FieldOffset(0x08)] public void** Vtbl8;
-//     [FieldOffset(0x10)] public CollisionNode* Prev;
-//     [FieldOffset(0x18)] public CollisionNode* Next;
-// }
+    private static readonly (int, int)[] _boxEdges =
+    [
+        (0, 1), (1, 3), (3, 2), (2, 0),
+        (4, 5), (5, 7), (7, 6), (6, 4),
+        (0, 4), (1, 5), (2, 6), (3, 7)
+    ];
 
-// [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-// public unsafe struct CollisionModule
-// {
-//     [FieldOffset(0x10)] public CollisionSceneManager* Manager;
-//     [FieldOffset(0xA8)] public int LoadInProgressCounter;
-//     [FieldOffset(0xAC)] public Vector4 ForcedStreamingBounds;
+    private static readonly Vector3[] _boxCorners =
+    [
+        new(-1, -1, -1),
+        new(-1, -1,  1),
+        new(-1,  1, -1),
+        new(-1,  1,  1),
+        new( 1, -1, -1),
+        new( 1, -1,  1),
+        new( 1,  1, -1),
+        new( 1,  1,  1),
+    ];
 
-//     public static CollisionModule* Instance => (CollisionModule*)FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->BGCollisionModule;
-// }
+    private float _maxDrawDistance = 10;
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x38)]
-// public unsafe struct CollisionSceneManager
-// {
-//     [FieldOffset(0x00)] public void** Vtbl;
-//     [FieldOffset(0x18)] public CollisionSceneWrapper* FirstScene;
-//     [FieldOffset(0x20)] public int NumScenes;
-//     [FieldOffset(0x28)] public Vector4 StreamingBounds;
-// }
+    public void Dispose()
+    {
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x30)]
-// public unsafe struct CollisionSceneWrapper
-// {
-//     [FieldOffset(0x00)] public CollisionNode Base;
-//     [FieldOffset(0x20)] public CollisionSceneManager* Owner;
-//     [FieldOffset(0x28)] public CollisionScene* Scene;
-// }
+    public void Draw()
+    {
+        var module = Framework.Instance()->BGCollisionModule;
+        ImGui.TextUnformatted($"Module: {(nint)module:X}->{(nint)module->SceneManager:X} ({module->SceneManager->NumScenes} scenes, {module->LoadInProgressCounter} loads)");
+        ImGui.TextUnformatted($"Streaming: {SphereStr(module->ForcedStreamingSphere)} / {SphereStr(module->SceneManager->StreamingSphere)}");
+        module->ForcedStreamingSphere.W = _maxDrawDistance;
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-// public unsafe struct CollisionScene
-// {
-//     [FieldOffset(0x00)] public void** Vtbl;
-//     [FieldOffset(0x08)] public CollisionSceneManager* Owner;
-//     [FieldOffset(0x10)] public CollisionObjectBase* FirstObj;
-//     [FieldOffset(0x18)] public int NumObjs;
-//     [FieldOffset(0x20)] public Vector4 StreamingBounds; // center = player pos, w = radius
-//     [FieldOffset(0x30)] public int NumLoading;
-//     [FieldOffset(0x38)] public CollisionQuadtree* Quadtree;
-// }
+        GatherInfo();
+        DrawSettings();
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-// public unsafe struct CollisionQuadtree
-// {
-//     [FieldOffset(0x00)] public void** Vtbl;
-//     [FieldOffset(0x08)] public float MinX;
-//     [FieldOffset(0x0C)] public float MaxX;
-//     [FieldOffset(0x10)] public float LeafSizeX;
-//     [FieldOffset(0x14)] public float MinZ;
-//     [FieldOffset(0x18)] public float MaxZ;
-//     [FieldOffset(0x1C)] public float LeafSizeZ;
-//     [FieldOffset(0x20)] public int NumLevels;
-//     [FieldOffset(0x28)] public CollisionNode* Nodes;
-//     [FieldOffset(0x30)] public int NumNodes;
-//     [FieldOffset(0x38)] public void* Owner;
-// }
+        var i = 0;
+        foreach (var s in module->SceneManager->Scenes)
+        {
+            DrawSceneColliders(s->Scene, i);
+            DrawSceneQuadtree(s->Scene->Quadtree, i);
+            ++i;
+        }
+    }
 
-// public enum CollisionObjectType : int
-// {
-//     Multi = 1,
-//     Shape = 2,
-//     Box = 3,
-//     Cylinder = 4,
-//     Sphere = 5,
-//     Plane = 6,
-//     PlaneTwoSided = 7,
-// }
+    public void DrawVisualizers()
+    {
 
-// [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
-// public unsafe struct CollisionObjectBase
-// {
-//     [FieldOffset(0x00)] public CollisionObjectBaseVTable* Vtbl;
-//     [FieldOffset(0x00)] public CollisionNode Base;
-//     [FieldOffset(0x30)] public CollisionObjectBase* PrevNodeObj;
-//     [FieldOffset(0x38)] public CollisionObjectBase* NextNodeObj;
-//     [FieldOffset(0x44)] public uint NumRefs;
-//     [FieldOffset(0x48)] public CollisionScene* Scene;
-//     [FieldOffset(0x68)] public uint LayerMask;
-// }
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 24 * 8)]
-// public unsafe struct CollisionObjectBaseVTable
-// {
-//     [FieldOffset(17 * 8)] public delegate* unmanaged[Stdcall]<CollisionObjectBase*, CollisionObjectType> GetObjectType;
-// }
+    private void GatherInfo()
+    {
+        _streamedMeshes.Clear();
+        _availableLayers.Reset();
+        _availableMaterials.Reset();
+        foreach (var s in Framework.Instance()->BGCollisionModule->SceneManager->Scenes)
+        {
+            foreach (var coll in s->Scene->Colliders)
+            {
+                _availableLayers |= new BitMask(coll->LayerMask);
+                _availableMaterials |= new BitMask(coll->ObjectMaterialValue);
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x20)]
-// public unsafe struct CollisionObjectMultiElement
-// {
-//     [FieldOffset(0x00)] public int SubFile;
-//     [FieldOffset(0x08)] public CollisionObjectShape* Shape;
-//     [FieldOffset(0x10)] public float MinX;
-//     [FieldOffset(0x14)] public float MinZ;
-//     [FieldOffset(0x18)] public float MaxX;
-//     [FieldOffset(0x1C)] public float MaxZ;
-// }
+                var collType = coll->GetColliderType();
+                if (collType == ColliderType.Streamed)
+                {
+                    var cast = (ColliderStreamed*)coll;
+                    if (cast->Header != null && cast->Elements != null)
+                    {
+                        for (var i = 0; i < cast->Header->NumMeshes; ++i)
+                        {
+                            var m = cast->Elements[i].Mesh;
+                            if (m != null)
+                                _streamedMeshes.Add((nint)m);
+                        }
+                    }
+                }
+                else if (collType == ColliderType.Mesh)
+                {
+                    var cast = (ColliderMesh*)coll;
+                    if (!cast->MeshIsSimple && cast->Mesh != null)
+                    {
+                        var mesh = (MeshPCB*)cast->Mesh;
+                        var mask = new BitMask(coll->ObjectMaterialMask);
+                        GatherMeshNodeMaterials(mesh->RootNode, ~mask);
+                    }
+                }
+            }
+        }
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
-// public unsafe struct CollisionObjectMulti // type 1
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0A8)] public fixed byte PathBase[256];
-//     [FieldOffset(0x1B8)] public float StreamedMinX;
-//     [FieldOffset(0x1BC)] public float StreamedMinZ;
-//     [FieldOffset(0x1C0)] public float StreamedMaxX;
-//     [FieldOffset(0x1C4)] public float StreamedMaxZ;
-//     [FieldOffset(0x1C8)] public int* PtrNumElements;
-//     [FieldOffset(0x1D8)] public CollisionObjectMultiElement* Elements;
-// }
+    private bool FilterCollider(Collider* coll)
+    {
+        if (coll->LayerMask == 0 ? !_showZeroLayer : (_shownLayers.Raw & coll->LayerMask) == 0)
+            return false;
+        if (_showOnlyFlagRaycast && (coll->VisibilityFlags & 1) == 0)
+            return false;
+        if (_showOnlyFlagVisit && (coll->VisibilityFlags & 2) == 0)
+            return false;
+        var matFilter = _availableMaterials & _materialMask;
+        if (matFilter.Any() && coll->GetColliderType() != ColliderType.Mesh)
+            return /*_materialId.None() ? (matFilter.Raw & coll->ObjectMaterialValue) != 0 :*/ (matFilter.Raw & (coll->ObjectMaterialValue ^ _materialId.Raw)) == 0;
+        return true;
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x198)]
-// public unsafe struct CollisionObjectShape // type 2
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0C8)] public CollisionShapePCB* Shape; // pointer to interface really
-//     [FieldOffset(0x0D4)] public Vector3 Translation;
-//     [FieldOffset(0x0E0)] public Vector3 Rotation;
-//     [FieldOffset(0x0EC)] public Vector3 Scale;
-//     [FieldOffset(0x0F8)] public Vector3 TranslationPrev;
-//     [FieldOffset(0x104)] public Vector3 RotationPrev;
-//     [FieldOffset(0x110)] public Mat4x3 World;
-//     [FieldOffset(0x140)] public Mat4x3 InvWorld;
-//     [FieldOffset(0x170)] public Vector4 BoundingSphere;
-//     [FieldOffset(0x180)] public Vector3 BoundingBoxMin;
-//     [FieldOffset(0x18C)] public Vector3 BoundingBoxMax;
-// }
+    private void DrawSettings()
+    {
+        using var n = _tree.Node2("Settings");
+        if (!n.Opened)
+            return;
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x140)]
-// public unsafe struct CollisionObjectBox // type 3
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0A0)] public Vector3 Translation;
-//     [FieldOffset(0x0AC)] public Vector3 TranslationPrev;
-//     [FieldOffset(0x0B8)] public Vector3 Rotation;
-//     [FieldOffset(0x0C4)] public Vector3 RotationPrev;
-//     [FieldOffset(0x0D0)] public Vector3 Scale;
-//     [FieldOffset(0x0DC)] public Mat4x3 World;
-//     [FieldOffset(0x10C)] public Mat4x3 InvWorld;
-// }
+        ImGui.Checkbox("Show objects with zero layer", ref _showZeroLayer);
+        {
+            var shownLayers = _availableLayers & _shownLayers;
+            using var layers = ImRaii.Combo("Shown layers", shownLayers == _availableLayers ? "All" : shownLayers.None() ? "None" : string.Join(", ", shownLayers.SetBits()));
+            if (layers)
+            {
+                foreach (var i in _availableLayers.SetBits())
+                {
+                    var shown = _shownLayers[i];
+                    if (ImGui.Checkbox($"Layer {i}", ref shown))
+                        _shownLayers[i] = shown;
+                }
+            }
+        }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x148)]
-// public unsafe struct CollisionObjectCylinder // type 4
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0A0)] public Vector3 Translation;
-//     [FieldOffset(0x0AC)] public Vector3 TranslationPrev;
-//     [FieldOffset(0x0B8)] public Vector3 Rotation;
-//     [FieldOffset(0x0C4)] public Vector3 RotationPrev;
-//     [FieldOffset(0x0D0)] public Vector3 Scale;
-//     [FieldOffset(0x0DC)] public float Radius;
-//     [FieldOffset(0x0E0)] public Mat4x3 World;
-//     [FieldOffset(0x110)] public Mat4x3 InvWorld;
-// }
+        {
+            var matMask = _materialMask & _availableMaterials;
+            using var materials = ImRaii.Combo("Material mask", matMask.None() ? "None" : matMask.Raw.ToString("X"));
+            if (materials)
+            {
+                foreach (var i in _availableMaterials.SetBits())
+                {
+                    var filter = _materialMask[i];
+                    if (ImGui.Checkbox($"Material {1u << i:X16}", ref filter))
+                        _materialMask[i] = filter;
+                }
+            }
+        }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x150)]
-// public unsafe struct CollisionObjectSphere // type 5
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0A4)] public Vector3 Translation;
-//     [FieldOffset(0x0B0)] public Vector3 TranslationPrev;
-//     [FieldOffset(0x0BC)] public Vector3 Rotation;
-//     [FieldOffset(0x0C8)] public Vector3 RotationPrev;
-//     [FieldOffset(0x0D4)] public Vector3 Scale;
-//     [FieldOffset(0x0E0)] public Vector3 ScalePrev;
-//     [FieldOffset(0x0EC)] public Mat4x3 World;
-//     [FieldOffset(0x11C)] public Mat4x3 InvWorld;
-// }
+        {
+            var matId = _materialId & _availableMaterials;
+            using var materials = ImRaii.Combo("Material id", matId.None() ? "None" : matId.Raw.ToString("X"));
+            if (materials)
+            {
+                foreach (var i in _availableMaterials.SetBits())
+                {
+                    var filter = _materialId[i];
+                    if (ImGui.Checkbox($"Material {1u << i:X16}", ref filter))
+                        _materialId[i] = filter;
+                }
+            }
+        }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x140)]
-// public unsafe struct CollisionObjectPlane // type 6/7
-// {
-//     [FieldOffset(0x000)] public CollisionObjectBase Base;
-//     [FieldOffset(0x0A0)] public Vector3 Translation;
-//     [FieldOffset(0x0AC)] public Vector3 TranslationPrev;
-//     [FieldOffset(0x0B8)] public Vector3 Rotation;
-//     [FieldOffset(0x0C4)] public Vector3 RotationPrev;
-//     [FieldOffset(0x0D0)] public Vector3 Scale;
-//     [FieldOffset(0x0DC)] public Mat4x3 World;
-//     [FieldOffset(0x10C)] public Mat4x3 InvWorld;
-//     [FieldOffset(0x13D)] public byte Extended;
-// }
+        {
+            using var flags = ImRaii.Combo("Flag filter", _showOnlyFlagRaycast ? _showOnlyFlagVisit ? "Only when both flags are set" : "Only if raycast flag is set" : _showOnlyFlagVisit ? "Only if global visit flag is set" : "Show everything");
+            if (flags)
+            {
+                ImGui.Checkbox("Hide objects without raycast flag (0x1)", ref _showOnlyFlagRaycast);
+                ImGui.Checkbox("Hide objects without global viist flag (0x2)", ref _showOnlyFlagVisit);
+            }
+        }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-// public unsafe struct CollisionShapePCB
-// {
-//     [FieldOffset(0x00)] public void** Vtbl;
-//     [FieldOffset(0x08)] public void** Vtbl8;
-//     [FieldOffset(0x10)] public CollisionObjectShape* OwnerObj;
-//     [FieldOffset(0x18)] public CollisionShapePCBData* Data;
-// };
+        if (ImGui.SliderFloat("Max Draw Distance", ref _maxDrawDistance, 10, 1000, "%.0f"))
+        { }
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0x30)] // variable length structure: followed by raw verts then compressed verts then prims
-// public unsafe struct CollisionShapePCBData
-// {
-//     [FieldOffset(0x00)] public ulong Header;
-//     [FieldOffset(0x08)] public int Child1Offset;
-//     [FieldOffset(0x0C)] public int Child2Offset;
-//     [FieldOffset(0x10)] public Vector3 AABBMin;
-//     [FieldOffset(0x1C)] public Vector3 AABBMax;
-//     [FieldOffset(0x28)] public ushort NumVertsCompressed; // ushort[3] per vert
-//     [FieldOffset(0x2A)] public ushort NumPrims;
-//     [FieldOffset(0x2C)] public ushort NumVertsRaw; // vector3 per vert
-// };
+    private void DrawSceneColliders(Scene* s, int index)
+    {
+        using var n = _tree.Node2($"Scene {index}: {s->NumColliders} colliders, {s->NumLoading} loading, streaming={SphereStr(s->StreamingSphere)}###scene_{index}");
+        if (n.SelectedOrHovered)
+            foreach (var coll in s->Colliders)
+                if (FilterCollider(coll))
+                    VisualizeCollider(coll, _materialId, _materialMask);
+        if (n.Opened)
+            foreach (var coll in s->Colliders)
+                DrawCollider(coll);
+    }
 
-// [StructLayout(LayoutKind.Explicit, Size = 0xC)]
-// public unsafe struct CollisionShapePrimitive
-// {
-//     [FieldOffset(0x0)] public byte V1;
-//     [FieldOffset(0x1)] public byte V2;
-//     [FieldOffset(0x2)] public byte V3;
-//     [FieldOffset(0x4)] public uint Flags;
-//     [FieldOffset(0x8)] public uint Unk8;
-// }
+    private void DrawSceneQuadtree(Quadtree* tree, int index)
+    {
+        using var n = _tree.Node2($"Quadtree {index}: {tree->NumLevels} levels ([{tree->MinX}, {tree->MaxX}]x[{tree->MinZ}, {tree->MaxZ}], leaf {tree->LeafSizeX}x{tree->LeafSizeZ}), {tree->NumNodes} nodes###tree_{index}");
+        if (!n.Opened)
+            return;
 
-// public unsafe sealed class DebugCollision : IDisposable
-// {
-//     private readonly UITree _tree = new();
-//     private (Action, nint) _drawExtra;
-//     private readonly HashSet<nint> _slaveShapes = [];
+        for (int level = 0; level < tree->NumLevels; ++level)
+        {
+            var cellSizeX = (tree->MaxX - tree->MinX + 1) / (1 << level);
+            var cellSizeZ = (tree->MaxZ - tree->MinZ + 1) / (1 << level);
+            using var ln = _tree.Node2($"Level {level}, {cellSizeX}x{cellSizeZ} cells ({Quadtree.NumNodesAtLevel(level)} nodes starting at {Quadtree.StartingNodeForLevel(level)})");
+            if (!ln.Opened)
+                continue;
 
-//     private readonly nint _typeinfoCollisionShapePCB;
+            var nodes = tree->NodesAtLevel(level);
+            for (int i = 0; i < nodes.Length; ++i)
+            {
+                ref var node = ref nodes[i];
+                if (node.Node.NodeLink.Next == null)
+                    continue;
 
-//     public DebugCollision()
-//     {
-//         _typeinfoCollisionShapePCB = Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? 48 89 78 10 48 89 08");
-//         Service.Log($"vtbl CollisionShapePCB: {_typeinfoCollisionShapePCB:X}");
+                var coord = Quadtree.CellCoords((uint)i);
+                var cellX = tree->MinX + coord.x * cellSizeX;
+                var cellZ = tree->MinZ + coord.z * cellSizeZ;
+                using var cn = _tree.Node2($"[{coord.x}, {coord.z}] ([{cellX}x{cellZ}]-[{cellX + cellSizeX}x{cellZ + cellSizeZ}])###node_{level}_{i}", node.Node.NodeLink.Next == null);
 
-//         _drawExtra = (() => { }, 0);
-//     }
+                if (cn.Opened)
+                    foreach (var coll in node.Colliders)
+                        DrawCollider(coll);
 
-//     public void Dispose()
-//     {
+                if (cn.SelectedOrHovered)
+                {
+                    // TODO: visualize cell bounds?
+                    foreach (var coll in node.Colliders)
+                        VisualizeCollider(coll, _materialId, _materialMask);
+                }
+            }
+        }
+    }
 
-//     }
+    private void DrawCollider(Collider* coll)
+    {
+        if (!FilterCollider(coll))
+            return;
 
-//     public void Draw()
-//     {
-//         UpdateSlaveShapes();
+        var raycastFlag = (coll->VisibilityFlags & 1) != 0;
+        var globalVisitFlag = (coll->VisibilityFlags & 2) != 0;
+        var flagsText = raycastFlag ? globalVisitFlag ? "raycast, global visit" : "raycast" : globalVisitFlag ? "global visit" : "none";
 
-//         if (ImGui.Button("Clear selection"))
-//             _drawExtra = (() => { }, 0);
-//         ImGui.SameLine();
-//         if (ImGui.Button("Export to obj"))
-//             ExportToObj(true, true);
-//         ImGui.SameLine();
-//         if (ImGui.Button($"Generate report"))
-//             Report();
+        var type = coll->GetColliderType();
+        var color = Colors.TextColor1;
+        if (type == ColliderType.Mesh)
+        {
+            var collMesh = (ColliderMesh*)coll;
+            if (_streamedMeshes.Contains((nint)coll))
+                color = Colors.TextColor4;
+            else if (collMesh->MeshIsSimple)
+                color = Colors.TextColor3;
+        }
+        using var n = _tree.Node2($"{type} {(nint)coll:X}, layers={coll->LayerMask:X8}, layout-id={coll->LayoutObjectId:X16}, refs={coll->NumRefs}, material={coll->ObjectMaterialValue:X}/{coll->ObjectMaterialMask:X}, flags={flagsText}###{(nint)coll:X}", false, color);
+        if (ImGui.BeginPopupContextItem())
+        {
+            ContextCollider(coll);
+            ImGui.EndPopup();
+        }
+        if (n.SelectedOrHovered)
+            VisualizeCollider(coll, _materialId, _materialMask);
+        if (!n.Opened)
+            return;
 
-//         //var screenPos = ImGui.GetMousePos();
-//         //var ray = CameraManager.Instance()->CurrentCamera->ScreenPointToRay(screenPos);
-//         //BGCollisionModule.Raycast(ray.Origin, ray.Direction, out var hitInfo);
-//         //ImGui.TextUnformatted($"S2W: {screenPos} -> {hitInfo.Point}");
-//         //for (int i = 0; i < 0x58; i += 8)
-//         //    ImGui.TextUnformatted($"{i:X} = {Utils.ReadField<nint>(&hitInfo, i):X16}");
+        _tree.LeafNode2($"Raw flags: {coll->VisibilityFlags:X}");
+        switch (type)
+        {
+            case ColliderType.Streamed:
+                {
+                    var cast = (ColliderStreamed*)coll;
+                    DrawResource(cast->Resource);
+                    var path = cast->PathBaseString;
+                    _tree.LeafNode2($"Path: {path}/{Encoding.UTF8.GetString(cast->PathBase[(path.Length + 1)..])}");
+                    _tree.LeafNode2($"Streamed: [{cast->StreamedMinX:f3}x{cast->StreamedMinZ:f3}] - [{cast->StreamedMaxX:f3}x{cast->StreamedMaxZ:f3}]");
+                    _tree.LeafNode2($"Loaded: {cast->Loaded} ({cast->NumMeshesLoading} meshes load in progress)");
+                    if (cast->Header != null && cast->Entries != null && cast->Elements != null)
+                    {
+                        var headerRaw = (float*)cast->Header;
+                        _tree.LeafNode2($"Header: meshes={cast->Header->NumMeshes}, u={headerRaw[1]:f3} {headerRaw[2]:f3} {headerRaw[3]:f3} {headerRaw[4]:f3} {headerRaw[5]:f3} {headerRaw[6]:f3} {headerRaw[7]:f3}");
+                        for (var i = 0; i < cast->Header->NumMeshes; ++i)
+                        {
+                            var entry = cast->Entries + i;
+                            var elem = cast->Elements + i;
+                            var entryRaw = (uint*)entry;
+                            using var mn = _tree.Node2($"Mesh {i}: file=tr{entry->MeshId:d4}.pcb, bounds={AABBStr(entry->Bounds)} == {(nint)elem->Mesh:X}###mesh_{i}", elem->Mesh == null);
+                            if (mn.SelectedOrHovered && elem->Mesh != null)
+                                VisualizeCollider(&elem->Mesh->Collider, _materialId, _materialMask);
+                            if (mn.Opened)
+                                DrawColliderMesh(elem->Mesh);
+                        }
+                    }
+                }
+                break;
+            case ColliderType.Mesh:
+                DrawColliderMesh((ColliderMesh*)coll);
+                break;
+            case ColliderType.Box:
+                {
+                    var cast = (ColliderBox*)coll;
+                    _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
+                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
+                    DrawMat4x3("World", ref cast->World);
+                    DrawMat4x3("InvWorld", ref cast->InvWorld);
+                }
+                break;
+            case ColliderType.Cylinder:
+                {
+                    var cast = (ColliderCylinder*)coll;
+                    _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
+                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
+                    _tree.LeafNode2($"Radius: {cast->Radius:f3}");
+                    DrawMat4x3("World", ref cast->World);
+                    DrawMat4x3("InvWorld", ref cast->InvWorld);
+                }
+                break;
+            case ColliderType.Sphere:
+                {
+                    var cast = (ColliderSphere*)coll;
+                    _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
+                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
+                    DrawMat4x3("World", ref cast->World);
+                    DrawMat4x3("InvWorld", ref cast->InvWorld);
+                }
+                break;
+            case ColliderType.Plane:
+            case ColliderType.PlaneTwoSided:
+                {
+                    var cast = (ColliderPlane*)coll;
+                    _tree.LeafNode2($"Normal: {cast->World.Row2 / cast->Scale.Z:f3}");
+                    _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
+                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
+                    DrawMat4x3("World", ref cast->World);
+                    DrawMat4x3("InvWorld", ref cast->InvWorld);
+                }
+                break;
+        }
+    }
 
-//         var module = CollisionModule.Instance;
-//         ImGui.TextUnformatted($"Module: {(nint)module:X}->{(nint)module->Manager:X} ({module->Manager->NumScenes} scenes, {module->LoadInProgressCounter} loads)");
-//         ImGui.TextUnformatted($"Streaming: {SphereStr(module->ForcedStreamingBounds)} / {SphereStr(module->Manager->StreamingBounds)}");
+    private void DrawColliderMesh(ColliderMesh* coll)
+    {
+        DrawResource(coll->Resource);
+        _tree.LeafNode2($"Translation: {Vec3Str(coll->Translation)}");
+        _tree.LeafNode2($"Rotation: {Vec3Str(coll->Rotation)}");
+        _tree.LeafNode2($"Scale: {Vec3Str(coll->Scale)}");
+        DrawMat4x3("World", ref coll->World);
+        DrawMat4x3("InvWorld", ref coll->InvWorld);
+        if (_tree.LeafNode2($"Bounding sphere: {SphereStr(coll->BoundingSphere)}").SelectedOrHovered)
+            VisualizeSphere(coll->BoundingSphere, Colors.CollisionColor1);
+        if (_tree.LeafNode2($"Bounding box: {AABBStr(coll->WorldBoundingBox)}").SelectedOrHovered)
+            VisualizeOBB(ref coll->WorldBoundingBox, ref Matrix4x3.Identity, Colors.CollisionColor1);
+        _tree.LeafNode2($"Total size: {coll->TotalPrimitives} prims, {coll->TotalChildren} nodes");
+        _tree.LeafNode2($"Mesh type: {(coll->MeshIsSimple ? "simple" : coll->MemoryData != null ? "PCB in-memory" : "PCB from file")} {(coll->Loaded ? "" : "(loading)")}");
+        if (coll->Mesh == null || coll->MeshIsSimple)
+            return;
 
-//         var scene = module->Manager->FirstScene;
-//         while (scene != null)
-//         {
-//             DrawScene(scene);
-//             scene = (CollisionSceneWrapper*)scene->Base.Next;
-//         }
+        var mesh = (MeshPCB*)coll->Mesh;
+        DrawColliderMeshPCBNode("Root", mesh->RootNode, ref coll->World, coll->Collider.ObjectMaterialValue & coll->Collider.ObjectMaterialMask, ~coll->Collider.ObjectMaterialMask);
+    }
 
-//         _drawExtra.Item1();
-//     }
+    private void DrawColliderMeshPCBNode(string tag, MeshPCB.FileNode* node, ref Matrix4x3 world, ulong objMatId, ulong objMatInvMask)
+    {
+        if (node == null)
+            return;
 
-//     private void UpdateSlaveShapes()
-//     {
-//         bool foundCtx = _drawExtra.Item2 == 0;
+        using var n = _tree.Node2(tag);
+        if (n.SelectedOrHovered)
+            VisualizeColliderMeshPCBNode(node, ref world, Colors.CollisionColor1, objMatId, objMatId, _materialId, _materialMask);
+        if (!n.Opened)
+            return;
 
-//         _slaveShapes.Clear();
-//         var scene = CollisionModule.Instance->Manager->FirstScene;
-//         while (scene != null)
-//         {
-//             var obj = scene->Scene->FirstObj;
-//             while (obj != null)
-//             {
-//                 foundCtx |= (nint)obj == _drawExtra.Item2;
-//                 if (obj->Vtbl->GetObjectType(obj) == CollisionObjectType.Multi)
-//                 {
-//                     var castObj = (CollisionObjectMulti*)obj;
-//                     if (castObj->Elements != null)
-//                     {
-//                         for (int i = 0; i < *castObj->PtrNumElements; ++i)
-//                             _slaveShapes.Add((nint)castObj->Elements[i].Shape);
-//                     }
-//                 }
-//                 obj = (CollisionObjectBase*)obj->Base.Next;
-//             }
-//             scene = (CollisionSceneWrapper*)scene->Base.Next;
-//         }
+        _tree.LeafNode2($"Header: {node->Header:X16}");
+        if (_tree.LeafNode2($"AABB: {AABBStr(node->LocalBounds)}").SelectedOrHovered)
+            VisualizeOBB(ref node->LocalBounds, ref world, Colors.CollisionColor1);
 
-//         if (!foundCtx)
-//         {
-//             Service.Log($"resetting selection for {_drawExtra.Item2:X}");
-//             _drawExtra = (() => { }, 0);
-//         }
-//     }
+        {
+            using var nv = _tree.Node2($"Vertices: {node->NumVertsRaw}+{node->NumVertsCompressed}", node->NumVertsRaw + node->NumVertsCompressed == 0);
+            if (nv.Opened)
+            {
+                for (int i = 0; i < node->NumVertsRaw + node->NumVertsCompressed; ++i)
+                {
+                    var v = node->Vertex(i);
+                    if (_tree.LeafNode2($"[{i}] ({(i < node->NumVertsRaw ? 'r' : 'c')}): {Vec3Str(v)}").SelectedOrHovered)
+                        VisualizeVertex(world.TransformCoordinate(v), Colors.CollisionColor2);
+                }
+            }
+        }
+        {
+            using var np = _tree.Node2($"Primitives: {node->NumPrims}", node->NumPrims == 0);
+            if (np.Opened)
+            {
+                int i = 0;
+                foreach (ref var prim in node->Primitives)
+                    if (_tree.LeafNode2($"[{i++}]: {prim.V1}x{prim.V2}x{prim.V3}, material={prim.Material:X8}").SelectedOrHovered)
+                        VisualizeTriangle(node, ref prim, ref world, Colors.CollisionColor2);
+            }
+        }
+        DrawColliderMeshPCBNode($"Child 1 (+{node->Child1Offset})", node->Child1, ref world, objMatId, objMatId);
+        DrawColliderMeshPCBNode($"Child 2 (+{node->Child2Offset})", node->Child2, ref world, objMatId, objMatId);
+    }
 
-//     private void DrawScene(CollisionSceneWrapper* wrapper)
-//     {
-//         foreach (var n in _tree.Node($"{(nint)wrapper:X}->{(nint)wrapper->Scene:X} ({wrapper->Scene->NumObjs} objects, {wrapper->Scene->NumLoading} loads)###{(nint)wrapper:X}", select: MakeSelect(() => VisualizeScene(wrapper->Scene), null)))
-//         {
-//             _tree.LeafNode($"Streaming bounds: [{SphereStr(wrapper->Scene->StreamingBounds)}");
+    private void DrawResource(Resource* res)
+    {
+        if (res != null)
+        {
+            _tree.LeafNode2($"Resource: {(nint)res:X} '{res->PathString}'");
+        }
+        else
+        {
+            _tree.LeafNode2($"Resource: null");
+        }
+    }
 
-//             foreach (var n2 in _tree.Node($"Objects"))
-//             {
-//                 var obj = wrapper->Scene->FirstObj;
-//                 while (obj != null)
-//                 {
-//                     DrawObject(obj);
-//                     obj = (CollisionObjectBase*)obj->Base.Next;
-//                 }
-//             }
+    public void VisualizeCollider(Collider* coll, BitMask filterId, BitMask filterMask)
+    {
+        switch (coll->GetColliderType())
+        {
+            case ColliderType.Streamed:
+                {
+                    var cast = (ColliderStreamed*)coll;
+                    if (cast->Header != null && cast->Elements != null)
+                    {
+                        for (int i = 0; i < cast->Header->NumMeshes; ++i)
+                        {
+                            var elem = cast->Elements + i;
+                            VisualizeColliderMesh(elem->Mesh, Colors.CollisionColor1, _materialId, _materialMask);
+                        }
+                    }
+                }
+                break;
+            case ColliderType.Mesh:
+                VisualizeColliderMesh((ColliderMesh*)coll, _streamedMeshes.Contains((nint)coll) ? Colors.CollisionColor1 : Colors.CollisionColor2, _materialId, _materialMask);
+                break;
+            case ColliderType.Box:
+                {
+                    var cast = (ColliderBox*)coll;
+                    Span<Vector3> corners = stackalloc Vector3[8];
+                    for (var i = 0; i < 8; i++)
+                        corners[i] = cast->World.TransformCoordinate(_boxCorners[i]);
 
-//             var tree = wrapper->Scene->Quadtree;
-//             foreach (var n2 in _tree.Node($"Quadtree {(nint)tree:X}: {tree->NumLevels} levels ([{tree->MinX}, {tree->MaxX}]x[{tree->MinZ}, {tree->MaxZ}], leaf {tree->LeafSizeX}x{tree->LeafSizeZ}), {tree->NumNodes} nodes", tree->NumNodes == 0))
-//             {
-//                 for (int i = 0; i < tree->NumNodes; ++i)
-//                 {
-//                     var node = tree->Nodes + i;
-//                     foreach (var n3 in _tree.Node($"{i}", node->Next == null, select: MakeSelect(() => VisualizeQuadtreeNode(node), null)))
-//                     {
-//                         var child = (CollisionObjectBase*)node->Next;
-//                         while (child != null && child != node)
-//                         {
-//                             DrawObject(child);
-//                             child = child->NextNodeObj;
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
+                    foreach (var (start, end) in _boxEdges)
+                        Camera.Instance?.DrawWorldLine(corners[start], corners[end], Colors.CollisionColor3);
+                }
+                break;
+            case ColliderType.Cylinder:
+                {
+                    var cast = (ColliderCylinder*)coll;
+                    VisualizeCylinder(ref cast->World, Colors.CollisionColor3);
+                }
+                break;
+            case ColliderType.Sphere:
+                {
+                    var cast = (ColliderSphere*)coll;
+                    Camera.Instance?.DrawWorldSphere(cast->Translation, cast->Scale.X, Colors.CollisionColor3);
+                }
+                break;
+            case ColliderType.Plane:
+            case ColliderType.PlaneTwoSided:
+                {
+                    var cast = (ColliderPlane*)coll;
+                    var a = cast->World.TransformCoordinate(new(-1, +1, 0));
+                    var b = cast->World.TransformCoordinate(new(-1, -1, 0));
+                    var c = cast->World.TransformCoordinate(new(+1, -1, 0));
+                    var d = cast->World.TransformCoordinate(new(+1, +1, 0));
+                    Camera.Instance?.DrawWorldLine(a, b, Colors.CollisionColor3);
+                    Camera.Instance?.DrawWorldLine(b, c, Colors.CollisionColor3);
+                    Camera.Instance?.DrawWorldLine(c, d, Colors.CollisionColor3);
+                    Camera.Instance?.DrawWorldLine(d, a, Colors.CollisionColor3);
+                }
+                break;
+        }
+    }
 
-//     private void DrawObject(CollisionObjectBase* obj)
-//     {
-//         var type = obj->Vtbl->GetObjectType(obj);
-//         foreach (var n3 in _tree.Node($"{type} {(nint)obj:X}, layers={obj->LayerMask:X8}, refs={obj->NumRefs}", color: _slaveShapes.Contains((nint)obj) ? Colors.Safe : Colors.TextColor1, select: MakeSelect(() => VisualizeObject(obj), obj)))
-//         {
-//             switch (type)
-//             {
-//                 case CollisionObjectType.Multi:
-//                     {
-//                         var castObj = (CollisionObjectMulti*)obj;
-//                         var path = MemoryHelper.ReadStringNullTerminated((nint)castObj->PathBase);
-//                         _tree.LeafNode($"Path: {path}");
-//                         _tree.LeafNode($"Filename: {MemoryHelper.ReadStringNullTerminated((nint)castObj->PathBase + path.Length + 1)}");
-//                         _tree.LeafNode($"Streamed: [{castObj->StreamedMinX:f3}x{castObj->StreamedMinZ:f3}] - [{castObj->StreamedMaxX:f3}x{castObj->StreamedMaxZ:f3}]");
-//                         if (castObj->Elements != null)
-//                         {
-//                             foreach (var n4 in _tree.Node($"Elements: {*castObj->PtrNumElements}"))
-//                             {
-//                                 for (int i = 0; i < *castObj->PtrNumElements; ++i)
-//                                 {
-//                                     var elem = castObj->Elements + i;
-//                                     var elemBase = &elem->Shape->Base;
-//                                     foreach (var n5 in _tree.Node($"#{i}: {elem->SubFile:d4} [{elem->MinX:f3}x{elem->MinZ:f3}] - [{elem->MaxX:f3}x{elem->MaxZ:f3}] == {(nint)elem->Shape:X}", elem->Shape == null, select: MakeSelect(() => VisualizeObject(elemBase), elemBase)))
-//                                         if (elem->Shape != null)
-//                                             DrawObjectShape(elem->Shape);
-//                                 }
-//                             }
-//                         }
-//                     }
-//                     break;
-//                 case CollisionObjectType.Shape:
-//                     DrawObjectShape((CollisionObjectShape*)obj);
-//                     break;
-//                 case CollisionObjectType.Box:
-//                     {
-//                         var castObj = (CollisionObjectBox*)obj;
-//                         _tree.LeafNode($"Translation: {Utils.Vec3String(castObj->Translation)}");
-//                         _tree.LeafNode($"Rotation: {Utils.Vec3String(castObj->Rotation)}");
-//                         _tree.LeafNode($"Scale: {Utils.Vec3String(castObj->Scale)}");
-//                         DrawMat4x3("World", ref castObj->World);
-//                         DrawMat4x3("InvWorld", ref castObj->InvWorld);
-//                     }
-//                     break;
-//                 case CollisionObjectType.Cylinder:
-//                     {
-//                         var castObj = (CollisionObjectCylinder*)obj;
-//                         _tree.LeafNode($"Translation: {Utils.Vec3String(castObj->Translation)}");
-//                         _tree.LeafNode($"Rotation: {Utils.Vec3String(castObj->Rotation)}");
-//                         _tree.LeafNode($"Scale: {Utils.Vec3String(castObj->Scale)}");
-//                         _tree.LeafNode($"Radius: {castObj->Radius:f3}");
-//                         DrawMat4x3("World", ref castObj->World);
-//                         DrawMat4x3("InvWorld", ref castObj->InvWorld);
-//                     }
-//                     break;
-//                 case CollisionObjectType.Sphere:
-//                     {
-//                         var castObj = (CollisionObjectSphere*)obj;
-//                         _tree.LeafNode($"Translation: {Utils.Vec3String(castObj->Translation)}");
-//                         _tree.LeafNode($"Rotation: {Utils.Vec3String(castObj->Rotation)}");
-//                         _tree.LeafNode($"Scale: {Utils.Vec3String(castObj->Scale)}");
-//                         DrawMat4x3("World", ref castObj->World);
-//                         DrawMat4x3("InvWorld", ref castObj->InvWorld);
-//                     }
-//                     break;
-//                 case CollisionObjectType.Plane:
-//                 case CollisionObjectType.PlaneTwoSided:
-//                     {
-//                         var castObj = (CollisionObjectPlane*)obj;
-//                         _tree.LeafNode($"Translation: {Utils.Vec3String(castObj->Translation)}");
-//                         _tree.LeafNode($"Rotation: {Utils.Vec3String(castObj->Rotation)}");
-//                         _tree.LeafNode($"Scale: {Utils.Vec3String(castObj->Scale)}");
-//                         DrawMat4x3("World", ref castObj->World);
-//                         DrawMat4x3("InvWorld", ref castObj->InvWorld);
-//                     }
-//                     break;
-//             }
-//         }
-//     }
+    private void VisualizeColliderMesh(ColliderMesh* coll, uint color, BitMask filterId, BitMask filterMask)
+    {
+        if (coll != null && !coll->MeshIsSimple && coll->Mesh != null)
+        {
+            var mesh = (MeshPCB*)coll->Mesh;
+            VisualizeColliderMeshPCBNode(mesh->RootNode, ref coll->World, color, coll->Collider.ObjectMaterialValue & coll->Collider.ObjectMaterialMask, ~coll->Collider.ObjectMaterialMask, filterId, filterMask);
+        }
+    }
 
-//     private void DrawObjectShape(CollisionObjectShape* obj)
-//     {
-//         _tree.LeafNode($"Translation: {Utils.Vec3String(obj->Translation)}");
-//         _tree.LeafNode($"Rotation: {Utils.Vec3String(obj->Rotation)}");
-//         _tree.LeafNode($"Scale: {Utils.Vec3String(obj->Scale)}");
-//         DrawMat4x3("World", ref obj->World);
-//         DrawMat4x3("InvWorld", ref obj->InvWorld);
-//         _tree.LeafNode($"Bounding sphere: [{SphereStr(obj->BoundingSphere)}", select: MakeSelect(() => VisualizeSphere(obj->BoundingSphere), &obj->Base));
-//         _tree.LeafNode($"Bounding box: {Utils.Vec3String(obj->BoundingBoxMin)} - {Utils.Vec3String(obj->BoundingBoxMax)}", select: MakeSelect(() => VisualizeAABB(obj->BoundingBoxMin, obj->BoundingBoxMax), &obj->Base));
+    private void VisualizeColliderMeshPCBNode(MeshPCB.FileNode* node, ref Matrix4x3 world, uint color, ulong objMatId, ulong objMatInvMask, BitMask filterId, BitMask filterMask)
+    {
+        if (node == null)
+            return;
 
-//         bool shapeHasData = obj->Shape != null && (nint)obj->Shape->Vtbl == _typeinfoCollisionShapePCB && obj->Shape->Data != null;
-//         var shapeType = obj->Shape == null ? "null" : (nint)obj->Shape->Vtbl == _typeinfoCollisionShapePCB ? "PCB" : $"unknown +{(nint)obj->Shape->Vtbl - Service.SigScanner.Module.BaseAddress:X}";
-//         foreach (var n in _tree.Node($"Shape: {(nint)obj->Shape:X} {shapeType}", !shapeHasData, select: MakeSelect(shapeHasData ? () => VisualizeShape(obj->Shape->Data, obj) : () => { }, &obj->Base)))
-//         {
-//             if (shapeHasData)
-//                 DrawPCBShape(obj->Shape->Data, obj);
-//         }
-//     }
+        if (node->NumVertsRaw + node->NumVertsCompressed != 0)
+        {
+            for (var i = 0; i < node->NumPrims; ++i)
+            {
+                var prim = node->Primitives[i];
 
-//     private void DrawPCBShape(CollisionShapePCBData* data, CollisionObjectShape* obj)
-//     {
-//         if (data == null)
-//             return;
-//         _tree.LeafNode($"Header: {data->Header:X16}");
-//         _tree.LeafNode($"AABB: {Utils.Vec3String(data->AABBMin)} - {Utils.Vec3String(data->AABBMax)}", select: MakeSelect(() => VisualizeOBB(data->AABBMin, data->AABBMax, obj), &obj->Base));
-//         foreach (var n in _tree.Node($"Vertices: {data->NumVertsRaw}+{data->NumVertsCompressed}", data->NumVertsRaw + data->NumVertsCompressed == 0))
-//         {
-//             var pRaw = (float*)(data + 1);
-//             for (int i = 0; i < data->NumVertsRaw; ++i)
-//             {
-//                 var v = new Vector3(pRaw[0], pRaw[1], pRaw[2]);
-//                 _tree.LeafNode($"[{i}] (r): {Utils.Vec3String(v)}", select: MakeSelect(() => VisualizeVertex(v, obj), &obj->Base));
-//                 pRaw += 3;
-//             }
-//             var pCompressed = (ushort*)pRaw;
-//             var quantScale = (data->AABBMax - data->AABBMin) / 65535.0f;
-//             for (int i = 0; i < data->NumVertsCompressed; ++i)
-//             {
-//                 var v = data->AABBMin + quantScale * new Vector3(pCompressed[0], pCompressed[1], pCompressed[2]);
-//                 _tree.LeafNode($"[{i + data->NumVertsRaw}] (c): {Utils.Vec3String(v)}", select: MakeSelect(() => VisualizeVertex(v, obj), &obj->Base));
-//                 pCompressed += 3;
-//             }
-//         }
-//         foreach (var n in _tree.Node($"Primitives: {data->NumPrims}", data->NumPrims == 0))
-//         {
-//             var pRaw = (float*)(data + 1);
-//             var pCompr = (ushort*)(pRaw + 3 * data->NumVertsRaw);
-//             var pPrims = (CollisionShapePrimitive*)(pCompr + 3 * data->NumVertsCompressed);
-//             for (int i = 0; i < data->NumPrims; ++i)
-//             {
-//                 var idx = i;
-//                 _tree.LeafNode($"[{i}]: {pPrims->V1}x{pPrims->V2}x{pPrims->V3}, {pPrims->Flags:X8}, {pPrims->Unk8:X8}", select: MakeSelect(() => VisualizePrimitive(data, idx, obj), &obj->Base));
-//                 ++pPrims;
-//             }
-//         }
-//         foreach (var n in _tree.Node($"Child 1 (+{data->Child1Offset})", data->Child1Offset == 0, select: MakeSelect(data->Child1Offset != 0 ? () => VisualizeShape((CollisionShapePCBData*)((byte*)data + data->Child1Offset), obj) : () => { }, &obj->Base)))
-//         {
-//             if (data->Child1Offset != 0)
-//                 DrawPCBShape((CollisionShapePCBData*)((byte*)data + data->Child1Offset), obj);
-//         }
-//         foreach (var n in _tree.Node($"Child 2 (+{data->Child2Offset})", data->Child2Offset == 0, select: MakeSelect(data->Child2Offset != 0 ? () => VisualizeShape((CollisionShapePCBData*)((byte*)data + data->Child2Offset), obj) : () => { }, &obj->Base)))
-//         {
-//             if (data->Child2Offset != 0)
-//                 DrawPCBShape((CollisionShapePCBData*)((byte*)data + data->Child2Offset), obj);
-//         }
-//     }
+                var v1 = world.TransformCoordinate(node->Vertex(prim.V1));
+                var v2 = world.TransformCoordinate(node->Vertex(prim.V2));
+                var v3 = world.TransformCoordinate(node->Vertex(prim.V3));
 
-//     private void DrawMat4x3(string tag, ref Mat4x3 mat)
-//     {
-//         _tree.LeafNode($"{tag} R0: {Utils.Vec3String(mat.Row0)}");
-//         _tree.LeafNode($"{tag} R1: {Utils.Vec3String(mat.Row1)}");
-//         _tree.LeafNode($"{tag} R2: {Utils.Vec3String(mat.Row2)}");
-//         _tree.LeafNode($"{tag} R3: {Utils.Vec3String(mat.Row3)}");
-//     }
+                Camera.Instance?.DrawWorldLine(v1, v2, color);
+                Camera.Instance?.DrawWorldLine(v2, v3, color);
+                Camera.Instance?.DrawWorldLine(v3, v1, color);
+            }
+        }
 
-//     private Action MakeSelect(Action sel, CollisionObjectBase* ctx) => () =>
-//     {
-//         Service.Log($"select: {(nint)ctx:X}");
-//         _drawExtra = (sel, (nint)ctx);
-//     };
+        VisualizeColliderMeshPCBNode(node->Child1, ref world, color, objMatId, objMatInvMask, filterId, filterMask);
+        VisualizeColliderMeshPCBNode(node->Child2, ref world, color, objMatId, objMatInvMask, filterId, filterMask);
+    }
 
-//     private void VisualizeSphere(Vector4 sphere) => Camera.Instance?.DrawWorldSphere(new(sphere.X, sphere.Y, sphere.Z), sphere.W, Colors.Safe);
-//     private void VisualizeAABB(Vector3 min, Vector3 max) => Camera.Instance?.DrawWorldOBB(min, max, SharpDX.Matrix.Identity, Colors.Safe);
-//     private void VisualizeOBB(Vector3 min, Vector3 max, CollisionObjectShape* obj) => Camera.Instance?.DrawWorldOBB(min, max, obj->World.M, Colors.Safe);
-//     private void VisualizeVertex(Vector3 v, CollisionObjectShape* obj) => Camera.Instance?.DrawWorldSphere(SharpDX.Vector3.TransformCoordinate(new(v.X, v.Y, v.Z), obj->World.M).ToSystem(), 0.1f, Colors.Danger);
+    private void VisualizeOBB(ref AABB localBB, ref Matrix4x3 world, uint color)
+    {
+        var aaa = world.TransformCoordinate(new(localBB.Min.X, localBB.Min.Y, localBB.Min.Z));
+        var aab = world.TransformCoordinate(new(localBB.Min.X, localBB.Min.Y, localBB.Max.Z));
+        var aba = world.TransformCoordinate(new(localBB.Min.X, localBB.Max.Y, localBB.Min.Z));
+        var abb = world.TransformCoordinate(new(localBB.Min.X, localBB.Max.Y, localBB.Max.Z));
+        var baa = world.TransformCoordinate(new(localBB.Max.X, localBB.Min.Y, localBB.Min.Z));
+        var bab = world.TransformCoordinate(new(localBB.Max.X, localBB.Min.Y, localBB.Max.Z));
+        var bba = world.TransformCoordinate(new(localBB.Max.X, localBB.Max.Y, localBB.Min.Z));
+        var bbb = world.TransformCoordinate(new(localBB.Max.X, localBB.Max.Y, localBB.Max.Z));
+        Camera.Instance?.DrawWorldLine(aaa, aab, color);
+        Camera.Instance?.DrawWorldLine(aab, bab, color);
+        Camera.Instance?.DrawWorldLine(bab, baa, color);
+        Camera.Instance?.DrawWorldLine(baa, aaa, color);
+        Camera.Instance?.DrawWorldLine(aba, abb, color);
+        Camera.Instance?.DrawWorldLine(abb, bbb, color);
+        Camera.Instance?.DrawWorldLine(bbb, bba, color);
+        Camera.Instance?.DrawWorldLine(bba, aba, color);
+        Camera.Instance?.DrawWorldLine(aaa, aba, color);
+        Camera.Instance?.DrawWorldLine(aab, abb, color);
+        Camera.Instance?.DrawWorldLine(baa, bba, color);
+        Camera.Instance?.DrawWorldLine(bab, bbb, color);
+    }
 
-//     private void VisualizePrimitive(CollisionShapePCBData* data, int iPrim, CollisionObjectShape* obj, uint color = 0)
-//     {
-//         var colors = color == 0 ? Colors.Danger : color;
-//         var pRaw = (float*)(data + 1);
-//         var pCompr = (ushort*)(pRaw + 3 * data->NumVertsRaw);
-//         var pPrim = (CollisionShapePrimitive*)(pCompr + 3 * data->NumVertsCompressed);
-//         pPrim += iPrim;
-//         var v1 = LocalVertex(data, pPrim->V1);
-//         var v2 = LocalVertex(data, pPrim->V2);
-//         var v3 = LocalVertex(data, pPrim->V3);
-//         var w = obj->World.M;
-//         var w1 = SharpDX.Vector3.TransformCoordinate(new(v1.X, v1.Y, v1.Z), w).ToSystem();
-//         var w2 = SharpDX.Vector3.TransformCoordinate(new(v2.X, v2.Y, v2.Z), w).ToSystem();
-//         var w3 = SharpDX.Vector3.TransformCoordinate(new(v3.X, v3.Y, v3.Z), w).ToSystem();
-//         Camera.Instance?.DrawWorldLine(w1, w2, colors);
-//         Camera.Instance?.DrawWorldLine(w2, w3, colors);
-//         Camera.Instance?.DrawWorldLine(w3, w1, colors);
-//     }
+    private void VisualizeCylinder(ref Matrix4x3 world, uint color)
+    {
+        int numSegments = CurveApprox.CalculateCircleSegments(world.Row0.Length(), 360.Degrees(), 0.1f);
+        var prev1 = world.TransformCoordinate(new(0, +1, 1));
+        var prev2 = world.TransformCoordinate(new(0, -1, 1));
+        for (int i = 1; i <= numSegments; ++i)
+        {
+            var dir = (i * 360.0f / numSegments).Degrees().ToDirection().ToVec2();
+            var curr1 = world.TransformCoordinate(new(dir.X, +1, dir.Y));
+            var curr2 = world.TransformCoordinate(new(dir.X, -1, dir.Y));
+            Camera.Instance?.DrawWorldLine(curr1, prev1, color);
+            Camera.Instance?.DrawWorldLine(curr2, prev2, color);
+            Camera.Instance?.DrawWorldLine(curr1, curr2, color);
+            prev1 = curr1;
+            prev2 = curr2;
+        }
+    }
 
-//     private void VisualizeShape(CollisionShapePCBData* data, CollisionObjectShape* obj, uint color = 0)
-//     {
-//         var colors = color == 0 ? Colors.Danger : color;
-//         for (int i = 0; i < data->NumPrims; ++i)
-//             VisualizePrimitive(data, i, obj, color);
-//         if (data->Child1Offset != 0)
-//             VisualizeShape((CollisionShapePCBData*)((byte*)data + data->Child1Offset), obj, colors);
-//         if (data->Child2Offset != 0)
-//             VisualizeShape((CollisionShapePCBData*)((byte*)data + data->Child2Offset), obj, colors);
-//     }
+    private void VisualizeSphere(Vector4 sphere, uint color) => Camera.Instance?.DrawWorldSphere(new(sphere.X, sphere.Y, sphere.Z), sphere.W, color);
 
-//     private void VisualizeObject(CollisionObjectBase* obj)
-//     {
-//         switch (obj->Vtbl->GetObjectType(obj))
-//         {
-//             case CollisionObjectType.Multi:
-//                 {
-//                     var castObj = (CollisionObjectMulti*)obj;
-//                     if (castObj->Elements != null)
-//                     {
-//                         for (int i = 0; i < *castObj->PtrNumElements; ++i)
-//                         {
-//                             var elem = castObj->Elements + i;
-//                             if (elem->Shape != null && elem->Shape->Shape != null && (nint)elem->Shape->Shape->Vtbl == _typeinfoCollisionShapePCB && elem->Shape->Shape->Data != null)
-//                                 VisualizeShape(elem->Shape->Shape->Data, elem->Shape, Colors.Safe);
-//                         }
-//                     }
-//                 }
-//                 break;
-//             case CollisionObjectType.Shape:
-//                 {
-//                     var castObj = (CollisionObjectShape*)obj;
-//                     if (castObj->Shape != null && (nint)castObj->Shape->Vtbl == _typeinfoCollisionShapePCB && castObj->Shape->Data != null)
-//                         VisualizeShape(castObj->Shape->Data, castObj, _slaveShapes.Contains((nint)obj) ? Colors.Safe : Colors.Danger);
-//                 }
-//                 break;
-//             case CollisionObjectType.Box:
-//                 {
-//                     var castObj = (CollisionObjectBox*)obj;
-//                     Camera.Instance?.DrawWorldOBB(new(-1), new(+1), castObj->World.M, Colors.Enemy);
-//                 }
-//                 break;
-//             case CollisionObjectType.Cylinder:
-//                 {
-//                     var castObj = (CollisionObjectCylinder*)obj;
-//                     Camera.Instance?.DrawWorldUnitCylinder(castObj->World.M, Colors.Enemy);
-//                 }
-//                 break;
-//             case CollisionObjectType.Sphere:
-//                 {
-//                     var castObj = (CollisionObjectSphere*)obj;
-//                     Camera.Instance?.DrawWorldSphere(castObj->Translation, castObj->Scale.X, Colors.Enemy);
-//                 }
-//                 break;
-//             case CollisionObjectType.Plane:
-//             case CollisionObjectType.PlaneTwoSided:
-//                 {
-//                     var castObj = (CollisionObjectPlane*)obj;
-//                     var m = castObj->World.M;
-//                     var a = SharpDX.Vector3.TransformCoordinate(new(-1, +1, 0), m).ToSystem();
-//                     var b = SharpDX.Vector3.TransformCoordinate(new(-1, -1, 0), m).ToSystem();
-//                     var c = SharpDX.Vector3.TransformCoordinate(new(+1, -1, 0), m).ToSystem();
-//                     var d = SharpDX.Vector3.TransformCoordinate(new(+1, +1, 0), m).ToSystem();
-//                     Camera.Instance?.DrawWorldLine(a, b, Colors.Enemy);
-//                     Camera.Instance?.DrawWorldLine(b, c, Colors.Enemy);
-//                     Camera.Instance?.DrawWorldLine(c, d, Colors.Enemy);
-//                     Camera.Instance?.DrawWorldLine(d, a, Colors.Enemy);
-//                 }
-//                 break;
-//         }
-//     }
+    private void VisualizeVertex(Vector3 worldPos, uint color) => Camera.Instance?.DrawWorldSphere(worldPos, 0.1f, color);
 
-//     private void VisualizeQuadtreeNode(CollisionNode* node)
-//     {
-//         var child = (CollisionObjectBase*)node->Next;
-//         while (child != null && child != node)
-//         {
-//             VisualizeObject(child);
-//             child = child->NextNodeObj;
-//         }
-//     }
+    private void VisualizeTriangle(MeshPCB.FileNode* node, ref Mesh.Primitive prim, ref Matrix4x3 world, uint color)
+    {
+        var v1 = world.TransformCoordinate(node->Vertex(prim.V1));
+        var v2 = world.TransformCoordinate(node->Vertex(prim.V2));
+        var v3 = world.TransformCoordinate(node->Vertex(prim.V3));
+        Camera.Instance?.DrawWorldLine(v1, v2, color);
+        Camera.Instance?.DrawWorldLine(v2, v3, color);
+        Camera.Instance?.DrawWorldLine(v3, v1, color);
+    }
 
-//     private void VisualizeScene(CollisionScene* scene)
-//     {
-//         var obj = scene->FirstObj;
-//         while (obj != null)
-//         {
-//             VisualizeObject(obj);
-//             obj = (CollisionObjectBase*)obj->Base.Next;
-//         }
-//     }
+    private void GatherMeshNodeMaterials(MeshPCB.FileNode* node, BitMask invMask)
+    {
+        if (node == null)
+            return;
+        foreach (ref var prim in node->Primitives)
+            _availableMaterials |= invMask & new BitMask(prim.Material);
+        GatherMeshNodeMaterials(node->Child1, invMask);
+        GatherMeshNodeMaterials(node->Child2, invMask);
+    }
 
-//     private Vector3 LocalVertex(CollisionShapePCBData* data, int index)
-//     {
-//         var pRaw = (float*)(data + 1);
-//         if (index < data->NumVertsRaw)
-//         {
-//             pRaw += 3 * index;
-//             return new(pRaw[0], pRaw[1], pRaw[2]);
-//         }
-//         var pCompr = (ushort*)(pRaw + 3 * data->NumVertsRaw);
-//         pCompr += 3 * (index - data->NumVertsRaw);
-//         var quantScale = (data->AABBMax - data->AABBMin) / 65535.0f;
-//         return data->AABBMin + quantScale * new Vector3(pCompr[0], pCompr[1], pCompr[2]);
-//     }
+    private string SphereStr(Vector4 s) => $"[{s.X:f3}, {s.Y:f3}, {s.Z:f3}] R{s.W:f3}";
+    private string Vec3Str(Vector3 v) => $"[{v.X:f3}, {v.Y:f3}, {v.Z:f3}]";
+    private string AABBStr(AABB bb) => $"{Vec3Str(bb.Min)} - {Vec3Str(bb.Max)}";
 
-//     private void ExportToObj(bool streamed, bool nonStreamedShapes)
-//     {
-//         var res = new StringBuilder();
-//         var firstVertex = 1;
+    private void DrawMat4x3(string tag, ref Matrix4x3 mat)
+    {
+        _tree.LeafNode2($"{tag} R0: {Vec3Str(mat.Row0)}");
+        _tree.LeafNode2($"{tag} R1: {Vec3Str(mat.Row1)}");
+        _tree.LeafNode2($"{tag} R2: {Vec3Str(mat.Row2)}");
+        _tree.LeafNode2($"{tag} R3: {Vec3Str(mat.Row3)}");
+    }
 
-//         var scene = CollisionModule.Instance->Manager->FirstScene;
-//         var identity = SharpDX.Matrix.Identity;
-//         while (scene != null)
-//         {
-//             var obj = scene->Scene->FirstObj;
-//             while (obj != null)
-//             {
-//                 switch (obj->Vtbl->GetObjectType(obj))
-//                 {
-//                     case CollisionObjectType.Multi:
-//                         if (streamed)
-//                         {
-//                             var castObj = (CollisionObjectMulti*)obj;
-//                             if (castObj->Elements != null)
-//                             {
-//                                 var basePath = MemoryHelper.ReadStringNullTerminated((nint)castObj->PathBase);
-//                                 for (int i = 0; i < *castObj->PtrNumElements; ++i)
-//                                 {
-//                                     var f = Service.DataManager.GetFile($"{basePath}/tr{castObj->Elements[i].SubFile:d4}.pcb");
-//                                     if (f != null)
-//                                     {
-//                                         // format: dword 0, dword version (1/4), dword totalChildNodes, dword totalPrims, pcbdata
-//                                         fixed (byte* data = &f.Data[0])
-//                                         {
-//                                             var version = *(int*)(data + 4);
-//                                             if (version is 1 or 4)
-//                                             {
-//                                                 ExportShape(res, ref identity, (CollisionShapePCBData*)(data + 16), ref firstVertex);
-//                                             }
-//                                         }
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                         break;
-//                     case CollisionObjectType.Shape:
-//                         if (nonStreamedShapes && !_slaveShapes.Contains((nint)obj))
-//                         {
-//                             var castObj = (CollisionObjectShape*)obj;
-//                             if (castObj->Shape != null && (nint)castObj->Shape->Vtbl == _typeinfoCollisionShapePCB && castObj->Shape->Data != null)
-//                             {
-//                                 var m = castObj->World.M;
-//                                 ExportShape(res, ref m, castObj->Shape->Data, ref firstVertex);
-//                             }
-//                         }
-//                         break;
-//                 }
-//                 obj = (CollisionObjectBase*)obj->Base.Next;
-//             }
-//             scene = (CollisionSceneWrapper*)scene->Base.Next;
-//         }
-//         ImGui.SetClipboardText(res.ToString());
-//     }
+    private void ContextCollider(Collider* coll)
+    {
+        var activeLayers = new BitMask(coll->LayerMask);
+        foreach (var i in _availableLayers.SetBits())
+        {
+            var active = activeLayers[i];
+            if (ImGui.Checkbox($"Layer {i}", ref active))
+            {
+                activeLayers[i] = active;
+                coll->LayerMask = activeLayers.Raw;
+            }
+        }
 
-//     private void ExportShape(StringBuilder res, ref SharpDX.Matrix world, CollisionShapePCBData* data, ref int firstVertex)
-//     {
-//         var pRaw = (float*)(data + 1);
-//         for (int i = 0; i < data->NumVertsRaw; ++i)
-//         {
-//             var v = new Vector3(pRaw[0], pRaw[1], pRaw[2]);
-//             var w = SharpDX.Vector3.TransformCoordinate(new(v.X, v.Y, v.Z), world);
-//             res.AppendLine($"v {w.X} {w.Y} {w.Z}");
-//             pRaw += 3;
-//         }
-//         var pCompressed = (ushort*)pRaw;
-//         var quantScale = (data->AABBMax - data->AABBMin) / 65535.0f;
-//         for (int i = 0; i < data->NumVertsCompressed; ++i)
-//         {
-//             var v = data->AABBMin + quantScale * new Vector3(pCompressed[0], pCompressed[1], pCompressed[2]);
-//             var w = SharpDX.Vector3.TransformCoordinate(new(v.X, v.Y, v.Z), world);
-//             res.AppendLine($"v {w.X} {w.Y} {w.Z}");
-//             pCompressed += 3;
-//         }
-//         var pPrims = (CollisionShapePrimitive*)pCompressed;
-//         for (int i = 0; i < data->NumPrims; ++i)
-//         {
-//             res.AppendLine($"f {pPrims->V1 + firstVertex} {pPrims->V2 + firstVertex} {pPrims->V3 + firstVertex}");
-//             ++pPrims;
-//         }
-//         firstVertex += data->NumVertsRaw + data->NumVertsCompressed;
+        var raycast = (coll->VisibilityFlags & 1) != 0;
+        if (ImGui.Checkbox("Flag: raycast", ref raycast))
+            coll->VisibilityFlags ^= 1;
 
-//         if (data->Child1Offset != 0)
-//             ExportShape(res, ref world, (CollisionShapePCBData*)((byte*)data + data->Child1Offset), ref firstVertex);
-//         if (data->Child2Offset != 0)
-//             ExportShape(res, ref world, (CollisionShapePCBData*)((byte*)data + data->Child2Offset), ref firstVertex);
-//     }
-
-//     private void Report()
-//     {
-//         Dictionary<nint, int> shapeVtbls = [];
-//         Dictionary<int, int> multiVersions = [];
-
-//         var scene = CollisionModule.Instance->Manager->FirstScene;
-//         while (scene != null)
-//         {
-//             var obj = scene->Scene->FirstObj;
-//             while (obj != null)
-//             {
-//                 switch (obj->Vtbl->GetObjectType(obj))
-//                 {
-//                     case CollisionObjectType.Multi:
-//                         {
-//                             var castObj = (CollisionObjectMulti*)obj;
-//                             if (castObj->Elements != null)
-//                             {
-//                                 var basePath = MemoryHelper.ReadStringNullTerminated((nint)castObj->PathBase);
-//                                 for (int i = 0; i < *castObj->PtrNumElements; ++i)
-//                                 {
-//                                     var f = Service.DataManager.GetFile($"{basePath}/tr{castObj->Elements[i].SubFile:d4}.pcb");
-//                                     if (f != null)
-//                                     {
-//                                         // format: dword 0, dword version (1/4), dword totalChildNodes, dword totalPrims, pcbdata
-//                                         fixed (byte* data = &f.Data[0])
-//                                         {
-//                                             var version = *(int*)(data + 4);
-//                                             if (!multiVersions.ContainsKey(version))
-//                                                 multiVersions[version] = 0;
-//                                             ++multiVersions[version];
-//                                         }
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                         break;
-//                     case CollisionObjectType.Shape:
-//                         {
-//                             var castObj = (CollisionObjectShape*)obj;
-//                             if (castObj->Shape != null)
-//                             {
-//                                 var vt = (nint)castObj->Shape->Vtbl;
-//                                 if (!shapeVtbls.ContainsKey(vt))
-//                                     shapeVtbls[vt] = 0;
-//                                 ++shapeVtbls[vt];
-//                             }
-//                         }
-//                         break;
-//                 }
-//                 obj = (CollisionObjectBase*)obj->Base.Next;
-//             }
-//             scene = (CollisionSceneWrapper*)scene->Base.Next;
-//         }
-
-//         var res = new StringBuilder();
-//         res.AppendLine("multi versions:");
-//         foreach (var v in multiVersions)
-//             res.AppendLine($"v{v.Key} == {v.Value}");
-//         res.AppendLine("shape vtbls:");
-//         foreach (var vt in shapeVtbls)
-//             res.AppendLine($"{vt.Key - Service.SigScanner.Module.BaseAddress:X} == {vt.Value}");
-//         ImGui.SetClipboardText(res.ToString());
-//     }
-
-//     private string SphereStr(Vector4 s) => $"[{s.X:f3}, {s.Y:f3}, {s.Z:f3}] R{s.W:f3}";
-// }
+        var globalVisit = (coll->VisibilityFlags & 2) != 0;
+        if (ImGui.Checkbox("Flag: global visit", ref globalVisit))
+            coll->VisibilityFlags ^= 2;
+    }
+}

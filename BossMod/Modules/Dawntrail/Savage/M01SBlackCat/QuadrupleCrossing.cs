@@ -14,7 +14,7 @@ class QuadrupleCrossingProtean(BossModule module) : Components.GenericBaitAway(m
     {
         CurrentBaits.Clear();
         if (Origin != null && _activation != default)
-            foreach (var p in Raid.WithoutSlot().SortedByRange(Origin.Position).Take(4))
+            foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(Origin.Position).Take(4))
                 CurrentBaits.Add(new(Origin, p, _shape, _activation));
     }
 
@@ -96,19 +96,19 @@ class QuadrupleCrossingProtean(BossModule module) : Components.GenericBaitAway(m
 
 class QuadrupleCrossingAOE(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(8);
     private bool ready;
     private static readonly AOEShapeCone _shape = new(100, 22.5f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (ready)
+        if (!ready)
+            yield break;
+        var count = _aoes.Count;
+        for (var i = 0; i < count; ++i)
         {
-            var aoeCount = Math.Clamp(_aoes.Count, 0, 4);
-            for (var i = aoeCount; i < _aoes.Count; ++i)
-                yield return _aoes[i];
-            for (var i = 0; i < aoeCount; ++i)
-                yield return _aoes[i] with { Color = Colors.Danger };
+            var aoe = _aoes[i];
+            yield return i < 4 ? count > 4 ? aoe with { Color = Colors.Danger } : aoe : aoe with { Risky = false };
         }
     }
 
@@ -125,7 +125,7 @@ class QuadrupleCrossingAOE(BossModule module) : Components.GenericAOEs(module)
             case AID.LeapingQuadrupleCrossingBossAOE:
             case AID.LeapingQuadrupleCrossingShadeAOE:
                 ++NumCasts;
-                if (_aoes.Count > 0)
+                if (_aoes.Count != 0)
                     _aoes.RemoveAt(0);
                 break;
         }

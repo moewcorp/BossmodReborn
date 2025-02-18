@@ -62,7 +62,7 @@ class MorbidRetreat(BossModule module) : Components.ActionDrivenForcedMarch(modu
 }
 
 class SomberMelody(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SomberMelody));
-class VoidWaterIII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.VoidWaterIII), 8);
+class VoidWaterIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidWaterIII), 8);
 class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 7, m => m.Enemies(OID.Voidzone).Where(z => z.EventState != 7));
 
 class D013LoreleiStates : StateMachineBuilder
@@ -70,7 +70,6 @@ class D013LoreleiStates : StateMachineBuilder
     public D013LoreleiStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<VirginTearsArenaChange>()
             .ActivateOnEnter<Voidzone>()
             .ActivateOnEnter<MorbidAdvance>()

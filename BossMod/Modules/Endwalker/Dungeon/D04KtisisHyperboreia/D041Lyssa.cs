@@ -3,8 +3,8 @@
 public enum OID : uint
 {
     Boss = 0x3323, // R=4.0
-    Helper = 0x233C,
-    IcePillar = 0x3324, // R2.000, x0 (spawn during fight)
+    IcePillar = 0x3324, // R2.0
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -23,7 +23,7 @@ public enum AID : uint
     SkullDasher = 25182, // Boss->player, 5.0s cast, single-target, tankbuster
 }
 
-class PillarPierceAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PillarPierceAOE), new AOEShapeRect(40, 2));
+class PillarPierceAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierceAOE), new AOEShapeRect(40, 2));
 
 class PunishingSlice(BossModule module) : Components.GenericAOEs(module)
 {
@@ -61,7 +61,7 @@ class PunishingSlice(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class IcePillar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IcePillar), new AOEShapeCircle(4));
+class IcePillar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IcePillar), 4);
 class HeavySmash(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HeavySmash), 6, 4, 4);
 class SkullDasher(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SkullDasher));
 class FrigidStomp(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FrigidStomp));
@@ -83,5 +83,5 @@ class D041LyssaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10396)]
 public class D041Lyssa(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Circle(new(-144, 49), 19.5f)], [new Rectangle(new(-144, 28), 20, 2), new Rectangle(new(-144, 70), 20, 2)]);
+    public static readonly ArenaBoundsComplex arena = new([new Polygon(new(-144, 49), 19.5f, 32)], [new Rectangle(new(-144, 28), 20, 2.1f), new Rectangle(new(-144, 70), 20, 2)]);
 }

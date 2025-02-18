@@ -23,7 +23,7 @@ public enum AID : uint
 }
 
 class ThunderBeam(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ThunderBeam));
-class Laserblade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Laserblade), new AOEShapeRect(25, 4, 25));
+class Laserblade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Laserblade), new AOEShapeRect(50, 4));
 class AllaganThunder(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AllaganThunder), 5);
 
 class Shock(BossModule module) : Components.GenericAOEs(module)

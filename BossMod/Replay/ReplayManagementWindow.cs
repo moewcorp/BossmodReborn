@@ -1,9 +1,8 @@
 ﻿using BossMod.Autorotation;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.ImGuiFileDialog;
 using ImGuiNET;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using System.Diagnostics;
 using System.IO;
 
@@ -13,7 +12,7 @@ public class ReplayManagementWindow : UIWindow
 {
     private readonly WorldState _ws;
     private DirectoryInfo _logDir;
-    private readonly ReplayManagementConfig _config;
+    private static readonly ReplayManagementConfig _config = Service.Config.Get<ReplayManagementConfig>();
     private readonly ReplayManager _manager;
     private readonly EventSubscriptions _subscriptions;
     private ReplayRecorder? _recorder;
@@ -30,7 +29,6 @@ public class ReplayManagementWindow : UIWindow
     {
         _ws = ws;
         _logDir = logDir;
-        _config = Service.Config.Get<ReplayManagementConfig>();
         _manager = new(rotationDB, logDir.FullName);
         _subscriptions = new
         (
@@ -240,7 +238,7 @@ public class ReplayManagementWindow : UIWindow
         if (_ws.CurrentCFCID != 0)
             prefix = Service.LuminaRow<ContentFinderCondition>(_ws.CurrentCFCID)?.Name.ToString();
         if (_ws.CurrentZone != 0)
-            prefix ??= Service.LuminaRow<TerritoryType>(_ws.CurrentZone)?.PlaceName.Value?.NameNoArticle.ToString();
+            prefix ??= Service.LuminaRow<TerritoryType>(_ws.CurrentZone)?.PlaceName.ValueNullable?.NameNoArticle.ToString();
         prefix ??= "World";
         prefix = Utils.StringToIdentifier(prefix);
 

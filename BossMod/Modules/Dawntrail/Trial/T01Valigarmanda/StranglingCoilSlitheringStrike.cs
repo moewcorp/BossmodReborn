@@ -7,7 +7,7 @@ class StranglingCoilSusurrantBreath(BossModule module) : Components.GenericAOEs(
     private readonly ArcaneLightning aoe = module.FindComponent<ArcaneLightning>()!;
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoe.AOEs.Count == 0 ? Utils.ZeroOrOne(_aoe) : ([]);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoe.AOEs.Count == 0 ? Utils.ZeroOrOne(_aoe) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

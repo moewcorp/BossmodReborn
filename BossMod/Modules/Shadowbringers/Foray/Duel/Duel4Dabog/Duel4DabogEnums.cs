@@ -3,17 +3,18 @@
 public enum OID : uint
 {
     Boss = 0x3261, // R4.500, x1
-    Helper = 0x233C, // R0.500, x14
     Deathwall = 0x18D6, // R0.500, spawn during fight
     DabogFragment = 0x3262, // R4.500, spawn during fight
     AtomicSphere = 0x3263, // R1.000, spawn during fight
     AtomicSphereVoidzone = 0x1EB1A4, // R0.500, EventObj type, spawn during fight
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss->player, no cast, single-target
     Deathwall = 24246, // Deathwall->self, no cast, range 20-30 donut deathwall
+
     Enrage = 24247, // Boss->self, 10.0s cast, enrage
     LeftArmLimitCut = 24249, // Boss->self, 4.0s cast, single-target, buff for next left-arm attack
     RightArmLimitCut = 24250, // Boss->self, 4.0s cast, single-target, buff for next right-arm attack
@@ -40,7 +41,7 @@ public enum AID : uint
     RightArmRayBuffed = 24272, // Boss->self, 4.0s cast, single-target, visual (rotating crosses)
     RightArmRayAOEFirst = 24273, // Helper->self, 10.0s cast, range 16 width 6 cross aoe
     RightArmRayAOERest = 24274, // Helper->self, no cast, range 16 width 6 cross aoe
-    RightArmRayVoidzone = 24275, // Helper->player, no cast, range 5 circle aoe that leaves voidzone
+    RightArmRayVoidzone = 24275 // Helper->player, no cast, range 5 circle aoe that leaves voidzone
 }
 
 public enum IconID : uint
@@ -49,5 +50,5 @@ public enum IconID : uint
     RightArmBlasterBait = 42, // player
     LeftArmWaveBait = 23, // player
     AtomicSphereCW = 156, // AtomicSphere
-    AtomicSphereCCW = 157, // AtomicSphere
+    AtomicSphereCCW = 157 // AtomicSphere
 }

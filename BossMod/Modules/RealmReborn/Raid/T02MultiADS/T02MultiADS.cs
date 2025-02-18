@@ -17,7 +17,7 @@ public enum OID : uint
     DisposalNodeFirestreamHelper = 0x8E1, // R0.500, x5
     ADSHelper = 0x8E2, // R0.500, x10
     ADSVacuumWaveHelper = 0x8E3, // R0.500, x1
-    GravityField = 0x1E8728, // EventObj type, spawns during fight
+    GravityField = 0x1E8728 // EventObj type, spawns during fight
 }
 
 public enum AID : uint
@@ -43,14 +43,14 @@ public enum AID : uint
     AllaganRotAOE = 1219, // QuarantineNodeAllaganRotHelper/ADSHelper->player, no cast, raidwide, explosion if debuff ticks down
 
     NodeRetrieval = 1228, // ADS->QuarantineNode/AttackNode/SanitaryNode/DefenseNode/DisposalNode, no cast, single-target, visual
-    Object199 = 1229, // ADS->self, no cast, enrage
+    Object199 = 1229 // ADS->self, no cast, enrage
 }
 
 public enum SID : uint
 {
     VulnerabilityUp = 202, // ADS/QuarantineNode/AttackNode/SanitaryNode/MonitoringNode/DefenseNode/DisposalNode->player, extra=0x1/0x2/0x3/0x4/0x5/0x6/0x7/0x8
     AllaganRot = 333, // QuarantineNode/ADS->player, extra=0x0
-    AllaganImmunity = 334, // none->player, extra=0x0
+    AllaganImmunity = 334 // none->player, extra=0x0
 }
 
 class CleaveCommon(BossModule module, AID aid, float hitboxRadius) : Components.Cleave(module, ActionID.MakeSpell(aid), new AOEShapeCone(6 + hitboxRadius, 60.Degrees()), activeWhileCasting: false);
@@ -58,13 +58,13 @@ class CleaveADS(BossModule module) : CleaveCommon(module, AID.CleaveADS, 2.3f);
 class CleaveNode(BossModule module) : CleaveCommon(module, AID.CleaveNode, 1.15f);
 
 class HighVoltage(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.HighVoltage));
-class RepellingCannons(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RepellingCannons), new AOEShapeCircle(8.3f));
-class PiercingLaser(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(32.3f, 3));
+class RepellingCannons(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RepellingCannons), 8.3f);
+class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(32.3f, 3));
 // TODO: chain lightning?..
-class Firestream(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FirestreamAOE), new AOEShapeRect(35.5f, 3));
-class Ballast1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BallastAOE1), new AOEShapeCone(5.5f, 135.Degrees()));
-class Ballast2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BallastAOE2), new AOEShapeDonutSector(5.5f, 10.5f, 135.Degrees()));
-class Ballast3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BallastAOE3), new AOEShapeDonutSector(10.5f, 15.5f, 135.Degrees()));
+class Firestream(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FirestreamAOE), new AOEShapeRect(35.5f, 3));
+class Ballast1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BallastAOE1), new AOEShapeCone(5.5f, 135.Degrees()));
+class Ballast2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BallastAOE2), new AOEShapeDonutSector(5.5f, 10.5f, 135.Degrees()));
+class Ballast3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BallastAOE3), new AOEShapeDonutSector(10.5f, 15.5f, 135.Degrees()));
 class GravityField(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.GravityField), m => m.Enemies(OID.GravityField), 1);
 
 class T02AI(BossModule module) : BossComponent(module)
@@ -117,7 +117,7 @@ class T02ADSStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.ADS, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1459, SortOrder = 1, PlanLevel = 50)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.ADS, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1459, SortOrder = 1, PlanLevel = 50)]
 public class T02ADS(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 77), new ArenaBoundsRect(18, 13));
 
 class T02QuarantineNodeStates : StateMachineBuilder
@@ -133,7 +133,7 @@ class T02QuarantineNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.QuarantineNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1468, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.QuarantineNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1468, SortOrder = 2)]
 public class T02QuarantineNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 112), new ArenaBoundsRect(14, 13))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight
@@ -152,7 +152,7 @@ class T02AttackNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.AttackNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1469, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.AttackNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1469, SortOrder = 3)]
 public class T02AttackNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(-44, 94), new ArenaBoundsSquare(17))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight
@@ -173,7 +173,7 @@ class T02SanitaryNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.SanitaryNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1470, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SanitaryNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1470, SortOrder = 4)]
 public class T02SanitaryNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(-43, 52), new ArenaBoundsRect(18, 15))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight
@@ -191,7 +191,7 @@ class T02MonitoringNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.MonitoringNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1471, SortOrder = 5)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.MonitoringNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1471, SortOrder = 5)]
 public class T02MonitoringNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 39), new ArenaBoundsRect(17, 15))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight
@@ -209,7 +209,7 @@ class T02DefenseNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.DefenseNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1472, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.DefenseNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1472, SortOrder = 6)]
 public class T02DefenseNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(46, 52), new ArenaBoundsRect(17, 14))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight
@@ -228,7 +228,7 @@ class T02DisposalNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", PrimaryActorOID = (uint)OID.DisposalNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1473, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.DisposalNode, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 94, NameID = 1473, SortOrder = 7)]
 public class T02DisposalNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(41, 94), new ArenaBoundsRect(14, 20))
 {
     protected override bool CheckPull() => base.CheckPull() && !Enemies(OID.ADS).Any(e => e.InCombat); // don't start modules for temporary node actors spawned during main boss fight

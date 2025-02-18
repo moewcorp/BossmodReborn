@@ -1,20 +1,20 @@
 ﻿namespace BossMod.Endwalker.Alliance.A32Llymlaen;
 
-class WindRose(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WindRose), new AOEShapeCircle(12));
-class SeafoamSpiral(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SeafoamSpiral), new AOEShapeDonut(6, 70));
-class DeepDiveNormal(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeepDiveNormal), 6, 8);
-class Stormwhorl(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Stormwhorl), 6);
-class Stormwinds(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Stormwinds), 6);
-class Maelstrom(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Maelstrom), 6);
+class WindRose(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindRose), 12f);
+class SeafoamSpiral(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SeafoamSpiral), new AOEShapeDonut(6f, 70f));
+class DeepDiveNormal(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeepDiveNormal), 6f, 8);
+class Stormwhorl(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Stormwhorl), 6f);
+class Stormwinds(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Stormwinds), 6f);
+class Maelstrom(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Maelstrom), 6f);
 class Godsbane(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.GodsbaneAOE));
-class DeepDiveHardWater(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeepDiveHardWater), 6);
+class DeepDiveHardWater(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeepDiveHardWater), 6f);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, LTS, veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 11299, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, LTS", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 11299, SortOrder = 3)]
 public class A32Llymlaen(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, DefaultBounds)
 {
-    public const float CorridorHalfLength = 40;
-    public static readonly WPos DefaultCenter = new(0, -900);
-    public static readonly ArenaBoundsRect DefaultBounds = new(19, 29);
+    public const float CorridorHalfLength = 40f;
+    public static readonly WPos DefaultCenter = new(0, -900f);
+    public static readonly ArenaBoundsRect DefaultBounds = new(19f, 29f);
     public static readonly ArenaBoundsCustom EastCorridorBounds = BuildCorridorBounds(+1);
     public static readonly ArenaBoundsCustom WestCorridorBounds = BuildCorridorBounds(-1);
 

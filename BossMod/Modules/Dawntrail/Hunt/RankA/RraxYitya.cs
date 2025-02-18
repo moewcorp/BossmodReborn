@@ -18,11 +18,11 @@ public enum AID : uint
     LeftWingblade2 = 37167, // Boss->self, 3.0s cast, range 25 90 degree cone
 }
 
-class RightWingblade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightWingblade), new AOEShapeCone(25, 90.Degrees()));
-class LeftWingblade(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LeftWingblade), new AOEShapeCone(25, 90.Degrees()));
-class RightWingblade2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RightWingblade2), new AOEShapeCone(25, 90.Degrees()));
-class LeftWingblade2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LeftWingblade2), new AOEShapeCone(25, 90.Degrees()));
-class LaughingLeap(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.LaughingLeap), new AOEShapeRect(15, 2.5f));
+class RightWingblade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightWingblade), new AOEShapeCone(25, 90.Degrees()));
+class LeftWingblade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LeftWingblade), new AOEShapeCone(25, 90.Degrees()));
+class RightWingblade2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightWingblade2), new AOEShapeCone(25, 90.Degrees()));
+class LeftWingblade2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LeftWingblade2), new AOEShapeCone(25, 90.Degrees()));
+class LaughingLeap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LaughingLeap), new AOEShapeRect(15, 2.5f));
 class TriplicateReflex(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.TriplicateReflex), "Last 3 wingblades repeat in rapid succession, stay close to the middle!");
 
 class HiddenWingblades(BossModule module) : Components.GenericAOEs(module)
@@ -99,5 +99,5 @@ class RraxYityaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 12753)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 12753)]
 public class RraxYitya(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

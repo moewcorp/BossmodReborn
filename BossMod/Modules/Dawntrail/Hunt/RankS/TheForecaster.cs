@@ -37,11 +37,11 @@ public enum AID : uint
     ClimateChangeStatusEffect = 39133 // Boss->self, no cast, single-target
 }
 
-class FloodConditions(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.FloodConditions), 6);
-class GaleForceWinds(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GaleForceWinds), new AOEShapeRect(40, 20));
-class Hyperelectricity(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Hyperelectricity), new AOEShapeCircle(10));
-class WildfireConditions(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WildfireConditions), new AOEShapeDonut(5, 40));
-class BlizzardConditions(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlizzardConditions), new AOEShapeCross(40, 2.5f));
+class FloodConditions(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FloodConditions), 6f);
+class GaleForceWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GaleForceWinds), new AOEShapeRect(40f, 20f));
+class Hyperelectricity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hyperelectricity), 10f);
+class WildfireConditions(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildfireConditions), new AOEShapeDonut(5f, 40f));
+class BlizzardConditions(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlizzardConditions), new AOEShapeCross(40f, 2.5f));
 
 class ForecastClimateChange(BossModule module) : Components.GenericAOEs(module)
 {
@@ -49,55 +49,62 @@ class ForecastClimateChange(BossModule module) : Components.GenericAOEs(module)
     private Forecast currentForecast;
     private enum ClimateChange { None, G2B, B2W, H2G, W2H }
     private ClimateChange currentClimateChange;
-    private static readonly AOEShapeRect rect = new(40, 20);
-    private static readonly AOEShapeDonut donut = new(5, 40);
-    private static readonly AOEShapeCircle circle = new(10);
-    private static readonly AOEShapeCross cross = new(40, 2.5f);
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly HashSet<AID> castEnd = [AID.WeatherChannelFirstCircle, AID.WeatherChannelFirstCross, AID.WeatherChannelFirstDonut,
-    AID.WeatherChannelFirstRect, AID.WeatherChannelRestCircle, AID.WeatherChannelRestDonut, AID.WeatherChannelRestRect, AID.WeatherChannelRestCross];
+    private static readonly AOEShapeRect rect = new(40f, 20f);
+    private static readonly AOEShapeDonut donut = new(5f, 40f);
+    private static readonly AOEShapeCircle circle = new(10f);
+    private static readonly AOEShapeCross cross = new(40f, 2.5f);
+    private readonly List<AOEInstance> _aoes = new(3);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (count > 1)
-            yield return _aoes[1] with { Risky = false };
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Forecast1:
+            case (uint)AID.Forecast1:
                 currentForecast = Forecast.HGW;
                 break;
-            case AID.Forecast2:
+            case (uint)AID.Forecast2:
                 currentForecast = Forecast.GWH;
                 break;
-            case AID.Forecast3:
+            case (uint)AID.Forecast3:
                 currentForecast = Forecast.WHB;
                 break;
-            case AID.Forecast4:
+            case (uint)AID.Forecast4:
                 currentForecast = Forecast.BHG;
                 break;
-            case AID.ClimateChange1:
+            case (uint)AID.ClimateChange1:
                 currentClimateChange = ClimateChange.G2B;
                 break;
-            case AID.ClimateChange2:
+            case (uint)AID.ClimateChange2:
                 currentClimateChange = ClimateChange.B2W;
                 break;
-            case AID.ClimateChange3:
+            case (uint)AID.ClimateChange3:
                 currentClimateChange = ClimateChange.H2G;
                 break;
-            case AID.ClimateChange4:
+            case (uint)AID.ClimateChange4:
                 currentClimateChange = ClimateChange.W2H;
                 break;
-            case AID.WeatherChannelFirstCircle:
-            case AID.WeatherChannelFirstCross:
-            case AID.WeatherChannelFirstDonut:
-            case AID.WeatherChannelFirstRect:
+            case (uint)AID.WeatherChannelFirstCircle:
+            case (uint)AID.WeatherChannelFirstCross:
+            case (uint)AID.WeatherChannelFirstDonut:
+            case (uint)AID.WeatherChannelFirstRect:
                 AddAOEs(spell);
                 break;
         }
@@ -150,8 +157,20 @@ class ForecastClimateChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && castEnd.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.WeatherChannelFirstCircle:
+                case (uint)AID.WeatherChannelFirstCross:
+                case (uint)AID.WeatherChannelFirstDonut:
+                case (uint)AID.WeatherChannelFirstRect:
+                case (uint)AID.WeatherChannelRestCircle:
+                case (uint)AID.WeatherChannelRestDonut:
+                case (uint)AID.WeatherChannelRestRect:
+                case (uint)AID.WeatherChannelRestCross:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 

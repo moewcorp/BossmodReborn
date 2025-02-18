@@ -4,6 +4,7 @@ public enum OID : uint
 {
     Boss = 0x3AE2, //R=8.0
     FearsomeFlotsam = 0x3AE3, //R=2.4
+    Helper2 = 0x3E97, // R2.7
     Helper = 0x233C
 }
 
@@ -45,14 +46,12 @@ public enum AID : uint
 public enum IconID : uint
 {
     Stackmarker = 161, // player
-    Spreadmarker = 139, // player
-    Tankbuster = 230 // player
+    Spreadmarker = 139 // player
 }
 
 public enum TetherID : uint
 {
-    LimitBreakCharger = 3, // FearsomeFlotsam->Boss
-    BaitAway = 1 // 3E97->player
+    BaitAway = 1 // Helper2->player
 }
 
 public enum NPCYell : uint
@@ -86,7 +85,7 @@ class VoidTorrent(BossModule module) : Components.BaitAwayCast(module, ActionID.
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (CurrentBaits.Count > 0)
+        if (CurrentBaits.Count != 0)
             hints.Add("Tankbuster cleave");
     }
 }
@@ -94,13 +93,13 @@ class VoidTorrent(BossModule module) : Components.BaitAwayCast(module, ActionID.
 class Voidcleaver(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Voidcleaver));
 class VoidMiasmaBait(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(50, 15.Degrees()), (uint)TetherID.BaitAway);
 
-class Cleaver(BossModule module, AID aid) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(50, 15.Degrees()));
+class Cleaver(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(50, 15.Degrees()));
 class VoidMiasma(BossModule module) : Cleaver(module, AID.VoidMiasma);
 class Lifescleaver(BossModule module) : Cleaver(module, AID.Lifescleaver);
 
 class Tsunami(BossModule module) : Components.RaidwideAfterNPCYell(module, ActionID.MakeSpell(AID.Tsunami), (uint)NPCYell.LimitBreakStart, 4.5f);
 class StygianDeluge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StygianDeluge));
-class Antediluvian(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Antediluvian), new AOEShapeCircle(15))
+class Antediluvian(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Antediluvian), 15)
 {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
@@ -110,39 +109,36 @@ class Antediluvian(BossModule module) : Components.SelfTargetedAOEs(module, Acti
     }
 }
 
-class BodySlam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BodySlam), new AOEShapeCircle(8));
+class BodySlam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BodySlam), 8);
 class BodySlamKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BodySlamKB), 10, true)
 {
-    private WPos data;
-    private DateTime activation;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        base.OnCastStarted(caster, spell);
-        if ((AID)spell.Action.ID == AID.BodySlamKB)
-        {
-            activation = Module.CastFinishAt(spell, 0.6f);
-            data = caster.Position;
-        }
-    }
-
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if ((Sources(slot, actor).Any() || activation > WorldState.CurrentTime) && Module.FindComponent<Antediluvian>()!.NumCasts >= 4)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(data, 10), activation.AddSeconds(-0.6f));
+        var source = Sources(slot, actor).FirstOrDefault();
+        if (source != default && Module.FindComponent<Antediluvian>()!.NumCasts >= 4)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Origin, 10), source.Activation);
     }
 }
 
 class HydraulicRam(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        for (var i = 1; i < _aoes.Count; ++i)
-            yield return _aoes[i];
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -156,23 +152,31 @@ class HydraulicRam(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.HydraulicRam)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.HydraulicRam)
             _aoes.RemoveAt(0);
     }
 }
 
 class Hydrobomb(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(12);
     private static readonly AOEShapeCircle circle = new(4);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 1)
-            for (var i = 0; i < 2; ++i)
-                yield return _aoes[i] with { Color = Colors.Danger };
-        for (var i = 1; i < _aoes.Count; ++i)
-            yield return _aoes[i];
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 2)
+                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+            else
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -183,17 +187,17 @@ class Hydrobomb(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.Hydrobomb)
+        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Hydrobomb)
             _aoes.RemoveAt(0);
     }
 }
 
-class Hydrovent(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Hydrovent), 6);
+class Hydrovent(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hydrovent), 6);
 class NeapTide(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.NeapTide), 6, 5);
 
 class SpringTideHydroFall(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4) // both use the same icon
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Stackmarker)
             AddStack(actor, WorldState.FutureTime(5));
@@ -211,7 +215,6 @@ class D113CagnazzoStates : StateMachineBuilder
     public D113CagnazzoStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<StygianDelugeArenaChange>()
             .ActivateOnEnter<Voidcleaver>()
             .ActivateOnEnter<Lifescleaver>()

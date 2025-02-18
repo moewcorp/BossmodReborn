@@ -2,7 +2,7 @@
 
 class HyperdimensionalSlash(BossModule module) : BossComponent(module)
 {
-    public int NumCasts { get; private set; }
+    public int NumCasts;
     private BitMask _laserTargets;
     private Angle _coneDir;
     private readonly List<(WPos Pos, Actor? Source)> _tears = [];
@@ -17,7 +17,7 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         _tears.Clear();
         foreach (var tear in Module.Enemies(OID.AetherialTear))
             _tears.Add((tear.Position, null));
-        foreach (var target in Raid.WithSlot(true).IncludedInMask(_laserTargets).Actors())
+        foreach (var target in Raid.WithSlot(true, true, true).IncludedInMask(_laserTargets).Actors())
             _tears.Add((TearPosition(target), target));
 
         _riskyTears.Reset();
@@ -34,7 +34,7 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         }
 
         // TODO: proper targeting (seems to be predefined, charibert's target for first?..)
-        var coneTarget = Raid.WithSlot().ExcludedFromMask(_laserTargets).Actors().Closest(Module.Center);
+        var coneTarget = Raid.WithSlot(false, true, true).ExcludedFromMask(_laserTargets).Actors().Closest(Module.Center);
         _coneDir = coneTarget != null ? Angle.FromDirection(coneTarget.Position - Module.Center) : 0.Degrees();
     }
 
@@ -57,7 +57,7 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         // make sure actor is not clipped by any lasers
         var otherLasers = _laserTargets;
         otherLasers.Clear(slot);
-        if (Raid.WithSlot().IncludedInMask(otherLasers).WhereActor(target => _aoeLaser.Check(actor.Position, Module.Center, Angle.FromDirection(target.Position - Module.Center))).Any())
+        if (Raid.WithSlot(false, true, true).IncludedInMask(otherLasers).WhereActor(target => _aoeLaser.Check(actor.Position, Module.Center, Angle.FromDirection(target.Position - Module.Center))).Any())
             hints.Add("GTFO from laser aoe!");
 
         // make sure actor is either not hit by cone (if is target of a laser) or is hit by a cone (otherwise)
@@ -73,9 +73,9 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         if (_laserTargets.None())
             return;
 
-        foreach (var t in Raid.WithSlot().IncludedInMask(_laserTargets).Actors())
-            _aoeLaser.Draw(Arena, Module.Center, Angle.FromDirection(t.Position - Module.Center));
-        _aoeCone.Draw(Arena, Module.Center, _coneDir);
+        foreach (var t in Raid.WithSlot(false, true, true).IncludedInMask(_laserTargets).Actors())
+            _aoeLaser.Draw(Arena, Arena.Center, Angle.FromDirection(t.Position - Module.Center));
+        _aoeCone.Draw(Arena, Arena.Center, _coneDir);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -84,7 +84,7 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
             Arena.AddCircle(_tears[i].Pos, _linkRadius, _riskyTears[i] ? Colors.Danger : Colors.Safe);
 
         if (_laserTargets[pcSlot])
-            Arena.AddLine(Module.Center, TearPosition(pc), Colors.Danger);
+            Arena.AddLine(Arena.Center, TearPosition(pc), Colors.Danger);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -96,7 +96,7 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((IconID)iconID == IconID.HyperdimensionalSlash)
         {
@@ -104,5 +104,5 @@ class HyperdimensionalSlash(BossModule module) : BossComponent(module)
         }
     }
 
-    private WPos TearPosition(Actor target) => Module.Center + Module.Bounds.ClampToBounds(50 * (target.Position - Module.Center).Normalized());
+    private WPos TearPosition(Actor target) => Arena.Center + Arena.Bounds.ClampToBounds(50 * (target.Position - Arena.Center).Normalized());
 }

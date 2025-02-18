@@ -2,17 +2,28 @@
 
 class Border(BossModule module) : Components.GenericAOEs(module)
 {
-    public static readonly WPos BoundsCenter = new(-416, -184);
-    public static readonly ArenaBoundsCircle DefaultBounds = new(34.5f);
-    private const float _innerRingRadius = 14.5f;
-    private const float _outerRingRadius = 27.5f;
-    private const float _ringHalfWidth = 2.5f;
-    private const float _alcoveDepth = 1;
-    private const float _alcoveWidth = 2;
     private bool Active;
-    private static readonly Shape[] labyrinth = [new PolygonCustom(InDanger()), new PolygonCustom(MidDanger()), new PolygonCustom(OutDanger())];
-    private static readonly AOEShapeCustom customShape = new(labyrinth);
-    private static readonly ArenaBoundsComplex labPhase = new([new Circle(BoundsCenter, 34.5f)], labyrinth);
+    private static readonly WPos ArenaCenter = new(-416, -184);
+    private static readonly Polygon[] DefaultPolygon = [new(ArenaCenter, 34.5f, 48)];
+    public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultPolygon, [new Rectangle(new(-416, -219), 20, 1.4f), new Rectangle(new(-416, -149), 20, 1.25f)]);
+    private static readonly Shape[] labyrinthDifference = [new DonutV(ArenaCenter, 30, 34.5f, 48), new DonutV(ArenaCenter, 17, 25, 48), new Polygon(ArenaCenter, 12, 48)];
+    private static readonly Rectangle[] labyrinthUnion = [.. GenerateAlcoves(new(-416, -211.5f)), .. GenerateAlcoves(WPos.RotateAroundOrigin(22.5f, ArenaCenter, new(-416, -198.5f)), 22.5f.Degrees())];
+    private static readonly ArenaBoundsComplex labPhase = new(DefaultPolygon, labyrinthDifference, labyrinthUnion);
+    private static readonly AOEShapeCustom customShape = new(labyrinthDifference, labyrinthUnion);
+
+    private static List<Rectangle> GenerateAlcoves(WPos basePosition, Angle start = default)
+    {
+        var a45 = 45.Degrees();
+
+        List<Rectangle> rects = new(8)
+        {
+            new(basePosition, 2, 4, start)
+        };
+
+        for (var i = 1; i < 8; ++i)
+            rects.Add(new(WPos.RotateAroundOrigin(i * 45, ArenaCenter, basePosition), 2, 4, start + a45 * i));
+        return rects;
+    }
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -26,49 +37,7 @@ class Border(BossModule module) : Components.GenericAOEs(module)
         {
             Active = true;
             Arena.Bounds = labPhase;
+            Arena.Center = labPhase.Center;
         }
-    }
-
-    private static List<WPos> RingBorder(Angle centerOffset, float ringRadius, bool innerBorder)
-    {
-        var offsetMultiplier = innerBorder ? -1 : 1;
-        var halfWidth = (_alcoveWidth / ringRadius).Radians();
-        var radiusWithDepth = ringRadius + offsetMultiplier * (_ringHalfWidth + _alcoveDepth);
-        var radiusWithoutDepth = ringRadius + offsetMultiplier * _ringHalfWidth;
-        var stepAngle = 45.Degrees();
-
-        var points = new List<WPos>();
-
-        for (var i = 0; i < 8; ++i)
-        {
-            var currentCenter = centerOffset + i * stepAngle;
-            points.AddRange(CurveApprox.CircleArc(BoundsCenter, radiusWithDepth, currentCenter - halfWidth, currentCenter + halfWidth, Shape.MaxApproxError));
-            var nextCenter = currentCenter + stepAngle;
-            points.AddRange(CurveApprox.CircleArc(BoundsCenter, radiusWithoutDepth, currentCenter + halfWidth, nextCenter - halfWidth, Shape.MaxApproxError));
-        }
-        points.Add(points[0]);
-
-        return points;
-    }
-
-    private static List<WPos> InDanger() => RingBorder(22.5f.Degrees(), _innerRingRadius, true);
-
-    private static List<WPos> MidDanger()
-    {
-        var outerRing = RingBorder(0.Degrees(), _outerRingRadius, true);
-        var innerRing = RingBorder(22.5f.Degrees(), _innerRingRadius, false);
-        innerRing.Reverse();
-        outerRing.AddRange(innerRing);
-        return outerRing;
-    }
-
-    private static List<WPos> OutDanger()
-    {
-        var outerBoundary = CurveApprox.Circle(BoundsCenter, 34.6f, Shape.MaxApproxError).ToList();
-        outerBoundary.Add(outerBoundary[0]);
-        var innerRing = RingBorder(0.Degrees(), _outerRingRadius, false);
-        innerRing.Reverse();
-        outerBoundary.AddRange(innerRing);
-        return outerBoundary;
     }
 }

@@ -18,6 +18,30 @@ public enum ActionTargets
     All = (1 << 9) - 1,
 }
 
+// some debuffs prevent specific categories of action - amnesia, silence, pacification, etc
+public enum ActionCategory : byte
+{
+    None,
+    Autoattack,
+    Spell,
+    Weaponskill,
+    Ability,
+    Item,
+    DoLAbility,
+    DoHAbility,
+    Event,
+    LimitBreak9,
+    System10,
+    System11,
+    Mount,
+    Special,
+    ItemManipulation,
+    LimitBreak15,
+    Unk1,
+    Artillery,
+    Unk2
+}
+
 // used for BLM calculations and possibly BLU optimization
 public enum ActionAspect : byte
 {
@@ -47,6 +71,7 @@ public sealed record class ActionDefinition(ActionID ID)
     public ActionTargets AllowedTargets;
     public float Range; // 0 for self-targeted abilities
     public float CastTime; // 0 for instant-cast; can be adjusted by a number of factors (TODO: add functor)
+    public ActionCategory Category;
     public int MainCooldownGroup = -1;
     public int ExtraCooldownGroup = -1;
     public float Cooldown; // for single charge (if multi-charge action); can be adjusted by a number of factors (TODO: add functor)
@@ -89,13 +114,14 @@ public sealed record class ActionDefinition(ActionID ID)
             : MainCooldownGroup;
 
     // for multi-charge abilities, action is ready when elapsed >= single-charge cd; assume that if any multi-charge actions share cooldown group, they have same cooldown - otherwise dunno how it should work
-    // TODO: use adjusted cooldown
+    // note: GCDs with multiple charges can be affected OR unaffected by haste depending on how many charges the user currently has access to
+    // the only separate-cooldown GCD that increases to >1 charge via trait is currently MCH Drill; others have multiple charges at unlock - SGE Phlegma, RPR Soul Slice, BLU Surpanakha
     public float MainReadyIn(ReadOnlySpan<Cooldown> cooldowns, ReadOnlySpan<ClientState.DutyAction> dutyActions)
     {
         if (MainCooldownGroup < 0)
             return 0;
         var cdg = cooldowns[ActualMainCooldownGroup(dutyActions)];
-        return !IsMultiCharge || cdg.Total < Cooldown ? cdg.Remaining : Cooldown - cdg.Elapsed;
+        return cdg.Total > 0 ? Math.Max(0, cdg.Total / MaxChargesAtCap() - cdg.Elapsed) : 0;
     }
 
     public float ExtraReadyIn(ReadOnlySpan<Cooldown> cooldowns) => ExtraCooldownGroup >= 0 ? cooldowns[ExtraCooldownGroup].Remaining : 0;
@@ -107,7 +133,7 @@ public sealed record class ActionDefinition(ActionID ID)
         if (MainCooldownGroup < 0)
             return 0;
         var cdg = cooldowns[ActualMainCooldownGroup(dutyActions)];
-        return cdg.Total > 0 ? (MaxChargesAtLevel(level) * Cooldown - cdg.Elapsed) : 0;
+        return cdg.Total > 0 ? Math.Max(0, MaxChargesAtLevel(level) * cdg.Total / MaxChargesAtCap() - cdg.Elapsed) : 0;
     }
 
     public bool IsUnlocked(WorldState ws, Actor player)
@@ -123,10 +149,10 @@ public sealed record class ActionDefinition(ActionID ID)
 // note that it is associated to a specific worldstate, so that it can be used for things like action conditions
 public sealed class ActionDefinitions : IDisposable
 {
-    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Action>? _actionsSheet = Service.LuminaSheet<Lumina.Excel.GeneratedSheets.Action>();
-    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Item>? _itemsSheet = Service.LuminaSheet<Lumina.Excel.GeneratedSheets.Item>();
-    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJobCategory>? _cjcSheet = Service.LuminaSheet<Lumina.Excel.GeneratedSheets.ClassJobCategory>();
-    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Trait>? _traitSheet = Service.LuminaSheet<Lumina.Excel.GeneratedSheets.Trait>();
+    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.Sheets.Action> _actionsSheet = Service.LuminaSheet<Lumina.Excel.Sheets.Action>()!;
+    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.Sheets.Item> _itemsSheet = Service.LuminaSheet<Lumina.Excel.Sheets.Item>()!;
+    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.RawRow> _cjcSheet = Service.LuminaGameData!.Excel.GetSheet<Lumina.Excel.RawRow>(null, "ClassJobCategory")!;
+    private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.Sheets.Trait> _traitSheet = Service.LuminaSheet<Lumina.Excel.Sheets.Trait>()!;
     private readonly List<IDisposable> _classDefinitions;
     private readonly Dictionary<ActionID, ActionDefinition> _definitions = [];
 
@@ -147,6 +173,14 @@ public sealed class ActionDefinitions : IDisposable
     public static readonly ActionID IDPotionVit = new(ActionType.Item, 1044164); // hq grade 2 gemdraught of vitality
     public static readonly ActionID IDPotionInt = new(ActionType.Item, 1044165); // hq grade 2 gemdraught of intelligence
     public static readonly ActionID IDPotionMnd = new(ActionType.Item, 1044166); // hq grade 2 gemdraught of mind
+
+    // deep dungeon consumables
+    public static readonly ActionID IDPotionSustaining = new(ActionType.Item, 20309);
+    public static readonly ActionID IDPotionMax = new(ActionType.Item, 1013637);
+    public static readonly ActionID IDPotionEmpyrean = new(ActionType.Item, 23163);
+    public static readonly ActionID IDPotionSuper = new(ActionType.Item, 1023167);
+    public static readonly ActionID IDPotionOrthos = new(ActionType.Item, 38944);
+    public static readonly ActionID IDPotionHyper = new(ActionType.Item, 1038956);
 
     // special general actions that we support
     public static readonly ActionID IDGeneralLimitBreak = new(ActionType.General, 3);
@@ -184,6 +218,7 @@ public sealed class ActionDefinitions : IDisposable
             new BLU.Definitions(this),
             new PCT.Definitions(this),
             new VPR.Definitions(this),
+            new Roleplay.Definitions(this),
         ];
 
         // items (TODO: more generic approach is needed...)
@@ -193,9 +228,20 @@ public sealed class ActionDefinitions : IDisposable
         RegisterPotion(IDPotionInt);
         RegisterPotion(IDPotionMnd);
 
-        // bozja actions
+        RegisterPotion(IDPotionSustaining, 1.1f);
+        RegisterPotion(IDPotionMax, 1.1f);
+        RegisterPotion(IDPotionEmpyrean, 1.1f);
+        RegisterPotion(IDPotionSuper, 1.1f);
+        RegisterPotion(IDPotionOrthos, 1.1f);
+        RegisterPotion(IDPotionHyper, 1.1f);
+
+        // special content actions - bozja, deep dungeons, etc
         for (var i = BozjaHolsterID.None + 1; i < BozjaHolsterID.Count; ++i)
             RegisterBozja(i);
+        for (var i = PomanderID.Safety; i < PomanderID.Count; ++i)
+            RegisterDeepDungeon(new(ActionType.Pomander, (uint)i));
+        for (var i = 1u; i <= 3; i++)
+            RegisterDeepDungeon(new(ActionType.Magicite, i));
     }
 
     public void Dispose()
@@ -215,51 +261,62 @@ public sealed class ActionDefinitions : IDisposable
     public static Actor? FindEsunaTarget(WorldState ws) => ws.Party.WithoutSlot().FirstOrDefault(p => p.Statuses.Any(s => Utils.StatusIsRemovable(s.ID)));
     public static Actor? SmartTargetEsunable(WorldState ws, Actor player, Actor? primaryTarget, AIHints hints) => SmartTargetFriendly(primaryTarget) ?? FindEsunaTarget(ws) ?? player;
 
-    public BitMask SpellAllowedClasses(Lumina.Excel.GeneratedSheets.Action? data)
+    // check if dashing to target will put the player inside a forbidden zone
+    // TODO should we check if dash trajectory will cross any zones with imminent activation?
+    public static bool PreventDashIfDangerous(WorldState _, Actor player, Actor? target, AIHints hints)
+    {
+        if (target == null || !Service.Config.Get<ActionTweaksConfig>().PreventDangerousDash)
+            return false;
+
+        var dist = player.DistanceToHitbox(target);
+        var dir = player.DirectionTo(target).Normalized();
+        var src = player.Position;
+        var proj = dist > 0 ? src + dir * MathF.Max(0, dist) : src;
+        return hints.ForbiddenZones.Any(d => d.shapeDistance(proj) < 0);
+    }
+
+    public BitMask SpellAllowedClasses(Lumina.Excel.Sheets.Action data)
     {
         BitMask res = default;
-        var cjc = _cjcSheet?.GetRowParser(data?.ClassJobCategory.Row ?? 0);
+        var cjc = _cjcSheet?.GetRowOrDefault(data.ClassJobCategory.RowId);
         if (cjc != null)
-            for (var i = 1; i < _cjcSheet!.ColumnCount; ++i)
-                res[i - 1] = cjc.ReadColumn<bool>(i);
+            for (var i = 1; i < _cjcSheet!.Columns.Count; ++i)
+                res[i - 1] = cjc.Value.ReadBoolColumn(i);
         return res;
     }
     public BitMask SpellAllowedClasses(uint spellId) => SpellAllowedClasses(ActionData(spellId));
     public BitMask ActionAllowedClasses(ActionID aid) => aid.Type == ActionType.Spell ? SpellAllowedClasses(aid.ID) : new(~0ul);
 
-    public int SpellMinLevel(Lumina.Excel.GeneratedSheets.Action? data) => data?.ClassJobLevel ?? 0;
+    public int SpellMinLevel(Lumina.Excel.Sheets.Action data) => data.ClassJobLevel;
     public int SpellMinLevel(uint spellId) => SpellMinLevel(ActionData(spellId));
     public int ActionMinLevel(ActionID aid) => aid.Type == ActionType.Spell ? SpellMinLevel(aid.ID) : 0;
 
-    public uint SpellUnlockLink(Lumina.Excel.GeneratedSheets.Action? data) => data?.UnlockLink ?? 0;
+    public uint SpellUnlockLink(Lumina.Excel.Sheets.Action data) => data.UnlockLink.RowId;
     public uint SpellUnlockLink(uint spellId) => SpellUnlockLink(ActionData(spellId));
     public uint ActionUnlockLink(ActionID aid) => aid.Type == ActionType.Spell ? SpellUnlockLink(aid.ID) : 0;
 
     // see ActionManager.CanUseActionOnTarget
-    public ActionTargets SpellAllowedTargets(Lumina.Excel.GeneratedSheets.Action? data)
+    public ActionTargets SpellAllowedTargets(Lumina.Excel.Sheets.Action data)
     {
         var res = ActionTargets.None;
-        if (data != null)
-        {
-            if (data.CanTargetSelf)
-                res |= ActionTargets.Self;
-            if (data.CanTargetParty)
-                res |= ActionTargets.Party;
-            if (data.CanTargetFriendly)
-                res |= ActionTargets.Alliance;
-            if (data.CanTargetHostile)
-                res |= ActionTargets.Hostile;
-            if (data.Unknown19)
-                res |= ActionTargets.Friendly;
-            if (data.Unknown22)
-                res |= ActionTargets.OwnPet;
-            if (data.Unknown23)
-                res |= ActionTargets.PartyPet;
-            if (data.TargetArea)
-                res |= ActionTargets.Area;
-            if (data.Unknown24 == 1)
-                res |= ActionTargets.Dead;
-        }
+        if (data.CanTargetSelf)
+            res |= ActionTargets.Self;
+        if (data.CanTargetParty)
+            res |= ActionTargets.Party;
+        if (data.CanTargetAlliance)
+            res |= ActionTargets.Alliance;
+        if (data.CanTargetHostile)
+            res |= ActionTargets.Hostile;
+        if (data.CanTargetAlly)
+            res |= ActionTargets.Friendly;
+        if (data.CanTargetOwnPet)
+            res |= ActionTargets.OwnPet;
+        if (data.CanTargetPartyPet)
+            res |= ActionTargets.PartyPet;
+        if (data.TargetArea)
+            res |= ActionTargets.Area;
+        if (data.DeadTargetBehaviour == 1)
+            res |= ActionTargets.Dead;
         return res;
     }
     public ActionTargets SpellAllowedTargets(uint spellId) => SpellAllowedTargets(ActionData(spellId));
@@ -267,46 +324,46 @@ public sealed class ActionDefinitions : IDisposable
 
     // see ActionManager.GetActionRange
     // note that actions with range == -1 use data from equipped weapon; currently all weapons for phys-ranged classes have range 25, others have range 3
-    public int SpellRange(Lumina.Excel.GeneratedSheets.Action? data, bool isPhysRanged = false)
+    public int SpellRange(Lumina.Excel.Sheets.Action data, bool isPhysRanged = false)
     {
-        if ((SCH.AID)(data?.RowId ?? 0) is SCH.AID.PetEmbrace or SCH.AID.PetFeyUnion or SCH.AID.PetSeraphicVeil)
+        if ((SCH.AID)data.RowId is SCH.AID.PetEmbrace or SCH.AID.PetFeyUnion or SCH.AID.PetSeraphicVeil)
             return 30; // these are hardcoded
-        var range = data?.Range ?? 0;
+        var range = data.Range;
         return range >= 0 ? range : isPhysRanged ? 25 : 3;
     }
     public int SpellRange(uint spellId, bool isPhysRanged = false) => SpellRange(ActionData(spellId), isPhysRanged);
     public int ActionRange(ActionID aid, bool isPhysRanged = false) => SpellRange(aid.SpellId(), isPhysRanged);
 
     // see ActionManager.GetCastTimeAdjusted
-    public float SpellBaseCastTime(Lumina.Excel.GeneratedSheets.Action? data) => (data?.Cast100ms ?? 0) * 0.1f;
+    public float SpellBaseCastTime(Lumina.Excel.Sheets.Action data) => data.Cast100ms * 0.1f;
     public float SpellBaseCastTime(uint spellId) => SpellBaseCastTime(ActionData(spellId));
     public float ActionBaseCastTime(ActionID aid) => aid.Type switch
     {
-        ActionType.Item => ItemData(aid.ID)?.CastTimes ?? 2,
-        ActionType.KeyItem => Service.LuminaRow<Lumina.Excel.GeneratedSheets.EventItem>(aid.ID)?.CastTime ?? 0,
+        ActionType.Item => ItemData(aid.ID).CastTimeSeconds/* ?? 2*/,
+        ActionType.KeyItem => Service.LuminaRow<Lumina.Excel.Sheets.EventItem>(aid.ID)?.CastTime ?? 0,
         ActionType.Spell or ActionType.Mount or ActionType.Ornament => SpellBaseCastTime(aid.SpellId()),
         _ => 0
     };
 
-    public int SpellMainCDGroup(Lumina.Excel.GeneratedSheets.Action? data) => (data?.CooldownGroup ?? 0) - 1;
+    public int SpellMainCDGroup(Lumina.Excel.Sheets.Action data) => data.CooldownGroup - 1;
     public int SpellMainCDGroup(uint spellId) => SpellMainCDGroup(ActionData(spellId));
     public int ActionMainCDGroup(ActionID aid) => SpellMainCDGroup(aid.SpellId());
 
-    public int SpellExtraCDGroup(Lumina.Excel.GeneratedSheets.Action? data) => (data?.AdditionalCooldownGroup ?? 0) - 1;
+    public int SpellExtraCDGroup(Lumina.Excel.Sheets.Action data) => data.AdditionalCooldownGroup - 1;
     public int SpellExtraCDGroup(uint spellId) => SpellExtraCDGroup(ActionData(spellId));
     public int ActionExtraCDGroup(ActionID aid) => aid.Type == ActionType.Spell ? SpellExtraCDGroup(aid.ID) : -1; // see ActionManager.GetAdditionalRecastGroup - always -1 for non-spells
 
     // see ActionManager.GetAdjustedRecastTime
-    public float SpellBaseCooldown(Lumina.Excel.GeneratedSheets.Action? data) => (data?.Recast100ms ?? 0) * 0.1f;
+    public float SpellBaseCooldown(Lumina.Excel.Sheets.Action data) => data.Recast100ms * 0.1f;
     public float SpellBaseCooldown(uint spellId) => SpellBaseCooldown(ActionData(spellId));
     public float ActionBaseCooldown(ActionID aid) => aid.Type switch
     {
         ActionType.Spell => SpellBaseCooldown(aid.ID),
-        ActionType.Item => (ItemData(aid.ID)?.Cooldowns * (aid.ID > 1000000 ? 0.9f : 1.0f)) ?? 5,
+        ActionType.Item => ItemData(aid.ID).Cooldowns * (aid.ID > 1000000 ? 0.9f : 1.0f) /*?? 5*/,
         _ => 5,
     };
 
-    public ActionAspect SpellAspect(Lumina.Excel.GeneratedSheets.Action? data) => (ActionAspect)(data?.Aspect ?? 0);
+    public ActionAspect SpellAspect(Lumina.Excel.Sheets.Action data) => (ActionAspect)data.Aspect;
     public ActionAspect SpellAspect(uint spellId) => SpellAspect(ActionData(spellId));
     public ActionAspect ActionAspect(ActionID aid) => aid.Type switch
     {
@@ -315,13 +372,13 @@ public sealed class ActionDefinitions : IDisposable
     };
 
     // the vast majority of chargeless actions have MaxCharges=0, even though they logically have 1
-    public int SpellBaseMaxCharges(Lumina.Excel.GeneratedSheets.Action? data) => Math.Max(data?.MaxCharges ?? 1, (byte)1);
+    public int SpellBaseMaxCharges(Lumina.Excel.Sheets.Action data) => Math.Max(data.MaxCharges, (byte)1);
     public int SpellBaseMaxCharges(uint spellId) => SpellBaseMaxCharges(ActionData(spellId));
     public int ActionBaseMaxCharges(ActionID aid) => SpellBaseMaxCharges(aid.SpellId());
 
-    private Lumina.Excel.GeneratedSheets.Action? ActionData(uint id) => _actionsSheet?.GetRow(id);
-    private Lumina.Excel.GeneratedSheets.Item? ItemData(uint id) => _itemsSheet?.GetRow(id % 500000);
-    private Lumina.Excel.GeneratedSheets.Trait? TraitData(uint id) => _traitSheet?.GetRow(id);
+    private Lumina.Excel.Sheets.Action ActionData(uint id) => _actionsSheet.GetRow(id);
+    private Lumina.Excel.Sheets.Item ItemData(uint id) => _itemsSheet.GetRow(id % 500000);
+    private Lumina.Excel.Sheets.Trait TraitData(uint id) => _traitSheet.GetRow(id);
 
     // registration for different kinds of actions
     public void RegisterSpell(ActionID aid, bool isPhysRanged = false, float instantAnimLock = 0.6f, float castAnimLock = 0.1f)
@@ -342,7 +399,8 @@ public sealed class ActionDefinitions : IDisposable
             MaxChargesBase = SpellBaseMaxCharges(data),
             InstantAnimLock = instantAnimLock,
             CastAnimLock = castAnimLock,
-            IsRoleAction = data?.IsRoleAction ?? false
+            IsRoleAction = data.IsRoleAction,
+            Category = (ActionCategory)data.ActionCategory.RowId
         };
         Register(aid, def);
     }
@@ -352,17 +410,17 @@ public sealed class ActionDefinitions : IDisposable
 
     private void Register(ActionID aid, ActionDefinition definition) => _definitions.Add(aid, definition);
 
-    private void RegisterPotion(ActionID aid)
+    private void RegisterPotion(ActionID aid, float animLock = 0.6f)
     {
         var baseId = aid.ID % 500000;
         var item = ItemData(baseId);
-        var itemAction = item?.ItemAction.Value;
-        var spellId = itemAction?.Type ?? 0;
+        var itemAction = item.ItemAction.Value;
+        var spellId = itemAction.Type;
         var cdgroup = SpellMainCDGroup(spellId);
-        float cooldown = item?.Cooldowns ?? 0;
+        float cooldown = item.Cooldowns;
         var targets = SpellAllowedTargets(spellId);
         var range = SpellRange(spellId);
-        var castTime = item?.CastTimes ?? 2;
+        var castTime = item.CastTimeSeconds /*?? 2*/;
         var aidNQ = new ActionID(ActionType.Item, baseId);
         _definitions[aidNQ] = new(aidNQ)
         {
@@ -371,6 +429,7 @@ public sealed class ActionDefinitions : IDisposable
             CastTime = castTime,
             MainCooldownGroup = cdgroup,
             Cooldown = cooldown,
+            InstantAnimLock = animLock,
         };
         var aidHQ = new ActionID(ActionType.Item, baseId + 1000000);
         _definitions[aidHQ] = new(aidHQ)
@@ -380,6 +439,7 @@ public sealed class ActionDefinitions : IDisposable
             CastTime = castTime,
             MainCooldownGroup = cdgroup,
             Cooldown = cooldown * 0.9f,
+            InstantAnimLock = animLock
         };
     }
 
@@ -397,11 +457,16 @@ public sealed class ActionDefinitions : IDisposable
         }
     }
 
+    private void RegisterDeepDungeon(ActionID id)
+    {
+        _definitions[id] = new(id) { AllowedTargets = ActionTargets.Self, InstantAnimLock = 2.1f };
+    }
+
     // hardcoded mechanic implementations
     public void RegisterChargeIncreaseTrait(ActionID aid, uint traitId)
     {
         var trait = TraitData(traitId)!;
-        _definitions[aid].MaxChargesOverride.Add((trait.Value, trait.Level, trait.Quest.Row));
+        _definitions[aid].MaxChargesOverride.Add((trait.Value, trait.Level, trait.Quest.RowId));
     }
     public void RegisterChargeIncreaseTrait<AID, TraitID>(AID aid, TraitID traitId) where AID : Enum where TraitID : Enum => RegisterChargeIncreaseTrait(ActionID.MakeSpell(aid), (uint)(object)traitId);
 }

@@ -29,9 +29,7 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Baitaway = 2, // player
-    Throttle = 158, // MiningDrone/Boss
-    Tankbuster = 381 // player
+    Baitaway = 2 // player
 }
 
 class Throttle(BossModule module) : Components.GenericAOEs(module)
@@ -63,7 +61,7 @@ class Throttle(BossModule module) : Components.GenericAOEs(module)
 
 class AetherochemicalFlame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AetherochemicalFlame));
 class AetherochemicalResidue(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5), (uint)IconID.Baitaway, ActionID.MakeSpell(AID.AetherochemicalResidue), 4.1f, true);
-class AditDriver(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AditDriver), new AOEShapeRect(30, 3, 3));
+class AditDriver(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AditDriver), new AOEShapeRect(33, 3));
 class AetherochemicalCoil(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.AetherochemicalCoil));
 class SludgeVoidzone(BossModule module) : Components.PersistentVoidzone(module, 2.5f, m => m.Enemies(OID.SludgeVoidzone).Where(z => z.EventState != 7));
 
@@ -72,7 +70,6 @@ class D132DefectiveDroneStates : StateMachineBuilder
     public D132DefectiveDroneStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<Throttle>()
             .ActivateOnEnter<AetherochemicalFlame>()
             .ActivateOnEnter<AetherochemicalResidue>()
@@ -87,17 +84,18 @@ public class D132DefectiveDrone(WorldState ws, Actor primary) : BossModule(ws, p
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.RepurposedDreadnaught).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(OID.RepurposedDreadnaught));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
-                OID.RepurposedDreadnaught => 2,
-                OID.Boss => 1,
+                OID.RepurposedDreadnaught => 1,
                 _ => 0
             };
         }

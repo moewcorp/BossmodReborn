@@ -17,10 +17,10 @@ class FledglingFlight(BossModule module) : BossComponent(module)
         if (_sources.Count == 0)
             return;
 
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
         {
             _playerDeathTollStacks[i] = player.FindStatus((uint)SID.DeathsToll)?.Extra ?? 0; // TODO: use status events here...
-            _playerAOECount[i] = _sources.Where(srcRot => player.Position.InCone(srcRot.Item1.Position, srcRot.Item2, _coneHalfAngle)).Count();
+            _playerAOECount[i] = _sources.Count(srcRot => player.Position.InCone(srcRot.Item1.Position, srcRot.Item2, _coneHalfAngle));
         }
     }
 
@@ -51,7 +51,7 @@ class FledglingFlight(BossModule module) : BossComponent(module)
             return;
 
         // draw all players
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
             Arena.Actor(player, _playerAOECount[i] != _playerDeathTollStacks[i] ? Colors.PlayerInteresting : Colors.PlayerGeneric);
 
         var eyePos = GetEyePlacementPosition(pcSlot, pc);
@@ -89,7 +89,7 @@ class FledglingFlight(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is >= 296 and <= 299)
         {
@@ -121,6 +121,6 @@ class FledglingFlight(BossModule module) : BossComponent(module)
             return null;
 
         var offset = rot.ToDirection() * _eyePlacementOffset;
-        return _playerDeathTollStacks[slot] > 0 ? Module.Center - offset : Module.Center + offset;
+        return _playerDeathTollStacks[slot] > 0 ? Arena.Center - offset : Arena.Center + offset;
     }
 }

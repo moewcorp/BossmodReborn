@@ -9,16 +9,15 @@ public sealed class NetworkState
 
     public uint IDScramble;
 
-    public IEnumerable<WorldState.Operation> CompareToInitial()
+    public List<WorldState.Operation> CompareToInitial()
     {
-        if (IDScramble != 0)
-            yield return new OpIDScramble(IDScramble);
+        return IDScramble != 0 ? [new OpIDScramble(IDScramble)] : [];
     }
 
     public Event<OpIDScramble> IDScrambleChanged = new();
     public sealed record class OpIDScramble(uint Value) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws)
+        protected override void Exec(ref WorldState ws)
         {
             ws.Network.IDScramble = Value;
             ws.Network.IDScrambleChanged.Fire(this);
@@ -29,13 +28,13 @@ public sealed class NetworkState
     public Event<OpServerIPC> ServerIPCReceived = new();
     public sealed record class OpServerIPC(ServerIPC Packet) : WorldState.Operation
     {
-        protected override void Exec(WorldState ws) => ws.Network.ServerIPCReceived.Fire(this);
+        protected override void Exec(ref WorldState ws) => ws.Network.ServerIPCReceived.Fire(this);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("IPCS"u8)
             .Emit((int)Packet.ID)
             .Emit(Packet.Opcode)
             .Emit(Packet.Epoch)
             .Emit(Packet.SourceServerActor, "X8")
             .Emit(Packet.SendTimestamp.Ticks)
-            .Emit(Packet.Payload.ToArray());
+            .Emit([.. Packet.Payload]);
     }
 }

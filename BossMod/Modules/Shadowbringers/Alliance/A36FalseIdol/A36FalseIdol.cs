@@ -1,9 +1,11 @@
 ﻿namespace BossMod.Shadowbringers.Alliance.A36FalseIdol;
 
-class MadeMagic1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MadeMagic1), new AOEShapeRect(50, 15));
-class MadeMagic2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MadeMagic2), new AOEShapeRect(50, 15));
+abstract class MadeMagic(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(50, 15));
+class MadeMagic1(BossModule module) : MadeMagic(module, AID.MadeMagic1);
+class MadeMagic2(BossModule module) : MadeMagic(module, AID.MadeMagic2);
+
 class ScreamingScore(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ScreamingScore));
-class ScatteredMagic(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ScatteredMagic), 4);
+class ScatteredMagic(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScatteredMagic), 4);
 class DarkerNote2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DarkerNote2), 6);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 779, NameID = 9948)]

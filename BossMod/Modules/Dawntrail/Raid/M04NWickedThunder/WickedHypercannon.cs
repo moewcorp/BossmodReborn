@@ -36,7 +36,7 @@ class WickedHypercannon(BossModule module) : Components.GenericAOEs(module)
         if (_aoe != null)
         {
             var activation = _aoe?.Activation!;
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), (DateTime)activation));
+            hints.PredictedDamage.Add((Raid.WithSlot(false, true, true).Mask(), (DateTime)activation));
         }
     }
 }

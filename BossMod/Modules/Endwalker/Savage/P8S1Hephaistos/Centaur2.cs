@@ -54,7 +54,7 @@ class CentaurDiflare(BossModule module) : Components.UniformStackSpread(module, 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ConceptualDiflare)
-            AddStacks(Raid.WithoutSlot().Where(a => a.Role == Role.Healer));
+            AddStacks(Raid.WithoutSlot(false, true, true).Where(a => a.Role == Role.Healer));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -67,7 +67,7 @@ class CentaurDiflare(BossModule module) : Components.UniformStackSpread(module, 
 // TODO: hints
 class BlazingFootfalls(BossModule module) : BossComponent(module)
 {
-    public int NumMechanicsDone { get; private set; }
+    public int NumMechanicsDone;
     private int _seenVisuals;
     private bool _firstCrush;
     private bool _firstSafeLeft;
@@ -85,23 +85,23 @@ class BlazingFootfalls(BossModule module) : BossComponent(module)
         if (NumMechanicsDone == 0)
         {
             // draw first trailblaze
-            Arena.ZoneRect(Module.Center, new WDir(0, 1), Module.Bounds.Radius, Module.Bounds.Radius, _trailblazeHalfWidth, Colors.AOE);
+            Arena.ZoneRect(Arena.Center, new WDir(0, 1), Arena.Bounds.Radius, Arena.Bounds.Radius, _trailblazeHalfWidth, Colors.AOE);
         }
         if (NumMechanicsDone == 2)
         {
             // draw second trailblaze
-            Arena.ZoneRect(Module.Center, new WDir(1, 0), Module.Bounds.Radius, Module.Bounds.Radius, _trailblazeHalfWidth, Colors.AOE);
+            Arena.ZoneRect(Arena.Center, new WDir(1, 0), Arena.Bounds.Radius, Arena.Bounds.Radius, _trailblazeHalfWidth, Colors.AOE);
         }
 
         if (_firstCrush && NumMechanicsDone < 2)
         {
             // draw first crush
-            Arena.ZoneCircle(Module.Center + Module.Bounds.Radius * new WDir(_firstSafeLeft ? 1 : -1, 0), _crushRadius, Colors.AOE);
+            Arena.ZoneCircle(Arena.Center + Arena.Bounds.Radius * new WDir(_firstSafeLeft ? 1 : -1, 0), _crushRadius, Colors.AOE);
         }
         if (!_firstCrush && NumMechanicsDone is >= 2 and < 4)
         {
             // draw second crush
-            Arena.ZoneCircle(Module.Center + Module.Bounds.Radius * new WDir(0, _secondSafeTop ? 1 : -1), _crushRadius, Colors.AOE);
+            Arena.ZoneCircle(Arena.Center + Arena.Bounds.Radius * new WDir(0, _secondSafeTop ? 1 : -1), _crushRadius, Colors.AOE);
         }
     }
 
@@ -110,37 +110,37 @@ class BlazingFootfalls(BossModule module) : BossComponent(module)
         if (NumMechanicsDone < 2 && _seenVisuals > 0)
         {
             // draw first safespot
-            Arena.AddCircle(Module.Center + _safespotOffset * new WDir(_firstSafeLeft ? -1 : 1, 0), _safespotRadius, Colors.Safe, 2);
+            Arena.AddCircle(Arena.Center + _safespotOffset * new WDir(_firstSafeLeft ? -1 : 1, 0), _safespotRadius, Colors.Safe, 2);
         }
         if (NumMechanicsDone < 4 && _seenVisuals > 1)
         {
             // draw second safespot
-            Arena.AddCircle(Module.Center + _safespotOffset * new WDir(0, _secondSafeTop ? -1 : 1), _safespotRadius, Colors.Safe, 2);
+            Arena.AddCircle(Arena.Center + _safespotOffset * new WDir(0, _secondSafeTop ? -1 : 1), _safespotRadius, Colors.Safe, 2);
         }
 
         if (NumMechanicsDone == 0)
         {
             // draw knockback from first trailblaze
-            var adjPos = pc.Position + _trailblazeKnockbackDistance * new WDir(pc.Position.X < Module.Center.X ? -1 : 1, 0);
+            var adjPos = pc.Position + _trailblazeKnockbackDistance * new WDir(pc.Position.X < Arena.Center.X ? -1 : 1, 0);
             Components.Knockback.DrawKnockback(pc, adjPos, Arena);
         }
         if (NumMechanicsDone == 2)
         {
             // draw knockback from second trailblaze
-            var adjPos = pc.Position + _trailblazeKnockbackDistance * new WDir(0, pc.Position.Z < Module.Center.Z ? -1 : 1);
+            var adjPos = pc.Position + _trailblazeKnockbackDistance * new WDir(0, pc.Position.Z < Arena.Center.Z ? -1 : 1);
             Components.Knockback.DrawKnockback(pc, adjPos, Arena);
         }
 
         if (!_firstCrush && NumMechanicsDone == 1)
         {
             // draw knockback from first impact
-            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Module.Center + Module.Bounds.Radius * new WDir(_firstSafeLeft ? -1 : 1, 0), _impactKnockbackRadius);
+            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Arena.Center + Arena.Bounds.Radius * new WDir(_firstSafeLeft ? -1 : 1, 0), _impactKnockbackRadius);
             Components.Knockback.DrawKnockback(pc, adjPos, Arena);
         }
         if (_firstCrush && NumMechanicsDone == 3)
         {
             // draw knockback from second impact
-            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Module.Center + Module.Bounds.Radius * new WDir(0, _secondSafeTop ? -1 : 1), _impactKnockbackRadius);
+            var adjPos = Components.Knockback.AwayFromSource(pc.Position, Arena.Center + Arena.Bounds.Radius * new WDir(0, _secondSafeTop ? -1 : 1), _impactKnockbackRadius);
             Components.Knockback.DrawKnockback(pc, adjPos, Arena);
         }
     }
@@ -152,23 +152,23 @@ class BlazingFootfalls(BossModule module) : BossComponent(module)
             case AID.BlazingFootfallsImpactVisual:
                 if (_seenVisuals > 0)
                 {
-                    _secondSafeTop = spell.LocXZ.Z < Module.Center.Z;
+                    _secondSafeTop = spell.LocXZ.Z < Arena.Center.Z;
                 }
                 else
                 {
-                    _firstSafeLeft = spell.LocXZ.X < Module.Center.X;
+                    _firstSafeLeft = spell.LocXZ.X < Arena.Center.X;
                 }
                 ++_seenVisuals;
                 break;
             case AID.BlazingFootfallsCrushVisual:
                 if (_seenVisuals > 0)
                 {
-                    _secondSafeTop = spell.LocXZ.Z > Module.Center.Z;
+                    _secondSafeTop = spell.LocXZ.Z > Arena.Center.Z;
                 }
                 else
                 {
                     _firstCrush = true;
-                    _firstSafeLeft = spell.LocXZ.X > Module.Center.X;
+                    _firstSafeLeft = spell.LocXZ.X > Arena.Center.X;
                 }
                 ++_seenVisuals;
                 break;

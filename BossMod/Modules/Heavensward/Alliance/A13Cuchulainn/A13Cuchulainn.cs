@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Heavensward.Alliance.A13Cuchulainn;
 
-class CorrosiveBile1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CorrosiveBile1), new AOEShapeCone(25, 45.Degrees()));
-class FlailingTentacles2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlailingTentacles2), new AOEShapeRect(39, 3.5f));
-class Beckon(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Beckon), new AOEShapeCone(36.875f, 30.Degrees()));
+class CorrosiveBile1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CorrosiveBile1), new AOEShapeCone(25, 45.Degrees()));
+class FlailingTentacles2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlailingTentacles2), new AOEShapeRect(32.5f, 3.5f));
+class Beckon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Beckon), new AOEShapeCone(36.875f, 30.Degrees()));
 class BileBelow(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BileBelow));
 class Pestilence(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Pestilence));
 class BlackLung(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BlackLung));

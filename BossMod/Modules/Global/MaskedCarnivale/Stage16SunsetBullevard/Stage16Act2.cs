@@ -4,31 +4,34 @@ public enum OID : uint
 {
     Boss = 0x26F4, // R=4.0
     Cyclops = 0x26F3, //R=3.2
-    Helper = 0x233C, //R=0.5
+    Helper = 0x233C //R=0.5
 }
 
 public enum AID : uint
 {
-    AutoAttack = 6497, // 26F4->player, no cast, single-target
-    TenTonzeSlash = 14871, // 26F4->self, 4.0s cast, range 40+R 60-degree cone
-    VoiceOfAuthority = 14874, // 26F4->self, 1.5s cast, single-target, spawns cyclops add
-    OneOneOneTonzeSwing = 14872, // 26F4->self, 4.5s cast, range 8+R circle, knockback dist 20
-    CryOfRage = 14875, // 26F4->self, 3.0s cast, range 50+R circle, gaze
-    TheBullsVoice = 14779, // 26F4->self, 1.5s cast, single-target, damage buff
-    PredatorialInstinct = 14685, // 26F4->self, no cast, range 50+R circle, raidwide attract with dist 50
-    OneOneOneOneTonzeSwing = 14686, // 26F4->self, 9.0s cast, range 20+R circle, raidwide, needs diamondback to survive
-    ZoomIn = 14873, // 26F4->player, 4.0s cast, width 8 rect unavoidable charge, knockback dist 20
-    TenTonzeWave = 14876, // 26F4->self, 4.0s cast, range 40+R 60-degree cone
-    TenTonzeWave2 = 15268, // 233C->self, 4.6s cast, range 10-20 donut
+    AutoAttack = 6497, // Boss->player, no cast, single-target
+
+    TenTonzeSlash = 14871, // Boss->self, 4.0s cast, range 40+R 60-degree cone
+    VoiceOfAuthority = 14874, // Boss->self, 1.5s cast, single-target, spawns cyclops add
+    OneOneOneTonzeSwing = 14872, // Boss->self, 4.5s cast, range 8+R circle, knockback dist 20
+    CryOfRage = 14875, // Boss->self, 3.0s cast, range 50+R circle, gaze
+    TheBullsVoice = 14779, // Boss->self, 1.5s cast, single-target, damage buff
+    PredatorialInstinct = 14685, // Boss->self, no cast, range 50+R circle, raidwide attract with dist 50
+    OneOneOneOneTonzeSwing = 14686, // Boss->self, 9.0s cast, range 20+R circle, raidwide, needs diamondback to survive
+    ZoomIn = 14873, // Boss->player, 4.0s cast, width 8 rect unavoidable charge, knockback dist 20
+    TenTonzeWaveCone = 14876, // Boss->self, 4.0s cast, range 40+R 60-degree cone
+    TenTonzeWaveDonut = 15268 // Helper->self, 4.6s cast, range 10-20 donut
 }
 
 class OneOneOneOneTonzeSwing(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OneOneOneOneTonzeSwing), "Use Diamondback!");
-class TenTonzeSlash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TenTonzeSlash), new AOEShapeCone(44, 30.Degrees()));
-class OneOneOneTonzeSwing(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), new AOEShapeCircle(12));
+class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), 12);
 class CryOfRage(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CryOfRage));
-class TenTonzeWave(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TenTonzeWave), new AOEShapeCone(44, 30.Degrees()));
-class TenTonzeWave2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TenTonzeWave2), new AOEShapeDonut(10, 20));
-class OneOneOneTonzeSwingKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), 20, shape: new AOEShapeCircle(12)); // actual knockback happens ~1.45s after snapshot
+
+abstract class TenTonzeCone(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(44, 30.Degrees()));
+class TenTonzeSlash(BossModule module) : TenTonzeCone(module, AID.TenTonzeSlash);
+class TenTonzeWaveCone(BossModule module) : TenTonzeCone(module, AID.TenTonzeWaveCone);
+
+class TenTonzeWaveDonut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTonzeWaveDonut), new AOEShapeDonut(10, 20));
 class ZoomIn(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.ZoomIn), 4);
 
 class ZoomInKB(BossModule module) : Components.Knockback(module) // actual knockback happens ~0.7s after snapshot
@@ -69,13 +72,12 @@ class Stage16Act2States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<OneOneOneOneTonzeSwing>()
             .ActivateOnEnter<OneOneOneTonzeSwing>()
-            .ActivateOnEnter<OneOneOneTonzeSwingKB>()
             .ActivateOnEnter<TenTonzeSlash>()
             .ActivateOnEnter<CryOfRage>()
             .ActivateOnEnter<ZoomIn>()
             .ActivateOnEnter<ZoomInKB>()
-            .ActivateOnEnter<TenTonzeWave>()
-            .ActivateOnEnter<TenTonzeWave2>()
+            .ActivateOnEnter<TenTonzeWaveCone>()
+            .ActivateOnEnter<TenTonzeWaveDonut>()
             .DeactivateOnEnter<Hints>();
     }
 }
@@ -83,7 +85,7 @@ class Stage16Act2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 626, NameID = 8113, SortOrder = 2)]
 public class Stage16Act2 : BossModule
 {
-    public Stage16Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(16))
+    public Stage16Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {
         ActivateComponent<Hints>();
     }
@@ -96,12 +98,12 @@ public class Stage16Act2 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = (OID)e.Actor.OID switch
             {
                 OID.Cyclops => 1,
-                OID.Boss => 0,
                 _ => 0
             };
         }

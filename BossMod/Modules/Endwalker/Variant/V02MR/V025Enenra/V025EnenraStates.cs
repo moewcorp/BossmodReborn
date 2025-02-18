@@ -6,7 +6,6 @@ class V025EnenraStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            .ActivateOnEnter<Components.StayInBounds>()
             .ActivateOnEnter<PipeCleaner>()
             .ActivateOnEnter<Uplift>()
             .ActivateOnEnter<Snuff>()

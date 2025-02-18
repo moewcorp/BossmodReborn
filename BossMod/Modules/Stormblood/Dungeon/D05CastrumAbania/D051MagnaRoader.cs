@@ -51,7 +51,7 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
         {
             var distance = (actor.Position - closestTurret.Position).LengthSq();
             if (forbidden.Count > 0 && distance > 9)
-                hints.AddForbiddenZone(p => forbidden.Max(f => f(p)));
+                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
             else if (distance < 9)
             {
                 hints.InteractWithTarget = closestTurret;
@@ -62,7 +62,7 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(default, Actor.FakeActor).Any())
+        if (Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(default, Raid.Player()!).Any())
             hints.Add("Use the turrets to stun the boss!");
     }
 
@@ -114,8 +114,8 @@ class WildSpeedHaywire(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MagitekPulse(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekPulse), 6);
-class MagitekFireII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekFireII), 5);
+class MagitekPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekPulse), 6);
+class MagitekFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekFireII), 5);
 class MagitekFireIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MagitekFireIII));
 
 class D051MagnaRoaderStates : StateMachineBuilder

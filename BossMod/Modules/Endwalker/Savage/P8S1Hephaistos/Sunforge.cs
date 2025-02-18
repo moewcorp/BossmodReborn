@@ -23,7 +23,7 @@ class SunforgeSidesHint(BossModule module) : Components.CastHint(module, ActionI
     }
 }
 
-class SunforgeCenter(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScorchingFang), new AOEShapeRect(21, 7, 21));
-class SunforgeSides(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.SunsPinion), new AOEShapeRect(21, 21, -7));
-class SunforgeCenterIntermission(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScorchingFangIntermission), new AOEShapeRect(42, 7));
-class SunforgeSidesIntermission(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ScorchedPinion), new AOEShapeRect(21, 42, -7));
+class SunforgeCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchingFang), new AOEShapeRect(21, 7, 21));
+class SunforgeSides(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SunsPinion), new AOEShapeRect(21, 21, -7));
+class SunforgeCenterIntermission(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchingFangIntermission), new AOEShapeRect(42, 7));
+class SunforgeSidesIntermission(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchedPinion), new AOEShapeRect(21, 42, -7));

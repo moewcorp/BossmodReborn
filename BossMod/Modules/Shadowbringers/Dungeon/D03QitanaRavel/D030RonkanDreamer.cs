@@ -12,15 +12,17 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    WrathOfTheRonka = 17223, // 2A40->self, 6.0s cast, single-target
-    WrathOfTheRonkaLong = 15918, // 28E8->self, no cast, range 35 width 8 rect
-    WrathOfTheRonkaShort = 15916, // 28E8->self, no cast, range 12 width 8 rect
-    WrathOfTheRonkaMedium = 15917, // 28E8->self, no cast, range 22 width 8 rect
-    RonkanFire = 17433, // 2A40->player, 1.0s cast, single-target
-    RonkanAbyss = 17387, // 2A40->location, 3.0s cast, range 6 circle
-    AutoAttack = 872, // 28DD/28DC->player, no cast, single-target
-    AutoAttack2 = 17949, // 28E3->player, no cast, single-target
-    BurningBeam = 15923 // 28E3->self, 3.0s cast, range 15 width 4 rect
+    AutoAttack1 = 872, // RonkanVessel/RonkanIdol->player, no cast, single-target
+    AutoAttack2 = 17949, // RonkanThorn->player, no cast, single-target
+
+    WrathOfTheRonka = 17223, // Boss->self, 6.0s cast, single-target
+    WrathOfTheRonkaLong = 15918, // Helper->self, no cast, range 35 width 8 rect
+    WrathOfTheRonkaShort = 15916, // Helper->self, no cast, range 12 width 8 rect
+    WrathOfTheRonkaMedium = 15917, // Helper->self, no cast, range 22 width 8 rect
+    RonkanFire = 17433, // Boss->player, 1.0s cast, single-target
+    RonkanAbyss = 17387, // Boss->location, 3.0s cast, range 6 circle
+
+    BurningBeam = 15923 // RonkanThorn->self, 3.0s cast, range 15 width 4 rect
 }
 
 public enum TetherID : uint
@@ -29,19 +31,18 @@ public enum TetherID : uint
 }
 
 class RonkanFire(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RonkanFire));
-class RonkanAbyss(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RonkanAbyss), 6);
+class RonkanAbyss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RonkanAbyss), 6f);
 
 class WrathOfTheRonka(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rectShort = new(12, 4);
-    private static readonly AOEShapeRect rectMedium = new(22, 4);
-    private static readonly AOEShapeRect rectLong = new(35, 4);
+    private readonly List<AOEInstance> _aoes = new(6);
+    private static readonly AOEShapeRect rectShort = new(12f, 4f), rectMedium = new(22f, 4f), rectLong = new(35f, 4f);
+
     private static readonly (WPos Position, AOEShapeRect Shape)[] aoeMap =
-        [(new(-17, 627), rectMedium), (new(17, 642), rectMedium),
-        (new(-17, 436), rectMedium), (new(17, 421), rectMedium),
-        (new(-17, 642), rectShort), (new(17, 627), rectShort),
-        (new(17, 436), rectShort), (new(-17, 421), rectShort)];
+        [(new(-17f, 627f), rectMedium), (new(17f, 642f), rectMedium),
+        (new(-17f, 436f), rectMedium), (new(17f, 421f), rectMedium),
+        (new(-17f, 642f), rectShort), (new(17f, 627f), rectShort),
+        (new(17f, 436f), rectShort), (new(-17f, 421f), rectShort)];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
@@ -50,26 +51,29 @@ class WrathOfTheRonka(BossModule module) : Components.GenericAOEs(module)
         if (tether.ID == (uint)TetherID.StatueActivate)
         {
             var aoeShape = GetAOEShape(source.Position) ?? rectLong;
-            _aoes.Add(new(aoeShape, source.Position, source.Rotation, WorldState.FutureTime(6)));
+            _aoes.Add(new(aoeShape, WPos.ClampToGrid(source.Position), source.Rotation, WorldState.FutureTime(6d)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.WrathOfTheRonkaShort or AID.WrathOfTheRonkaMedium or AID.WrathOfTheRonkaLong)
+        if (spell.Action.ID is (uint)AID.WrathOfTheRonkaShort or (uint)AID.WrathOfTheRonkaMedium or (uint)AID.WrathOfTheRonkaLong)
             _aoes.Clear();
     }
 
     private static AOEShapeRect? GetAOEShape(WPos position)
     {
-        foreach (var (pos, shape) in aoeMap)
-            if (position.AlmostEqual(pos, 1))
-                return shape;
+        for (var i = 0; i < 8; ++i)
+        {
+            var aoe = aoeMap[i];
+            if (position.AlmostEqual(aoe.Position, 1f))
+                return aoe.Shape;
+        }
         return null;
     }
 }
 
-class BurningBeam(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BurningBeam), new AOEShapeRect(15, 2));
+class BurningBeam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BurningBeam), new AOEShapeRect(15f, 2f));
 
 class D030RonkanDreamerStates : StateMachineBuilder
 {
@@ -86,21 +90,20 @@ class D030RonkanDreamerStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8639)]
 public class D030RonkanDreamer(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.Z > 550 ? arena1.Center : arena2.Center, primary.Position.Z > 550 ? arena1 : arena2)
 {
-    private static readonly WPos[] vertices1 = [new(-3.82f, 640.12f), new(-3.95f, 640.67f), new(-3.98f, 646.62f), new(-6.08f, 646.51f), new(-6.58f, 644.99f),
-    new(-6.28f, 643.05f), new(-6.38f, 641.22f), new(-6.60f, 639.71f), new(-6.29f, 639.34f), new(-4.27f, 639.03f)];
-    private static readonly WPos[] vertices2 = [new(6.61f, 625.6f), new(6.3f, 627.46f), new(6.32f, 629.1f), new(6.54f, 630.78f), new(6.28f, 631.19f),
-    new(4.28f, 631.45f), new(3.83f, 630.55f), new(3.82f, 629.67f), new(3.96f, 623.91f), new(6.07f, 623.83f)];
-    private static readonly WPos[] vertices3 = [new(-3.77f, 418.91f), new(-3.94f, 419.58f), new(-3.97f, 425.34f), new(-6.11f, 425.47f), new(-6.59f, 423.67f),
-    new(-6.38f, 421.66f), new(-6.38f, 420.01f), new(-6.53f, 418.49f), new(-6.27f, 418.12f), new(-4, 417.82f),
-    new(-3.77f, 418.91f)];
-    private static readonly WPos[] vertices4 = [new(6.09f, 432.98f), new(6.64f, 434.58f), new(6.37f, 436.54f), new(6.31f, 438.11f), new(6.50f, 439.59f),
-    new(6.48f, 440.24f), new(4.29f, 440.32f), new(3.81f, 439.47f), new(3.95f, 438.75f), new(4.00f, 432.74f),
-    new(6.09f, 432.98f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new Rectangle(new(0, 640), 17.5f, 23)], [new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new Rectangle(new(0, 434.5f), 17.5f, 24)], [new PolygonCustom(vertices3), new PolygonCustom(vertices4)]);
+    private static readonly WPos[] vertices1 = [new(-4.299f, 646.21f), new(-4.298f, 640.685f), new(-4.118f, 640.131f), new(-4.467f, 639.508f), new(-6.074f, 639.653f),
+    new(-6.195f, 639.858f), new(-5.99f, 641.313f), new(-5.958f, 643.01f), new(-6.236f, 644.911f), new(-5.856f, 646.17f)];
+    private static readonly WPos[] vertices2 = [new(6.074f, 630.811f), new(6.195f, 630.606f), new(5.99f, 629.151f), new(5.958f, 627.454f), new(6.236f, 625.553f),
+    new(5.856f, 624.294f), new(4.299f, 624.254f), new(4.298f, 629.779f), new(4.118f, 630.333f), new(4.467f, 630.956f)];
+    private static readonly WPos[] vertices3 = [new(6.074f, 439.811f), new(6.195f, 439.606f), new(5.99f, 438.151f), new(5.958f, 436.454f), new(6.236f, 434.553f),
+    new(5.856f, 433.294f), new(4.299f, 433.254f), new(4.298f, 438.779f), new(4.118f, 439.333f), new(4.467f, 439.956f)];
+    private static readonly WPos[] vertices4 = [new(-4.299f, 424.978f), new(-4.298f, 419.453f), new(-4.118f, 418.899f), new(-4.467f, 418.277f), new(-6.074f, 418.421f),
+    new(-6.195f, 418.626f), new(-5.99f, 420.081f), new(-5.958f, 421.778f), new(-6.236f, 423.679f), new(-5.856f, 424.938f)];
+    private static readonly ArenaBoundsComplex arena1 = new([new Rectangle(new(default, 640f), 17.25f, 23f)], [new PolygonCustomO(vertices1, 0.5f), new PolygonCustomO(vertices2, 0.5f)]);
+    private static readonly ArenaBoundsComplex arena2 = new([new Rectangle(new(default, 434.5f), 17.25f, 23.75f)], [new PolygonCustomO(vertices3, 0.5f), new PolygonCustomO(vertices4, 0.5f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.RonkanVessel).Concat([PrimaryActor]).Concat(Enemies(OID.RonkanThorn)).Concat(Enemies(OID.RonkanIdol)));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies([(uint)OID.RonkanVessel, (uint)OID.RonkanThorn, (uint)OID.RonkanIdol]));
     }
 }

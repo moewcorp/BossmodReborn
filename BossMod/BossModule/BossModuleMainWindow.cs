@@ -21,18 +21,18 @@ public class BossModuleMainWindow : UIWindow
     public override void PreOpenCheck()
     {
         var showZoneModule = ShowZoneModule();
-        IsOpen = _mgr.Config.Enable && (_mgr.LoadedModules.Count > 0 || showZoneModule);
+        IsOpen = BossModuleManager.Config.Enable && (_mgr.LoadedModules.Count > 0 || showZoneModule);
         ShowCloseButton = _mgr.ActiveModule != null && !showZoneModule;
         WindowName = (showZoneModule ? $"Zone module ({_zmm.ActiveModule?.GetType().Name})" : _mgr.ActiveModule != null ? $"Boss module ({_mgr.ActiveModule.GetType().Name})" : "Loaded boss modules") + _windowID;
         Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-        if (_mgr.Config.TrishaMode)
+        if (BossModuleManager.Config.TrishaMode)
             Flags |= ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground;
-        if (_mgr.Config.Lock)
+        if (BossModuleManager.Config.Lock)
             Flags |= ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoInputs;
-        ForceMainWindow = _mgr.Config.TrishaMode; // NoBackground flag without ForceMainWindow works incorrectly for whatever reason
+        ForceMainWindow = BossModuleManager.Config.TrishaMode; // NoBackground flag without ForceMainWindow works incorrectly for whatever reason
 
-        if (_mgr.Config.ShowWorldArrows && _mgr.ActiveModule != null && _mgr.WorldState.Party[PartyState.PlayerSlot] is var pc && pc != null)
-            DrawMovementHints(_mgr.ActiveModule.CalculateMovementHintsForRaidMember(PartyState.PlayerSlot, pc), pc.PosRot.Y);
+        if (BossModuleManager.Config.ShowWorldArrows && _mgr.ActiveModule != null && _mgr.WorldState.Party[PartyState.PlayerSlot] is var pc && pc != null)
+            DrawMovementHints(_mgr.ActiveModule.CalculateMovementHintsForRaidMember(PartyState.PlayerSlot, ref pc), pc.PosRot.Y);
     }
 
     public override void OnOpen()
@@ -62,13 +62,12 @@ public class BossModuleMainWindow : UIWindow
         if (ShowZoneModule())
         {
             _zmm.ActiveModule?.DrawGlobalHints();
-            _zmm.ActiveModule?.DrawExtra();
         }
         else if (_mgr.ActiveModule != null)
         {
             try
             {
-                _mgr.ActiveModule.Draw(_mgr.Config.RotateArena ? _mgr.WorldState.Client.CameraAzimuth : _mgr.Config.FlipArena ? 180.Degrees() : default, PartyState.PlayerSlot, !_mgr.Config.HintsInSeparateWindow, true);
+                _mgr.ActiveModule.Draw(BossModuleManager.Config.RotateArena ? _mgr.WorldState.Client.CameraAzimuth : BossModuleManager.Config.FlipArena ? 180f.Degrees() : default, PartyState.PlayerSlot, !BossModuleManager.Config.HintsInSeparateWindow, true);
             }
             catch (Exception ex)
             {
@@ -78,8 +77,9 @@ public class BossModuleMainWindow : UIWindow
         }
         else
         {
-            foreach (var m in _mgr.LoadedModules)
+            for (var i = 0; i < _mgr.LoadedModules.Count; ++i)
             {
+                var m = _mgr.LoadedModules[i];
                 var oidType = BossModuleRegistry.FindByOID(m.PrimaryActor.OID)?.ObjectIDType;
                 var oidName = oidType?.GetEnumName(m.PrimaryActor.OID);
                 if (ImGui.Button($"{m.GetType()} ({m.PrimaryActor.InstanceID:X} '{m.PrimaryActor.Name}' {oidName})"))
@@ -95,8 +95,8 @@ public class BossModuleMainWindow : UIWindow
 
         foreach ((var start, var end, var color) in arrows)
         {
-            Vector3 start3 = new(start.X, y, start.Z);
-            Vector3 end3 = new(end.X, y, end.Z);
+            Vector3 start3 = start.ToVec3(y);
+            Vector3 end3 = end.ToVec3(y);
             Camera.Instance.DrawWorldLine(start3, end3, color);
             var dir = Vector3.Normalize(end3 - start3);
             var arrowStart = end3 - 0.4f * dir;
@@ -112,5 +112,5 @@ public class BossModuleMainWindow : UIWindow
             _ = new BossModuleConfigWindow(_mgr.ActiveModule.Info, _mgr.WorldState);
     }
 
-    private bool ShowZoneModule() => _mgr.Config.ShowGlobalHints && !_mgr.Config.HintsInSeparateWindow && _mgr.ActiveModule?.StateMachine.ActivePhase == null && (_zmm.ActiveModule?.WantToBeDrawn() ?? false);
+    private bool ShowZoneModule() => BossModuleManager.Config.ShowGlobalHints && !BossModuleManager.Config.HintsInSeparateWindow && _mgr.ActiveModule?.StateMachine.ActivePhase == null && (_zmm.ActiveModule?.WantDrawHints() ?? false);
 }

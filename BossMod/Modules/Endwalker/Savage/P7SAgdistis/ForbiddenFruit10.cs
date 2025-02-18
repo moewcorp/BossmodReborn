@@ -9,7 +9,7 @@ class ForbiddenFruit10(BossModule module) : ForbiddenFruitCommon(module, ActionI
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         base.DrawArenaBackground(pcSlot, pc);
-        foreach (var (slot, target) in Raid.WithSlot(true))
+        foreach (var (slot, target) in Raid.WithSlot(true, true, true))
         {
             var source = TetherSources[slot];
             if (source != null)

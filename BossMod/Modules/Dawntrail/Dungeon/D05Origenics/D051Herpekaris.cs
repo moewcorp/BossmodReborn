@@ -42,58 +42,95 @@ public enum AID : uint
 class CollectiveAgony(BossModule module) : Components.LineStack(module, ActionID.MakeSpell(AID.CollectiveAgonyMarker), ActionID.MakeSpell(AID.CollectiveAgony), 5.6f);
 class StridentShriek(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StridentShriek));
 class ConvulsiveCrush(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.ConvulsiveCrush));
-class PoisonHeartSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.PoisonHeartSpread), 5);
-class PoisonHeartVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 2, ActionID.MakeSpell(AID.PoisonHeartVoidzone), m => m.Enemies(OID.PoisonVoidzone).Where(z => z.EventState != 7), 0.9f);
+class PoisonHeartSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.PoisonHeartSpread), 5f);
+class PoisonHeartVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 2f, ActionID.MakeSpell(AID.PoisonHeartVoidzone), GetVoidzones, 0.9f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.PoisonVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-class PodBurst(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 6);
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+abstract class PodBurst(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
 class PodBurst1(BossModule module) : PodBurst(module, AID.PodBurst1);
 class PodBurst2(BossModule module) : PodBurst(module, AID.PodBurst2);
 
 class WrithingRiot(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCone coneLeftRight = new(25, 105.Degrees());
-    private static readonly AOEShapeCone coneRear = new(25, 45.Degrees());
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly AOEShapeCone coneLeftRight = new(25f, 105f.Degrees());
+    private static readonly AOEShapeCone coneRear = new(25f, 45f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
-            yield return _aoes[1] with { Risky = _aoes[0].Shape != _aoes[1].Shape };
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        {
+            for (var i = 0; i < max; ++i)
+            {
+                var aoe = _aoes[i];
+                if (i == 0)
+                    aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+                else
+                    aoes[i] = aoe with { Risky = aoes[0].Shape != aoe.Shape };
+            }
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var activation = WorldState.FutureTime(9.2f + _aoes.Count * 2);
-        switch ((AID)spell.Action.ID)
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, WorldState.FutureTime(7.3d - _aoes.Count * 1d)));
+        switch (spell.Action.ID)
         {
-            case AID.RightSweepTelegraph:
-            case AID.LeftSweepTelegraph:
-                AddAOE(coneLeftRight, caster.Position, spell.Rotation, activation);
+            case (uint)AID.RightSweepTelegraph:
+            case (uint)AID.LeftSweepTelegraph:
+                AddAOE(coneLeftRight);
                 break;
-            case AID.RearSweepTelegraph:
-                AddAOE(coneRear, caster.Position, spell.Rotation, activation);
+            case (uint)AID.RearSweepTelegraph:
+                AddAOE(coneRear);
                 break;
         }
     }
 
-    private void AddAOE(AOEShape shape, WPos position, Angle rotation, DateTime activation)
-    {
-        _aoes.Add(new(shape, position, rotation, activation));
-    }
-
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0)
-            switch ((AID)spell.Action.ID)
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
             {
-                case AID.RearSweep:
-                case AID.LeftSweep:
-                case AID.RightSweep:
+                case (uint)AID.RearSweep:
+                case (uint)AID.LeftSweep:
+                case (uint)AID.RightSweep:
                     _aoes.RemoveAt(0);
                     break;
             }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        base.AddAIHints(slot, actor, assignment, hints);
+        // stay close to the middle if there is next imminent aoe
+        if (_aoes.Count > 1)
+        {
+            var aoe = _aoes[0];
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe.Origin, 3f), aoe.Activation);
+        }
     }
 }
 
@@ -114,4 +151,4 @@ class D051HerpekarisStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 825, NameID = 12741, SortOrder = 1)]
-public class D051Herpekaris(WorldState ws, Actor primary) : BossModule(ws, primary, new(-88, -180), new ArenaBoundsSquare(17.5f));
+public class D051Herpekaris(WorldState ws, Actor primary) : BossModule(ws, primary, new(-88f, -180f), new ArenaBoundsSquare(17.5f));

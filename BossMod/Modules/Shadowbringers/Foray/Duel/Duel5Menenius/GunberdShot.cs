@@ -4,10 +4,10 @@ class GunberdShot(BossModule module) : BossComponent(module)
 {
     private Actor? _gunberdCaster;
 
-    public bool DarkShotLoaded { get; private set; }
-    public bool WindslicerLoaded { get; private set; }
+    public bool DarkShotLoaded;
+    public bool WindslicerLoaded;
 
-    public bool Gunberding { get; private set; }
+    public bool Gunberding;
 
     public override void AddGlobalHints(GlobalHints hints)
     {

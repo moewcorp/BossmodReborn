@@ -23,13 +23,13 @@ class P2EarthMissileIce(BossModule module) : Components.PersistentVoidzoneAtCast
 // TODO: add hint for spread target to stay close to tornado...
 class P2Enumeration(BossModule module) : Components.UniformStackSpread(module, 5, 6, 3, 3, true, false) // TODO: verify enumeration radius
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         switch ((IconID)iconID)
         {
             case IconID.Enumeration:
                 // note: we assume tanks never share enumeration
-                AddStack(actor, WorldState.FutureTime(5.1f), Raid.WithSlot(true).WhereActor(p => p.Role == Role.Tank).Mask());
+                AddStack(actor, WorldState.FutureTime(5.1f), Raid.WithSlot(true, true, true).WhereActor(p => p.Role == Role.Tank).Mask());
                 break;
             case IconID.EarthMissileIce:
                 AddSpread(actor, WorldState.FutureTime(5.1f));
@@ -51,7 +51,7 @@ class P2Enumeration(BossModule module) : Components.UniformStackSpread(module, 5
     }
 }
 
-class P2HiddenMinefield(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HiddenMinefield), new AOEShapeCircle(5))
+class P2HiddenMinefield(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HiddenMinefield), 5)
 {
     private readonly List<WPos> _mines = [];
 

@@ -3,8 +3,8 @@
 // TODO: show reflect hints, show stay under dome hints
 class MaelstromsBolt(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.MaelstromsBoltAOE))
 {
-    private readonly IReadOnlyList<Actor> _ballLightnings = module.Enemies(OID.BallLightning);
-    private readonly IReadOnlyList<Actor> _domes = module.Enemies(OID.ProtectiveDome);
+    private readonly List<Actor> _ballLightnings = module.Enemies(OID.BallLightning);
+    private readonly List<Actor> _domes = module.Enemies(OID.ProtectiveDome);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -13,9 +13,7 @@ class MaelstromsBolt(BossModule module) : Components.CastCounter(module, ActionI
             Arena.Actor(b, Colors.Object, true);
             Arena.AddCircle(b.Position, 8, Colors.Object);
         }
-        foreach (var d in _domes)
-        {
-            Arena.AddCircle(d.Position, 8, Colors.Safe);
-        }
+        for (var i = 0; i < _domes.Count; ++i)
+            Arena.AddCircle(_domes[i].Position, 8, Colors.Safe);
     }
 }

@@ -7,7 +7,7 @@ public enum OID : uint
     UltimaTitan = 0x38FD, // /R=5.25
     UltimaIfrit = 0x38FF, // R=5.0
     GraniteGaol = 0x38FE, // R=1.8
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -47,7 +47,7 @@ public enum AID : uint
 
     TransitionFinish1 = 28994, // Boss->self, no cast, single-target, visual (lose buff)
     TransitionFinish2 = 28993, // Boss->self, no cast, single-target, visual (lose buff)
-    TransitionFinish3 = 28995, // Boss->self, no cast, single-target, visual (lose buff)
+    TransitionFinish3 = 28995 // Boss->self, no cast, single-target, visual (lose buff)
 }
 
 public enum SID : uint
@@ -57,22 +57,25 @@ public enum SID : uint
 }
 
 class EarthenFury(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.EarthenFuryAOE));
-class Geocrush(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Geocrush), new AOEShapeCircle(25)); // TODO: verify falloff...
-class Landslide1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Landslide1), new AOEShapeRect(40, 3));
-class Landslide2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Landslide2), new AOEShapeRect(40, 3));
-class WeightOfTheLand(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WeightOfTheLand), new AOEShapeCircle(6));
+class Geocrush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Geocrush), 25); // TODO: verify falloff...
+
+abstract class Landslide(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
+class Landslide1(BossModule module) : Landslide(module, AID.Landslide1);
+class Landslide2(BossModule module) : Landslide(module, AID.Landslide2);
+
+class WeightOfTheLand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WeightOfTheLand), 6);
 class AerialBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AerialBlastAOE));
-class EyeOfTheStorm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EyeOfTheStormAOE), new AOEShapeDonut(12.5f, 25));
-class MistralShriek(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MistralShriek), new AOEShapeCircle(23));
+class EyeOfTheStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheStormAOE), new AOEShapeDonut(12.5f, 25));
+class MistralShriek(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralShriek), 23);
 class Hellfire(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HellfireAOE));
-class RadiantPlume(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), new AOEShapeCircle(8));
+class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
 
 class VulcanBurst(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.VulcanBurst), 15, stopAtWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Casters.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center, Module.Bounds.Radius - Distance), Module.CastFinishAt(Casters[0].CastInfo!));
+        if (Casters.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, Arena.Bounds.Radius - Distance), Module.CastFinishAt(Casters[0].CastInfo!));
     }
 }
 
@@ -95,12 +98,18 @@ class T04PortaDecumana1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "veyn", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 830, NameID = 2137, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 830, NameID = 2137, SortOrder = 1)]
 public class T04PortaDecumana1(WorldState ws, Actor primary) : BossModule(ws, primary, new(-772, -600), new ArenaBoundsCircle(19.5f))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (PrimaryActor.FindStatus(SID.Invincibility) != null || PrimaryActor.FindStatus(SID.VortexBarrier) != null)
-            hints.PotentialTargets.RemoveAll(e => e.Actor == PrimaryActor);
+        {
+            var e = hints.FindEnemy(PrimaryActor);
+            if (e != null)
+            {
+                e.Priority = AIHints.Enemy.PriorityInvincible;
+            }
+        }
     }
 }

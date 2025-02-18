@@ -14,7 +14,7 @@ class EndOfDaysTethered(BossModule module) : BossComponent(module)
         if (tetheredCaster == null)
             return; // non-tethered players shouldn't need to worry about this mechanic
 
-        if (Raid.WithoutSlot().Exclude(actor).InShape(_shape, tetheredCaster).Any())
+        if (Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, tetheredCaster).Any())
             hints.Add("Bait away from raid!");
         if (_tethers.Any(t => t.target != actor && _shape.Check(actor.Position, t.source)))
             hints.Add("Move away from other baits!");

@@ -9,7 +9,7 @@ class P2Flarethrower(BossModule module) : Components.GenericBaitAway(module, Act
     public override void Update()
     {
         CurrentBaits.Clear();
-        if (_source != null && Raid.WithoutSlot().Closest(_source.Position) is var target && target != null)
+        if (_source != null && Raid.WithoutSlot(false, true, true).Closest(_source.Position) is var target && target != null)
             CurrentBaits.Add(new(_source, target, _shape));
     }
 
@@ -25,7 +25,7 @@ class P2Flarethrower(BossModule module) : Components.GenericBaitAway(module, Act
         if ((AID)spell.Action.ID == AID.FlarethrowerP2)
         {
             _source = caster;
-            ForbiddenPlayers = Raid.WithSlot(true).WhereActor(a => a.InstanceID != caster.TargetID).Mask(); // TODO: unsure about this... assumes BJ main target should bait
+            ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(a => a.InstanceID != caster.TargetID).Mask(); // TODO: unsure about this... assumes BJ main target should bait
         }
     }
 }

@@ -79,7 +79,7 @@ class P5Sigma(BossModule module) : BossComponent(module)
             _waveCannonsDone = true;
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot < 0)
@@ -224,11 +224,11 @@ class P5SigmaWaveCannon(BossModule module) : Components.GenericBaitAway(module, 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.SigmaWaveCannon)
-            foreach (var p in Raid.WithSlot(true).IncludedInMask(_waveCannonTargets).Actors())
+            foreach (var p in Raid.WithSlot(true, true, true).IncludedInMask(_waveCannonTargets).Actors())
                 CurrentBaits.Add(new(caster, p, _shapeWaveCannon));
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.SigmaWaveCannon)
             _waveCannonTargets.Set(Raid.FindSlot(actor.InstanceID));
@@ -332,7 +332,7 @@ class P5SigmaRearLasers(BossModule module) : Components.GenericAOEs(module)
             yield return new(_shape, Module.Center, StartingDir + NumCasts * Rotation, _activation.AddSeconds(0.6 * NumCasts), Colors.Danger);
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if ((OID)actor.OID != OID.RearPowerUnit)
             return;
@@ -375,12 +375,12 @@ class P5SigmaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
             return;
         if (actor.ModelState.ModelState == 4)
         {
-            AOEs.Add(new(new AOEShapeRect(40, 40, -4), actor.Position, actor.Rotation + 90.Degrees(), WorldState.FutureTime(15.1f)));
-            AOEs.Add(new(new AOEShapeRect(40, 40, -4), actor.Position, actor.Rotation - 90.Degrees(), WorldState.FutureTime(15.1f)));
+            AOEs.Add(new(P5OmegaDoubleAOEs.Shapes[2], actor.Position, actor.Rotation + 90.Degrees(), WorldState.FutureTime(15.1f)));
+            AOEs.Add(new(P5OmegaDoubleAOEs.Shapes[2], actor.Position, actor.Rotation - 90.Degrees(), WorldState.FutureTime(15.1f)));
         }
         else
         {
-            AOEs.Add(new(new AOEShapeCross(100, 5), actor.Position, actor.Rotation, WorldState.FutureTime(15.1f)));
+            AOEs.Add(new(P5OmegaDoubleAOEs.Shapes[3], actor.Position, actor.Rotation, WorldState.FutureTime(15.1f)));
             Show = true; // cross can be shown from the start
         }
     }
@@ -412,23 +412,23 @@ class P5SigmaNearDistantWorld(BossModule module) : P5NearDistantWorld(module)
 
         if (actor == NearWorld)
         {
-            yield return Module.Center + 10 * (_lasers.StartingDir + 10 * _lasers.Rotation).ToDirection();
+            yield return Arena.Center + 10 * (_lasers.StartingDir + 10 * _lasers.Rotation).ToDirection();
         }
         else if (actor == DistantWorld)
         {
-            yield return Module.Center + 10 * _lasers.StartingDir.ToDirection();
+            yield return Arena.Center + 10 * _lasers.StartingDir.ToDirection();
         }
         else
         {
             // TODO: figure out a way to assign safespots - for now, assume no-dynamis always go south (and so can be second far baiters or any near baiters), dynamis can go anywhere
-            yield return Module.Center + 19 * _lasers.StartingDir.ToDirection(); // '4' - second far bait spot
-            yield return Module.Center + 19 * (_lasers.StartingDir + 9 * _lasers.Rotation).ToDirection(); // '2' - first near bait spot
-            yield return Module.Center + 19 * (_lasers.StartingDir + 11 * _lasers.Rotation).ToDirection(); // '3' - second near bait spot
+            yield return Arena.Center + 19 * _lasers.StartingDir.ToDirection(); // '4' - second far bait spot
+            yield return Arena.Center + 19 * (_lasers.StartingDir + 9 * _lasers.Rotation).ToDirection(); // '2' - first near bait spot
+            yield return Arena.Center + 19 * (_lasers.StartingDir + 11 * _lasers.Rotation).ToDirection(); // '3' - second near bait spot
             if (_dynamisStacks[slot])
             {
-                yield return Module.Center - 19 * _lasers.StartingDir.ToDirection(); // '1' - first far bait spot
-                yield return Module.Center - 19 * (_lasers.StartingDir + 5 * _lasers.Rotation).ToDirection(); // first (far) laser bait spot
-                yield return Module.Center - 19 * (_lasers.StartingDir - 5 * _lasers.Rotation).ToDirection(); // second (stay) laser bait spot
+                yield return Arena.Center - 19 * _lasers.StartingDir.ToDirection(); // '1' - first far bait spot
+                yield return Arena.Center - 19 * (_lasers.StartingDir + 5 * _lasers.Rotation).ToDirection(); // first (far) laser bait spot
+                yield return Arena.Center - 19 * (_lasers.StartingDir - 5 * _lasers.Rotation).ToDirection(); // second (stay) laser bait spot
             }
         }
     }

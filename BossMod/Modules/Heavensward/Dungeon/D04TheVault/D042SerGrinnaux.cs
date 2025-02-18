@@ -38,7 +38,7 @@ public enum AID : uint
     BossPhase2Vanish = 4256 // SerGrinnauxTheBull->self, no cast, single-target
 }
 
-class HeavySwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HeavySwing), new AOEShapeCone(6.5f, 45.Degrees()), (uint)OID.SerGrinnauxTheBull);
+class HeavySwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HeavySwing), new AOEShapeCone(6.5f, 45.Degrees()), [(uint)OID.SerGrinnauxTheBull]);
 class Overpower(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Overpower), new AOEShapeCone(10.2f, 45.Degrees()));
 class DimensionalRip(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.DimensionalRip), m => m.Enemies(OID.StellarImplodeArea).Where(e => e.EventState != 7), 1.1f);
 
@@ -47,35 +47,12 @@ class FaithUnmoving(BossModule module) : Components.KnockbackFromCastTarget(modu
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<AetherialTear>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || (Module.FindComponent<DimensionalRip>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false);
 }
 
-class Rive(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Rive), new AOEShapeRect(30.5f, 1));
-class HyperdimensionalSlash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HyperdimensionalSlash), new AOEShapeRect(47.2f, 4));
-class DimensionalCollapse1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse1), new AOEShapeDonutSector(2.5f, 7.5f, 90.Degrees()));
-class DimensionalCollapse2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse2), new AOEShapeDonutSector(7.5f, 12.5f, 90.Degrees()));
-class DimensionalCollapse3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse3), new AOEShapeDonutSector(12.5f, 17.5f, 90.Degrees()));
-
-class AetherialTear(BossModule module) : Components.GenericAOEs(module)
-{
-    private static readonly AOEShapeCircle circle = new(7);
-    private readonly List<Actor> _tears = [];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        foreach (var s in _tears)
-            yield return new(circle, s.Position);
-    }
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if ((OID)actor.OID == OID.AetherialTear)
-            _tears.Add(actor);
-    }
-
-    public override void OnActorDestroyed(Actor actor)
-    {
-        if ((OID)actor.OID == OID.AetherialTear)
-            _tears.Remove(actor);
-    }
-}
+class Rive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rive), new AOEShapeRect(30.5f, 1));
+class HyperdimensionalSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdimensionalSlash), new AOEShapeRect(47.2f, 4));
+class DimensionalCollapse1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse1), new AOEShapeDonutSector(2.5f, 7.5f, 90.Degrees()));
+class DimensionalCollapse2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse2), new AOEShapeDonutSector(7.5f, 12.5f, 90.Degrees()));
+class DimensionalCollapse3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapse3), new AOEShapeDonutSector(12.5f, 17.5f, 90.Degrees()));
+class AetherialTear(BossModule module) : Components.PersistentVoidzone(module, 7, m => m.Enemies(OID.AetherialTear));
 
 class D042SerGrinnauxStates : StateMachineBuilder
 {

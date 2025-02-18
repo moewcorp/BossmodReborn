@@ -20,6 +20,8 @@ public abstract class RoleTankUtility(RotationModuleManager manager, Actor playe
         DefineSimpleConfig(def, SharedTrack.Provoke, "Provoke", "", 200, ClassShared.AID.Provoke);
         DefineSimpleConfig(def, SharedTrack.Interject, "Interject", "Interrupt", -50, ClassShared.AID.Interject);
 
+        // TODO: combine standard/ex options
+        // TODO: add 'if-not-active' strategy with configurable min-time-left
         def.Define(SharedTrack.Reprisal).As<ReprisalOption>("Reprisal", "", 250)
             .AddOption(ReprisalOption.None, "None", "Do not use automatically")
             .AddOption(ReprisalOption.Use, "Use", "Use Reprisal (10s)", 60, 10, ActionTargets.Self, 22, 97)

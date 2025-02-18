@@ -103,11 +103,11 @@ class ChannelingFlow(BossModule module) : BossComponent(module)
 
     private IEnumerable<(Actor, WDir)> ActiveArrows()
     {
-        return Raid.WithSlot().WhereSlot(SlotActive).Select(ia => (ia.Item2, _arrows[ia.Item1].Item1));
+        return Raid.WithSlot(false, true, true).WhereSlot(SlotActive).Select(ia => (ia.Item2, _arrows[ia.Item1].Item1));
     }
 
     private IEnumerable<(int, Actor)> ActorsHitBy(int slot, Actor actor)
     {
-        return Raid.WithSlot().Exclude(slot).WhereActor(a => a.Position.InRect(actor.Position, _arrows[slot].Item1, 50, 0, _typhoonHalfWidth));
+        return Raid.WithSlot(false, true, true).Exclude(slot).WhereActor(a => a.Position.InRect(actor.Position, _arrows[slot].Item1, 50, 0, _typhoonHalfWidth));
     }
 }

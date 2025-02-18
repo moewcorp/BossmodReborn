@@ -63,65 +63,97 @@ public enum AID : uint
 
 class DualBlowsSteeledStrike(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-
-    private static readonly AOEShapeCone cone = new(30, 90.Degrees());
-    private static readonly AOEShapeCross cross = new(30, 4);
-    private static readonly HashSet<AID> casts = [AID.DualBlows1, AID.DualBlows2, AID.DualBlows3, AID.DualBlows4, AID.SteeledStrike1, AID.SteeledStrike2];
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
+    private static readonly AOEShapeCross cross = new(30f, 4f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (_aoes.Count > 1)
-            yield return _aoes[1] with { Risky = false };
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (casts.Take(4).Contains((AID)spell.Action.ID))
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+        switch (spell.Action.ID)
         {
-            _aoes.Add(new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.SortBy(x => x.Activation);
+            case (uint)AID.DualBlows1:
+            case (uint)AID.DualBlows2:
+            case (uint)AID.DualBlows3:
+            case (uint)AID.DualBlows4:
+                AddAOE(cone);
+                if (_aoes.Count == 2)
+                    _aoes.SortBy(x => x.Activation);
+                break;
+            case (uint)AID.SteeledStrike1:
+            case (uint)AID.SteeledStrike2:
+                AddAOE(cross);
+                break;
         }
-        if (casts.Skip(4).Contains((AID)spell.Action.ID))
-            _aoes.Add(new(cross, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && casts.Contains((AID)spell.Action.ID))
-            _aoes.RemoveAt(0);
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.DualBlows1:
+                case (uint)AID.DualBlows2:
+                case (uint)AID.DualBlows3:
+                case (uint)AID.DualBlows4:
+                case (uint)AID.SteeledStrike1:
+                case (uint)AID.SteeledStrike2:
+                    _aoes.RemoveAt(0);
+                    break;
+            }
     }
 }
 
 class BurningSun(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circleSmall = new(4);
-    private static readonly AOEShapeCircle circleBig = new(6);
+    private readonly List<AOEInstance> _aoes = new(26);
+    private static readonly AOEShapeCircle circleSmall = new(4f), circleBig = new(6f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            for (var i = 0; i < Math.Clamp(_aoes.Count, 0, 9); ++i)
-                yield return _aoes[i] with { Color = Colors.Danger };
-        if (_aoes.Count > 9)
-            for (var i = 9; i < _aoes.Count; ++i)
-                yield return _aoes[i];
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 10)
+                aoes[i] = count > 9 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BurningSunTelegraph1)
-            _aoes.Add(new(circleSmall, spell.LocXZ, default, Module.CastFinishAt(spell, 4)));
-        else if ((AID)spell.Action.ID == AID.BurningSunTelegraph2)
-            _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell, 4)));
+        if (spell.Action.ID == (uint)AID.BurningSunTelegraph1)
+            _aoes.Add(new(circleSmall, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
+        else if (spell.Action.ID == (uint)AID.BurningSunTelegraph2)
+            _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.BurningSun1 or AID.BurningSun2)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.BurningSun1 or (uint)AID.BurningSun2)
             _aoes.RemoveAt(0);
     }
 }
@@ -140,28 +172,28 @@ class BrawlEnder(BossModule module) : Components.Knockback(module, stopAtWall: t
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BrawlEnder)
+        if (spell.Action.ID == (uint)AID.BrawlEnder)
             activation = Module.CastFinishAt(spell, 0.9f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.BrawlEnder)
+        if (spell.Action.ID == (uint)AID.BrawlEnder)
             activation = default;
     }
 }
 
-abstract class TheThrill(BossModule module, AID aid) : Components.CastTowers(module, ActionID.MakeSpell(aid), 3);
+abstract class TheThrill(BossModule module, AID aid) : Components.CastTowers(module, ActionID.MakeSpell(aid), 3f);
 class TheThrill1(BossModule module) : TheThrill(module, AID.TheThrill1);
 class TheThrill2(BossModule module) : TheThrill(module, AID.TheThrill2);
 
-class FireVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.FireVoidzone).Where(z => z.EventState != 7));
+class FireVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, m => m.Enemies(OID.FireVoidzone).Where(z => z.EventState != 7));
 class FancyBladework(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FancyBladework));
-class CoiledStrike(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CoiledStrike), new AOEShapeCone(30, 75.Degrees()));
-class GloryBlaze(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GloryBlaze), new AOEShapeRect(40, 3));
+class CoiledStrike(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CoiledStrike), new AOEShapeCone(30f, 75f.Degrees()));
+class GloryBlaze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GloryBlaze), new AOEShapeRect(40f, 3f));
 class BattleBreaker(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BattleBreaker));
 
-abstract class MorningStars(BossModule module, AID aid) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(aid), 4);
+abstract class MorningStars(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 4f);
 class MorningStars1(BossModule module) : MorningStars(module, AID.MorningStars1);
 class MorningStars2(BossModule module) : MorningStars(module, AID.MorningStars2);
 
@@ -186,4 +218,4 @@ class AFatherFirstStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70419, NameID = 12675)]
-public class AFatherFirst(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 49), new ArenaBoundsRect(14.55f, 19.5f));
+public class AFatherFirst(WorldState ws, Actor primary) : BossModule(ws, primary, new(0f, 49f), new ArenaBoundsRect(14.55f, 19.5f));

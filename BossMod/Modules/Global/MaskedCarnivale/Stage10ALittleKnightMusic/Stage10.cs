@@ -20,12 +20,12 @@ public enum AID : uint
     BlackNebula = 14724, // Boss->self, 6.0s cast, range 50+R circle, interruptible enrage after 3 King's Will casts
 }
 
-class IronJustice1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice1), new AOEShapeCone(9, 60.Degrees()));
-class IronJustice2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice2), new AOEShapeCone(9.5f, 60.Degrees()));
-class IronJustice3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice3), new AOEShapeCone(10, 60.Degrees()));
-class IronJustice4(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.IronJustice4), new AOEShapeCone(10.5f, 60.Degrees()));
+class IronJustice1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice1), new AOEShapeCone(9, 60.Degrees()));
+class IronJustice2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice2), new AOEShapeCone(9.5f, 60.Degrees()));
+class IronJustice3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice3), new AOEShapeCone(10, 60.Degrees()));
+class IronJustice4(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice4), new AOEShapeCone(10.5f, 60.Degrees()));
 class BlackNebula(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.BlackNebula));
-class Cloudcover1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Cloudcover1), 6);
+class Cloudcover1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cloudcover1), 6);
 class KingsWill1(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.KingsWill));
 class KingsWill2(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.KingsWill2));
 class KingsWill3(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.KingsWill3));
@@ -64,7 +64,7 @@ class Stage10States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 620, NameID = 8100)]
 public class Stage10 : BossModule
 {
-    public Stage10(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), new ArenaBoundsCircle(25))
+    public Stage10(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {
         ActivateComponent<Hints>();
     }

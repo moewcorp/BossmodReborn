@@ -21,16 +21,16 @@ public enum AID : uint
     SelfDetonate = 14574 // ScholaColossusRubricatus->self, 35.0s cast, range 30 circle, enrage
 }
 
-class MagitekMissile(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekMissile), 15);
-class Exhaust(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(43.2f, 5));
-class GrandSword(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.GrandSword), new AOEShapeCone(18.4f, 60.Degrees()));
+class MagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekMissile), 15);
+class Exhaust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(43.2f, 5));
+class GrandSword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrandSword), new AOEShapeCone(18.4f, 60.Degrees()));
 class SelfDetonate(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SelfDetonate), "Enrage!", true);
 
 class UnbreakableCermetBlade(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private const string RiskHint = "Go under shield!";
-    private const string StayHint = "Wait under shield!";
+    private const string Hint = "Go under shield!";
+
     private static readonly AOEShapeCircle circle = new(4.5f, true);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
@@ -45,11 +45,12 @@ class UnbreakableCermetBlade(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var activeAOEs = ActiveAOEs(slot, actor).ToList();
-        if (activeAOEs.Any(c => !c.Check(actor.Position)))
-            hints.Add(RiskHint);
-        else if (activeAOEs.Any(c => c.Check(actor.Position)))
-            hints.Add(StayHint, false);
+        if (_aoe == null)
+            return;
+        if (!_aoe.Value.Check(actor.Position))
+            hints.Add(Hint);
+        else
+            hints.Add(Hint, false);
     }
 }
 

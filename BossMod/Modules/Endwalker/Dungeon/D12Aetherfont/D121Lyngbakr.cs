@@ -25,38 +25,52 @@ public enum AID : uint
 
 class ExplosiveResonantFrequency(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circleSmall = new(8);
-    private static readonly AOEShapeCircle circleBig = new(15);
+    private static readonly AOEShapeCircle circleSmall = new(8), circleBig = new(15);
     private readonly List<AOEInstance> _aoes = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            foreach (var a in _aoes)
-                if ((a.Activation - _aoes[0].Activation).TotalSeconds <= 1)
-                    yield return a;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        List<AOEInstance> aoes = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if ((aoe.Activation - _aoes[0].Activation).TotalSeconds <= 1)
+                aoes.Add(aoe);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.ResonantFrequency)
-            _aoes.Add(new(circleSmall, caster.Position, default, Module.CastFinishAt(spell)));
+            _aoes.Add(new(circleSmall, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
         else if ((AID)spell.Action.ID == AID.ExplosiveFrequency)
-            _aoes.Add(new(circleBig, caster.Position, default, Module.CastFinishAt(spell)));
+            _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ResonantFrequency)
-            _aoes.RemoveAll(x => x.Shape == circleSmall);
-        else if ((AID)spell.Action.ID == AID.ExplosiveFrequency)
-            _aoes.RemoveAll(x => x.Shape == circleBig);
+        if ((AID)spell.Action.ID is AID.ResonantFrequency or AID.ExplosiveFrequency)
+        {
+            for (var i = 0; i < _aoes.Count; ++i)
+            {
+                var aoe = _aoes[i];
+                if (aoe.ActorID == caster.InstanceID)
+                {
+                    _aoes.Remove(aoe);
+                    break;
+                }
+            }
+        }
     }
 }
 
 class SonicBloop(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SonicBloop));
 class Waterspout(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Waterspout), 5);
-class TidalBreath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TidalBreath), new AOEShapeCone(40, 90.Degrees()));
+class TidalBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TidalBreath), new AOEShapeCone(40, 90.Degrees()));
 class Tidalspout(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Tidalspout), 6, 4, 4);
 class Upsweep(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Upsweep));
 class BodySlam(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BodySlam));
@@ -76,8 +90,9 @@ class D121LyngbakrStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12336)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12336, SortOrder = 3)]
 public class D121Lyngbakr(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-322, 120), 19.75f)], [new Rectangle(new(-322, 99), 20, 2.25f), new Rectangle(new(-322, 140), 20, 1.25f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-322, 120), 19.5f * CosPI.Pi40th, 48)], [new Rectangle(new(-322, 99), 20, 2.25f),
+    new Rectangle(new(-322, 140), 20, 1.25f)]);
 }

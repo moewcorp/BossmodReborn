@@ -1,6 +1,4 @@
-﻿using BossMod.Autorotation;
-
-namespace BossMod.QuestBattle.Endwalker.MSQ;
+﻿namespace BossMod.QuestBattle.Endwalker.MSQ;
 
 class AutoThancred(WorldState ws) : UnmanagedRotation(ws, 3)
 {

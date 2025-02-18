@@ -38,7 +38,7 @@ class CharringCataclysm(BossModule module) : Components.UniformStackSpread(modul
         if ((AID)spell.Action.ID is AID.SusurrantBreathAOE or AID.SlitheringStrikeAOE or AID.StranglingCoilAOE)
         {
             // note: dd vs supports is random, select supports arbitrarily
-            AddStacks(Module.Raid.WithoutSlot(true).Where(p => p.Class.IsSupport()), Module.CastFinishAt(spell, 0.7f));
+            AddStacks(Module.Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), Module.CastFinishAt(spell, 0.7f));
         }
     }
 
@@ -69,4 +69,4 @@ class ChillingCataclysm(BossModule module) : Components.GenericAOEs(module, Acti
     }
 }
 
-class CracklingCataclysm(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CracklingCataclysm), 6);
+class CracklingCataclysm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CracklingCataclysm), 6);

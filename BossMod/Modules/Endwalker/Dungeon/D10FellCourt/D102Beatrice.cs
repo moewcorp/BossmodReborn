@@ -43,17 +43,17 @@ public enum IconID : uint
     Icon139 = 139, // player
 }
 
-class BeatificScorn5(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BeatificScornAOE), new AOEShapeCircle(9));
+class BeatificScorn5(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BeatificScornAOE), 9);
 
 class DeathForeseen1(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DeathForeseen1));
 class DeathForeseen2(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DeathForeseen2));
 
-class Voidshaker(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Voidshaker), new AOEShapeCone(20, 60.Degrees()));
+class Voidshaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Voidshaker), new AOEShapeCone(20, 60.Degrees()));
 
 class VoidNail(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.VoidNail), 6);
 class Hush(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Hush));
 class EyeOfTroia(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.EyeOfTroia));
-class ToricVoid3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ToricVoid3), new AOEShapeDonut(10, 10));
+class ToricVoid3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ToricVoid3), new AOEShapeDonut(10, 10));
 class Antipressure(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Antipressure), 6, 4, 4);
 
 class D102BeatriceStates : StateMachineBuilder

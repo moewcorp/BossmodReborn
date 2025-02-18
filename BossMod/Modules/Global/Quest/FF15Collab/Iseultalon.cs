@@ -25,20 +25,20 @@ public enum AID : uint
     Electrocution = 14609, // 25B3->location, 10.0s cast, range 3 circle, tower
     Electrocution2 = 14981, // 25B3->location, 10.0s cast, range 3 circle, tower
     FatalCurrent = 14610, // Helper/Helper2->self, 2.0s cast, range 80 circle, tower fail
-    TailWhip = 14607, // Boss->self, 3.0s cast, range 12 270-degree cone
+    TailWhip = 14607 // Boss->self, 3.0s cast, range 12 270-degree cone
 }
 
 public enum IconID : uint
 {
-    stack = 93, // 2650
-    spread = 129, // player/2650
+    Stackmarker = 93, // 2650
+    Spreadmarker = 129 // player/2650
 }
 
 class Thunderbolt(BossModule module) : Components.UniformStackSpread(module, 0, 5, alwaysShowSpreads: true)
 {
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if (iconID == (uint)IconID.spread)
+        if (iconID == (uint)IconID.Spreadmarker)
             AddSpread(actor);
     }
 
@@ -50,13 +50,13 @@ class Thunderbolt(BossModule module) : Components.UniformStackSpread(module, 0, 
 }
 
 class Electrocution(BossModule module) : Components.GenericTowers(module)
-{ //Noctis always goes to soak this tower, except on first cast as a tutorial
+{ // Noctis always goes to soak this tower, except on first cast as a tutorial
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID is AID.Electrocution)
         {
             if (NumCasts > 0)
-                Towers.Add(new(DeterminePosition(caster, spell), 3, forbiddenSoakers: Raid.WithSlot(true).WhereActor(p => p.InstanceID == Raid.Player()!.InstanceID).Mask()));
+                Towers.Add(new(DeterminePosition(caster, spell), 3, forbiddenSoakers: Raid.WithSlot(true, true, false).WhereActor(p => p.InstanceID == Raid.Player()!.InstanceID).Mask()));
             if (NumCasts == 0)
                 Towers.Add(new(DeterminePosition(caster, spell), 3));
         }
@@ -85,7 +85,7 @@ class Electrocution2(BossModule module) : Components.CastTowers(module, ActionID
 
 class Stomp(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Stomp));
 
-class DeathRay : Components.SelfTargetedAOEs
+class DeathRay : Components.SimpleAOEs
 {
     public DeathRay(BossModule module) : base(module, ActionID.MakeSpell(AID.DeathRay2), new AOEShapeRect(40, 1))
     {
@@ -93,7 +93,7 @@ class DeathRay : Components.SelfTargetedAOEs
     }
 }
 
-class TailWhip(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TailWhip), new AOEShapeCone(12, 135.Degrees()));
+class TailWhip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailWhip), new AOEShapeCone(12, 135.Degrees()));
 
 class DeathRay2(BossModule module) : Components.GenericAOEs(module)
 {

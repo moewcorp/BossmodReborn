@@ -16,7 +16,7 @@ class BlackHole(BossModule module) : BossComponent(module)
     {
         if (Baiter == actor)
         {
-            if (Raid.WithoutSlot().InRadiusExcluding(actor, _startingRadius).Any())
+            if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _startingRadius).Any())
                 hints.Add("GTFO from raid!");
         }
         else if (Baiter != null)
@@ -69,7 +69,7 @@ class BlackHole(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnEventIcon(Actor actor, uint iconID)
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.BlackHole)
             Baiter = actor;

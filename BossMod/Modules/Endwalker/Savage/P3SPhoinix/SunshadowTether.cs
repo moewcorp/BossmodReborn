@@ -20,7 +20,7 @@ class SunshadowTether(BossModule module) : BossComponent(module)
             if (target != null && target.Position != bird.Position)
             {
                 var dir = (target.Position - bird.Position).Normalized();
-                foreach ((var i, var player) in Raid.WithSlot().Exclude(target))
+                foreach ((var i, var player) in Raid.WithSlot(false, true, true).Exclude(target))
                 {
                     if (player.Position.InRect(bird.Position, dir, 50, 0, _chargeHalfWidth))
                     {
@@ -68,7 +68,7 @@ class SunshadowTether(BossModule module) : BossComponent(module)
             return;
 
         // draw all players
-        foreach ((var i, var player) in Raid.WithSlot())
+        foreach ((var i, var player) in Raid.WithSlot(false, true, true))
             Arena.Actor(player, _playersInAOE[i] ? Colors.PlayerInteresting : Colors.PlayerGeneric);
 
         // draw my tether

@@ -5,7 +5,7 @@
 // in p4, landslides are cast at predetermined angles (ultimate predation, ???)
 class Landslide(BossModule module) : Components.GenericAOEs(module)
 {
-    public bool Awakened { get; private set; }
+    public bool Awakened;
     public DateTime PredictedActivation;
     protected Actor? PredictedSource;
     private readonly List<Actor> _casters = [];

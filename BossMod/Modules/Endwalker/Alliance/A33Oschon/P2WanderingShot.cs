@@ -3,16 +3,16 @@ namespace BossMod.Endwalker.Alliance.A33Oschon;
 class P2WanderingShot(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.GreatWhirlwind))
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCircle _shape = new(23);
+    private static readonly AOEShapeCircle _shape = new(23f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        WPos coords = (AID)spell.Action.ID switch
+        var coords = spell.Action.ID switch
         {
-            AID.WanderingShotN or AID.WanderingVolleyN => new(-0.015f, 739.986f),
-            AID.WanderingShotS or AID.WanderingVolleyS => new(-0.015f, 759.975f),
+            (uint)AID.WanderingShotN or (uint)AID.WanderingVolleyN => WPos.ClampToGrid(new(0f, 740f)),
+            (uint)AID.WanderingShotS or (uint)AID.WanderingVolleyS => WPos.ClampToGrid(new(0f, 760f)),
             _ => default
         };
         if (coords != default)

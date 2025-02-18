@@ -22,7 +22,7 @@ class P6AkhAfah(BossModule module) : Components.UniformStackSpread(module, 4, 0,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.AkhAfahN)
-            AddStacks(Raid.WithoutSlot(true).Where(p => p.Role == Role.Healer));
+            AddStacks(Raid.WithoutSlot(true, true, true).Where(p => p.Role == Role.Healer));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

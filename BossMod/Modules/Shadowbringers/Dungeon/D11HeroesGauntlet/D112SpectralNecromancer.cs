@@ -65,8 +65,8 @@ public enum TetherID : uint
     CrawlingNecrobombs = 79 // Necrobomb7/Necrobomb8/Necrobomb5/Necrobomb6->player/2753/2757/2752
 }
 
-class AbsoluteDarkII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AbsoluteDarkII), new AOEShapeCone(40, 60.Degrees()));
-class PainMire(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.PainMire), 9)
+class AbsoluteDarkII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbsoluteDarkII), new AOEShapeCone(40f, 60f.Degrees()));
+class PainMire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PainMire), 9f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -77,10 +77,10 @@ class PainMire(BossModule module) : Components.LocationTargetedAOEs(module, Acti
     }
 }
 
-class BleedVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.BleedVoidzone).Where(x => x.EventState != 7));
+class BleedVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8f, m => m.Enemies(OID.BleedVoidzone).Where(x => x.EventState != 7));
 class TwistedTouch(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TwistedTouch));
 class ChaosStorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ChaosStorm));
-class DarkDeluge(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.DarkDeluge), 5);
+class DarkDeluge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkDeluge), 5f);
 class NecrobombBaitAway(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(9.25f), (uint)IconID.Baitaway, ActionID.MakeSpell(AID.DeathThroes), centerAtTarget: true); // note: explosion is not always exactly the position of player, if zombie teleports to player it is player + zombie hitboxradius = 1.25 away
 
 class Necrobombs(BossModule module) : BossComponent(module)
@@ -90,34 +90,46 @@ class Necrobombs(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_ba.ActiveBaits.Any())
+        if (_ba.ActiveBaits.Count != 0)
             return;
         var forbidden = new List<Func<WPos, float>>();
         foreach (var e in WorldState.Actors.Where(x => !x.IsAlly && x.Tether.ID == (uint)TetherID.CrawlingNecrobombs))
             forbidden.Add(circle.Distance(e.Position, default));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(p => forbidden.Min(f => f(p)));
+        if (forbidden.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
     }
 }
 
 class Burst(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(8);
-    private static readonly HashSet<AID> casts = [AID.Burst1, AID.Burst2, AID.Burst3, AID.Burst4, AID.Burst5, AID.Burst6, AID.Burst7, AID.Burst8];
+    private readonly List<AOEInstance> _aoes = new(4);
+    private static readonly AOEShapeCircle circle = new(8f);
+
     // Note: Burst5 to Burst8 locations are unknown until players unable to move, so they are irrelevant and not drawn
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
         if (modelState == 54)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(6))); // activation time can be vastly different, even twice as high so we take a conservative delay
+            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(6d))); // activation time can be vastly different, even twice as high so we take a conservative delay
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (casts.Contains((AID)spell.Action.ID))
-            _aoes.Clear();
+        if (_aoes.Count != 0)
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.Burst1:
+                case (uint)AID.Burst2:
+                case (uint)AID.Burst3:
+                case (uint)AID.Burst4:
+                case (uint)AID.Burst5:
+                case (uint)AID.Burst6:
+                case (uint)AID.Burst7:
+                case (uint)AID.Burst8:
+                    _aoes.Clear();
+                    break;
+            }
     }
 }
 
@@ -192,5 +204,5 @@ class D112SpectralNecromancerStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 737, NameID = 9508)]
 public class D112SpectralNecromancer(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-450, -531), 19.5f)], [new Rectangle(new(-470, -531), 20, 1.25f, 90.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-450f, -531f), 19.5f)], [new Rectangle(new(-470f, -531f), 1.25f, 20f)]);
 }

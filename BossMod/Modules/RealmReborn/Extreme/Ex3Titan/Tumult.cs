@@ -6,7 +6,7 @@ class Tumult(BossModule module) : Components.CastCounter(module, ActionID.MakeSp
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        hints.PredictedDamage.Add((Raid.WithSlot().Mask(), _nextExpected));
+        hints.PredictedDamage.Add((Raid.WithSlot(false, true, true).Mask(), _nextExpected));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

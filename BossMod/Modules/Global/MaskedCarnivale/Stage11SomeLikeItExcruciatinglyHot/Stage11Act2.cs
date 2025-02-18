@@ -2,12 +2,12 @@ namespace BossMod.Global.MaskedCarnivale.Stage11.Act2;
 
 public enum OID : uint
 {
-    Boss = 0x2719, //R=1.2
+    Boss = 0x2719 //R=1.2
 }
 
 public enum AID : uint
 {
-    Fulmination = 14583, // 2719->self, 23.0s cast, range 60 circle
+    Fulmination = 14583 // 2719->self, 23.0s cast, range 60 circle
 }
 
 class Hints(BossModule module) : BossComponent(module)
@@ -24,14 +24,14 @@ class Stage11Act2States : StateMachineBuilder
     {
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead);
+            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 621, NameID = 2280, SortOrder = 2)]
 public class Stage11Act2 : BossModule
 {
-    public Stage11Act2(WorldState ws, Actor primary) : base(ws, primary, new(100, 100), Layouts.Layout4Quads)
+    public Stage11Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.Layout4Quads)
     {
         ActivateComponent<Hints>();
     }

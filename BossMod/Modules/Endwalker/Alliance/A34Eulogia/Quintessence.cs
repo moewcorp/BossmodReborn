@@ -2,20 +2,28 @@ namespace BossMod.Endwalker.Alliance.A34Eulogia;
 
 class Quintessence(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly (AOEShape? shape, WPos origin, Angle rotation, DateTime activation)[] _forms = [default, default, default];
-    private int _numAssignedForms;
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly AOEShapeCone cone = new(50f, 90f.Degrees());
+    private static readonly AOEShapeDonut donut = new(8f, 60f);
+    private byte _index;
+    private WPos position;
 
-    private static readonly AOEShapeCone _shapeRight = new(50, 90.Degrees(), -90.Degrees());
-    private static readonly AOEShapeCone _shapeLeft = new(50, 90.Degrees(), 90.Degrees());
-    private static readonly AOEShapeDonut _shapeDonut = new(8, 50);
-    private static readonly HashSet<AID> castEnd = [AID.QuintessenceAOE1Right, AID.QuintessenceAOE1Left, AID.QuintessenceAOE1Donut, AID.QuintessenceAOE2Right,
-    AID.QuintessenceAOE2Left, AID.QuintessenceAOE2Donut, AID.QuintessenceAOE3Right, AID.QuintessenceAOE3Left, AID.QuintessenceAOE3Donut];
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (NumCasts < _forms.Length && _forms[NumCasts] is var imminent && imminent.shape != null && imminent.origin != default)
-            yield return new(imminent.shape, imminent.origin, imminent.rotation, imminent.activation, Colors.Danger);
-        if (NumCasts + 1 < _forms.Length && _forms[NumCasts + 1] is var future && future.shape != null && future.origin != default)
-            yield return new(future.shape, future.origin, future.rotation, future.activation, Colors.AOE, false);
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -34,52 +42,124 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
         //  v| /        \ v|
         //   * <-- 50 --- *
         //     --- 53 -->
-        if ((index <= 0x4F) != (_numAssignedForms == 0))
-            ReportError($"Unexpected ENVC {index:X}: order {_numAssignedForms}");
 
         WDir offset = index switch
         {
-            0x4C or 0x53 or 0x56 => new(+9, +9),
-            0x4D or 0x50 or 0x55 => new(-9, +9),
-            0x4E or 0x52 or 0x57 => new(-9, -9),
-            0x4F or 0x51 or 0x54 => new(+9, -9),
+            0x4C or 0x53 or 0x56 => new(9f, 9f),
+            0x4D or 0x50 or 0x55 => new(-9f, 9f),
+            0x4E or 0x52 or 0x57 => new(-9f, -9f),
+            0x4F or 0x51 or 0x54 => new(9f, -9f),
             _ => default
         };
-        var from = _numAssignedForms == 0 ? Module.Center : _forms[_numAssignedForms - 1].origin;
-        var to = Module.Center + offset;
-        _forms[_numAssignedForms].origin = to;
-        _forms[_numAssignedForms].rotation = Angle.FromDirection(to - from);
-        ++_numAssignedForms;
+        _index = index;
+        position = WPos.ClampToGrid(Arena.Center + offset);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var (order, shape) = (AID)spell.Action.ID switch
-        {
-            AID.FirstFormRight => (0, _shapeRight),
-            AID.SecondFormRight => (1, _shapeRight),
-            AID.ThirdFormRight => (2, _shapeRight),
-            AID.FirstFormLeft => (0, _shapeLeft),
-            AID.SecondFormLeft => (1, _shapeLeft),
-            AID.ThirdFormLeft => (2, _shapeLeft),
-            AID.FirstFormDonut => (0, _shapeDonut),
-            AID.SecondFormDonut => (1, _shapeDonut),
-            AID.ThirdFormDonut => (2, _shapeDonut),
-            _ => (-1, (AOEShape?)null)
-        };
-        if (shape == null)
+        if (_index == default)
             return;
+        void AddAOE(Angle rotation, AOEShape? shape = null)
+        {
+            _aoes.Add(new(shape ?? cone, position, rotation, Module.CastFinishAt(spell, 19.5f - _aoes.Count * 3.7f)));
+            _index = default;
+        }
 
-        if (_forms[order].shape != null)
-            ReportError($"Duplicate shape for order {order}: {spell.Action}");
-
-        _forms[order].shape = shape;
-        _forms[order].activation = Module.CastFinishAt(spell, 19.5f - order * 3.7f);
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.FirstFormRight:
+                switch (_index)
+                {
+                    case 0x4C:
+                        AddAOE(Angle.AnglesIntercardinals[0]);
+                        break;
+                    case 0x4D:
+                        AddAOE(Angle.AnglesIntercardinals[3]);
+                        break;
+                    case 0x4E:
+                        AddAOE(Angle.AnglesIntercardinals[2]);
+                        break;
+                    case 0x4F:
+                        AddAOE(Angle.AnglesIntercardinals[1]);
+                        break;
+                }
+                break;
+            case (uint)AID.FirstFormLeft:
+                switch (_index)
+                {
+                    case 0x4C:
+                        AddAOE(Angle.AnglesIntercardinals[2]);
+                        break;
+                    case 0x4D:
+                        AddAOE(Angle.AnglesIntercardinals[1]);
+                        break;
+                    case 0x4E:
+                        AddAOE(Angle.AnglesIntercardinals[0]);
+                        break;
+                    case 0x4F:
+                        AddAOE(Angle.AnglesIntercardinals[3]);
+                        break;
+                }
+                break;
+            case (uint)AID.FirstFormDonut:
+            case (uint)AID.SecondFormDonut:
+            case (uint)AID.ThirdFormDonut:
+                AddAOE(default, donut);
+                break;
+            case (uint)AID.SecondFormRight or (uint)AID.ThirdFormRight:
+                switch (_index)
+                {
+                    case 0x50 or 0x57:
+                        AddAOE(Angle.AnglesCardinals[2]);
+                        break;
+                    case 0x51 or 0x52:
+                        AddAOE(Angle.AnglesCardinals[3]);
+                        break;
+                    case 0x53 or 0x54:
+                        AddAOE(Angle.AnglesCardinals[1]);
+                        break;
+                    case 0x55 or 0x56:
+                        AddAOE(Angle.AnglesCardinals[0]);
+                        break;
+                }
+                break;
+            case (uint)AID.SecondFormLeft or (uint)AID.ThirdFormLeft:
+                switch (_index)
+                {
+                    case 0x50 or 0x57:
+                        AddAOE(Angle.AnglesCardinals[1]);
+                        break;
+                    case 0x55 or 0x56:
+                        AddAOE(Angle.AnglesCardinals[3]);
+                        break;
+                    case 0x51 or 0x52:
+                        AddAOE(Angle.AnglesCardinals[0]);
+                        break;
+                    case 0x53 or 0x54:
+                        AddAOE(Angle.AnglesCardinals[2]);
+                        break;
+                }
+                break;
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (castEnd.Contains((AID)spell.Action.ID))
-            ++NumCasts;
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.QuintessenceAOE1Right:
+            case (uint)AID.QuintessenceAOE1Left:
+            case (uint)AID.QuintessenceAOE1Donut:
+            case (uint)AID.QuintessenceAOE2Right:
+            case (uint)AID.QuintessenceAOE2Left:
+            case (uint)AID.QuintessenceAOE2Donut:
+            case (uint)AID.QuintessenceAOE3Right:
+            case (uint)AID.QuintessenceAOE3Left:
+            case (uint)AID.QuintessenceAOE3Donut:
+                ++NumCasts;
+                if (_aoes.Count != 0)
+                    _aoes.RemoveAt(0);
+                break;
+        }
     }
 }

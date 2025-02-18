@@ -133,13 +133,13 @@ public static class ConcaveHull
         return filteredPoints;
     }
 
-    private static Path64 ConvertToPath64(List<WPos> points) => new(points.Select(p => new Point64((long)(p.X * PolygonClipper.Scale), (long)(p.Z * PolygonClipper.Scale))).ToList());
-    private static List<WPos> ConvertToPoints(Path64 path) => path.Select(p => new WPos((float)(p.X * PolygonClipper.InvScale), (float)(p.Y * PolygonClipper.InvScale))).ToList();
+    private static Path64 ConvertToPath64(List<WPos> points) => [.. points.Select(p => new Point64((long)(p.X * PolygonClipper.Scale), (long)(p.Z * PolygonClipper.Scale))).ToList()];
+    private static List<WPos> ConvertToPoints(Path64 path) => [.. path.Select(p => new WPos((float)(p.X * PolygonClipper.InvScale), (float)(p.Y * PolygonClipper.InvScale)))];
 
     public static List<WPos> GenerateConcaveHull(List<WPos> points, float alpha, float epsilon)
     {
         if (points.Count < 3)
-            return new List<WPos>(points); // Not enough points to form a polygon
+            return [.. points]; // Not enough points to form a polygon
 
         points = FilterClosePoints(points, epsilon);
         var inputPath = ConvertToPath64(points);
@@ -206,7 +206,7 @@ public static class ConcaveHull
         return filteredPoints;
     }
 
-    private static bool AreCollinear(WPos a, WPos b, WPos c, float toleranceDegrees = 4)
+    private static bool AreCollinear(WPos a, WPos b, WPos c, float toleranceDegrees = 1)
     {
         var ab = new Vector2(b.X - a.X, b.Z - a.Z);
         var bc = new Vector2(c.X - b.X, c.Z - b.Z);

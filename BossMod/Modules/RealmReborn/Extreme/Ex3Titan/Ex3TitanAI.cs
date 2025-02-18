@@ -1,4 +1,36 @@
-﻿namespace BossMod.RealmReborn.Extreme.Ex3Titan;
+﻿using BossMod.AI;
+using BossMod.Autorotation;
+using BossMod.Pathfinding;
+
+namespace BossMod.RealmReborn.Extreme.Ex3Titan;
+
+sealed class Ex3TitanAIRotation(RotationModuleManager manager, Actor player) : AIRotationModule(manager, player)
+{
+    public enum Track { Movement }
+    public enum MovementStrategy { None, Pathfind, Explicit }
+
+    public static RotationModuleDefinition Definition()
+    {
+        var res = new RotationModuleDefinition("AI Experiment", "Experimental encounter-specific rotation", "Encounter AI", "veyn", RotationModuleQuality.WIP, new(~1ul), 1000, 1, RotationModuleOrder.Movement, typeof(Ex3Titan));
+        res.Define(Track.Movement).As<MovementStrategy>("Movement", "Movement")
+            .AddOption(MovementStrategy.None, "None", "No automatic movement")
+            .AddOption(MovementStrategy.Pathfind, "Pathfind", "Use standard pathfinding to move")
+            .AddOption(MovementStrategy.Explicit, "Explicit", "Move to specific point", supportedTargets: ActionTargets.Area);
+        return res;
+    }
+
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    {
+        SetForcedMovement(CalculateDestination(strategy.Option(Track.Movement)));
+    }
+
+    private WPos CalculateDestination(StrategyValues.OptionRef strategy) => strategy.As<MovementStrategy>() switch
+    {
+        MovementStrategy.Pathfind => NavigationDecision.Build(NavigationContext, World, Hints, Player, Speed()).Destination ?? Player.Position,
+        MovementStrategy.Explicit => ResolveTargetLocation(strategy.Value),
+        _ => Player.Position
+    };
+}
 
 class Ex3TitanAI(BossModule module) : BossComponent(module)
 {
@@ -7,13 +39,13 @@ class Ex3TitanAI(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        if (KillNextBomb && !Module.Enemies(OID.BombBoulder).Any())
+        if (KillNextBomb && Module.Enemies(OID.BombBoulder).Count == 0)
             KillNextBomb = false;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var haveGaolers = Module.Enemies(OID.GraniteGaoler).Any(a => a.IsTargetable && !a.IsDead);
+        bool haveGaolers = Module.Enemies(OID.GraniteGaoler).Any(a => a.IsTargetable && !a.IsDead);
         foreach (var e in hints.PotentialTargets)
         {
             e.StayAtLongRange = true;
@@ -33,8 +65,8 @@ class Ex3TitanAI(BossModule module) : BossComponent(module)
                         // theoretically we can swap to OT right after 1st buster, then MT's vuln will expire right after 3rd buster and he can taunt back
                         // OT's vuln will expire right before 5th buster, so MT will eat 1/4/7/... and OT will eat 2+3/5+6/...
                         // however, in reality phase is going to be extremely short - 1 or 2 tb's?..
-                        var isCurrentTank = actor.InstanceID == Module.PrimaryActor.TargetID;
-                        var needTankSwap = !haveGaolers && Module.FindComponent<MountainBuster>() == null && TankVulnStacks() >= 2;
+                        bool isCurrentTank = actor.InstanceID == Module.PrimaryActor.TargetID;
+                        bool needTankSwap = !haveGaolers && Module.FindComponent<MountainBuster>() == null && TankVulnStacks() >= 2;
                         e.PreferProvoking = e.ShouldBeTanked = isCurrentTank != needTankSwap;
                     }
                     break;

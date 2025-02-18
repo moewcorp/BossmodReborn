@@ -35,83 +35,103 @@ public enum AID : uint
     ConfessionOfFaithSpread = 15523 // Helper->player, 5.8s cast, range 5 circle, spread
 }
 
-class HoundOutOfHeaven(BossModule module) : Components.StretchTetherDuo(module, 19, 5.2f);
-class ViperPoisonVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.ViperPoisonPatterns), m => m.Enemies(OID.PoisonVoidzone).Where(z => z.EventState != 7), 0);
-class ConfessionOfFaithStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ConfessionOfFaithStack), 6, 4, 4);
-class ConfessionOfFaithSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ConfessionOfFaithSpread), 5);
-
-class ConfessionOfFaithBreath(BossModule module) : Components.GenericAOEs(module)
+class HoundOutOfHeaven(BossModule module) : Components.StretchTetherDuo(module, 19f, 5.2f);
+class ViperPoisonVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.ViperPoisonPatterns), GetVoidzones, 0.8f)
 {
-    private static readonly AOEShapeCone cone = new(60, 30.Degrees());
-    private readonly List<AOEInstance> _aoes = [];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    private static Actor[] GetVoidzones(BossModule module)
     {
-        if ((AID)spell.Action.ID == AID.ConfessionOfFaithCenter)
-            _aoes.Add(new(cone, caster.Position + 5 * (caster.Rotation + 180.Degrees()).ToDirection(), spell.Rotation, Module.CastFinishAt(spell)));
-        else if ((AID)spell.Action.ID is AID.ConfessionOfFaithLeft or AID.ConfessionOfFaithRight)
-            _aoes.Add(new(cone, caster.Position + Module.PrimaryActor.HitboxRadius * (caster.Rotation + 180.Degrees()).ToDirection(), spell.Rotation, Module.CastFinishAt(spell)));
-    }
+        var enemies = module.Enemies((uint)OID.PoisonVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID is AID.ConfessionOfFaithCenter or AID.ConfessionOfFaithLeft)
-            _aoes.Clear();
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
     }
 }
+class ConfessionOfFaithStack(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ConfessionOfFaithStack), 6f, 4, 4);
+class ConfessionOfFaithSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ConfessionOfFaithSpread), 5f);
 
-class ViperPoisonBait(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.ViperPoisonBait), new AOEShapeCircle(6), true)
+abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60f, 30f.Degrees()));
+class ConfessionOfFaithCenter(BossModule module) : Breath(module, AID.ConfessionOfFaithCenter);
+class ConfessionOfFaithLeft(BossModule module) : Breath(module, AID.ConfessionOfFaithLeft);
+class ConfessionOfFaithRight(BossModule module) : Breath(module, AID.ConfessionOfFaithRight);
+
+class ViperPoisonBait(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.ViperPoisonBait), new AOEShapeCircle(6f), true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (ActiveBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.Rect(new(17, -518), new(17, -558), 13));
+            hints.AddForbiddenZone(ShapeDistance.Rect(new(17f, -518f), new(17f, -558f), 13f));
     }
 }
 
-class Inhale(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Inhale), 50, kind: Kind.TowardsOrigin)
+class Inhale(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Inhale), 50f, kind: Kind.TowardsOrigin)
 {
     private readonly ViperPoisonVoidzone _aoe = module.FindComponent<ViperPoisonVoidzone>()!;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
-        var component = _aoe.ActiveAOEs(slot, actor).ToList();
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
         {
-            foreach (var c in component)
-                forbidden.Add(ShapeDistance.Rect(c.Origin, Module.PrimaryActor.Rotation, 40, 0, 6));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), source.Activation);
+            var component = _aoe.Sources(Module).ToList();
+            var count = component.Count;
+            var forbidden = new Func<WPos, float>[count];
+            for (var i = 0; i < count; ++i)
+                forbidden[i] = ShapeDistance.Rect(component[i].Position, Module.PrimaryActor.Rotation, 40f, default, 6f);
+            if (forbidden.Length != 0)
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<ViperPoisonVoidzone>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
+        {
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
 
-class HeavingBreath(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HeavingBreath), 35, kind: Kind.DirForward, stopAtWall: true)
+class HeavingBreath(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HeavingBreath), 35f, kind: Kind.DirForward, stopAtWall: true)
 {
     private readonly ViperPoisonVoidzone _aoe = module.FindComponent<ViperPoisonVoidzone>()!;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
-        var component = _aoe.ActiveAOEs(slot, actor).ToList();
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
         {
-            foreach (var c in component)
-                forbidden.Add(ShapeDistance.Rect(c.Origin, new Angle(), 40, 40, 6));
-            if (forbidden.Count > 0)
-                hints.AddForbiddenZone(p => forbidden.Min(f => f(p)), source.Activation);
+            var component = _aoe.Sources(Module).ToList();
+            var count = component.Count;
+            var forbidden = new Func<WPos, float>[count];
+            for (var i = 0; i < count; ++i)
+                forbidden[i] = ShapeDistance.Rect(component[i].Position, new WDir(0f, 1f), 40f, 40f, 6f);
+            if (forbidden.Length != 0)
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<ViperPoisonVoidzone>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
+        {
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
 
 class Glossolalia(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Glossolalia));
@@ -127,7 +147,9 @@ class D033ErosStates : StateMachineBuilder
             .ActivateOnEnter<Rend>()
             .ActivateOnEnter<HoundOutOfHeaven>()
             .ActivateOnEnter<Glossolalia>()
-            .ActivateOnEnter<ConfessionOfFaithBreath>()
+            .ActivateOnEnter<ConfessionOfFaithCenter>()
+            .ActivateOnEnter<ConfessionOfFaithRight>()
+            .ActivateOnEnter<ConfessionOfFaithLeft>()
             .ActivateOnEnter<ConfessionOfFaithSpread>()
             .ActivateOnEnter<ConfessionOfFaithStack>()
             .ActivateOnEnter<HeavingBreath>()

@@ -2,7 +2,7 @@
 
 class ViscousAetheroplasm(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.ViscousAetheroplasm), new AOEShapeCircle(2), originAtTarget: true)
 {
-    public bool NeedTankSwap { get; private set; }
+    public bool NeedTankSwap;
     private readonly int[] _stacks = new int[PartyState.MaxPartySize];
 
     public override void Update()

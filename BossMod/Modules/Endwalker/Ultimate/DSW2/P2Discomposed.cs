@@ -2,7 +2,7 @@
 
 class P2Discomposed(BossModule module) : BossComponent(module)
 {
-    public bool Applied { get; private set; }
+    public bool Applied;
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
