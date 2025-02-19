@@ -44,13 +44,11 @@ public sealed class Plugin : IDalamudPlugin
     private readonly UIRotationWindow _wndRotation;
     private readonly MainDebugWindow _wndDebug;
     private IDalamudPluginInterface PluginInterface;
-    private INotificationManager NotificationManager;
     private bool isDev;
-    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager, INotificationManager notificationManager)
+    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
     {
 #if !DEBUG
         PluginInterface = dalamud;
-        NotificationManager = notificationManager;
         if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
         {
             isDev = true;

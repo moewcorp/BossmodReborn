@@ -118,7 +118,7 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketRSVDataHook.Enable();
         Service.Log($"[WSG] ProcessPacketRSVData address = 0x{_processPacketRSVDataHook.Address:X}");
 
-        _processSystemLogMessageHook = Service.Hook.HookFromSignature<ProcessSystemLogMessageDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B6 43 28", ProcessSystemLogMessageDetour);
+        _processSystemLogMessageHook = Service.Hook.HookFromSignature<ProcessSystemLogMessageDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B6 46 28", ProcessSystemLogMessageDetour);
         _processSystemLogMessageHook.Enable();
         Service.Log($"[WSG] ProcessSystemLogMessage address = 0x{_processSystemLogMessageHook:X}");
 
