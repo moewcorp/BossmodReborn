@@ -87,6 +87,10 @@
       <HintPath>$(DalamudLibPath)PInvoke.User32.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="InteropGenerator.Runtime">
+      <HintPath>$(DalamudLibPath)InteropGenerator.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
