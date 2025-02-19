@@ -100,12 +100,12 @@ public class SimpleAOEs(BossModule module, ActionID aid, AOEShape shape, int max
         if (spell.Action == WatchedAction)
         {
             var count = Casters.Count;
+            var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
-                var aoe = Casters[i];
-                if (aoe.ActorID == caster.InstanceID)
+                if (Casters[i].ActorID == id)
                 {
-                    Casters.Remove(aoe);
+                    Casters.RemoveAt(i);
                     break;
                 }
             }

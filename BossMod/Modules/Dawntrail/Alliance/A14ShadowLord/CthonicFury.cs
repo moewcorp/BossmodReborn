@@ -62,10 +62,9 @@ class BurningCourtMoatKeepBattlements(BossModule module) : Components.GenericAOE
             var count = AOEs.Count;
             for (var i = 0; i < count; ++i)
             {
-                var aoe = AOEs[i];
-                if (aoe.ActorID == caster.InstanceID)
+                if (AOEs[i].ActorID == caster.InstanceID)
                 {
-                    AOEs.Remove(aoe);
+                    AOEs.RemoveAt(i);
                     break;
                 }
             }

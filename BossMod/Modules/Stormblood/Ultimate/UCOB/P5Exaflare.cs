@@ -1,32 +1,35 @@
 ﻿namespace BossMod.Stormblood.Ultimate.UCOB;
 
-class P5Exaflare(BossModule module) : Components.Exaflare(module, 6)
+class P5Exaflare(BossModule module) : Components.Exaflare(module, 6f)
 {
     public void Reset() => NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ExaflareFirst)
+        if (spell.Action.ID == (uint)AID.ExaflareFirst)
         {
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.5f, ExplosionsLeft = 6, MaxShownExplosions = 4 });
+            Lines.Add(new() { Next = caster.Position, Advance = 8f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.5f, ExplosionsLeft = 6, MaxShownExplosions = 4 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ExaflareFirst or AID.ExaflareRest)
+        if (spell.Action.ID is (uint)AID.ExaflareFirst or (uint)AID.ExaflareRest)
         {
             ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
         }
     }
 }

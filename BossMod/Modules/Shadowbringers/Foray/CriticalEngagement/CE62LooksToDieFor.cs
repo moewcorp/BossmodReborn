@@ -11,6 +11,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
+
     Thundercall = 23964, // Boss->self, 4.0s cast, single-target, visual (summon orbs)
     ThundercallVisual = 23965, // Helper->self, 4.5s cast, single-target, ???
     ThundercallAOE = 23966, // Helper->self, no cast, ???, raidwide
@@ -49,32 +50,32 @@ class LightningBoltDistantClap(BossModule module) : Components.GenericAOEs(modul
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LightningBoltAOE)
+        if (spell.Action.ID == (uint)AID.LightningBoltAOE)
             _aoes.Add(new(_shapeBolt, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.LightningBoltAOE:
-                if (_aoes.FindIndex(a => a.Origin.AlmostEqual(spell.TargetXZ, 1)) is var index && index >= 0)
-                    _aoes[index] = new(_shapeClap, spell.TargetXZ, default, WorldState.FutureTime(6.1f));
+            case (uint)AID.LightningBoltAOE:
+                if (_aoes.FindIndex(a => a.Origin.AlmostEqual(spell.TargetXZ, 1f)) is var index && index >= 0)
+                    _aoes[index] = new(_shapeClap, spell.TargetXZ, default, WorldState.FutureTime(6.1d));
                 break;
-            case AID.DistantClap:
-                _aoes.RemoveAll(a => a.Origin.AlmostEqual(caster.Position, 1));
+            case (uint)AID.DistantClap:
+                _aoes.RemoveAll(a => a.Origin.AlmostEqual(caster.Position, 1f));
                 break;
         }
     }
 }
 
-class TwistingWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(40, 5, 40));
+class TwistingWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(80, 5));
 
-class CloudToGround(BossModule module) : Components.Exaflare(module, 5)
+class CloudToGround(BossModule module) : Components.Exaflare(module, 5f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.CloudToGroundFirst)
+        if (spell.Action.ID == (uint)AID.CloudToGroundFirst)
         {
             Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
         }
@@ -82,18 +83,22 @@ class CloudToGround(BossModule module) : Components.Exaflare(module, 5)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.CloudToGroundFirst or AID.CloudToGroundRest)
+        if (spell.Action.ID is (uint)AID.CloudToGroundFirst or (uint)AID.CloudToGroundRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 }
@@ -102,10 +107,10 @@ class Flame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSp
 
 class Burn(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _flames = module.Enemies(OID.BallOfFire);
+    private readonly List<Actor> _flames = module.Enemies((uint)OID.BallOfFire);
     private readonly List<(Actor actor, AOEInstance? aoe)> _casters = [];
 
-    private static readonly AOEShapeCircle _shape = new(8);
+    private static readonly AOEShapeCircle _shape = new(8f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -115,7 +120,7 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
             if (c.aoe == null)
                 continue;
             if (deadline == default)
-                deadline = c.aoe.Value.Activation.AddSeconds(1);
+                deadline = c.aoe.Value.Activation.AddSeconds(1d);
             if (c.aoe.Value.Activation < deadline)
                 yield return c.aoe.Value;
         }
@@ -125,24 +130,24 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
     {
         foreach (var f in _flames.Where(f => f.ModelState.AnimState1 == 1 && _casters.FindIndex(c => c.actor == f) < 0))
         {
-            _casters.Add((f, new(_shape, f.Position, default, WorldState.FutureTime(5))));
+            _casters.Add((f, new(_shape, WPos.ClampToGrid(f.Position), default, WorldState.FutureTime(5d))));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Burn && _casters.FindIndex(f => f.actor == caster) is var index && index >= 0)
+        if (spell.Action.ID == (uint)AID.Burn && _casters.FindIndex(f => f.actor == caster) is var index && index >= 0)
             _casters[index] = (caster, null);
     }
 }
 
-abstract class Lash(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 90.Degrees()));
+abstract class Lash(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40f, 90f.Degrees()));
 class Forelash(BossModule module) : Lash(module, AID.Forelash);
 class Backlash(BossModule module) : Lash(module, AID.Backlash);
 
 class Charybdis(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Charybdis), "Set hp to 1");
 class Roar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Roar));
-class Levinbolt(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.LevinboltAOE), 6);
+class Levinbolt(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.LevinboltAOE), 6f);
 class SerpentsEdge(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SerpentsEdge));
 
 class CE62LooksToDieForStates : StateMachineBuilder
@@ -166,4 +171,4 @@ class CE62LooksToDieForStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)] // bnpcname=9925
-public class CE62LooksToDieFor(WorldState ws, Actor primary) : BossModule(ws, primary, new(-200, -580), new ArenaBoundsCircle(20));
+public class CE62LooksToDieFor(WorldState ws, Actor primary) : BossModule(ws, primary, new(-200f, -580f), new ArenaBoundsCircle(20f));

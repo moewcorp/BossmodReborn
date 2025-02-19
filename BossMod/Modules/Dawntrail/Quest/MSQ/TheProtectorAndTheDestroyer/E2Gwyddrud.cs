@@ -182,10 +182,9 @@ class UntamedCurrentAOEs(BossModule module) : Components.GenericAOEs(module)
                 case (uint)AID.UntamedCurrentAOE10:
                     for (var i = 0; i < count; ++i)
                     {
-                        var aoe = _aoes[i];
-                        if (aoe.ActorID == caster.InstanceID)
+                        if (_aoes[i].ActorID == caster.InstanceID)
                         {
-                            _aoes.Remove(aoe);
+                            _aoes.RemoveAt(i);
                             break;
                         }
                     }

@@ -73,7 +73,7 @@ class WhispersOfTheWood(BossModule module) : Components.GenericAOEs(module)
                 AddAOEs([a180, a90, -a90, default]);
                 break;
         }
-        void AddAOEs(ReadOnlySpan<Angle> angles)
+        void AddAOEs(Angle[] angles)
         {
             for (var i = 0; i < 4; ++i)
             {

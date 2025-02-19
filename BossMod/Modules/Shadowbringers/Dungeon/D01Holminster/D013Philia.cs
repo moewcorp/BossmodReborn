@@ -49,7 +49,27 @@ public enum SID : uint
     Fetters = 1849 // none->player, extra=0xEC4
 }
 
-class SludgeVoidzone(BossModule module) : Components.PersistentVoidzone(module, 9.8f, m => m.Enemies(OID.SludgeVoidzone).Where(z => z.EventState != 7));
+class SludgeVoidzone(BossModule module) : Components.PersistentVoidzone(module, 9.8f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SludgeVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
 class ScavengersDaughter(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ScavengersDaughter));
 class HeadCrusher(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HeadCrusher));
 
@@ -125,7 +145,11 @@ class Aethersup(BossModule module) : Components.GenericAOEs(module)
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoe != default)
-            return [_aoe with { Risky = Module.Enemies((uint)OID.IronChain).Any(x => x.IsDead) }];
+        {
+            var chainL = Module.Enemies((uint)OID.IronChain);
+            var count = chainL.Count;
+            return [_aoe with { Risky = count == 0 || count != 0 && chainL[0].IsDead }];
+        }
         else
             return [];
     }
@@ -152,19 +176,19 @@ class Aethersup(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(20), (uint)IconID.SpreadFlare, ActionID.MakeSpell(AID.PendulumAOE1), 5.1f, true)
+class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(20f), (uint)IconID.SpreadFlare, ActionID.MakeSpell(AID.PendulumAOE1), 5.1f, true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
             hints.AddForbiddenZone(ShapeDistance.Circle(D013Philia.ArenaCenter, 18.5f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
             hints.Add("Bait away!");
     }
 }
@@ -181,7 +205,7 @@ class IntoTheLight(BossModule module) : Components.LineStack(module, ActionID.Ma
 
 class CatONineTails(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeCone _shape = new(25, 60.Degrees());
+    private static readonly AOEShapeCone _shape = new(25f, 60f.Degrees());
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -217,14 +241,14 @@ class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
         for (var i = 0; i < futureCount; ++i)
         {
             var aoe = futureAOEs[i];
-            aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, FutureColor);
+            aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, FutureColor);
         }
         for (var i = 0; i < imminentCount; ++i)
         {
             var aoe = imminentAOEs[i];
-            aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, ImminentColor);
+            aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, ImminentColor);
         }
-        for (var i = 0; i < _aoes.Count; ++i)
+        for (var i = 0; i < aoesCount; ++i)
         {
             var aoe = _aoes[i];
             aoes[index++] = aoe;
@@ -256,12 +280,18 @@ class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
 
         void Advance(WPos pos)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(pos, 1f));
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], pos);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 

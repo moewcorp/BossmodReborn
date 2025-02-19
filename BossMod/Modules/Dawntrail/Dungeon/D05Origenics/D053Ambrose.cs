@@ -289,10 +289,11 @@ public class D053Ambrose(WorldState ws, Actor primary) : BossModule(ws, primary,
     public static readonly WPos ArenaCenter = new(190f, default);
     public static readonly ArenaBoundsRect StartingBounds = new(32.5f, 24f);
     public static readonly ArenaBoundsRect DefaultBounds = new(15f, 19.5f);
+    private static readonly uint[] adds = [(uint)OID.Superfluity, (uint)OID.OrigenicsEyeborg];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies([(uint)OID.Superfluity, (uint)OID.OrigenicsEyeborg]));
+        Arena.Actors(Enemies(adds));
     }
 }

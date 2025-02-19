@@ -16,38 +16,40 @@ class HighestStakes(BossModule module) : Components.StackWithIcon(module, (uint)
 
 class AratamaForce(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _bubbles = module.Enemies(OID.AratamaForce);
+    private readonly List<Actor> _bubbles = module.Enemies((uint)OID.AratamaForce);
 
     private static readonly AOEShapeCircle _shape = new(2);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _bubbles.Where(actor => !actor.IsDead).Select(b => new AOEInstance(_shape, b.Position));
 }
 
-class HundredfoldHavoc(BossModule module) : Components.Exaflare(module, 5)
+class HundredfoldHavoc(BossModule module) : Components.Exaflare(module, 5f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HundredfoldHavocFirst)
+        if (spell.Action.ID == (uint)AID.HundredfoldHavocFirst)
         {
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 5 * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1, ExplosionsLeft = 10, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 10, MaxShownExplosions = 2 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.HundredfoldHavocFirst or AID.HundredfoldHavocRest)
+        if (spell.Action.ID is (uint)AID.HundredfoldHavocFirst or (uint)AID.HundredfoldHavocRest)
         {
-            ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(spell.TargetXZ, 1));
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], spell.TargetXZ);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
         }
     }
 }

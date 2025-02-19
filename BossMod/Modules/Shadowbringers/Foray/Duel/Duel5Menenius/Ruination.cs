@@ -25,40 +25,33 @@ class RuinationCross(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class RuinationExaflare(BossModule module) : Components.Exaflare(module, 4)
+class RuinationExaflare(BossModule module) : Components.Exaflare(module, 4f)
 {
-    class LineWithActor : Line
-    {
-        public Actor Caster;
-
-        public LineWithActor(BossModule module, Actor caster)
-        {
-            Next = caster.Position;
-            Advance = 4 * caster.Rotation.ToDirection();
-            NextExplosion = module.CastFinishAt(caster.CastInfo!);
-            TimeToMove = 1.1f;
-            ExplosionsLeft = 6;
-            MaxShownExplosions = 7;
-            Caster = caster;
-        }
-    }
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.RuinationExaStart)
-            Lines.Add(new LineWithActor(Module, caster));
+        if (spell.Action.ID == (uint)AID.RuinationExaStart)
+        {
+            Lines.Add(new() { Next = caster.Position, Advance = 4f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 6, MaxShownExplosions = 6 });
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Lines.Count > 0 && (AID)spell.Action.ID is AID.RuinationExaStart or AID.RuinationExaMove)
+        if (spell.Action.ID is (uint)AID.RuinationExaStart or (uint)AID.RuinationExaMove)
         {
-            var index = Lines.FindIndex(item => ((LineWithActor)item).Caster == caster);
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

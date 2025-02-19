@@ -1,14 +1,14 @@
 ﻿namespace BossMod.Endwalker.Alliance.A14Naldthal;
 
 // TODO: create and use generic 'line stack' component
-class FarFlungFire(BossModule module) : Components.GenericWildCharge(module, 3, fixedLength: 40)
+class FarFlungFire(BossModule module) : Components.GenericWildCharge(module, 3f, fixedLength: 40f)
 {
     private bool _real;
     private ulong _targetID;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FarAboveDeepBelowNald or AID.HearthAboveFlightBelowNald or AID.HearthAboveFlightBelowThalNald)
+        if (spell.Action.ID is (uint)AID.FarAboveDeepBelowNald or (uint)AID.HearthAboveFlightBelowNald or (uint)AID.HearthAboveFlightBelowThalNald)
         {
             _real = true;
             InitIfReal();
@@ -17,14 +17,14 @@ class FarFlungFire(BossModule module) : Components.GenericWildCharge(module, 3, 
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FarFlungFireVisual:
+            case (uint)AID.FarFlungFireVisual:
                 Source = caster;
                 _targetID = spell.MainTargetID;
                 InitIfReal();
                 break;
-            case AID.FarFlungFireAOE:
+            case (uint)AID.FarFlungFireAOE:
                 ++NumCasts;
                 _real = false;
                 Source = null;
@@ -44,13 +44,13 @@ class DeepestPit(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _real;
     private readonly List<Actor> _targets = [];
-    private readonly List<Actor> _casters = [];
+    private readonly List<AOEInstance> _aoes = [];
 
-    public bool Active => _casters.Count != 0;
+    public bool Active => _aoes.Count != 0;
 
-    private static readonly AOEShapeCircle _shape = new(6);
+    private static readonly AOEShapeCircle _shape = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.CastInfo!.LocXZ, default, Module.CastFinishAt(c.CastInfo)));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => _real && _targets.Contains(player) ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
 
@@ -58,38 +58,46 @@ class DeepestPit(BossModule module) : Components.GenericAOEs(module)
     {
         if (_real)
             foreach (var t in _targets)
-                Arena.AddCircle(t.Position, _shape.Radius, Colors.Danger);
+                Arena.AddCircle(t.Position, _shape.Radius);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FarAboveDeepBelowThal:
-            case AID.HearthAboveFlightBelowThal:
-            case AID.HearthAboveFlightBelowNaldThal:
+            case (uint)AID.FarAboveDeepBelowThal:
+            case (uint)AID.HearthAboveFlightBelowThal:
+            case (uint)AID.HearthAboveFlightBelowNaldThal:
                 _real = true;
                 break;
-            case AID.DeepestPitFirst:
-            case AID.DeepestPitRest:
-                _casters.Add(caster);
+            case (uint)AID.DeepestPitFirst:
+            case (uint)AID.DeepestPitRest:
+                _aoes.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
                 break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DeepestPitFirst or AID.DeepestPitRest)
+        if (spell.Action.ID is (uint)AID.DeepestPitFirst or (uint)AID.DeepestPitRest)
         {
-            _casters.Remove(caster);
-            if (_casters.Count == 0)
+            var count = _aoes.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].ActorID == caster.InstanceID)
+                {
+                    _aoes.RemoveAt(i);
+                    break;
+                }
+            }
+            if (count == 0)
                 _targets.Clear();
         }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((IconID)iconID == IconID.DeepestPitTarget)
+        if (iconID == (uint)IconID.DeepestPitTarget)
         {
             _targets.Add(actor);
         }

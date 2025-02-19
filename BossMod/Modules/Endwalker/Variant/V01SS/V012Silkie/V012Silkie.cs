@@ -26,30 +26,34 @@ class SqueakyCleanAOE1W(BossModule module) : Components.SimpleAOEs(module, Actio
 class SqueakyCleanAOE2W(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SqueakyCleanAOE2W), new AOEShapeCone(60, 45.Degrees()));
 class SqueakyCleanAOE3W(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SqueakyCleanAOE3W), new AOEShapeCone(60, 112.5f.Degrees()));
 
-class EasternEwers(BossModule module) : Components.Exaflare(module, 4)
+class EasternEwers(BossModule module) : Components.Exaflare(module, 4f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.BrimOver)
+        if (spell.Action.ID == (uint)AID.BrimOver)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = new(0, 5.1f), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 11, MaxShownExplosions = int.MaxValue });
+            Lines.Add(new() { Next = caster.Position, Advance = new(default, 5.1f), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 11, MaxShownExplosions = int.MaxValue });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BrimOver or AID.Rinse)
+        if (spell.Action.ID is (uint)AID.BrimOver or (uint)AID.Rinse)
         {
-            var index = Lines.FindIndex(item => Math.Abs(item.Next.X - caster.Position.X) < 1);
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 }

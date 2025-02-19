@@ -139,19 +139,26 @@ class Burst(BossModule module) : Components.Exaflare(module, new AOEShapeCircle(
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BurstFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.2f, ExplosionsLeft = 9, MaxShownExplosions = 4 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.2f, ExplosionsLeft = 9, MaxShownExplosions = 4 });
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.BurstFirst or (uint)AID.BurstRepeat)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(spell.LocXZ, 1));
-            if (index == -1)
-                return;
-            AdvanceLine(Lines[index], spell.LocXZ);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    break;
+                }
+            }
         }
     }
 }

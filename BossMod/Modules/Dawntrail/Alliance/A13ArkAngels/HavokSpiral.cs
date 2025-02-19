@@ -25,7 +25,7 @@ class HavokSpiral(BossModule module) : Components.GenericRotatingAOE(module)
         if (_rotation.Count == 3 && _increment != default)
         {
             for (var i = 0; i < 3; ++i)
-                Sequences.Add(new(_shape, Arena.Center, _rotation[i], _increment, _activation, 1.2f, 8));
+                Sequences.Add(new(_shape, WPos.ClampToGrid(Arena.Center), _rotation[i], _increment, _activation, 1.2f, 8));
             _rotation.Clear();
             _increment = default;
         }

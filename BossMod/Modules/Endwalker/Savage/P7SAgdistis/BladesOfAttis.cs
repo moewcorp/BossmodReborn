@@ -1,45 +1,33 @@
 ﻿namespace BossMod.Endwalker.Savage.P7SAgdistis;
 
-class BladesOfAttis(BossModule module) : Components.Exaflare(module, 7)
+class BladesOfAttis(BossModule module) : Components.Exaflare(module, 7f)
 {
-    class LineWithActor : Line
-    {
-        public Actor Caster;
-
-        public LineWithActor(BossModule module, Actor caster)
-        {
-            Next = caster.Position;
-            Advance = 7 * caster.Rotation.ToDirection();
-            NextExplosion = module.CastFinishAt(caster.CastInfo!);
-            TimeToMove = 2;
-            ExplosionsLeft = 8;
-            MaxShownExplosions = 8;
-            Caster = caster;
-        }
-    }
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.BladesOfAttisFirst)
+        if (spell.Action.ID == (uint)AID.BladesOfAttisFirst)
         {
-            Lines.Add(new LineWithActor(Module, caster));
+            Lines.Add(new() { Next = caster.Position, Advance = 7f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2f, ExplosionsLeft = 8, MaxShownExplosions = 8 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BladesOfAttisFirst or AID.BladesOfAttisRest)
+        if (spell.Action.ID is (uint)AID.BladesOfAttisFirst or (uint)AID.BladesOfAttisRest)
         {
-            var index = Lines.FindIndex(item => ((LineWithActor)item).Caster == caster);
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 }

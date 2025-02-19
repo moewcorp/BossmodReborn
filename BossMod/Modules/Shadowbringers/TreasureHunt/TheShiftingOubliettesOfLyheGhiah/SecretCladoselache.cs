@@ -46,17 +46,13 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = iconID switch
+        _increment = iconID switch
         {
             (uint)IconID.RotateCW => -60.Degrees(),
             (uint)IconID.RotateCCW => 60.Degrees(),
             _ => default
         };
-        if (increment != default)
-        {
-            _increment = increment;
-            InitIfReady(actor);
-        }
+        InitIfReady(actor);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -79,7 +75,7 @@ class PelagicCleaverRotation(BossModule module) : Components.GenericRotatingAOE(
     {
         if (_rotation != default && _increment != default)
         {
-            Sequences.Add(new(_shape, source.Position, _rotation, _increment, _activation, 2.1f, 6));
+            Sequences.Add(new(_shape, WPos.ClampToGrid(source.Position), _rotation, _increment, _activation, 2.1f, 6));
             _rotation = default;
             _increment = default;
         }

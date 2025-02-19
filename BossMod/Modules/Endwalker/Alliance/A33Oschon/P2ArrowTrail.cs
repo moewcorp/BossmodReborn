@@ -5,7 +5,7 @@ class P2ArrowTrail(BossModule module) : Components.Exaflare(module, new AOEShape
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ArrowTrailHint)
-            Lines.Add(new() { Next = caster.Position, Advance = 5 * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 0.4f), TimeToMove = 0.5f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 0.4f), TimeToMove = 0.5f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -13,12 +13,18 @@ class P2ArrowTrail(BossModule module) : Components.Exaflare(module, new AOEShape
         if (spell.Action.ID == (uint)AID.ArrowTrailAOE)
         {
             ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position);
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
         }
     }

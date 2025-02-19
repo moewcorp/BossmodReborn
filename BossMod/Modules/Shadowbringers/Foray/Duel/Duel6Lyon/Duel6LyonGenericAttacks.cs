@@ -9,31 +9,31 @@ class OnFire(BossModule module) : BossComponent(module)
     {
         if (_isCasting)
             hints.Add("Applies On Fire to Lyon. Use Dispell to remove it");
-        if (_hasBuff)
+        else if (_hasBuff)
             hints.Add("Lyon has 'On Fire'. Use Dispell to remove it!");
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if (actor == Module.PrimaryActor && (SID)status.ID == SID.OnFire)
+        if (actor == Module.PrimaryActor && status.ID == (uint)SID.OnFire)
             _hasBuff = true;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HarnessFire)
+        if (spell.Action.ID == (uint)AID.HarnessFire)
             _isCasting = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HarnessFire)
+        if (spell.Action.ID == (uint)AID.HarnessFire)
             _isCasting = false;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (actor == Module.PrimaryActor && (SID)status.ID == SID.OnFire)
+        if (actor == Module.PrimaryActor && status.ID == (uint)SID.OnFire)
             _hasBuff = false;
     }
 }
@@ -44,7 +44,7 @@ class HeavenAndEarth(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
 
-    private static readonly AOEShapeCone _shape = new(20, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(20f, 15f.Degrees());
 
     private int _index;
 
@@ -53,25 +53,23 @@ class HeavenAndEarth(BossModule module) : Components.GenericRotatingAOE(module)
         _increment = increment;
         for (var i = 0; i < Sequences.Count; ++i)
         {
-            var sequence = Sequences[i];
-            sequence.Increment = _increment;
-            Sequences[i] = sequence;
+            Sequences[i] = Sequences[i] with { Increment = _increment };
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavenAndEarthCW)
+        if (spell.Action.ID == (uint)AID.HeavenAndEarthCW)
             UpdateIncrement(-30.Degrees());
-        else if ((AID)spell.Action.ID == AID.HeavenAndEarthCCW)
+        else if (spell.Action.ID == (uint)AID.HeavenAndEarthCCW)
             UpdateIncrement(30.Degrees());
-        else if ((AID)spell.Action.ID == AID.HeavenAndEarthStart)
-            Sequences.Add(new(_shape, caster.Position, spell.Rotation, _increment, Module.CastFinishAt(spell), 1.2f, 4));
+        else if (spell.Action.ID == (uint)AID.HeavenAndEarthStart)
+            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation, _increment, Module.CastFinishAt(spell), 1.2f, 4));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavenAndEarthMove && Sequences.Count > 0)
+        if (spell.Action.ID == (uint)AID.HeavenAndEarthMove)
             AdvanceSequence(++_index % Sequences.Count, WorldState.CurrentTime);
     }
 }
@@ -82,7 +80,7 @@ class HeartOfNatureConcentric(BossModule module) : Components.ConcentricAOEs(mod
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.NaturesPulse1)
+        if (spell.Action.ID == (uint)AID.NaturesPulse1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -90,21 +88,21 @@ class HeartOfNatureConcentric(BossModule module) : Components.ConcentricAOEs(mod
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.NaturesPulse1 => 0,
-                AID.NaturesPulse2 => 1,
-                AID.NaturesPulse3 => 2,
+                (uint)AID.NaturesPulse1 => 0,
+                (uint)AID.NaturesPulse2 => 1,
+                (uint)AID.NaturesPulse3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }
 
-class CagedHeartOfNature(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CagedHeartOfNature), 6);
+class CagedHeartOfNature(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CagedHeartOfNature), 6f);
 
-class WindsPeak(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindsPeak1), 5);
+class WindsPeak(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindsPeak1), 5f);
 
 class WindsPeakKB(BossModule module) : Components.Knockback(module)
 {
@@ -114,13 +112,15 @@ class WindsPeakKB(BossModule module) : Components.Knockback(module)
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        if (_watched && WorldState.CurrentTime < _time.AddSeconds(4.4f))
-            yield return new(Module.PrimaryActor.Position, 15, _activation);
+        if (_watched && WorldState.CurrentTime < _time.AddSeconds(4.4d))
+            return [new(Module.PrimaryActor.Position, 15f, _activation)];
+        else
+            return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.WindsPeak1)
+        if (spell.Action.ID == (uint)AID.WindsPeak1)
         {
             _watched = true;
             _time = WorldState.CurrentTime;
@@ -131,43 +131,38 @@ class WindsPeakKB(BossModule module) : Components.Knockback(module)
 
 class SplittingRage(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.SplittingRage));
 
-class NaturesBlood(BossModule module) : Components.Exaflare(module, 4)
+class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
 {
-    class LineWithActor : Line
-    {
-        public Actor Caster;
-
-        public LineWithActor(BossModule module, Actor caster)
-        {
-            Next = caster.Position;
-            Advance = 6 * caster.Rotation.ToDirection();
-            NextExplosion = module.CastFinishAt(caster.CastInfo);
-            TimeToMove = 1.1f;
-            ExplosionsLeft = 7;
-            MaxShownExplosions = 3;
-            Caster = caster;
-        }
-    }
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NaturesBlood1)
-            Lines.Add(new LineWithActor(Module, caster));
+        if (spell.Action.ID == (uint)AID.NaturesBlood1)
+        {
+            Lines.Add(new() { Next = caster.Position, Advance = 6f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 7, MaxShownExplosions = 3 });
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Lines.Count > 0 && (AID)spell.Action.ID is AID.NaturesBlood1 or AID.NaturesBlood2)
+        if (spell.Action.ID is (uint)AID.NaturesBlood1 or (uint)AID.NaturesBlood2)
         {
-            var index = Lines.FindIndex(item => ((LineWithActor)item).Caster == caster);
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }
 
-class MoveMountains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoveMountains3), new AOEShapeRect(40, 3))
+class MoveMountains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoveMountains3), new AOEShapeRect(40f, 3f))
 {
     // TODO predict rotation
 }

@@ -17,10 +17,11 @@ class Break(BossModule module) : Components.GenericGaze(module)
         if (spell.Action.ID is (uint)AID.BreakBossAOE or (uint)AID.BreakEyeAOE)
         {
             var count = Eyes.Count;
+            var pos = caster.Position;
             for (var i = 0; i < count; ++i)
             {
                 var eye = Eyes[i];
-                if (eye.Position == caster.Position)
+                if (eye.Position == pos)
                 {
                     Eyes.Remove(eye);
                     break;

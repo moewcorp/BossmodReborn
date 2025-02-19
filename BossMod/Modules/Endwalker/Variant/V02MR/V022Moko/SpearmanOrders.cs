@@ -1,48 +1,58 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class SpearmanOrdersFast(BossModule module) : Components.Exaflare(module, new AOEShapeRect(3, 2, 0.474f))
+class SpearmanOrdersFast(BossModule module) : Components.Exaflare(module, new AOEShapeRect(3f, 2f, 0.474f))
 {
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.AshigaruSoheiFast && id == 0x25E9)
+        if (actor.OID == (uint)OID.AshigaruSoheiFast && id == 0x25E9)
             Lines.Add(new() { Next = actor.Position, Advance = 3.474f * actor.Rotation.ToDirection(), NextExplosion = WorldState.FutureTime(7.8f), TimeToMove = 0.6f, ExplosionsLeft = 12, MaxShownExplosions = 4 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SpearpointPushFast)
+        if (spell.Action.ID == (uint)AID.SpearpointPushFast)
         {
-            ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position);
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
         }
     }
 }
 
-class SpearmanOrdersSlow(BossModule module) : Components.Exaflare(module, new AOEShapeRect(2, 2, 0.316f))
+class SpearmanOrdersSlow(BossModule module) : Components.Exaflare(module, new AOEShapeRect(2f, 2f, 0.316f))
 {
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.AshigaruSoheiSlow && id == 0x25E9)
+        if (actor.OID == (uint)OID.AshigaruSoheiSlow && id == 0x25E9)
             Lines.Add(new() { Next = actor.Position, Advance = 2.316f * actor.Rotation.ToDirection(), NextExplosion = WorldState.FutureTime(7.8f), TimeToMove = 0.6f, ExplosionsLeft = 18, MaxShownExplosions = 2 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SpearpointPushSlow)
+        if (spell.Action.ID == (uint)AID.SpearpointPushSlow)
         {
-            ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position);
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
         }
     }

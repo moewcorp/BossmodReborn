@@ -32,10 +32,9 @@ class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module)
         {
             for (var i = 0; i < AOEs.Count; ++i)
             {
-                var aoe = AOEs[i];
-                if (aoe.ActorID == caster.InstanceID)
+                if (AOEs[i].ActorID == caster.InstanceID)
                 {
-                    AOEs.Remove(aoe);
+                    AOEs.RemoveAt(i);
                     break;
                 }
             }

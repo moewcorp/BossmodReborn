@@ -105,12 +105,12 @@ public class CastGaze(BossModule module, ActionID aid, bool inverted = false, fl
         if (spell.Action == WatchedAction)
         {
             var count = Eyes.Count;
+            var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
-                var eye = Eyes[i];
-                if (eye.ActorID == caster.InstanceID)
+                if (Eyes[i].ActorID == id)
                 {
-                    Eyes.Remove(eye);
+                    Eyes.RemoveAt(i);
                     break;
                 }
             }

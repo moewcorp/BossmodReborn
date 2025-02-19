@@ -250,9 +250,11 @@ class D052DeceiverStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 825, NameID = 12693, SortOrder = 3)]
 public class D052Deceiver(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChanges.ArenaCenter, ArenaChanges.StartingBounds)
 {
+    private static readonly uint[] adds = [(uint)OID.OrigenicsSentryG92, (uint)OID.OrigenicsSentryG91];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies([(uint)OID.OrigenicsSentryG92, (uint)OID.OrigenicsSentryG91]));
+        Arena.Actors(Enemies(adds));
     }
 }

@@ -36,42 +36,42 @@ public enum AID : uint
     Earthquake2 = 37532, // Helper->self, 7.0s cast, range 10-20 donut
     Earthquake3 = 37533, // Helper->self, 9.0s cast, range 20-30 donut
 
-    FreezeInCyan = 37540, // Boss->self, 5.0s cast, range 40 45-degree cone
+    FreezeInCyan = 37540 // Boss->self, 5.0s cast, range 40 45-degree cone
 }
 
-class FreezeInCyan(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FreezeInCyan), new AOEShapeCone(40, 22.5f.Degrees()));
-class NineIvies(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NineIvies), new AOEShapeCone(50, 10.Degrees()), 9);
-class TornadoInGreen(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TornadoInGreen), new AOEShapeDonut(10, 40));
+class FreezeInCyan(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FreezeInCyan), new AOEShapeCone(40f, 22.5f.Degrees()));
+class NineIvies(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NineIvies), new AOEShapeCone(50f, 10f.Degrees()), 9);
+class TornadoInGreen(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TornadoInGreen), new AOEShapeDonut(10f, 40f));
 class SculptureCast(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.SculptureCast));
 class BlazeInRed(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BlazeInRed));
 
 class BloodyCaress(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCone cone = new(60, 90.Degrees());
+    private static readonly AOEShapeCone cone = new(60f, 90f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.AFlowerInTheSun)
+        if (actor.OID == (uint)OID.AFlowerInTheSun)
             _aoe = new(cone, actor.Position, actor.Rotation, WorldState.FutureTime(9.8f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.BloodyCaress)
+        if (spell.Action.ID == (uint)AID.BloodyCaress)
             _aoe = null;
     }
 }
 
 class Earthquake(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 20), new AOEShapeDonut(20, 30)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Earthquake1)
+        if (spell.Action.ID == (uint)AID.Earthquake1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -79,47 +79,56 @@ class Earthquake(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.Earthquake1 => 0,
-                AID.Earthquake2 => 1,
-                AID.Earthquake3 => 2,
+                (uint)AID.Earthquake1 => 0,
+                (uint)AID.Earthquake2 => 1,
+                (uint)AID.Earthquake3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }
 
 class FloodInBlueFirst : Components.SimpleAOEs
 {
-    public FloodInBlueFirst(BossModule module) : base(module, ActionID.MakeSpell(AID.FloodInBlueFirst), new AOEShapeRect(50, 5)) { Color = Colors.Danger; }
+    public FloodInBlueFirst(BossModule module) : base(module, ActionID.MakeSpell(AID.FloodInBlueFirst), new AOEShapeRect(50f, 5f)) { Color = Colors.Danger; }
 }
 
-class FloodInBlueRest(BossModule module) : Components.Exaflare(module, new AOEShapeRect(25, 2.5f, 25))
+class FloodInBlueRest(BossModule module) : Components.Exaflare(module, new AOEShapeRect(25f, 2.5f, 25f))
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FloodInBlueFirst)
+        void AddLine(WPos first, WDir dir, Angle offset)
+        => Lines.Add(new() { Next = first, Advance = dir, Rotation = spell.Rotation + offset, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+        if (spell.Action.ID == (uint)AID.FloodInBlueFirst)
         {
-            var advance1 = spell.Rotation.ToDirection().OrthoR() * 7.5f;
-            var advance2 = spell.Rotation.ToDirection().OrthoR() * 5;
+            var advance = spell.Rotation.ToDirection().OrthoR();
+            var advance1 = advance * 7.5f;
+            var advance2 = advance * 5f;
             var pos = caster.Position;
-            Lines.Add(new() { Next = pos + advance1, Advance = advance2, Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = 5, MaxShownExplosions = 2 });
-            Lines.Add(new() { Next = pos - advance1, Advance = -advance2, Rotation = (spell.Rotation + 180.Degrees()).Normalized(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+            AddLine(pos + advance1, advance2, default);
+            AddLine(pos - advance1, -advance2, 180f.Degrees());
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.FloodInBlueRest)
+        if (spell.Action.ID == (uint)AID.FloodInBlueRest)
         {
-            var index = Lines.FindIndex(l => l.Next.AlmostEqual(caster.Position, 3));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position + 2.5f * Lines[index].Rotation.ToDirection().OrthoR());
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 3f))
+                {
+                    AdvanceLine(line, caster.Position + 2.5f * line.Rotation.ToDirection().OrthoR());
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    break;
+                }
             }
         }
     }

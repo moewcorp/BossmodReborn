@@ -5,9 +5,9 @@
 // each wave is 5 subsequent lines, except for two horizontal ones that go towards edges - they only have 1 line - meaning there's a total 22 'rest' casts
 class UpwellFirst : Components.SimpleAOEs
 {
-    public UpwellFirst(BossModule module) : base(module, ActionID.MakeSpell(AID.UpwellFirst), new AOEShapeRect(60, 5)) { Color = Colors.Danger; }
+    public UpwellFirst(BossModule module) : base(module, ActionID.MakeSpell(AID.UpwellFirst), new AOEShapeRect(60f, 5f)) { Color = Colors.Danger; }
 }
-class UpwellRest(BossModule module) : Components.Exaflare(module, new AOEShapeRect(30, 2.5f, 30))
+class UpwellRest(BossModule module) : Components.Exaflare(module, new AOEShapeRect(30f, 2.5f, 30f))
 {
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -25,47 +25,55 @@ class UpwellRest(BossModule module) : Components.Exaflare(module, new AOEShapeRe
         {
             var aoe = futureAOEs[i];
             if (aoe.Item2 <= imminentDeadline)
-                aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, FutureColor);
+                aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, FutureColor);
         }
 
         for (var i = 0; i < imminentCount; ++i)
         {
             var aoe = imminentAOEs[i];
             if (aoe.Item2 <= imminentDeadline)
-                aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, ImminentColor);
+                aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, ImminentColor);
         }
         return aoes[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.UpwellFirst)
+        if (spell.Action.ID == (uint)AID.UpwellFirst)
         {
             var pos = caster.Position;
-            var check = pos.AlmostEqual(Arena.Center, 1);
-            var isNorth = pos.Z == 530;
-            var isSouth = pos.Z == 550;
+            var check = pos.AlmostEqual(Arena.Center, 1f);
+            var isNorth = pos.Z == 530f;
+            var isSouth = pos.Z == 550f;
             var numExplosions1 = check || isSouth ? 5 : 1;
             var numExplosions2 = check || isNorth ? 5 : 1;
             var dir = spell.Rotation.ToDirection().OrthoR();
             var advance1 = dir * 7.5f;
             var advance2 = dir * 5;
-            Lines.Add(new() { Next = pos + advance1, Advance = advance2, Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = numExplosions2, MaxShownExplosions = 2 });
-            Lines.Add(new() { Next = pos - advance1, Advance = -advance2, Rotation = (spell.Rotation + 180.Degrees()).Normalized(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = numExplosions1, MaxShownExplosions = 2 });
+            AddLine(pos + advance1, advance2, default, numExplosions2);
+            AddLine(pos - advance1, -advance2, 180f.Degrees(), numExplosions1);
+            void AddLine(WPos first, WDir dir, Angle offset, int explosions)
+            => Lines.Add(new() { Next = first, Advance = dir, Rotation = spell.Rotation + offset, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2f, ExplosionsLeft = explosions, MaxShownExplosions = 2 });
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.UpwellRest)
+        if (spell.Action.ID == (uint)AID.UpwellRest)
         {
-            ++NumCasts;
-            var index = Lines.FindIndex(l => l.Next.AlmostEqual(caster.Position, 3) && l.Rotation.AlmostEqual(caster.Rotation, Angle.DegToRad));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            var rot = caster.Rotation;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position + 2.5f * Lines[index].Rotation.ToDirection().OrthoR());
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 3f) && line.Rotation.AlmostEqual(rot, Angle.DegToRad))
+                {
+                    AdvanceLine(line, pos + 2.5f * line.Rotation.ToDirection().OrthoR());
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
         }
     }

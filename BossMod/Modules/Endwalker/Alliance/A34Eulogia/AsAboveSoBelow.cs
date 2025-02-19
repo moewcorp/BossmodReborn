@@ -6,13 +6,15 @@ class AsAboveSoBelow(BossModule module) : Components.Exaflare(module, 6f)
     {
         if (spell.Action.ID is (uint)AID.EverfireFirst or (uint)AID.OnceBurnedFirst)
         {
-            var advance = 6 * spell.Rotation.ToDirection();
+            var advance = 6f * spell.Rotation.ToDirection();
             var pos = caster.Position;
-            var activation = Module.CastFinishAt(spell);
             // outer lines have 4 explosion only, rest 5
             var numExplosions = (pos - Arena.Center).LengthSq() > 500f ? 4 : 6;
-            Lines.Add(new() { Next = pos, Advance = advance, NextExplosion = activation, TimeToMove = 1.5f, ExplosionsLeft = numExplosions, MaxShownExplosions = 5 });
-            Lines.Add(new() { Next = pos, Advance = -advance, NextExplosion = activation, TimeToMove = 1.5f, ExplosionsLeft = numExplosions, MaxShownExplosions = 5 });
+            AddLine(advance);
+            AddLine(-advance);
+
+            void AddLine(WDir dir)
+            => Lines.Add(new() { Next = pos, Advance = dir, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.5f, ExplosionsLeft = numExplosions, MaxShownExplosions = 5 });
         }
     }
 
@@ -23,29 +25,32 @@ class AsAboveSoBelow(BossModule module) : Components.Exaflare(module, 6f)
             case (uint)AID.EverfireFirst:
             case (uint)AID.OnceBurnedFirst:
                 var dir = caster.Rotation.ToDirection();
-                Advance(caster.Position, dir);
-                Advance(caster.Position, -dir);
+                Advance(dir);
+                Advance(-dir);
                 ++NumCasts;
                 break;
             case (uint)AID.EverfireRest:
             case (uint)AID.OnceBurnedRest:
-                Advance(caster.Position, caster.Rotation.ToDirection());
+                Advance(caster.Rotation.ToDirection());
                 ++NumCasts;
                 break;
         }
-    }
-
-    private void Advance(WPos position, WDir dir)
-    {
-        var index = Lines.FindIndex(item => item.Next.AlmostEqual(position, 1f) && item.Advance.Dot(dir) > 5f);
-        if (index == -1)
+        void Advance(WDir dir)
         {
-            ReportError($"Failed to find entry for {position} / {dir}");
-            return;
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f) && line.Advance.Dot(dir) > 5f)
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
+            ReportError($"Failed to find entry for {caster.InstanceID:X}, {pos} / {dir}");
         }
-
-        AdvanceLine(Lines[index], position);
-        if (Lines[index].ExplosionsLeft == 0)
-            Lines.RemoveAt(index);
     }
 }

@@ -120,7 +120,7 @@ class NecroticFluidMist(BossModule module) : Components.Exaflare(module, 6)
                 Pattern.Northward => GetNorthwardExplosions(caster.Position, Arena.Center),
                 _ => 0
             };
-            var advance = 6 * (CurrentWind == Pattern.Southward ? new WDir(0f, 1f) : new(0f, -1f));
+            var advance = 6 * (CurrentWind == Pattern.Southward ? new WDir(default, 1f) : new(default, -1f));
             Lines.Add(new() { Next = caster.Position, Advance = advance, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = numExplosions, MaxShownExplosions = 5 });
         }
     }
@@ -154,19 +154,22 @@ class NecroticFluidMist(BossModule module) : Components.Exaflare(module, 6)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.NecroticFluid or (uint)AID.NecroticMist)
-            Advance(spell.LocXZ);
-    }
-
-    private void Advance(WPos position)
-    {
-        var index = Lines.FindIndex(item => item.Next.AlmostEqual(position, 1f));
-        if (index != -1)
         {
-            AdvanceLine(Lines[index], position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
-            if (Lines.Count == 0)
-                CurrentWind = Pattern.None;
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    if (Lines.Count == 0)
+                        CurrentWind = Pattern.None;
+                    return;
+                }
+            }
         }
     }
 

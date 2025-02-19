@@ -1,41 +1,45 @@
 ﻿namespace BossMod.Endwalker.Savage.P12S2PallasAthena;
 
-abstract class Ekpyrosis(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 19); // TODO: verify falloff
+abstract class Ekpyrosis(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 19f); // TODO: verify falloff
 class EkpyrosisProximityV(BossModule module) : Ekpyrosis(module, AID.EkpyrosisProximityV);
 class EkpyrosisProximityH(BossModule module) : Ekpyrosis(module, AID.EkpyrosisProximityH);
 
-class EkpyrosisExaflare(BossModule module) : Components.Exaflare(module, 6)
+class EkpyrosisExaflare(BossModule module) : Components.Exaflare(module, 6f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.EkpyrosisExaflareFirst)
+        if (spell.Action.ID == (uint)AID.EkpyrosisExaflareFirst)
         {
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 8 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = caster.Position, Advance = 8f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.EkpyrosisExaflareFirst or AID.EkpyrosisExaflareRest)
+        if (spell.Action.ID is (uint)AID.EkpyrosisExaflareFirst or (uint)AID.EkpyrosisExaflareRest)
         {
             ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 }
 
 class EkpyrosisSpread : Components.UniformStackSpread
 {
-    public EkpyrosisSpread(BossModule module) : base(module, 0, 6)
+    public EkpyrosisSpread(BossModule module) : base(module, default, 6f)
     {
         foreach (var p in Raid.WithoutSlot(true, true, true))
             AddSpread(p, module.StateMachine.NextTransitionWithFlag(StateMachine.StateHint.Raidwide));
@@ -43,7 +47,7 @@ class EkpyrosisSpread : Components.UniformStackSpread
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.EkpyrosisSpread)
+        if (spell.Action.ID == (uint)AID.EkpyrosisSpread)
             Spreads.Clear();
     }
 }

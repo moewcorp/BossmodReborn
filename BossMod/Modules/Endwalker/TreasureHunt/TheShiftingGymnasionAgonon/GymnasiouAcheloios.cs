@@ -70,7 +70,7 @@ class DoubleHammer(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOEs(ReadOnlySpan<Angle> angles)
+        void AddAOEs(Angle[] angles)
         {
             _aoes.Add(new(Cone, spell.LocXZ, angles[0], Module.CastFinishAt(spell, 0.8f)));
             _aoes.Add(new(Cone, spell.LocXZ, angles[1], Module.CastFinishAt(spell, 3.7f)));

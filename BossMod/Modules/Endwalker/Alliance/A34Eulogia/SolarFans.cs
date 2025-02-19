@@ -4,28 +4,23 @@ class SolarFans(BossModule module) : Components.ChargeAOEs(module, ActionID.Make
 
 class RadiantRhythm(BossModule module) : Components.GenericAOEs(module)
 {
-    private Angle _nextAngle;
-    private DateTime _activation;
+    private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeDonutSector _shape = new(20f, 30f, 45f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_activation == default)
+        var count = _aoes.Count;
+        if (count == 0)
             return [];
-
-        var aoes = new AOEInstance[2];
-        var center = Arena.Center;
-        // assumption: we always have 4 moves
-        if (NumCasts < 8)
+        var max = count > 4 ? 4 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
         {
-            aoes[0] = new(_shape, center, _nextAngle, _activation, Colors.Danger);
-            aoes[1] = new(_shape, center, _nextAngle + 180f.Degrees(), _activation, Colors.Danger);
-        }
-        if (NumCasts < 6)
-        {
-            var future = _activation.AddSeconds(2.1d);
-            aoes[0] = new(_shape, center, _nextAngle + 90f.Degrees(), future);
-            aoes[1] = new(_shape, center, _nextAngle - 90f.Degrees(), future);
+            var aoe = _aoes[i];
+            if (i < 2)
+                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
         }
         return aoes;
     }
@@ -35,10 +30,19 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.SolarFansAOE)
         {
             // assumption: flames always move CCW
-            var startingAngle = Angle.FromDirection(spell.LocXZ - Arena.Center);
+            var pattern1 = false;
+            if ((int)spell.LocXZ.Z == -945f)
+                pattern1 = true;
             NumCasts = 0;
-            _nextAngle = startingAngle + 45f.Degrees();
-            _activation = Module.CastFinishAt(spell, 2.8f);
+            var activation = Module.CastFinishAt(spell, 2.8f);
+            for (var i = 1; i < 5; ++i)
+            {
+                var act = activation.AddSeconds(2.1d * (i - 1));
+                var angle = ((pattern1 ? 225f : 135f) + i * 90f).Degrees();
+                AddAOE(angle, act);
+                AddAOE(angle + 180f.Degrees(), act);
+            }
+            void AddAOE(Angle rotation, DateTime activation) => _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
         }
     }
 
@@ -47,16 +51,8 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.RadiantFlight)
         {
             ++NumCasts;
-            if (NumCasts == 8)
-            {
-                _nextAngle = default;
-                _activation = default;
-            }
-            else if ((NumCasts & 1) == 0)
-            {
-                _nextAngle += 90f.Degrees();
-                _activation = WorldState.FutureTime(2.1d);
-            }
+            if (_aoes.Count != 0)
+                _aoes.RemoveAt(0);
         }
     }
 }

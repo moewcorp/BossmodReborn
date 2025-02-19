@@ -50,24 +50,31 @@ class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, ActionID
     }
 }
 
-class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4)
+class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ForeseenFlurryFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.ForeseenFlurryFirst or (uint)AID.ForeseenFlurryRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    break;
+                }
+            }
         }
     }
 }
@@ -89,7 +96,7 @@ class HeroesAndPretendersStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70383, NameID = 13176)]
 public class HeroesAndPretenders(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(676, 41), 14.5f, 20)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(676f, 41f), 14.5f, 20)]);
 
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.PerchOfTheApex, (uint)OID.CultivatedMossFungus, (uint)OID.CultivatedOchu1, (uint)OID.CultivatedOchu2,
     (uint)OID.CultivatedMorbolSeedling];

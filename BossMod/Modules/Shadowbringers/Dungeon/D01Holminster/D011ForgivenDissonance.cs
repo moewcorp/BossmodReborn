@@ -21,9 +21,9 @@ public enum AID : uint
     Pillory = 15812 // Boss->player, 5.0s cast, single-target
 }
 
-class Thumbscrew(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Thumbscrew), 4);
+class Thumbscrew(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Thumbscrew), 4f);
 class ThePathofLight(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ThePathOfLight));
-class GibbetCage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GibbetCage), 8);
+class GibbetCage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GibbetCage), 8f);
 class HereticsFork(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HereticsFork), new AOEShapeCross(40f, 3f));
 class LightShot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightShot), new AOEShapeRect(40f, 2f));
 class WoodenHorse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WoodenHorse), new AOEShapeCone(40f, 45f.Degrees()));
@@ -48,5 +48,5 @@ class D011ForgivenDissonanceStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8299)]
 public class D011ForgivenDissonance(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-15, 240), 19.5f)], [new Rectangle(new(-15, 260), 20, 1.25f), new Rectangle(new(-15, 220), 20, 1.2f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-15f, 240f), 19.5f)], [new Rectangle(new(-15f, 260f), 20f, 1.25f), new Rectangle(new(-15f, 220f), 20f, 1.2f)]);
 }

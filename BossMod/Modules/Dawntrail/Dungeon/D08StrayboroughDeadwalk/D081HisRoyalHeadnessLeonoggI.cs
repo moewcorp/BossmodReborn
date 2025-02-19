@@ -47,13 +47,13 @@ public enum IconID : uint
 
 class MaliciousMistArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(14, 20);
+    private static readonly AOEShapeDonut donut = new(14f, 20f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.MaliciousMist && Arena.Bounds == D081HisRoyalHeadnessLeonoggI.StartingBounds)
+        if (spell.Action.ID == (uint)AID.MaliciousMist && Arena.Bounds == D081HisRoyalHeadnessLeonoggI.StartingBounds)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9f));
     }
 
@@ -99,31 +99,39 @@ class FallingNightmare(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.NobleNoggin && id == 0x11D1)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(3))); // can be 3 or 4 seconds depending on mechanic
+        if (actor.OID == (uint)OID.NobleNoggin && id == 0x11D1)
+            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(3d))); // can be 3 or 4 seconds depending on mechanic
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.FallingNightmare1 or AID.FallingNightmare2)
+        if (_aoes.Count > 0 && spell.Action.ID is (uint)AID.FallingNightmare1 or (uint)AID.FallingNightmare2)
             _aoes.RemoveAt(0);
     }
 }
 
 class SpiritedCharge(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(6, 1);
+    private static readonly AOEShapeRect rect = new(6f, 1f);
     private readonly List<Actor> _charges = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in _charges)
-            yield return new(rect, c.Position, c.Rotation);
+        var count = _charges.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = _charges[i];
+            aoes[i] = new(rect, c.Position, c.Rotation);
+        }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SpiritedChargeStart)
+        if (spell.Action.ID == (uint)AID.SpiritedChargeStart)
             _charges.Add(caster);
     }
 
@@ -134,24 +142,31 @@ class SpiritedCharge(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class EvilScheme(BossModule module) : Components.Exaflare(module, 4)
+class EvilScheme(BossModule module) : Components.Exaflare(module, 4f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.EvilSchemeFirst)
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 4 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 1.6f), TimeToMove = 1.5f, ExplosionsLeft = 5, MaxShownExplosions = 5 });
+        if (spell.Action.ID == (uint)AID.EvilSchemeFirst)
+            Lines.Add(new() { Next = caster.Position, Advance = 4f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell, 1.6f), TimeToMove = 1.5f, ExplosionsLeft = 5, MaxShownExplosions = 5 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.EvilSchemeFirst or AID.EvilSchemeRest)
+        if (spell.Action.ID is (uint)AID.EvilSchemeFirst or (uint)AID.EvilSchemeRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    break;
+                }
+            }
         }
     }
 }
@@ -160,7 +175,7 @@ class MaliciousMist(BossModule module) : Components.RaidwideCast(module, ActionI
 
 class Scream : Components.SimpleAOEs
 {
-    public Scream(BossModule module) : base(module, ActionID.MakeSpell(AID.Scream), new AOEShapeCone(20, 30.Degrees()), 4) { MaxDangerColor = 2; }
+    public Scream(BossModule module) : base(module, ActionID.MakeSpell(AID.Scream), new AOEShapeCone(20f, 30f.Degrees()), 4) { MaxDangerColor = 2; }
 }
 
 class D081HisRoyalHeadnessLeonoggIStates : StateMachineBuilder

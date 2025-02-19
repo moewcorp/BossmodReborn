@@ -92,55 +92,62 @@ public enum AID : uint
     FallOfMan = 30187, // Helper->self, 20.0s cast, range 90 width 20 rect
 }
 
-class RipperClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RipperClaw), new AOEShapeCone(9, 45.Degrees()));
-class Levinshower(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Levinshower), new AOEShapeCone(6, 60.Degrees()),
+class RipperClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RipperClaw), new AOEShapeCone(9f, 45f.Degrees()));
+class Levinshower(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Levinshower), new AOEShapeCone(6f, 60f.Degrees()),
 [(uint)OID.HordeBiast2, (uint)OID.HordeBiast4, (uint)OID.HordeBiast5, (uint)OID.HordeBiast6, (uint)OID.HordeBiast7]);
-class EarthShakerAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EarthshakerAOE), 31);
-class Earthshaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Earthshaker), new AOEShapeCone(80, 15.Degrees()), 2);
+class EarthShakerAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EarthshakerAOE), 31f);
+class Earthshaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Earthshaker), new AOEShapeCone(80f, 15f.Degrees()), 2);
 
-class EarthrisingAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EarthrisingAOE), 31);
-class Earthrising(BossModule module) : Components.Exaflare(module, 8)
+class EarthrisingAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EarthrisingAOE), 31f);
+class Earthrising(BossModule module) : Components.Exaflare(module, 8f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.EarthrisingCast)
+        if (spell.Action.ID == (uint)AID.EarthrisingCast)
         {
-            Lines.Add(new() { Next = spell.LocXZ, Advance = new(0, -7.5f), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = caster.Position, Advance = new(default, -7.5f), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.EarthrisingRepeat or AID.EarthrisingCast)
+        if (spell.Action.ID is (uint)AID.EarthrisingRepeat or (uint)AID.EarthrisingCast)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }
 
-class SidewiseSlice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SidewiseSlice), new AOEShapeCone(50, 60.Degrees()));
+class SidewiseSlice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SidewiseSlice), new AOEShapeCone(50f, 60f.Degrees()));
 
-class FireballSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FireballSpread), 6);
-class FireballAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireballAOE), 6);
-class Flamisphere(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Flamisphere), 10);
+class FireballSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FireballSpread), 6f);
+class FireballAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireballAOE), 6f);
+class Flamisphere(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Flamisphere), 10f);
 
-class BodySlam(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BodySlam), 20, kind: Kind.DirForward, stopAtWall: true);
+class BodySlam(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BodySlam), 20f, kind: Kind.DirForward, stopAtWall: true);
 
 class FlameBreath(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FlameBreathChannel))
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeRect rect = new(500, 10);
+    private static readonly AOEShapeRect rect = new(500f, 10f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FlameBreath1)
+        if (spell.Action.ID == (uint)AID.FlameBreath1)
             _aoe = new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(spell).AddSeconds(1));
     }
 
@@ -158,13 +165,13 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module, ActionID.M
 class FlameBreath2(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FlameBreathChannel))
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeRect rect = new(60, 10);
+    private static readonly AOEShapeRect rect = new(60f, 10f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FlameBreath2)
+        if (spell.Action.ID == (uint)AID.FlameBreath2)
         {
             NumCasts = 0;
             _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
@@ -184,18 +191,18 @@ class FlameBreath2(BossModule module) : Components.GenericAOEs(module, ActionID.
 class Cauterize(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Cauterize))
 {
     private Actor? Source;
-    private static readonly AOEShapeRect rect = new(160, 22);
-    private static readonly AOEShapeRect MoveIt = new(40, 22, 38);
+    private static readonly AOEShapeRect rect = new(160f, 22f);
+    private static readonly AOEShapeRect MoveIt = new(40f, 22f, 38f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Source == null)
-            yield break;
+            return [];
 
-        if (Arena.Center.Z > 218)
-            yield return new(MoveIt, Arena.Center);
+        if (Arena.Center.Z > 218f)
+            return [new(MoveIt, Arena.Center)];
         else
-            yield return new(rect, Source.Position, 180.Degrees(), Module.CastFinishAt(Source.CastInfo));
+            return [new(rect, Source.Position, 180f.Degrees(), Module.CastFinishAt(Source.CastInfo))];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -211,33 +218,36 @@ class Cauterize(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
     }
 }
 
-class Touchdown(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Touchdown), 10, stopAtWall: true);
+class Touchdown(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Touchdown), 10f, stopAtWall: true);
 
 class ScorchingBreath(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(100, 10, 100);
+    private static readonly AOEShapeRect rect = new(100f, 10f, 100f);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ScorchingBreath)
-            NumCasts++;
+        if (spell.Action.ID == (uint)AID.ScorchingBreath)
+            ++NumCasts;
     }
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (NumCasts > 0)
-            yield return new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+        if (NumCasts != 0)
+            return [new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo))];
+        else
+            return [];
     }
 }
 
 class ScrollingBounds(BossModule module) : BossComponent(module)
 {
-    public const float HalfHeight = 40;
-    public const float HalfWidth = 22;
+    public const float HalfHeight = 40f;
+    public const float HalfWidth = 22f;
 
     public static readonly ArenaBoundsRect Bounds = new(HalfWidth, HalfHeight);
 
     private int Phase = 1;
-    private (float Min, float Max) ZBounds = (120, 300);
+    private (float Min, float Max) ZBounds = (120f, 300f);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -245,17 +255,17 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
         {
             if (index == 0x03)
             {
-                ZBounds = (120, 200);
+                ZBounds = (120f, 200f);
                 Phase = 2;
             }
             else if (index == 0x04)
             {
-                ZBounds = (-40, 40);
+                ZBounds = (-40f, 40f);
                 Phase = 4;
             }
             else if (index == 0x06)
             {
-                ZBounds = (-200, -120);
+                ZBounds = (-200f, -120f);
                 Phase = 6;
             }
         }
@@ -263,12 +273,12 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
         {
             if (index == 0x00)
             {
-                ZBounds = (-40, 200);
+                ZBounds = (-40f, 200f);
                 Phase = 3;
             }
             else if (index == 0x01)
             {
-                ZBounds = (-200, 40);
+                ZBounds = (-200f, 40f);
                 Phase = 5;
             }
         }
@@ -278,10 +288,10 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
     {
         // force player to walk south to aggro vishap (status 1268 = In Event, not actionable)
         if (Phase == 1 && !actor.InCombat && actor.FindStatus(1268) == null)
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(0, 1), 38, 22, 40));
+            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 38f, 22f, 40f));
         // subsequent state transitions don't trigger until player moves into the area
-        else if (Phase == 3 && actor.Position.Z > 25 || Phase == 5 && actor.Position.Z > -135)
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(0, 1), 40, 22, 38));
+        else if (Phase == 3 && actor.Position.Z > 25f || Phase == 5 && actor.Position.Z > -135f)
+            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 40f, 22f, 38f));
     }
 
     public override void Update()
@@ -318,7 +328,7 @@ class VishapStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70127, NameID = 3330)]
-public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 245), ScrollingBounds.Bounds)
+public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, 245f), ScrollingBounds.Bounds)
 {
     // vishap doesn't start targetable
     private static readonly uint[] opponents = [(uint)OID.HordeWyvern1, (uint)OID.HordeWyvern2, (uint)OID.HordeWyvern3, (uint)OID.HordeWyvern4, (uint)OID.HordeWyvern5,

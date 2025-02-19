@@ -2,7 +2,7 @@
 
 class P7ExaflaresEdge : Components.Exaflare
 {
-    public P7ExaflaresEdge(BossModule module) : base(module, 6)
+    public P7ExaflaresEdge(BossModule module) : base(module, 6f)
     {
         ImminentColor = Colors.AOE;
     }
@@ -10,46 +10,76 @@ class P7ExaflaresEdge : Components.Exaflare
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         foreach (var p in SafeSpots())
-            Arena.AddCircle(p, 1, Colors.Safe);
+            Arena.AddCircle(p, 1f, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ExaflaresEdgeFirst)
+        if (spell.Action.ID == (uint)AID.ExaflaresEdgeFirst)
         {
-            var advance = 7 * spell.Rotation.ToDirection();
-            var pos = spell.LocXZ;
-            var activation = Module.CastFinishAt(spell);
-            Lines.Add(new() { Next = pos, Advance = advance, NextExplosion = activation, TimeToMove = 1.9f, ExplosionsLeft = 6, MaxShownExplosions = 1 });
-            Lines.Add(new() { Next = pos, Advance = advance.OrthoL(), NextExplosion = activation, TimeToMove = 1.9f, ExplosionsLeft = 6, MaxShownExplosions = 1 });
-            Lines.Add(new() { Next = pos, Advance = advance.OrthoR(), NextExplosion = activation, TimeToMove = 1.9f, ExplosionsLeft = 6, MaxShownExplosions = 1 });
+            var advance = 7f * spell.Rotation.ToDirection();
+            AddLine(advance);
+            AddLine(advance.OrthoL());
+            AddLine(advance.OrthoR());
+
+            void AddLine(WDir dir)
+            => Lines.Add(new() { Next = caster.Position, Advance = dir, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.9f, ExplosionsLeft = 6, MaxShownExplosions = 1 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ExaflaresEdgeFirst or AID.ExaflaresEdgeRest)
+        if (spell.Action.ID is (uint)AID.ExaflaresEdgeFirst or (uint)AID.ExaflaresEdgeRest)
         {
-            foreach (var l in Lines.Where(l => l.Next.AlmostEqual(caster.Position, 1)))
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(l, caster.Position);
+                var l = Lines[i];
+                if (l.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(l, pos);
+                }
             }
             ++NumCasts;
         }
     }
 
-    private IEnumerable<WPos> SafeSpots()
+    private List<WPos> SafeSpots()
     {
         if (NumCasts > 0 || Lines.Count < 9)
-            yield break;
-        foreach (var l in MainLines().Where(l => !MainLines().Any(o => o != l && Clips(o, l.Next))))
-            yield return l.Next;
+            return [];
+
+        List<WPos> safespots = [];
+        var mainLines = MainLines();
+        var len = mainLines.Length;
+
+        for (var i = 0; i < len; ++i)
+        {
+            var l = mainLines[i];
+            var isSafe = true;
+            for (var j = 0; j < len; ++j)
+            {
+                var o = mainLines[j];
+                if (o != l && Clips(o, l.Next))
+                {
+                    isSafe = false;
+                    break;
+                }
+            }
+            if (isSafe)
+                safespots.Add(l.Next);
+        }
+        return safespots;
     }
 
-    private IEnumerable<Line> MainLines()
+    private Line[] MainLines()
     {
-        for (var i = 0; i < Lines.Count; i += 3)
-            yield return Lines[i];
+        var count = Lines.Count;
+        var mainlines = new Line[count / 3];
+        for (var i = 0; i < count; i += 3)
+            mainlines[i] = Lines[i];
+        return mainlines;
     }
 
     private bool Clips(Line l, WPos p)
@@ -57,6 +87,6 @@ class P7ExaflaresEdge : Components.Exaflare
         var off = p - l.Next;
         var px = l.Advance.Dot(off);
         var pz = l.Advance.OrthoL().Dot(off);
-        return Math.Abs(px) < 42 || Math.Abs(pz) < 42 && px > 0; // 42 == 6*7 (radius * advance)
+        return Math.Abs(px) < 42 || Math.Abs(pz) < 42f && px > 0f; // 42 == 6*7 (radius * advance)
     }
 }

@@ -6,7 +6,7 @@ class P5FulgentBlade : Components.Exaflare
     private WDir _initialSafespot;
     private DateTime _nextBundle;
 
-    public P5FulgentBlade(BossModule module) : base(module, new AOEShapeRect(5, 40))
+    public P5FulgentBlade(BossModule module) : base(module, new AOEShapeRect(5f, 40f))
     {
         ImminentColor = Colors.AOE;
     }
@@ -16,7 +16,7 @@ class P5FulgentBlade : Components.Exaflare
         base.AddAIHints(slot, actor, assignment, hints);
         // add an extra hint to move to safe spot (TODO: reconsider? this can fuck up positionals for melee etc)
         if (Lines.Count != 0 && NumCasts <= 6 && SafeSpot() is var safespot && safespot != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(safespot, 1), DateTime.MaxValue);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(safespot, 1f), DateTime.MaxValue);
         //if (Lines.Count > 0 && NumCasts <= 6 && _lines.Count == 6)
         //{
         //    var shape = NumCasts switch
@@ -34,12 +34,12 @@ class P5FulgentBlade : Components.Exaflare
     {
         var safespot = SafeSpot();
         if (safespot != default)
-            Arena.AddCircle(safespot, 1, Colors.Safe);
+            Arena.AddCircle(safespot, 1f, Colors.Safe);
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.FulgentBladeLine)
+        if (actor.OID == (uint)OID.FulgentBladeLine)
         {
             var dir = (actor.Position - Arena.Center).Normalized();
             _lines.Add((actor, dir));
@@ -54,51 +54,57 @@ class P5FulgentBlade : Components.Exaflare
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.PathOfLightFirst or AID.PathOfDarknessFirst)
+        if (spell.Action.ID is (uint)AID.PathOfLightFirst or (uint)AID.PathOfDarknessFirst)
         {
             if (Lines.Count == 0)
                 UpdateOrder(caster.Position); // first line - we should have all 6 line actors already created, and it should match position of first or last two
 
             var dir = spell.Rotation.ToDirection();
-            var distanceToBorder = Intersect.RayCircle(caster.Position - Arena.Center, dir, 22);
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 5 * dir, Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = (int)(distanceToBorder / 5) + 1, MaxShownExplosions = 1 });
+            var distanceToBorder = Intersect.RayCircle(caster.Position - Arena.Center, dir, 22f);
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * dir, Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = (int)(distanceToBorder / 5) + 1, MaxShownExplosions = 1 });
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.PathOfLightFirst or AID.PathOfDarknessFirst or AID.PathOfLightRest or AID.PathOfDarknessRest)
+        if (spell.Action.ID is (uint)AID.PathOfLightFirst or (uint)AID.PathOfDarknessFirst or (uint)AID.PathOfLightRest or (uint)AID.PathOfDarknessRest)
         {
             if (WorldState.CurrentTime > _nextBundle)
             {
                 ++NumCasts;
-                _nextBundle = WorldState.FutureTime(1);
+                _nextBundle = WorldState.FutureTime(1d);
             }
 
-            int index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1) && item.Rotation.AlmostEqual(spell.Rotation, 0.1f));
-            if (index == -1)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            var rot = spell.Rotation;
+            for (var i = 0; i < count; ++i)
             {
-                ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                return;
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f) && line.Rotation.AlmostEqual(rot, 0.1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
-
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 
     private void UpdateOrder(WPos firstPos)
     {
-        if (_lines.Count != 6)
+        var count = _lines.Count;
+        if (count != 6)
         {
             ReportError($"Unexpected number of lines at cast start: {_lines.Count}");
         }
-        else if (_lines[^1].actor.Position.AlmostEqual(firstPos, 1) || _lines[^2].actor.Position.AlmostEqual(firstPos, 1))
+        else if (_lines[count - 1].actor.Position.AlmostEqual(firstPos, 1) || _lines[count - 2].actor.Position.AlmostEqual(firstPos, 1f))
         {
             _lines.Reverse(); // we guessed incorrectly, update the order
         }
-        else if (!_lines[0].actor.Position.AlmostEqual(firstPos, 1) && !_lines[1].actor.Position.AlmostEqual(firstPos, 1))
+        else if (!_lines[0].actor.Position.AlmostEqual(firstPos, 1) && !_lines[1].actor.Position.AlmostEqual(firstPos, 1f))
         {
             ReportError($"First cast at {firstPos} does not correspond to any of the first/last two lines");
         }
@@ -128,10 +134,10 @@ class P5FulgentBlade : Components.Exaflare
         var p2 = l2.actor.Position - distance * l2.dir;
         var d1 = l1.dir.OrthoL();
         var d2 = l2.dir.OrthoL();
-        p1 -= 50 * d1; // rays are 0 to infinity, oh well
-        p2 -= 50 * d2;
+        p1 -= 50f * d1; // rays are 0 to infinity, oh well
+        p2 -= 50f * d2;
         var t = Intersect.RayLine(p1, d1, p2, d2);
-        return t is > 0 and < 100 ? p1 + t * d1 : default;
+        return t is > 0f and < 100f ? p1 + t * d1 : default;
     }
 
     //private Func<WPos, float> LineIntersection(int i1, int i2, float distance = 5, float cushion = 1)

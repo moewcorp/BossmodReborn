@@ -72,16 +72,16 @@ class StraightSpindle(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var max = count > 3 ? 3 : count;
-        List<AOEInstance> aoes = new(max);
+        var aoes = new AOEInstance[max];
         for (var i = 0; i < max; ++i)
         {
-            aoes.Add(_aoes[i]);
+            aoes[i] = _aoes[i];
         }
         return aoes;
     }
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.StraightSpindleFast or AID.StraightSpindleSlow or AID.StraightSpindleAdds)
+        if (spell.Action.ID is (uint)AID.StraightSpindleFast or (uint)AID.StraightSpindleSlow or (uint)AID.StraightSpindleAdds)
         {
             _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
             if (_aoes.Count == 6)
@@ -91,13 +91,12 @@ class StraightSpindle(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.StraightSpindleFast or AID.StraightSpindleSlow or AID.StraightSpindleAdds)
+        if (spell.Action.ID is (uint)AID.StraightSpindleFast or (uint)AID.StraightSpindleSlow or (uint)AID.StraightSpindleAdds)
             for (var i = 0; i < _aoes.Count; ++i)
             {
-                var aoe = _aoes[i];
-                if (aoe.ActorID == caster.InstanceID)
+                if (_aoes[i].ActorID == caster.InstanceID)
                 {
-                    _aoes.Remove(aoe);
+                    _aoes.RemoveAt(i);
                     break;
                 }
             }
@@ -108,7 +107,8 @@ class Decay(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             if (e.Actor.CastInfo?.Action == WatchedAction)
@@ -119,7 +119,7 @@ class Decay(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(
 
 class Shield(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(5, true);
+    private static readonly AOEShapeCircle circle = new(5f, true);
     private AOEInstance? _aoe;
     private const string Hint = "Go under shield!";
 
@@ -127,7 +127,7 @@ class Shield(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.AlphinaudShield)
+        if (actor.OID == (uint)OID.AlphinaudShield)
             _aoe = new(circle, actor.Position, Color: Colors.SafeFromAOE);
     }
 
@@ -135,15 +135,15 @@ class Shield(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoe == null)
             return;
-        if (!_aoe.Value.Check(actor.Position))
-            hints.Add(Hint);
-        else
-            hints.Add(Hint, false);
+        var check = true;
+        if (_aoe.Value.Check(actor.Position))
+            check = false;
+        hints.Add(Hint, check);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.VoidEvocation)
+        if (spell.Action.ID == (uint)AID.VoidEvocation)
             _aoe = null;
     }
 }
@@ -152,7 +152,7 @@ class ProtectZero(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var zeros = Module.Enemies(OID.Zero);
+        var zeros = Module.Enemies((uint)OID.Zero);
         Actor? zero = null;
         for (var i = 0; i < zeros.Count; ++i)
         {
@@ -165,7 +165,8 @@ class ProtectZero(BossModule module) : BossComponent(module)
         }
         if (zero != null)
         {
-            for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+            var count = hints.PotentialTargets.Count;
+            for (var i = 0; i < count; ++i)
             {
                 var e = hints.PotentialTargets[i];
                 if (e.Actor.TargetID == zero.InstanceID)

@@ -4,51 +4,72 @@ class StormUnbound(BossModule module) : Components.Exaflare(module, 5)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TheStormUnboundCast)
-            Lines.Add(new() { Next = spell.LocXZ, Advance = caster.Rotation.ToDirection() * 5, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1, ExplosionsLeft = 4, MaxShownExplosions = 2 });
+        if (spell.Action.ID == (uint)AID.TheStormUnboundCast)
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TheStormUnboundCast or AID.TheStormUnboundRepeat)
+        if (spell.Action.ID is (uint)AID.TheStormUnboundCast or (uint)AID.TheStormUnboundRepeat)
         {
-            foreach (var l in Lines.Where(l => l.Next.AlmostEqual(caster.Position, 1)))
-                AdvanceLine(l, caster.Position);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }
 
-class LightlessSpark2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSparkAdds), new AOEShapeCone(40, 45.Degrees()));
+class LightlessSpark2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSparkAdds), new AOEShapeCone(40f, 45f.Degrees()));
 
-class ArtOfTheStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArtOfTheStorm), 8);
-class EntropicFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(50, 4));
+class ArtOfTheStorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArtOfTheStorm), 8f);
+class EntropicFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(50f, 4f));
 
-class FloodOfDarkness(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FloodOfDarkness), 6);
-class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeinSplitter), 10);
-class LightlessSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40, 45.Degrees()));
-class SwellUnbound(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheSwellUnbound), new AOEShapeDonut(8, 20));
-class Swell(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.ArtOfTheSwell), 8)
+class FloodOfDarkness(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FloodOfDarkness), 6f);
+class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeinSplitter), 10f);
+class LightlessSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40f, 45f.Degrees()));
+class SwellUnbound(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheSwellUnbound), new AOEShapeDonut(8f, 20f));
+class Swell(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.ArtOfTheSwell), 8f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Casters.Count > 0)
-            hints.AddForbiddenZone(new AOEShapeDonut(8, 50), Arena.Center);
+        if (Casters.Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 8));
     }
 }
 
-abstract class ArtOfTheSword(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
+abstract class ArtOfTheSword(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 3f));
 class ArtOfTheSword1(BossModule module) : ArtOfTheSword(module, AID.ArtOfTheSword1);
 class ArtOfTheSword2(BossModule module) : ArtOfTheSword(module, AID.ArtOfTheSword2);
 class ArtOfTheSword3(BossModule module) : ArtOfTheSword(module, AID.ArtOfTheSword3);
 
-class DarkAether(BossModule module) : Components.GenericAOEs(module)
+class DarkAether(BossModule module) : Components.PersistentVoidzone(module, 1.5f, GetVoidzones, 3)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.Enemies(OID.DarkAether).Select(e => new AOEInstance(new AOEShapeCircle(1.5f), e.Position, e.Rotation));
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    private static Actor[] GetVoidzones(BossModule module)
     {
-        foreach (var c in ActiveAOEs(slot, actor))
-            hints.AddForbiddenZone(new AOEShapeRect(3, 1.5f, 1.5f), c.Origin, c.Rotation, c.Activation);
+        var enemies = module.Enemies((uint)OID.DarkAether);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
     }
 }
 
@@ -77,4 +98,4 @@ public class ZenosP2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68721, NameID = 6039, PrimaryActorOID = (uint)OID.BossP2)]
-public class ZenosP2(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20));
+public class ZenosP2(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20f));

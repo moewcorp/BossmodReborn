@@ -32,36 +32,36 @@ public enum SID : uint
 
 class SpinShock(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly Angle _increment = 90.Degrees();
-    private static readonly AOEShapeCone cone = new(50, 45.Degrees());
+    private static readonly AOEShapeCone cone = new(50f, 45f.Degrees());
     public int Spins;
-
-    private static readonly Dictionary<AID, int> spinMapping = new()
-    {
-        { AID.HigherPower1, 3 },
-        { AID.HigherPower2, 4 },
-        { AID.HigherPower3, 5 },
-        { AID.HigherPower4, 6 }
-    };
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spinMapping.TryGetValue((AID)spell.Action.ID, out var spinCount))
-            Spins = spinCount;
-        switch ((AID)spell.Action.ID)
+        var spincount = spell.Action.ID switch
         {
-            case AID.SpinshockFirstCCW:
-                Sequences.Add(new(cone, Module.PrimaryActor.Position, spell.Rotation, _increment, Module.CastFinishAt(spell), 2.7f, Spins));
+            (uint)AID.HigherPower1 => 3,
+            (uint)AID.HigherPower2 => 4,
+            (uint)AID.HigherPower3 => 5,
+            (uint)AID.HigherPower4 => 6,
+            _ => 0
+        };
+        if (spincount != 0)
+            Spins = spincount;
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.SpinshockFirstCCW:
+                AddSequence(90f.Degrees());
                 break;
-            case AID.SpinshockFirstCW:
-                Sequences.Add(new(cone, Module.PrimaryActor.Position, spell.Rotation, -_increment, Module.CastFinishAt(spell), 2.7f, Spins));
+            case (uint)AID.SpinshockFirstCW:
+                AddSequence(-90f.Degrees());
                 break;
         }
+        void AddSequence(Angle angle) => Sequences.Add(new(cone, WPos.ClampToGrid(caster.Position), spell.Rotation, angle, Module.CastFinishAt(spell), 2.7f, Spins));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SpinshockFirstCCW or AID.SpinshockFirstCW or AID.SpinshockRest)
+        if (spell.Action.ID is (uint)AID.SpinshockFirstCCW or (uint)AID.SpinshockFirstCW or (uint)AID.SpinshockRest)
         {
             AdvanceSequence(caster.Position, spell.Rotation, WorldState.CurrentTime);
             --Spins;
@@ -74,23 +74,25 @@ class ShockingCrossXMarksTheShock(BossModule module) : Components.GenericAOEs(mo
     private readonly SpinShock _rotation = module.FindComponent<SpinShock>()!;
     private enum Cross { None, Cardinal, Intercardinal }
     private Cross currentCross;
-    private static readonly AOEShapeCross _cross = new(50, 5);
+    private static readonly AOEShapeCross _cross = new(50f, 5f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe != null && _rotation.Spins < 3)
-            yield return _aoe.Value;
+        if (_aoe is AOEInstance aoe && _rotation.Spins < 3)
+            return [aoe];
+        else
+            return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.XMarksTheShock:
+            case (uint)SID.XMarksTheShock:
                 currentCross = Cross.Intercardinal;
                 break;
-            case SID.ShockingCross:
+            case (uint)SID.ShockingCross:
                 currentCross = Cross.Cardinal;
                 break;
         }
@@ -98,7 +100,7 @@ class ShockingCrossXMarksTheShock(BossModule module) : Components.GenericAOEs(mo
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.XMarksTheShock or AID.ShockingCross)
+        if (spell.Action.ID is (uint)AID.XMarksTheShock or (uint)AID.ShockingCross)
         {
             currentCross = Cross.None;
             _aoe = null;
@@ -111,13 +113,13 @@ class ShockingCrossXMarksTheShock(BossModule module) : Components.GenericAOEs(mo
         {
             var sequence = _rotation.Sequences[0];
             var rotationOffset = currentCross == Cross.Cardinal ? default : 45.Degrees();
-            var activation = WorldState.FutureTime(11.5f + _rotation.Spins * 2);
+            var activation = WorldState.FutureTime(11.5d + _rotation.Spins * 2d);
             _aoe = new(_cross, sequence.Origin, sequence.Rotation + rotationOffset, activation);
         }
     }
 }
 
-class LightningBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightningBolt), 5);
+class LightningBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightningBolt), 5f);
 class ElectricalOverload(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElectricalOverload));
 
 class HeshualaStates : StateMachineBuilder

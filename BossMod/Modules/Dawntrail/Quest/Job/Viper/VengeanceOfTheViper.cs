@@ -50,48 +50,58 @@ public enum AID : uint
     Razorwind = 38736 // Helper->Keshkwa, 5.0s cast, range 7 circle, stack
 }
 
-class Razorwind(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Razorwind), 7, 2, 2);
-class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 15);
+class Razorwind(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Razorwind), 7f, 2, 2);
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 15f);
 
-class SwoopingFrenzy1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SwoopingFrenzy1), 15);
+class SwoopingFrenzy1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SwoopingFrenzy1), 15f);
 class SwoopingFrenzy2(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle circle = new(15);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(3);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 3 ? 3 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+            aoes[i] = _aoes[i];
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SwoopingFrenzy2 || (AID)spell.Action.ID == AID.SwoopingFrenzyTelegraph && !_aoes.Any(x => x.Origin.AlmostEqual(spell.LocXZ, 1)))
+        if (spell.Action.ID == (uint)AID.SwoopingFrenzy2 || spell.Action.ID == (uint)AID.SwoopingFrenzyTelegraph && !_aoes.Any(x => x.Origin.AlmostEqual(spell.LocXZ, 1f)))
             _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 1.5f)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.SwoopingFrenzy2 or AID.SwoopingFrenzy3)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.SwoopingFrenzy2 or (uint)AID.SwoopingFrenzy3)
             _aoes.RemoveAt(0);
     }
 }
 
-class BrutalStroke(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrutalStroke), 25);
+class BrutalStroke(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrutalStroke), 25f);
 class CatchingChaos(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CatchingChaos));
-class Galeripper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Galeripper), new AOEShapeCone(60, 45.Degrees()));
+class Galeripper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Galeripper), new AOEShapeCone(60f, 45f.Degrees()));
 
-abstract class BitingScratch(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40, 45.Degrees()));
+abstract class BitingScratch(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(40f, 45f.Degrees()));
 class BitingScratch1(BossModule module) : BitingScratch(module, AID.BitingScratch1);
 class BitingScratch2(BossModule module) : BitingScratch(module, AID.BitingScratch2);
 
-class FervidImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FervidImpact), 12);
-class FrigidPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidPulse), new AOEShapeDonut(12, 60));
+class FervidImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FervidImpact), 12f);
+class FrigidPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidPulse), new AOEShapeDonut(12f, 60f));
 
 class FirestormCycle(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(12), new AOEShapeDonut(12, 60)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(12f), new AOEShapeDonut(12f, 60f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FirestormCycleOut)
+        if (spell.Action.ID == (uint)AID.FirestormCycleOut)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -99,24 +109,24 @@ class FirestormCycle(BossModule module) : Components.ConcentricAOEs(module, _sha
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.FirestormCycleOut => 0,
-                AID.FirestormCycleIn => 1,
+                (uint)AID.FirestormCycleOut => 0,
+                (uint)AID.FirestormCycleIn => 1,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.4f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.4d));
         }
     }
 }
 
 class StormkissedFlames(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(12, 60), new AOEShapeCircle(12)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(12f, 60f), new AOEShapeCircle(12f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.StormkissedFlamesIn)
+        if (spell.Action.ID == (uint)AID.StormkissedFlamesIn)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -124,39 +134,39 @@ class StormkissedFlames(BossModule module) : Components.ConcentricAOEs(module, _
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.StormkissedFlamesIn => 0,
-                AID.StormkissedFlamesOut => 1,
+                (uint)AID.StormkissedFlamesIn => 0,
+                (uint)AID.StormkissedFlamesOut => 1,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.4f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.4d));
         }
     }
 }
 
 class FervidPulse(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeCross cross = new(50, 7);
-    private static readonly Angle increment = 22.5f.Degrees();
+    private static readonly AOEShapeCross cross = new(50f, 7f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FervidPulseFirstCCW:
-                Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 2.9f, 5));
+            case (uint)AID.FervidPulseFirstCCW:
+                AddSequence(22.5f.Degrees());
                 break;
-            case AID.FervidPulseFirstCW1:
-            case AID.FervidPulseFirstCW2:
-                Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, -increment, Module.CastFinishAt(spell), 2.9f, 5));
+            case (uint)AID.FervidPulseFirstCW1:
+            case (uint)AID.FervidPulseFirstCW2:
+                AddSequence(-22.5f.Degrees());
                 break;
         }
+        void AddSequence(Angle angle) => Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, angle, Module.CastFinishAt(spell), 2.9f, 5));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.FervidPulseFirstCCW or AID.FervidPulseFirstCW1 or AID.FervidPulseFirstCW2 or AID.FervidPulseRest)
+        if (spell.Action.ID is (uint)AID.FervidPulseFirstCCW or (uint)AID.FervidPulseFirstCW1 or (uint)AID.FervidPulseFirstCW2 or (uint)AID.FervidPulseRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 }
@@ -186,7 +196,7 @@ class VengeanceOfTheViperStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70389, NameID = 12829)]
 public class VengeanceOfTheViper(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-402, 738), 19.5f, 20)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-402f, 738f), 19.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.RightWing, (uint)OID.LeftWing];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

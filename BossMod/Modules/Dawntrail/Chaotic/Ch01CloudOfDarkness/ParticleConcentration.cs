@@ -148,12 +148,12 @@ class ParticleConcentration(BossModule module) : Components.GenericTowers(module
         {
             ++NumCasts;
             var count = Towers.Count;
+            var pos = caster.Position;
             for (var i = 0; i < count; ++i)
             {
-                var tower = Towers[i];
-                if (tower.Position == caster.Position)
+                if (Towers[i].Position == pos)
                 {
-                    Towers.Remove(tower);
+                    Towers.RemoveAt(i);
                     break;
                 }
             }

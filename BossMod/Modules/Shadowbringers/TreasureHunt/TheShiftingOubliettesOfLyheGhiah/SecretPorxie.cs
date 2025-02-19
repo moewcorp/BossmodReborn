@@ -59,14 +59,21 @@ class Sweep(BossModule module) : Components.Exaflare(module, 6f)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Lines.Count != 0 && spell.Action.ID == (uint)AID.SweepRest)
+        if (spell.Action.ID == (uint)AID.SweepRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
-            if (index == -1)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

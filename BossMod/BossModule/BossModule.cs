@@ -28,24 +28,41 @@ public abstract class BossModule : IDisposable
 
     public List<Actor> Enemies(uint oid)
     {
-        var entry = RelevantEnemies.GetValueOrDefault(oid);
-        entry ??= RelevantEnemies[oid] = [.. WorldState.Actors.Where(actor => actor.OID == oid)];
+        if (!RelevantEnemies.TryGetValue(oid, out var entry))
+        {
+            entry = [];
+            foreach (var actor in WorldState.Actors.Actors.Values)
+            {
+                if (actor.OID == oid)
+                    entry.Add(actor);
+            }
+            RelevantEnemies[oid] = entry;
+        }
         return entry;
     }
 
-    public List<Actor> Enemies(ReadOnlySpan<uint> enemies)
+    public List<Actor> Enemies(uint[] enemies)
     {
-        List<Actor> relevantenemies = [];
+        List<Actor> relevantEnemies = [];
         var len = enemies.Length;
         for (var i = 0; i < len; ++i)
         {
             var enemy = enemies[i];
-            var entry = RelevantEnemies.GetValueOrDefault(enemy);
-            entry ??= RelevantEnemies[enemy] = [.. WorldState.Actors.Where(actor => actor.OID == enemy)];
-            relevantenemies.AddRange(entry);
+            if (!RelevantEnemies.TryGetValue(enemy, out var entry))
+            {
+                entry = [];
+                foreach (var actor in WorldState.Actors.Actors.Values)
+                {
+                    if (actor.OID == enemy)
+                        entry.Add(actor);
+                }
+                RelevantEnemies[enemy] = entry;
+            }
+            relevantEnemies.AddRange(entry);
         }
-        return relevantenemies;
+        return relevantEnemies;
     }
+
     public List<Actor> Enemies<OID>(OID oid) where OID : Enum => Enemies((uint)(object)oid);
 
     // component management: at most one component of any given type can be active at any time

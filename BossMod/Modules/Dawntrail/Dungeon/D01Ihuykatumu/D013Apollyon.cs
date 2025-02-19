@@ -120,7 +120,7 @@ class CuttingWind(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        void AddWhirlwind(ReadOnlySpan<WPos> pos)
+        void AddWhirlwind(WPos[] pos)
         {
             for (var i = 0; i < 3; ++i)
             {

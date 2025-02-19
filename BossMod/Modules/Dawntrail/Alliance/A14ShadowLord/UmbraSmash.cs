@@ -11,7 +11,8 @@ class UmbraSmash(BossModule module) : Components.Exaflare(module, new AOEShapeRe
         var imminentAOEs = ImminentAOEs(linesCount);
 
         // use only imminent aoes for hints
-        for (var i = 0; i < imminentAOEs.Length; ++i)
+        var len = imminentAOEs.Length;
+        for (var i = 0; i < len; ++i)
         {
             var aoe = imminentAOEs[i];
             hints.AddForbiddenZone(Shape, aoe.Item1, aoe.Item3, aoe.Item2);
@@ -20,6 +21,9 @@ class UmbraSmash(BossModule module) : Components.Exaflare(module, new AOEShapeRe
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
+        void AddLine(WPos origin, WDir direction, Angle offset)
+        => Lines.Add(new() { Next = origin, Advance = 5f * direction, Rotation = spell.Rotation + offset, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.3f, ExplosionsLeft = 6, MaxShownExplosions = 2 });
+
         switch (spell.Action.ID)
         {
             case (uint)AID.UmbraSmashAOE1:
@@ -29,8 +33,8 @@ class UmbraSmash(BossModule module) : Components.Exaflare(module, new AOEShapeRe
             case (uint)AID.UmbraSmashAOEClone:
                 var dir = spell.Rotation.ToDirection();
                 var origin = caster.Position + 30f * dir;
-                Lines.Add(new() { Next = origin, Advance = 5f * dir.OrthoL(), Rotation = spell.Rotation + 90f.Degrees(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.3f, ExplosionsLeft = 6, MaxShownExplosions = 2 });
-                Lines.Add(new() { Next = origin, Advance = 5f * dir.OrthoR(), Rotation = spell.Rotation - 90f.Degrees(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.3f, ExplosionsLeft = 6, MaxShownExplosions = 2 });
+                AddLine(origin, dir.OrthoL(), 90f.Degrees());
+                AddLine(origin, dir.OrthoR(), -90f.Degrees());
                 break;
         }
     }
@@ -46,26 +50,35 @@ class UmbraSmash(BossModule module) : Components.Exaflare(module, new AOEShapeRe
             case (uint)AID.UmbraSmashAOEClone:
                 ++NumCasts;
                 var origin = caster.Position + 30f * spell.Rotation.ToDirection();
-                foreach (var l in Lines.Where(l => l.Next.AlmostEqual(origin, 1f)))
+                var count = Lines.Count;
+                for (var i = 0; i < count; ++i)
                 {
-                    l.Next = origin + l.Advance;
-                    l.TimeToMove = 1;
-                    l.NextExplosion = WorldState.FutureTime(l.TimeToMove);
-                    --l.ExplosionsLeft;
+                    var l = Lines[i];
+                    if (l.Next.AlmostEqual(origin, 1f))
+                    {
+                        l.Next = origin + l.Advance;
+                        l.TimeToMove = 1f;
+                        l.NextExplosion = WorldState.FutureTime(l.TimeToMove);
+                        --l.ExplosionsLeft;
+                    }
                 }
                 break;
             case (uint)AID.UmbraWave:
                 ++NumCasts;
-                var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
-                if (index == -1)
+                var count2 = Lines.Count;
+                var pos = caster.Position;
+                for (var i = 0; i < count2; ++i)
                 {
-                    ReportError($"Failed to find entry for {caster.InstanceID:X}");
-                    return;
+                    var line = Lines[i];
+                    if (line.Next.AlmostEqual(pos, 1f))
+                    {
+                        AdvanceLine(line, pos);
+                        if (line.ExplosionsLeft == 0)
+                            Lines.RemoveAt(i);
+                        return;
+                    }
                 }
-
-                AdvanceLine(Lines[index], caster.Position);
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                ReportError($"Failed to find entry for {caster.InstanceID:X}");
                 break;
         }
     }

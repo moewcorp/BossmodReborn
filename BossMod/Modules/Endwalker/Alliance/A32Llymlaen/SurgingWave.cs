@@ -20,7 +20,26 @@ class SurgingWaveCorridor(BossModule module) : BossComponent(module)
 
 class SurgingWaveAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SurgingWaveAOE), 6f);
 class SurgingWaveShockwave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.SurgingWaveShockwave), 68f, true);
-class SurgingWaveSeaFoam(BossModule module) : Components.PersistentVoidzone(module, 1.5f, m => m.Enemies(OID.SeaFoam).Where(x => !x.IsDead));
+class SurgingWaveSeaFoam(BossModule module) : Components.PersistentVoidzone(module, 1.5f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SeaFoam);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 public class SurgingWaveFrothingSea : Components.Exaflare
 {
@@ -30,18 +49,16 @@ public class SurgingWaveFrothingSea : Components.Exaflare
         FutureColor = Colors.Danger;
     }
 
-    private static readonly Angle _rot1 = 90.Degrees();
-    private static readonly Angle _rot2 = -90.Degrees();
-
     public override void OnEventEnvControl(byte index, uint state)
     {
-        var _activation = WorldState.FutureTime(30d);
+        void AddLine(WPos first, Angle rot)
+        => Lines.Add(new() { Next = first, Advance = 2.3f * rot.ToDirection(), NextExplosion = WorldState.FutureTime(30d), TimeToMove = 0.9f, ExplosionsLeft = 13, MaxShownExplosions = 2, Rotation = rot });
         if (index == 0x49)
         {
             if (state == 0x00800040)
-                Lines.Add(new() { Next = new(-80, -900), Advance = 2.3f * _rot1.ToDirection(), NextExplosion = _activation, TimeToMove = 0.9f, ExplosionsLeft = 13, MaxShownExplosions = 2, Rotation = _rot1 });
-            if (state == 0x08000400)
-                Lines.Add(new() { Next = new(80, -900), Advance = 2.3f * _rot2.ToDirection(), NextExplosion = _activation, TimeToMove = 0.9f, ExplosionsLeft = 13, MaxShownExplosions = 2, Rotation = _rot2 });
+                AddLine(new(-80f, -900f), 90f.Degrees());
+            else if (state == 0x08000400)
+                AddLine(new(80f, -900f), -90f.Degrees());
         }
     }
 
@@ -52,8 +69,9 @@ public class SurgingWaveFrothingSea : Components.Exaflare
             ++NumCasts;
             if (Lines.Count != 0)
             {
-                AdvanceLine(Lines[0], Lines[0].Next + 2.3f * Lines[0].Rotation.ToDirection());
-                if (Lines[0].ExplosionsLeft == 0)
+                var line = Lines[0];
+                AdvanceLine(line, line.Next + 2.3f * line.Rotation.ToDirection());
+                if (line.ExplosionsLeft == 0)
                     Lines.RemoveAt(0);
             }
         }

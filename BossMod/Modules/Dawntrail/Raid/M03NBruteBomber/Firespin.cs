@@ -2,26 +2,27 @@ namespace BossMod.Dawntrail.Raid.M03NBruteBomber;
 
 class FireSpin(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeCone cone = new(40, 30.Degrees());
+    private static readonly AOEShapeCone cone = new(40f, 30f.Degrees());
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FireSpinCCW:
-            case AID.InfernalSpinCCW:
-                Sequences.Add(new(cone, Module.PrimaryActor.Position, spell.Rotation, 45.Degrees(), Module.CastFinishAt(spell, 0.5f), 1, 8));
+            case (uint)AID.FireSpinCCW:
+            case (uint)AID.InfernalSpinCCW:
+                AddSequence(45f.Degrees());
                 break;
-            case AID.FireSpinCW:
-            case AID.InfernalSpinCW:
-                Sequences.Add(new(cone, Module.PrimaryActor.Position, spell.Rotation, -45.Degrees(), Module.CastFinishAt(spell, 0.5f), 1, 8));
+            case (uint)AID.FireSpinCW:
+            case (uint)AID.InfernalSpinCW:
+                AddSequence(-45f.Degrees());
                 break;
         }
+        void AddSequence(Angle angle) => Sequences.Add(new(cone, spell.LocXZ, spell.Rotation, angle, Module.CastFinishAt(spell, 0.5f), 1f, 8));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FireSpinFirst or AID.FireSpinRest or AID.InfernalSpinFirst or AID.InfernalSpinRest)
+        if (spell.Action.ID is (uint)AID.FireSpinFirst or (uint)AID.FireSpinRest or (uint)AID.InfernalSpinFirst or (uint)AID.InfernalSpinRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 }

@@ -4,9 +4,9 @@ class VirtualShiftEarth(BossModule module) : BossComponent(module)
 {
     public BitMask Flying;
 
-    public static readonly WPos Midpoint = new(100, 94);
-    public static readonly WDir CenterOffset = new(8, 0);
-    public static readonly WDir HalfExtent = new(4, 8);
+    public static readonly WPos Midpoint = new(100f, 94f);
+    public static readonly WDir CenterOffset = new(8f, default);
+    public static readonly WDir HalfExtent = new(4f, 8f);
 
     public static bool OnPlatform(WPos p)
     {
@@ -19,19 +19,19 @@ class VirtualShiftEarth(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.AddRect(Midpoint + CenterOffset, new(0, 1), HalfExtent.Z, HalfExtent.Z, HalfExtent.X, Colors.Border, 2);
-        Arena.AddRect(Midpoint - CenterOffset, new(0, 1), HalfExtent.Z, HalfExtent.Z, HalfExtent.X, Colors.Border, 2);
+        Arena.AddRect(Midpoint + CenterOffset, new(default, 1f), HalfExtent.Z, HalfExtent.Z, HalfExtent.X, Colors.Border, 2f);
+        Arena.AddRect(Midpoint - CenterOffset, new(default, 1f), HalfExtent.Z, HalfExtent.Z, HalfExtent.X, Colors.Border, 2f);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.GravitationalAnomaly)
+        if (status.ID == (uint)SID.GravitationalAnomaly)
             Flying.Set(Raid.FindSlot(actor.InstanceID));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.GravitationalAnomaly)
+        if (status.ID == (uint)SID.GravitationalAnomaly)
             Flying[Raid.FindSlot(actor.InstanceID)] = default;
     }
 }
@@ -66,7 +66,7 @@ class LawsOfEarthBurst1 : LawsOfEarthBurst
 {
     public LawsOfEarthBurst1(BossModule module) : base(module)
     {
-        AddTowers(WorldState.FutureTime(5), VirtualShiftEarth.Midpoint, VirtualShiftEarth.CenterOffset, new(0, 6), new(2, 0));
+        AddTowers(WorldState.FutureTime(5d), VirtualShiftEarth.Midpoint, VirtualShiftEarth.CenterOffset, new(default, 6f), new(2f, default));
     }
 }
 
@@ -74,12 +74,12 @@ class LawsOfEarthBurst2 : LawsOfEarthBurst
 {
     public LawsOfEarthBurst2(BossModule module) : base(module)
     {
-        AddTowers(WorldState.FutureTime(8.8f), VirtualShiftEarth.Midpoint, VirtualShiftEarth.CenterOffset, new(0, 5));
+        AddTowers(WorldState.FutureTime(8.8d), VirtualShiftEarth.Midpoint, VirtualShiftEarth.CenterOffset, new(default, 5f));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GravityPillar)
+        if (spell.Action.ID == (uint)AID.GravityPillar)
             foreach (ref var t in Towers.AsSpan())
                 t.ForbiddenSoakers.Set(Raid.FindSlot(spell.TargetID));
     }
@@ -152,7 +152,7 @@ class MeteorImpact(BossModule module) : Components.CastCounter(module, default)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         foreach (var p in Raid.WithSlot(true, true, true).IncludedInMask(_meteorsAbovePlatforms).Actors())
-            Arena.AddCircle(p.Position, 4, Colors.Danger);
+            Arena.AddCircle(p.Position, 4f);
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -166,11 +166,11 @@ class MeteorImpact(BossModule module) : Components.CastCounter(module, default)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.MeteorImpactPlatform or AID.MeteorImpactFall)
+        if (spell.Action.ID is (uint)AID.MeteorImpactPlatform or (uint)AID.MeteorImpactFall)
         {
             _activeMeteors.Reset(); // assume all meteors fall at the same time
             ++NumCasts;
-            if ((AID)spell.Action.ID == AID.MeteorImpactPlatform)
+            if (spell.Action.ID == (uint)AID.MeteorImpactPlatform)
                 ++_numPlacedMeteors;
         }
     }
@@ -212,21 +212,21 @@ class WeightyBlow(BossModule module) : Components.CastCounter(module, ActionID.M
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.WeightyBlow)
+        if (spell.Action.ID == (uint)AID.WeightyBlow)
             _activeBaits = true;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.MeteorImpactPlatform:
+            case (uint)AID.MeteorImpactPlatform:
                 _boulders.Add(caster);
                 break;
-            case AID.WeightyBlowDestroy:
+            case (uint)AID.WeightyBlowDestroy:
                 _boulders.Remove(caster);
                 break;
-            case AID.WeightyBlowAOE:
+            case (uint)AID.WeightyBlowAOE:
                 ++NumCasts;
                 break;
         }

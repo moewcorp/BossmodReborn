@@ -100,7 +100,7 @@ class SapSpiller(BossModule module) : Components.GenericAOEs(module)
                 AddAOEs([a90, a180, a90]);
                 break;
         }
-        void AddAOEs(ReadOnlySpan<Angle> angles)
+        void AddAOEs(Angle[] angles)
         {
             for (var i = 0; i < 3; ++i)
             {

@@ -71,7 +71,7 @@ class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 6f, def
     }
 }
 
-class HolyOrb(BossModule module) : Components.Exaflare(module, new AOEShapeCircle(6))
+class HolyOrb(BossModule module) : Components.Exaflare(module, 6f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -83,12 +83,19 @@ class HolyOrb(BossModule module) : Components.Exaflare(module, new AOEShapeCircl
     {
         if (spell.Action.ID is (uint)AID.HolyOrbFirst or (uint)AID.HolyOrbRest)
         {
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1));
-            if (index < 0)
-                return;
-            AdvanceLine(Lines[index], caster.Position);
-            if (Lines[index].ExplosionsLeft == 0)
-                Lines.RemoveAt(index);
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

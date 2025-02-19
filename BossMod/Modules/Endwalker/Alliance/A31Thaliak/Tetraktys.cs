@@ -57,13 +57,11 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
         //   5            E
         //  678          F 10
         // 9ABCD
-        void AddAOEs(AOEShapeTriCone shape, ReadOnlySpan<WPos> positions, ReadOnlySpan<Angle> rotations)
+        void AddAOEs(WPos[] positions, Angle[] rotations)
         {
-            for (var i = 0; i < positions.Length; ++i)
+            for (var i = 0; i < 3; ++i)
             {
-                var pos = positions[i];
-                var rot = rotations[i];
-                AddAOE(shape, pos, rot);
+                AddAOE(_triSmall, positions[i], rotations[i]);
             }
         }
         void AddAOE(AOEShapeTriCone shape, WPos pos, Angle rot) => AOEs.Add(new(shape, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(3.8d)));
@@ -73,13 +71,13 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
             switch (index)
             {
                 case 0x05: // 05, 08, 0B always activate together
-                    AddAOEs(_triSmall, [new(-945f, 948.5f), new(-937f, 934.644f), new(-945f, 921f)], [_rot1, _rot1, _rot1]);
+                    AddAOEs([new(-945f, 948.5f), new(-937f, 934.644f), new(-945f, 921f)], [_rot1, _rot1, _rot1]);
                     break;
                 case 0x06: // 06, 09, 0C always activate together
-                    AddAOEs(_triSmall, [new(-937f, 962.356f), new(-961f, 948.5f), new(-953f, 934.644f)], [_rot3, _rot1, _rot1]);
+                    AddAOEs([new(-937f, 962.356f), new(-961f, 948.5f), new(-953f, 934.644f)], [_rot3, _rot1, _rot1]);
                     break;
                 case 0x07: // 07, 0A, 0D always activate together
-                    AddAOEs(_triSmall, [new(-929f, 948.5f), new(-953f, 962.356f), new(-945f, 948.5f)], [_rot1, _rot2, _rot2]);
+                    AddAOEs([new(-929f, 948.5f), new(-953f, 962.356f), new(-945f, 948.5f)], [_rot1, _rot2, _rot2]);
                     break;
                 case 0x0E:
                     AddAOE(_triLarge, new(-945f, 921f), _rot1);

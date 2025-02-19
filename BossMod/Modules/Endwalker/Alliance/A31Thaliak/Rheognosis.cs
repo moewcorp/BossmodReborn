@@ -24,7 +24,7 @@ class RheognosisKnockback(BossModule module) : Components.Knockback(module)
 
 public class RheognosisCrash : Components.Exaflare
 {
-    public RheognosisCrash(BossModule module) : base(module, new AOEShapeRect(10f, 12f), ActionID.MakeSpell(AID.RheognosisCrash)) => ImminentColor = Colors.AOE;
+    public RheognosisCrash(BossModule module) : base(module, new AOEShapeRect(10f, 12f)) => ImminentColor = Colors.AOE;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -41,16 +41,23 @@ public class RheognosisCrash : Components.Exaflare
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action == WatchedAction)
+        if (spell.Action.ID == (uint)AID.RheognosisCrash)
         {
             ++NumCasts;
-            var index = Lines.FindIndex(item => item.Next.AlmostEqual(caster.Position, 1f));
-            if (index >= 0)
+            var count = Lines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
             {
-                AdvanceLine(Lines[index], caster.Position);
-                if (Lines[index].ExplosionsLeft == 0)
-                    Lines.RemoveAt(index);
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                        Lines.RemoveAt(i);
+                    return;
+                }
             }
+            ReportError($"Failed to find entry for {caster.InstanceID:X}");
         }
     }
 }
