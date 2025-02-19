@@ -1,4 +1,6 @@
-﻿namespace BossMod.Endwalker.VariantCriterion.C03AAI.C032Lala;
+﻿using BossModReborn.Modules.Endwalker.Criterion.C03AAI.C032Lala;
+
+namespace BossMod.Endwalker.VariantCriterion.C03AAI.C032Lala;
 
 class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
 {
@@ -11,6 +13,7 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
 
     public List<AOEInstance> Mines = [];
     public PlayerState[] Players = new PlayerState[4];
+    private readonly C032LalaConfig _config = Service.Config.Get<C032LalaConfig>();
 
     private static readonly AOEShapeRect _shape = new(4, 4, 4);
 
@@ -56,8 +59,8 @@ class PlanarTactics(BossModule module) : Components.GenericAOEs(module)
         WDir safeCornerOffset = default;
         foreach (var m in Mines)
             safeCornerOffset -= m.Origin - Module.Center;
-        var relSouth = (safeCornerOffset + safeCornerOffset.OrthoL()) / 16;
-        var relWest = relSouth.OrthoR();
+        var relSouth = (safeCornerOffset + (_config.PlanarTacticsReverse ? safeCornerOffset.OrthoR() : safeCornerOffset.OrthoL())) / 16;
+        var relWest = (_config.PlanarTacticsReverse ? relSouth.OrthoL() : relSouth.OrthoR());
         var off1 = 5 * relSouth + 13 * relWest;
         var off2a = 3 * relSouth + 13 * relWest;
         var off2b = -8 * relSouth + 16 * relWest;
