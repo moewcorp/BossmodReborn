@@ -1,13 +1,15 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
-class Reisho1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ReishoFirst), 6);
-class Reisho2(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.HauntingThrall), 10)
+class Reisho1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ReishoFirst), 6f);
+class Reisho2(BossModule module) : Components.PersistentVoidzone(module, 6f, GetGhosts, 10f)
 {
+    private static List<Actor> GetGhosts(BossModule module) => module.Enemies((uint)OID.HauntingThrall);
+
     private bool started;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ReishoFirst)
+        if (spell.Action.ID == (uint)AID.ReishoFirst)
             started = true;
     }
 
@@ -25,9 +27,9 @@ class Reisho2(BossModule module) : Components.PersistentVoidzone(module, 6, m =>
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ReishoRest)
+        if (spell.Action.ID == (uint)AID.ReishoRest)
             ++NumCasts;
-        else if ((AID)spell.Action.ID == AID.ThunderVortex) // not sure if mechanic can repeat if fight takes long enough
+        else if (spell.Action.ID == (uint)AID.ThunderVortex) // not sure if mechanic can repeat if fight takes long enough
         {
             started = false;
             NumCasts = 0;

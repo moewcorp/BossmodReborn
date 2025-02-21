@@ -17,15 +17,11 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly V026ShishuChochinConfig _config = Service.Config.Get<V026ShishuChochinConfig>();
 
-    private static readonly Circle lantern1 = new(new(723.5f, 57.5f), 1);
-    private static readonly Circle lantern2 = new(new(690.5f, 57.5f), 1);
-    private static readonly Circle lantern3 = new(new(681.2f, 51.6f), 1);
+    private static readonly Circle lantern1 = new(new(723.5f, 57.5f), 1f), lantern2 = new(new(690.5f, 57.5f), 1f), lantern3 = new(new(681.2f, 51.6f), 1f);
     private readonly List<Circle> lanterns = [lantern1, lantern2, lantern3];
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return [new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99), Colors.SafeFromAOE)];
-    }
+    private AOEInstance? _aoe;
 
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001)
@@ -36,12 +32,13 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
                 lanterns.Remove(lantern2);
             else if (index == 0x46)
                 lanterns.Remove(lantern3);
+            _aoe = new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99d), Colors.SafeFromAOE);
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Illume)
+        if (spell.Action.ID == (uint)AID.Illume)
             ++NumCasts;
     }
 
@@ -53,26 +50,19 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
         if (count)
             base.AddAIHints(slot, actor, assignment, hints);
         var lanternPriorityCount = 0;
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+
+        var countT = hints.PotentialTargets.Count;
+        for (var i = 0; i < countT; ++i)
         {
             var e = hints.PotentialTargets[i];
             if (e.Actor.OID == (uint)OID.Boss)
             {
-                var hasActiveAOE = false;
-                foreach (var c in ActiveAOEs(slot, actor))
-                {
-                    if (c.Check(actor.Position))
-                    {
-                        hasActiveAOE = true;
-                        break;
-                    }
-                }
-
-                if (lanternPriorityCount == 0 && hasActiveAOE && count)
+                var inAOE = _aoe != null && _aoe.Value.Check(actor.Position);
+                if (lanternPriorityCount == 0 && inAOE && count)
                 {
                     Actor? closestBoss = null;
                     var closestDistance = float.MaxValue;
-                    var boss = Module.Enemies(OID.Boss);
+                    var boss = Module.Enemies((uint)OID.Boss);
                     var countBoss = boss.Count;
                     for (var j = 0; j < countBoss; ++j)
                     {
@@ -106,12 +96,13 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var l in lanterns)
-            Arena.AddCircle(l.Center, 5, Colors.Safe, 5);
+        var count = lanterns.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(lanterns[i].Center, 5f, Colors.Safe, 5f);
     }
 }
 
-class Illume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Illume), new AOEShapeCone(6, 45.Degrees()));
+class Illume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Illume), new AOEShapeCone(6f, 45f.Degrees()));
 
 class V026ShishuChochinStates : StateMachineBuilder
 {
@@ -120,8 +111,17 @@ class V026ShishuChochinStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Lanterns>()
             .ActivateOnEnter<Illume>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDeadOrDestroyed);
-
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies((uint)OID.Boss);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (!enemies[i].IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -177,6 +177,6 @@ public class V026ShishuChochin(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Boss));
+        Arena.Actors(Enemies((uint)OID.Boss));
     }
 }

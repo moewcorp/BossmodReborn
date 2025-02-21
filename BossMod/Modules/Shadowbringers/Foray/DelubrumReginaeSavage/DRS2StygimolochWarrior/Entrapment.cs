@@ -6,7 +6,7 @@ class EntrapmentAttract(BossModule module) : Components.Knockback(module, Action
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        yield return new(new(Arena.Center.X, Arena.Center.Z + Module.Bounds.Radius), 60, _activation, Kind: Kind.TowardsOrigin);
+        yield return new(new(Arena.Center.X, Arena.Center.Z + Module.Bounds.Radius), 60f, _activation, Kind: Kind.TowardsOrigin);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -58,7 +58,7 @@ class Entrapment : Components.CastCounter
         if (player != null)
             for (var z = 0; z < 7; ++z)
                 for (var x = 0; x < 7; ++x)
-                    if (player.Position.InCircle(Module.Center + CellOffset(x, z), 10))
+                    if (player.Position.InCircle(Arena.Center + CellOffset(x, z), 10f))
                         _uncovered.Set(IndexFromCell(x, z));
 
         // remove all patterns that have difference with current state in uncovered areas
@@ -248,6 +248,6 @@ class EntrapmentInescapable(BossModule module) : Entrapment(module, _allowedPatt
     }
 }
 
-class LethalBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LethalBlow), new AOEShapeRect(44, 24));
+class LethalBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LethalBlow), new AOEShapeRect(44f, 24f));
 class LeapingSpark(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.LeapingSparkAOE));
-class Devour(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Devour), new AOEShapeCone(6, 60.Degrees()));
+class Devour(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Devour), new AOEShapeCone(6f, 60f.Degrees()));

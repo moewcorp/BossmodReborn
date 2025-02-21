@@ -56,7 +56,7 @@ class SpinShock(BossModule module) : Components.GenericRotatingAOE(module)
                 AddSequence(-90f.Degrees());
                 break;
         }
-        void AddSequence(Angle angle) => Sequences.Add(new(cone, WPos.ClampToGrid(caster.Position), spell.Rotation, angle, Module.CastFinishAt(spell), 2.7f, Spins));
+        void AddSequence(Angle increment) => Sequences.Add(new(cone, WPos.ClampToGrid(caster.Position), spell.Rotation, increment, Module.CastFinishAt(spell), 2.7f, Spins));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

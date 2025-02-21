@@ -2,13 +2,13 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(20, 28);
+    private static readonly AOEShapeDonut donut = new(20f, 28f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.StormcloudSummons)
+        if (spell.Action.ID == (uint)AID.StormcloudSummons)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
     }
 

@@ -1,47 +1,39 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
-class YokiUzu(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.YokiUzu), 23);
-
-class FocusedTremor(BossModule module) : Components.GenericAOEs(module)
+class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly YokiUzu _yokiUzu = module.FindComponent<YokiUzu>()!;
-    private static readonly AOEShapeRect rect = new(30, 20);
-    private AOEInstance _aoe;
-    private Circle? circle;
+    private static readonly AOEShapeRect rect = new(30f, 20f);
+    private static readonly AOEShapeDonut donut = new(23f, 40f, true);
+    private AOEInstance? _aoe;
+    private AOEInstance? _aoeCache;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe == default)
-            yield break;
-
-        var isCasterActive = _yokiUzu.ActiveCasters.Count != 0;
-        var firstAOEActivation = _yokiUzu.ActiveAOEs(slot, actor).FirstOrDefault().Activation;
-        var sixFulmsUnderStatus = actor.FindStatus(SID.SixFulmsUnder);
-        var expireAt = sixFulmsUnderStatus?.ExpireAt ?? DateTime.MaxValue;
-        var extra = circle != null ? 10 : 0;
-        RectangleSE[] rectShape = [new(_aoe.Origin, _aoe.Origin + (rect.LengthFront + extra) * _aoe.Rotation.ToDirection(), rect.HalfWidth)];
-        Circle[] circleShape = circle != null ? [circle] : [];
-        var aoeInstance = _aoe with
+        if (_aoe == null)
+            return [];
+        else
         {
-            Origin = Arena.Center,
-            Shape = new AOEShapeCustom(rectShape, null, circleShape, false, circle != null ? OperandType.Xor : OperandType.Union) with { InvertForbiddenZone = isCasterActive },
-            Color = isCasterActive ? Colors.SafeFromAOE : Colors.AOE,
-            Activation = !isCasterActive ? expireAt : firstAOEActivation
-        };
-
-        yield return aoeInstance;
+            var aoe = _aoe.Value;
+            return [aoe.Shape == rect ? aoe with { Activation = actor.FindStatus((uint)SID.SixFulmsUnder)?.ExpireAt ?? DateTime.MaxValue } : aoe];
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.YokiUzu)
-            circle = new(caster.Position, 23);
+        if (spell.Action.ID == (uint)AID.YokiUzu)
+        {
+            _aoeCache = _aoe;
+            _aoe = new(donut, spell.LocXZ, default, Module.CastFinishAt(spell), Colors.SafeFromAOE);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.YokiUzu)
-            circle = null;
+        if (spell.Action.ID == (uint)AID.YokiUzu)
+        {
+            _aoe = _aoeCache;
+            _aoeCache = null;
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -49,30 +41,32 @@ class FocusedTremor(BossModule module) : Components.GenericAOEs(module)
         if (state == 0x00020001)
             _aoe = index switch
             {
-                0x67 => new(rect, Arena.Center - new WDir(20, 0), 90.Degrees()),
-                0x65 => new(rect, Arena.Center - new WDir(-20, 0), -90.Degrees()),
-                0x66 => new(rect, Arena.Center - new WDir(0, 20)),
-                0x68 => new(rect, Arena.Center - new WDir(0, -20), 180.Degrees()),
+                0x67 => new(rect, Arena.Center - new WDir(20f, default), 90f.Degrees()),
+                0x65 => new(rect, Arena.Center - new WDir(-20f, default), -90f.Degrees()),
+                0x66 => new(rect, Arena.Center - new WDir(default, 20f)),
+                0x68 => new(rect, Arena.Center - new WDir(default, -20f), 180f.Degrees()),
                 _ => default
             };
-        if (state == 0x00080004 && index is 0x65 or 0x66 or 0x67 or 0x68)
+        else if (state == 0x00080004 && index is 0x65 or 0x66 or 0x67 or 0x68)
             _aoe = default;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        var sixFulmsUnderStatus = actor.FindStatus(SID.SixFulmsUnder);
-        var expireAt = sixFulmsUnderStatus?.ExpireAt ?? DateTime.MaxValue;
-        if (circle != null && (expireAt - WorldState.CurrentTime).TotalSeconds <= 8)
+        var expireAt = actor.FindStatus((uint)SID.SixFulmsUnder)?.ExpireAt ?? DateTime.MaxValue;
+        if (_aoe is AOEInstance aoe && aoe.Shape == donut && (expireAt - WorldState.CurrentTime).TotalSeconds <= 8d)
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveAOEs(slot, actor).Any(c => c.Color == Colors.AOE))
-            base.AddHints(slot, actor, hints);
-        else if (ActiveAOEs(slot, actor).Any(c => !c.Check(actor.Position)))
-            hints.Add("Go into quicksand to avoid AOE!");
+        if (_aoe is AOEInstance aoe)
+        {
+            if (aoe.Shape == rect)
+                base.AddHints(slot, actor, hints);
+            else if (!aoe.Check(actor.Position))
+                hints.Add("Go into quicksand to avoid AOE!");
+        }
     }
 }

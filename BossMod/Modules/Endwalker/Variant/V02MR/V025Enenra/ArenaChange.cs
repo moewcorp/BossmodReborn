@@ -2,13 +2,13 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V025Enenra;
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(20, 21);
+    private static readonly AOEShapeDonut donut = new(20f, 21f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FlagrantCombustion && Arena.Bounds == V025Enenra.StartingBounds)
+        if (spell.Action.ID == (uint)AID.FlagrantCombustion && Arena.Bounds == V025Enenra.StartingBounds)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 2.9f));
     }
 

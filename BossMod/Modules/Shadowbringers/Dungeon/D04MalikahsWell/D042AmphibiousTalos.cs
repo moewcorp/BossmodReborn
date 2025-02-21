@@ -54,9 +54,8 @@ class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(modu
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell);
-        }
-        if (_rotation != default)
             InitIfReady(caster);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -80,7 +79,7 @@ class Efface(BossModule module) : Components.SingleTargetCast(module, ActionID.M
 class HighPressureRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HighPressure));
 class HighPressureKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HighPressure), 20f, stopAtWall: true);
 class GeyserEruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GeyserEruption), 8f);
-class Geysers(BossModule module) : Components.PersistentVoidzone(module, 4, GetVoidzones)
+class Geysers(BossModule module) : Components.PersistentVoidzone(module, 4f, GetVoidzones)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {

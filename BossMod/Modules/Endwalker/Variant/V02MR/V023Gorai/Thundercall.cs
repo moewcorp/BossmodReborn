@@ -2,36 +2,44 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
 class Thundercall(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(4);
     private int counter;
-    private static readonly AOEShapeCircle circleSmall = new(8);
-    private static readonly AOEShapeCircle circleBig = new(18);
+    private static readonly AOEShapeCircle circleSmall = new(8f), circleBig = new(18f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void OnActorCreated(Actor actor)
     {
-        if (counter < 2 && (OID)actor.OID == OID.BallOfLevin)
+        if (counter < 2 && actor.OID == (uint)OID.BallOfLevin)
         {
-            _aoes.Add(new(circleBig, actor.Position, default, WorldState.FutureTime(10.8f)));
+            _aoes.Add(new(circleBig, actor.Position, default, WorldState.FutureTime(10.8d)));
             ++counter;
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((OID)actor.OID == OID.BallOfLevin && (SID)status.ID == SID.SmallOrb)
+
+        if (actor.OID == (uint)OID.BallOfLevin && status.ID == (uint)SID.SmallOrb)
         {
-            var activation = WorldState.FutureTime(10);
-            _aoes.Add(new(circleSmall, actor.Position, default, activation));
-            foreach (var a in Module.Enemies(OID.BallOfLevin).Except([actor]))
-                _aoes.Add(new(circleBig, a.Position, default, activation));
+            var activation = WorldState.FutureTime(10d);
+            AddAOE(circleSmall, actor.Position);
+
+            var orbs = Module.Enemies((uint)OID.BallOfLevin);
+            var count = orbs.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var orb = orbs[i];
+                if (orb != actor)
+                    AddAOE(circleBig, orb.Position);
+            }
+            void AddAOE(AOEShape shape, WPos origin) => _aoes.Add(new(shape, WPos.ClampToGrid(origin), default, activation));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ShockSmall or AID.ShockLarge)
+        if (spell.Action.ID is (uint)AID.ShockSmall or (uint)AID.ShockLarge)
             _aoes.Clear();
     }
 }

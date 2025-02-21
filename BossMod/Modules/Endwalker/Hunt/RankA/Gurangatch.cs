@@ -29,21 +29,22 @@ class Slammer(BossModule module) : Components.GenericRotatingAOE(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
+        void AddSequence(Angle increment, int casts = 8, int max = 2) => Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 3.6f, casts, max));
         switch (spell.Action.ID)
         {
             case (uint)AID.OctupleSlammerLCW:
             case (uint)AID.OctupleSlammerRCW:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 90f.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
+                AddSequence(90f.Degrees());
                 ImminentColor = Colors.Danger;
                 break;
             case (uint)AID.OctupleSlammerLCCW:
             case (uint)AID.OctupleSlammerRCCW:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, -90f.Degrees(), Module.CastFinishAt(spell), 3.7f, 8));
+                AddSequence(-90f.Degrees());
                 ImminentColor = Colors.Danger;
                 break;
             case (uint)AID.LeftHammerSlammer:
             case (uint)AID.RightHammerSlammer:
-                Sequences.Add(new(_shape, caster.Position, spell.Rotation, 180f.Degrees(), Module.CastFinishAt(spell), 3.6f, 2, 1));
+                AddSequence(180f.Degrees());
                 ImminentColor = 0;
                 break;
         }

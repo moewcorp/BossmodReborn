@@ -73,8 +73,19 @@ class SwoopingFrenzy2(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.SwoopingFrenzy2 || spell.Action.ID == (uint)AID.SwoopingFrenzyTelegraph && !_aoes.Any(x => x.Origin.AlmostEqual(spell.LocXZ, 1f)))
+        if (spell.Action.ID == (uint)AID.SwoopingFrenzy2 || spell.Action.ID == (uint)AID.SwoopingFrenzyTelegraph && !HasMatchingAOE(spell.LocXZ))
             _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 1.5f)));
+    }
+
+    private bool HasMatchingAOE(WPos location)
+    {
+        var count = _aoes.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (_aoes[i].Origin.AlmostEqual(location, 1f))
+                return true;
+        }
+        return false;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

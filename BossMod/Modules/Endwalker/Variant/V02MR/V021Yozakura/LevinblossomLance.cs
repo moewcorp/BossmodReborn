@@ -6,7 +6,7 @@ class LevinblossomLance(BossModule module) : Components.GenericRotatingAOE(modul
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddSequence(Angle angle) => Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, angle, Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
+        void AddSequence(Angle increment) => Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
         switch (spell.Action.ID)
         {
             case (uint)AID.LevinblossomLanceCCW:

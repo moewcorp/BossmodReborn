@@ -210,7 +210,7 @@ class CatONineTails(BossModule module) : Components.GenericRotatingAOE(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FierceBeatingRotationVisual)
-            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation + 180f.Degrees(), -45f.Degrees(), Module.CastFinishAt(spell), 2, 8));
+            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation + 180f.Degrees(), -45f.Degrees(), Module.CastFinishAt(spell), 2f, 8));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

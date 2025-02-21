@@ -17,7 +17,7 @@ class FireSpin(BossModule module) : Components.GenericRotatingAOE(module)
                 AddSequence(-45f.Degrees());
                 break;
         }
-        void AddSequence(Angle angle) => Sequences.Add(new(cone, spell.LocXZ, spell.Rotation, angle, Module.CastFinishAt(spell, 0.5f), 1f, 8));
+        void AddSequence(Angle increment) => Sequences.Add(new(cone, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell, 0.5f), 1f, 8));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

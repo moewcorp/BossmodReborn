@@ -1,33 +1,35 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class ImpurePurgation(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ImpurePurgation))
+class ImpurePurgation(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _castersPurgationFirst = [];
-    private readonly List<Actor> _castersPurgationNext = [];
-
-    private static readonly AOEShapeCone cone = new(60, 22.5f.Degrees());
+    private static readonly AOEShapeCone cone = new(60f, 22.5f.Degrees());
+    public readonly List<AOEInstance> AOEs = new(8);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _castersPurgationFirst.Count > 0
-            ? _castersPurgationFirst.Select(c => new AOEInstance(cone, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersPurgationNext.Select(c => new AOEInstance(cone, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var max = count > 4 ? 4 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
+            aoes[i] = AOEs[i];
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Add(caster);
+        if (spell.Action.ID is (uint)AID.ImpurePurgationFirst or (uint)AID.ImpurePurgationSecond)
+        {
+            AOEs.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (AOEs.Count == 8)
+                AOEs.SortBy(x => x.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Remove(caster);
+        if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.ImpurePurgationFirst or (uint)AID.ImpurePurgationFirst)
+            AOEs.RemoveAt(0);
     }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.ImpurePurgationFirst => _castersPurgationFirst,
-        AID.ImpurePurgationSecond => _castersPurgationNext,
-        _ => null
-    };
 }

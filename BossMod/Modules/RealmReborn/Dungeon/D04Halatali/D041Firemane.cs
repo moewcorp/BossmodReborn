@@ -21,7 +21,7 @@ public enum AID : uint
 
 class Fireflow(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCone cone = new(60, 22.5f.Degrees());
+    private static readonly AOEShapeCone cone = new(60f, 22.5f.Degrees());
     private readonly List<AOEInstance> _aoes = new(8);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -38,7 +38,7 @@ class Fireflow(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Fireflow1 or AID.Fireflow2)
+        if (spell.Action.ID is (uint)AID.Fireflow1 or (uint)AID.Fireflow2)
         {
             _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (_aoes.Count == 8)
@@ -48,13 +48,13 @@ class Fireflow(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.Fireflow1 or AID.Fireflow2)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.Fireflow1 or (uint)AID.Fireflow2)
             _aoes.RemoveAt(0);
     }
 }
 
 class BurningBolt(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.BurningBolt));
-class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5);
+class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5f);
 
 class D041FiremaneStates : StateMachineBuilder
 {
@@ -71,7 +71,7 @@ class D041FiremaneStates : StateMachineBuilder
 public class D041Firemane(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(18.77f, 105.52f), new(20.74f, 105.75f), new(21.4f, 106.03f), new(31.94f, 110.21f), new(32.51f, 110.54f),
-    new(34.44f, 112.19f), new(35, 112.58f), new(42.3f, 119.87f), new(44.11f, 121.45f), new(47.1f, 124.46f),
+    new(34.44f, 112.19f), new(35f, 112.58f), new(42.3f, 119.87f), new(44.11f, 121.45f), new(47.1f, 124.46f),
     new(47.65f, 124.87f), new(48.29f, 125.2f), new(51.14f, 127.53f), new(51.48f, 127.91f), new(52.34f, 129.13f),
     new(52.7f, 129.77f), new(52.99f, 130.44f), new(55.04f, 140.77f), new(55, 141.44f), new(54.86f, 142.09f),
     new(54.61f, 142.71f), new(50.46f, 148.48f), new(49.99f, 148.92f), new(40.54f, 154.16f), new(33.76f, 155.83f),

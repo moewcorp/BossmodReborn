@@ -13,8 +13,7 @@ class V024ShishioStates : StateMachineBuilder
             .ActivateOnEnter<Vasoconstrictor>()
             // Route 9
             .ActivateOnEnter<Yoki>()
-            .ActivateOnEnter<YokiUzu>()
-            .ActivateOnEnter<FocusedTremor>()
+            .ActivateOnEnter<FocusedTremorYokiUzu>()
             // Route 10
             .ActivateOnEnter<LeftSwipe>()
             .ActivateOnEnter<RightSwipe>()

@@ -51,8 +51,8 @@ class GobspinSwipe(BossModule module) : Components.GenericAOEs(module)
 
 class Knockbacks(BossModule module) : Components.Knockback(module)
 {
-    private static readonly AOEShapeCircle circle = new(8);
-    private static readonly AOEShapeDonut donut = new(5, 30);
+    private static readonly AOEShapeCircle circle = new(8f);
+    private static readonly AOEShapeDonut donut = new(5f, 30f);
     private Source? _knockback;
 
     public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
@@ -60,15 +60,15 @@ class Knockbacks(BossModule module) : Components.Knockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var activation = Module.CastFinishAt(spell, 4);
-        if ((AID)spell.Action.ID == AID.GobspinWhooshdropsTelegraph)
-            _knockback = new(Module.PrimaryActor.Position, 15, activation, circle);
-        if ((AID)spell.Action.ID == AID.GobswipeConklopsTelegraph)
-            _knockback = new(Module.PrimaryActor.Position, 15, activation, donut);
+        if (spell.Action.ID == (uint)AID.GobspinWhooshdropsTelegraph)
+            _knockback = new(Module.PrimaryActor.Position, 15f, activation, circle);
+        else if (spell.Action.ID == (uint)AID.GobswipeConklopsTelegraph)
+            _knockback = new(Module.PrimaryActor.Position, 15f, activation, donut);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.GobspinWhooshdrops or AID.GobswipeConklops)
+        if (spell.Action.ID is (uint)AID.GobspinWhooshdrops or (uint)AID.GobswipeConklops)
             _knockback = null;
     }
 }
@@ -79,14 +79,14 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
     private Angle _rotation;
     private DateTime _activation;
 
-    private static readonly AOEShapeRect _shape = new(32, 3);
+    private static readonly AOEShapeRect _shape = new(32f, 3f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = (IconID)iconID switch
+        var increment = iconID switch
         {
-            IconID.RotateCW => -60.Degrees(),
-            IconID.RotateCCW => 60.Degrees(),
+            (uint)IconID.RotateCW => -60f.Degrees(),
+            (uint)IconID.RotateCCW => 60f.Degrees(),
             _ => default
         };
         if (increment != default)
@@ -98,18 +98,17 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GobfireShootypopsStart)
+        if (spell.Action.ID == (uint)AID.GobfireShootypopsStart)
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell);
-        }
-        if (_rotation != default)
             InitIfReady(caster);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.GobfireShootypopsStart or AID.GobfireShootypops)
+        if (spell.Action.ID is (uint)AID.GobfireShootypopsStart or (uint)AID.GobfireShootypops)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 
@@ -117,7 +116,7 @@ class GobfireShootypops(BossModule module) : Components.GenericRotatingAOE(modul
     {
         if (_rotation != default && _increment != default)
         {
-            Sequences.Add(new(_shape, source.Position, _rotation, _increment, _activation, 1, 6));
+            Sequences.Add(new(_shape, WPos.ClampToGrid(source.Position), _rotation, _increment, _activation, 1, 6));
             _rotation = default;
             _increment = default;
         }
