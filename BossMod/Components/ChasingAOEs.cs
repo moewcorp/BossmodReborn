@@ -99,13 +99,29 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
 
     public override void Update()
     {
-        Chasers.RemoveAll(c => (c.Target.IsDestroyed || c.Target.IsDead) && c.NumRemaining < MaxCasts);
+        var count = Chasers.Count;
+        if (count == 0)
+            return;
+
+        for (var i = count - 1; i >= 0; --i)
+        {
+            var c = Chasers[i];
+            if ((c.Target.IsDestroyed || c.Target.IsDead) && c.NumRemaining < MaxCasts)
+                Chasers.RemoveAt(i);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var c in Chasers)
+        var count = Chasers.Count;
+        if (Chasers.Count == 0)
+            return;
+
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Chasers[i];
             Arena.AddLine(c.PrevPos, c.Target.Position);
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

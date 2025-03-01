@@ -32,7 +32,7 @@ class BlazingLariat(BossModule module) : Components.CastCounter(module, default)
             }
             else
             {
-                hints.Add("Spread!", clipped.Any());
+                hints.Add("Spread!", clipped.Count != 0);
             }
         }
     }

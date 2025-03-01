@@ -128,8 +128,6 @@ class StormsOfAsphodelos(BossModule module) : BossComponent(module)
         }
     }
 
-    private IEnumerable<(int, Actor)> FindPlayersInWinds(Actor origin, Actor target)
-    {
-        return Raid.WithSlot(false, true, true).InShape(_windsAOE, origin.Position, Angle.FromDirection(target.Position - origin.Position));
-    }
+    private List<(int, Actor)> FindPlayersInWinds(Actor origin, Actor target)
+    => Raid.WithSlot(false, true, true).InShape(_windsAOE, origin.Position, Angle.FromDirection(target.Position - origin.Position));
 }

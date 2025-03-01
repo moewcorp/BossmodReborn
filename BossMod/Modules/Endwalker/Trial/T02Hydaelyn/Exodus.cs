@@ -8,8 +8,7 @@ class Exodus(BossModule module) : Components.RaidwideInstant(module, ActionID.Ma
     {
         if (actor.OID == (uint)OID.CrystalOfLight)
         {
-            ++_numCrystalsDestroyed;
-            if (_numCrystalsDestroyed == 6)
+            if (++_numCrystalsDestroyed == 6)
                 Activation = WorldState.FutureTime(7.2f);
         }
     }

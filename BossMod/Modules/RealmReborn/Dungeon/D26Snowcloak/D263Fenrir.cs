@@ -71,5 +71,5 @@ class D263FenrirStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 27, NameID = 3044, SortOrder = 4)]
 public class D263Fenrir(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(1, 65.1f), 26, 24, 7.5f.Degrees())], [new Rectangle(new(-25.4f, 65), 20, 1, 89.977f.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(1, 65.1f), 26, 24, 7.5f.Degrees())], [new Rectangle(new(-25.4f, 65), 1f, 20f)]);
 }

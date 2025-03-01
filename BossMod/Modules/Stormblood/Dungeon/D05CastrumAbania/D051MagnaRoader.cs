@@ -137,25 +137,36 @@ public class D051MagnaRoader(WorldState ws, Actor primary) : BossModule(ws, prim
     private static readonly ArenaBoundsComplex arena = new([new Circle(new(-212.99f, 186.99f), 19.55f)], [new Rectangle(new(-213, 167), 20, 1.25f), new Rectangle(new(-213, 208), 20, 2.1f)]);
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.TwelfthLegionOptio).Concat([PrimaryActor]));
-        Arena.Actors(Enemies(OID.MarkXLIIIMiniCannon), Colors.Object);
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.TwelfthLegionOptio));
+        Arena.Actors(Enemies((uint)OID.MarkXLIIIMiniCannon), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var comp = FindComponent<WildSpeedHaywire>()?.ActiveAOEs(slot, actor).Any();
-        if (comp != null && (bool)comp && Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable))
-            foreach (var e in hints.PotentialTargets)
-                e.Priority = -1; // targeting anything will leave the cannon
-        else
-            foreach (var e in hints.PotentialTargets)
+        if (comp != null && (bool)comp && Enemies((uint)OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable))
+        {
+            var count = hints.PotentialTargets.Count;
+            for (var i = 0; i < count; ++i)
             {
-                e.Priority = (OID)e.Actor.OID switch
+                var e = hints.PotentialTargets[i];
+                e.Priority = AIHints.Enemy.PriorityUndesirable; // targeting anything will leave the cannon
+            }
+        }
+        else
+        {
+            var count = hints.PotentialTargets.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var e = hints.PotentialTargets[i];
+                e.Priority = e.Actor.OID switch
                 {
-                    OID.TwelfthLegionOptio => 2,
-                    OID.Boss => 1,
+                    (uint)OID.TwelfthLegionOptio => 2,
+                    (uint)OID.Boss => 1,
                     _ => 0
                 };
             }
+        }
     }
 }

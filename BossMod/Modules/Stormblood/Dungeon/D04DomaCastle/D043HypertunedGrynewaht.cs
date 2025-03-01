@@ -57,22 +57,24 @@ class Chainsaw(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe != null)
-            yield return _aoe.Value with { Origin = Module.PrimaryActor.Position, Rotation = Module.PrimaryActor.Rotation };
+        if (_aoe is AOEInstance aoe)
+            return [aoe with { Origin = Module.PrimaryActor.Position, Rotation = Module.PrimaryActor.Rotation }];
+        else
+            return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ChainsawFirst)
+        if (spell.Action.ID == (uint)AID.ChainsawFirst)
             _aoe = new(rect, Module.PrimaryActor.Position, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ChainsawFirst:
-            case AID.ChainsawRest:
+            case (uint)AID.ChainsawFirst:
+            case (uint)AID.ChainsawRest:
                 if (++NumCasts == 5)
                 {
                     _aoe = null;
@@ -103,7 +105,7 @@ class ChainMine(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.ActiveAOEs(slot, actor).Count() <= 1)
+        if (_aoe.Casters.Count <= 1)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
@@ -114,42 +116,44 @@ class ThermobaricChargeBait(BossModule module) : Components.GenericBaitAway(modu
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Prey)
+        if (status.ID == (uint)SID.Prey)
             CurrentBaits.Add(new(Module.PrimaryActor, actor, circle, status.ExpireAt));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Prey)
+        if (status.ID == (uint)SID.Prey)
             CurrentBaits.Clear();
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
             hints.Add("Bait away!");
+        else
+            base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 23));
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 23f));
     }
 }
 
 class Gunsaw(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect = new(60.9f, 1);
+    private static readonly AOEShapeRect rect = new(60.9f, 1f);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.GunsawFirst)
+        if (spell.Action.ID == (uint)AID.GunsawFirst)
         {
             var target = Raid.WithoutSlot(false, true, true).FirstOrDefault(x => x.Position.InRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f));
             if (target != default)
                 CurrentBaits.Add(new(caster, target, rect));
         }
-        else if ((AID)spell.Action.ID == AID.GunsawRest)
+        else if (spell.Action.ID == (uint)AID.GunsawRest)
             if (++NumCasts == 4)
             {
                 CurrentBaits.Clear();

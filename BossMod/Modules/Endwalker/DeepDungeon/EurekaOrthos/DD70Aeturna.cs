@@ -47,7 +47,10 @@ class Shatter(BossModule module) : Components.GenericAOEs(module)
             var crystals = Module.Enemies((uint)OID.AllaganCrystal);
             var count = crystals.Count;
             for (var i = 0; i < count; ++i)
-                _aoes.Add(new(shape, WPos.ClampToGrid(crystals[i].Position), default, Module.CastFinishAt(spell, 0.5f)));
+            {
+                var crystal = crystals[i];
+                _aoes.Add(new(shape, WPos.ClampToGrid(crystal.Position), crystal.Rotation, Module.CastFinishAt(spell, 0.5f)));
+            }
         }
         switch (spell.Action.ID)
         {

@@ -49,32 +49,28 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCone(50f, 60f.Degrees()), new AOEShapeDonut(8f, 60f), new AOEShapeRect(40f, 2.5f),
     new AOEShapeCross(60f, 5f), new AOEShapeDonut(5f, 60f)];
-    private readonly Dictionary<uint, List<AOEInstance>> _icons = new() {
-        { (uint)IconID.Icon1, [] },
-        { (uint)IconID.Icon2, [] },
-        { (uint)IconID.Icon3, [] }
-    };
-    private AOEInstance _boss;
+    public readonly List<AOEInstance> AOEs = new(6);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var icon in _icons)
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        var act0 = AOEs[0].Activation;
+        var color = Colors.Danger;
+        var index = 0;
+        for (var i = 0; i < count; ++i)
         {
-            if (icon.Value != null && icon.Value.Count > 0)
-            {
-                foreach (var c in icon.Value)
-                    yield return new(c.Shape, c.Origin, c.Rotation, c.Activation, Colors.Danger);
-                var nextIcon = _icons.FirstOrDefault(x => x.Key == icon.Key + 1).Value;
-                if (nextIcon != null)
-                    foreach (var c in nextIcon)
-                        yield return new(c.Shape, c.Origin, c.Rotation, c.Activation, Risky: false);
-                if (_boss != default)
-                    yield return new(_boss.Shape, _boss.Origin, _boss.Rotation, _boss.Activation, Risky: false);
-                yield break;
-            }
+            var aoe = AOEs[i];
+            var act = aoe.Activation;
+            var total = (act - act0).TotalSeconds;
+            var comp = total < 1d;
+            if (total > 5d)
+                break;
+            aoes[index++] = aoe with { Color = comp ? color : 0, Risky = comp };
         }
-        if (_boss != default)
-            yield return new(_boss.Shape, _boss.Origin, _boss.Rotation, _boss.Activation, Colors.Danger);
+        return aoes[..index];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -84,8 +80,11 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
             (uint)OID.SquareInterceptor => 2,
             (uint)OID.OrbInterceptor => 1,
             (uint)OID.EggInterceptor => 0,
-            _ => default
+            _ => -1
         };
+
+        if (shapeIndex == -1)
+            return;
 
         var activation = iconID switch
         {
@@ -95,65 +94,52 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
             _ => default
         };
 
-        _icons[iconID].Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, activation));
+        AOEs.Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, activation));
+        if (AOEs.Count == 6)
+            AOEs.SortBy(x => x.Activation);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        _boss = spell.Action.ID switch
+        AOEInstance? aoe = spell.Action.ID switch
         {
             (uint)AID.PeripheralLasers => new(_shapes[4], spell.LocXZ, default, Module.CastFinishAt(spell)),
             (uint)AID.CrossLaser => new(_shapes[3], spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)),
-            _ => _boss
+            _ => null
         };
+
+        if (aoe != null)
+            AOEs.Add(aoe.Value);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is (uint)AID.AetherochemicalLaserCone or (uint)AID.AetherochemicalLaserLine or (uint)AID.AetherochemicalLaserDonut)
+        switch (spell.Action.ID)
         {
-            foreach (var icon in _icons)
-                if (icon.Value.Count != 0)
-                {
-                    icon.Value.RemoveAt(0);
-                    break;
-                }
+            case (uint)AID.AetherochemicalLaserCone:
+            case (uint)AID.AetherochemicalLaserLine:
+            case (uint)AID.AetherochemicalLaserDonut:
+            case (uint)AID.PeripheralLasers:
+            case (uint)AID.CrossLaser:
+                if (AOEs.Count != 0)
+                    AOEs.RemoveAt(0);
+                break;
         }
-        else if (spell.Action.ID is (uint)AID.PeripheralLasers or (uint)AID.CrossLaser)
-            _boss = default;
     }
 }
 
-class AetherLaserLine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine), new AOEShapeRect(40f, 2.5f), 4)
+class AetherLaserLine : Components.SimpleAOEs
 {
-    private readonly AetheroChemicalLaserCombo _aoe = module.FindComponent<AetheroChemicalLaserCombo>()!;
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private readonly AetheroChemicalLaserCombo _aoe;
+
+    public AetherLaserLine(BossModule module) : base(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine), new AOEShapeRect(40f, 2.5f), 4)
     {
-        var count = Casters.Count;
-
-        if (count == 0)
-            return [];
-
-        var hasActiveAOEs = false;
-        {
-            foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
-            {
-                hasActiveAOEs = true;
-                break;
-            }
-        }
-        if (hasActiveAOEs)
-            return [];
-
-        var max = count > 4 ? 4 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
-        {
-            var caster = Casters[i];
-            aoes[i] = caster with { Color = i < 2 && count > i ? Colors.Danger : 0 };
-        }
-        return aoes;
+        MaxDangerColor = 2;
+        MaxRisky = 2;
+        _aoe = module.FindComponent<AetheroChemicalLaserCombo>()!;
     }
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Count != 0 && _aoe.AOEs.Count == 0 ? base.ActiveAOEs(slot, actor) : [];
 }
 
 class AetherLaserLine2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine2), new AOEShapeRect(40f, 2.5f));

@@ -77,8 +77,8 @@ public class D042SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, prim
 {
     protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.SerGrinnauxTheBull).Any(e => e.InCombat);
 
-    public static readonly ArenaBoundsComplex arena = new([new Circle(new(0, 72), 19.7f)], [new Rectangle(new(19.5f, 72), 7.75f, 1.75f, 90.Degrees()),
-    new Rectangle(new(0, 51), 7.75f, 2), new Rectangle(new(-20.8f, 72), 5, 1.75f, 90.Degrees())]);
+    public static readonly ArenaBoundsComplex arena = new([new Circle(new(0, 72), 19.7f)], [new Rectangle(new(19.5f, 72), 1.75f, 7.75f),
+    new Rectangle(new(0, 51), 7.75f, 2), new Rectangle(new(-20.8f, 72), 1.75f, 5f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

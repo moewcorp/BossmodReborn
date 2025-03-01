@@ -42,6 +42,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 ops.Add(new OpTarget(instanceID, act.TargetID));
             if (act.MountId != 0)
                 ops.Add(new OpMount(instanceID, act.MountId));
+            if (act.ForayInfo != default)
+                ops.Add(new OpForayInfo(act.InstanceID, act.ForayInfo));
             if (act.Tether.ID != 0)
                 ops.Add(new OpTether(instanceID, act.Tether));
             if (act.CastInfo != null)
@@ -165,6 +167,7 @@ public sealed class ActorState : IEnumerable<Actor>
             .Emit(HPMP.MaxHP)
             .Emit(HPMP.Shield)
             .Emit(HPMP.CurMP)
+            .Emit(HPMP.MaxMP)
             .Emit(IsTargetable)
             .Emit(IsAlly)
             .EmitActor(OwnerID)
@@ -263,7 +266,7 @@ public sealed class ActorState : IEnumerable<Actor>
             actor.HPMP = HPMP;
             ws.Actors.HPMPChanged.Fire(actor);
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("HP  "u8).EmitActor(InstanceID).Emit(HPMP.CurHP).Emit(HPMP.MaxHP).Emit(HPMP.Shield).Emit(HPMP.CurMP);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("HP  "u8).EmitActor(InstanceID).Emit(HPMP.CurHP).Emit(HPMP.MaxHP).Emit(HPMP.Shield).Emit(HPMP.CurMP).Emit(HPMP.MaxMP);
     }
 
     public Event<Actor> IsTargetableChanged = new();
@@ -363,6 +366,17 @@ public sealed class ActorState : IEnumerable<Actor>
             ws.Actors.MountChanged.Fire(actor);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("MNTD"u8).EmitActor(InstanceID).Emit(Value);
+    }
+
+    public Event<Actor> ForayInfoChanged = new();
+    public sealed record class OpForayInfo(ulong InstanceID, ActorForayInfo Value) : Operation(InstanceID)
+    {
+        protected override void ExecActor(ref WorldState ws, ref Actor actor)
+        {
+            actor.ForayInfo = Value;
+            ws.Actors.ForayInfoChanged.Fire(actor);
+        }
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("FORA"u8).EmitActor(InstanceID).Emit(Value.Level).Emit(Value.Element);
     }
 
     // note: this is currently based on network events rather than per-frame state inspection

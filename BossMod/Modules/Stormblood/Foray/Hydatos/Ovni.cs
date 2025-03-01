@@ -2,11 +2,15 @@
 
 public enum OID : uint
 {
-    Boss = 0x2685, // R16.000, x1
+    Boss = 0x2685, // R16.0
+    UnfoundOgre = 0x26BF, // R1.3
 }
 
 public enum AID : uint
 {
+    AutoAttack1 = 14781, // Boss->player, no cast, single-target
+    AutoAttack2 = 15228, // UnfoundOgre->player, no cast, single-target
+
     RockHard = 14786, // Boss->location, 3.0s cast, range 8 circle
     TorrentialTorment = 14785, // Boss->self, 5.0s cast, range 40+R 45-degree cone
     Fluorescence = 14789, // Boss->self, 3.0s cast, single-target
@@ -16,11 +20,13 @@ public enum AID : uint
     IonStorm = 14788, // Boss->players, no cast, range 20 circle
     VitriolicBarrage = 14790, // Boss->self, 4.0s cast, range 25+R circle
     ConcussiveOscillation = 14783, // Boss->self, 5.0s cast, range 24 circle
+    StraightPunch = 15430, // UnfoundOgre->player, no cast, single-target
+    PlainPound = 15431 // UnfoundOgre->self, 3.0s cast, range 6 circle
 }
 
 public enum IconID : uint
 {
-    IonShower = 111, // player->self
+    IonShower = 111 // player->self
 }
 
 class PullOfTheVoid(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.PullOfTheVoid), 30f, kind: Kind.TowardsOrigin, minDistanceBetweenHitboxes: true);
@@ -29,6 +35,7 @@ class ConcussiveOscillation(BossModule module) : Components.SimpleAOEs(module, A
 class VitriolicBarrage(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.VitriolicBarrage));
 class RockHard(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RockHard), 8);
 class TorrentialTorment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TorrentialTorment), new AOEShapeCone(56f, 22.5f.Degrees()));
+
 class IonShower(BossModule module) : Components.GenericStackSpread(module, alwaysShowSpreads: true, raidwideOnResolve: false)
 {
     private int _numCasts;
@@ -38,7 +45,7 @@ class IonShower(BossModule module) : Components.GenericStackSpread(module, alway
         if (iconID == (uint)IconID.IonShower && WorldState.Actors.Find(targetID) is { } target)
         {
             _numCasts = 0;
-            Spreads.Add(new(target, 20, WorldState.FutureTime(5d)));
+            Spreads.Add(new(target, 20f, WorldState.FutureTime(5d)));
         }
     }
 
@@ -50,13 +57,24 @@ class IonShower(BossModule module) : Components.GenericStackSpread(module, alway
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Spreads.Any(s => s.Target == actor))
-            // just gtfo from boss as far as possible
-            hints.GoalZones.Add(p => (p - Module.PrimaryActor.Position).LengthSq() > 1600f ? 100f : 0f);
+        var found = false;
+        var count = Spreads.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (Spreads[i].Target == actor)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (found) // just gtfo from boss as far as possible
+            hints.GoalZones.Add(p => (p - Module.PrimaryActor.Position).LengthSq() > 1600f ? 100f : default);
         else
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
+
+class PlainPound(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PlainPound), 6);
 
 class OvniStates : StateMachineBuilder
 {
@@ -69,10 +87,32 @@ class OvniStates : StateMachineBuilder
             .ActivateOnEnter<VitriolicBarrage>()
             .ActivateOnEnter<RockHard>()
             .ActivateOnEnter<TorrentialTorment>()
-            .ActivateOnEnter<IonShower>();
+            .ActivateOnEnter<IonShower>()
+            .ActivateOnEnter<PlainPound>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 639, NameID = 8060, Contributors = "xan")]
-public class Ovni(WorldState ws, Actor primary) : BossModule(ws, primary, new(266.1068f, -97.09414f), new ArenaBoundsCircle(80f, MapResolution: 1));
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "xan, Malediktus", GroupType = BossModuleInfo.GroupType.EurekaNM, GroupID = 639, NameID = 1424, SortOrder = 11)]
+public class Ovni(WorldState ws, Actor primary) : BossModule(ws, primary, new(266.1068f, -97.09414f), SharedBounds.Circle)
+{
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.UnfoundOgre));
+    }
 
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
+            {
+                (uint)OID.Boss => 1,
+                _ when e.Actor.InCombat => 0,
+                _ => AIHints.Enemy.PriorityUndesirable
+            };
+        }
+    }
+}

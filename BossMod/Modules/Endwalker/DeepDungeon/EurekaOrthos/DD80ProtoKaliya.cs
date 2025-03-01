@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 31421, // Boss->players, no cast, range 6+R 90-degree cone
+
     AetheromagnetismKB = 31431, // Helper->player, no cast, single-target, knockback 10, away from source
     AetheromagnetismPull = 31430, // Helper->player, no cast, single-target, pull 10, between centers
     AutoCannons = 31432, // WeaponsDrone->self, 4.0s cast, range 41+R width 5 rect
@@ -44,20 +45,20 @@ public enum TetherID : uint
 
 class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes: true)
 {
-    private readonly HashSet<(Actor, uint)> statusOnActor = [];
-    public readonly HashSet<(Actor, Source)> sourceByActor = [];
+    public readonly Source?[] _sources = new Source?[4];
     private readonly NerveGasRingAndAutoCannons _aoe1 = module.FindComponent<NerveGasRingAndAutoCannons>()!;
     private readonly Barofield _aoe2 = module.FindComponent<Barofield>()!;
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        if (sourceByActor.Count != 0 && _aoe1.AOEs.Any(z => z.Shape == NerveGasRingAndAutoCannons.donut))
+        if (_sources[slot] is Source source)
         {
-            var x = sourceByActor.FirstOrDefault(x => x.Item1 == actor);
-            return [new(x.Item2.Origin, x.Item2.Distance, x.Item2.Activation, Kind: x.Item2.Kind)];
+            var count = _aoe1.AOEs.Count;
+            for (var i = 0; i < count; ++i)
+                if (_aoe1.AOEs[i].Shape == NerveGasRingAndAutoCannons.donut)
+                    return [source];
         }
-        else
-            return [];
+        return [];
     }
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
@@ -73,28 +74,25 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
         return _aoe2.AOE != null && _aoe2.AOE.Value.Check(pos) || !Module.InBounds(pos);
     }
 
-    private bool IsPull(Actor source, Actor target)
-    {
-        return statusOnActor.Contains((source, (uint)SID.NegativeChargeDrone)) && statusOnActor.Contains((target, (uint)SID.PositiveChargePlayer)) ||
-            statusOnActor.Contains((source, (uint)SID.PositiveChargeDrone)) && statusOnActor.Contains((target, (uint)SID.NegativeChargePlayer));
-    }
-
-    private bool IsKnockback(Actor source, Actor target)
-    {
-        return statusOnActor.Contains((source, (uint)SID.NegativeChargeDrone)) && statusOnActor.Contains((target, (uint)SID.NegativeChargePlayer)) ||
-            statusOnActor.Contains((source, (uint)SID.PositiveChargeDrone)) && statusOnActor.Contains((target, (uint)SID.PositiveChargePlayer));
-    }
-
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
+        bool IsPull(ref Actor target)
+        => source.FindStatus((uint)SID.NegativeChargeDrone) != null && target.FindStatus((uint)SID.PositiveChargePlayer) != null ||
+        source.FindStatus((uint)SID.PositiveChargeDrone) != null && target.FindStatus((uint)SID.NegativeChargePlayer) != null;
+
+        bool IsKnockback(ref Actor target)
+        => source.FindStatus((uint)SID.NegativeChargeDrone) != null && target.FindStatus((uint)SID.NegativeChargePlayer) != null ||
+        source.FindStatus((uint)SID.PositiveChargeDrone) != null && target.FindStatus((uint)SID.PositiveChargePlayer) != null;
+
         if (tether.ID == (uint)TetherID.Magnetism)
         {
             var target = WorldState.Actors.Find(tether.Target)!;
-            var activation = WorldState.FutureTime(10d);
-            if (IsPull(source, target))
-                sourceByActor.Add((target, new(source.Position, 10f, activation, Kind: Kind.TowardsOrigin)));
-            else if (IsKnockback(source, target))
-                sourceByActor.Add((target, new(source.Position, 10f, activation)));
+            if (IsPull(ref target))
+                AddSource(false);
+            else if (IsKnockback(ref target))
+                AddSource(true);
+
+            void AddSource(bool isKnockback) => _sources[Raid.FindSlot(target.InstanceID)] = new(source.Position, 10f, WorldState.FutureTime(10d), Kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
         }
     }
 
@@ -103,26 +101,39 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
         if (tether.ID == (uint)TetherID.Magnetism)
         {
             var target = WorldState.Actors.Find(tether.Target)!;
-            sourceByActor.RemoveWhere(x => x.Item1 == target);
-        }
-    }
-
-    public override void OnStatusGain(Actor actor, ActorStatus status)
-    {
-        if (status.ID is (uint)SID.NegativeChargeDrone or (uint)SID.PositiveChargeDrone or (uint)SID.PositiveChargePlayer or (uint)SID.NegativeChargePlayer)
-        {
-            statusOnActor.RemoveWhere(x => x.Item1 == actor);
-            statusOnActor.Add((actor, status.ID));
+            _sources[Raid.FindSlot(target.InstanceID)] = null;
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (sourceByActor.Count > 0)
+        if (_sources[slot] is Source source)
         {
-            var target = sourceByActor.FirstOrDefault(x => x.Item1 == actor);
-            var offset = target.Item2.Kind == Kind.TowardsOrigin ? 180f.Degrees() : default;
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(Arena.Center, 15f, 18f, Angle.FromDirection(target.Item2.Origin - Arena.Center) + offset, 35f.Degrees()));
+            var attract = source.Kind == Kind.TowardsOrigin;
+            var pos = Module.PrimaryActor.Position;
+            var barofield = ShapeDistance.Circle(pos, 5f);
+            var arena = ShapeDistance.InvertedCircle(pos, 8f);
+            var cannons = Module.Enemies((uint)OID.WeaponsDrone);
+            var count = cannons.Count;
+            var forbiddenRects = new Func<WPos, float>[count];
+            for (var i = 0; i < count; ++i)
+            {
+                var c = cannons[i];
+                forbiddenRects[i] = ShapeDistance.Rect(c.Position, c.Rotation, 43f, default, 2.5f);
+            }
+            var all = ShapeDistance.Union((Func<WPos, float>[])[barofield, arena, .. forbiddenRects]);
+
+            hints.AddForbiddenZone(p =>
+            {
+                var dir = (p - source.Origin).Normalized();
+                var kb = attract ? -dir : dir;
+
+                // prevent KB through death zone in center
+                if (Intersect.RayCircle(p, kb, pos, 5f) < 99f)
+                    return 0;
+
+                return all(p + kb * 10f);
+            }, source.Activation);
         }
     }
 }
@@ -150,40 +161,58 @@ class Barofield(BossModule module) : Components.GenericAOEs(module)
 class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(2);
-    private static readonly AOEShapeCross cross = new(43f, 2.5f);
+    private static readonly AOEShapeCross cross = new(20f, 2.5f);
+    private static readonly AOEShapeCross rect = new(43f, 2.5f);
     public static readonly AOEShapeDonut donut = new(8f, 30f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShape shape, bool risky = true) => AOEs.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), Risky: risky));
+        void AddAOE(AOEShape shape) => AOEs.Add(new(shape, spell.LocXZ, shape == rect ? spell.Rotation : default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
         if (spell.Action.ID == (uint)AID.NerveGasRing)
         {
-            AddAOE(donut, false);
+            AddAOE(donut);
             AddAOE(cross);
         }
         else if (spell.Action.ID == (uint)AID.AutoCannons)
-            AddAOE(cross);
-        else if (AOEs.Count == 2 && spell.Action.ID == (uint)AID.AutoCannons)
         {
-            AOEs.RemoveAt(1);
-            AddAOE(cross);
+            AddAOE(rect);
+            var count = AOEs.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (AOEs[i].Shape == cross)
+                {
+                    AOEs.RemoveAt(i);
+                    break;
+                }
+            }
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.NerveGasRing or (uint)AID.AutoCannons)
-            AOEs.RemoveAt(0);
+        {
+            var count = AOEs.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (AOEs[i].ActorID == id)
+                {
+                    AOEs.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 }
 
-class NerveGas(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(30f, 90f.Degrees()));
+class NerveGas(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(25.5f, 90f.Degrees()));
 class LeftNerveGas(BossModule module) : NerveGas(module, AID.LeftwardNerveGas);
 class RightNerveGas(BossModule module) : NerveGas(module, AID.RightwardNerveGas);
 
-class CentralizedNerveGas(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CentralizedNerveGas), new AOEShapeCone(30f, 60f.Degrees()));
+class CentralizedNerveGas(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CentralizedNerveGas), new AOEShapeCone(25.5f, 60f.Degrees()));
 
 class AutoAttack(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AutoAttack), new AOEShapeCone(11f, 45f.Degrees()))
 {
@@ -191,13 +220,13 @@ class AutoAttack(BossModule module) : Components.Cleave(module, ActionID.MakeSpe
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.AOE != null)
+        if (_aoe.AOE == null)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (_aoe.AOE != null)
+        if (_aoe.AOE == null)
             base.DrawArenaForeground(pcSlot, pc);
     }
 }

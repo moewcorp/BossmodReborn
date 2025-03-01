@@ -173,17 +173,17 @@ public static class ConcaveHull
     private static List<WPos> ApplyAlphaFilter(List<WPos> hull, double alpha)
     {
         List<WPos> filteredHull = [hull[0]];
-
-        for (var i = 1; i < hull.Count; ++i)
+        var count = hull.Count;
+        for (var i = 1; i < count; ++i)
         {
             var currentPoint = hull[i];
-            var lastAddedPoint = filteredHull.Last();
+            var lastAddedPoint = filteredHull[^1];
             if (Distance(currentPoint, lastAddedPoint) > alpha)
                 filteredHull.Add(currentPoint);
         }
 
-        if (Distance(filteredHull.Last(), filteredHull.First()) > alpha)
-            filteredHull.Add(filteredHull.First());
+        if (Distance(filteredHull[^1], filteredHull[0]) > alpha)
+            filteredHull.Add(filteredHull[0]);
         return filteredHull;
     }
 

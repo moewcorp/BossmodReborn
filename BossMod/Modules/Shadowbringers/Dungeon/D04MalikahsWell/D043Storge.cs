@@ -93,6 +93,7 @@ class D043StorgeStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8249)]
 public class D043Storge(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Cross(new(196f, -95f), 19.5f, 14f), new Square(new(182f, -81f), 0.3f, 45f.Degrees()),
-    new Square(new(210, -81), 0.3f, 45f.Degrees()), new Square(new(182f, -109f), 0.3f, 45f.Degrees()), new Square(new(210f, -109f), 0.3f, 45f.Degrees())]);
+    private static readonly Angle a45 = 45f.Degrees();
+    private static readonly ArenaBoundsComplex arena = new([new Cross(new(196f, -95f), 19.5f, 14f), new Square(new(182f, -81f), 0.3f, a45),
+    new Square(new(210, -81), 0.3f, a45), new Square(new(182f, -109f), 0.3f, a45), new Square(new(210f, -109f), 0.3f, a45)]);
 }

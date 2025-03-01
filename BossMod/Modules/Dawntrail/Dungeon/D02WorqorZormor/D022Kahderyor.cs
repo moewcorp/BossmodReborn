@@ -50,7 +50,7 @@ class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
     private const string Hint = "Be inside a crystal line!";
     private static readonly AOEShapeDonut donut = new(8f, 50f);
     private static readonly AOEShapeCircle circle = new(15f);
-    private static readonly Angle[] angles = [-119.997f.Degrees(), -29.996f.Degrees(), 80.001f.Degrees(), -99.996f.Degrees()];
+    private static readonly Angle[] angles = [119.997f.Degrees(), 29.996f.Degrees(), -80.001f.Degrees(), 99.996f.Degrees()];
     private static readonly WPos[] positions = [new(-43, -57), new(-63, -57), new(-53, -47), new(-53, -67)];
     private const float Length = 50f;
     private const uint State = 0x00800040;

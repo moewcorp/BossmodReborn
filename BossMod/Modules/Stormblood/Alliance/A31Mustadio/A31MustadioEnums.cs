@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x25B7, // R5.880, x?
     Helper = 0x233C, // R0.500, x?, 523 type
-    Actor1eaa60 = 0x1EAA60, // R0.500, x0 (spawn during fight), EventObj type
+    LegShotVoidzone = 0x1EAA60, // R0.500, x0 (spawn during fight), EventObj type
     EarlyTurret = 0x25B8, // R2.660, x4
     Fran = 0x273E, // R0.595, x1
     IronConstruct = 0x25B9, // R4.550, x8

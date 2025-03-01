@@ -8,7 +8,7 @@ public sealed class AutoPull(RotationModuleManager manager, Actor player) : Rota
 
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("Misc AI: Auto-pull", "Automatically attack passive mobs in certain circumstances", "Misc", "xan", RotationModuleQuality.Basic, new(~0ul), 1000, Order: RotationModuleOrder.HighLevel, CanUseWhileRoleplaying: true);
+        var def = new RotationModuleDefinition("Auto-pull", "Automatically attack passive mobs in certain circumstances", "AI", "xan", RotationModuleQuality.Basic, new(~0ul), 1000, Order: RotationModuleOrder.HighLevel, CanUseWhileRoleplaying: true);
 
         def.AbilityTrack(Track.QuestBattle, "Automatically attack solo duty bosses");
         def.AbilityTrack(Track.DeepDungeon, "Automatically attack deep dungeon bosses when solo");
@@ -38,7 +38,7 @@ public sealed class AutoPull(RotationModuleManager manager, Actor player) : Rota
         if (strategy.Enabled(Track.Hunt) && Bossmods.ActiveModule?.Info?.Category == BossModuleInfo.Category.Hunt && Bossmods.ActiveModule?.PrimaryActor is Actor p && p.InCombat && p.HPRatio < 0.95f)
         {
             Hints.SetPriority(p, 0);
-            primaryTarget = p;
+            primaryTarget = Hints.ForcedTarget = p;
             return;
         }
 
@@ -48,7 +48,7 @@ public sealed class AutoPull(RotationModuleManager manager, Actor player) : Rota
             if (bestEnemy != null)
             {
                 bestEnemy.Priority = 0;
-                primaryTarget = bestEnemy.Actor;
+                primaryTarget = Hints.ForcedTarget = bestEnemy.Actor;
             }
         }
     }

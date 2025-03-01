@@ -57,7 +57,7 @@ public enum IconID : uint
 }
 
 class CandescentRayLineStack(BossModule module) : Components.LineStack(module, null, ActionID.MakeSpell(AID.CandescentRayLineStack), minStackSize: 3, maxStackSize: 3);
-class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(module, ActionID.MakeSpell(AID.CandescentRayTB), new AOEShapeRect(50, 4))
+class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(module, ActionID.MakeSpell(AID.CandescentRayTB), new AOEShapeRect(50f, 4f))
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -70,19 +70,21 @@ class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(modul
     {
         if (Target == null)
             return;
-        var koana = Module.Enemies(OID.Koana).FirstOrDefault();
-        var wuk = Module.Enemies(OID.WukLamat).FirstOrDefault();
+        var koanas = Module.Enemies(OID.Koana);
+        var wuks = Module.Enemies(OID.WukLamat);
+        var koana = koanas.Count != 0 ? koanas[0] : null;
+        var wuk = wuks.Count != 0 ? wuks[0] : null;
         var primary = Module.PrimaryActor;
         if (koana != null)
-            hints.AddForbiddenZone(ShapeDistance.Cone(primary.Position, 100, primary.AngleTo(koana), Angle.Asin(4 / (koana.Position - primary.Position).Length())), Activation);
+            hints.AddForbiddenZone(ShapeDistance.Cone(primary.Position, 100f, primary.AngleTo(koana), Angle.Asin(4f / (koana.Position - primary.Position).Length())), Activation);
         if (wuk != null)
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(primary.Position, primary.AngleTo(wuk), 50, 0, 4), Activation);
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(primary.Position, primary.AngleTo(wuk), 50f, default, 4f), Activation);
     }
 }
 
-class SearingSwell(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SearingSwell), new AOEShapeCone(40, 22.5f.Degrees()));
-class Ensnare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ensnare), 6);
-class TriceraSnare(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.TriceraSnare), 6, 4.7f)
+class SearingSwell(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SearingSwell), new AOEShapeCone(40f, 22.5f.Degrees()));
+class Ensnare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ensnare), 6f);
+class TriceraSnare(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.TriceraSnare), 6f, 4.7f)
 {
     public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
     {
@@ -96,7 +98,7 @@ class PrimordialRoar2(BossModule module) : Components.RaidwideCast(module, Actio
 
 class OrbCollecting(BossModule module) : BossComponent(module)
 {
-    private readonly List<Actor> _orbs = module.Enemies(OID.Orbs);
+    private readonly List<Actor> _orbs = module.Enemies((uint)OID.Orbs);
 
     private IEnumerable<Actor> ActiveOrbs => _orbs.Where(x => x.Tether.ID != 0);
 
@@ -132,9 +134,9 @@ class OrbCollecting(BossModule module) : BossComponent(module)
 
 class FlameBlast(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(20, 2, 20);
+    private static readonly AOEShapeRect rect = new(20f, 2f, 20f);
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly Angle a90 = 90.Degrees();
+    private static readonly Angle a90 = 90f.Degrees();
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -155,13 +157,13 @@ class FlameBlast(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.BallOfFire)
-            _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, WorldState.FutureTime(6.7f)));
+        if (actor.OID == (uint)OID.BallOfFire)
+            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation + a90, WorldState.FutureTime(6.7d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.FlameBlast)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.FlameBlast)
             _aoes.RemoveAt(0);
     }
 }
@@ -185,13 +187,13 @@ class Firestorm(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Firestorm)
+        if (spell.Action.ID == (uint)AID.Firestorm)
             _aoes.Add(new(circle, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Firestorm)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Firestorm)
             _aoes.RemoveAt(0);
     }
 }

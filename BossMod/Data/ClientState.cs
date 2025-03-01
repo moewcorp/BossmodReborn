@@ -451,8 +451,16 @@ public sealed class ClientState
         public override void Write(ReplayRecorder.Output output)
         {
             output.EmitFourCC("CLKV"u8);
-            foreach (var val in Value)
-                output.Emit(val);
+            var len = Value.Length;
+            for (var i = 0; i < len; ++i)
+                output.Emit(Value[i]);
         }
+    }
+
+    public Event<OpFateInfo> FateInfo = new();
+    public sealed record class OpFateInfo(uint FateId, DateTime StartTime) : WorldState.Operation
+    {
+        protected override void Exec(ref WorldState ws) => ws.Client.FateInfo.Fire(this);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("FATE"u8).Emit(FateId).Emit(StartTime.Ticks);
     }
 }

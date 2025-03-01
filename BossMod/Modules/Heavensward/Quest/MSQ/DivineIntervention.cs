@@ -55,7 +55,7 @@ class SerGrinnauxStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67133, NameID = 3850)]
 public class SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Capsule(new(0, 1.979f), 3.66f, 11.45f, 50, 90.Degrees())], [new Rectangle(new(0, -9.995f), 4, 0.7f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Capsule(new(default, 1.979f), 3.66f, 11.45f, 50, 90f.Degrees())], [new Rectangle(new(default, -9.995f), 4f, 0.7f)]);
     public static readonly uint[] Bosses = [(uint)OID.Boss, (uint)OID.SerPaulecrainColdfire];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

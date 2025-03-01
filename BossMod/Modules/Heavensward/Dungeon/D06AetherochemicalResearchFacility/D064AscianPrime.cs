@@ -141,7 +141,7 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(16f);
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly WPos _frozenStarShortTether = new(230f, 86f), _frozenStarLongTether = new(230f, 92f);
-    private static readonly WPos _donut = WPos.ClampToGrid(new(230f, 79f)), _circle1 = WPos.ClampToGrid(new(241f, 79f)), _circle2 = WPos.ClampToGrid(new(219f, 79f));
+    private static readonly WPos _donut = new(230f, 79f), _circle1 = new(241f, 79f), _circle2 = new(219f, 79f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -167,7 +167,7 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
             AddAOE(donut, _donut, reverse);
             if (reverse)
                 _aoes.Reverse();
-            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, pos, default, WorldState.FutureTime(first ? 11.8d : 14.8f)));
+            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, WPos.ClampToGrid(pos), default, WorldState.FutureTime(first ? 11.8d : 14.8f)));
         }
 
         if (actor.OID == (uint)OID.FrozenStar)

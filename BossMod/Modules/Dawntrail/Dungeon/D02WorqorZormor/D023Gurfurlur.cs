@@ -248,9 +248,9 @@ class Windswrath2(BossModule module) : Windswrath(module, AID.Windswrath2)
     {
         if (actor.OID == (uint)OID.BitingWind)
         {
-            if (actor.Position == new WPos(-74f, -180f))
+            if (actor.Position.Z == -180f)
                 CurrentPattern = Pattern.EWEW;
-            else if (actor.Position == new WPos(-74f, -210f))
+            else if (actor.Position.Z == -210f)
                 CurrentPattern = Pattern.WEWE;
         }
     }

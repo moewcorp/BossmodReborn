@@ -82,13 +82,14 @@ public static class AngleExtensions
 
 public static class CosPI
 {
-    public static readonly float Pi8th = (float)(1 / Math.Cos(Math.PI / 8));
-    public static readonly float Pi16th = (float)(1 / Math.Cos(Math.PI / 16));
-    public static readonly float Pi20th = (float)(1 / Math.Cos(Math.PI / 20));
-    public static readonly float Pi28th = (float)(1 / Math.Cos(Math.PI / 28));
-    public static readonly float Pi32th = (float)(1 / Math.Cos(Math.PI / 32));
-    public static readonly float Pi36th = (float)(1 / Math.Cos(Math.PI / 36));
-    public static readonly float Pi40th = (float)(1 / Math.Cos(Math.PI / 40));
-    public static readonly float Pi48th = (float)(1 / Math.Cos(Math.PI / 48));
-    public static readonly float Pi60th = (float)(1 / Math.Cos(Math.PI / 60));
+    public const float Pi8th = 1.082392f; // 1 / Math.Cos(Math.PI / 8)
+    public const float Pi16th = 1.019591f; // 1 / Math.Cos(Math.PI / 16)
+    public const float Pi20th = 1.012465f; // 1 / Math.Cos(Math.PI / 20)
+    public const float Pi28th = 1.006328f; // 1 / Math.Cos(Math.PI / 28)
+    public const float Pi32th = 1.004839f; // 1 / Math.Cos(Math.PI / 32)
+    public const float Pi36th = 1.00382f; // 1 / Math.Cos(Math.PI / 36)
+    public const float Pi40th = 1.0030922f; // 1 / Math.Cos(Math.PI / 40)
+    public const float Pi48th = 1.0021457f; // 1 / Math.Cos(Math.PI / 48)
+    public const float Pi60th = 1.0013723f; // 1 / Math.Cos(Math.PI / 60)
+    public const float Pi64th = 1.001206f; // 1 / Math.Cos(Math.PI / 64)
 }

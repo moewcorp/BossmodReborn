@@ -78,6 +78,5 @@ class D061MagitekScorpionStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 247, NameID = 6037)]
 public class D061MagitekScorpion(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly Angle a90 = 89.977f.Degrees();
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-191, 72), 19.75f)], [new Rectangle(new(-210, 72), 20, 1, a90), new Rectangle(new(-172.2f, 72), 20, 1, a90)]);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-191, 72), 19.75f)], [new Rectangle(new(-210, 72), 1f, 20f), new Rectangle(new(-172.2f, 72), 1f, 20f)]);
 }

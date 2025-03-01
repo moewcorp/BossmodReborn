@@ -39,45 +39,72 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
     public readonly AOEShapeCircle Shape = new(radius);
     public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
     public readonly float CastEventToSpawn = castEventToSpawn;
-    private readonly List<(WPos pos, DateTime time)> _predictedByEvent = [];
-    private readonly List<(Actor caster, DateTime time)> _predictedByCast = [];
+    private readonly List<(WPos pos, DateTime time, ulong InstanceID)> _predicted = [];
 
-    public bool HaveCasters => _predictedByCast.Count > 0;
+    public bool HaveCasters => _predicted.Count > 0;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var p in _predictedByEvent)
-            yield return new(Shape, WPos.ClampToGrid(p.pos), default, p.time);
-        foreach (var p in _predictedByCast)
-            yield return new(Shape, p.caster.CastInfo!.LocXZ, default, p.time);
+        var aoes = new List<AOEInstance>();
+        var count = _predicted.Count;
+        if (count != 0)
+            for (var i = 0; i < count; ++i)
+            {
+                var p = _predicted[i];
+                aoes.Add(new(Shape, p.pos, default, p.time));
+            }
+
         foreach (var z in Sources(Module))
-            yield return new(Shape, WPos.ClampToGrid(z.Position));
+            aoes.Add(new(Shape, WPos.ClampToGrid(z.Position)));
+
+        return aoes;
     }
 
     public override void Update()
     {
-        if (_predictedByEvent.Count > 0)
+        if (_predicted.Count != 0)
             foreach (var s in Sources(Module))
-                _predictedByEvent.RemoveAll(p => p.pos.InCircle(s.Position, 6));
+            {
+                var count = _predicted.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (_predicted[i].pos.InCircle(s.Position, 6f))
+                    {
+                        _predicted.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _predictedByCast.Add((caster, Module.CastFinishAt(spell, CastEventToSpawn)));
+            _predicted.Add(new(spell.LocXZ, Module.CastFinishAt(spell, CastEventToSpawn), caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _predictedByCast.RemoveAll(p => p.caster == caster);
+        {
+            var count = _predicted.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_predicted[i].InstanceID == id)
+                {
+                    _predicted.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
         if (spell.Action == WatchedAction)
-            _predictedByEvent.Add((spell.TargetXZ, WorldState.FutureTime(CastEventToSpawn)));
+            _predicted.Add(new(spell.TargetXZ, WorldState.FutureTime(CastEventToSpawn), caster.InstanceID));
     }
 }
 

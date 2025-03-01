@@ -274,7 +274,7 @@ public class CastTowers(BossModule module, ActionID aid, float radius, int minSo
 }
 
 // for tower mechanics in open world since likely not everyone is in your party
-public class GenericTowersOpenWorld(BossModule module, ActionID aid = default, bool prioritizeInsufficient = false) : CastCounter(module, aid)
+public class GenericTowersOpenWorld(BossModule module, ActionID aid = default, bool prioritizeInsufficient = false, bool prioritizeEmpty = false) : CastCounter(module, aid)
 {
     public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, HashSet<Actor>? allowedSoakers = null, DateTime activation = default)
     {
@@ -315,6 +315,7 @@ public class GenericTowersOpenWorld(BossModule module, ActionID aid = default, b
 
     public readonly List<Tower> Towers = [];
     public readonly bool PrioritizeInsufficient = prioritizeInsufficient; // give priority to towers with more than 0 but less than min soakers
+    public readonly bool PrioritizeEmpty = prioritizeEmpty; // give priority to towers with 0 soakers
 
     // default tower styling
     public static void DrawTower(MiniArena arena, WPos pos, float radius, bool safe)
@@ -420,7 +421,16 @@ public class GenericTowersOpenWorld(BossModule module, ActionID aid = default, b
         }
         if (!hasForbiddenSoakers)
         {
-            if (PrioritizeInsufficient)
+            if (PrioritizeEmpty)
+            {
+                for (var i = 0; i < count; ++i)
+                {
+                    var t = Towers[i];
+                    if (t.NumInside(Module) == 0)
+                        forbiddenInverted.Add(ShapeDistance.InvertedCircle(t.Position, t.Radius));
+                }
+            }
+            else if (PrioritizeInsufficient) // less soakers than max
             {
                 List<Tower> insufficientTowers = new(count);
                 for (var i = 0; i < count; ++i)
@@ -510,7 +520,7 @@ public class GenericTowersOpenWorld(BossModule module, ActionID aid = default, b
     }
 }
 
-public class CastTowersOpenWorld(BossModule module, ActionID aid, float radius, int minSoakers = 1, int maxSoakers = 1) : GenericTowersOpenWorld(module, aid)
+public class CastTowersOpenWorld(BossModule module, ActionID aid, float radius, int minSoakers = 1, int maxSoakers = 1, bool prioritizeInsufficient = false, bool prioritizeEmpty = false) : GenericTowersOpenWorld(module, aid, prioritizeInsufficient, prioritizeEmpty)
 {
     public readonly float Radius = radius;
     public readonly int MinSoakers = minSoakers;

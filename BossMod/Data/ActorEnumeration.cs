@@ -100,24 +100,64 @@ public static class ActorEnumeration
     }
 
     // select actors in specified shape
-    public static IEnumerable<Actor> InShape(this IEnumerable<Actor> range, AOEShape shape, Actor origin)
+    public static List<Actor> InShape(this IEnumerable<Actor> range, AOEShape shape, Actor origin)
     {
-        return range.Where(actor => shape.Check(actor.Position, origin));
+        List<Actor> result = [];
+
+        foreach (var actor in range)
+        {
+            if (shape.Check(actor.Position, origin))
+            {
+                result.Add(actor);
+            }
+        }
+
+        return result;
     }
 
-    public static IEnumerable<(int, Actor)> InShape(this IEnumerable<(int, Actor)> range, AOEShape shape, Actor origin)
+    public static List<(int, Actor)> InShape(this IEnumerable<(int, Actor)> range, AOEShape shape, Actor origin)
     {
-        return range.WhereActor(actor => shape.Check(actor.Position, origin));
+        List<(int, Actor)> result = [];
+
+        foreach (var tuple in range)
+        {
+            if (shape.Check(tuple.Item2.Position, origin))
+            {
+                result.Add(tuple);
+            }
+        }
+
+        return result;
     }
 
-    public static IEnumerable<Actor> InShape(this IEnumerable<Actor> range, AOEShape shape, WPos origin, Angle rotation)
+    public static List<Actor> InShape(this IEnumerable<Actor> range, AOEShape shape, WPos origin, Angle rotation)
     {
-        return range.Where(actor => shape.Check(actor.Position, origin, rotation));
+        List<Actor> result = [];
+
+        foreach (var actor in range)
+        {
+            if (shape.Check(actor.Position, origin, rotation))
+            {
+                result.Add(actor);
+            }
+        }
+
+        return result;
     }
 
-    public static IEnumerable<(int, Actor)> InShape(this IEnumerable<(int, Actor)> range, AOEShape shape, WPos origin, Angle rotation)
+    public static List<(int, Actor)> InShape(this IEnumerable<(int, Actor)> range, AOEShape shape, WPos origin, Angle rotation)
     {
-        return range.WhereActor(actor => shape.Check(actor.Position, origin, rotation));
+        List<(int, Actor)> result = [];
+
+        foreach (var tuple in range)
+        {
+            if (shape.Check(tuple.Item2.Position, origin, rotation))
+            {
+                result.Add(tuple);
+            }
+        }
+
+        return result;
     }
 
     // select actors that have tether with specific ID

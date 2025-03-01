@@ -179,7 +179,7 @@ public class D041SerAdelphel(WorldState ws, Actor primary) : BossModule(ws, prim
 {
     protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.SerAdelphelBrightblade).Any(e => e.InCombat);
 
-    public static readonly ArenaBounds arena = new ArenaBoundsComplex([new Circle(new(0, -100), 19.5f)], [new Rectangle(new(0, -120), 20, 1.75f), new Rectangle(new(-21, -100), 20, 1.75f, 90.Degrees())]);
+    public static readonly ArenaBounds arena = new ArenaBoundsComplex([new Circle(new(default, -100), 19.5f)], [new Rectangle(new(0, -120), 20f, 1.75f), new Rectangle(new(-21, -100), 1.75f, 20f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

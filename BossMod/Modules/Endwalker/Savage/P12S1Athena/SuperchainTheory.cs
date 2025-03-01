@@ -66,7 +66,7 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                         hints.Add("GTFO from aoe!");
                     break;
                 case Shape.Spread:
-                    hints.Add("Spread!", Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shapeSpread, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)).Any());
+                    hints.Add("Spread!", Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shapeSpread, c.Origin.Position, Angle.FromDirection(actor.Position - c.Origin.Position)).Count != 0);
                     break;
                 case Shape.Pairs:
                     var actorIsSupport = actor.Class.IsSupport();

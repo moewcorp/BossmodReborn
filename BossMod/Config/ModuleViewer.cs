@@ -294,6 +294,10 @@ public sealed class ModuleViewer : IDisposable
                 groupId |= module.GroupID;
                 var duelName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} Duel";
                 return (new(duelName, groupId, groupId), new(module, Service.LuminaRow<DynamicEvent>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
+            case BossModuleInfo.GroupType.EurekaNM:
+                groupId |= module.GroupID;
+                var nmName = FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name);
+                return (new(nmName, groupId, groupId), new(module, Service.LuminaRow<Fate>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
             case BossModuleInfo.GroupType.GoldSaucer:
                 return (new("Gold saucer", groupId, groupId), new(module, $"{Service.LuminaRow<GoldSaucerTextData>(module.GroupID)?.Text}: {BNpcName(module.NameID)}", module.SortOrder));
             default:

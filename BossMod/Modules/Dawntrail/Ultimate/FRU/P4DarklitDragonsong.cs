@@ -173,7 +173,7 @@ class P4DarklitDragonsongPathOfLight(BossModule module) : Components.GenericBait
         {
             if (baitIndex < 0)
                 hints.Add("Stay closer to bait!");
-            else if (PlayersClippedBy(CurrentBaits[baitIndex]).Any())
+            else if (PlayersClippedBy(CurrentBaits[baitIndex]).Count != 0)
                 hints.Add("Bait cone away from raid!");
         }
 

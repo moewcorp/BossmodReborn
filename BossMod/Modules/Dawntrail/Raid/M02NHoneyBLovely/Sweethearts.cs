@@ -12,7 +12,7 @@ abstract class Sweethearts(BossModule module, uint oid, uint aid) : Components.G
         if (count == 0)
             return [];
         var aoes = new AOEInstance[count];
-        for (var i = 0; i < _hearts.Count; ++i)
+        for (var i = 0; i < count; ++i)
         {
             var h = _hearts[i];
             aoes[i] = new(capsule, h.Position, h.Rotation);

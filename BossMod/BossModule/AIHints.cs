@@ -89,6 +89,9 @@ public sealed class AIHints
     // AI will attempt to shield & mitigate
     public readonly List<(BitMask players, DateTime activation)> PredictedDamage = [];
 
+    // list of party members with cleansable debuffs that are dangerous enough to sacrifice a GCD to cleanse them, i.e. doom, throttle, some types of vuln debuff, etc
+    public BitMask ShouldCleanse;
+
     // maximal time we can spend casting before we need to move
     // this is used by the action queue to skip casts that we won't be able to finish and execute lower-priority fallback actions instead
     public float MaxCastTime = float.MaxValue;
@@ -122,6 +125,7 @@ public sealed class AIHints
         ImminentSpecialMode = default;
         MisdirectionThreshold = 15f.Degrees();
         PredictedDamage.Clear();
+        ShouldCleanse.Reset();
         MaxCastTime = float.MaxValue;
         ForceCancelCast = false;
         ActionsToExecute.Clear();
@@ -412,5 +416,20 @@ public sealed class AIHints
         };
     }
 
-    public WPos ClampToBounds(WPos position) => PathfindMapCenter + PathfindMapBounds.ClampToBounds(position - PathfindMapCenter);
+    public Func<WPos, float> PullTargetToLocation(Actor target, WPos destination, float destRadius = 2)
+    {
+        var enemy = FindEnemy(target);
+        if (enemy == null)
+            return _ => 0;
+
+        var adjRange = enemy.TankDistance + target.HitboxRadius + 0.5f;
+        var desiredToTarget = target.Position - destination;
+        var leewaySq = destRadius * destRadius;
+        if (desiredToTarget.LengthSq() > leewaySq)
+        {
+            var dest = destination - adjRange * desiredToTarget.Normalized();
+            return GoalSingleTarget(dest, PathfindMapBounds.MapResolution, 10f);
+        }
+        return _ => 0f;
+    }
 }

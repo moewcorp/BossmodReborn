@@ -5,14 +5,14 @@ public enum OID : uint
     Boss = 0x155C, // R2.5
     PrayerWall = 0x155E, // R5.0
     DarkCloud = 0x155D, // R1.0
-    WallHelperNW1 = 0x1EA07A, //R2.0 - 392.5, 89.161
-    WallHelperNE1 = 0x1EA076, //R2.0 - 407.5, 89.161
-    WallHelperNW2 = 0x1EA07B, //R2.0 - 392.5, 99.161
-    WallHelperNE2 = 0x1EA077, //R2.0 - 407.5, 99.161
-    WallHelperSW1 = 0x1EA07C, //R2.0 - 392.5, 109.161
-    WallHelperSE1 = 0x1EA078, //R2.0 - 407.5, 109.161
-    WallHelperSW2 = 0x1EA07D, //R2.0 - 392.5, 119.161
-    WallHelperSE2 = 0x1EA079, //R2.0 - 407.5, 119.161
+    WallHelperNW1 = 0x1EA07A, //R2.0
+    WallHelperNE1 = 0x1EA076, //R2.0
+    WallHelperNW2 = 0x1EA07B, //R2.0
+    WallHelperNE2 = 0x1EA077, //R2.0
+    WallHelperSW1 = 0x1EA07C, //R2.0
+    WallHelperSE1 = 0x1EA078, //R2.0
+    WallHelperSW2 = 0x1EA07D, //R2.0
+    WallHelperSE2 = 0x1EA079, //R2.0
     Helper = 0x1B2
 }
 
@@ -221,16 +221,16 @@ class BurningBright(BossModule module) : Components.BaitAwayCast(module, ActionI
     }
 }
 
-class RearHoof(BossModule module) : Components.SingleTargetInstant(module, ActionID.MakeSpell(AID.RearHoof), 4f)
+class RearHoof(BossModule module) : Components.SingleTargetInstant(module, ActionID.MakeSpell(AID.RearHoof))
 {
-    private bool start, firstKB;
+    private bool start = true, firstKB;
 
     public override void Update()
     {
-        if (!start)
+        if (start)
         {
-            Targets.Add((Raid.FindSlot(Module.PrimaryActor.TargetID), WorldState.FutureTime(6.1d))); // its assumed that the tank will aggro the boss first
-            start = true;
+            AddTankbuster(6.1d); // its assumed that the tank will aggro the boss first
+            start = false;
         }
     }
 
@@ -238,7 +238,7 @@ class RearHoof(BossModule module) : Components.SingleTargetInstant(module, Actio
     {
         if (!firstKB && spell.Action.ID == (uint)AID.GallopKB)
         {
-            Targets.Add((Raid.FindSlot(Module.PrimaryActor.TargetID), WorldState.FutureTime(7d)));
+            AddTankbuster(7d);
             firstKB = true;
         }
     }
@@ -246,13 +246,18 @@ class RearHoof(BossModule module) : Components.SingleTargetInstant(module, Actio
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.DarkCloud)
-            Targets.Add((Raid.FindSlot(actor.InstanceID), WorldState.FutureTime(4d)));
+            AddTankbuster(4d);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.RearHoof)
             Targets.Clear();
+    }
+
+    private void AddTankbuster(double delay)
+    {
+        Targets.Add((Raid.FindSlot(Module.PrimaryActor.TargetID), WorldState.FutureTime(delay)));
     }
 }
 

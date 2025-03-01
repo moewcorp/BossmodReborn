@@ -122,23 +122,24 @@ class D023TiomanStates : StateMachineBuilder
 public class D023Tioman(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(-104, -395);
-    private static readonly ArenaBoundsComplex arena = new([new Circle(ArenaCenter, 27.5f)], [new Rectangle(new(-112.465f, -368.177f), 20, 1.25f, 19.24f.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(ArenaCenter, 27.5f)], [new Rectangle(new(-112.465f, -368.177f), 20, 1.25f, -19.24f.Degrees())]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.LeftWingOfTragedy));
-        Arena.Actors(Enemies(OID.RightWingOfInjury));
+        Arena.Actors(Enemies((uint)OID.LeftWingOfTragedy));
+        Arena.Actors(Enemies((uint)OID.RightWingOfInjury));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.RightWingOfInjury or OID.LeftWingOfTragedy => 1,
+                (uint)OID.RightWingOfInjury or (uint)OID.LeftWingOfTragedy => 1,
                 _ => 0
             };
         }

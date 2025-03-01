@@ -11,7 +11,7 @@ public class RaidwideCast(BossModule module, ActionID aid, string hint = "Raidwi
 }
 
 // generic unavoidable raidwide, initiated by a custom condition and applied by an instant cast after a delay
-public class RaidwideInstant(BossModule module, ActionID aid, float delay, string hint = "Raidwide") : CastCounter(module, aid)
+public class RaidwideInstant(BossModule module, ActionID aid, float delay = 0f, string hint = "Raidwide") : CastCounter(module, aid)
 {
     public readonly float Delay = delay;
     public readonly string Hint = hint;
@@ -80,7 +80,7 @@ public class SingleTargetCast(BossModule module, ActionID aid, string hint = "Ta
 }
 
 // generic unavoidable single-target damage, initiated by a custom condition and applied by an instant cast after a delay
-public class SingleTargetInstant(BossModule module, ActionID aid, float delay, string hint = "Tankbuster") : CastCounter(module, aid)
+public class SingleTargetInstant(BossModule module, ActionID aid, float delay = 0f, string hint = "Tankbuster") : CastCounter(module, aid)
 {
     public readonly float Delay = delay; // delay from visual cast end to cast event
     public readonly string Hint = hint;

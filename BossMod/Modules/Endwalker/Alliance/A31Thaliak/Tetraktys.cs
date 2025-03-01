@@ -4,7 +4,7 @@ class TetraktysBorder(BossModule module) : Components.GenericAOEs(module)
 {
     public static readonly WPos NormalCenter = new(-945f, 945f);
     public static readonly ArenaBoundsSquare NormalBounds = new(24f);
-    private static readonly Polygon[] triangle = [new(new(-945, 948.71267f), 27.71281f, 3, 180.Degrees())];
+    private static readonly Polygon[] triangle = [new(new(-945, 948.71267f), 27.71281f, 3, 180f.Degrees())];
     private static readonly ArenaBoundsComplex TriangleBounds = new(triangle);
     private static readonly AOEShapeCustom transition = new([new Square(NormalCenter, 24f)], triangle);
     private AOEInstance? _aoe;

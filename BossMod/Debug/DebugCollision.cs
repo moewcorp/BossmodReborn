@@ -306,7 +306,8 @@ public sealed unsafe class DebugCollision() : IDisposable
                 {
                     var cast = (ColliderBox*)coll;
                     _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
-                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    var rotation = cast->Rotation;
+                    _tree.LeafNode2($"Rotation: {Vec3Str(rotation)} (Yaw: {(rotation.Y * Angle.RadToDeg).Degrees().Normalized()}°)");
                     _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
                     DrawMat4x3("World", ref cast->World);
                     DrawMat4x3("InvWorld", ref cast->InvWorld);
@@ -316,7 +317,8 @@ public sealed unsafe class DebugCollision() : IDisposable
                 {
                     var cast = (ColliderCylinder*)coll;
                     _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
-                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    var rotation = cast->Rotation;
+                    _tree.LeafNode2($"Rotation: {Vec3Str(rotation)} (Yaw: {(rotation.Y * Angle.RadToDeg).Degrees().Normalized()}°)");
                     _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
                     _tree.LeafNode2($"Radius: {cast->Radius:f3}");
                     DrawMat4x3("World", ref cast->World);
@@ -327,7 +329,8 @@ public sealed unsafe class DebugCollision() : IDisposable
                 {
                     var cast = (ColliderSphere*)coll;
                     _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
-                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    var rotation = cast->Rotation;
+                    _tree.LeafNode2($"Rotation: {Vec3Str(rotation)} (Yaw: {(rotation.Y * Angle.RadToDeg).Degrees().Normalized()}°)");
                     _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
                     DrawMat4x3("World", ref cast->World);
                     DrawMat4x3("InvWorld", ref cast->InvWorld);
@@ -339,7 +342,8 @@ public sealed unsafe class DebugCollision() : IDisposable
                     var cast = (ColliderPlane*)coll;
                     _tree.LeafNode2($"Normal: {cast->World.Row2 / cast->Scale.Z:f3}");
                     _tree.LeafNode2($"Translation: {Vec3Str(cast->Translation)}");
-                    _tree.LeafNode2($"Rotation: {Vec3Str(cast->Rotation)}");
+                    var rotation = cast->Rotation;
+                    _tree.LeafNode2($"Rotation: {Vec3Str(rotation)} (Yaw: {(rotation.Y * Angle.RadToDeg).Degrees().Normalized()}°)");
                     _tree.LeafNode2($"Scale: {Vec3Str(cast->Scale)}");
                     DrawMat4x3("World", ref cast->World);
                     DrawMat4x3("InvWorld", ref cast->InvWorld);
@@ -352,7 +356,8 @@ public sealed unsafe class DebugCollision() : IDisposable
     {
         DrawResource(coll->Resource);
         _tree.LeafNode2($"Translation: {Vec3Str(coll->Translation)}");
-        _tree.LeafNode2($"Rotation: {Vec3Str(coll->Rotation)}");
+        var rotation = coll->Rotation;
+        _tree.LeafNode2($"Rotation: {Vec3Str(rotation)} (Yaw: {(rotation.Y * Angle.RadToDeg).Degrees().Normalized()}°)");
         _tree.LeafNode2($"Scale: {Vec3Str(coll->Scale)}");
         DrawMat4x3("World", ref coll->World);
         DrawMat4x3("InvWorld", ref coll->InvWorld);
@@ -366,10 +371,10 @@ public sealed unsafe class DebugCollision() : IDisposable
             return;
 
         var mesh = (MeshPCB*)coll->Mesh;
-        DrawColliderMeshPCBNode("Root", mesh->RootNode, ref coll->World, coll->Collider.ObjectMaterialValue & coll->Collider.ObjectMaterialMask, ~coll->Collider.ObjectMaterialMask);
+        DrawColliderMeshPCBNode("Root", mesh->RootNode, ref coll->World, coll->Collider.ObjectMaterialValue & coll->Collider.ObjectMaterialMask, ~coll->Collider.ObjectMaterialMask, coll);
     }
 
-    private void DrawColliderMeshPCBNode(string tag, MeshPCB.FileNode* node, ref Matrix4x3 world, ulong objMatId, ulong objMatInvMask)
+    private void DrawColliderMeshPCBNode(string tag, MeshPCB.FileNode* node, ref Matrix4x3 world, ulong objMatId, ulong objMatInvMask, ColliderMesh* coll)
     {
         if (node == null)
             return;
@@ -381,18 +386,57 @@ public sealed unsafe class DebugCollision() : IDisposable
             return;
 
         _tree.LeafNode2($"Header: {node->Header:X16}");
+
         if (_tree.LeafNode2($"AABB: {AABBStr(node->LocalBounds)}").SelectedOrHovered)
             VisualizeOBB(ref node->LocalBounds, ref world, Colors.CollisionColor1);
 
+        using var nv = _tree.Node2($"Vertices: {node->NumVertsRaw}+{node->NumVertsCompressed}", node->NumVertsRaw + node->NumVertsCompressed == 0);
+        if (nv.Opened)
         {
-            using var nv = _tree.Node2($"Vertices: {node->NumVertsRaw}+{node->NumVertsCompressed}", node->NumVertsRaw + node->NumVertsCompressed == 0);
-            if (nv.Opened)
+            // Collect all vertices
+            Vector3 translation = coll->Translation;
+            Vector3 rotation = coll->Rotation;
+
+            List<(Vector3 vertex, int index, char type)> vertices = [];
+
+            for (var i = 0; i < node->NumVertsRaw + node->NumVertsCompressed; ++i)
             {
-                for (int i = 0; i < node->NumVertsRaw + node->NumVertsCompressed; ++i)
+                var v = node->Vertex(i);
+                var transformedVertex = ApplyTransformation(v, translation, rotation);
+                vertices.Add((transformedVertex, i, i < node->NumVertsRaw ? 'r' : 'c'));
+            }
+
+            var playerPos = Service.ClientState.LocalPlayer!.Position;
+            // Sort vertices by distance to player position, ignore height
+
+            vertices.Sort((a, b) =>
+            {
+                var distA = (playerPos.X - a.vertex.X) * (playerPos.X - a.vertex.X) +
+                              (playerPos.Z - a.vertex.Z) * (playerPos.Z - a.vertex.Z);
+
+                var distB = (playerPos.X - b.vertex.X) * (playerPos.X - b.vertex.X) +
+                              (playerPos.Z - b.vertex.Z) * (playerPos.Z - b.vertex.Z);
+
+                return distA.CompareTo(distB);
+            });
+
+            // Render vertices in sorted order
+            foreach (var (vertex, index, type) in vertices)
+            {
+                var vertexStr = $"new({vertex.X.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}f, {vertex.Z.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}f)";
+                using var node2 = _tree.Node2($"[{index}] ({type}): {Vec3Str(vertex)}");
+                if (node2.SelectedOrHovered)
                 {
-                    var v = node->Vertex(i);
-                    if (_tree.LeafNode2($"[{i}] ({(i < node->NumVertsRaw ? 'r' : 'c')}): {Vec3Str(v)}").SelectedOrHovered)
-                        VisualizeVertex(world.TransformCoordinate(v), Colors.CollisionColor2);
+                    VisualizeVertex(vertex, Colors.CollisionColor2);
+                }
+
+                if (ImGui.BeginPopupContextItem())
+                {
+                    if (ImGui.MenuItem("Copy to Clipboard"))
+                    {
+                        ImGui.SetClipboardText(vertexStr);
+                    }
+                    ImGui.EndPopup();
                 }
             }
         }
@@ -406,8 +450,8 @@ public sealed unsafe class DebugCollision() : IDisposable
                         VisualizeTriangle(node, ref prim, ref world, Colors.CollisionColor2);
             }
         }
-        DrawColliderMeshPCBNode($"Child 1 (+{node->Child1Offset})", node->Child1, ref world, objMatId, objMatId);
-        DrawColliderMeshPCBNode($"Child 2 (+{node->Child2Offset})", node->Child2, ref world, objMatId, objMatId);
+        DrawColliderMeshPCBNode($"Child 1 (+{node->Child1Offset})", node->Child1, ref world, objMatId, objMatId, coll);
+        DrawColliderMeshPCBNode($"Child 2 (+{node->Child2Offset})", node->Child2, ref world, objMatId, objMatId, coll);
     }
 
     private void DrawResource(Resource* res)
@@ -614,5 +658,15 @@ public sealed unsafe class DebugCollision() : IDisposable
         var globalVisit = (coll->VisibilityFlags & 2) != 0;
         if (ImGui.Checkbox("Flag: global visit", ref globalVisit))
             coll->VisibilityFlags ^= 2;
+    }
+
+    private static Vector3 ApplyTransformation(Vector3 vertex, Vector3 translation, Vector3 rotation)
+    {
+        var rotX = rotation.X;
+        var rotY = rotation.Y;
+        var rotZ = rotation.Z;
+        var rotMatrix = Matrix4x4.CreateRotationX(rotX) * Matrix4x4.CreateRotationY(rotY) * Matrix4x4.CreateRotationZ(rotZ);
+        var rotatedVertex = Vector3.Transform(vertex, rotMatrix);
+        return rotatedVertex + translation;
     }
 }

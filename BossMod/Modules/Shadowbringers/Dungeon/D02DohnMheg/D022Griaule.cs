@@ -24,15 +24,15 @@ class FeedingTime(BossModule module) : Components.InterceptTether(module, Action
     private DateTime _activation;
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.PaintedSapling)
-            _activation = WorldState.FutureTime(10.9f);
+        if (actor.OID == (uint)OID.PaintedSapling)
+            _activation = WorldState.FutureTime(10.9d);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Active)
         {
-            var source = Module.Enemies(OID.PaintedSapling)[slot];
+            var source = Module.Enemies((uint)OID.PaintedSapling)[slot];
             var target = Module.PrimaryActor;
             hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), _activation);
         }
@@ -48,13 +48,13 @@ class Swinge(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Swinge)
+        if (spell.Action.ID == (uint)AID.Swinge)
             _aoe = new(new AOEShapeCone(50f + caster.HitboxRadius, 30.Degrees()), caster.Position, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Swinge)
+        if (spell.Action.ID == (uint)AID.Swinge)
             _aoe = null;
     }
 }
@@ -73,17 +73,18 @@ class D022GriauleStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8143)]
 public class D022Griaule(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(7.156f, -339.132f), 24.5f * CosPI.Pi32th, 32)], [new Rectangle(new(7, -363.5f), 20f, 1.1f), new Rectangle(new(7, -315), 20f, 0.75f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(7.156f, -339.132f), 24.5f * CosPI.Pi32th, 32)], [new Rectangle(new(7f, -363.5f), 20f, 1.1f), new Rectangle(new(7f, -315), 20f, 0.75f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.PaintedRoot));
+        Arena.Actors(Enemies((uint)OID.PaintedRoot));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch

@@ -36,11 +36,11 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(2.5f);
     private bool active;
     private bool addedCircles;
-    private readonly HashSet<Actor> chests = [.. module.Enemies(OID.Helper).Where(x => x.NameID == 6274)];
-    private readonly HashSet<Circle> closedChests = [];
-    private readonly HashSet<Circle> openChests = [];
+    private readonly List<Actor> chests = [.. module.Enemies((uint)OID.Helper).Where(x => x.NameID == 6274)];
+    private readonly List<Circle> closedChests = [];
+    private readonly List<Circle> openChests = [];
 
-    public static bool IsOld(Actor actor) => actor.FindStatus(SID.Old) != null;
+    public static bool IsOld(Actor actor) => actor.FindStatus((uint)SID.Old) != null;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -61,31 +61,31 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        var chest = chests.FirstOrDefault(x => x.Position.AlmostEqual(actor.Position, 5));
+        var chest = chests.FirstOrDefault(x => x.Position.AlmostEqual(actor.Position, 5f));
         if (chest != null)
         {
             if (state == 0x00040008)
             {
-                closedChests.RemoveWhere(x => x.Center == chest.Position);
+                closedChests.RemoveAll(x => x.Center == chest.Position);
                 openChests.Add(new(chest.Position, 2.5f));
             }
             else if (state == 0x00100020)
             {
                 closedChests.Add(new(chest.Position, 2.5f));
-                openChests.RemoveWhere(x => x.Center == chest.Position);
+                openChests.RemoveAll(x => x.Center == chest.Position);
             }
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Seduce)
+        if (spell.Action.ID == (uint)AID.Seduce)
             active = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Seduce)
+        if (spell.Action.ID == (uint)AID.Seduce)
             active = false;
     }
 
@@ -101,59 +101,57 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
 class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(13);
-    private AOEInstance _aoe;
+    public AOEInstance? AOE;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_aoe != default)
-            yield return _aoe with { Origin = Module.PrimaryActor.Position };
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Seduce)
-            _aoe = new(circle, default, default, Module.CastFinishAt(spell, 8));
+        if (spell.Action.ID == (uint)AID.Seduce)
+            AOE = new(circle, D022RubyPrincess.ArenaCenter, default, Module.CastFinishAt(spell, 8f));
+        else if (spell.Action.ID == (uint)AID.CoriolisKick)
+            AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.CoriolisKick)
-            _aoe = default;
+        if (spell.Action.ID == (uint)AID.CoriolisKick)
+            AOE = null;
     }
 }
 
-class AbyssalVolcano(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalVolcano), 7);
+class AbyssalVolcano(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalVolcano), 7f);
 
-class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4), ActionID.MakeSpell(AID.GeothermalFlatulenceFirst), ActionID.MakeSpell(AID.GeothermalFlatulenceRest), 3, 0.8f, 10, true, (uint)IconID.ChasingAOE)
+class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4f), ActionID.MakeSpell(AID.GeothermalFlatulenceFirst), ActionID.MakeSpell(AID.GeothermalFlatulenceRest), 3, 0.8f, 10, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (Actors.Contains(actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 18), Activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 18f), Activation);
     }
 }
 
-class Tornadogenesis(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Tornadogenesis), new AOEShapeCone(9.6f, 60.Degrees()))
+class Tornadogenesis(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Tornadogenesis), new AOEShapeCone(9.6f, 60f.Degrees()))
 {
     private readonly SeduceCoriolisKick _aoe = module.FindComponent<SeduceCoriolisKick>()!;
     private readonly GeothermalFlatulence _aoes = module.FindComponent<GeothermalFlatulence>()!;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_aoe.ActiveAOEs(slot, actor).Any() && _aoes.Chasers.Count == 0)
+        if (_aoe.AOE == null && _aoes.Chasers.Count == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_aoe.ActiveAOEs(slot, actor).Any() && _aoes.Chasers.Count == 0)
+        if (_aoe.AOE == null && _aoes.Chasers.Count == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!_aoe.ActiveAOEs(pcSlot, pc).Any() && _aoes.Chasers.Count == 0)
+        if (_aoe.AOE == null && _aoes.Chasers.Count == 0)
             base.DrawArenaForeground(pcSlot, pc);
     }
 }
@@ -174,5 +172,6 @@ class D022RubyPrincessStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 235, NameID = 6241)]
 public class D022RubyPrincess(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-0.046f, -208.362f), 20)], [new Rectangle(new(-0.4f, -187.4f), 20, 2.5f), new Rectangle(new(-20, -208), 20, 1.5f, 90.Degrees())]);
+    public static readonly WPos ArenaCenter = new(-0.046f, -208.362f);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(ArenaCenter, 20)], [new Rectangle(new(-0.4f, -187.4f), 20, 2.5f), new Rectangle(new(-20, -208), 1.5f, 20f)]);
 }

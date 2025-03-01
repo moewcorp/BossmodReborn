@@ -2,23 +2,37 @@
 
 public enum OID : uint
 {
-    Boss = 0x2765, // R5.000, x1
-    FaithlessGuard = 0x2767, // R2.000, x0 (spawn during fight)
-    LifelessSlave1 = 0x2766, // R2.700, x1
-    LifelessSlave2 = 0x2785, // R2.700, x1
-    LifelessSlave3 = 0x2784, // R2.700, x1
+    Boss = 0x2765, // R5.0
+    FaithlessGuard = 0x2767, // R2.0
+    LifelessSlave1 = 0x2766, // R2.7
+    LifelessSlave2 = 0x2785, // R2.7
+    LifelessSlave3 = 0x2784, // R2.7
+    HydatosDelphyne = 0x26C5, // R1.2
+    DarkGargoyle = 0x26C6, // R2.3-4.14
+    Helper = 0x2783
 }
 
 public enum AID : uint
 {
+    AutoAttack1 = 15496, // Boss->player, no cast, single-target
+    AutoAttack2 = 15234, // HydatosDelphyne->player, no cast, single-target
+    AutoAttack3 = 15235, // DarkGargoyle->player, no cast, single-target
+
+    BuffSlaves = 16171, // Boss->self, no cast, range 50 circle, applies Magic Infusion buff to slaves
     SickleStrike = 15466, // Boss->player, 3.5s cast, single-target
     PetrifactionBoss = 15469, // Boss->self, 450 circle
     AbyssalReaper = 15468, // Boss->self, 4.0s cast, range 18 circle
     PetrifactionAdds = 15475, // LifelessSlave1/LifelessSlave2/LifelessSlave3->self, 4.0s cast, range 50 circle
     CircleOfFlames = 15472, // FaithlessGuard->location, 3.0s cast, range 5 circle
     TailSlap = 15471, // FaithlessGuard->self, 3.0s cast, range 12 120-degree cone
-    Petrattraction = 15473, // FaithlessGuard->2783, 3.0s cast, single-target
-    CircleBlade = 15470, // FaithlessGuard->self, 3.0s cast, range 7 circle
+    PetrattractionVisual = 15473, // FaithlessGuard->Helper, 3.0s cast, single-target
+    Petrattraction = 15476, // Helper->self, no cast, range 50 circle, pull 50, between hitboxes
+    GrimFate = 15451, // DarkGargoyle->self, 3.0s cast, range 8 120-degree cone
+    Desolation = 15453, // DarkGargoyle->self, 3.0s cast, range 12 width 8 rect
+
+    CircleBlade1 = 15470, // FaithlessGuard->self, 3.0s cast, range 7 circle
+    CircleBlade2 = 15448, // HydatosDelphyne->self, 3.0s cast, range 7 circle
+    FireToss = 15449, // HydatosDelphyne->players, 3.0s cast, range 5 circle
 }
 
 class SickleStrike(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.SickleStrike));
@@ -27,9 +41,33 @@ class PetrifactionAdds(BossModule module) : Components.CastGaze(module, ActionID
 class AbyssalReaper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalReaper), 18f);
 class CircleOfFlames(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfFlames), 5f);
 class TailSlap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSlap), new AOEShapeCone(12f, 60f.Degrees()));
-class Petrattraction(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Petrattraction), 50f, kind: Kind.TowardsOrigin);
-class CircleBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleBlade), 7);
-class Adds(BossModule module) : Components.Adds(module, (uint)OID.FaithlessGuard);
+class GrimFate(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrimFate), new AOEShapeCone(8f, 60f.Degrees()));
+class Desolation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Desolation), new AOEShapeRect(12f, 4f));
+
+class Petrattraction(BossModule module) : Components.Knockback(module)
+{
+    public Source? _source;
+
+    private static readonly AOEShapeCircle circle = new(50f);
+
+    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.PetrattractionVisual)
+            _source = new(caster.Position, 50f, Module.CastFinishAt(spell, 1.4f), circle, Kind: Kind.TowardsOrigin);
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.Petrattraction)
+            _source = null;
+    }
+}
+
+class CircleBlade1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleBlade1), 7);
+class CircleBlade2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleBlade2), 7);
+class FireToss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireToss), 5f);
 
 class CetoStates : StateMachineBuilder
 {
@@ -43,11 +81,37 @@ class CetoStates : StateMachineBuilder
             .ActivateOnEnter<CircleOfFlames>()
             .ActivateOnEnter<TailSlap>()
             .ActivateOnEnter<Petrattraction>()
-            .ActivateOnEnter<CircleBlade>()
-            .ActivateOnEnter<Adds>();
+            .ActivateOnEnter<CircleBlade1>()
+            .ActivateOnEnter<CircleBlade2>()
+            .ActivateOnEnter<GrimFate>()
+            .ActivateOnEnter<Desolation>()
+            .ActivateOnEnter<FireToss>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 639, NameID = 7955, Contributors = "xan")]
-public class Ceto(WorldState ws, Actor primary) : BossModule(ws, primary, new(747.8959f, -878.8765f), new ArenaBoundsCircle(80f, MapResolution: 1));
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "xan, Malediktus", GroupType = BossModuleInfo.GroupType.EurekaNM, GroupID = 639, NameID = 1421, SortOrder = 9)]
+public class Ceto(WorldState ws, Actor primary) : BossModule(ws, primary, new(747.8959f, -878.8765f), SharedBounds.Circle)
+{
+    private static readonly uint[] trash = [(uint)OID.FaithlessGuard, (uint)OID.HydatosDelphyne, (uint)OID.DarkGargoyle];
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(trash));
+    }
 
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
+            {
+                (uint)OID.Boss => 1,
+                (uint)OID.FaithlessGuard => AIHints.Enemy.PriorityPointless,
+                _ when e.Actor.InCombat => 0,
+                _ => AIHints.Enemy.PriorityUndesirable
+            };
+        }
+    }
+}

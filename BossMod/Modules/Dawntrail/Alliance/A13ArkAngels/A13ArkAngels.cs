@@ -61,7 +61,8 @@ public class A13ArkAngels(WorldState ws, Actor primary) : BossModule(ws, primary
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             if (e.Actor.FindStatus((uint)SID.Invincibility) != null)

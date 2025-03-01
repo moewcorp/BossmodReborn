@@ -75,38 +75,80 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
 
     public WPos BaitOrigin(Bait bait) => (CenterAtTarget ? bait.Target : bait.Source).Position;
     public bool IsClippedBy(Actor actor, Bait bait) => bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation);
-    public IEnumerable<Actor> PlayersClippedBy(Bait bait) => Raid.WithoutSlot().Exclude(bait.Target).InShape(bait.Shape, BaitOrigin(bait), bait.Rotation);
+    public List<Actor> PlayersClippedBy(Bait bait)
+    {
+        var actors = Raid.WithoutSlot();
+        var len = actors.Length;
+        List<Actor> result = new(len);
+        for (var i = 0; i < len; ++i)
+        {
+            var actor = actors[i];
+            if (actor != bait.Target && bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation))
+                result.Add(actor);
+        }
+
+        return result;
+    }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (!EnableHints)
             return;
-
+        var count = ActiveBaits.Count;
+        if (count == 0)
+            return;
         if (ForbiddenPlayers[slot])
         {
-            if (ActiveBaitsOn(actor).Count != 0)
+            var activeBaits = ActiveBaitsOn(actor);
+            if (activeBaits.Count != 0)
                 hints.Add("Avoid baiting!");
         }
         else
         {
-            if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Any()))
-                hints.Add(BaitAwayHint);
+            var activeBaits = ActiveBaitsOn(actor);
+            for (var i = 0; i < activeBaits.Count; ++i)
+            {
+                var clippedPlayers = PlayersClippedBy(activeBaits[i]);
+                if (clippedPlayers.Count != 0)
+                {
+                    hints.Add(BaitAwayHint);
+                    break;
+                }
+            }
         }
 
-        if (!IgnoreOtherBaits && ActiveBaitsNotOn(actor).Any(b => IsClippedBy(actor, b)))
-            hints.Add("GTFO from baited aoe!");
+        if (!IgnoreOtherBaits)
+        {
+            var otherActiveBaits = ActiveBaitsNotOn(actor);
+            for (var i = 0; i < otherActiveBaits.Count; ++i)
+            {
+                if (IsClippedBy(actor, otherActiveBaits[i]))
+                {
+                    hints.Add("GTFO from baited aoe!");
+                    break;
+                }
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (ActiveBaits.Count == 0)
             return;
+        var activeBaitsNotOnActor = ActiveBaitsNotOn(actor);
+        var activeBaitsOnActor = ActiveBaitsOn(actor);
+        var countActiveBaitsNotOnActor = activeBaitsNotOnActor.Count;
+        var countActiveBaitsOnActor = activeBaitsOnActor.Count;
 
-        foreach (var bait in ActiveBaitsNotOn(actor))
+        for (var i = 0; i < countActiveBaitsNotOnActor; ++i)
+        {
+            var bait = activeBaitsNotOnActor[i];
             hints.AddForbiddenZone(bait.Shape, BaitOrigin(bait), bait.Rotation, bait.Activation);
-
-        foreach (var bait in ActiveBaitsOn(actor))
-            AddTargetSpecificHints(actor, bait, hints);
+        }
+        for (var i = 0; i < countActiveBaitsOnActor; ++i)
+        {
+            AddTargetSpecificHints(actor, activeBaitsOnActor[i], hints);
+        }
     }
 
     private void AddTargetSpecificHints(Actor actor, Bait bait, AIHints hints)
@@ -334,7 +376,7 @@ public class BaitAwayChargeTether(BossModule module, float halfWidth, float acti
         if (ActiveBaits.Count == 0)
             return;
         base.AddHints(slot, actor, hints);
-        if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Any()))
+        if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Count != 0))
             hints.Add(BaitAwayHint);
     }
 }

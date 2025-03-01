@@ -226,6 +226,6 @@ public class D043Zander(WorldState ws, Actor primary) : BossModule(ws, primary, 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.BossP2));
+        Arena.Actors(Enemies((uint)OID.BossP2));
     }
 }

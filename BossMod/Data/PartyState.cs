@@ -135,7 +135,8 @@ public sealed class PartyState
     // find a slot index containing specified player (by name); returns -1 if not found
     public int FindSlot(ReadOnlySpan<char> name, StringComparison cmp = StringComparison.CurrentCultureIgnoreCase)
     {
-        for (var i = 0; i < Members.Length; ++i)
+        var length = Members.Length;
+        for (var i = 0; i < length; ++i)
             if (name.Equals(Members[i].Name, cmp))
                 return i;
         return -1;

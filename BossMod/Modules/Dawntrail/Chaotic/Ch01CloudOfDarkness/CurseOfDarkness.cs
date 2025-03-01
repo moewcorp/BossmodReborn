@@ -13,8 +13,11 @@ class DarkEnergyParticleBeam(BossModule module) : Components.GenericBaitAway(mod
         CurrentBaits.Clear();
         var deadline = WorldState.FutureTime(7d);
         foreach (var (i, p) in Raid.WithSlot(false, false, true))
-            if (_activation[i] != default && _activation[i] < deadline)
-                CurrentBaits.Add(new(p, p, _shape, _activation[i]));
+        {
+            ref var activation = ref _activation[i];
+            if (activation != default && activation < deadline)
+                CurrentBaits.Add(new(p, p, _shape, activation));
+        }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)

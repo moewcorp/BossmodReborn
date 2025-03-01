@@ -112,7 +112,7 @@ class BouncingBomb(BossModule module) : Components.GenericAOEs(module)
         {
             var aoe = _aoes[i];
             if ((aoe.Activation - firstact).TotalSeconds < 1d)
-                aoes[i] = (lastact - aoe.Activation).TotalSeconds > 1 ? aoe with { Color = Colors.Danger } : aoe;
+                aoes[i] = (lastact - aoe.Activation).TotalSeconds > 1d ? aoe with { Color = Colors.Danger } : aoe;
             else
                 aoes[i] = aoe with { Risky = false };
         }

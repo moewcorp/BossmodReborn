@@ -21,24 +21,40 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        // future AOEs
-        foreach (var s in Sequences)
-        {
-            var num = Math.Min(s.NumRemainingCasts, s.MaxShownAOEs);
-            var rot = s.Rotation;
-            var time = s.NextActivation > WorldState.CurrentTime ? s.NextActivation : WorldState.CurrentTime;
-            for (var i = 1; i < num; ++i)
-            {
-                rot += s.Increment;
-                time = time.AddSeconds(s.SecondsBetweenActivations);
-                yield return new(s.Shape, s.Origin, rot, time, FutureColor);
-            }
-        }
+        var count = Sequences.Count;
+        if (count == 0)
+            return [];
 
-        // imminent AOEs
-        foreach (var s in Sequences)
-            if (s.NumRemainingCasts > 0)
-                yield return new(s.Shape, s.Origin, s.Rotation, s.NextActivation, ImminentColor);
+        var aoes = new List<AOEInstance>();
+        var curTime = WorldState.CurrentTime;
+        for (var j = 0; j < count; ++j)
+        {
+            var s = Sequences[j];
+            var remaining = s.NumRemainingCasts;
+            var num = Math.Min(remaining, s.MaxShownAOEs);
+            var rot = s.Rotation;
+            var nextAct = s.NextActivation;
+            var time = nextAct > curTime ? nextAct : curTime;
+            var shape = s.Shape;
+            var origin = s.Origin;
+            // future AOEs
+            if (num > 0)
+            {
+                var timeBetween = s.SecondsBetweenActivations;
+                var inc = s.Increment;
+
+                for (var i = 1; i < num; ++i)
+                {
+                    rot += inc;
+                    time = time.AddSeconds(timeBetween);
+                    aoes.Add(new(shape, origin, rot, time, FutureColor));
+                }
+            }
+            // imminent AOEs
+            if (remaining != 0)
+                aoes.Add(new(shape, origin, s.Rotation, nextAct, remaining > 1 ? ImminentColor : FutureColor));
+        }
+        return aoes;
     }
 
     public void AdvanceSequence(int index, DateTime currentTime, bool removeWhenFinished = true)
@@ -64,10 +80,16 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
     // return false if sequence was not found
     public bool AdvanceSequence(WPos origin, Angle rotation, DateTime currentTime, bool removeWhenFinished = true)
     {
-        var index = Sequences.FindIndex(s => s.Origin.AlmostEqual(origin, 1) && s.Rotation.AlmostEqual(rotation, 0.05f));
-        if (index < 0)
-            return false;
-        AdvanceSequence(index, currentTime, removeWhenFinished);
-        return true;
+        var count = Sequences.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var s = Sequences[i];
+            if (s.Origin.AlmostEqual(origin, 1f) && s.Rotation.AlmostEqual(rotation, 0.05f))
+            {
+                AdvanceSequence(i, currentTime, removeWhenFinished);
+                return true;
+            }
+        }
+        return false;
     }
 }

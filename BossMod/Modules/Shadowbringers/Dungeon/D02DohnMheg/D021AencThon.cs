@@ -35,44 +35,21 @@ class LaughingLeapStack(BossModule module) : Components.StackWithIcon(module, (u
 class Geyser(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(6f);
-
-    private static readonly Dictionary<uint, Dictionary<Angle, WPos[]>> GeyserPositions = new()
-    {
-        {
-            (uint)OID.GeyserHelper1, new Dictionary<Angle, WPos[]>
-            {
-                { 0.Degrees(), [new(0f, 14.16f), new(-9f, 45.16f)] },
-                { 180.Degrees(), [new(9f, 15.16f), new(0f, 46.16f)] },
-                { -90.Degrees(), [new(-15f, 21.16f), new(16f, 30.16f)] },
-                { 90.Degrees(), [new(-16f, 30.16f), new(15f, 39.16f)] }
-            }
-        },
-        {
-            (uint)OID.GeyserHelper2, new Dictionary<Angle, WPos[]>
-            {
-                { 0.Degrees(), [new(0f, 35.16f), new(-9f, 15.16f), new(7f, 23.16f)] },
-                { 90.Degrees(),  [new(-15f, 39.16f), new(-7f, 23.16f), new(5f, 30.16f)] },
-                { 180.Degrees(), [new(9f, 45.16f), new(-7f, 37.16f), new(0f, 25.16f)] },
-                { -90.Degrees(), [new(7f, 37.16f), new(15f, 21.16f), new(-5f, 30.16f)] }
-            }
-        }
-    };
-
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(14);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
         var act0 = _aoes[0].Activation;
+        var compareFL = (_aoes[count - 1].Activation - act0).TotalSeconds > 1d;
+        var aoes = new AOEInstance[count];
         var color = Colors.Danger;
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
-            var act = aoe.Activation;
-            aoes[i] = aoe with { Color = act != _aoes[count - 1].Activation ? color : 0, Risky = act == act0 };
+            aoes[i] = (aoe.Activation - act0).TotalSeconds < 1d ? aoe with { Color = compareFL ? color : 0 } : aoe with { Risky = false };
         }
         return aoes;
     }
@@ -81,16 +58,37 @@ class Geyser(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00100020)
         {
-            if (GeyserPositions.TryGetValue(actor.OID, out var positionsByRotation))
+            var rotation = (int)actor.Rotation.Deg;
+            if (actor.OID == (uint)OID.GeyserHelper1)
             {
-                var activation = WorldState.FutureTime(5.1f);
-                foreach (var (rotation, positions) in positionsByRotation)
-                    if (actor.Rotation.AlmostEqual(rotation, Angle.DegToRad))
-                    {
-                        for (var i = 0; i < positions.Length; ++i)
-                            _aoes.Add(new(circle, WPos.ClampToGrid(positions[i]), default, activation));
-                        break;
-                    }
+                WPos[] positions = rotation switch
+                {
+                    0 => [new(default, 14.16f), new(-9f, 45.16f)],
+                    -180 => [new(9f, 15.16f), new(default, 46.16f)],
+                    -90 => [new(-15f, 21.16f), new(16f, 30.16f)],
+                    89 => [new(-16f, 30.16f), new(15f, 39.16f)],
+                    _ => []
+                };
+                AddAOEs(positions);
+            }
+            else if (actor.OID == (uint)OID.GeyserHelper2)
+            {
+                WPos[] positions = rotation switch
+                {
+                    0 => [new(default, 35.16f), new(-9f, 15.16f), new(7f, 23.16f)],
+                    -180 => [new(-15f, 39.16f), new(-7f, 23.16f), new(5f, 30.16f)],
+                    -90 => [new(9f, 45.16f), new(-7f, 37.16f), new(default, 25.16f)],
+                    89 => [new(7f, 37.16f), new(15f, 21.16f), new(-5f, 30.16f)],
+                    _ => []
+                };
+                AddAOEs(positions);
+            }
+            void AddAOEs(WPos[] positions)
+            {
+                var len = positions.Length;
+                var activation = WorldState.FutureTime(5.1d);
+                for (var i = 0; i < len; ++i)
+                    _aoes.Add(new(circle, WPos.ClampToGrid(positions[i]), default, activation));
             }
         }
     }
@@ -119,5 +117,5 @@ class D021AencThonStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8141)]
 public class D021AencThon(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(0f, 30f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(0f, 50f), 20f, 1f), new Rectangle(new(0f, 10f), 20f, 1.4f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(default, 30f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(default, 50f), 20f, 1f), new Rectangle(new(default, 10f), 20f, 1.4f)]);
 }

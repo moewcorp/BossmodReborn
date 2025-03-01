@@ -77,7 +77,7 @@ abstract class P6HallowedPlume(BossModule module) : Components.GenericBaitAway(m
         {
             if (shouldBait)
             {
-                if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Any()))
+                if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Count != 0))
                     hints.Add("Bait away from raid!");
             }
             else

@@ -66,13 +66,13 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Transporting)
+        if (status.ID == (uint)SID.Transporting)
             transporting.Set(Raid.FindSlot(actor.InstanceID));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Transporting)
+        if (status.ID == (uint)SID.Transporting)
             transporting[Raid.FindSlot(actor.InstanceID)] = default;
     }
 
@@ -98,17 +98,17 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.DirectSeeding)
+        if (spell.Action.ID == (uint)AID.DirectSeeding)
             ++NumCasts;
-        else if ((AID)spell.Action.ID == AID.IrefulWind)
+        else if (spell.Action.ID == (uint)AID.IrefulWind)
         {
-            var knockbackDirection = new Angle(MathF.Round(spell.Rotation.Deg / 90) * 90) * Angle.DegToRad;
+            var knockbackDirection = new Angle(MathF.Round(spell.Rotation.Deg / 90f) * 90f) * Angle.DegToRad;
             var offset = 10 * knockbackDirection.ToDirection();
             var tileList = tiles.ToList();
             var newTiles = new List<Square>(10);
             for (var i = 0; i < tileList.Count; ++i)
                 tileList[i] = new(tileList[i].Center - offset, tileList[i].HalfSize);
-            foreach (var t in tileList.Where(x => (caster.Position - x.Center).LengthSq() > 625))
+            foreach (var t in tileList.Where(x => (caster.Position - x.Center).LengthSq() > 625f))
                 newTiles.Add(new(t.Center + offset, t.HalfSize));
             tileList.AddRange(newTiles);
             tiles = [.. tileList];
@@ -133,18 +133,18 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
             transportingCheckStartTimes.Remove(actor);
     }
 
-    private IEnumerable<Actor> GetClippedSeeds(AOEInstance shape)
+    private List<Actor> GetClippedSeeds(AOEInstance shape)
         => Module.Enemies(D092LeananSith.Seeds).Where(x => x.IsTargetable).InShape(shape.Shape, shape.Origin, default);
 
     private void HandleNonTransportingActor(Actor actor, AIHints hints, IEnumerable<Actor> clippedSeeds, Actor closestSeed)
     {
         var forbidden = new List<Func<WPos, float>>(4);
         foreach (var seed in clippedSeeds)
-            forbidden.Add(ShapeDistance.InvertedCircle(seed.Position, 3));
+            forbidden.Add(ShapeDistance.InvertedCircle(seed.Position, 3f));
         var distance = (actor.Position - closestSeed.Position).LengthSq();
-        if (forbidden.Count > 0 && distance > 9)
+        if (forbidden.Count > 0 && distance > 9f)
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
-        else if (distance < 9)
+        else if (distance < 9f)
             hints.InteractWithTarget = closestSeed;
     }
 
@@ -172,7 +172,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         else if (!trans)
         {
             var aoes = ActiveAOEs(slot, actor).FirstOrDefault();
-            if (aoes.Shape != null && GetClippedSeeds(aoes).Any())
+            if (aoes.Shape != null && GetClippedSeeds(aoes).Count != 0)
                 hints.Add("Pick up seeds in vulnerable squares!");
         }
     }

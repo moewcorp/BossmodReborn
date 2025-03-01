@@ -18,7 +18,7 @@ class PalladianGrasp(BossModule module) : Components.CastCounter(module, default
         {
             if (actor.InstanceID == target.InstanceID)
             {
-                if (Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, Origin(target), default).Any())
+                if (Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, Origin(target), default).Count != 0)
                     hints.Add("Bait away from raid!");
             }
             else

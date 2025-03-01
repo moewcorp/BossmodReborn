@@ -156,10 +156,10 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
             for (var i = 0; i < 4; ++i)
             {
-                var aoe = aoeChecks[i];
-                if (ActiveAOEs(0, Raid.Player()!).Any(c => c.Shape == aoe.AOE && c.Activation <= WorldState.CurrentTime))
+                var aoeCheck = aoeChecks[i];
+                if (_aoe is AOEInstance aoe && aoe.Shape == aoeCheck.AOE && aoe.Activation <= WorldState.CurrentTime)
                 {
-                    Arena.Bounds = aoe.Bounds;
+                    Arena.Bounds = aoeCheck.Bounds;
                     _aoe = null;
                     break;
                 }

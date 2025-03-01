@@ -50,7 +50,7 @@ abstract class InfernWave(BossModule module, bool savage, bool showHints, int ma
                 if (t.target == actor)
                 {
                     ++numBaits;
-                    clipping |= Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, b.Source.Position, t.dir).Any();
+                    clipping |= Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, b.Source.Position, t.dir).Count != 0;
                 }
                 else
                 {

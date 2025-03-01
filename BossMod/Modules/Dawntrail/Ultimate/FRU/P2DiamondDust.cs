@@ -89,7 +89,7 @@ class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBaitAway(
         {
             if (baitIndex < 0)
                 hints.Add("Stay closer to bait!");
-            else if (PlayersClippedBy(CurrentBaits[baitIndex]).Any())
+            else if (PlayersClippedBy(CurrentBaits[baitIndex]).Count != 0)
                 hints.Add("Bait cone away from raid!");
         }
 

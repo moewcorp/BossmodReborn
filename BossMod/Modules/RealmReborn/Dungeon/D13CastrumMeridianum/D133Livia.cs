@@ -87,5 +87,5 @@ class D133LiviaStates : StateMachineBuilder
 public class D133Livia(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-98, -33), 19.5f * CosPI.Pi36th, 36)],
-    [new Rectangle(new(-78.187f, -36.886f), 20, 1.25f, 79.Degrees())]);
+    [new Rectangle(new(-78.187f, -36.886f), 20, 1.25f, -79.Degrees())]);
 }

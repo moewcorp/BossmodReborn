@@ -67,7 +67,8 @@ public sealed class Plugin : IDalamudPlugin
         InteropGenerator.Runtime.Resolver.GetInstance.Resolve();
 
         dalamud.Create<Service>();
-        Service.LogHandler = (string msg) => Service.Logger.Debug(msg);
+        Service.LogHandlerDebug = (string msg) => Service.Logger.Debug(msg);
+        Service.LogHandlerVerbose = (string msg) => Service.Logger.Verbose(msg);
         Service.LuminaGameData = dataManager.GameData;
         Service.WindowSystem = new("bmr");
         //Service.Device = pluginInterface.UiBuilder.Device;
@@ -93,7 +94,7 @@ public sealed class Plugin : IDalamudPlugin
         _bossmod = new(_ws);
         _zonemod = new(_ws);
         _hintsBuilder = new(_ws, _bossmod, _zonemod);
-        _movementOverride = new();
+        _movementOverride = new(dalamud);
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
         _rotation = new(_rotationDB, _bossmod, _hints);

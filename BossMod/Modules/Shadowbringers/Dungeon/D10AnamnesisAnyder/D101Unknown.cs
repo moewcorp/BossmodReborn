@@ -118,6 +118,7 @@ public class D101Unknown(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Unknown).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.Unknown));
     }
 }

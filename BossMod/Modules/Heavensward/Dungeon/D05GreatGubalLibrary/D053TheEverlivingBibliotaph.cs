@@ -42,30 +42,41 @@ public enum IconID : uint
 
 class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module)
 {
-    public static readonly AOEShapeCircle Circle = new(8);
+    public static readonly AOEShapeCircle Circle = new(8f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.VoidSpark)
-            CurrentBaits.Add(new(actor, actor, Circle, WorldState.FutureTime(5.1f)));
+            CurrentBaits.Add(new(actor, actor, Circle, WorldState.FutureTime(5.1d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.VoidSparkBait)
-            CurrentBaits.RemoveAll(x => x.Target == WorldState.Actors.Find(spell.MainTargetID));
+        if (spell.Action.ID == (uint)AID.VoidSparkBait)
+        {
+            var count = CurrentBaits.Count;
+            var id = spell.MainTargetID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (CurrentBaits[i].Target.InstanceID == id)
+                {
+                    CurrentBaits.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 22.5f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
             hints.Add("Bait away!");
     }
 }
@@ -78,42 +89,53 @@ class VoidSpark(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Voidsphere)
-            _aoes.Add(new(VoidSparkBait.Circle, actor.Position, default, WorldState.FutureTime(9.8f)));
+        if (actor.OID == (uint)OID.Voidsphere)
+            _aoes.Add(new(VoidSparkBait.Circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(9.8d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.VoidSpark)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.VoidSpark)
             _aoes.RemoveAt(0);
     }
 }
 
-class DeepDarkness(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepDarkness), new AOEShapeDonut(12, 25));
-class MagicBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagicBurst), 15);
-class VoidBlizzardIIIAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidBlizzardIIIAOE), 5);
-class AbyssalSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssalSwing), new AOEShapeCone(7.5f, 45.Degrees()), [(uint)OID.Biblioklept]);
-class AbyssalCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalCharge), new AOEShapeRect(41, 2));
+class DeepDarkness(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepDarkness), new AOEShapeDonut(12f, 25f));
+class MagicBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagicBurst), 15f);
+class VoidBlizzardIIIAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidBlizzardIIIAOE), 5f);
+class AbyssalSwing(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssalSwing), new AOEShapeCone(7.5f, 45f.Degrees()), [(uint)OID.Biblioklept]);
+class AbyssalCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AbyssalCharge), new AOEShapeRect(41f, 2f));
 
 class VoidCall(BossModule module) : Components.GenericTowers(module, prioritizeInsufficient: true)
 {
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Tower)
-            Towers.Add(new(actor.Position, 3, activation: WorldState.FutureTime(17.8f)));
-        else if ((OID)actor.OID is OID.Biblioklept or OID.Bibliophile or OID.Bibliomancer)
+        if (actor.OID == (uint)OID.Tower)
+            Towers.Add(new(actor.Position, 3, activation: WorldState.FutureTime(17.8d)));
+        else if (actor.OID is (uint)OID.Biblioklept or (uint)OID.Bibliophile or (uint)OID.Bibliomancer)
             Towers.Clear();
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
         if (state == 0x00100020)
-            Towers.RemoveAll(x => x.Position == actor.Position);
+        {
+            var count = Towers.Count;
+            var pos = actor.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (Towers[i].Position == pos)
+                {
+                    Towers.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.VoidCall) // there seems to be a rare bug where a tower bugs, safeguard against it
+        if (spell.Action.ID == (uint)AID.VoidCall) // there seems to be a rare bug where a tower bugs, safeguard against it
             Towers.Clear();
     }
 
@@ -121,7 +143,7 @@ class VoidCall(BossModule module) : Components.GenericTowers(module, prioritizeI
     {
         if (Towers.Count == 0)
             return;
-        var towerCount = Module.Enemies(OID.Tower).Count;
+        var towerCount = Module.Enemies((uint)OID.Tower).Count;
         var soakers = towerCount == 2 ? 3 : towerCount == 3 ? 2 : 1;
         for (var i = 0; i < Towers.Count; ++i)
             Towers[i] = Towers[i] with { MinSoakers = soakers, MaxSoakers = soakers };
@@ -147,7 +169,7 @@ class D053EverlivingBibliotaphStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 31, NameID = 3930)]
 public class D053EverlivingBibliotaph(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(377.8f, -59.7f), 24.5f, 80)], [new Rectangle(new(353.541f, -59.553f), 20, 1.25f, 89.977f.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(377.8f, -59.7f), 24.5f, 80)], [new Rectangle(new(353.541f, -59.553f), 1.25f, 20f)]);
     private static readonly uint[] adds = [(uint)OID.Bibliophile, (uint)OID.Biblioklept, (uint)OID.Bibliomancer];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
@@ -158,12 +180,13 @@ public class D053EverlivingBibliotaph(WorldState ws, Actor primary) : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Biblioklept or OID.Bibliophile or OID.Bibliomancer => 1,
+                (uint)OID.Biblioklept or (uint)OID.Bibliophile or (uint)OID.Bibliomancer => 1,
                 _ => 0
             };
         }

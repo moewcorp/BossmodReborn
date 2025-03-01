@@ -45,21 +45,21 @@ public enum AID : uint
     VoidcluserVisual = 32932, // Voidcluster->self, no cast, single-target
 }
 
-class Voidblood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Voidblood), 6);
-class VoidSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidSlash), new AOEShapeCone(9.7f, 45.Degrees()));
+class Voidblood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Voidblood), 6f);
+class VoidSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidSlash), new AOEShapeCone(9.7f, 45f.Degrees()));
 class EvilMist(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.EvilMist));
 class VoidEvocation(BossModule module) : Components.RaidwideInstant(module, ActionID.MakeSpell(AID.VoidEvocation), 5.1f)
 {
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.AlphinaudShield)
+        if (actor.OID == (uint)OID.AlphinaudShield)
             Activation = WorldState.FutureTime(Delay);
     }
 }
 
-class Explosion(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Explosion), 5);
-class Dark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dark), 10);
-class Hellsnap(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Hellsnap), 6);
+class Explosion(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Explosion), 5f);
+class Dark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dark), 10f);
+class Hellsnap(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Hellsnap), 6f);
 
 class StraightSpindle(BossModule module) : Components.GenericAOEs(module)
 {
@@ -157,7 +157,7 @@ class ProtectZero(BossModule module) : BossComponent(module)
         for (var i = 0; i < zeros.Count; ++i)
         {
             var zer0 = zeros[i];
-            if (zer0.FindStatus(2056) != null)
+            if (zer0.FindStatus(2056u) != null)
             {
                 zero = zer0;
                 break;

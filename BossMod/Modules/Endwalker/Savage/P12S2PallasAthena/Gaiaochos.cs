@@ -91,7 +91,7 @@ class UltimaBlow(BossModule module) : Components.CastCounter(module, ActionID.Ma
         if (_vulnerable[slot])
         {
             var source = _tethers.Find(t => t.target == actor).source;
-            var numHit = source != null ? Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, source.Position, Angle.FromDirection(actor.Position - source.Position)).Count() : 0;
+            var numHit = source != null ? Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, source.Position, Angle.FromDirection(actor.Position - source.Position)).Count : 0;
             if (numHit == 0)
                 hints.Add("Hide behind partner!");
             else if (numHit > 1)
