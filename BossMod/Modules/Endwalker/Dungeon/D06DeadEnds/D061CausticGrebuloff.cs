@@ -196,13 +196,13 @@ class NecroticFluidMist(BossModule module) : Components.Exaflare(module, 6)
 
 class Befoulment(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Befoulment), 6f);
 class BlightedWater(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BlightedWater), 6f, 4, 4);
-class CoughUpAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CoughUpAOE), 6);
+class CoughUpAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CoughUpAOE), 6f);
 
 class WaveOfNausea(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly NecroticFluidMist _exa = module.FindComponent<NecroticFluidMist>()!;
     public readonly List<AOEInstance> AOEs = new(2);
-    private static readonly AOEShapeDonut donut = new(6, 40);
+    private static readonly AOEShapeDonut donut = new(6f, 40f);
     private static readonly Shape[] differenceShapes = [new Circle(new(271.473f, -178.027f), 6f), new Circle(new(261.494f, -178.027f), 6f)];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;

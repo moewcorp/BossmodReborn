@@ -40,16 +40,54 @@ public enum TetherID : uint
     HolyChain = 9 // player->player
 }
 
-class KnightsTour(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 2));
+class KnightsTour(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 2f));
 class WhiteKnightsTour(BossModule module) : KnightsTour(module, AID.WhiteKnightsTour);
 class BlackKnightsTour(BossModule module) : KnightsTour(module, AID.BlackKnightsTour);
 
 class AltarPyre(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AltarPyre));
 
-class HeavensflameAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavensflameAOE), 5);
+class HeavensflameAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavensflameAOE), 5f);
 class HolyChain(BossModule module) : Components.Chains(module, (uint)TetherID.HolyChain, ActionID.MakeSpell(AID.HolyChainPlayerTether));
-class TurretTour(BossModule module) : Components.PersistentVoidzone(module, 2, m => m.Enemies(OID.DawnKnight).Concat(m.Enemies(OID.DuskKnight)).Where(x => x.ModelState.ModelState == 8), 10);
-class TurretTourHint(BossModule module) : Components.PersistentVoidzone(module, 2, m => m.Enemies(OID.DawnKnight).Concat(m.Enemies(OID.DuskKnight)).Where(x => x.ModelState.ModelState != 8 && !x.Position.AlmostEqual(module.Center, 10)), 3);
+class TurretTour(BossModule module) : Components.PersistentVoidzone(module, 2f, GetVoidzones, 10f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies(D043SerCharibert.Knights);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.ModelState.ModelState == 8)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+class TurretTourHint(BossModule module) : Components.PersistentVoidzone(module, 2f, GetVoidzones, 3f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies(D043SerCharibert.Knights);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.ModelState.ModelState != 8 && !z.Position.AlmostEqual(module.Center, 10f))
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class D043SerCharibertStates : StateMachineBuilder
 {
@@ -69,9 +107,11 @@ class D043SerCharibertStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS), Xyzzy", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 34, NameID = 3642)]
 public class D043SerCharibert(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 4.1f), new ArenaBoundsSquare(19.5f))
 {
+    public static readonly uint[] Knights = [(uint)OID.DawnKnight, (uint)OID.DuskKnight];
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.HolyFlame), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.HolyFlame), Colors.Object);
     }
 }

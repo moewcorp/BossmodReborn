@@ -39,53 +39,60 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private readonly List<uint> buffs = new(2);
-    private static readonly Angle angle = 120.Degrees();
-    private static readonly AOEShapeCone cone = new(40, 60.Degrees());
+    private static readonly Angle angle = 120f.Degrees();
+    private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
             if (i == 0)
-                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
             else
-                aoes.Add(aoe);
+                aoes[i] = aoe;
         }
         return aoes;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.MiddleHead or SID.RightHead or SID.LeftHead)
+        if (status.ID is (uint)SID.MiddleHead or (uint)SID.LeftHead or (uint)SID.RightHead)
             buffs.Add(status.ID);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.PyricBreathFront or AID.PyricBreathLeft or AID.PyricBreathRight)
+        if (spell.Action.ID is (uint)AID.PyricBreathFront or (uint)AID.PyricBreathLeft or (uint)AID.PyricBreathRight)
         {
-            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            void AddAOE(Angle offset = default, float delay = 2.1f) => _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + offset, Module.CastFinishAt(spell, delay)));
+            AddAOE(delay: default);
             if (buffs.Count == 2)
             {
-                var activation = Module.CastFinishAt(spell, 2.1f);
-                if (buffs[1] == (uint)SID.RightHead)
-                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? -angle : -2 * angle), activation));
-                else if (buffs[1] == (uint)SID.LeftHead)
-                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.MiddleHead ? angle : 2 * angle), activation));
-                else if (buffs[1] == (uint)SID.MiddleHead)
-                    _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + (buffs[0] == (uint)SID.LeftHead ? -angle : angle), activation));
+                var buff = buffs[0];
+                switch (buffs[1])
+                {
+                    case (uint)SID.RightHead:
+                        AddAOE(buff == (uint)SID.MiddleHead ? -angle : -2f * angle);
+                        break;
+                    case (uint)SID.LeftHead:
+                        AddAOE(buff == (uint)SID.MiddleHead ? angle : 2f * angle);
+                        break;
+                    case (uint)SID.MiddleHead:
+                        AddAOE(buff == (uint)SID.LeftHead ? -angle : angle);
+                        break;
+                }
             }
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.PyricBreathFront or AID.PyricBreathLeft or AID.PyricBreathRight)
+        if (spell.Action.ID is (uint)AID.PyricBreathFront or (uint)AID.PyricBreathLeft or (uint)AID.PyricBreathRight)
         {
             ++NumCasts;
             if (_aoes.Count != 0 && buffs.Count != 0)
@@ -98,7 +105,7 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.PyricBreathFront2 or AID.PyricBreathLeft2 or AID.PyricBreathRight2)
+        if (spell.Action.ID is (uint)AID.PyricBreathFront2 or (uint)AID.PyricBreathLeft2 or (uint)AID.PyricBreathRight2)
         {
             _aoes.Clear();
             buffs.Clear();
@@ -106,8 +113,8 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class PyricSphere(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PyricSphere), new AOEShapeCross(50, 2)); // we could draw this almost 5s earlier, but why bother with 10s cast time
-class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PyricBlast), 6, 4, 4);
+class PyricSphere(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PyricSphere), new AOEShapeCross(50f, 2f)); // we could draw this almost 5s earlier, but why bother with 10s cast time
+class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.PyricBlast), 6f, 4, 4);
 class Scratch(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Scratch));
 class Intimidation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Intimidation));
 
@@ -125,4 +132,4 @@ class D042LadonLordStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10398)]
-public class D042LadonLord(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 48), new ArenaBoundsSquare(19.5f));
+public class D042LadonLord(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, 48f), new ArenaBoundsSquare(19.5f));

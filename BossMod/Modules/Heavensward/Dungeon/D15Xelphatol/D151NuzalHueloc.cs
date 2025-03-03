@@ -97,14 +97,12 @@ public class D151NuzalHueloc(WorldState ws, Actor primary) : BossModule(ws, prim
     {
         var allEnemies = Enemies(opponents);
         var count = allEnemies.Count;
-        List<Actor> filteredEnemies = new(count);
         for (var i = 0; i < count; ++i)
         {
             var enemy = allEnemies[i];
             if (enemy.FindStatus((uint)SID.Invincibility) == null)
-                filteredEnemies.Add(enemy);
+                Arena.Actor(enemy);
         }
-        Arena.Actors(filteredEnemies);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

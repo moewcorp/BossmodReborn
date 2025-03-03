@@ -297,4 +297,11 @@ public class D090VelveteenAnt(WorldState ws, Actor primary) : BossModule(ws, pri
         Arena.Actors(Enemies(trash));
         Arena.Actors(Enemies(combs), Colors.Object);
     }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PotentialTargets[i].Priority = 0;
+    }
 }

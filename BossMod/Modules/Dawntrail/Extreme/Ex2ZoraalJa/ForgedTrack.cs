@@ -14,14 +14,14 @@ class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
     private Pattern _patternN;
     private Pattern _patternS;
 
-    private static readonly AOEShapeRect _shape = new(10, 2.5f, 10);
-    private static readonly AOEShapeRect _shapeWide = new(10, 7.5f, 10);
+    private static readonly AOEShapeRect _shape = new(10f, 2.5f, 10f);
+    private static readonly AOEShapeRect _shapeWide = new(10f, 7.5f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => NarrowAOEs.Concat(WideAOEs).Concat(KnockbackAOEs);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => [.. NarrowAOEs, .. WideAOEs, .. KnockbackAOEs];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID != AID.ForgedTrackPreview)
+        if (spell.Action.ID != (uint)AID.ForgedTrackPreview)
             return;
 
         var casterOffset = caster.Position - Arena.Center;
@@ -63,18 +63,18 @@ class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ForgedTrackAOE:
+            case (uint)AID.ForgedTrackAOE:
                 ++NumCasts;
                 NarrowAOEs.Clear();
                 break;
-            case AID.FieryEdgeAOECenter:
+            case (uint)AID.FieryEdgeAOECenter:
                 if (WideAOEs.Count == 0)
                     Module.ReportError(this, "Unexpected wide aoe");
                 WideAOEs.Clear();
                 break;
-            case AID.StormyEdgeAOE:
+            case (uint)AID.StormyEdgeAOE:
                 if (KnockbackAOEs.Count == 0)
                     Module.ReportError(this, "Unexpected knockback");
                 KnockbackAOEs.Clear();
@@ -122,16 +122,20 @@ class ForgedTrackKnockback(BossModule module) : Components.Knockback(module, Act
 {
     private readonly ForgedTrack? _main = module.FindComponent<ForgedTrack>();
 
-    private static readonly AOEShapeRect _shape = new(20, 10);
+    private static readonly AOEShapeRect _shape = new(20f, 10f);
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         if (_main == null)
-            yield break;
-        foreach (var aoe in _main.KnockbackAOEs)
+            return [];
+        var count = _main.KnockbackAOEs.Count;
+        var sources = new List<Source>();
+        for (var i = 0; i < count; ++i)
         {
-            yield return new(aoe.Origin, 7, aoe.Activation, _shape, aoe.Rotation + 90.Degrees(), Kind.DirForward);
-            yield return new(aoe.Origin, 7, aoe.Activation, _shape, aoe.Rotation - 90.Degrees(), Kind.DirForward);
+            var aoe = _main.KnockbackAOEs[i];
+            sources.Add(new(aoe.Origin, 7f, aoe.Activation, _shape, aoe.Rotation + 90f.Degrees(), Kind.DirForward));
+            sources.Add(new(aoe.Origin, 7, aoe.Activation, _shape, aoe.Rotation - 90f.Degrees(), Kind.DirForward));
         }
+        return sources;
     }
 }

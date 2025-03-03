@@ -11,7 +11,7 @@ public enum AID : uint
     AutoAttack = 15492, // Boss->player, no cast, single-target
 
     W11TonzeSwipeAdds = 14978, // Adulator->player, no cast, single-target
-    W11TonzeSwipe = 14972, // Boss->self, 3.0s cast, range 9 ?-degree cone
+    W11TonzeSwipe = 14972, // Boss->self, 3.0s cast, range 9 120-degree cone
     W111TonzeSwing = 14973, // Boss->self, 4.0s cast, range 13 circle
     OrderToAssault = 14975, // Boss->self, 3.0s cast, range 100 circle, buffs Adulators
     OrderToStandFast = 14976, // Boss->self, 3.0s cast, range 100 circle, buffs Adulators
@@ -20,7 +20,7 @@ public enum AID : uint
     ZoomIn = 14980 // Adulator->location, 3.0s cast, width 8 rect charge
 }
 
-class W11TonzeSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W11TonzeSwipe), new AOEShapeCone(9f, 75f.Degrees()));
+class W11TonzeSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W11TonzeSwipe), new AOEShapeCone(9f, 60f.Degrees()));
 class W111TonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W111TonzeSwing), 13f);
 class W111TonzeSwingAdds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W111TonzeSwingAdds), 13f);
 class W111TonzeSwingBig(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W111TonzeSwingBig), 20f);

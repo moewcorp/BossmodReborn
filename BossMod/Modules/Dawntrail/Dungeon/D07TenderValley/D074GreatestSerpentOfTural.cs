@@ -86,15 +86,15 @@ class ScreesOfFury(BossModule module) : Components.BaitAwayIcon(module, new AOES
     }
 }
 
-class GreatestFlood(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GreatestFlood), 15)
+class GreatestFlood(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GreatestFlood), 15f)
 {
     private static readonly Angle a45 = 45f.Degrees();
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Origin, 4f, source.Direction, a45), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Position, 4f, source.Rotation, a45), Module.CastFinishAt(source.CastInfo));
     }
 }
 

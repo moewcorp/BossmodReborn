@@ -32,16 +32,7 @@ class TartareanShockwave(BossModule module) : Components.SimpleAOEs(module, Acti
 class BigTartareanShockwave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanShockwave1), 14);
 class GalesOfTartarus(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GalesOfTartarus), new AOEShapeRect(30, 2.5f));
 class BigGalesOfTartarus(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GalesOfTartarus1), new AOEShapeRect(30, 15));
-class DirectionalParry(BossModule module) : Components.DirectionalParry(module, [(uint)OID.Boss])
-{
-    private static readonly Angle a45 = 45.Degrees();
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Module.PrimaryActor.FindStatus(SID.DirectionalParry) != null)
-            hints.AddForbiddenZone(ShapeDistance.Cone(Module.PrimaryActor.Position, 100, Module.PrimaryActor.Rotation, a45), WorldState.FutureTime(10));
-    }
-}
+class DirectionalParry(BossModule module) : Components.DirectionalParry(module, [(uint)OID.Boss]);
 class TartareanTomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanTomb), 11);
 
 class RhitahtynSasArvinaStates : StateMachineBuilder

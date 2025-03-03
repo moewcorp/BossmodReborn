@@ -3,28 +3,31 @@ namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 class ElevateAndEviscerateShockwave(BossModule module) : Components.GenericAOEs(module, default, "GTFO from shockwave!")
 {
     private AOEInstance? aoe;
-    private static readonly AOEShapeCross cross = new(60, 5);
+    private static readonly AOEShapeCross cross = new(60f, 5f);
     private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
+    public static readonly AOEShapeRect Rect = new(5f, 5f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var aoes = new List<AOEInstance>();
         if (_kb.CurrentTarget != null && _kb.CurrentTarget != actor)
         {
-            yield return new(cross, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.CurrentTarget.Position)), default, _kb.CurrentDeadline.AddSeconds(3.2f));
+            aoes.Add(new(cross, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.CurrentTarget.Position)), default, _kb.CurrentDeadline.AddSeconds(3.2d)));
             if (_kb.CurrentKnockbackDistance == 0)
-                yield return new(Mouser.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.CurrentTarget.Position)), default, _kb.CurrentDeadline.AddSeconds(2));
+                aoes.Add(new(Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.CurrentTarget.Position)), default, _kb.CurrentDeadline.AddSeconds(2d)));
             else if (_kb.CurrentKnockbackDistance == 10 && Module.InBounds(_kb.Cache))
-                yield return new(Mouser.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, _kb.CurrentDeadline.AddSeconds(4.2f));
+                aoes.Add(new(Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, _kb.CurrentDeadline.AddSeconds(4.2d)));
         }
         if (aoe != null && _kb.LastTarget != actor)
-            yield return aoe.Value;
+            aoes.Add(aoe.Value);
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ElevateAndEviscerateHitAOE or AID.ElevateAndEviscerateKnockbackAOE && Module.InBounds(_kb.Cache))
-            aoe = new(Mouser.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, WorldState.FutureTime(_kb.CurrentKnockbackDistance == 0 ? 1.4f : 3.6f));
-        else if ((AID)spell.Action.ID is AID.ElevateAndEviscerateImpactHit or AID.ElevateAndEviscerateImpactKnockback)
+        if (spell.Action.ID is (uint)AID.ElevateAndEviscerateHitAOE or (uint)AID.ElevateAndEviscerateKnockbackAOE && Module.InBounds(_kb.Cache))
+            aoe = new(Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, WorldState.FutureTime(_kb.CurrentKnockbackDistance == 0f ? 1.4d : 3.6d));
+        else if (spell.Action.ID is (uint)AID.ElevateAndEviscerateImpactHit or (uint)AID.ElevateAndEviscerateImpactKnockback)
             aoe = null;
     }
 
@@ -41,7 +44,7 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
     public Actor? CurrentTarget; // for current mechanic
     public Actor? LastTarget; // for current mechanic
     public DateTime CurrentDeadline; // for current target - expected time when stun starts, which is deadline for positioning
-    public int CurrentKnockbackDistance;
+    public float CurrentKnockbackDistance;
     public WPos Cache;
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
@@ -50,7 +53,8 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         if (CurrentTarget != null && actor == CurrentTarget && CurrentKnockbackDistance > 0)
-            yield return new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, Direction: actor.Rotation, Kind: Kind.DirForward);
+            return [new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, Direction: actor.Rotation, Kind: Kind.DirForward)];
+        return [];
     }
 
     public override void Update()
@@ -78,10 +82,10 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ElevateAndEviscerateKnockback or AID.ElevateAndEviscerateHit)
+        if (spell.Action.ID is (uint)AID.ElevateAndEviscerateKnockback or (uint)AID.ElevateAndEviscerateHit)
         {
             CurrentDeadline = Module.CastFinishAt(spell, 1.8f);
-            CurrentKnockbackDistance = (AID)spell.Action.ID == AID.ElevateAndEviscerateKnockback ? 10 : 0;
+            CurrentKnockbackDistance = spell.Action.ID == (uint)AID.ElevateAndEviscerateKnockback ? 10f : 0f;
             InitIfReady();
         }
     }
@@ -97,9 +101,9 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ElevateAndEviscerateHitAOE or AID.ElevateAndEviscerateKnockbackAOE)
+        if (spell.Action.ID is (uint)AID.ElevateAndEviscerateHitAOE or (uint)AID.ElevateAndEviscerateKnockbackAOE)
             LastTarget = CurrentTarget;
-        else if ((AID)spell.Action.ID == AID.ElevateAndEviscerateShockwave)
+        else if (spell.Action.ID == (uint)AID.ElevateAndEviscerateShockwave)
         {
             ++NumCasts;
             CurrentTarget = null;
@@ -120,12 +124,14 @@ class ElevateAndEviscerateHint(BossModule module) : Components.GenericAOEs(modul
         {
             var damagedCells = Module.FindComponent<ArenaChanges>()!.DamagedCells;
             var tiles = ArenaChanges.Tiles;
+            var aoes = new List<AOEInstance>();
 
             foreach (var index in damagedCells.SetBits())
             {
-                var tile = tiles[index];
-                yield return new(Mouser.Rect, tile.Center, Color: Colors.FutureVulnerable, Risky: false);
+                aoes.Add(new(ElevateAndEviscerateShockwave.Rect, tiles[index].Center, Color: Colors.FutureVulnerable, Risky: false));
             }
+            return aoes;
         }
+        return [];
     }
 }

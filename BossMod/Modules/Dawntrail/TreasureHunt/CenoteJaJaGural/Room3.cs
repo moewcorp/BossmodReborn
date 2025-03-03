@@ -101,17 +101,7 @@ class Room3States : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Room3.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return module.PrimaryActor.EventState == 7;
-            };
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.EventState == 7;
     }
 }
 
@@ -129,16 +119,14 @@ public class Room3(WorldState ws, Actor primary) : BossModule(ws, primary, Arena
     private static readonly uint[] trash = [(uint)OID.BirdOfTheCenote1, (uint)OID.BirdOfTheCenote2, (uint)OID.CenoteTocoToco, (uint)OID.CenoteToucalibri,
     (uint)OID.CenoteSarracenia1, (uint)OID.CenoteSarracenia2, (uint)OID.CenoteFlytrap, (uint)OID.CenoteRoselet, (uint)OID.CenoteBloodglider,
     (uint)OID.CenoteWamoura, (uint)OID.CenoteMorpho, (uint)OID.CenoteWamouracampa];
-    public static readonly uint[] All = [(uint)OID.Boss, .. trash, .. bonusAdds];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor, Colors.Object);
         Arena.Actors(Enemies(trash));
         Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
-    protected override bool CheckPull() => !PrimaryActor.IsTargetable;
+    protected override bool CheckPull() => Enemies(trash).Count != 0;
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

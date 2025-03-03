@@ -213,10 +213,10 @@ public class A14NaldthalStates : StateMachineBuilder
     {
         Cast(id, AID.SoulsMeasure, delay, 6);
         Targetable(id + 0x10, false, 1.1f, "Boss disappears");
-        ComponentCondition<SoulVessel>(id + 0x20, 20.6f, comp => comp.ActiveActors.Any(), "Adds appear")
+        ComponentCondition<SoulVessel>(id + 0x20, 20.6f, comp => comp.ActiveActors.Count != 0, "Adds appear")
             .ActivateOnEnter<SoulVessel>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        ComponentCondition<SoulVessel>(id + 0x30, 100, comp => !comp.ActiveActors.Any(), "Adds enrage")
+        ComponentCondition<SoulVessel>(id + 0x30, 100, comp => comp.ActiveActors.Count == 0, "Adds enrage")
             .ActivateOnEnter<Twingaze>()
             .ActivateOnEnter<MagmaticSpell>()
             .DeactivateOnExit<Twingaze>()

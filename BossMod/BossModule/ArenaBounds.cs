@@ -329,7 +329,7 @@ public record class ArenaBoundsCustom : ArenaBounds
         var width = map.Width;
         var height = map.Height;
         var resolution = map.Resolution;
-        map.BlockPixelsInside(new PolygonWithHolesDistanceFunction(default, poly).InvertedDistance, -1, 0.49999f * resolution); // check inner circle of the pixel
+        map.BlockPixelsInside(new PolygonWithHolesDistanceFunction(default, poly).InvertedDistance, -1f, 0.49999f * resolution); // check inner circle of the pixel
         // now check the corners
         var halfSample = resolution * 0.49999f; // tiny offset to account for floating point inaccuracies
 

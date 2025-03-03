@@ -4,7 +4,7 @@
 public class Adds(BossModule module, uint oid, int priority = 0) : BossComponent(module)
 {
     public readonly List<Actor> Actors = module.Enemies(oid);
-    public IEnumerable<Actor> ActiveActors
+    public List<Actor> ActiveActors
     {
         get
         {

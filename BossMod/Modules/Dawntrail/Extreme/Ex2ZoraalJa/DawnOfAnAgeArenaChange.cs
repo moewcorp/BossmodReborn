@@ -2,14 +2,14 @@ namespace BossMod.Dawntrail.Extreme.Ex2ZoraalJa;
 
 class DawnOfAnAgeArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom square = new([new Square(Trial.T02ZoraalJa.ZoraalJa.ArenaCenter, 20, Trial.T02ZoraalJa.ZoraalJa.ArenaRotation)],
-    [new Square(Trial.T02ZoraalJa.ZoraalJa.ArenaCenter, 10, Trial.T02ZoraalJa.ZoraalJa.ArenaRotation)]);
+    private static readonly AOEShapeCustom square = new([new Square(Trial.T02ZoraalJa.ZoraalJa.ArenaCenter, 20f, Trial.T02ZoraalJa.ZoraalJa.ArenaRotation)],
+    [new Square(Trial.T02ZoraalJa.ZoraalJa.ArenaCenter, 10f, Trial.T02ZoraalJa.ZoraalJa.ArenaRotation)]);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.DawnOfAnAge)
+        if (spell.Action.ID == (uint)AID.DawnOfAnAge)
             _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.9f));
     }
 

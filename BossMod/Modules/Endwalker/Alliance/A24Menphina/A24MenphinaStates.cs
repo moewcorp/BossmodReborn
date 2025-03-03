@@ -231,10 +231,10 @@ class A24MenphinaStates : StateMachineBuilder
     {
         Cast(id, AID.SelenainMysteria, delay, 3, "Boss disappears")
             .SetHint(StateMachine.StateHint.DowntimeStart);
-        ComponentCondition<CeremonialPillar>(id + 0x10, 4.5f, comp => comp.ActiveActors.Any(), "Adds appear")
+        ComponentCondition<CeremonialPillar>(id + 0x10, 4.5f, comp => comp.ActiveActors.Count != 0, "Adds appear")
             .ActivateOnEnter<CeremonialPillar>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        ComponentCondition<CeremonialPillar>(id + 0x100, 100, comp => !comp.ActiveActors.Any(), "Adds enrage")
+        ComponentCondition<CeremonialPillar>(id + 0x100, 100, comp => comp.ActiveActors.Count == 0, "Adds enrage")
             .ActivateOnEnter<AncientBlizzard>()
             .ActivateOnEnter<KeenMoonbeam>()
             .DeactivateOnExit<AncientBlizzard>()

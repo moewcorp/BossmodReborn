@@ -206,7 +206,7 @@ public static class ConcaveHull
         return filteredPoints;
     }
 
-    private static bool AreCollinear(WPos a, WPos b, WPos c, float toleranceDegrees = 1)
+    private static bool AreCollinear(WPos a, WPos b, WPos c, float toleranceDegrees = 5)
     {
         var ab = new Vector2(b.X - a.X, b.Z - a.Z);
         var bc = new Vector2(c.X - b.X, c.Z - b.Z);

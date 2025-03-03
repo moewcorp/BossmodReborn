@@ -74,7 +74,6 @@ public class D150XelphatolSkycaller(WorldState ws, Actor primary) : BossModule(w
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var filteredEnemies = new List<Actor>();
         var enemies = Enemies(Trash);
         var count = enemies.Count;
         var center = Arena.Center;
@@ -83,8 +82,14 @@ public class D150XelphatolSkycaller(WorldState ws, Actor primary) : BossModule(w
         {
             var enemy = enemies[i];
             if (enemy.Position.AlmostEqual(center, radius))
-                filteredEnemies.Add(enemy);
+                Arena.Actor(enemy);
         }
-        Arena.Actors(filteredEnemies);
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

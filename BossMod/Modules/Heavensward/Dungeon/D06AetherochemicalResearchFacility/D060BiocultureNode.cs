@@ -194,13 +194,6 @@ public class D060BiocultureNode(WorldState ws, Actor primary) : BossModule(ws, p
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
-        {
-            var e = hints.PotentialTargets[i];
-            if (e.Actor.OID == (uint)OID.Boss)
-            {
-                e.Priority = 0;
-                break;
-            }
-        }
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

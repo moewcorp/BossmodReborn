@@ -46,40 +46,57 @@ public enum IconID : uint
     Spreadmarker = 74, // player
 }
 
-class ClawTether(BossModule module) : Components.StretchTetherSingle(module, (uint)TetherID.Claw, 10, needToKite: true);
-class RahuRay(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.RahuRay), 10, 4.1f);
+class ClawTether(BossModule module) : Components.StretchTetherSingle(module, (uint)TetherID.Claw, 10f, needToKite: true);
+class RahuRay(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.RahuRay), 10f, 4.1f);
 class KetuSlash1(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash1));
 class KetuSlash2(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash2));
 class KetuSlash3(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.KetuSlash3));
-class KetuCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuCutter), new AOEShapeCone(20.5f, 10.Degrees()));
-class KetuWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuWave), 10);
+class KetuCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuCutter), new AOEShapeCone(20.5f, 10f.Degrees()));
+class KetuWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KetuWave), 10f);
 
-class RahuBlaster(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 3));
+class RahuBlaster(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 3f));
 class RahuBlaster1(BossModule module) : RahuBlaster(module, AID.RahuBlaster1);
 class RahuBlaster2(BossModule module) : RahuBlaster(module, AID.RahuBlaster2);
 class RahuBlaster3(BossModule module) : RahuBlaster(module, AID.RahuBlaster3);
 
-class RahuComet(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15);
+class RahuComet(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15f);
 class RahuComet1(BossModule module) : RahuComet(module, AID.RahuComet1);
 class RahuComet2(BossModule module) : RahuComet(module, AID.RahuComet2);
 class RahuComet3(BossModule module) : RahuComet(module, AID.RahuComet3);
 
-class RahuCometKB(BossModule module, AID aid, int distance) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), distance, stopAtWall: true)
+class RahuCometKB(BossModule module, AID aid, float distance) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), distance, stopAtWall: true)
 {
-    private readonly KetuWave _aoe = module.FindComponent<KetuWave>()!;
+    private readonly KetuWave _aoe1 = module.FindComponent<KetuWave>()!;
+    private readonly KetuCutter _aoe2 = module.FindComponent<KetuCutter>()!;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && _aoe.ActiveCasters.Count == 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 20, Angle.FromDirection(Arena.Center - source.Origin), 20.Degrees()), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null && _aoe1.Casters.Count == 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 20f, Angle.FromDirection(Arena.Center - source.Position), 20f.Degrees()), Module.CastFinishAt(source.CastInfo));
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<KetuCutter>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
-    (Module.FindComponent<KetuWave>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var count1 = _aoe1.Casters.Count;
+        for (var i = 0; i < count1; ++i)
+        {
+            var aoe = _aoe1.Casters[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        var count2 = _aoe2.Casters.Count;
+        for (var i = 0; i < count2; ++i)
+        {
+            var aoe = _aoe2.Casters[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
-class RahuComet2KB(BossModule module) : RahuCometKB(module, AID.RahuComet2, 5);
-class RahuComet3KB(BossModule module) : RahuCometKB(module, AID.RahuComet3, 10);
+class RahuComet2KB(BossModule module) : RahuCometKB(module, AID.RahuComet2, 5f);
+class RahuComet3KB(BossModule module) : RahuCometKB(module, AID.RahuComet3, 10f);
 
 class D053InfernoStates : StateMachineBuilder
 {
@@ -91,8 +108,6 @@ class D053InfernoStates : StateMachineBuilder
             .ActivateOnEnter<RahuComet1>()
             .ActivateOnEnter<RahuComet2>()
             .ActivateOnEnter<RahuComet3>()
-            .ActivateOnEnter<RahuComet2KB>()
-            .ActivateOnEnter<RahuComet3KB>()
             .ActivateOnEnter<RahuBlaster1>()
             .ActivateOnEnter<RahuBlaster2>()
             .ActivateOnEnter<RahuBlaster3>()
@@ -100,7 +115,9 @@ class D053InfernoStates : StateMachineBuilder
             .ActivateOnEnter<KetuSlash2>()
             .ActivateOnEnter<KetuSlash3>()
             .ActivateOnEnter<KetuCutter>()
-            .ActivateOnEnter<RahuRay>();
+            .ActivateOnEnter<RahuRay>()
+            .ActivateOnEnter<RahuComet2KB>()
+            .ActivateOnEnter<RahuComet3KB>();
     }
 }
 
@@ -118,8 +135,10 @@ public class D053Inferno(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
+            var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch
             {
                 (uint)OID.TwelfthLegionDeathClaw => 2,

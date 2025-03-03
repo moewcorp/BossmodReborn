@@ -104,17 +104,7 @@ class Room2States : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Room2.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return module.PrimaryActor.EventState == 7;
-            };
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.EventState == 7;
     }
 }
 
@@ -131,16 +121,14 @@ public class Room2(WorldState ws, Actor primary) : BossModule(ws, primary, Arena
     (uint)OID.TuraliGarlic, (uint)OID.UolonOfFortune, (uint)OID.AlpacaOfFortune];
     private static readonly uint[] trash = [(uint)OID.CenoteWoodsman, (uint)OID.CenoteBranchbearer, (uint)OID.CenoteSlammer, (uint)OID.CenoteAlligator, (uint)OID.CenoteMonstera,
     (uint)OID.CenotePitcherWeed, (uint)OID.CenoteMourner, (uint)OID.CenoteLeafkin];
-    public static readonly uint[] All = [(uint)OID.Boss, .. trash, .. bonusAdds];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor, Colors.Object);
         Arena.Actors(Enemies(trash));
         Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
-    protected override bool CheckPull() => !PrimaryActor.IsTargetable;
+    protected override bool CheckPull() => Enemies(trash).Count != 0;
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

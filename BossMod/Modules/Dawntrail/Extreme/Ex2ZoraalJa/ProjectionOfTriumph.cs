@@ -7,49 +7,52 @@ class ProjectionOfTriumph(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Line> _lines = [];
     private DateTime _nextActivation;
 
-    private static readonly AOEShapeCircle _shapeCircle = new(4);
-    private static readonly AOEShapeDonut _shapeDonut = new(3, 8);
+    private static readonly AOEShapeCircle _shapeCircle = new(4f);
+    private static readonly AOEShapeDonut _shapeDonut = new(3f, 8f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var nextOrder = NextOrder();
-        for (var i = 0; i < _lines.Count; ++i)
+        var count = _lines.Count;
+        var aoes = new List<AOEInstance>();
+        for (var i = 0; i < count; ++i)
         {
             var order = i >= 2 ? nextOrder - 2 : nextOrder;
             if (order is >= 0 and < 4)
             {
                 var line = _lines[i];
-                var lineCenter = Module.Center + (-15 + 10 * order) * line.Direction;
+                var lineCenter = Arena.Center + (-15f + 10f * order) * line.Direction;
                 var ortho = line.Direction.OrthoL();
                 for (var j = -15; j <= 15; j += 10)
                 {
-                    yield return new(line.Shape, lineCenter + j * ortho, default, _nextActivation);
+                    aoes.Add(new(line.Shape, lineCenter + j * ortho, default, _nextActivation));
                 }
             }
         }
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        AOEShape? shape = (OID)actor.OID switch
+        AOEShape? shape = actor.OID switch
         {
-            OID.ProjectionOfTriumphCircle => _shapeCircle,
-            OID.ProjectionOfTriumphDonut => _shapeDonut,
+            (uint)OID.ProjectionOfTriumphCircle => _shapeCircle,
+            (uint)OID.ProjectionOfTriumphDonut => _shapeDonut,
             _ => null
         };
         if (shape != null)
         {
             _lines.Add(new(actor.Rotation.ToDirection(), shape));
-            _nextActivation = WorldState.FutureTime(9);
+            _nextActivation = WorldState.FutureTime(9d);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SiegeOfVollok or AID.WallsOfVollok)
+        if (spell.Action.ID is (uint)AID.SiegeOfVollok or (uint)AID.WallsOfVollok)
         {
             ++NumCasts;
-            _nextActivation = WorldState.FutureTime(5);
+            _nextActivation = WorldState.FutureTime(5d);
         }
     }
 

@@ -44,7 +44,7 @@ class Slammer(BossModule module) : Components.GenericRotatingAOE(module)
                 break;
             case (uint)AID.LeftHammerSlammer:
             case (uint)AID.RightHammerSlammer:
-                AddSequence(180f.Degrees());
+                AddSequence(180f.Degrees(), 2, 1);
                 ImminentColor = 0;
                 break;
         }

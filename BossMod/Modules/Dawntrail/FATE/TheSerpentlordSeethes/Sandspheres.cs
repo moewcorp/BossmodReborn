@@ -9,34 +9,57 @@ class Sandspheres(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var sandspheres = Module.Enemies(OID.SandSphere).Count(x => !x.IsDead);
-        return sandspheres == 7 ? _aoesSmall.Take(7).Concat(_aoesBig.Take(7)) : _aoesSmall.Take(8).Concat(_aoesBig.Take(8));
+        int aliveSandSpheres = 0;
+        var sandspheres = Module.Enemies((uint)OID.SandSphere);
+        var count = sandspheres.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (!sandspheres[i].IsDead)
+                ++aliveSandSpheres;
+
+            if (aliveSandSpheres > 7)
+                break;
+        }
+
+        var max = (aliveSandSpheres == 7) ? 7 : 8;
+        var countS = _aoesSmall.Count;
+        var countB = _aoesBig.Count;
+
+        var aoes = new List<AOEInstance>(max * 2);
+        for (var i = 0; i < max; i++)
+        {
+            if (countS > i)
+                aoes.Add(_aoesSmall[i]);
+            if (countB > i)
+                aoes.Add(_aoesBig[i]);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.SummoningSands:
-                _aoesSmall.Add(new(circleSmall, caster.Position, default, Module.CastFinishAt(spell)));
+            case (uint)AID.SummoningSands:
+                _aoesSmall.Add(new(circleSmall, spell.LocXZ, default, Module.CastFinishAt(spell)));
                 break;
-            case AID.Sandburst1:
-            case AID.Sandburst2:
-                _aoesBig.Add(new(circleBig, caster.Position, default, Module.CastFinishAt(spell)));
+            case (uint)AID.Sandburst1:
+            case (uint)AID.Sandburst2:
+                _aoesBig.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell)));
                 break;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoesSmall.Count != 0 && (AID)spell.Action.ID == AID.SummoningSands)
+        if (_aoesSmall.Count != 0 && spell.Action.ID == (uint)AID.SummoningSands)
             _aoesSmall.RemoveAt(0);
         else if (_aoesBig.Count == 0)
             return;
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Sandburst1:
-            case AID.Sandburst2:
+            case (uint)AID.Sandburst1:
+            case (uint)AID.Sandburst2:
                 _aoesBig.RemoveAt(0);
                 break;
         }

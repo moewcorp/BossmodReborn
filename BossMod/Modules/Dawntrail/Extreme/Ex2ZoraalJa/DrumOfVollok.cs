@@ -13,19 +13,19 @@ class DrumOfVollokPlatforms(BossModule module) : BossComponent(module)
         {
             case 0x00800040:
                 Arena.Bounds = Ex2ZoraalJa.NWPlatformBounds;
-                Arena.Center += 15 * 135.Degrees().ToDirection();
+                Arena.Center += 15f * 135f.Degrees().ToDirection();
                 Active = true;
                 break;
             case 0x02000100:
                 Arena.Bounds = Ex2ZoraalJa.NEPlatformBounds;
-                Arena.Center += 15 * (-135).Degrees().ToDirection();
+                Arena.Center += 15f * (-135f).Degrees().ToDirection();
                 Active = true;
                 break;
         }
     }
 }
 
-class DrumOfVollok(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DrumOfVollokAOE), 4, 2, 2);
+class DrumOfVollok(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DrumOfVollokAOE), 4f, 2, 2);
 
 class DrumOfVollokKnockback(BossModule module) : Components.Knockback(module, ignoreImmunes: true)
 {
@@ -33,10 +33,21 @@ class DrumOfVollokKnockback(BossModule module) : Components.Knockback(module, ig
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
-        if (_main == null || _main.Stacks.Any(s => s.Target == actor))
-            yield break;
-        foreach (var s in _main.Stacks)
+        if (_main == null)
+            return [];
+        var count = _main.Stacks.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (_main.Stacks[i].Target == actor)
+                return [];
+        }
+        var sources = new List<Source>();
+        for (var i = 0; i < count; ++i)
+        {
+            var s = _main.Stacks[i];
             if (actor.Position.InCircle(s.Target.Position, s.Radius))
-                yield return new(s.Target.Position, 25, s.Activation);
+                sources.Add(new(s.Target.Position, 25f, s.Activation));
+        }
+        return sources;
     }
 }

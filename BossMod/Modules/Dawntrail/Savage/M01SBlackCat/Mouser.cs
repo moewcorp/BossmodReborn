@@ -10,7 +10,15 @@ class ArenaChanges(BossModule module) : BossComponent(module)
     private static readonly Square[] defaultSquare = [new(ArenaCenter, 20)];
     public BitMask DamagedCells;
     public BitMask DestroyedCells;
-    public static readonly Square[] Tiles = [.. Enumerable.Range(0, 16).Select(index => new Square(CellCenter(index), 5))];
+    public static readonly Square[] Tiles = GenerateTiles();
+
+    private static Square[] GenerateTiles()
+    {
+        var squares = new Square[16];
+        for (var i = 0; i < 16; ++i)
+            squares[i] = new Square(CellCenter(i), 5f);
+        return squares;
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -19,18 +27,17 @@ class ArenaChanges(BossModule module) : BossComponent(module)
         switch (state)
         {
             case 0x00020001: // damage tile (first jump)
-                DamagedCells.Set(index);
-                DestroyedCells.Clear(index);
+                DamagedCells[index] = true;
                 break;
             case 0x00200010: // destroy tile (second jump)
-                DamagedCells.Clear(index);
-                DestroyedCells.Set(index);
+                DamagedCells[index] = false;
+                DestroyedCells[index] = true;
                 break;
             case 0x01000004: // repair destroyed tile (after initial jumps)
             case 0x00800004: // repair damaged tile (mechanic end)
             case 0x00080004: // start short repair (will finish before kb)
-                DamagedCells.Clear(index);
-                DestroyedCells.Clear(index);
+                DamagedCells[index] = false;
+                DestroyedCells[index] = false;
                 break;
             case 0x00400004: // start long repair (won't finish before kb)
                 break;
@@ -40,10 +47,10 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GrimalkinGaleSpreadAOE)
+        if (spell.Action.ID == (uint)AID.GrimalkinGaleSpreadAOE)
         {
-            DamagedCells.Reset();
-            DestroyedCells.Reset();
+            DamagedCells = default;
+            DestroyedCells = default;
             UpdateArenaBounds();
         }
     }
@@ -64,16 +71,26 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     public static WPos CellCenter(int index)
     {
-        var x = -15 + 10 * (index & 3);
-        var z = -15 + 10 * (index >> 2);
+        var x = -15f + 10f * (index & 3);
+        var z = -15f + 10f * (index >> 2);
         return ArenaCenter + new WDir(x, z);
     }
 
     private void UpdateArenaBounds()
     {
-        Shape[] brokenTiles = [.. Tiles.Where((tile, index) => DestroyedCells[index])];
-        var brokenTilesCount = brokenTiles.Length == 16 ? [] : brokenTiles; // prevents empty sequence error at end of enrage
-        ArenaBoundsComplex arena = new(defaultSquare, brokenTiles);
+        List<Square> brokenTilesList = [];
+
+        var len = Tiles.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (DestroyedCells[i])
+                brokenTilesList.Add(Tiles[i]);
+        }
+
+        Square[] brokenTiles = [.. brokenTilesList];
+        if (brokenTiles.Length == 16) // prevents empty sequence error at end of enrage
+            brokenTiles = [];
+        var arena = new ArenaBoundsComplex(defaultSquare, brokenTiles);
         Arena.Bounds = arena;
         Arena.Center = arena.Center;
     }
@@ -83,9 +100,9 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
 class Mouser(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(32);
     private bool enrage;
-    public static readonly AOEShapeRect Rect = new(5, 5, 5);
+    private static readonly AOEShapeRect rect = new(10f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -97,23 +114,23 @@ class Mouser(BossModule module) : Components.GenericAOEs(module)
         var total = countDanger + countsAOE;
         var max = total > count ? count : total;
 
-        List<AOEInstance> aoes = new(max);
+        var aoes = new AOEInstance[max];
         for (var i = 0; i < max; ++i)
         {
             var aoe = _aoes[i];
             if (i < countDanger)
-                aoes.Add(count > countDanger ? aoe with { Color = Colors.Danger } : aoe);
+                aoes[i] = count > countDanger ? aoe with { Color = Colors.Danger } : aoe;
             else
-                aoes.Add(aoe);
+                aoes[i] = aoe;
         }
         return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.MouserTelegraphFirst or AID.MouserTelegraphSecond)
-            _aoes.Add(new(Rect, caster.Position, spell.Rotation, WorldState.FutureTime(9.7f)));
-        else if ((AID)spell.Action.ID == AID.MouserEnrage)
+        if (spell.Action.ID is (uint)AID.MouserTelegraphFirst or (uint)AID.MouserTelegraphSecond)
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, WorldState.FutureTime(9.7d)));
+        else if (spell.Action.ID == (uint)AID.MouserEnrage)
             enrage = true;
     }
 
@@ -125,20 +142,20 @@ class Mouser(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Mouser)
+        if (spell.Action.ID == (uint)AID.Mouser)
             ++NumCasts;
     }
 }
 
-class GrimalkinGaleShockwave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GrimalkinGaleShockwaveAOE), 21, true, stopAfterWall: true);
-class GrimalkinGaleSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GrimalkinGaleSpreadAOE), 5);
+class GrimalkinGaleShockwave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GrimalkinGaleShockwaveAOE), 21f, true, stopAfterWall: true);
+class GrimalkinGaleSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GrimalkinGaleSpreadAOE), 5f);
 
 class SplinteringNails(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.SplinteringNailsAOE))
 {
     private readonly ElevateAndEviscerate? _jumps = module.FindComponent<ElevateAndEviscerate>();
     private Actor? _source;
 
-    private static readonly AOEShapeCone _shape = new(100, 25.Degrees()); // TODO: verify angle
+    private static readonly AOEShapeCone _shape = new(100f, 25f.Degrees()); // TODO: verify angle
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -165,7 +182,7 @@ class SplinteringNails(BossModule module) : Components.CastCounter(module, Actio
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SplinteringNails)
+        if (spell.Action.ID == (uint)AID.SplinteringNails)
         {
             _source = caster;
         }

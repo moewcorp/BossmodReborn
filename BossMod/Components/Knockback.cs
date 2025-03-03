@@ -130,11 +130,11 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
             }
     }
 
-    public IEnumerable<(WPos from, WPos to)> CalculateMovements(int slot, Actor actor)
+    public List<(WPos from, WPos to)> CalculateMovements(int slot, Actor actor)
     {
         if (MaxCasts <= 0)
-            yield break;
-
+            return [];
+        var movements = new List<(WPos, WPos)>();
         var from = actor.Position;
         var count = 0;
         foreach (var s in Sources(slot, actor))
@@ -148,7 +148,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
             {
                 Kind.AwayFromOrigin => from != s.Origin ? (from - s.Origin).Normalized() : default,
                 Kind.TowardsOrigin => from != s.Origin ? (s.Origin - from).Normalized() : default,
-                Kind.DirBackward => (s.Direction + 180.Degrees()).ToDirection(),
+                Kind.DirBackward => (s.Direction + 180f.Degrees()).ToDirection(),
                 Kind.DirForward => s.Direction.ToDirection(),
                 Kind.DirLeft => s.Direction.ToDirection().OrthoL(),
                 Kind.DirRight => s.Direction.ToDirection().OrthoR(),
@@ -211,12 +211,13 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
             }
 
             var to = from + distance * dir;
-            yield return (from, to);
+            movements.Add((from, to));
             from = to;
 
             if (++count == MaxCasts)
                 break;
         }
+        return movements;
     }
 }
 

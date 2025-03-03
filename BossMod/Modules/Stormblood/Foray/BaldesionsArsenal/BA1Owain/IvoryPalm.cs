@@ -51,11 +51,12 @@ class EurekanAero(BossModule module) : Components.Cleave(module, ActionID.MakeSp
 {
     public override List<(Actor origin, Actor target, Angle angle)> OriginsAndTargets()
     {
-        var count = Enemies.Count;
+        var enemies = Module.Enemies(EnemyOID);
+        var count = enemies.Count;
         List<(Actor, Actor, Angle)> origins = new(count);
         for (var i = 0; i < count; ++i)
         {
-            var enemy = Enemies[i];
+            var enemy = enemies[i];
             if (enemy.IsDead || enemy.FindStatus((uint)SID.Petrification) != null)
                 continue;
 

@@ -11,12 +11,12 @@ class ForwardBackwardHalf(BossModule module) : Components.GenericAOEs(module, Ac
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var (relevant, front, left) = (AID)spell.Action.ID switch
+        var (relevant, front, left) = spell.Action.ID switch
         {
-            AID.ForwardHalfR or AID.ForwardHalfLongR => (true, true, false),
-            AID.ForwardHalfL or AID.ForwardHalfLongL => (true, true, true),
-            AID.BackwardHalfR or AID.BackwardHalfLongR => (true, false, false),
-            AID.BackwardHalfL or AID.BackwardHalfLongL => (true, false, true),
+            (uint)AID.ForwardHalfR or (uint)AID.ForwardHalfLongR => (true, true, false),
+            (uint)AID.ForwardHalfL or (uint)AID.ForwardHalfLongL => (true, true, true),
+            (uint)AID.BackwardHalfR or (uint)AID.BackwardHalfLongR => (true, false, false),
+            (uint)AID.BackwardHalfL or (uint)AID.BackwardHalfLongL => (true, false, true),
             _ => default
         };
         if (!relevant)
@@ -38,9 +38,9 @@ class HalfFull(BossModule module) : Components.GenericAOEs(module, ActionID.Make
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HalfFullR or AID.HalfFullL)
+        if (spell.Action.ID is (uint)AID.HalfFullR or (uint)AID.HalfFullL)
         {
-            var cleaveDir = spell.Rotation + ((AID)spell.Action.ID == AID.HalfFullL ? 90 : -90).Degrees();
+            var cleaveDir = spell.Rotation + (spell.Action.ID == (uint)AID.HalfFullL ? 90 : -90).Degrees();
             _aoes.Add(new(_shapeSide, caster.Position, cleaveDir, Module.CastFinishAt(spell)));
         }
     }

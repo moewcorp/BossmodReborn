@@ -19,8 +19,8 @@ public enum AID : uint
     Catapult = 40672 // GiantCorse->location, 4.0s cast, range 6 circle
 }
 
-class GlassPunch(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GlassPunch), new AOEShapeCone(7, 60.Degrees()));
-class Catapult(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Catapult), 6);
+class GlassPunch(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GlassPunch), new AOEShapeCone(7f, 60f.Degrees()));
+class Catapult(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Catapult), 6f);
 
 class D90StationSpecterStates : StateMachineBuilder
 {
@@ -38,7 +38,7 @@ class D90StationSpecterStates : StateMachineBuilder
                 for (var i = 0; i < count; ++i)
                 {
                     var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed && enemy.Position.AlmostEqual(center, radius))
+                    if (!enemy.IsDeadOrDestroyed)
                         return false;
                 }
                 return true;
@@ -107,17 +107,13 @@ public class D90StationSpecter(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var filteredEnemies = new List<Actor>();
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
+        Arena.Actors(Enemies(Trash));
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.Position.AlmostEqual(center, radius))
-                filteredEnemies.Add(enemy);
-        }
-        Arena.Actors(filteredEnemies);
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

@@ -40,21 +40,35 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null || !_aoe.ActiveAOEs(slot, actor).Any())
+        if (AI.AIManager.Instance?.Beh == null || _aoe.AOEs.Count == 0)
             return;
+
         var forbidden = new List<Func<WPos, float>>();
-        var turrets = Module.Enemies(OID.MarkXLIIIMiniCannon).Where(x => x.IsTargetable).ToList();
-        foreach (var t in turrets)
-            forbidden.Add(ShapeDistance.InvertedCircle(t.Position, 3));
-        var closestTurret = turrets.Closest(actor.Position);
-        if (closestTurret != null)
+        var turrets = Module.Enemies((uint)OID.MarkXLIIIMiniCannon);
+        Actor? closest = null;
+        var minDistSq = float.MaxValue;
+
+        var count = turrets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            var distance = (actor.Position - closestTurret.Position).LengthSq();
-            if (forbidden.Count > 0 && distance > 9)
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
-            else if (distance < 9)
+            var turret = turrets[i];
+            if (turret.IsTargetable)
             {
-                hints.InteractWithTarget = closestTurret;
+                hints.GoalZones.Add(hints.GoalSingleTarget(turret, 1f, 5f));
+                var distSq = (actor.Position - turret.Position).LengthSq();
+                if (distSq < minDistSq)
+                {
+                    minDistSq = distSq;
+                    closest = turret;
+                }
+            }
+        }
+
+        if (closest != null)
+        {
+            if (minDistSq < 9f)
+            {
+                hints.InteractWithTarget = closest;
                 hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.MagitekPulse), null, ActionQueue.Priority.High, targetPos: Module.PrimaryActor.PosRot.XYZ());
             }
         }
@@ -62,60 +76,79 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(default, Raid.Player()!).Any())
-            hints.Add("Use the turrets to stun the boss!");
+        if (_aoe.AOEs.Count == 0)
+            return;
+        var turrets = Module.Enemies((uint)OID.MarkXLIIIMiniCannon);
+        var count = turrets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (turrets[i].IsTargetable)
+            {
+                hints.Add("Use the turrets to stun the boss!");
+                return;
+            }
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!(Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable) && _aoe.ActiveAOEs(pcSlot, pc).Any()))
+        if (_aoe.AOEs.Count == 0)
             return;
-        foreach (var a in Module.Enemies(OID.MarkXLIIIMiniCannon).Where(x => x.IsTargetable))
-            Arena.AddCircle(a.Position, 3, Colors.Safe);
+        var turrets = Module.Enemies((uint)OID.MarkXLIIIMiniCannon);
+        var count = turrets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var turret = turrets[i];
+            if (turret.IsTargetable)
+                Arena.AddCircle(turret.Position, 3f, Colors.Safe);
+        }
     }
 }
 
 class WildSpeedHaywire(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40.5f, 3);
+    public readonly List<AOEInstance> AOEs = new(4);
+    private static readonly AOEShapeRect rect = new(40.5f, 3f);
+
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        for (var i = 1; i < _aoes.Count; ++i)
-            yield return _aoes[i];
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = AOEs[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HaywireTelegraph)
-            _aoes.Add(new(rect, caster.Position, spell.Rotation, Module.CastFinishAt(spell, -0.2f))); // actual dmg AOE happens ~0.2s before cast ends
+        if (spell.Action.ID == (uint)AID.HaywireTelegraph)
+            AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, -0.2f))); // actual dmg AOE happens ~0.2s before cast ends
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.WildSpeed)
-            _aoes.RemoveAt(0);
+        if (AOEs.Count > 0 && spell.Action.ID == (uint)AID.WildSpeed)
+            AOEs.RemoveAt(0);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Fetters && actor == Module.PrimaryActor)
-            _aoes.Clear();
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (ActiveAOEs(slot, actor).Any() && Module.Enemies(OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable))
-        { }
-        else
-            base.AddAIHints(slot, actor, assignment, hints);
+        if (status.ID == (uint)SID.Fetters && actor == Module.PrimaryActor)
+            AOEs.Clear();
     }
 }
 
-class MagitekPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekPulse), 6);
-class MagitekFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekFireII), 5);
+class MagitekPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekPulse), 6f);
+class MagitekFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekFireII), 5f);
 class MagitekFireIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MagitekFireIII));
 
 class D051MagnaRoaderStates : StateMachineBuilder
@@ -144,9 +177,16 @@ public class D051MagnaRoader(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var comp = FindComponent<WildSpeedHaywire>()?.ActiveAOEs(slot, actor).Any();
-        if (comp != null && (bool)comp && Enemies((uint)OID.MarkXLIIIMiniCannon).Any(x => x.IsTargetable))
+        if (FindComponent<WildSpeedHaywire>()?.AOEs.Count != 0)
         {
+            var turrets = Enemies((uint)OID.MarkXLIIIMiniCannon);
+            var countT = turrets.Count;
+            for (var i = 0; i < countT; ++i)
+            {
+                var turret = turrets[i];
+                if (turret.IsTargetable)
+                    return;
+            }
             var count = hints.PotentialTargets.Count;
             for (var i = 0; i < count; ++i)
             {
@@ -162,8 +202,7 @@ public class D051MagnaRoader(WorldState ws, Actor primary) : BossModule(ws, prim
                 var e = hints.PotentialTargets[i];
                 e.Priority = e.Actor.OID switch
                 {
-                    (uint)OID.TwelfthLegionOptio => 2,
-                    (uint)OID.Boss => 1,
+                    (uint)OID.TwelfthLegionOptio => 1,
                     _ => 0
                 };
             }

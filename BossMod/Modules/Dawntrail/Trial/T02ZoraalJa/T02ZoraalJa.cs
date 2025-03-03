@@ -29,11 +29,11 @@ class T02ZoraalJaStates : StateMachineBuilder
 
 public abstract class ZoraalJa(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultBounds)
 {
-    public static readonly Angle ArenaRotation = 45.Degrees();
+    public static readonly Angle ArenaRotation = 45f.Degrees();
     public static readonly WPos ArenaCenter = new(100, 100);
-    public static readonly ArenaBoundsSquare DefaultBounds = new(20, ArenaRotation);
-    public static readonly ArenaBoundsSquare SmallBounds = new(10, ArenaRotation);
+    public static readonly ArenaBoundsSquare DefaultBounds = new(20f, ArenaRotation);
+    public static readonly ArenaBoundsSquare SmallBounds = new(10f, ArenaRotation);
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 995, NameID = 12881, SortOrder = 1)]
-public class T02ZoraalJa(WorldState ws, Actor primary) : ZoraalJa(ws, primary) { }
+public class T02ZoraalJa(WorldState ws, Actor primary) : ZoraalJa(ws, primary);

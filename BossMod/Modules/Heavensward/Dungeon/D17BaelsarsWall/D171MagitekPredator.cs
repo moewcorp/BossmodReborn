@@ -24,14 +24,14 @@ public enum SID : uint
     DamageUp = 290 // none->SkyArmorReinforcement/Helper, extra=0x0
 }
 
-class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(42.94f, 3));
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(42.94f, 3f));
 class MagitekClaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.MagitekClaw));
-class MagitekMissile(BossModule module) : Components.SingleTargetInstant(module, ActionID.MakeSpell(AID.MagitekMissile), 5, "50% HP damage on prey targets")
+class MagitekMissile(BossModule module) : Components.SingleTargetInstant(module, ActionID.MakeSpell(AID.MagitekMissile), 5f, "50% HP damage on prey targets")
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Prey)
-            Targets.Add((Raid.FindSlot(actor.InstanceID), WorldState.FutureTime(5)));
+        if (status.ID == (uint)SID.Prey)
+            Targets.Add((Raid.FindSlot(actor.InstanceID), WorldState.FutureTime(5d)));
     }
 }
 
@@ -47,21 +47,23 @@ class D171MagitekPredatorStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 219, NameID = 5564)]
-public class D171MagitekPredator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-174, 73), new ArenaBoundsSquare(19.5f))
+public class D171MagitekPredator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-174f, 73f), new ArenaBoundsSquare(19.5f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.SkyArmorReinforcement).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.SkyArmorReinforcement));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.SkyArmorReinforcement => 1,
+                (uint)OID.SkyArmorReinforcement => 1,
                 _ => 0
             };
         }

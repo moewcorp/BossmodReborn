@@ -99,7 +99,7 @@ class Ex5RubicanteStates : StateMachineBuilder
     private void Flamesent(uint id, float delay)
     {
         Targetable(id, false, delay, "Boss disappear");
-        ComponentCondition<GreaterFlamesent>(id + 0x10, 4.9f, comp => comp.ActiveActors.Any(), "Adds appear")
+        ComponentCondition<GreaterFlamesent>(id + 0x10, 4.9f, comp => comp.ActiveActors.Count != 0, "Adds appear")
             .ActivateOnEnter<GreaterFlamesent>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
         // TODO: consider adding more states here, mechanics are well timed it seems...

@@ -3,7 +3,7 @@
 // TODO: consider improving this somehow? too many ways to resolve...
 class ProjectionOfTurmoil(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.MightOfVollok))
 {
-    private readonly List<Actor> _line = module.Enemies(OID.ProjectionOfTurmoil);
+    private readonly List<Actor> _line = module.Enemies((uint)OID.ProjectionOfTurmoil);
     private BitMask _targets;
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => _targets[playerSlot] ? PlayerPriority.Interesting : PlayerPriority.Normal;
@@ -14,25 +14,26 @@ class ProjectionOfTurmoil(BossModule module) : Components.CastCounter(module, Ac
         {
             var actor = Raid[slot];
             if (actor != null)
-                Arena.AddCircle(actor.Position, 8, Colors.Safe);
+                Arena.AddCircle(actor.Position, 8f, Colors.Safe);
         }
-        for (var i = 0; i < _line.Count; ++i)
+        var count = _line.Count;
+        for (var i = 0; i < count; ++i)
         {
             var l = _line[i];
-            var off = new WDir(28.28427f - Math.Abs(l.Position.Z - Module.Center.Z), 0);
+            var off = new WDir(28.28427f - Math.Abs(l.Position.Z - Arena.Center.Z), default);
             Arena.AddLine(l.Position - off, l.Position + off, Colors.Danger);
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Projection)
-            _targets.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Projection)
+            _targets[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Projection)
-            _targets.Clear(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Projection)
+            _targets[Raid.FindSlot(actor.InstanceID)] = false;
     }
 }

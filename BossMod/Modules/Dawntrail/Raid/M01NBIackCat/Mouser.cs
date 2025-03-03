@@ -2,12 +2,20 @@ namespace BossMod.Dawntrail.Raid.M01NBlackCat;
 
 class ArenaChanges(BossModule module) : BossComponent(module)
 {
-    public static readonly WPos ArenaCenter = new(100, 100);
-    public static readonly ArenaBoundsSquare DefaultBounds = new(20);
-    private static readonly Square[] defaultSquare = [new(ArenaCenter, 20)];
+    public static readonly WPos ArenaCenter = new(100f, 100f);
+    public static readonly ArenaBoundsSquare DefaultBounds = new(20f);
+    private static readonly Square[] defaultSquare = [new(ArenaCenter, 20f)];
     public BitMask DamagedCells;
     public BitMask DestroyedCells;
-    public static readonly Square[] Tiles = [.. Enumerable.Range(0, 16).Select(index => new Square(CellCenter(index), 5))];
+    public static readonly Square[] Tiles = GenerateTiles();
+
+    private static Square[] GenerateTiles()
+    {
+        var squares = new Square[16];
+        for (var i = 0; i < 16; ++i)
+            squares[i] = new Square(CellCenter(i), 5f);
+        return squares;
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -19,16 +27,16 @@ class ArenaChanges(BossModule module) : BossComponent(module)
         if (index > 0x0F)
             return;
         if (state == 0x00020001) // tile gets damaged
-            DamagedCells.Set(index);
+            DamagedCells[index] = true;
         else if (state == 0x00200010) // tile gets broken
         {
-            DamagedCells.Clear(index);
-            DestroyedCells.Set(index);
+            DamagedCells[index] = false;
+            DestroyedCells[index] = true;
         }
         else if (state is 0x01000004 or 0x00800004) // tile gets repaired
         {
-            DamagedCells.Clear(index);
-            DestroyedCells.Clear(index);
+            DamagedCells[index] = false;
+            DestroyedCells[index] = false;
         }
         UpdateArenaBounds();
     }
@@ -49,15 +57,23 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     public static WPos CellCenter(int index)
     {
-        var x = -15 + 10 * (index & 3);
-        var z = -15 + 10 * (index >> 2);
+        var x = -15f + 10f * (index & 3);
+        var z = -15f + 10f * (index >> 2);
         return ArenaCenter + new WDir(x, z);
     }
 
     private void UpdateArenaBounds()
     {
-        Shape[] brokenTiles = [.. Tiles.Where((tile, index) => DestroyedCells[index])];
-        ArenaBoundsComplex arena = new(defaultSquare, brokenTiles);
+        List<Square> brokenTilesList = [];
+        var len = Tiles.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (DestroyedCells[i])
+                brokenTilesList.Add(Tiles[i]);
+        }
+
+        Square[] brokenTiles = [.. brokenTilesList];
+        var arena = new ArenaBoundsComplex(defaultSquare, brokenTiles);
         Arena.Bounds = arena;
         Arena.Center = arena.Center;
     }
@@ -65,8 +81,8 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
 class Mouser(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    public static readonly AOEShapeRect Rect = new(5f, 5f, 5f);
+    private readonly List<AOEInstance> _aoes = new(19);
+    private static readonly AOEShapeRect rect = new(10f, 5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -92,7 +108,7 @@ class Mouser(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.MouserTelegraphFirst or (uint)AID.MouserTelegraphSecond)
-            _aoes.Add(new(Rect, caster.Position, spell.Rotation, WorldState.FutureTime(9.7f)));
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, WorldState.FutureTime(9.7d)));
     }
 
     public override void OnEventEnvControl(byte index, uint state)

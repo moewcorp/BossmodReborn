@@ -55,7 +55,7 @@ public sealed class NormalMovement(RotationModuleManager manager, Actor player) 
             if (Player.PendingKnockbacks.Count > 0)
                 return; // do not move if there are any unresolved knockbacks - the positions are taken at resolve time, so we might fuck things up
 
-            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && Hints.ImminentSpecialMode.activation <= World.FutureTime(1))
+            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && Hints.ImminentSpecialMode.activation <= World.FutureTime(1d))
             {
                 Hints.ForceCancelCast = true; // this is only useful if autopyretic tweak is disabled
                 return; // pyretic is imminent, do not move
@@ -66,17 +66,17 @@ public sealed class NormalMovement(RotationModuleManager manager, Actor player) 
                 // strongly prefer moving towards interact target
                 Hints.GoalZones.Add(p =>
                 {
-                    var length = (p - Hints.InteractWithTarget.Position).Length();
+                    var length = (p - Hints.InteractWithTarget.Position).LengthSq();
 
                     // 99% of eventobjects have an interact range of 3.5y, while the rest have a range of 2.09y
                     // checking only for the shorter range here would be fine in the vast majority of cases, but it can break interact pathfinding in the case that the target object is partially covered by a forbidden zone with a radius between 2.1 and 3.5
                     // this is specifically an issue in the metal gear thancred solo duty in endwalker
-                    return length <= 2.09f ? 101 : length <= 3.5f ? 100 : 0;
+                    return length <= 4.3681f ? 101f : length <= 12.25f ? 100f : 0;
                 });
             }
         }
 
-        var speed = Player.FindStatus(ClassShared.SID.Sprint) != null ? 7.8f : 6;
+        var speed = Player.FindStatus(ClassShared.SID.Sprint) != null ? 7.8f : 6f;
         var destinationOpt = strategy.Option(Track.Destination);
         var destinationStrategy = destinationOpt.As<DestinationStrategy>();
         var navi = destinationStrategy switch

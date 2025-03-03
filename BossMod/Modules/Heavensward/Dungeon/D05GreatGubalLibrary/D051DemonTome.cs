@@ -26,33 +26,29 @@ public enum AID : uint
 class Repel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Repel), 20, true, kind: Kind.DirForward, stopAtWall: true);
 class LiquefyCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefyCenter), new AOEShapeRect(57.84f, 4));
 class LiquefySides(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefySides), new AOEShapeRect(57.84f, 3.5f));
+class Disclosure(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Disclosure), new AOEShapeRect(20.5f, 11f));
 
-class Disclosure(BossModule module) : Components.GenericAOEs(module)
+class DisclosureSpin(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(12);
-    private static readonly AOEShapeRect rect = new(25, 10);
+    private AOEInstance? _aoe;
+    private static readonly AOEShapeCircle circle = new(12.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Disclosure)
+        if (spell.Action.ID == (uint)AID.Disclosure)
         {
-            if (spell.Rotation.AlmostEqual(-90.Degrees(), Angle.DegToRad))
-                _aoes.Add(new(rect, new(3.667f, 0), spell.Rotation, Module.CastFinishAt(spell)));
-            else if (spell.Rotation.AlmostEqual(90.Degrees(), Angle.DegToRad))
-                _aoes.Add(new(rect, new(3.3f, 0), spell.Rotation, Module.CastFinishAt(spell)));
             Arena.Bounds = D051DemonTome.SpinArena;
-            _aoes.Add(new(circle, Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 2.4f)));
+            _aoe = new(circle, WPos.ClampToGrid(Module.PrimaryActor.Position), default, Module.CastFinishAt(spell, 2.4f));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.Disclosure or AID.DisclosureSpin)
+        if (spell.Action.ID == (uint)AID.DisclosureSpin)
         {
-            _aoes.RemoveAt(0);
+            _aoe = null;
             Arena.Bounds = D051DemonTome.DefaultArena;
         }
     }
@@ -69,17 +65,19 @@ class D051DemonTomeStates : StateMachineBuilder
             .ActivateOnEnter<LiquefyCenter>()
             .ActivateOnEnter<LiquefySides>()
             .ActivateOnEnter<Repel>()
-            .ActivateOnEnter<Disclosure>();
+            .ActivateOnEnter<Disclosure>()
+            .ActivateOnEnter<DisclosureSpin>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 31, NameID = 3923)]
 public class D051DemonTome(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultArena.Center, DefaultArena)
 {
-    private static readonly WPos[] vertices = [new(19.49f, -9.58f), new(19.57f, -9.02f), new(19.57f, -8.51f), new(19.38f, -7.99f), new(19.23f, 7.30f),
-    new(19.54f, 7.76f), new(19.56f, 8.86f), new(19.62f, 9.37f), new(-14.67f, 9.60f), new(-18.81f, 9.59f),
-    new(-19.47f, 9.58f), new(-19.58f, 9.00f), new(-19.57f, 8.46f), new(-19.44f, 7.89f), new(-19.33f, -7.38f),
-    new(-19.57f, -7.85f), new(-19.59f, -8.96f), new(-19.68f, -9.47f), new(-17.27f, -9.59f), new(-3.43f, -9.60f)];
-    public static readonly ArenaBoundsComplex DefaultArena = new([new PolygonCustom(vertices)], [new RectangleSE(new(-3.666f, 0), new(3.29f, 0), 20)]);
-    public static readonly ArenaBoundsComplex SpinArena = new([new PolygonCustom(vertices)], [new RectangleSE(new(-3.666f, 0), new(3.29f, 0), 4.5f)]);
+    private static readonly Rectangle midRect = new(new(-0.182f, 0.014f), 3.475f, 4.5f, 0.02f.Degrees());
+    private static readonly Rectangle entranceRect = new(new(-20.486f, 0.109f), 1.25f, 8f);
+    private static readonly Rectangle exitRect = new(new(20.388f, -0.18f), 1.25f, 8f);
+    private static readonly Rectangle[] baseArena = [new Rectangle(default, 19.5f, 9.5f)];
+    public static readonly ArenaBoundsComplex DefaultArena = new(baseArena, [entranceRect, exitRect, midRect, new Rectangle(new(-0.166f, 8.588f), 3.487f, 5f),
+     new Rectangle(new(-0.185f, -8.554f), 3.475f, 5f)]);
+    public static readonly ArenaBoundsComplex SpinArena = new(baseArena, [entranceRect, exitRect, midRect]);
 }

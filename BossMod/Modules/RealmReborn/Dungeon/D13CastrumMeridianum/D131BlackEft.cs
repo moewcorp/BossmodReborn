@@ -23,9 +23,9 @@ public enum AID : uint
     MagitekCannon = 28775 // Boss->location, 3.0s cast, range 6 circle aoe
 }
 
-class IncendiarySupport(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.IncendiarySupportVisual), ActionID.MakeSpell(AID.IncendiarySupport), 1, "Raidwide x3");
-class HighPoweredMagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HighPoweredMagitekRay), new AOEShapeRect(50, 2));
-class MagitekCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekCannon), 6);
+class IncendiarySupport(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.IncendiarySupportVisual), ActionID.MakeSpell(AID.IncendiarySupport), 1f, "Raidwide x3");
+class HighPoweredMagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HighPoweredMagitekRay), new AOEShapeRect(50f, 2f));
+class MagitekCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekCannon), 6f);
 
 class D131BlackEftStates : StateMachineBuilder
 {
@@ -74,9 +74,11 @@ public class D131BlackEft(WorldState ws, Actor primary) : BossModule(ws, primary
     new(-1.82f, -70.34f), new(-1.22f, -70.34f), new(0.02f, -70.85f), new(0.34f, -71.37f), new(0.61f, -71.94f),
     new(0.61f, -73.48f), new(12.14f, -73.48f)];
     private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly uint[] trash = [(uint)OID.EigthCohortLaquearius, (uint)OID.EigthCohortSignifer, (uint)OID.MagitekColossus];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.EigthCohortLaquearius).Concat([PrimaryActor]).Concat(Enemies(OID.EigthCohortSignifer)).Concat(Enemies(OID.MagitekColossus)));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(trash));
     }
 }

@@ -173,7 +173,6 @@ public class D130CloudGardener(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var filteredEnemies = new List<Actor>();
         var enemies = Enemies(Trash);
         var count = enemies.Count;
         var center = Arena.Center;
@@ -182,21 +181,14 @@ public class D130CloudGardener(WorldState ws, Actor primary) : BossModule(ws, pr
         {
             var enemy = enemies[i];
             if (enemy.Position.AlmostEqual(center, radius))
-                filteredEnemies.Add(enemy);
+                Arena.Actor(enemy);
         }
-        Arena.Actors(filteredEnemies);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
-        {
-            var e = hints.PotentialTargets[i];
-            if (e.Actor.OID == (uint)OID.Boss)
-            {
-                e.Priority = 0;
-            }
-        }
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

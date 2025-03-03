@@ -3,7 +3,7 @@ namespace BossMod.Dawntrail.Trial.T02ZoraalJaP2;
 class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> _aoes = new(4);
-    private static readonly AOEShapeRect _shape = new(10, 2.5f, 10);
+    private static readonly AOEShapeRect _shape = new(10f, 2.5f, 10f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -11,9 +11,9 @@ class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var max = count > 4 ? 4 : count;
-        List<AOEInstance> aoes = new(max);
+        var aoes = new AOEInstance[max];
         for (var i = 0; i < max; ++i)
-            aoes.Add(_aoes[i]);
+            aoes[i] = _aoes[i];
         return aoes;
     }
 
@@ -27,12 +27,12 @@ class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
         var lane1 = laneOffset is < -7 and > -8;
         var lane3 = laneOffset is > 2 and < 3;
         var adjustedLaneOffset = laneOffset + (patternX ? 5 * (lane1 || lane3 ? 1 : -1) : 0);
-        _aoes.Add(new(_shape, Arena.Center + rightDir * adjustedLaneOffset, source.Rotation, WorldState.FutureTime(13.3f)));
+        _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center + rightDir * adjustedLaneOffset), source.Rotation, WorldState.FutureTime(13.3d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.ForgedTrack)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.ForgedTrack)
             _aoes.RemoveAt(0);
     }
 }

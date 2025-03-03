@@ -58,4 +58,11 @@ public class D060ClonedConjurer(WorldState ws, Actor primary) : BossModule(ws, p
     {
         Arena.Actors(Enemies(Trash));
     }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PotentialTargets[i].Priority = 0;
+    }
 }

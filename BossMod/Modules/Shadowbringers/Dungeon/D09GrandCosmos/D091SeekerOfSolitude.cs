@@ -31,11 +31,50 @@ public enum AID : uint
 
 class ImmortalAnathema(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ImmortalAnathema));
 class Shadowbolt(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Shadowbolt));
-class Tribulation(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.Tribulation), m => m.Enemies(OID.SweepVoidzone).Where(z => z.EventState != 7), 0.1f);
-class DarkPulse(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DarkPulse), 6, 4, 4);
-class DarkWell(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DarkWell), 5);
-class DarkShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkShock), 6);
-class MagickedBroom(BossModule module) : Components.PersistentVoidzone(module, 3.125f, m => m.Enemies(OID.MagickedBroom).Where(x => x.ModelState.AnimState1 == 1), 10);
+class Tribulation(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.Tribulation), GetVoidzones, 0.1f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SweepVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class DarkPulse(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DarkPulse), 6f, 4, 4);
+class DarkWell(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DarkWell), 5f);
+class DarkShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkShock), 6f);
+class MagickedBroom(BossModule module) : Components.PersistentVoidzone(module, 3.125f, GetVoidzones, 10f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.MagickedBroom);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.ModelState.AnimState1 == 1)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class D091SeekerOfSolitudeStates : StateMachineBuilder
 {
@@ -53,4 +92,4 @@ class D091SeekerOfSolitudeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 692, NameID = 9041)]
-public class D091SeekerOfSolitude(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 187), new ArenaBoundsRect(20.5f, 14.5f));
+public class D091SeekerOfSolitude(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, 187f), new ArenaBoundsRect(20.5f, 14.5f));

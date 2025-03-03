@@ -9,31 +9,52 @@ public class Cleave(BossModule module, ActionID aid, AOEShape shape, uint[]? ene
     public readonly bool ActiveWhileCasting = activeWhileCasting;
     public readonly bool OriginAtTarget = originAtTarget;
     public DateTime NextExpected;
-    public readonly List<Actor> Enemies = module.Enemies(enemyOID ?? [module.PrimaryActor.OID]);
+    public readonly uint[] EnemyOID = enemyOID ?? [module.PrimaryActor.OID];
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (OriginsAndTargets().Any(e => e.target != actor && Shape.Check(WPos.ClampToGrid(actor.Position), e.origin.Position, e.angle)))
+        var origins = OriginsAndTargets();
+        var count = origins.Count;
+        if (count == 0)
+            return;
+
+        for (var i = 0; i < count; ++i)
         {
-            hints.Add("GTFO from cleave!");
+            var e = origins[i];
+            if (actor != e.target && Shape.Check(WPos.ClampToGrid(actor.Position), e.origin.Position, e.angle))
+            {
+                hints.Add("GTFO from cleave!");
+                break;
+            }
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (OriginsAndTargets().Count == 0)
+        var origins = OriginsAndTargets();
+        var count = origins.Count;
+        if (count == 0)
             return;
 
-        foreach (var (origin, target, angle) in OriginsAndTargets())
-            if (actor != target)
-                hints.AddForbiddenZone(Shape, WPos.ClampToGrid(origin.Position), angle, NextExpected);
+        for (var i = 0; i < count; ++i)
+        {
+            var e = origins[i];
+            if (actor != e.target)
+                hints.AddForbiddenZone(Shape, WPos.ClampToGrid(e.origin.Position), e.angle, NextExpected);
             else
-                AddTargetSpecificHints(actor, origin, hints);
+                AddTargetSpecificHints(ref actor, ref e.origin, ref hints);
+        }
     }
 
-    private void AddTargetSpecificHints(Actor actor, Actor source, AIHints hints)
+    private void AddTargetSpecificHints(ref Actor actor, ref Actor source, ref AIHints hints)
     {
-        foreach (var a in Raid.WithoutSlot().Exclude(actor))
+        var raid = Raid.WithoutSlot();
+        var len = raid.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            var a = raid[i];
+            if (a == actor)
+                continue;
             switch (Shape)
             {
                 case AOEShapeCircle circle:
@@ -46,23 +67,29 @@ public class Cleave(BossModule module, ActionID aid, AOEShape shape, uint[]? ene
                     hints.AddForbiddenZone(ShapeDistance.Cone(WPos.ClampToGrid(source.Position), 100f, source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - source.Position).Length())));
                     break;
             }
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var e in OriginsAndTargets())
+        var origins = OriginsAndTargets();
+        var count = origins.Count;
+
+        for (var i = 0; i < count; ++i)
         {
+            var e = origins[i];
             Shape.Outline(Arena, WPos.ClampToGrid(e.origin.Position), e.angle);
         }
     }
 
     public virtual List<(Actor origin, Actor target, Angle angle)> OriginsAndTargets()
     {
-        var count = Enemies.Count;
+        var enemies = Module.Enemies(EnemyOID);
+        var count = enemies.Count;
         List<(Actor, Actor, Angle)> origins = new(count);
         for (var i = 0; i < count; ++i)
         {
-            var enemy = Enemies[i];
+            var enemy = enemies[i];
             if (enemy.IsDead)
                 continue;
 

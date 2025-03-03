@@ -201,10 +201,10 @@ class P3SStates : StateMachineBuilder
     // note: expects downtime at enter, clears when birds spawn, reset when birds die
     private void SmallBirdsPhase(uint id, float delay)
     {
-        ComponentCondition<SunBirdSmall>(id, delay, comp => comp.ActiveActors.Any(), "Small birds", 10000)
+        ComponentCondition<SunBirdSmall>(id, delay, comp => comp.ActiveActors.Count != 0, "Small birds", 10000)
             .ActivateOnEnter<SunBirdSmall>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        ComponentCondition<SunBirdSmall>(id + 0x010, 25, comp => !comp.ActiveActors.Any(), "Small birds enrage", 10000)
+        ComponentCondition<SunBirdSmall>(id + 0x010, 25, comp => comp.ActiveActors.Count == 0, "Small birds enrage", 10000)
             .ActivateOnEnter<SmallBirdDistance>()
             .DeactivateOnExit<SmallBirdDistance>()
             .DeactivateOnExit<SunBirdSmall>()
@@ -214,13 +214,13 @@ class P3SStates : StateMachineBuilder
     // note: expects downtime at enter, clears when birds spawn, reset when birds die
     private void LargeBirdsPhase(uint id, float delay)
     {
-        ComponentCondition<SunBirdLarge>(id, delay, comp => comp.ActiveActors.Any(), "Large birds", 10000)
+        ComponentCondition<SunBirdLarge>(id, delay, comp => comp.ActiveActors.Count != 0, "Large birds", 10000)
             .ActivateOnEnter<SunBirdLarge>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
-        ComponentCondition<SunBirdLarge>(id + 0x1000, 18.2f, comp => comp.FinishedTethers >= 4 || !comp.ActiveActors.Any(), "", 10000)
+        ComponentCondition<SunBirdLarge>(id + 0x1000, 18.2f, comp => comp.FinishedTethers >= 4 || comp.ActiveActors.Count == 0, "", 10000)
             .ActivateOnEnter<BirdTether>() // note that first tethers appear ~5s after this
             .DeactivateOnExit<BirdTether>();
-        ComponentCondition<SunBirdLarge>(id + 0x2000, 36.8f, comp => !comp.ActiveActors.Any(), "Large birds enrage", 10000) // enrage is ~55sec after spawn
+        ComponentCondition<SunBirdLarge>(id + 0x2000, 36.8f, comp => comp.ActiveActors.Count == 0, "Large birds enrage", 10000) // enrage is ~55sec after spawn
             .ActivateOnEnter<LargeBirdDistance>()
             .DeactivateOnExit<LargeBirdDistance>()
             .DeactivateOnExit<SunBirdLarge>()

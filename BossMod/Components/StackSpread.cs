@@ -405,6 +405,7 @@ public class LineStack(BossModule module, ActionID? aidMarker, ActionID aidResol
             CurrentBaits.Add(new(caster, WorldState.Actors.Find(spell.MainTargetID)!, rect, WorldState.FutureTime(ActionDelay)));
         else if (spell.Action == AidResolve && CurrentBaits.Count != 0)
         {
+            ++NumCasts;
             if (MarkerIsFinalTarget)
             {
                 if (CurrentBaits.Count == 1 && CurrentBaits.Any(x => x.Target.InstanceID != spell.MainTargetID))
@@ -413,7 +414,6 @@ public class LineStack(BossModule module, ActionID? aidMarker, ActionID aidResol
                 {
                     CurrentBaits.RemoveAll(s => s.Target.InstanceID == spell.MainTargetID);
                     castCounter = 0;
-                    ++NumCasts;
                 }
             }
             else
@@ -422,7 +422,6 @@ public class LineStack(BossModule module, ActionID? aidMarker, ActionID aidResol
                 {
                     CurrentBaits.RemoveAt(0);
                     castCounter = 0;
-                    ++NumCasts;
                 }
             }
         }

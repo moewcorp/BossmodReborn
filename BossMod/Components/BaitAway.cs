@@ -33,6 +33,8 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
         get
         {
             var count = CurrentBaits.Count;
+            if (count == 0)
+                return [];
             List<Bait> activeBaits = new(count);
             for (var i = 0; i < count; ++i)
             {
@@ -50,6 +52,8 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
     public List<Bait> ActiveBaitsOn(Actor target)
     {
         var count = CurrentBaits.Count;
+        if (count == 0)
+            return [];
         List<Bait> activeBaitsOnTarget = new(count);
         for (var i = 0; i < count; ++i)
         {
@@ -63,6 +67,8 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
     public List<Bait> ActiveBaitsNotOn(Actor target)
     {
         var count = CurrentBaits.Count;
+        if (count == 0)
+            return [];
         List<Bait> activeBaitsNotOnTarget = new(count);
         for (var i = 0; i < count; ++i)
         {

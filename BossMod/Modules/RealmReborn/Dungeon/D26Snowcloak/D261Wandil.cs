@@ -18,19 +18,19 @@ public enum AID : uint
     ColdWaveVisual = 3083, // Boss->self, 3.0s cast, ???
     ColdWave = 3111, // Helper->location, 4.0s cast, range 8 circle
     Tundra = 3082, // Boss->self, 3.0s cast, single-target
-    HypothermalCombustion = 3085, // FrostBomb->self, 3.0s cast, range 80+R circle
+    HypothermalCombustion = 3085 // FrostBomb->self, 3.0s cast, range 80+R circle
 }
 
 class TundraArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom donut = new([new Circle(D261Wandil.ArenaCenter, 20)], D261Wandil.Polygon);
+    private static readonly AOEShapeCustom donut = new([new Circle(D261Wandil.ArenaCenter, 20f)], D261Wandil.Polygon);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00040008 && (OID)actor.OID == OID.Voidzone)
+        if (state == 0x00040008 && actor.OID == (uint)OID.Voidzone)
         {
             Arena.Bounds = D261Wandil.SmallArena;
             Arena.Center = D261Wandil.ArenaCenter;
@@ -40,14 +40,14 @@ class TundraArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Tundra)
-            _aoe = new(donut, D261Wandil.ArenaCenter, default, Module.CastFinishAt(spell, 2));
+        if (spell.Action.ID == (uint)AID.Tundra)
+            _aoe = new(donut, D261Wandil.ArenaCenter, default, Module.CastFinishAt(spell, 2f));
     }
 }
 
-class IceGuillotine(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.IceGuillotine), new AOEShapeCone(11.23f, 60.Degrees()), activeWhileCasting: false);
-class SnowDrift(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.SnowDriftVisual), ActionID.MakeSpell(AID.SnowDrift), 2);
-class ColdWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColdWave), 8);
+class IceGuillotine(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.IceGuillotine), new AOEShapeCone(11.23f, 60f.Degrees()), activeWhileCasting: false);
+class SnowDrift(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.SnowDriftVisual), ActionID.MakeSpell(AID.SnowDrift), 2f);
+class ColdWave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ColdWave), 8f);
 
 class D261WandilStates : StateMachineBuilder
 {
@@ -76,17 +76,18 @@ public class D261Wandil(WorldState ws, Actor primary) : BossModule(ws, primary, 
     new(39.15f, -94.28f), new(41.39f, -98.67f), new(41.7f, -99.13f), new(45.25f, -102.67f), new(45.67f, -103.03f),
     new(50.41f, -105.45f), new(50.93f, -105.65f), new(55.56f, -107.02f)];
     public static readonly ArenaBoundsComplex DefaultArena = new([new PolygonCustom(vertices)]);
-    public static readonly Polygon[] Polygon = [new Polygon(ArenaCenter, 12, 20)];
+    public static readonly Polygon[] Polygon = [new Polygon(ArenaCenter, 12f, 20)];
     public static readonly ArenaBoundsComplex SmallArena = new(Polygon);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.FrostBomb => 2,
-                OID.Boss => 1,
+                (uint)OID.FrostBomb => 1,
                 _ => 0
             };
         }
@@ -94,6 +95,7 @@ public class D261Wandil(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.FrostBomb).Concat([PrimaryActor]));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.FrostBomb));
     }
 }

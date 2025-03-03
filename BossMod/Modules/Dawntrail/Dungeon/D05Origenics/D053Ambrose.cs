@@ -113,7 +113,7 @@ class ExtrasensoryExpulsion(BossModule module) : Components.Knockback(module, ma
             {
                 var recti = Sourcez[i];
                 if (recti.Shape is AOEShapeRect rect && rect == RectNS)
-                    forbidden.Add(ShapeDistance.InvertedRect(recti.Origin, recti.Direction, 19f, default, 9f));
+                    forbidden.Add(ShapeDistance.InvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
             }
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Sourcez[0].Activation);
         }
@@ -127,7 +127,7 @@ class OverwhelmingCharge(BossModule module) : Components.GenericAOEs(module)
     private readonly ExtrasensoryExpulsion _kb = module.FindComponent<ExtrasensoryExpulsion>()!;
     private const string Hint = "Wait inside safespot for knockback!";
     private static readonly AOEShapeCone cone = new(26f, 90f.Degrees());
-    private static readonly AOEShapeRect rectAdj = new(19f, 7f); // the knockback rectangles are placed poorly with significant error for from visuals plus half height of the arena is smaller than 20 knockback distance
+    private static readonly AOEShapeRect rectAdj = new(19f, 7f); // the knockback rectangles are placed poorly with significant error from visuals plus half height of the arena is smaller than 20 knockback distance
 
     public AOEInstance? AOE;
     private static readonly Angle a180 = 180f.Degrees();

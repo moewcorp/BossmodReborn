@@ -118,6 +118,14 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom electricFences00200010AOE = new(union00200010Shapes);
     private static readonly ArenaBoundsComplex electricFences00200010Arena = new(defaultRect, union00200010Shapes);
 
+    private static readonly (AOEShapeCustom AOE, ArenaBoundsComplex Bounds)[] arenaMap =
+    [
+        (electricFences01000080AOE, electricFences01000080Arena),
+        (electricFences08000400AOE, electricFences08000400Arena),
+        (electricFences00020001AOE, electricFences00020001Arena),
+        (electricFences00200010AOE, electricFences00200010Arena)
+    ];
+
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
@@ -144,24 +152,16 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void Update()
     {
-        if (Arena.Bounds == defaultBounds)
+        if (_aoe is AOEInstance aoe && aoe.Activation <= WorldState.CurrentTime)
         {
-            var aoeChecks = new[]
-            {
-                new { AOE = electricFences01000080AOE, Bounds = electricFences01000080Arena },
-                new { AOE = electricFences08000400AOE, Bounds = electricFences08000400Arena },
-                new { AOE = electricFences00020001AOE, Bounds = electricFences00020001Arena },
-                new { AOE = electricFences00200010AOE, Bounds = electricFences00200010Arena }
-            };
-
             for (var i = 0; i < 4; ++i)
             {
-                var aoeCheck = aoeChecks[i];
-                if (_aoe is AOEInstance aoe && aoe.Shape == aoeCheck.AOE && aoe.Activation <= WorldState.CurrentTime)
+                var aoeCheck = arenaMap[i];
+                if (aoe.Shape == aoeCheck.AOE)
                 {
                     Arena.Bounds = aoeCheck.Bounds;
                     _aoe = null;
-                    break;
+                    return;
                 }
             }
         }
@@ -169,7 +169,6 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        var activation = WorldState.FutureTime(3);
         if (state == 0x00020001 && index == 0x0C)
         {
             Arena.Bounds = defaultBounds;
@@ -177,19 +176,20 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         }
         else if (index == 0x0D)
         {
+            void AddAOE(AOEShapeCustom shape) => _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(3d));
             switch (state)
             {
                 case 0x08000400:
-                    _aoe = new(electricFences08000400AOE, Arena.Center, default, activation);
+                    AddAOE(electricFences08000400AOE);
                     break;
                 case 0x01000080:
-                    _aoe = new(electricFences01000080AOE, Arena.Center, default, activation);
+                    AddAOE(electricFences01000080AOE);
                     break;
                 case 0x00020001:
-                    _aoe = new(electricFences00020001AOE, Arena.Center, default, activation);
+                    AddAOE(electricFences00020001AOE);
                     break;
                 case 0x00200010:
-                    _aoe = new(electricFences00200010AOE, Arena.Center, default, activation);
+                    AddAOE(electricFences00200010AOE);
                     break;
                 case 0x02000004 or 0x10000004 or 0x00080004 or 0x00400004:
                     Arena.Bounds = defaultBounds;
@@ -223,7 +223,7 @@ class Electrowave(BossModule module) : Components.RaidwideCast(module, ActionID.
 
 class BlastCannon : Components.SimpleAOEs
 {
-    public BlastCannon(BossModule module) : base(module, ActionID.MakeSpell(AID.BlastCannon), new AOEShapeRect(26f, 2f))
+    public BlastCannon(BossModule module) : base(module, ActionID.MakeSpell(AID.BlastCannon), new AOEShapeRect(26f, 2f), 4)
     {
         MaxDangerColor = 2;
         MaxRisky = 2;

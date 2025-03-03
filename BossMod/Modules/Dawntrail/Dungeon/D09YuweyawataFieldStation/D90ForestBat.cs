@@ -81,12 +81,10 @@ public class D90ForestBat(WorldState ws, Actor primary) : BossModule(ws, primary
     {
         var enemies = Enemies(Trash);
         var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
         for (var i = 0; i < count; ++i)
         {
             var enemy = enemies[i];
-            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
+            if (enemy.InCombat)
                 return true;
         }
         return false;
@@ -94,7 +92,6 @@ public class D90ForestBat(WorldState ws, Actor primary) : BossModule(ws, primary
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var filteredEnemies = new List<Actor>();
         var enemies = Enemies(Trash);
         var count = enemies.Count;
         var center = Arena.Center;
@@ -103,8 +100,14 @@ public class D90ForestBat(WorldState ws, Actor primary) : BossModule(ws, primary
         {
             var enemy = enemies[i];
             if (enemy.Position.AlmostEqual(center, radius))
-                filteredEnemies.Add(enemy);
+                Arena.Actor(enemy);
         }
-        Arena.Actors(filteredEnemies);
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

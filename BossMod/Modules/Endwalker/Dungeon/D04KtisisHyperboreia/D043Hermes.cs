@@ -52,13 +52,13 @@ public enum IconID : uint
 
 class TrismegistosArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(20, 22);
+    private static readonly AOEShapeDonut donut = new(20f, 22f);
     private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Trismegistos && Arena.Bounds == D043Hermes.StartingBounds)
+        if (spell.Action.ID == (uint)AID.Trismegistos && Arena.Bounds == D043Hermes.StartingBounds)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.5f));
     }
 
@@ -75,7 +75,7 @@ class TrismegistosArenaChange(BossModule module) : Components.GenericAOEs(module
 class TrueBraveryInterruptHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.TrueBravery));
 class Trismegistos(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Trismegistos));
 
-class TrueTornadoTankbuster(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(4), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.TrueTornado4), 5.1f, true)
+class TrueTornadoTankbuster(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(4f), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.TrueTornado4), 5.1f, true)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -84,40 +84,74 @@ class TrueTornadoTankbuster(BossModule module) : Components.BaitAwayIcon(module,
     }
 }
 
-class TrueTornadoAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueTornadoAOE), 4);
+class TrueTornadoAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueTornadoAOE), 4f);
 
 class TrueAeroFirst(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect = new(40, 3);
+    private static readonly AOEShapeRect rect = new(40f, 3f);
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.TrueAeroTarget)
+        if (spell.Action.ID == (uint)AID.TrueAeroTarget)
             CurrentBaits.Add(new(Module.PrimaryActor, WorldState.Actors.Find(spell.MainTargetID)!, rect, WorldState.FutureTime(5.7f)));
-        else if ((AID)spell.Action.ID == AID.TrueAeroFirst)
+        else if (spell.Action.ID == (uint)AID.TrueAeroFirst)
             CurrentBaits.Clear();
     }
 }
 
-class TrueAeroRepeat(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroRepeat), new AOEShapeRect(40, 3));
+class TrueAeroRepeat(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroRepeat), new AOEShapeRect(40f, 3f));
 
-class TrueAeroII2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TrueAeroII2), 6);
-class TrueAeroII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroII3), 6);
+class TrueAeroII2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TrueAeroII2), 6f);
+class TrueAeroII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroII3), 6f);
 
-class TrueAeroIV1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroIV1), new AOEShapeRect(50, 5));
-class TrueAeroIV3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroIV3), new AOEShapeRect(50, 5), 4);
+class TrueAeroIV1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroIV1), new AOEShapeRect(50f, 5f));
+class TrueAeroIV3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TrueAeroIV3), new AOEShapeRect(50f, 5f), 4);
 
-class CosmicKiss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmicKiss), 10);
+class CosmicKiss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmicKiss), 10f);
 
 class TrueAeroIVLOS(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.TrueAeroIVLOS), 50, false, true)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.Meteor).Count > 0 ? Module.Enemies(OID.Meteor).Where(x => x.ModelState.AnimState2 != 1) : Module.Enemies(OID.Meteor);
+    private readonly CosmicKiss _aoe = module.FindComponent<CosmicKiss>()!;
+
+    public override IEnumerable<Actor> BlockerActors()
+    {
+        var meteors = Module.Enemies((uint)OID.Meteor);
+        var count = meteors.Count;
+        if (count != 0)
+        {
+            for (var i = 0; i < count; ++i)
+            {
+                var m = meteors[i];
+                if (m.ModelState.AnimState2 != 1)
+                {
+                    return [m];
+                }
+            }
+            return [];
+        }
+        return [];
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        var meteors = Module.Enemies((uint)OID.Meteor);
+        var count = meteors.Count;
+        if (count == 0)
+            return;
         base.AddAIHints(slot, actor, assignment, hints);
-        var component = Module.FindComponent<CosmicKiss>()!.ActiveAOEs(slot, actor).Any();
-        if (BlockerActors().Any() && !component) // force AI to move closer to the meteor as soon as they become visible
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(BlockerActors().First().Position, 8));
+
+        Actor? meteor = null;
+        var countBroken = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var m = meteors[i];
+            if (m.ModelState.AnimState2 != 1)
+                meteor = m;
+            else
+                ++countBroken;
+        }
+
+        if (countBroken == 3 && meteor is Actor met && _aoe.Casters.Count == 0) // force AI to move closer to the meteor as soon as they become visible
+            hints.GoalZones.Add(hints.GoalSingleTarget(met, 5f, 5f));
     }
 }
 
@@ -145,7 +179,7 @@ class D043HermesStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10363)]
 public class D043Hermes(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
-    private static readonly WPos ArenaCenter = new(0, -50);
+    private static readonly WPos ArenaCenter = new(default, -50f);
     public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 21.5f, 64)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 20, 64)]);
+    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 20f, 64)]);
 }

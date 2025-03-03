@@ -33,9 +33,9 @@ public enum SID : uint
     Invincibility = 325 // none->Boss, extra=0x0
 }
 
-class PageTear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.PageTear), new AOEShapeCone(8, 45.Degrees()))
+class PageTear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.PageTear), new AOEShapeCone(8f, 45f.Degrees()))
 {
-    public static bool IsInvincible(Actor actor) => actor.FindStatus(SID.Invincibility) != null;
+    public static bool IsInvincible(Actor actor) => actor.FindStatus((uint)SID.Invincibility) != null;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -56,24 +56,68 @@ class PageTear(BossModule module) : Components.Cleave(module, ActionID.MakeSpell
     }
 }
 
-class HeadDown(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.HeadDown), 4);
+class HeadDown(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.HeadDown), 4f);
 class DeathRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathRay), new AOEShapeRect(24.2f, 1.5f));
-class Tomewind(BossModule module) : Components.PersistentVoidzone(module, 3, m => m.Enemies(OID.Tomewind).Where(x => !x.IsDead));
-class TailSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(12, 45.Degrees()));
+class Tomewind(BossModule module) : Components.PersistentVoidzone(module, 3f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Tomewind);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-class Bibliocide(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCircle(0), (uint)TetherID.WhaleOil, activationDelay: 5)
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class TailSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(12f, 45f.Degrees()));
+
+class Bibliocide(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCircle(0), (uint)TetherID.WhaleOil, activationDelay: 5f)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!ActiveBaits.Any(x => x.Target == actor))
+        var targetFound = false;
+        var count = CurrentBaits.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (CurrentBaits[i].Target == actor)
+            {
+                targetFound = true;
+                break;
+            }
+        }
+        if (!targetFound)
             return;
+
         hints.Add("Pull the orb to the boss!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, Module.PrimaryActor.HitboxRadius), ActiveBaits.FirstOrDefault().Activation);
+        var count = CurrentBaits.Count;
+        Bait? target = null;
+        for (var i = 0; i < count; ++i)
+        {
+            var bait = CurrentBaits[i];
+            if (CurrentBaits[i].Target == actor)
+            {
+                target = bait;
+                break;
+            }
+        }
+        if (target == null)
+            return;
+
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, Module.PrimaryActor.HitboxRadius), target.Value.Activation);
     }
 }
 
@@ -128,17 +172,18 @@ public class D052Byblos(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        if (PrimaryActor.FindStatus(SID.Invincibility) == null)
+        if (PrimaryActor.FindStatus((uint)SID.Invincibility) == null)
             Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Page64));
+        Arena.Actors(Enemies((uint)OID.Page64));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            if (e.Actor.FindStatus(SID.Invincibility) != null)
+            if (e.Actor.FindStatus((uint)SID.Invincibility) != null)
             {
                 e.Priority = AIHints.Enemy.PriorityInvincible;
                 break;

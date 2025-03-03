@@ -211,12 +211,59 @@ public static class ActorEnumeration
         }
     }
 
-    // find closest actor to point
-    public static Actor? Closest(this IEnumerable<Actor> range, WPos origin) => range.MinBy(a => (a.Position - origin).LengthSq());
-    public static (int, Actor) Closest(this IEnumerable<(int, Actor)> range, WPos origin) => range.MinBy(ia => (ia.Item2.Position - origin).LengthSq());
+    // Find closest actor to a given point
+    public static Actor? Closest(this IEnumerable<Actor> range, WPos origin)
+    {
+        Actor? closest = null;
+        var minDistSq = float.MaxValue;
 
-    // find farthest actor from point
-    public static Actor? Farthest(this IEnumerable<Actor> range, WPos origin) => range.MaxBy(a => (a.Position - origin).LengthSq());
+        foreach (var actor in range)
+        {
+            var distSq = (actor.Position - origin).LengthSq();
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                closest = actor;
+            }
+        }
+        return closest;
+    }
+
+    // Find closest actor (with index) to a given point
+    public static (int, Actor) Closest(this IEnumerable<(int, Actor)> range, WPos origin)
+    {
+        (int, Actor)? closest = null;
+        var minDistSq = float.MaxValue;
+
+        foreach (var (index, actor) in range)
+        {
+            var distSq = (actor.Position - origin).LengthSq();
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                closest = (index, actor);
+            }
+        }
+        return closest!.Value;
+    }
+
+    // Find farthest actor from a given point
+    public static Actor? Farthest(this IEnumerable<Actor> range, WPos origin)
+    {
+        Actor? farthest = null;
+        var maxDistSq = float.MinValue;
+
+        foreach (var actor in range)
+        {
+            var distSq = (actor.Position - origin).LengthSq();
+            if (distSq > maxDistSq)
+            {
+                maxDistSq = distSq;
+                farthest = actor;
+            }
+        }
+        return farthest;
+    }
 
     // count num actors matching and not matching a condition
     public static (int match, int mismatch) CountByCondition(this IEnumerable<Actor> range, Func<Actor, bool> condition)

@@ -232,7 +232,6 @@ IsArena1(primary) ? arena1 : IsArena2(primary) ? arena3 : arena2)
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var filteredEnemies = new List<Actor>();
         var enemies = Enemies(Trash);
         var count = enemies.Count;
         var center = Arena.Center;
@@ -241,8 +240,14 @@ IsArena1(primary) ? arena1 : IsArena2(primary) ? arena3 : arena2)
         {
             var enemy = enemies[i];
             if (enemy.Position.AlmostEqual(center, radius))
-                filteredEnemies.Add(enemy);
+                Arena.Actor(enemy);
         }
-        Arena.Actors(filteredEnemies);
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PotentialTargets[i].Priority = 0;
     }
 }

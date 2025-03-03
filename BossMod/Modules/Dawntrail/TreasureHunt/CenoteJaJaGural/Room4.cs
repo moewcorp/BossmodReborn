@@ -95,17 +95,7 @@ class Room4States : StateMachineBuilder
             .ActivateOnEnter<HeirloomScream>()
             .ActivateOnEnter<PungentPirouette>()
             .ActivateOnEnter<Pollen>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Room4.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return module.PrimaryActor.EventState == 7;
-            };
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.EventState == 7;
     }
 }
 
@@ -122,16 +112,14 @@ public class Room4(WorldState ws, Actor primary) : BossModule(ws, primary, Arena
     (uint)OID.TuraliGarlic, (uint)OID.UolonOfFortune, (uint)OID.AlpacaOfFortune];
     private static readonly uint[] trash = [(uint)OID.CenoteQeziigural, (uint)OID.CenoteTohsoq, (uint)OID.CenoteMegamaguey, (uint)OID.CenoteTyaitya, (uint)OID.CenoteTulichu,
     (uint)OID.CenoteTomaton, (uint)OID.CenoteNecrosis];
-    public static readonly uint[] All = [(uint)OID.Boss, .. trash, .. bonusAdds];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor, Colors.Object);
         Arena.Actors(Enemies(trash));
         Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
     }
 
-    protected override bool CheckPull() => !PrimaryActor.IsTargetable;
+    protected override bool CheckPull() => Enemies(trash).Count != 0;
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

@@ -7,7 +7,7 @@ class OutOfCombatActionsConfig : ConfigNode
     public bool Enabled = false;
 
     [PropertyDisplay("Auto use Peloton when moving out of combat")]
-    public bool AutoPeloton = true;
+    public bool AutoPeloton = false;
 }
 
 // Tweak to automatically use out-of-combat convenience actions (peloton, pet summoning, etc).
@@ -40,7 +40,7 @@ public sealed class OutOfCombatActionsTweak : IDisposable
 
         if (_config.AutoPeloton && player.ClassCategory == ClassCategory.PhysRanged && _ws.CurrentTime >= _nextAutoPeloton)
         {
-            var movementThreshold = 5 * _ws.Frame.Duration;
+            var movementThreshold = 5f * _ws.Frame.Duration;
             if (player.LastFrameMovement.LengthSq() >= movementThreshold * movementThreshold)
                 hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), player, ActionQueue.Priority.VeryLow);
         }

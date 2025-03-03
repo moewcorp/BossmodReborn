@@ -258,10 +258,11 @@ public struct NavigationDecision
 
             // Now walk across the row from x=0..(width-1), computing right corner
             var rowStart = y * width;
+            var cx = cy;
             for (var x = 0; x < width; ++x)
             {
                 // Right corner for this pixel is cx = cy + x*dx
-                var cx = cy + x * dx;
+                cx += dx;
                 float rightP = 0;
                 for (var i = 0; i < len; ++i)
                 {
