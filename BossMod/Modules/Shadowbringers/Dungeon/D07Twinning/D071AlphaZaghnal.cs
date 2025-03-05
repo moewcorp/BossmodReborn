@@ -27,7 +27,7 @@ public enum AID : uint
     Pounce = 15724, // BetaZaghnal->player, no cast, single-target
 
     PounceErrant = 15711, // Boss->players, no cast, range 10 circle
-    ChargeEradicated = 15715, // Boss->player, 5.0s cast, range 8 circle
+    ChargeEradicated = 15715 // Boss->player, 5.0s cast, range 8 circle
 }
 
 public enum IconID : uint
@@ -40,34 +40,35 @@ public enum IconID : uint
 }
 
 class BeastlyRoar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BeastlyRoar));
-class Augurium(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Augurium), new AOEShapeCone(12, 60.Degrees()));
+class Augurium(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Augurium), new AOEShapeCone(12f, 60f.Degrees()));
 
-class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.PounceErrant), 10, 4.6f)
+class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.PounceErrant), 10f, 4.6f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (IsSpreadTarget(actor))
         {
-            var spread = Spreads.FirstOrDefault();
-            var cages = Module.Enemies(OID.IronCage);
+            var cages = Module.Enemies((uint)OID.IronCage);
             var count = cages.Count;
             if (count == 0)
                 return;
-            var forbidden = new List<Func<WPos, float>>(count);
+            var forbidden = new Func<WPos, float>[count];
             for (var i = 0; i < count; ++i)
-                forbidden.Add(ShapeDistance.Circle(Module.Enemies(OID.IronCage)[i].Position, 11));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), spread.Activation);
+                forbidden[i] = ShapeDistance.Circle(cages[i].Position, 11f);
+            if (forbidden.Length != 0)
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Spreads[0].Activation);
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        if (!Spreads.Any(x => x.Target == pc))
+        if (!IsSpreadTarget(pc))
             return;
-        var cages = Module.Enemies(OID.IronCage);
-        for (var i = 0; i < cages.Count; ++i)
+        var cages = Module.Enemies((uint)OID.IronCage);
+        var count = cages.Count;
+        for (var i = 0; i < count; ++i)
         {
             var a = cages[i];
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
@@ -76,57 +77,79 @@ class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (Spreads.Any(x => x.Target == actor))
+        if (IsSpreadTarget(actor))
             hints.Add("Spread, avoid intersecting cage hitboxes!");
     }
 }
 
-class ChargeEradicated(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ChargeEradicated), 8, 4, 4);
-class ChargeEradicatedVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Voidzone).Where(x => x.EventState != 7));
+class ChargeEradicated(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ChargeEradicated), 8f, 4, 4);
+class ChargeEradicatedVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Voidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
 {
-    private readonly AOEShapeRect rect = new(50, 3);
+    private readonly AOEShapeRect rect = new(50f, 3f);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (CurrentBaits.Count != 0 && (AID)spell.Action.ID is AID.ForlornImpact1 or AID.ForlornImpact2 or AID.ForlornImpact3 or AID.ForlornImpact4)
+        if (CurrentBaits.Count != 0 && spell.Action.ID is (uint)AID.ForlornImpact1 or (uint)AID.ForlornImpact2 or (uint)AID.ForlornImpact3 or (uint)AID.ForlornImpact4)
             CurrentBaits.RemoveAt(0);
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((IconID)iconID is >= IconID.Target1 and <= IconID.Target4)
-            CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(7.2f)));
+        if (iconID is >= (uint)IconID.Target1 and <= (uint)IconID.Target4)
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(7.2d)));
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        var bait = ActiveBaitsOn(actor).FirstOrDefault();
-        if (bait != default)
+        var bait = ActiveBaitsOn(actor);
+        if (bait.Count != 0)
         {
-            var cages = Module.Enemies(OID.IronCage);
+            var b = bait[0];
+            var cages = Module.Enemies((uint)OID.IronCage);
             var count = cages.Count;
             if (count == 0)
                 return;
-            var forbidden = new List<Func<WPos, float>>(count);
-            for (var i = 0; i < cages.Count; ++i)
+            var forbidden = new Func<WPos, float>[count];
+            for (var i = 0; i < count; ++i)
             {
                 var a = cages[i];
-                forbidden.Add(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(3.5f / (a.Position - bait.Source.Position).Length())));
+                forbidden[i] = ShapeDistance.Cone(b.Source.Position, 100f, b.Source.AngleTo(a), Angle.Asin(3.5f / (a.Position - b.Source.Position).Length()));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), bait.Activation);
+            if (forbidden.Length != 0)
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), b.Activation);
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        if (!ActiveBaits.Any(x => x.Target == pc))
+        if (ActiveBaitsOn(pc).Count == 0)
             return;
-        var cages = Module.Enemies(OID.IronCage);
-        for (var i = 0; i < cages.Count; ++i)
+        var cages = Module.Enemies((uint)OID.IronCage);
+        var count = cages.Count;
+        for (var i = 0; i < count; ++i)
         {
             var a = cages[i];
             Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
@@ -135,7 +158,7 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away, avoid intersecting cage hitboxes!");
     }
 }
@@ -160,6 +183,6 @@ public class D071AlphaZaghnal(WorldState ws, Actor primary) : BossModule(ws, pri
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.BetaZaghnal));
+        Arena.Actors(Enemies((uint)OID.BetaZaghnal));
     }
 }

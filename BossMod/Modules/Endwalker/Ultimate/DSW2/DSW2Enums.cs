@@ -251,7 +251,7 @@ public enum AID : uint
     DarkBreath = 27963, // Helper->self, no cast, range 50 ?-degree cone (fixed direction)
     HolyBreath = 27964, // Helper->self, no cast, range 50 ?-degree cone (fixed direction)
     StaggeringBreath = 27965, // Helper->player, no cast, range 15 circle solo tankbuster
-    //_Ability_ = 27951, // Helper->self, no cast, single-target
+    HraesvelgrVisual = 27951, // Helper->self, no cast, single-target
     MortalVowApply = 27952, // NidhoggP6->player, no cast, range 5 circle, apply debuff
     MortalVowPass = 27953, // Helper->self, no cast, range 5 circle, pass debuff
     AkhAfahN = 27971, // NidhoggP6->self, 8.0s cast, single-target

@@ -83,7 +83,8 @@ public enum AID : uint
     SDramaticBurstOrange = 34117, // Helper->self, no cast, range 60 circle unsoaked tower
     SBurstBlue = 34118, // Helper->self, no cast, range 4 circle tower
     SDramaticBurstBlue = 34119, // Helper->self, no cast, range 60 circle unsoaked tower
-    //_Spell_OdderFodder = 34071, // Helper->self, no cast, range 60 circle
+    NOdderFodder = 34071, // Helper->self, no cast, range 60 circle
+    SOdderFodder = 34115, // Helper->self, no cast, range 60 circle
 
     CloudToGround = 34088, // *Boss->self, 6.2s cast, single-target, visual (exaflares)
     NCloudToGroundAOEFirst = 34089, // Helper->self, 7.0s cast, range 6 circle

@@ -77,8 +77,9 @@ class P7ExaflaresEdge : Components.Exaflare
     {
         var count = Lines.Count;
         var mainlines = new Line[count / 3];
+        var index = 0;
         for (var i = 0; i < count; i += 3)
-            mainlines[i] = Lines[i];
+            mainlines[index++] = Lines[i];
         return mainlines;
     }
 

@@ -81,9 +81,9 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         tiles = state switch
         {
             0x00020001 => GenerateTiles(defaultGreenTiles),
-            0x00200010 => GenerateRotatedTiles(180),
-            0x01000080 => GenerateRotatedTiles(-90),
-            0x08000400 => GenerateRotatedTiles(90),
+            0x00200010 => GenerateRotatedTiles(180f),
+            0x01000080 => GenerateRotatedTiles(-90f),
+            0x08000400 => GenerateRotatedTiles(90f),
             _ => [],
         };
     }

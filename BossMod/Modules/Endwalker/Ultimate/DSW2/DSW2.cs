@@ -2,8 +2,8 @@
 
 class P2AscalonsMercyConcealed(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AscalonsMercyConcealedAOE), new AOEShapeCone(50, 15.Degrees()));
 
-abstract class AscalonMight(BossModule module, OID oid) : Components.Cleave(module, ActionID.MakeSpell(AID.AscalonsMight), new AOEShapeCone(50, 30.Degrees()), [(uint)oid]);
-class P2AscalonMight(BossModule module) : AscalonMight(module, OID.BossP2);
+abstract class AscalonMight(BossModule module, uint oid) : Components.Cleave(module, ActionID.MakeSpell(AID.AscalonsMight), new AOEShapeCone(50, 30.Degrees()), [oid]);
+class P2AscalonMight(BossModule module) : AscalonMight(module, (uint)OID.BossP2);
 
 class P2UltimateEnd(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.UltimateEndAOE));
 class P3Drachenlance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DrachenlanceAOE), new AOEShapeCone(13, 45.Degrees()));
@@ -16,7 +16,7 @@ class P5Cauterize1(BossModule module) : Cauterize(module, AID.Cauterize1);
 class P5Cauterize2(BossModule module) : Cauterize(module, AID.Cauterize2);
 
 class P5SpearOfTheFury(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpearOfTheFuryP5), new AOEShapeRect(50, 5));
-class P5AscalonMight(BossModule module) : AscalonMight(module, OID.BossP5);
+class P5AscalonMight(BossModule module) : AscalonMight(module, (uint)OID.BossP5);
 class P5Surrender(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Surrender));
 class P6SwirlingBlizzard(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SwirlingBlizzard), new AOEShapeDonut(20, 35));
 class P7Shockwave(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.ShockwaveP7));

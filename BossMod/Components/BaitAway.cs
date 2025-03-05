@@ -153,15 +153,22 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
         }
         for (var i = 0; i < countActiveBaitsOnActor; ++i)
         {
-            AddTargetSpecificHints(actor, activeBaitsOnActor[i], hints);
+            var bait = activeBaitsOnActor[i];
+            AddTargetSpecificHints(ref actor, ref bait, ref hints);
         }
     }
 
-    private void AddTargetSpecificHints(Actor actor, Bait bait, AIHints hints)
+    private void AddTargetSpecificHints(ref Actor actor, ref Bait bait, ref AIHints hints)
     {
         if (bait.Source == bait.Target) // TODO: think about how to handle source == target baits, eg. vomitting mechanics
             return;
-        foreach (var a in Raid.WithoutSlot().Exclude(actor))
+        var raid = Raid.WithoutSlot();
+        var len = raid.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            var a = raid[i];
+            if (a == actor)
+                continue;
             switch (bait.Shape)
             {
                 case AOEShapeDonut:
@@ -169,15 +176,16 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
                     hints.AddForbiddenZone(bait.Shape, a.Position, default, bait.Activation);
                     break;
                 case AOEShapeCone cone:
-                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
+                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
                     break;
                 case AOEShapeRect rect:
-                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
+                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
                     break;
                 case AOEShapeCross cross:
                     hints.AddForbiddenZone(cross, a.Position, bait.Rotation, bait.Activation);
                     break;
             }
+        }
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => ActiveBaitsOn(player).Count != 0 ? BaiterPriority : PlayerPriority.Irrelevant;
@@ -334,7 +342,10 @@ public class BaitAwayChargeCast(BossModule module, ActionID aid, float halfWidth
 
     public override void Update()
     {
-        for (var i = 0; i < CurrentBaits.Count; ++i)
+        var count = CurrentBaits.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
         {
             var b = CurrentBaits[i];
             CurrentBaits[i] = b with { Shape = rect with { LengthFront = (b.Target.Position - b.Source.Position).Length() } };

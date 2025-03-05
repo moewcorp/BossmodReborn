@@ -56,7 +56,8 @@ abstract class Towers(BossModule module, uint oid, uint tid) : Components.Generi
         {
             if (state == 0x00040008)
             {
-                for (var i = 0; i < Towers.Count; ++i)
+                var count = Towers.Count;
+                for (var i = 0; i < count; ++i)
                 {
                     var tower = Towers[i];
                     if (tower.Position == actor.Position)

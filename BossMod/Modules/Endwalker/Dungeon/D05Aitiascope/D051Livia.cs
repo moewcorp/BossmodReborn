@@ -30,59 +30,70 @@ public enum AID : uint
     OdiEtAmo = 25675 // Boss->self, 3.0s cast, single-target
 }
 
-class AglaeaBite(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AglaeaBite), new AOEShapeCone(9, 60.Degrees()), endsOnCastEvent: true)
+class AglaeaBite(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AglaeaBite), new AOEShapeCone(9f, 60f.Degrees()), endsOnCastEvent: true)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (CurrentBaits.Count > 0)
+        if (CurrentBaits.Count != 0)
             hints.Add("Tankbuster cleave");
     }
 }
 
 class AglaeaShot(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(20, 3);
-    private readonly List<Actor> casters = [];
+    private readonly List<AOEInstance> _aoes = new(8);
+    private static readonly AOEShapeRect rect = new(20f, 3f);
+    private readonly List<Actor> casters = new(8);
     private DateTime activation;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            foreach (var a in _aoes)
-                yield return new(rect, a.Origin, a.Rotation, a.Activation);
-        else if ((activation - WorldState.CurrentTime).TotalSeconds < 5)
-            foreach (var c in casters)
-                yield return new(rect, c.Position, c.Rotation, activation);
+        if (_aoes.Count != 0)
+            return _aoes;
+        else if ((activation - WorldState.CurrentTime).TotalSeconds < 5d)
+        {
+            var count = casters.Count;
+            var aoes = new AOEInstance[count];
+            for (var i = 0; i < count; ++i)
+            {
+                var c = casters[i];
+                aoes[i] = new(rect, c.Position, c.Rotation, activation);
+            }
+            return aoes;
+        }
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AglaeaShot1)
-            _aoes.Add(new(rect, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+        if (spell.Action.ID is (uint)AID.AglaeaShot1 or (uint)AID.AglaeaShot2)
+        {
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            casters.Clear();
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AglaeaShot1)
+        if (_aoes.Count != 0)
         {
-            activation = WorldState.FutureTime(10);
-            if (_aoes.Count > 0)
+            if (spell.Action.ID == (uint)AID.AglaeaShot1)
             {
+                activation = WorldState.FutureTime(10d);
                 _aoes.RemoveAt(0);
                 casters.Add(caster);
             }
+            else if (spell.Action.ID == (uint)AID.AglaeaShot2)
+                _aoes.RemoveAt(0);
         }
-        else if ((AID)spell.Action.ID == AID.AglaeaShot2)
-            casters.Remove(caster);
     }
 }
 
-class AglaeaClimbAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AglaeaClimbAOE), new AOEShapeCone(20, 45.Degrees()));
-class Disparagement(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Disparagement), new AOEShapeCone(40, 60.Degrees()));
+class AglaeaClimbAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AglaeaClimbAOE), new AOEShapeCone(20f, 45f.Degrees()));
+class Disparagement(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Disparagement), new AOEShapeCone(40f, 60f.Degrees()));
 
-class IgnisOdi(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.IgnisOdi), 6, 4, 4);
-class IgnisAmoris(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IgnisAmoris), 6);
+class IgnisOdi(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.IgnisOdi), 6f, 4, 4);
+class IgnisAmoris(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IgnisAmoris), 6f);
 class Frustration(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Frustration));
 
 class D051LiviaStates : StateMachineBuilder
@@ -103,5 +114,5 @@ class D051LiviaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 786, NameID = 10290)]
 public class D051Livia(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-6, 471), 19.5f * CosPI.Pi36th, 36)], [new Rectangle(new(-6, 491.8f), 20, 2)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-6f, 471), 19.5f * CosPI.Pi36th, 36)], [new Rectangle(new(-6f, 491.025f), 20f, 1.25f)]);
 }

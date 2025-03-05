@@ -19,8 +19,8 @@ public enum AID : uint
 class LeafstormRimestorm(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime _rimestormExpected;
-    private static readonly AOEShapeCircle _leafstorm = new(10);
-    private static readonly AOEShapeCone _rimestorm = new(40, 90.Degrees());
+    private static readonly AOEShapeCircle _leafstorm = new(10f);
+    private static readonly AOEShapeCone _rimestorm = new(40f, 90f.Degrees());
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -35,20 +35,20 @@ class LeafstormRimestorm(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster == Module.PrimaryActor && (AID)spell.Action.ID == AID.Leafstorm)
-            _rimestormExpected = WorldState.FutureTime(9.6f);
+        if (spell.Action.ID == (uint)AID.Leafstorm)
+            _rimestormExpected = WorldState.FutureTime(9.6d);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster == Module.PrimaryActor && (AID)spell.Action.ID == AID.Rimestorm)
+        if (spell.Action.ID == (uint)AID.Rimestorm)
             _rimestormExpected = new();
     }
 }
 
-class Snowball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Snowball), 8);
-class Canopy(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Canopy), new AOEShapeCone(12, 60.Degrees()), activeWhileCasting: false);
-class BackhandBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BackhandBlow), new AOEShapeCone(12, 60.Degrees()));
+class Snowball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Snowball), 8f);
+class Canopy(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Canopy), new AOEShapeCone(12f, 60f.Degrees()), activeWhileCasting: false);
+class BackhandBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BackhandBlow), new AOEShapeCone(12f, 60f.Degrees()));
 
 class AegeirosStates : StateMachineBuilder
 {

@@ -29,7 +29,7 @@ class ImpurePurgation(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.ImpurePurgationFirst or (uint)AID.ImpurePurgationFirst)
+        if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.ImpurePurgationFirst or (uint)AID.ImpurePurgationSecond)
             AOEs.RemoveAt(0);
     }
 }

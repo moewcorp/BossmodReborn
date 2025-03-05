@@ -42,7 +42,6 @@ class Spiritcull(BossModule module) : Components.GenericStackSpread(module)
     {
         if (Stacks.Count != 0 && targets.Contains(pc))
         {
-
             Actor? actor = null;
             var minDistanceSq = float.MaxValue;
             var count = targets.Count;

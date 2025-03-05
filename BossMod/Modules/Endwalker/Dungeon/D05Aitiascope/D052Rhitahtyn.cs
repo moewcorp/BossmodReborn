@@ -20,7 +20,7 @@ public enum AID : uint
     ShieldSkewer = 25680, // Boss->location, 11.0s cast, range 40 width 14 rect
     ShrapnelShellVisual = 25682, // Boss->self, 3.0s cast, single-target
     ShrapnelShellAOE = 25684, // Helper->location, 3.5s cast, range 5 circle
-    TargetMarkerVisual = 25683, // 346C/346D->self, no cast, single-target
+    TargetMarkerVisual = 25683, // TargetMarker1/TargetMarker2->self, no cast, single-target
 
     TartareanImpact = 25685, // Boss->self, 5.0s cast, range 60 circle, raidwide
     TartareanSpark = 25687, // Boss->self, 3.0s cast, range 40 width 6 rect
@@ -32,13 +32,21 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public bool Safespots;
     private DateTime activation;
-    public static readonly WPos ArenaCenter = new(11, 144);
+    public static readonly WPos ArenaCenter = new(11f, 144f);
     public static readonly ArenaBoundsSquare DefaultBounds = new(19.5f);
-    private static readonly WPos[] positions = [new(19.5f, 152), new(2.5f, 152), new(2.5f, 136),
-    new(19.5f, 136)];
-    private static readonly Rectangle[] squares = [.. positions.Select(pos => new Rectangle(pos, 2, 1.5f))];
+    private static readonly WPos[] positions = [new(19.5f, 152f), new(2.5f, 152f), new(2.5f, 136f),
+    new(19.5f, 136f)];
+    private static readonly Rectangle[] squares = InitializeSquares();
     private static readonly Rectangle[] rect = [new(ArenaCenter, 6.5f, 19.5f)];
-    private readonly List<Shape> union = [];
+    private readonly List<Rectangle> union = new(2);
+
+    private static Rectangle[] InitializeSquares()
+    {
+        var rects = new Rectangle[4];
+        for (var i = 0; i < 4; ++i)
+            rects[i] = new(positions[i], 2f, 1.5f);
+        return rects;
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -78,87 +86,127 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
+
         if (Safespots) // force AI to move to a safespot before it becomes available
         {
-            foreach (var shape in union)
-                if (shape is Rectangle rectangle)
-                    forbidden.Add(ShapeDistance.InvertedCircle(rectangle.Center, 5));
-        }
-        if (forbidden.Count != 0)
+            var forbidden = new Func<WPos, float>[2];
+            for (var i = 0; i < 2; ++i)
+                forbidden[i] = ShapeDistance.InvertedCircle(union[i].Center, 5f);
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), activation);
+        }
     }
 }
 
-class ShieldSkewer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ShieldSkewer), new AOEShapeRect(40, 7))
+class ShieldSkewer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ShieldSkewer), new AOEShapeRect(40f, 7f))
 {
+    private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
+
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Casters.Count == 0)
-            yield break;
-        yield return Casters[0] with { Risky = !Module.FindComponent<ArenaChanges>()!.Safespots };
+            return [];
+        return [Casters[0] with { Risky = !_arena.Safespots }];
     }
 }
 
 class Shrapnel(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(36);
+    private readonly List<AOEInstance> _aoes = new(18);
     private static readonly AOEShapeCircle circle = new(6f);
-    private static readonly Dictionary<int, WPos[]> shrapnelPositions = new()
-    {
-        [1] = [ new(-6.027f, 153.979f), new(7.98f, 160.998f), new(20.981f, 126.97f), new(7.98f, 146.99f), new(27.97f, 140.978f), // SWNE
-                                new(20.981f, 140.978f), new(27.97f, 133.99f), new(13.992f, 140.978f), new(20.981f, 133.99f), new(0.992f, 146.99f),
-                                new(0.992f, 153.979f), new(-6.027f, 160.998f), new(13.992f, 126.97f), new(13.992f, 133.99f), new(0.992f, 160.998f),
-                                new(-6.027f, 146.99f), new(7.98f, 153.979f), new(27.97f, 126.97f) ],
-        [2] = [ new(20.981f, 160.998f), new(13.992f, 153.979f), new(-6.027f, 140.978f), new(13.992f, 160.998f), new(-6.027f, 126.97f), // NWSE
-                                new(7.98f, 126.97f), new(0.992f, 133.99f), new(7.98f, 133.99f), new(-6.027f, 133.99f), new(27.97f, 153.979f),
-                                new(13.992f, 146.99f), new(20.981f, 146.99f), new(0.992f, 126.97f), new(0.992f, 140.978f), new(27.97f, 160.998f),
-                                new(27.97f, 146.99f), new(20.981f, 153.979f), new(7.98f, 140.978f) ],
-        [3] = [ new(-6.027f, 160.998f), new(0.992f, 153.979f), new(7.98f, 133.99f), new(-6.027f, 146.99f), new(-6.027f, 140.978f), // W
-                             new(0.992f, 133.99f), new(-6.027f, 133.99f), new(7.98f, 126.97f), new(0.992f, 140.978f), new(7.98f, 153.979f),
-                             new(-6.027f, 153.979f), new(0.992f, 146.99f), new(0.992f, 126.97f), new(-6.027f, 126.97f), new(0.992f, 160.998f),
-                             new(7.98f, 160.998f), new(7.98f, 146.99f), new(7.98f, 140.978f) ],
-        [4] = [ new(13.992f, 160.998f), new(20.981f, 146.99f), new(20.981f, 140.978f), new(27.97f, 146.99f), new(27.97f, 140.978f), // E
-                             new(20.981f, 133.99f), new(13.992f, 126.97f), new(27.97f, 126.97f), new(27.97f, 133.99f), new(13.992f, 146.99f),
-                             new(27.97f, 153.979f), new(20.981f, 153.979f), new(20.981f, 126.97f), new(13.992f, 133.99f), new(13.992f, 153.979f),
-                             new(27.97f, 160.998f), new(20.981f, 160.998f), new(13.992f, 140.978f) ]
-    };
+    private static readonly WPos[] shrapnelPositionsSWNE =
+        [
+            new(-6.027f, 153.979f), new(7.98f, 160.998f), new(20.981f, 126.97f), new(7.98f, 146.99f), new(27.97f, 140.978f),
+            new(20.981f, 140.978f), new(27.97f, 133.99f), new(13.992f, 140.978f), new(20.981f, 133.99f), new(0.992f, 146.99f),
+            new(0.992f, 153.979f), new(-6.027f, 160.998f), new(13.992f, 126.97f), new(13.992f, 133.99f), new(0.992f, 160.998f),
+            new(-6.027f, 146.99f), new(7.98f, 153.979f), new(27.97f, 126.97f)
+        ];
+    private static readonly WPos[] shrapnelPositionsNWSE =
+        [
+            new(20.981f, 160.998f), new(13.992f, 153.979f), new(-6.027f, 140.978f), new(13.992f, 160.998f), new(-6.027f, 126.97f),
+            new(7.98f, 126.97f), new(0.992f, 133.99f), new(7.98f, 133.99f), new(-6.027f, 133.99f), new(27.97f, 153.979f),
+            new(13.992f, 146.99f), new(20.981f, 146.99f), new(0.992f, 126.97f), new(0.992f, 140.978f), new(27.97f, 160.998f),
+            new(27.97f, 146.99f), new(20.981f, 153.979f), new(7.98f, 140.978f)
+        ];
+    private static readonly WPos[] shrapnelPositionsW =
+        [
+            new(-6.027f, 160.998f), new(0.992f, 153.979f), new(7.98f, 133.99f), new(-6.027f, 146.99f), new(-6.027f, 140.978f),
+            new(0.992f, 133.99f), new(-6.027f, 133.99f), new(7.98f, 126.97f), new(0.992f, 140.978f), new(7.98f, 153.979f),
+            new(-6.027f, 153.979f), new(0.992f, 146.99f), new(0.992f, 126.97f), new(-6.027f, 126.97f), new(0.992f, 160.998f),
+            new(7.98f, 160.998f), new(7.98f, 146.99f), new(7.98f, 140.978f)
+        ];
+    private static readonly WPos[] shrapnelPositionsE =
+        [
+            new(13.992f, 160.998f), new(20.981f, 146.99f), new(20.981f, 140.978f), new(27.97f, 146.99f), new(27.97f, 140.978f),
+            new(20.981f, 133.99f), new(13.992f, 126.97f), new(27.97f, 126.97f), new(27.97f, 133.99f), new(13.992f, 146.99f),
+            new(27.97f, 153.979f), new(20.981f, 153.979f), new(20.981f, 126.97f), new(13.992f, 133.99f), new(13.992f, 153.979f),
+            new(27.97f, 160.998f), new(20.981f, 160.998f), new(13.992f, 140.978f)
+        ];
+
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
 
     public override void Update()
     {
         if (_aoes.Count == 0)
         {
-            var target1SWNE = Module.Enemies((uint)OID.TargetMarker1).FirstOrDefault(x => x.Position.Z < 144f && x.Rotation >= 0.1f.Degrees());
-            var target1NWSE = Module.Enemies((uint)OID.TargetMarker1).FirstOrDefault(x => x.Position.Z < 144f && x.Rotation <= -0.1f.Degrees());
-            var target2W = Module.Enemies((uint)OID.TargetMarker2).FirstOrDefault(x => x.Position.X < 11f);
-            var target2E = Module.Enemies((uint)OID.TargetMarker2).FirstOrDefault(x => x.Position.X > 11f);
-            if (target1SWNE != null)
-                AddAOEs(1);
-            else if (target1NWSE != null)
-                AddAOEs(2);
-            else if (target2W != null)
-                AddAOEs(3);
-            else if (target2E != null)
-                AddAOEs(4);
+            var marker1 = Module.Enemies((uint)OID.TargetMarker1);
+            var count1 = marker1.Count;
+            for (var i = 0; i < count1; ++i)
+            {
+                var marker = marker1[i];
+                if (marker.Position.Z < 144f)
+                {
+                    if (marker.Rotation >= 0.1f.Degrees())
+                        AddAOEs(shrapnelPositionsSWNE);
+                    else if (marker.Rotation <= -0.1f.Degrees())
+                        AddAOEs(shrapnelPositionsNWSE);
+                    return;
+                }
+            }
+            var marker2 = Module.Enemies((uint)OID.TargetMarker2);
+            var count2 = marker2.Count;
+            for (var i = 0; i < count2; ++i)
+            {
+                var marker = marker2[i];
+                if (marker.Position.X < 11f)
+                {
+                    AddAOEs(shrapnelPositionsW);
+                    return;
+                }
+                else if (marker.Position.X > 11f)
+                {
+                    AddAOEs(shrapnelPositionsE);
+                    return;
+                }
+            }
         }
     }
 
-    private void AddAOEs(int direction)
+    private void AddAOEs(WPos[] coords)
     {
-        foreach (var position in shrapnelPositions[direction])
-            _aoes.Add(new(circle, position, default, WorldState.FutureTime(8d)));
+        for (var i = 0; i < 18; ++i)
+            _aoes.Add(new(circle, coords[i], default, WorldState.FutureTime(8d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.ShrapnelShellAOE)
-            _aoes.RemoveAll(x => x.Origin.AlmostEqual(spell.LocXZ, 1f));
+        {
+            var count = _aoes.Count;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin.AlmostEqual(pos, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 
-class Impact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Impact), new AOEShapeRect(14, 20));
-class TartareanSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanSpark), new AOEShapeRect(40, 3));
+class Impact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Impact), new AOEShapeRect(14f, 20f));
+class TartareanSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TartareanSpark), new AOEShapeRect(40f, 3f));
 class AnvilOfTartarus(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.AnvilOfTartarus));
 class TartareanImpact(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TartareanImpact));
 
