@@ -29,31 +29,63 @@ public enum IconID : uint
     BaitKnockback = 23, // player
 }
 
-class Thunderhead(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Thunderhead));
+class Thunderhead(BossModule module) : Components.PersistentVoidzone(module, 8f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Thunderhead);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class DadJoke(BossModule module) : Components.Knockback(module)
 {
     private DateTime _activation;
+    private readonly Thunderhead _aoe = module.FindComponent<Thunderhead>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_activation != default)
-            yield return new(Module.PrimaryActor.Position, 15, _activation, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position), Kind: Kind.DirForward);
+            return new Source[1] { new(Module.PrimaryActor.Position, 15f, _activation, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position), Kind: Kind.DirForward) };
+        return [];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.BaitKnockback)
-            _activation = WorldState.FutureTime(5);
+            _activation = WorldState.FutureTime(5d);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DadJoke)
+        if (spell.Action.ID == (uint)AID.DadJoke)
             _activation = default;
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Thunderhead>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class VoidThunderII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidThunderII), 4);
@@ -73,15 +105,13 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var critbuff = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.CriticalStrikes) != null);
-        if (critbuff != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.CriticalStrikes) != null)
             hints.Add($"Dispel {Module.PrimaryActor.Name} with Eerie Soundwave!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var electrocution = actor.FindStatus(SID.Electrocution);
-        if (electrocution != null)
+        if (actor.FindStatus((uint)SID.Electrocution) != null)
             hints.Add("Electrocution on you! Cleanse it with Exuviation.");
     }
 }
@@ -95,8 +125,8 @@ class Stage26Act2States : StateMachineBuilder
             .ActivateOnEnter<VoidThunderII>()
             .ActivateOnEnter<VoidThunderIII>()
             .ActivateOnEnter<BodyBlow>()
-            .ActivateOnEnter<DadJoke>()
             .ActivateOnEnter<Thunderhead>()
+            .ActivateOnEnter<DadJoke>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>();
     }

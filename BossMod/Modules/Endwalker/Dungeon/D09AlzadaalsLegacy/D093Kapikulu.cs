@@ -37,11 +37,11 @@ public enum TetherID : uint
 
 class BillowingBoltsArenaChange(BossModule module) : BossComponent(module)
 {
-    private static readonly ArenaBoundsRect smallerBounds = new(15, 20);
+    private static readonly ArenaBoundsRect smallerBounds = new(15f, 20f);
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BillowingBolts && Arena.Bounds != smallerBounds)
+        if (spell.Action.ID == (uint)AID.BillowingBolts && Arena.Bounds != smallerBounds)
             Arena.Bounds = smallerBounds;
     }
 }
@@ -50,14 +50,14 @@ class ManaExplosion(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Pattern { None, Pattern1, Pattern2 }
     private Pattern currentPattern;
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(15);
-    private static readonly WPos[] aoePositionsSet1 = [new(119, -68), new(101, -86), new(101, -50)]; // yellow P2, green P1
-    private static readonly WPos[] aoePositionsSet2 = [new(119, -50), new(101, -68), new(119, -86)]; // yellow P1, green P2
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly AOEShapeCircle circle = new(15f);
+    private static readonly WPos[] aoePositionsSet1 = [new(119f, -68f), new(101f, -86f), new(101f, -50f)]; // yellow P2, green P1
+    private static readonly WPos[] aoePositionsSet2 = [new(119f, -50f), new(101f, -68f), new(119f, -86f)]; // yellow P1, green P2
     private Actor? _target;
     private DateTime _activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
@@ -72,12 +72,13 @@ class ManaExplosion(BossModule module) : Components.GenericAOEs(module)
     {
         if (_target != default) // Helper can teleport after tether started, this fixes the rare problem
         {
-            if (_target.Position == new WPos(110, -45.5f)) // green cloth tethered
+            void AddAOE(WPos pos) => _aoes.Add(new(circle, WPos.ClampToGrid(pos), default, _activation));
+            if (_target.Position.Z == -45.5f) // green cloth tethered
                 foreach (var c in currentPattern == Pattern.Pattern1 ? aoePositionsSet1 : aoePositionsSet2)
-                    _aoes.Add(new(circle, c, default, _activation));
-            else if (_target.Position == new WPos(110, -90.5f)) // yellow cloth tethered
+                    AddAOE(c);
+            else if (_target.Position.Z == -90.5f) // yellow cloth tethered
                 foreach (var c in currentPattern == Pattern.Pattern1 ? aoePositionsSet2 : aoePositionsSet1)
-                    _aoes.Add(new(circle, c, default, _activation));
+                    AddAOE(c);
             if (_aoes.Count != 0)
                 _target = default;
         }
@@ -96,7 +97,7 @@ class ManaExplosion(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ManaExplosion)
+        if (spell.Action.ID == (uint)AID.ManaExplosion)
         {
             currentPattern = Pattern.None;
             _aoes.Clear();
@@ -104,19 +105,19 @@ class ManaExplosion(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BastingBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BastingBlade), new AOEShapeRect(60, 7.5f));
+class BastingBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BastingBlade), new AOEShapeRect(60f, 7.5f));
 
 class SpikeTraps(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(6, 3);
+    private static readonly AOEShapeRect rect = new(6f, 3f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Traps)
-            _aoes.Add(new(rect, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+        if (spell.Action.ID == (uint)AID.Traps)
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -126,9 +127,9 @@ class SpikeTraps(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BorderChange(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BorderChange), new AOEShapeRect(5, 20));
-class MagnitudeOpus(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.MagnitudeOpus), 6, 4, 4);
-class RotaryGale(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.RotaryGale), 5);
+class BorderChange(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BorderChange), new AOEShapeRect(5f, 20f));
+class MagnitudeOpus(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.MagnitudeOpus), 6f, 4, 4);
+class RotaryGale(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.RotaryGale), 5f);
 class CrewelSlice(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.CrewelSlice));
 class BillowingBolts(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BillowingBolts));
 
@@ -150,4 +151,4 @@ class D093KapikuluStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 844, NameID = 11238)]
-public class D093Kapikulu(WorldState ws, Actor primary) : BossModule(ws, primary, new(110, -68), new ArenaBoundsRect(19.5f, 24.5f));
+public class D093Kapikulu(WorldState ws, Actor primary) : BossModule(ws, primary, new(110f, -68f), new ArenaBoundsRect(19.5f, 24.5f));

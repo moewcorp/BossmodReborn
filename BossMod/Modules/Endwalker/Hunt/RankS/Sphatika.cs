@@ -46,10 +46,10 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Angle> _pendingCleaves = [];
     private static readonly AOEShapeCone _shape = new(40f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_pendingCleaves.Count > 0)
-            return [new(_shape, Module.PrimaryActor.Position, _pendingCleaves[0])]; // TODO: activation
+            return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position, _pendingCleaves[0]) }; // TODO: activation
         else
             return [];
     }

@@ -7,38 +7,41 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, ActionID.
     private readonly int[] _lineOffset = new int[5];
     private readonly int[] _lineMovement = new int[5];
 
-    private static readonly AOEShapeRect _shape = new(5, 5, 5);
+    private static readonly AOEShapeRect _shape = new(5f, 5f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!Active)
-            yield break;
+            return [];
 
+        var aoes = new List<AOEInstance>();
         for (var z = -2; z <= 2; ++z)
         {
             for (var x = -2; x <= 2; ++x)
             {
                 if (CellDangerous(x, z, true))
-                    yield return new(_shape, CellCenter(x, z), Color: Colors.AOE);
+                    aoes.Add(new(_shape, CellCenter(x, z)));
                 else if (CellDangerous(x, z, false))
-                    yield return new(_shape, CellCenter(x, z), Color: Colors.SafeFromAOE);
+                    aoes.Add(new(_shape, CellCenter(x, z), Color: Colors.SafeFromAOE));
             }
         }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (!Active)
             return;
-
-        Arena.AddLine(Arena.Center + new WDir(-15, -25), Arena.Center + new WDir(-15, +25), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(-05, -25), Arena.Center + new WDir(-05, +25), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(+05, -25), Arena.Center + new WDir(+05, +25), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(+15, -25), Arena.Center + new WDir(+15, +25), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(-25, -15), Arena.Center + new WDir(+25, -15), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(-25, -05), Arena.Center + new WDir(+25, -05), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(-25, +05), Arena.Center + new WDir(+25, +05), Colors.Border);
-        Arena.AddLine(Arena.Center + new WDir(-25, +15), Arena.Center + new WDir(+25, +15), Colors.Border);
+        var pos = Arena.Center;
+        var color = Colors.Border;
+        Arena.AddLine(pos + new WDir(-15, -25), pos + new WDir(-15, +25), color);
+        Arena.AddLine(pos + new WDir(-05, -25), pos + new WDir(-05, +25), color);
+        Arena.AddLine(pos + new WDir(+05, -25), pos + new WDir(+05, +25), color);
+        Arena.AddLine(pos + new WDir(+15, -25), pos + new WDir(+15, +25), color);
+        Arena.AddLine(pos + new WDir(-25, -15), pos + new WDir(+25, -15), color);
+        Arena.AddLine(pos + new WDir(-25, -05), pos + new WDir(+25, -05), color);
+        Arena.AddLine(pos + new WDir(-25, +05), pos + new WDir(+25, +05), color);
+        Arena.AddLine(pos + new WDir(-25, +15), pos + new WDir(+25, +15), color);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -92,5 +95,5 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, ActionID.
     }
 }
 
-class HammersLevinforge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Levinforge), new AOEShapeRect(50, 5));
-class HammersSpire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ByregotSpire), new AOEShapeRect(50, 15));
+class HammersLevinforge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Levinforge), new AOEShapeRect(50f, 5f));
+class HammersSpire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ByregotSpire), new AOEShapeRect(50f, 15f));

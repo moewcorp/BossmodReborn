@@ -4,23 +4,19 @@ class RazingVolleyParticleBeam(BossModule module) : Components.SimpleAOEs(module
 {
     private DateTime _nextBundle;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
             return [];
+
         var deadline = Casters[0].Activation.AddSeconds(3d);
 
-        var aoes = new AOEInstance[count];
         var index = 0;
-        for (var i = 0; i < count; ++i)
-        {
-            var caster = Casters[i];
-            if (caster.Activation > deadline)
-                break;
-            aoes[index++] = caster;
-        }
-        return aoes[..index];
+        while (index < count && Casters[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(Casters)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

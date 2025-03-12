@@ -19,30 +19,31 @@ public enum AID : uint
     BubbleBurst = 8068, // Churn->self, no cast, range 40 circle, failed to kill bubble in time
     MadStare = 8066, // Boss->self, 5.0s cast, range 40 circle, gaze
     BiteAndRun1 = 8069, // NaishiNoKami->player, 30.0s cast, width 5 rect charge
-    BiteAndRun2 = 8070, // 1C87->player, 15.0s cast, width 5 rect charge
+    BiteAndRun2 = 8070 // NaishiNoJo->player, 15.0s cast, width 5 rect charge
 }
 
 class BlackTide(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(13);
+    private static readonly AOEShapeCircle circle = new(13f);
     private Actor? helper;
     private DateTime activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts >= 10 && helper != null) // I have seen logs with upto 18 water splashes, not sure how the amount is decided, need more logs to hopefully see a pattern
-            yield return new(circle, helper.Position, default, activation);
+            return new AOEInstance[1] { new(circle, WPos.ClampToGrid(helper.Position), default, activation) };
+        return [];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WaterSplashVisual)
+        if (spell.Action.ID == (uint)AID.WaterSplashVisual)
         {
             ++NumCasts;
             helper = caster;
-            activation = WorldState.FutureTime(4); // seen activation times from 4-6s
+            activation = WorldState.FutureTime(4f); // seen activation times from 4-6s
         }
-        else if ((AID)spell.Action.ID == AID.BlackTide)
+        else if (spell.Action.ID == (uint)AID.BlackTide)
             NumCasts = 0;
     }
 }
@@ -79,20 +80,21 @@ public class D023ShisuiYohi(WorldState ws, Actor primary) : BossModule(ws, prima
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Churn));
-        Arena.Actors(Enemies(OID.NaishiNoKami));
-        Arena.Actors(Enemies(OID.NaishiNoJo));
+        Arena.Actors(Enemies((uint)OID.Churn));
+        Arena.Actors(Enemies((uint)OID.NaishiNoKami));
+        Arena.Actors(Enemies((uint)OID.NaishiNoJo));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.NaishiNoKami or OID.NaishiNoJo => 3,
-                OID.Churn => 2,
-                OID.Boss => 1,
+                (uint)OID.NaishiNoKami or (uint)OID.NaishiNoJo => 2,
+                (uint)OID.Churn => 1,
                 _ => 0
             };
         }

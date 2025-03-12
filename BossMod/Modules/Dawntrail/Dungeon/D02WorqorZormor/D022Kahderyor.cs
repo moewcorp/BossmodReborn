@@ -61,7 +61,7 @@ class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
     public AOEInstance? AOE;
     private static readonly WDir am40 = -40f.Degrees().ToDirection(), a0 = new(0f, 1f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -129,18 +129,14 @@ class WindShotStack(BossModule module) : Components.DonutStack(module, ActionID.
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveStacks.Count == 0)
+        if (Stacks.Count == 0)
             return;
 
-        var comp = _aoe.AOE;
-        if (comp == null)
-            return;
-
-        var aoe = comp.Value;
+        var aoe = _aoe.AOE!.Value;
         var forbidden = new List<Func<WPos, float>>(3);
         var party = Raid.WithoutSlot(false, true, true);
-
-        for (var i = 0; i < party.Length; ++i)
+        var len = party.Length;
+        for (var i = 0; i < len; ++i)
         {
             var p = party[i];
             if (p == actor)
@@ -154,7 +150,7 @@ class WindShotStack(BossModule module) : Components.DonutStack(module, ActionID.
         }
 
         if (forbidden.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveStacks[0].Activation);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Stacks[0].Activation);
     }
 }
 

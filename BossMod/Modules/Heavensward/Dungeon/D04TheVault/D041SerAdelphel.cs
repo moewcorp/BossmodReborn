@@ -45,42 +45,42 @@ public enum IconID : uint
     Spreadmarker = 32 // player
 }
 
-class Bloodstain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bloodstain), 5);
-class HeavenlySlash(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HeavenlySlash), new AOEShapeCone(10.2f, 45.Degrees()));
+class Bloodstain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bloodstain), 5f);
+class HeavenlySlash(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.HeavenlySlash), new AOEShapeCone(10.2f, 45f.Degrees()));
 class HoliestOfHoly(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HoliestOfHoly));
 class HolyShieldBash(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HolyShieldBash), "Stun + single target damage x2");
 
 class BrightSphere(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(6);
+    private static readonly AOEShapeCircle circle = new(6f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
             if (i == 0)
-                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
             else
-                aoes.Add(aoe);
+                aoes[i] = aoe;
         }
         return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.BrightSphere)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(4.6f)));
+        if (actor.OID == (uint)OID.BrightSphere)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(4.6d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.BrightFlare)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.BrightFlare)
             _aoes.RemoveAt(0);
     }
 }
@@ -94,23 +94,23 @@ class ShiningBlade(BossModule module) : Components.GenericAOEs(module)
 
     private const int HalfWidth = 3;
     private const float SubsequentActivationDelay = 2.2f;
-    private static readonly Angle a90 = 90.Degrees(), a180 = 180.Degrees(), am90 = -90.Degrees(), a60 = 60.Degrees(), a0 = 0.Degrees();
+    private static readonly Angle a90 = 90f.Degrees(), a180 = 180f.Degrees(), am90 = -90f.Degrees(), a60 = 60f.Degrees();
 
     private readonly List<AOEInstance> _aoes = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
             if (i == 0)
-                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
             else
-                aoes.Add(aoe);
+                aoes[i] = aoe;
         }
         return aoes;
     }
@@ -129,13 +129,13 @@ class ShiningBlade(BossModule module) : Components.GenericAOEs(module)
             AddAOEs(primary, east, north, south, west, activationTimes);
         else if (primary.InCone(Arena.Center, a180, a60))
             AddAOEs(primary, south, east, west, north, activationTimes);
-        else if (primary.InCone(Arena.Center, a0, a60))
+        else if (primary.InCone(Arena.Center, new Angle(), a60))
             AddAOEs(primary, north, west, east, south, activationTimes);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.ShiningBlade)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.ShiningBlade)
             _aoes.RemoveAt(0);
     }
 
@@ -145,8 +145,8 @@ class ShiningBlade(BossModule module) : Components.GenericAOEs(module)
         [
             activation,
             activation.AddSeconds(SubsequentActivationDelay),
-            activation.AddSeconds(2 * SubsequentActivationDelay),
-            activation.AddSeconds(3 * SubsequentActivationDelay)
+            activation.AddSeconds(2d * SubsequentActivationDelay),
+            activation.AddSeconds(3d * SubsequentActivationDelay)
         ];
     }
 
@@ -175,17 +175,28 @@ class D041SerAdelphelStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS), Xyzzy", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 34, NameID = 3634)]
-public class D041SerAdelphel(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -100), arena)
+public class D041SerAdelphel(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -100f), arena)
 {
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.SerAdelphelBrightblade).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies((uint)OID.SerAdelphelBrightblade);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return base.CheckPull();
+    }
 
-    public static readonly ArenaBounds arena = new ArenaBoundsComplex([new Circle(new(default, -100), 19.5f)], [new Rectangle(new(0, -120), 20f, 1.75f), new Rectangle(new(-21, -100), 1.75f, 20f)]);
+    public static readonly ArenaBounds arena = new ArenaBoundsComplex([new Circle(new(default, -100f), 19.5f)], [new Rectangle(new(default, -120), 20f, 1.75f), new Rectangle(new(-21f, -100f), 1.75f, 20f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SerAdelphelBrightblade));
-        Arena.Actors(Enemies(OID.VaultDeacon));
-        Arena.Actors(Enemies(OID.VaultOstiary));
+        Arena.Actors(Enemies((uint)OID.SerAdelphelBrightblade));
+        Arena.Actors(Enemies((uint)OID.VaultDeacon));
+        Arena.Actors(Enemies((uint)OID.VaultOstiary));
     }
 }

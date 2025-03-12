@@ -47,10 +47,10 @@ class ValfodrKB(BossModule module) : Components.Knockback(module, ActionID.MakeS
     private Source? _source;
     private readonly Infatuation _aoe = module.FindComponent<Infatuation>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_target == slot && _source != null)
-            return [_source.Value];
+            return new Source[1] { _source.Value };
         else
             return [];
     }

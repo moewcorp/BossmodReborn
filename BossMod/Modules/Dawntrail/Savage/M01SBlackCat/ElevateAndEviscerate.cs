@@ -7,7 +7,7 @@ class ElevateAndEviscerateShockwave(BossModule module) : Components.GenericAOEs(
     private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
     public static readonly AOEShapeRect Rect = new(5f, 5f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var aoes = new List<AOEInstance>();
         if (_kb.CurrentTarget != null && _kb.CurrentTarget != actor)
@@ -20,7 +20,7 @@ class ElevateAndEviscerateShockwave(BossModule module) : Components.GenericAOEs(
         }
         if (aoe != null && _kb.LastTarget != actor)
             aoes.Add(aoe.Value);
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -50,17 +50,17 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
         => player == CurrentTarget ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (CurrentTarget != null && actor == CurrentTarget && CurrentKnockbackDistance > 0)
-            return [new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, Direction: actor.Rotation, Kind: Kind.DirForward)];
+            return new Source[] { new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, Direction: actor.Rotation, Kind: Kind.DirForward) };
         return [];
     }
 
     public override void Update()
     {
-        if (CurrentTarget != null && Sources(0, CurrentTarget).Any())
-            Cache = CalculateMovements(0, CurrentTarget).First().to;
+        if (CurrentTarget != null && ActiveSources(0, CurrentTarget).Length != 0)
+            Cache = CalculateMovements(0, CurrentTarget)[0].to;
         else if (CurrentTarget != null)
             Cache = CurrentTarget.Position;
     }
@@ -112,25 +112,44 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<ElevateAndEviscerateHint>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var comp = Module.FindComponent<ElevateAndEviscerateHint>();
+        if (comp != null)
+        {
+            var aoes = comp.ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                    return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class ElevateAndEviscerateHint(BossModule module) : Components.GenericAOEs(module)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
+    private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var comp = Module.FindComponent<ElevateAndEviscerate>()!.CurrentTarget;
-        if (comp != default && actor == comp)
+        var comp = _kb.CurrentTarget;
+        if (comp != null && actor == comp)
         {
-            var damagedCells = Module.FindComponent<ArenaChanges>()!.DamagedCells;
+            var damagedCells = _arena.DamagedCells.SetBits();
             var tiles = ArenaChanges.Tiles;
             var aoes = new List<AOEInstance>();
-
-            foreach (var index in damagedCells.SetBits())
+            var len = damagedCells.Length;
+            for (var i = 0; i < len; ++i)
             {
-                aoes.Add(new(ElevateAndEviscerateShockwave.Rect, tiles[index].Center, Color: Colors.FutureVulnerable, Risky: false));
+                var tile = tiles[damagedCells[i]];
+                aoes.Add(new(ElevateAndEviscerateShockwave.Rect, tile.Center, Color: Colors.FutureVulnerable, Risky: false));
             }
-            return aoes;
+            return CollectionsMarshal.AsSpan(aoes);
         }
         return [];
     }

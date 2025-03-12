@@ -6,7 +6,7 @@ class DominionSlash(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {

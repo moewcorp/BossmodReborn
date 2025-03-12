@@ -53,7 +53,18 @@ class Stage07Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () => module.Enemies(Stage07Act1.Trash).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage07Act1.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -67,11 +78,22 @@ public class Stage07Act1 : BossModule
     }
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Sprite];
 
-    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Sprite));
+        Arena.Actors(Enemies((uint)OID.Sprite));
     }
 }

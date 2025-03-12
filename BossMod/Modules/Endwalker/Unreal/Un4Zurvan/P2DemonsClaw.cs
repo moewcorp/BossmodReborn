@@ -4,10 +4,11 @@ class P2DemonsClawKnockback(BossModule module) : Components.Knockback(module, Ac
 {
     private Actor? _caster;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_caster?.CastInfo?.TargetID == actor.InstanceID)
-            yield return new(_caster.Position, 17, Module.CastFinishAt(_caster.CastInfo));
+            return new Source[1] { new(_caster.Position, 17f, Module.CastFinishAt(_caster.CastInfo)) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -25,7 +26,7 @@ class P2DemonsClawKnockback(BossModule module) : Components.Knockback(module, Ac
 
 class P2DemonsClawWaveCannon(BossModule module) : Components.GenericWildCharge(module, 5, ActionID.MakeSpell(AID.WaveCannonShared))
 {
-    public Actor? Target { get; private set; }
+    public Actor? Target;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

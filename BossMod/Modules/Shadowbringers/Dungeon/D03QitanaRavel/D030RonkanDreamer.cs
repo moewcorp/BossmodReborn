@@ -44,7 +44,7 @@ class WrathOfTheRonka(BossModule module) : Components.GenericAOEs(module)
         (new(-17f, 642f), rectShort), (new(17f, 627f), rectShort),
         (new(17f, 436f), rectShort), (new(-17f, 421f), rectShort)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
@@ -100,10 +100,11 @@ public class D030RonkanDreamer(WorldState ws, Actor primary) : BossModule(ws, pr
     new(-6.195f, 418.626f), new(-5.99f, 420.081f), new(-5.958f, 421.778f), new(-6.236f, 423.679f), new(-5.856f, 424.938f)];
     private static readonly ArenaBoundsComplex arena1 = new([new Rectangle(new(default, 640f), 17.25f, 23f)], [new PolygonCustomO(vertices1, 0.5f), new PolygonCustomO(vertices2, 0.5f)]);
     private static readonly ArenaBoundsComplex arena2 = new([new Rectangle(new(default, 434.5f), 17.25f, 23.75f)], [new PolygonCustomO(vertices3, 0.5f), new PolygonCustomO(vertices4, 0.5f)]);
+    private static readonly uint[] trash = [(uint)OID.RonkanVessel, (uint)OID.RonkanThorn, (uint)OID.RonkanIdol];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies([(uint)OID.RonkanVessel, (uint)OID.RonkanThorn, (uint)OID.RonkanIdol]));
+        Arena.Actors(Enemies(trash));
     }
 }

@@ -2,8 +2,8 @@
 
 class Footprint(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.Footprint))
 {
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        yield return new(Module.PrimaryActor.Position, 20); // TODO: activation
+        return new Source[1] { new(Module.PrimaryActor.Position, 20f) }; // TODO: activation
     }
 }

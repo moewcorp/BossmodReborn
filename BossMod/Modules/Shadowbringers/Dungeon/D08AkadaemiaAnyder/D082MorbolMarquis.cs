@@ -50,27 +50,28 @@ class ExtensibleTendrilsPutridBreath(BossModule module) : Components.GenericAOEs
     private DateTime activation;
     private int remainingCasts;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe != null)
+        if (_aoe is AOEInstance aoe)
         {
-            yield return _aoe.Value;
-            yield break;
+            return new AOEInstance[1] { aoe };
         }
+        var aoes = new List<AOEInstance>(2);
         if (remainingCasts > 0)
         {
-            var delay1 = activation.AddSeconds((5 - remainingCasts) * 6.1f);
-            if ((delay1 - WorldState.CurrentTime).TotalSeconds <= 2.5f)
-                yield return new(cross, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + a45, delay1);
+            var delay1 = activation.AddSeconds((5d - remainingCasts) * 6.1d);
+            if ((delay1 - WorldState.CurrentTime).TotalSeconds <= 2.5d)
+                aoes.Add(new(cross, WPos.ClampToGrid(Module.PrimaryActor.Position), Module.PrimaryActor.Rotation + a45, delay1));
         }
-        var delay2 = activation.AddSeconds(27.1f);
+        var delay2 = activation.AddSeconds(27.1d);
         if (activation != default && (delay2 - WorldState.CurrentTime).TotalSeconds <= 4.9f)
-            yield return new(cone, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, delay2);
+            aoes.Add(new(cone, WPos.ClampToGrid(Module.PrimaryActor.Position), Module.PrimaryActor.Rotation, delay2));
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ExtensibleTendrilsFirst)
+        if (spell.Action.ID == (uint)AID.ExtensibleTendrilsFirst)
         {
             remainingCasts = 5;
             activation = Module.CastFinishAt(spell);
@@ -80,15 +81,15 @@ class ExtensibleTendrilsPutridBreath(BossModule module) : Components.GenericAOEs
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ExtensibleTendrilsFirst:
-            case AID.ExtensibleTendrilsRest:
+            case (uint)AID.ExtensibleTendrilsFirst:
+            case (uint)AID.ExtensibleTendrilsRest:
                 _aoe = null;
                 --remainingCasts;
                 break;
 
-            case AID.PutridBreath:
+            case (uint)AID.PutridBreath:
                 activation = default;
                 break;
         }
@@ -99,7 +100,7 @@ class BlossomArenaChanges(BossModule module) : BossComponent(module)
 {
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if ((OID)actor.OID == OID.Voidzone)
+        if (actor.OID == (uint)OID.Voidzone)
         {
             Arena.Bounds = state switch
             {
@@ -128,11 +129,12 @@ class D082MorbolMarquisStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 661, NameID = 8272)]
 public class D082MorbolMarquis(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    private const int X = -224, InnerRadius = 10, OuterRadius = 15, Radius = 25, Edges = 12;
-    private static readonly WPos arenaCenter = new(X, -38);
-    private static readonly Angle a45 = 45.Degrees(), a135 = 135.Degrees();
+    private const float X = -224f, InnerRadius = 10f, OuterRadius = 15f, Radius = 25f;
+    private const int Edges = 12;
+    private static readonly WPos arenaCenter = new(X, -38f);
+    private static readonly Angle a45 = 45f.Degrees(), a135 = 135f.Degrees();
     private static readonly Polygon[] defaultCircle = [new(arenaCenter, 24.5f * CosPI.Pi48th, 48)];
-    private static readonly Rectangle[] defaultDifference = [new(new(X, -13), Radius, 1.1f), new(new(X, -63), Radius, 1.1f)];
+    private static readonly Rectangle[] defaultDifference = [new(new(X, -13f), Radius, 1.1f), new(new(X, -63f), Radius, 1.1f)];
     private static readonly Shape[] blueBlossom = [new ConeV(arenaCenter, InnerRadius, a45, a45, Edges), new ConeV(arenaCenter, InnerRadius, -a135, a45, Edges),
     new DonutSegmentV(arenaCenter, OuterRadius, Radius, a45, a45, Edges), new DonutSegmentV(arenaCenter, OuterRadius, Radius, -a135, a45, Edges)];
     private static readonly Shape[] yellowBlossom = [new ConeV(arenaCenter, InnerRadius, -a45, a45, Edges), new ConeV(arenaCenter, InnerRadius, a135, a45, Edges),

@@ -28,28 +28,35 @@ class ExplosiveResonantFrequency(BossModule module) : Components.GenericAOEs(mod
     private static readonly AOEShapeCircle circleSmall = new(8f), circleBig = new(15f);
     private readonly List<AOEInstance> _aoes = new(11);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if ((aoe.Activation - _aoes[0].Activation).TotalSeconds <= 1d)
-                aoes.Add(aoe);
-        }
-        return aoes;
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShapeCircle shape) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
-        if (spell.Action.ID == (uint)AID.ResonantFrequency)
-            AddAOE(circleSmall);
-        else if (spell.Action.ID == (uint)AID.ExplosiveFrequency)
-            AddAOE(circleBig);
+        var shape = spell.Action.ID switch
+        {
+            (uint)AID.ResonantFrequency => circleSmall,
+            (uint)AID.ExplosiveFrequency => circleBig,
+            _ => null
+        };
+        if (shape != null)
+        {
+            _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            if (_aoes.Count == 11)
+                _aoes.SortBy(x => x.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

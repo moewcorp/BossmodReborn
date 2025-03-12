@@ -13,7 +13,7 @@ class TripleKasumiGiri(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeOut = new(6f);
     private static readonly AOEShapeDonut _shapeIn = new(6f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -246,11 +246,19 @@ class IaiGiriResolve(BossModule module) : Components.GenericAOEs(module)
 
     private readonly List<Instance> _instances = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var i in _instances)
-            if (i.AOEs.Count > 0)
-                yield return i.AOEs[0];
+        var count = _instances.Count;
+        if (count == 0)
+            return [];
+        var aoes = new List<AOEInstance>();
+        for (var i = 0; i < count; ++i)
+        {
+            var ins = _instances[i];
+            if (ins.AOEs.Count != 0)
+                aoes.Add(ins.AOEs[0]);
+        }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

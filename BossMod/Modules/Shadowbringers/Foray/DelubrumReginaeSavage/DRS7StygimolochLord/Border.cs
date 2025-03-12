@@ -3,39 +3,40 @@
 class Border(BossModule module) : Components.GenericAOEs(module)
 {
     private bool Active;
-    private static readonly WPos ArenaCenter = new(-416, -184);
+    private static readonly WPos ArenaCenter = new(-416f, -184f);
     private static readonly Polygon[] DefaultPolygon = [new(ArenaCenter, 34.5f, 48)];
-    public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultPolygon, [new Rectangle(new(-416, -219), 20, 1.4f), new Rectangle(new(-416, -149), 20, 1.25f)]);
-    private static readonly Shape[] labyrinthDifference = [new DonutV(ArenaCenter, 30, 34.5f, 48), new DonutV(ArenaCenter, 17, 25, 48), new Polygon(ArenaCenter, 12, 48)];
-    private static readonly Rectangle[] labyrinthUnion = [.. GenerateAlcoves(new(-416, -211.5f)), .. GenerateAlcoves(WPos.RotateAroundOrigin(22.5f, ArenaCenter, new(-416, -198.5f)), 22.5f.Degrees())];
+    public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultPolygon, [new Rectangle(new(-416f, -219f), 20f, 1.4f), new Rectangle(new(-416f, -149f), 20f, 1.25f)]);
+    private static readonly Shape[] labyrinthDifference = [new DonutV(ArenaCenter, 30f, 34.5f, 48), new DonutV(ArenaCenter, 17f, 25f, 48), new Polygon(ArenaCenter, 12f, 48)];
+    private static readonly Rectangle[] labyrinthUnion = [.. GenerateAlcoves(new(-416f, -211.5f)), .. GenerateAlcoves(WPos.RotateAroundOrigin(22.5f, ArenaCenter, new(-416f, -198.5f)), 22.5f.Degrees())];
     private static readonly ArenaBoundsComplex labPhase = new(DefaultPolygon, labyrinthDifference, labyrinthUnion);
     private static readonly AOEShapeCustom customShape = new(labyrinthDifference, labyrinthUnion);
+    private DateTime activation;
 
-    private static List<Rectangle> GenerateAlcoves(WPos basePosition, Angle start = default)
+    private static Rectangle[] GenerateAlcoves(WPos basePosition, Angle start = default)
     {
-        var a45 = 45.Degrees();
+        var a45 = 45f.Degrees();
 
-        List<Rectangle> rects = new(8)
-        {
-            new(basePosition, 2, 4, start)
-        };
+        var rects = new Rectangle[8];
+        rects[0] = new(basePosition, 2f, 4f, start);
 
         for (var i = 1; i < 8; ++i)
-            rects.Add(new(WPos.RotateAroundOrigin(i * 45, ArenaCenter, basePosition), 2, 4, start + a45 * i));
+            rects[i] = new(WPos.RotateAroundOrigin(i * 45f, ArenaCenter, basePosition), 2f, 4f, start + a45 * i);
         return rects;
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!Active)
-            yield return new(customShape, Arena.Center);
+            return new AOEInstance[1] { new(customShape, Arena.Center, default, activation) };
+        return [];
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.MemoryOfTheLabyrinth)
+        if (spell.Action.ID == (uint)AID.MemoryOfTheLabyrinth)
         {
             Active = true;
+            activation = Module.CastFinishAt(spell, 0.7f);
             Arena.Bounds = labPhase;
             Arena.Center = labPhase.Center;
         }

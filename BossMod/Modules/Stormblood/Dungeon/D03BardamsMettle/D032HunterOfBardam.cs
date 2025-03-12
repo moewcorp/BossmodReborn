@@ -50,18 +50,28 @@ public enum IconID : uint
     ChasingAOE = 197 // player
 }
 
-class Comet(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4), ActionID.MakeSpell(AID.CometFirst), ActionID.MakeSpell(AID.CometRest), 10, 1.5f, 9, true, (uint)IconID.ChasingAOE);
-class CometFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometFirst), 4);
-class CometRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometRest), 4);
+class Comet(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4f), ActionID.MakeSpell(AID.CometFirst), ActionID.MakeSpell(AID.CometRest), 10f, 1.5f, 9, true, (uint)IconID.ChasingAOE);
+class CometFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometFirst), 4f);
+class CometRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometRest), 4f);
 
-class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.MeteorImpact), 50, safeInsideHitbox: false)
+class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.MeteorImpact), 50f, safeInsideHitbox: false)
 {
     private DateTime activation;
 
-    public override IEnumerable<Actor> BlockerActors()
+    public override ReadOnlySpan<Actor> BlockerActors()
     {
-        var starshard = Module.Enemies(OID.StarShard).Where(x => !x.IsDead);
-        return starshard.Count() == 1 ? starshard : [];
+        var boulders = Module.Enemies((uint)OID.StarShard);
+        var count = boulders.Count;
+        if (count == 0)
+            return [];
+        var actors = new List<Actor>();
+        for (var i = 0; i < count; ++i)
+        {
+            var b = boulders[i];
+            if (!b.IsDead)
+                actors.Add(b);
+        }
+        return actors.Count == 1 ? CollectionsMarshal.AsSpan(actors) : [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -75,7 +85,7 @@ class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, Ac
 
     public override void Update()
     {
-        if (BlockerActors().Any() && Safezones.Count == 0)
+        if (BlockerActors().Length != 0 && Safezones.Count == 0)
         {
             Refresh();
             AddSafezone(activation);
@@ -85,18 +95,18 @@ class MeteorImpact(BossModule module) : Components.CastLineOfSightAOE(module, Ac
 
 class Charge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charge), new AOEShapeRect(46.25f, 2.5f));
 class EmptyGaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.EmptyGaze));
-class Sacrifice(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Sacrifice), 3);
-class Reconstruct(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Reconstruct), 5);
-class CometImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometImpact), 9);
-class BardamsRing(BossModule module) : Components.DonutStack(module, ActionID.MakeSpell(AID.BardamsRing), (uint)IconID.BardamsRing, 10, 20, 3.5f, 4, 4);
+class Sacrifice(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Sacrifice), 3f);
+class Reconstruct(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Reconstruct), 5f);
+class CometImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CometImpact), 9f);
+class BardamsRing(BossModule module) : Components.DonutStack(module, ActionID.MakeSpell(AID.BardamsRing), (uint)IconID.BardamsRing, 10f, 20f, 3.5f, 4, 4);
 
 class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 20)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Tremblor1)
+        if (spell.Action.ID == (uint)AID.Tremblor1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -104,10 +114,10 @@ class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.Tremblor1 => 0,
-                AID.Tremblor2 => 1,
+                (uint)AID.Tremblor1 => 0,
+                (uint)AID.Tremblor2 => 1,
                 _ => -1
             };
             AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f));
@@ -115,7 +125,7 @@ class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     }
 }
 
-class TremblorFinal(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor2), new AOEShapeDonut(10, 20))
+class TremblorFinal(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tremblor2), new AOEShapeDonut(10f, 20f))
 {
     private readonly Tremblor _aoe = module.FindComponent<Tremblor>()!;
 
@@ -127,26 +137,27 @@ class TremblorFinal(BossModule module) : Components.SimpleAOEs(module, ActionID.
 
 class HeavyStrike(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, 135.Degrees()), new AOEShapeDonutSector(6.5f, 12.5f, 135.Degrees()), new AOEShapeDonutSector(12.5f, 18.5f, 135.Degrees())];
+    private static readonly Angle a135 = 135f.Degrees();
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, a135), new AOEShapeDonutSector(6.5f, 12.5f, a135), new AOEShapeDonutSector(12.5f, 18.5f, a135)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavyStrike)
-            AddSequence(caster.Position, Module.CastFinishAt(spell, 1), spell.Rotation);
+        if (spell.Action.ID == (uint)AID.HeavyStrike)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell, 1), spell.Rotation);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (Sequences.Count > 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.HeavyStrike1 => 0,
-                AID.HeavyStrike2 => 1,
-                AID.HeavyStrike3 => 2,
+                (uint)AID.HeavyStrike1 => 0,
+                (uint)AID.HeavyStrike2 => 1,
+                (uint)AID.HeavyStrike3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.3f), spell.Rotation);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.3d), spell.Rotation);
         }
     }
 }
@@ -194,7 +205,11 @@ public class D032HunterOfBardam(WorldState ws, Actor primary) : BossModule(ws, p
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
-            e.Priority = -1;
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = AIHints.Enemy.PriorityForbidden;
+        }
     }
 }

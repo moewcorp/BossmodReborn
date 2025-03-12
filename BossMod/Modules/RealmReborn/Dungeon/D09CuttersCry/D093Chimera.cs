@@ -22,24 +22,53 @@ public enum AID : uint
     ChaoticChorus = 1108 // Cacophony->self, no cast, range 6 aoe
 }
 
-class LionsBreath(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.LionsBreath), new AOEShapeCone(9.7f, 60.Degrees())); // TODO: verify angle
+class LionsBreath(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.LionsBreath), new AOEShapeCone(9.7f, 60f.Degrees())); // TODO: verify angle
 
-abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.7f, 60.Degrees()));
+abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.7f, 60f.Degrees()));
 class RamsBreath(BossModule module) : Breath(module, AID.RamsBreath);
 class DragonsBreath(BossModule module) : Breath(module, AID.DragonsBreath);
 
 class RamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RamsVoice), 9.7f);
-class DragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DragonsVoice), new AOEShapeDonut(8, 30));
-class RamsKeeper(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.RamsKeeper), m => m.Enemies(OID.IceVoidzone).Where(e => e.EventState != 7), 0.8f);
-
-class ChaoticChorus(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ChaoticChorus))
+class DragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DragonsVoice), new AOEShapeDonut(8f, 30f));
+class RamsKeeper(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.RamsKeeper), GetVoidzones, 0.8f)
 {
-    private readonly AOEShape _shape = new AOEShapeCircle(6);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private static Actor[] GetVoidzones(BossModule module)
     {
-        // TODO: timings
-        return Module.Enemies(OID.Cacophony).Where(c => !c.IsDead).Select(c => new AOEInstance(_shape, c.Position, c.Rotation));
+        var enemies = module.Enemies((uint)OID.IceVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class ChaoticChorus(BossModule module) : Components.PersistentVoidzone(module, 6f, GetEnemies)
+{
+    private static Actor[] GetEnemies(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Cacophony);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
     }
 }
 
@@ -59,4 +88,4 @@ class D093ChimeraStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12, NameID = 1590)]
-public class D093Chimera(WorldState ws, Actor primary) : BossModule(ws, primary, new(-170, -200), new ArenaBoundsCircle(30));
+public class D093Chimera(WorldState ws, Actor primary) : BossModule(ws, primary, new(-170f, -200f), new ArenaBoundsCircle(30f));

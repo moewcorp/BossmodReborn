@@ -50,7 +50,7 @@ class Petrattraction(BossModule module) : Components.Knockback(module)
 
     private static readonly AOEShapeCircle circle = new(50f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _source);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

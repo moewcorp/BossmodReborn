@@ -2,30 +2,35 @@
 
 class GreatBallOfFire(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _smallFlames = module.Enemies(OID.RagingFlame);
-    private readonly List<Actor> _bigFlames = module.Enemies(OID.ImmolatingFlame);
-    private readonly DateTime _activation = module.WorldState.FutureTime(6.6f);
+    private readonly List<Actor> _smallFlames = module.Enemies((uint)OID.RagingFlame);
+    private readonly List<Actor> _bigFlames = module.Enemies((uint)OID.ImmolatingFlame);
+    private readonly DateTime _activation = module.WorldState.FutureTime(6.6d);
 
-    private static readonly AOEShapeCircle _shapeSmall = new(10);
-    private static readonly AOEShapeCircle _shapeBig = new(18);
+    private static readonly AOEShapeCircle _shapeSmall = new(10f);
+    private static readonly AOEShapeCircle _shapeBig = new(18f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        for (var i = 0; i < _smallFlames.Count; ++i)
+        var countS = _smallFlames.Count;
+        var countB = _bigFlames.Count;
+        var aoes = new AOEInstance[countS + countB];
+        var index = 0;
+        for (var i = 0; i < countS; ++i)
         {
             var f = _smallFlames[i];
-            yield return new(_shapeSmall, f.Position, new(), Module.CastFinishAt(f.CastInfo, 0, _activation));
+            aoes[index++] = new(_shapeSmall, f.Position, default, Module.CastFinishAt(f.CastInfo, 0, _activation));
         }
-        for (var i = 0; i < _bigFlames.Count; ++i)
+        for (var i = 0; i < countB; ++i)
         {
             var f = _bigFlames[i];
-            yield return new(_shapeBig, f.Position, new(), Module.CastFinishAt(f.CastInfo, 0, _activation));
+            aoes[index++] = new(_shapeBig, f.Position, default, Module.CastFinishAt(f.CastInfo, 0, _activation));
         }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BurnSmall or AID.BurnBig)
+        if (spell.Action.ID is (uint)AID.BurnSmall or (uint)AID.BurnBig)
             ++NumCasts;
     }
 }

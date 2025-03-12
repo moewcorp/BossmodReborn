@@ -14,26 +14,34 @@ class AboveBoard(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var imminentBombs = AreBigBombsDangerous(slot) ? _bigBombs : _smallBombs;
-        return imminentBombs.Select(b => new AOEInstance(_shape, b.Position, new(), _activation));
+        var count = imminentBombs.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = new(_shape, imminentBombs[i].Position, default, _activation);
+        }
+        return aoes;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.ReversalOfForces:
-                if ((OID)actor.OID is OID.AetherialBolt or OID.AetherialBurst)
+            case (uint)SID.ReversalOfForces:
+                if (actor.OID is (uint)OID.AetherialBolt or (uint)OID.AetherialBurst)
                     _invertedBombs = true;
                 else
                     _invertedPlayers.Set(Raid.FindSlot(actor.InstanceID));
                 break;
-            case SID.AboveBoardPlayerLong:
-            case SID.AboveBoardPlayerShort:
-            case SID.AboveBoardBombLong:
-            case SID.AboveBoardBombShort:
+            case (uint)SID.AboveBoardPlayerLong:
+            case (uint)SID.AboveBoardPlayerShort:
+            case (uint)SID.AboveBoardBombLong:
+            case (uint)SID.AboveBoardBombShort:
                 AdvanceState(State.ThrowUpDone);
                 break;
         }
@@ -41,15 +49,15 @@ class AboveBoard(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.LotsCastBigShort:
-            case AID.LotsCastSmallShort:
+            case (uint)AID.LotsCastBigShort:
+            case (uint)AID.LotsCastSmallShort:
                 AdvanceState(State.ShortExplosionsDone);
                 break;
-            case AID.LotsCastLong:
+            case (uint)AID.LotsCastLong:
                 AdvanceState(State.LongExplosionsDone);
-                _activation = WorldState.FutureTime(4.2f);
+                _activation = WorldState.FutureTime(4.2d);
                 break;
         }
     }

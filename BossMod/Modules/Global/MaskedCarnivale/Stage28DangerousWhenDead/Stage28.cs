@@ -49,18 +49,51 @@ public enum SID : uint
 
 class DoomImpending(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.DoomImpending), "Heal to full before cast ends!");
 class MarchOfTheDraugar(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MarchOfTheDraugar), "Summons adds! (Kill with fire!)");
-class NecrobaneVoidzone(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 6, m => m.Enemies(OID.NecrobaneVoidzone).Where(z => z.EventState != 7), ActionID.MakeSpell(AID.MegaDeath));
-class Necrobane(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Necrobane), 6);
+class NecrobaneVoidzone(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 6f, GetVoidzones, ActionID.MakeSpell(AID.MegaDeath))
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.NecrobaneVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class Necrobane(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Necrobane), 6f);
 class HelblarShriek(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HelblarShriek));
 class FuneralPyre(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FuneralPyre));
-class Catapult(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Catapult), 6);
-class VengefulSoul(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VengefulSoul), 6);
-class BilrostSquall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BilrostSquall), 10);
+class Catapult(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Catapult), 6f);
+class VengefulSoul(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VengefulSoul), 6f);
+class BilrostSquall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BilrostSquall), 10f);
 class Cackle(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.Cackle));
 
-class Brainstorm(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
+class Brainstorm(BossModule module) : Components.StatusDrivenForcedMarch(module, 2f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<BilrostSquall>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    private readonly BilrostSquall _aoe = module.FindComponent<BilrostSquall>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class Hints(BossModule module) : BossComponent(module)
@@ -76,9 +109,9 @@ class Stage28States : StateMachineBuilder
     public Stage28States(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Brainstorm>()
             .ActivateOnEnter<Cackle>()
             .ActivateOnEnter<BilrostSquall>()
+            .ActivateOnEnter<Brainstorm>()
             .ActivateOnEnter<VengefulSoul>()
             .ActivateOnEnter<Catapult>()
             .ActivateOnEnter<FuneralPyre>()
@@ -108,13 +141,14 @@ public class Stage28 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.UndeadSerf1 or OID.UndeadSerf2 or OID.UndeadSoldier or OID.UndeadGravekeeper or OID.UndeadWarrior => 1,
-                _ => 0
+                (uint)OID.Boss => 0,
+                _ => 1
             };
         }
     }

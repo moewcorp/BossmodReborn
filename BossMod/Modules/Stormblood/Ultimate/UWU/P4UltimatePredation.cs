@@ -36,15 +36,15 @@ class P4UltimatePredation(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (CurState == State.Predicted && (AID)spell.Action.ID == AID.CrimsonCyclone)
+        if (CurState == State.Predicted && spell.Action.ID == (uint)AID.CrimsonCyclone)
             CurState = State.First;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CrimsonCyclone:
+            case (uint)AID.CrimsonCyclone:
                 if (CurState == State.First)
                 {
                     CurState = State.Second;
@@ -52,7 +52,7 @@ class P4UltimatePredation(BossModule module) : BossComponent(module)
                         _hints.RemoveAt(0);
                 }
                 break;
-            case AID.CrimsonCycloneCross:
+            case (uint)AID.CrimsonCycloneCross:
                 if (CurState == State.Second)
                 {
                     CurState = State.Done;

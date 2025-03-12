@@ -52,7 +52,7 @@ class ElectrothermiaArenaChange(BossModule module) : Components.GenericAOEs(modu
     private static readonly AOEShapeDonut donut = new(17f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Electrothermia && Arena.Bounds == D043Zander.StartingBounds)
@@ -77,7 +77,7 @@ class SlitherbaneBurstCombo(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
     private static readonly AOEShapeRect rect = new(20f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -156,7 +156,7 @@ class Syntheslither(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCone cone = new(19f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

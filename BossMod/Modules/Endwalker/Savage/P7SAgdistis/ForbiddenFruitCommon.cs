@@ -14,32 +14,45 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
     private BitMatrix _tetherClips; // [i,j] is set if i is tethered and clips j
 
     protected static readonly BitMask ValidPlatformsMask = new(7);
-    protected static readonly AOEShapeCircle ShapeBullUntethered = new(10);
-    protected static readonly AOEShapeRect ShapeBirdUntethered = new(60, 4);
-    protected static readonly AOEShapeRect ShapeBullBirdTethered = new(60, 4);
-    protected static readonly AOEShapeCone ShapeMinotaurUntethered = new(60, 45.Degrees());
-    protected static readonly AOEShapeCone ShapeMinotaurTethered = new(60, 22.5f.Degrees());
+    protected static readonly AOEShapeCircle ShapeBullUntethered = new(10f);
+    protected static readonly AOEShapeRect ShapeRect = new(60f, 4f);
+    protected static readonly AOEShapeCone ShapeMinotaurUntethered = new(60f, 45f.Degrees());
+    protected static readonly AOEShapeCone ShapeMinotaurTethered = new(60f, 22.5f.Degrees());
 
     public bool CastsActive => _activeAOEs.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var (source, shape, time) in _predictedAOEs)
-            yield return new(shape, source.Position, source.Rotation, time);
-        foreach (var (source, shape) in _activeAOEs)
-            yield return new(shape, source.Position, source.CastInfo!.Rotation, Module.CastFinishAt(source.CastInfo));
+        var countP = _predictedAOEs.Count;
+        var countA = _activeAOEs.Count;
+        var aoes = new AOEInstance[countP + countA];
+        var index = 0;
+        for (var i = 0; i < countP; ++i)
+        {
+            var p = _predictedAOEs[i];
+            aoes[index++] = new(p.Item2, p.Item1.Position, p.Item1.Rotation, p.Item3);
+        }
+        for (var i = 0; i < countA; ++i)
+        {
+            var p = _activeAOEs[i];
+            aoes[index++] = new(p.Item2, p.Item1.CastInfo!.LocXZ, p.Item1.CastInfo!.Rotation, Module.CastFinishAt(p.Item1.CastInfo));
+        }
+        return aoes;
     }
 
     public override void Update()
     {
-        _tetherClips.Reset();
-        foreach (var (slot, player) in Raid.WithSlot(false, true, true))
+        _tetherClips = default;
+        var party = Raid.WithSlot(false, true, true);
+        var len = party.Length;
+        for (var i = 0; i < len; ++i)
         {
-            var tetherSource = TetherSources[slot];
+            ref readonly var p = ref party[i];
+            var tetherSource = TetherSources[p.Item1];
             if (tetherSource != null)
             {
-                AOEShape tetherShape = (OID)tetherSource.OID == OID.ImmatureMinotaur ? ShapeMinotaurTethered : ShapeBullBirdTethered;
-                _tetherClips[slot] = Raid.WithSlot(false, true, true).Exclude(player).InShape(tetherShape, tetherSource.Position, Angle.FromDirection(player.Position - tetherSource.Position)).Mask();
+                AOEShape tetherShape = tetherSource.OID == (uint)OID.ImmatureMinotaur ? ShapeMinotaurTethered : ShapeRect;
+                _tetherClips[p.Item1] = party.Exclude(p.Item2).InShape(tetherShape, tetherSource.Position, Angle.FromDirection(p.Item2.Position - tetherSource.Position)).Mask();
             }
         }
     }
@@ -75,17 +88,17 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.StaticMoon:
+            case (uint)AID.StaticMoon:
                 _predictedAOEs.Clear();
                 _activeAOEs.Add((caster, ShapeBullUntethered));
                 break;
-            case AID.StymphalianStrike:
+            case (uint)AID.StymphalianStrike:
                 _predictedAOEs.Clear();
-                _activeAOEs.Add((caster, ShapeBirdUntethered));
+                _activeAOEs.Add((caster, ShapeRect));
                 break;
-            case AID.BullishSwipeAOE:
+            case (uint)AID.BullishSwipeAOE:
                 MinotaursBaited = true;
                 _activeAOEs.Add((caster, ShapeMinotaurUntethered));
                 break;
@@ -94,7 +107,7 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.StaticMoon or AID.StymphalianStrike or AID.BullishSwipeAOE)
+        if (spell.Action.ID is (uint)AID.StaticMoon or (uint)AID.StymphalianStrike or (uint)AID.BullishSwipeAOE)
             _activeAOEs.RemoveAll(i => i.Item1 == caster);
     }
 
@@ -105,15 +118,15 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
             var castStart = PredictUntetheredCastStart(actor);
             if (castStart != null)
             {
-                AOEShape? shape = (OID)actor.OID switch
+                AOEShape? shape = actor.OID switch
                 {
-                    OID.ForbiddenFruitBull => ShapeBullUntethered,
-                    OID.ForbiddenFruitBird => ShapeBirdUntethered,
+                    (uint)OID.ForbiddenFruitBull => ShapeBullUntethered,
+                    (uint)OID.ForbiddenFruitBird => ShapeRect,
                     _ => null
                 };
                 if (shape != null)
                 {
-                    _predictedAOEs.Add((actor, shape, castStart.Value.AddSeconds(3)));
+                    _predictedAOEs.Add((actor, shape, castStart.Value.AddSeconds(3d)));
                 }
             }
         }
@@ -125,7 +138,7 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
     // this is called by default OnTethered, but subclasses might want to call it themselves and use returned info (target slot if tether was assigned)
     protected int TryAssignTether(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID is TetherID.Bull or TetherID.MinotaurClose or TetherID.MinotaurFar or TetherID.Bird)
+        if (tether.ID is (uint)TetherID.Bull or (uint)TetherID.MinotaurClose or (uint)TetherID.MinotaurFar or (uint)TetherID.Bird)
         {
             var slot = Raid.FindSlot(tether.Target);
             if (slot >= 0)
@@ -138,14 +151,14 @@ class ForbiddenFruitCommon(BossModule module, ActionID watchedAction) : Componen
         return -1;
     }
 
-    protected static uint TetherColor(Actor source) => (OID)source.OID switch
+    protected static uint TetherColor(Actor source) => source.OID switch
     {
-        OID.ImmatureMinotaur => Colors.Vulnerable,
-        OID.BullTetherSource => Colors.Other7,
-        OID.ImmatureStymphalide => Colors.Danger,
+        (uint)OID.ImmatureMinotaur => Colors.Vulnerable,
+        (uint)OID.BullTetherSource => Colors.Other7,
+        (uint)OID.ImmatureStymphalide => Colors.Danger,
         _ => 0
     };
 
     protected static int PlatformIDFromOffset(WDir offset) => offset.Z > 0 ? 1 : offset.X > 0 ? 2 : 0;
-    protected static Angle PlatformDirection(int id) => (id - 1) * 120.Degrees();
+    protected static Angle PlatformDirection(int id) => (id - 1) * 120f.Degrees();
 }

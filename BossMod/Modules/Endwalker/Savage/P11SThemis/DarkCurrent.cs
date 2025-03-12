@@ -6,23 +6,32 @@ class DarkCurrent(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var aoe in _aoes.Skip(3).Take(6))
-            yield return aoe;
-        foreach (var aoe in _aoes.Take(3))
-            yield return aoe;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 9 ? 9 : count;
+        var aoes = new AOEInstance[max];
+
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 3)
+                aoes[i] = count > 3 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.DarkCurrentAOEFirst or AID.DarkCurrentAOERest)
+        if (spell.Action.ID is (uint)AID.DarkCurrentAOEFirst or (uint)AID.DarkCurrentAOERest)
         {
             ++NumCasts;
-            if (_aoes.Count > 0)
+            if (_aoes.Count != 0)
                 _aoes.RemoveAt(0);
-            if (_aoes.Count > 2)
-                _aoes.AsSpan()[2].Color = Colors.Danger;
         }
     }
 
@@ -32,18 +41,19 @@ class DarkCurrent(BossModule module) : Components.GenericAOEs(module)
         {
             // index 01 => start from N/S, 02 => start from E/W
             // state 00020001 => CW => 00080004 end, 00200010 => CCW => 00800004 end
-            var startingAngle = index == 2 ? 90.Degrees() : 0.Degrees();
+            var startingAngle = index == 2 ? 90f.Degrees() : default;
             var rotation = state == 0x00020001 ? -22.5f.Degrees() : 22.5f.Degrees();
+            void AddAOE(WDir offset, DateTime act) => _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center + offset), default, act));
             for (var i = 0; i < 8; ++i)
             {
+                var act = WorldState.FutureTime(7.1d + i * 1.1d);
                 var offset = 13 * (startingAngle + i * rotation).ToDirection();
-                var color = i == 0 ? Colors.Danger : Colors.AOE;
-                _aoes.Add(new(_shape, Module.Center, default, WorldState.FutureTime(7.1f + i * 1.1f), color));
-                _aoes.Add(new(_shape, Module.Center + offset, default, WorldState.FutureTime(7.1f + i * 1.1f), color));
-                _aoes.Add(new(_shape, Module.Center - offset, default, WorldState.FutureTime(7.1f + i * 1.1f), color));
+                AddAOE(default, act);
+                AddAOE(offset, act);
+                AddAOE(-offset, act);
             }
         }
     }
 }
 
-class BlindingLight(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BlindingLightAOE), 6);
+class BlindingLight(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BlindingLightAOE), 6f);

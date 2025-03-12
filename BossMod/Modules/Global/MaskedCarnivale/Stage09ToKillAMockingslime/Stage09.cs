@@ -26,8 +26,28 @@ public enum AID : uint
 }
 
 class GoldenTongue(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.GoldenTongue));
-class DarkVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 4, ActionID.MakeSpell(AID.Dark), m => m.Enemies(OID.DarkVoidzone).Where(e => e.EventState != 7), 1);
-class Dark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dark), 5);
+class DarkVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 4f, ActionID.MakeSpell(AID.Dark), GetVoidzones, 1f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.DarkVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class Dark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dark), 5f);
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -57,14 +77,16 @@ public class Stage09 : BossModule
         ActivateComponent<Hints>();
     }
     private static readonly uint[] adds = [(uint)OID.Licorice, (uint)OID.Flan, (uint)OID.Pudding, (uint)OID.Marshmallow, (uint)OID.Bavarois, (uint)OID.Gelato];
+
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Boss => 0,
+                (uint)OID.Boss => 0,
                 _ => 1
             };
         }

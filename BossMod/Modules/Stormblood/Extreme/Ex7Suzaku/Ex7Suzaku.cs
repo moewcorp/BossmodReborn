@@ -237,16 +237,17 @@ class RapturousEchoDance(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_transitioned || actor != Module.Raid.Player())
+        var player = Module.Raid.Player()!;
+        if (_transitioned || actor != player)
             return;
 
         var proximity = false;
         foreach (var platform in _platformData)
         {
-            if ((platform.Value.Position - Module.Raid.Player()!.Position).LengthSq() < 0.7f)
+            if ((platform.Value.Position - player.Position).LengthSq() < 0.7f)
             {
-                foreach (var orb in Module.Enemies(OID.RapturousEcho))
-                    if (!orb.IsDead && (orb.Position - Module.Raid.Player()!.Position).LengthSq() < 12)
+                foreach (var orb in Module.Enemies((uint)OID.RapturousEcho))
+                    if (!orb.IsDead && (orb.Position - player.Position).LengthSq() < 12f)
                     {
                         proximity = true;
                         break;
@@ -276,16 +277,16 @@ class RapturousEchoDance(BossModule module) : BossComponent(module)
             case Direction.Unset:
                 return;
             case Direction.North:
-                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(0, 5)), 175.Degrees(), WorldState.CurrentTime));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(0, 5)), 175f.Degrees(), WorldState.CurrentTime));
                 break;
             case Direction.East:
-                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(-5, 0)), 175.Degrees(), WorldState.CurrentTime));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(-5, 0)), 175f.Degrees(), WorldState.CurrentTime));
                 break;
             case Direction.South:
-                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(0, -5)), 175.Degrees(), WorldState.CurrentTime));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(0, -5)), 175f.Degrees(), WorldState.CurrentTime));
                 break;
             case Direction.West:
-                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(5, 0)), 175.Degrees(), WorldState.CurrentTime));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(new WDir(5, 0)), 175f.Degrees(), WorldState.CurrentTime));
                 break;
         }
     }
@@ -299,18 +300,18 @@ class ScarletFeverArenaChange(BossModule module) : Components.GenericAOEs(module
     private static readonly AOEShapeCircle circle = new(Ex7Suzaku.InnerRadius);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ScarletFever && Module.Arena.Bounds == Ex7Suzaku.Phase1Bounds)
-            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 7));
+        if (spell.Action.ID == (uint)AID.ScarletFever && Module.Arena.Bounds == Ex7Suzaku.Phase1Bounds)
+            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 7f));
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if ((OID)actor.OID == OID.RapturousEchoPlatform && state == 0x00040008)
-            Module.Arena.Bounds = Ex7Suzaku.Phase2Bounds;
+        if (actor.OID == (uint)OID.RapturousEchoPlatform && state == 0x00040008)
+            Arena.Bounds = Ex7Suzaku.Phase2Bounds;
     }
 }
 
@@ -321,9 +322,9 @@ class MesmerizingMelody(BossModule module) : Components.KnockbackFromCastTarget(
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, Ex7Suzaku.OuterRadius - SafeDistance, Ex7Suzaku.OuterRadius, default, 180.Degrees()), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, Ex7Suzaku.OuterRadius - SafeDistance, Ex7Suzaku.OuterRadius, default, 180f.Degrees()), Module.CastFinishAt(source.CastInfo));
     }
 }
 
@@ -331,9 +332,9 @@ class RuthlessRefrain(BossModule module) : Components.KnockbackFromCastTarget(mo
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Origin, Ex7Suzaku.InnerRadius, Ex7Suzaku.InnerRadius + MesmerizingMelody.SafeDistance, default, 180.Degrees()), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, Ex7Suzaku.InnerRadius, Ex7Suzaku.InnerRadius + MesmerizingMelody.SafeDistance, default, 180f.Degrees()), Module.CastFinishAt(source.CastInfo));
     }
 }
 
@@ -347,18 +348,18 @@ class PayThePiper(BossModule module) : BossComponent(module)
         var target = WorldState.Actors.Find(tether.Target)!;
         if (target != Module.Raid.Player() || (TetherID)tether.ID != TetherID.PayThePiper)
             return;
-        switch ((OID)source.OID)
+        switch (source.OID)
         {
-            case OID.NorthernPyre:
+            case (uint)OID.NorthernPyre:
                 _marchDirection = Direction.North;
                 break;
-            case OID.EasternPyre:
+            case (uint)OID.EasternPyre:
                 _marchDirection = Direction.East;
                 break;
-            case OID.SouthernPyre:
+            case (uint)OID.SouthernPyre:
                 _marchDirection = Direction.East;
                 break;
-            case OID.WesternPyre:
+            case (uint)OID.WesternPyre:
                 _marchDirection = Direction.West;
                 break;
         }
@@ -368,12 +369,12 @@ class PayThePiper(BossModule module) : BossComponent(module)
     {
         if (actor != Module.Raid.Player())
             return;
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.LoomingCrescendo:
+            case (uint)SID.LoomingCrescendo:
                 _isLoomingCrescendo = true;
                 break;
-            case SID.PayingThePiper:
+            case (uint)SID.PayingThePiper:
                 _isLoomingCrescendo = false;
                 break;
         }
@@ -383,7 +384,7 @@ class PayThePiper(BossModule module) : BossComponent(module)
     {
         if (actor != Module.Raid.Player())
             return;
-        if ((SID)status.ID == SID.LoomingCrescendo)
+        if (status.ID == (uint)SID.LoomingCrescendo)
             _isLoomingCrescendo = false;
     }
 
@@ -405,7 +406,7 @@ class PayThePiper(BossModule module) : BossComponent(module)
                     break;
                 case Direction.East:
                     safeCenter = new(Ex7Suzaku.ArenaCenter.X - safeOffset, Ex7Suzaku.ArenaCenter.Z);
-                    rotation = 0.Degrees();
+                    rotation = default;
                     break;
                 case Direction.South:
                     safeCenter = new(Ex7Suzaku.ArenaCenter.X, Ex7Suzaku.ArenaCenter.Z - safeOffset);
@@ -413,7 +414,7 @@ class PayThePiper(BossModule module) : BossComponent(module)
                     break;
                 case Direction.West:
                     safeCenter = new(Ex7Suzaku.ArenaCenter.X + safeOffset, Ex7Suzaku.ArenaCenter.Z);
-                    rotation = 0.Degrees();
+                    rotation = default;
                     break;
             }
 
@@ -422,11 +423,11 @@ class PayThePiper(BossModule module) : BossComponent(module)
         }
     }
 }
-class WellOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41, 10));
-class ScathingNetStack(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.ScathingNetStack), 6, 5.1f, 8);
-class PhantomFlurryCombo(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryCombo), new AOEShapeCone(41, 90.Degrees()));
-class PhantomFlurryKnockback(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryKnockback), new AOEShapeCone(41, 90.Degrees()));
-class Hotspot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21, 45.Degrees()));
+class WellOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WellOfFlame), new AOEShapeRect(41f, 10f));
+class ScathingNetStack(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.ScathingNetStack), 6f, 5.1f, 8);
+class PhantomFlurryCombo(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryCombo), new AOEShapeCone(41f, 90f.Degrees()));
+class PhantomFlurryKnockback(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomFlurryKnockback), new AOEShapeCone(41f, 90f.Degrees()));
+class Hotspot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hotspot), new AOEShapeCone(21f, 45f.Degrees()));
 
 class Ex7SuzakuStates : StateMachineBuilder
 {
@@ -470,6 +471,6 @@ public class Ex7Suzaku(WorldState ws, Actor primary) : BossModule(ws, primary, A
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ScarletLady), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.ScarletLady), Colors.Vulnerable);
     }
 }

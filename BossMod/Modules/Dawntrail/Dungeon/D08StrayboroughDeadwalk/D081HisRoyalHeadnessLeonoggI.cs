@@ -50,7 +50,7 @@ class MaliciousMistArenaChange(BossModule module) : Components.GenericAOEs(modul
     private static readonly AOEShapeDonut donut = new(14f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.MaliciousMist && Arena.Bounds == D081HisRoyalHeadnessLeonoggI.StartingBounds)
@@ -95,7 +95,7 @@ class FallingNightmare(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(2);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
@@ -115,7 +115,7 @@ class SpiritedCharge(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(6f, 1f);
     private readonly List<Actor> _charges = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _charges.Count;
         if (count == 0)

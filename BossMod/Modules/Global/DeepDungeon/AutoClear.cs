@@ -814,9 +814,9 @@ public abstract class AutoClear : ZoneModule
         var casterZ = (int)casterCell.Z;
 
         var bm = new Bitmap(data.Width, data.Height, data.Color0, data.Color1, data.Resolution);
-        for (var i = Math.Max(0, casterX - pixelRange); i <= Math.Min(data.Width, casterX + pixelRange); i++)
+        for (var i = Math.Max(0, casterX - pixelRange); i <= Math.Min(data.Width, casterX + pixelRange); ++i)
         {
-            for (var j = Math.Max(0, casterZ - pixelRange); j <= Math.Min(data.Height, casterZ + pixelRange); j++)
+            for (var j = Math.Max(0, casterZ - pixelRange); j <= Math.Min(data.Height, casterZ + pixelRange); ++j)
             {
                 var pt = new Vector2(i, j);
                 var cc = new Vector2(casterX, casterZ);

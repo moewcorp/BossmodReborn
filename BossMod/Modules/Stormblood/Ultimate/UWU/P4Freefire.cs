@@ -6,13 +6,13 @@ class P4Freefire(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
 
     private static readonly AOEShape _shape = new AOEShapeCircle(15); // TODO: verify falloff
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.Helper && id == 0x0449)
+        if (actor.OID == (uint)OID.Helper && id == 0x0449)
         {
-            _aoes.Add(new(_shape, actor.Position, default, WorldState.FutureTime(5.9f)));
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(5.9d)));
         }
     }
 }

@@ -15,8 +15,8 @@ public enum AID : uint
     InflammableFumes = 14753 // Boss->self, 15.0s cast, range 50 circle
 }
 
-class WildHorn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(16.96f, 60.Degrees()));
-class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(46.96f, 30.Degrees()));
+class WildHorn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(16.96f, 60f.Degrees()));
+class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(46.96f, 30f.Degrees()));
 class SporeSac(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SporeSac), "Calls Roselets. Prepare Ice Spikes if available.");
 class InflammableFumes(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.InflammableFumes), false, true);
 
@@ -52,17 +52,18 @@ public class Stage12Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Roselet), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Roselet), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Roselet => 1, // TODO: ideally AI would use Ice Spikes when these spawn instead of attacking them directly
+                (uint)OID.Roselet => 1, // TODO: ideally AI would use Ice Spikes when these spawn instead of attacking them directly
                 _ => 0
             };
         }

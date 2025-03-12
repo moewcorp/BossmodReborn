@@ -45,7 +45,7 @@ class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom square = new([new Square(D041CommanderR8.ArenaCenter, 20f)], [new Square(D041CommanderR8.ArenaCenter, 17f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == D041CommanderR8.StartingBounds)
@@ -67,7 +67,7 @@ class EnhancedMobility(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeRect[] rects = [new(14f, 3f), new(10f, 7f), new(20f, 7f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -114,7 +114,7 @@ class RapidRotary(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonutSector donutSectorBig = new(17f, 28f, a60);
     private static readonly AOEShapeCone cone = new(14f, a60);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

@@ -60,12 +60,11 @@ class SnortsaultCircle(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(5f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.ActiveCasters.Count == 0 && _aoe != null)
-            return [_aoe.Value];
-        else
-            return [];
+        if (_aoes.ActiveCasters.Length == 0 && _aoe != null)
+            return new AOEInstance[1] { _aoe.Value };
+        return [];
     }
 
     public override void OnActorCreated(Actor actor)
@@ -115,19 +114,19 @@ class Snortsault(BossModule module) : Components.GenericRotatingAOE(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe.ActiveCasters.Count == 0)
+        if (_aoe.ActiveCasters.Length == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.ActiveCasters.Count == 0)
+        if (_aoe.ActiveCasters.Length == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        if (_aoe.ActiveCasters.Count == 0)
+        if (_aoe.ActiveCasters.Length == 0)
             base.DrawArenaBackground(pcSlot, pc);
     }
 }

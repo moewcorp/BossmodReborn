@@ -24,10 +24,10 @@ public enum SID : uint
     Doom = 910, // Boss->player, extra=0x0
 }
 
-class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4));
-class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60.Degrees()));
-class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8);
-class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6, 30));
+class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4f));
+class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60f.Degrees()));
+class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8f);
+class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6f, 30f));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -41,17 +41,25 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.BlazingAngon).All(e => e.IsDead))
-            hints.Add($"Kill {Module.Enemies(OID.BlazingAngon).FirstOrDefault()!.Name}! Use physical attacks except fire aspected.");
-        var magicreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.RepellingSpray) != null);
-        if (magicreflect != null)
+        var angons = Module.Enemies((uint)OID.BlazingAngon);
+        var count = angons.Count;
+        if (count != 0)
+            for (var i = 0; i < count; ++i)
+            {
+                var angon = angons[i];
+                if (!angon.IsDead)
+                {
+                    hints.Add($"Kill {angon.Name}! Use physical attacks except fire aspected.");
+                    break;
+                }
+            }
+        if (Module.PrimaryActor.FindStatus((uint)SID.RepellingSpray) != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all magic damage!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var doomed = actor.FindStatus(SID.Doom);
-        if (doomed != null)
+        if (actor.FindStatus((uint)SID.Doom) != null)
             hints.Add("You were doomed! Cleanse it with Exuviation or finish the act fast.");
     }
 }
@@ -80,13 +88,14 @@ public class Stage25Act2 : BossModule
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.BlazingAngon => 1,
-                OID.Boss => 0, // TODO: ideally Azulmagia should only be attacked with physical abilities in this act
+                (uint)OID.BlazingAngon => 1,
+                (uint)OID.Boss => 0, // TODO: ideally Azulmagia should only be attacked with physical abilities in this act
                 _ => 0
             };
         }
@@ -95,6 +104,6 @@ public class Stage25Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.BlazingAngon), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.BlazingAngon), Colors.Object);
     }
 }

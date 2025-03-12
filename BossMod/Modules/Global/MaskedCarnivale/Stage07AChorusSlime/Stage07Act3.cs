@@ -13,20 +13,41 @@ public enum AID : uint
     Object130 = 14711 // Boss->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
 
-class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.LowVoltage), 35, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
+class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.LowVoltage), 35f, true); // TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
 
 class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
+    private static List<Actor> GetEnemies(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Boss);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var slimes = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                slimes.Add(z);
+        }
+        return slimes;
+    }
+
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var p in Module.Enemies(OID.Slime).Where(x => !x.IsDead))
-            Arena.AddCircle(p.Position, 7.6f, Colors.Danger);
+        var slimes = GetEnemies(Module);
+        var count = slimes.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(slimes[i].Position, 7.6f, Colors.Danger);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        foreach (var p in Module.Enemies(OID.Slime).Where(x => !x.IsDead))
-            if (actor.Position.InCircle(p.Position, 7.5f))
+        var slimes = GetEnemies(Module);
+        var count = slimes.Count;
+        for (var i = 0; i < count; ++i)
+            if (actor.Position.InCircle(slimes[i].Position, 7.6f))
                 hints.Add("In slime explosion radius!");
     }
 }
@@ -45,7 +66,18 @@ class Stage07Act3States : StateMachineBuilder
     {
         TrivialPhase()
             // .ActivateOnEnter<LowVoltage>()
-            .Raw.Update = () => module.Enemies(Stage07Act3.Trash).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage07Act3.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -59,11 +91,22 @@ public class Stage07Act3 : BossModule
     }
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Slime];
 
-    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Boss));
-        Arena.Actors(Enemies(OID.Slime));
+        Arena.Actors(Enemies((uint)OID.Boss));
+        Arena.Actors(Enemies((uint)OID.Slime));
     }
 }

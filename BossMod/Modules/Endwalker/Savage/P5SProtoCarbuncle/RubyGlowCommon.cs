@@ -9,19 +9,35 @@ abstract class RubyGlowCommon(BossModule module, ActionID watchedAction = defaul
 {
     public enum ArenaState { Normal, Cells, DiagNW, DiagNE } // DiagNW == NW to SE, etc
 
-    public ArenaState State { get; private set; }
+    public ArenaState State;
     private readonly List<Actor> _magicStones = [];
     private readonly List<Actor> _poisonStones = [];
-    public IEnumerable<Actor> MagicStones => _magicStones.Where(s => !s.IsDestroyed);
-    public IEnumerable<Actor> PoisonStones => _poisonStones.Where(s => !s.IsDestroyed);
+    public List<Actor> MagicStones => GetStones(_magicStones);
+    public List<Actor> PoisonStones => GetStones(_poisonStones);
+
+    private List<Actor> GetStones(List<Actor> Stones)
+    {
+        var count = Stones.Count;
+        if (count == 0)
+            return [];
+
+        var stones = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = Stones[i];
+            if (!z.IsDead)
+                stones.Add(z);
+        }
+        return stones;
+    }
 
     public static readonly AOEShape ShapeQuadrant = new AOEShapeRect(7.5f, 7.5f, 7.5f);
-    public static readonly AOEShape ShapeHalf = new AOEShapeRect(45, 45);
-    public static readonly AOEShape ShapePoison = new AOEShapeCircle(13);
+    public static readonly AOEShape ShapeHalf = new AOEShapeRect(45f, 45f);
+    public static readonly AOEShape ShapePoison = new AOEShapeCircle(13f);
 
     public int QuadrantForPosition(WPos pos)
     {
-        var offset = pos - Module.Center;
+        var offset = pos - Arena.Center;
         return State switch
         {
             ArenaState.Cells => (offset.X < 0 ? 0 : 1) | (offset.Z < 0 ? 0 : 2),
@@ -52,32 +68,42 @@ abstract class RubyGlowCommon(BossModule module, ActionID watchedAction = defaul
         return w;
     }
 
-    public IEnumerable<AOEInstance> ActivePoisonAOEs()
+    public AOEInstance[] ActivePoisonAOEs()
     {
         // TODO: correct explosion time
-        return PoisonStones.Select(o => new AOEInstance(ShapePoison, o.Position));
+        var stones = PoisonStones;
+        var count = stones.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = new(ShapePoison, stones[i].Position);
+        }
+        return aoes;
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
+        var center = Arena.Center;
+        var radius = Arena.Bounds.Radius;
+        var color = Colors.Border;
         switch (State)
         {
             case ArenaState.Cells:
-                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, 0), Arena.Center + new WDir(Arena.Bounds.Radius, 0), Colors.Border);
-                Arena.AddLine(Arena.Center - new WDir(0, Arena.Bounds.Radius), Arena.Center + new WDir(0, Arena.Bounds.Radius), Colors.Border);
+                Arena.AddLine(center - new WDir(radius, default), center + new WDir(radius, default), color);
+                Arena.AddLine(center - new WDir(default, radius), center + new WDir(default, radius), color);
                 break;
             case ArenaState.DiagNW:
-                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, Arena.Bounds.Radius), Arena.Center + new WDir(Arena.Bounds.Radius, Arena.Bounds.Radius), Colors.Border);
+                Arena.AddLine(center - new WDir(radius, radius), center + new WDir(radius, radius), color);
                 break;
             case ArenaState.DiagNE:
-                Arena.AddLine(Arena.Center - new WDir(Arena.Bounds.Radius, -Arena.Bounds.Radius), Arena.Center + new WDir(Arena.Bounds.Radius, -Arena.Bounds.Radius), Colors.Border);
+                Arena.AddLine(center - new WDir(radius, -radius), center + new WDir(radius, -radius), color);
                 break;
         }
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if ((OID)actor.OID != OID.TopazStoneAny)
+        if (actor.OID != (uint)OID.TopazStoneAny)
             return;
 
         switch (state)
@@ -172,7 +198,7 @@ abstract class RubyGlowRecolor(BossModule module, int expectedMagicStones) : Rub
         switch (CurRecolorState)
         {
             case RecolorState.BeforeStones:
-                if (MagicStones.Count() == _expectedMagicStones)
+                if (MagicStones.Count == _expectedMagicStones)
                 {
                     var counts = new int[4];
                     foreach (var o in MagicStones)
@@ -182,7 +208,7 @@ abstract class RubyGlowRecolor(BossModule module, int expectedMagicStones) : Rub
                 }
                 break;
             case RecolorState.BeforeRecolor:
-                if (PoisonStones.Any())
+                if (PoisonStones.Count != 0)
                 {
                     CurRecolorState = RecolorState.Done;
                 }

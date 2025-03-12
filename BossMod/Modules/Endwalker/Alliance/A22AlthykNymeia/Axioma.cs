@@ -41,10 +41,10 @@ class Axioma(BossModule module) : Components.GenericAOEs(module)
     private static readonly Shape[] union = [shapeCustom1, shapeCustom2, shapeCustom3, shapeCustom4, shapeCustom5, shapeCustom6];
     private static readonly AOEShapeCustom voidzone = new(union);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (active)
-            return [new(ShouldBeInZone ? voidzone with { InvertForbiddenZone = true } : voidzone, Arena.Center, default, WorldState.FutureTime(2.5d), ShouldBeInZone ? Colors.SafeFromAOE : Colors.AOE)];
+            return new AOEInstance[1] { new(ShouldBeInZone ? voidzone with { InvertForbiddenZone = true } : voidzone, Arena.Center, default, WorldState.FutureTime(2.5d), ShouldBeInZone ? Colors.SafeFromAOE : Colors.AOE) };
         else
             return [];
     }
@@ -69,11 +69,31 @@ class Axioma(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!ShouldBeInZone && ActiveAOEs(slot, actor).Any(c => c.Risky && c.Check(actor.Position)))
+        if (!active)
+            return;
+        var aoes = ActiveAOEs(slot, actor);
+        var riskyInZone = false;
+        var riskyOutZone = false;
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var c = ref aoes[i];
+            if (c.Risky)
+            {
+                if (c.Check(actor.Position))
+                    riskyInZone = true;
+                else
+                    riskyOutZone = true;
+            }
+            if (ShouldBeInZone && riskyInZone)
+                break;
+        }
+
+        if (!ShouldBeInZone && riskyInZone)
             hints.Add(riskHint);
-        else if (ShouldBeInZone && ActiveAOEs(slot, actor).Any(c => c.Risky && !c.Check(actor.Position)))
+        else if (ShouldBeInZone && riskyOutZone)
             hints.Add(risk2Hint);
-        else if (ShouldBeInZone && ActiveAOEs(slot, actor).Any(c => c.Risky && c.Check(actor.Position)))
+        else if (ShouldBeInZone && riskyInZone)
             hints.Add(stayHint, false);
     }
 }

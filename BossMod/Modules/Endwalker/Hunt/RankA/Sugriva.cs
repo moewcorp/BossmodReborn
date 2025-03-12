@@ -21,11 +21,11 @@ public enum AID : uint
     ApplyPrey = 27229 // Boss->player, 0.5s cast, single-target
 }
 
-class Twister(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Twister), 20, shape: new AOEShapeCircle(8))
+class Twister(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Twister), 20, shape: new AOEShapeCircle(8f))
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (Casters.Count > 0)
+        if (Casters.Count != 0)
             hints.Add("Stack and knockback");
     }
 
@@ -38,26 +38,19 @@ class Twister(BossModule module) : Components.KnockbackFromCastTarget(module, Ac
     {
         base.DrawArenaForeground(pcSlot, pc);
 
-        var caster = Casters.FirstOrDefault();
+        var caster = Casters.Count != 0 ? Casters[0] : null;
         var target = caster != null ? WorldState.Actors.Find(caster.CastInfo!.TargetID) : null;
         if (target != null)
             Shape!.Outline(Arena, target);
     }
 }
 
-class Spark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spark), new AOEShapeDonut(14, 30));
-class ScytheTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheTail), 17);
+class Spark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spark), new AOEShapeDonut(14f, 30f));
+class ScytheTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheTail), 17f);
 
-class Butcher(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Butcher), new AOEShapeCone(8, 60.Degrees()), endsOnCastEvent: true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count > 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class Butcher(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Butcher), new AOEShapeCone(8f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
 
-class Rip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rip), new AOEShapeCone(8, 60.Degrees()));
+class Rip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rip), new AOEShapeCone(8f, 60f.Degrees()));
 
 // TODO: generalize to baited aoe
 class RockThrow(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RockThrowRest))
@@ -65,10 +58,11 @@ class RockThrow(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
     private Actor? _target;
     private static readonly AOEShapeCircle _shape = new(6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Active())
-            yield return new(_shape, Module.PrimaryActor.CastInfo!.LocXZ, default, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+            return new AOEInstance[1] { new(_shape, Module.PrimaryActor.CastInfo!.LocXZ, default, Module.CastFinishAt(Module.PrimaryActor.CastInfo)) };
+        return [];
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
@@ -84,22 +78,22 @@ class RockThrow(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ApplyPrey:
+            case (uint)AID.ApplyPrey:
                 NumCasts = 0;
                 _target = WorldState.Actors.Find(spell.TargetID);
                 if (_target?.Type == ActorType.Chocobo) //Player Chocobos are immune against prey, so mechanic doesn't happen if a chocobo gets selected
                     _target = null;
                 break;
-            case AID.RockThrowRest:
+            case (uint)AID.RockThrowRest:
                 if (NumCasts >= 1)
                     _target = null;
                 break;
         }
     }
 
-    private bool Active() => (Module.PrimaryActor.CastInfo?.IsSpell() ?? false) && (AID)Module.PrimaryActor.CastInfo!.Action.ID is AID.RockThrowFirst or AID.RockThrowRest;
+    private bool Active() => (Module.PrimaryActor.CastInfo?.IsSpell() ?? false) && Module.PrimaryActor.CastInfo!.Action.ID is (uint)AID.RockThrowFirst or (uint)AID.RockThrowRest;
 }
 
 class Crosswind(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Crosswind));

@@ -1,6 +1,25 @@
 ﻿namespace BossMod.Dawntrail.Unreal.Un1Byakko;
 
-class UnrelentingAnguish(BossModule module) : Components.PersistentVoidzone(module, 2, m => m.Enemies(OID.AratamaForce).Where(z => !z.IsDead), 2);
+class UnrelentingAnguish(BossModule module) : Components.PersistentVoidzone(module, 2f, GetVoidzones, 2)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.AratamaForce);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class OminousWind(BossModule module) : BossComponent(module)
 {

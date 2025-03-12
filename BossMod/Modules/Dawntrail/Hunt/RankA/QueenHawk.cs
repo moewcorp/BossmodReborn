@@ -29,7 +29,20 @@ public enum SID : uint
 class ResonantBuzz(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ResonantBuzz), "Applies Forced March!");
 class ResonantBuzzMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<BeeBeAOE>()?.ActiveAOEs(slot, actor).Any(a => a.Shape.Check(pos, a.Origin, a.Rotation)) ?? false;
+    private readonly BeeBeAOE _aoe = module.FindComponent<BeeBeAOE>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -44,51 +57,43 @@ class FrenziedSting(BossModule module) : Components.SingleTargetCast(module, Act
 
 class BeeBeAOE(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _activeAOEs = [];
+    private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle _shapeCircle = new(12);
     private static readonly AOEShapeDonut _shapeDonut = new(10, 40);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _activeAOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
-        var activation = WorldState.FutureTime(15);
-        switch ((AID)spell.Action.ID)
+        var activation = WorldState.FutureTime(15d);
+        switch (spell.Action.ID)
         {
-            case AID.BeeBeGone:
-                _activeAOEs.Add(new(_shapeCircle, caster.Position, default, activation));
+            case (uint)AID.BeeBeGone:
+                _aoes.Add(new(_shapeCircle, spell.LocXZ, default, activation));
                 break;
-            case AID.BeeBeHere:
-                _activeAOEs.Add(new(_shapeDonut, caster.Position, default, activation));
+            case (uint)AID.BeeBeHere:
+                _aoes.Add(new(_shapeDonut, spell.LocXZ, default, activation));
                 break;
         }
     }
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
-
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.BeeBeGone:
-            case AID.BeeBeHere:
-                var currentAOE = _activeAOEs[0];
-                _activeAOEs[0] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, currentAOE.Activation, Colors.Danger);
+            case (uint)AID.BeeBeGone:
+            case (uint)AID.BeeBeHere:
+                var currentAOE = _aoes[0];
+                _aoes[0] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, currentAOE.Activation, Colors.Danger);
                 break;
         }
     }
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (actor != Module.PrimaryActor)
-            return;
-
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.BeeBeGone:
-            case SID.BeeBeHere:
-                _activeAOEs.Clear();
+            case (uint)SID.BeeBeGone:
+            case (uint)SID.BeeBeHere:
+                _aoes.Clear();
                 break;
         }
     }
@@ -99,11 +104,11 @@ class QueenHawkStates : StateMachineBuilder
     public QueenHawkStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<BeeBeAOE>()
             .ActivateOnEnter<ResonantBuzz>()
             .ActivateOnEnter<ResonantBuzzMarch>()
             .ActivateOnEnter<StraightSpindle>()
-            .ActivateOnEnter<FrenziedSting>()
-            .ActivateOnEnter<BeeBeAOE>();
+            .ActivateOnEnter<FrenziedSting>();
     }
 }
 

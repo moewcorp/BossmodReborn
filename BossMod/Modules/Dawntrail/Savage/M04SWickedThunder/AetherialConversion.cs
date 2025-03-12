@@ -41,12 +41,13 @@ class AetherialConversionTailThrust(BossModule module) : Components.GenericAOEs(
 {
     private readonly AetherialConversion? _comp = module.FindComponent<AetherialConversion>();
 
-    private static readonly AOEShapeCircle _shape = new(18);
+    private static readonly AOEShapeCircle _shape = new(18f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_comp?.CurMechanic == AetherialConversion.Mechanic.AOE && _comp.NumCasts < 2)
-            yield return new(_shape, Module.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), default);
+            return new AOEInstance[1] { new(_shape, Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), default) };
+        return [];
     }
 }
 
@@ -54,9 +55,10 @@ class AetherialConversionSwitchOfTides(BossModule module) : Components.Knockback
 {
     private readonly AetherialConversion? _comp = module.FindComponent<AetherialConversion>();
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_comp?.CurMechanic == AetherialConversion.Mechanic.Knockback && _comp.NumCasts < 2)
-            yield return new(Module.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), 25);
+            return new Source[1] { new(Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), 25f) };
+        return [];
     }
 }

@@ -4,22 +4,44 @@ class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var converter = Module.Enemies(OID.Converter).FirstOrDefault(x => x.IsTargetable);
-        if (converter != null)
+        var converters = Module.Enemies((uint)OID.Converter);
+        var converter = converters.Count != 0 ? converters[0] : null;
+        if (converter != null && converter.IsTargetable)
             hints.Add($"Activate the {converter.Name} or wipe!");
-        if (Module.Enemies(OID.WavetoothSahagin).Any(x => x.IsTargetable && !x.IsDead))
-            hints.Add("Kill Sahagins or lose control!");
-        if (Module.Enemies(OID.Spume).Any(x => x.IsTargetable && !x.IsDead))
-            hints.Add("Destroy the spumes!");
+
+        var wavetooth = Module.Enemies((uint)OID.WavetoothSahagin);
+        var countW = wavetooth.Count;
+        for (var i = 0; i < countW; ++i)
+        {
+            var w = wavetooth[i];
+            if (w.IsTargetable && !w.IsDead)
+            {
+                hints.Add("Kill Sahagins or lose control!");
+                break;
+            }
+        }
+
+        var spumes = Module.Enemies((uint)OID.WavetoothSahagin);
+        var countS = spumes.Count;
+        for (var i = 0; i < countS; ++i)
+        {
+            var s = spumes[i];
+            if (s.IsTargetable && !s.IsDead)
+            {
+                hints.Add("Destroy the spumes!");
+                return;
+            }
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var tail = Module.Enemies(OID.Tail).FirstOrDefault(x => x.IsTargetable && x.FindStatus(SID.Invincibility) == null && x.FindStatus(SID.MantleOfTheWhorl) != null);
-        var TankMimikry = actor.FindStatus(2124); //Bluemage Tank Mimikry
-        if (tail != null)
+        var tails = Module.Enemies((uint)OID.Tail);
+        var tail = tails.Count != 0 ? tails[0] : null;
+        // SID 2124 = Bluemage Tank Mimikry
+        if (tail != null && tail.FindStatus((uint)SID.Invincibility) == null && tail.FindStatus((uint)SID.MantleOfTheWhorl) != null)
         {
-            if ((actor.Class.GetClassCategory() is ClassCategory.Caster or ClassCategory.Healer || actor.Class is Class.BLU && TankMimikry == null) && actor.TargetID == Module.Enemies(OID.Tail).FirstOrDefault()?.InstanceID)
+            if ((actor.Class.GetClassCategory() is ClassCategory.Caster or ClassCategory.Healer || actor.Class is Class.BLU && actor.FindStatus(2124u) == null) && actor.TargetID == tail.InstanceID)
                 hints.Add("Attack the head! (Attacking the tail will reflect damage onto you)");
             else if (actor.Class.GetClassCategory() is ClassCategory.PhysRanged && actor.TargetID == Module.PrimaryActor.InstanceID)
                 hints.Add("Attack the tail! (Attacking the head will reflect damage onto you)");
@@ -28,9 +50,9 @@ class Hints(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        var converter = Module.Enemies(OID.Converter).FirstOrDefault();
-        var convertertargetable = Module.Enemies(OID.Converter).FirstOrDefault(x => x.IsTargetable);
-        if (converter != null && convertertargetable != null)
+        var converters = Module.Enemies((uint)OID.Converter);
+        var converter = converters.Count != 0 ? converters[0] : null;
+        if (converter != null && converter.IsTargetable)
             Arena.AddCircle(converter.Position, 1.4f, Colors.Safe);
     }
 }

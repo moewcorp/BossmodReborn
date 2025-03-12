@@ -2,13 +2,15 @@
 
 class P6Touchdown(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.TouchdownAOE))
 {
-    private static readonly AOEShapeCircle _shape = new(20); // TODO: verify falloff
+    private static readonly AOEShapeCircle _shape = new(20f); // TODO: verify falloff
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: activation
-        yield return new(_shape, Arena.Center);
-        yield return new(_shape, Arena.Center + new WDir(0, 25));
+        var aoes = new AOEInstance[2];
+        aoes[0] = new(_shape, Arena.Center);
+        aoes[1] = new(_shape, Arena.Center + new WDir(default, 25f));
+        return aoes;
     }
 }
 
@@ -19,7 +21,7 @@ class P6TouchdownCauterize(BossModule module) : BossComponent(module)
     private BitMask _boiling;
     private BitMask _freezing;
 
-    private static readonly AOEShapeRect _shape = new(80, 11);
+    private static readonly AOEShapeRect _shape = new(80f, 11f);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -45,25 +47,25 @@ class P6TouchdownCauterize(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.Boiling:
-                _boiling.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.Boiling:
+                _boiling[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
-            case SID.Freezing:
-                _freezing.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.Freezing:
+                _freezing[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CauterizeN:
+            case (uint)AID.CauterizeN:
                 _nidhogg = caster;
                 break;
-            case AID.CauterizeH:
+            case (uint)AID.CauterizeH:
                 _hraesvelgr = caster;
                 break;
         }

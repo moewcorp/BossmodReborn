@@ -1,36 +1,28 @@
 ﻿namespace BossMod.Stormblood.Alliance.A33ThunderGod;
 
-class HallowedBolt(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.HallowedBoltVisual))
+class HallowedBolt(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private readonly List<Actor> _castersHallowedBoltAOE = [];
-    private readonly List<Actor> _castersHallowedBoltDonut = [];
-
-    private static readonly AOEShape _shapeHallowedBoltAOE = new AOEShapeCircle(15);
-    private static readonly AOEShape _shapeHallowedBoltDonut = new AOEShapeDonut(15, 30);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return _castersHallowedBoltAOE.Count > 3
-            ? _castersHallowedBoltAOE.Select(c => new AOEInstance(_shapeHallowedBoltAOE, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersHallowedBoltDonut.Select(c => new AOEInstance(_shapeHallowedBoltDonut, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(15f), new AOEShapeDonut(15f, 30f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Add(caster);
+        if (spell.Action.ID == (uint)AID.HallowedBolt1)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Remove(caster);
+        if (Sequences.Count != 0)
+        {
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.HallowedBolt1 => 0,
+                (uint)AID.HallowedBolt2 => 1,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
+        }
     }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.HallowedBoltAOE => _castersHallowedBoltAOE,
-        AID.HallowedBoltDonut => _castersHallowedBoltDonut,
-        _ => null
-    };
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 636, NameID = 7899)] //7917
@@ -41,6 +33,6 @@ public class A33ThunderGod(WorldState ws, Actor primary) : BossModule(ws, primar
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.EphemeralKnight));
+        Arena.Actors(Enemies((uint)OID.EphemeralKnight));
     }
 }

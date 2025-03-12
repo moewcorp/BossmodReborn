@@ -56,7 +56,7 @@ class IceSpiral(BossModule module) : Components.GenericAOEs(module)
         new(-299.522f, 221.373f), new(-296.836f, 224.166f), new(-296.249f, 224.892f)
     ];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

@@ -5,7 +5,7 @@ public enum OID : uint
     Boss = 0x252B, //R=6.75
     MagitekTrooper = 0x252A, //R=0.9
     Helper = 0x233C,
-    Noctis = 0x2529,
+    Noctis = 0x2529
 }
 
 public enum AID : uint
@@ -20,9 +20,9 @@ public enum AID : uint
     unknown2 = 14533, // Boss->self, no cast, single-target
 }
 
-class Chainsaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Chainsaw), new AOEShapeCone(10, 45.Degrees()));
-class Shock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shock), 10);
-class MagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekMissile2), 5);
+class Chainsaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Chainsaw), new AOEShapeCone(10f, 45f.Degrees()));
+class Shock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shock), 10f);
+class MagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekMissile2), 5f);
 
 class MAxStates : StateMachineBuilder
 {
@@ -41,7 +41,7 @@ public class MAx(WorldState ws, Actor primary) : BossModule(ws, primary, new(295
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Noctis), Colors.Vulnerable);
-        Arena.Actors(Enemies(OID.MagitekTrooper), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Noctis), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.MagitekTrooper), Colors.Object);
     }
 }

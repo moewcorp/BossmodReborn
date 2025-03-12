@@ -4,29 +4,30 @@ class MercyFourfold(BossModule module) : Components.GenericAOEs(module, ActionID
 {
     public readonly List<AOEInstance> AOEs = [];
     private readonly List<AOEInstance?> _safezones = [];
-    private static readonly AOEShapeCone _shapeAOE = new(50, 90.Degrees());
-    private static readonly AOEShapeCone _shapeSafe = new(50, 45.Degrees());
+    private static readonly AOEShapeCone _shapeAOE = new(50f, 90f.Degrees());
+    private static readonly AOEShapeCone _shapeSafe = new(50f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (AOEs.Count > 0)
-            yield return AOEs[0];
+            return CollectionsMarshal.AsSpan(AOEs)[..1];
         if (_safezones.Count > 0 && _safezones[0] != null)
-            yield return _safezones[0]!.Value;
+            return new AOEInstance[1] { _safezones[0]!.Value };
+        return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID != SID.Mercy)
+        if (status.ID != (uint)SID.Mercy)
             return;
 
         var dirOffset = status.Extra switch
         {
-            0xF7 => -45.Degrees(),
-            0xF8 => -135.Degrees(),
-            0xF9 => 45.Degrees(),
-            0xFA => 135.Degrees(),
-            _ => 0.Degrees()
+            0xF7 => -45f.Degrees(),
+            0xF8 => -135f.Degrees(),
+            0xF9 => 45f.Degrees(),
+            0xFA => 135f.Degrees(),
+            _ => default
         };
         if (dirOffset == default)
             return;
@@ -37,7 +38,7 @@ class MercyFourfold(BossModule module) : Components.GenericAOEs(module, ActionID
             // see whether there is a safezone for two contiguous aoes
             var mid = dir.ToDirection() + AOEs[^1].Rotation.ToDirection(); // length should be either ~sqrt(2) or ~0
             if (mid.LengthSq() > 1)
-                _safezones.Add(new(_shapeSafe, actor.Position, Angle.FromDirection(-mid), new(), Colors.SafeFromAOE, false));
+                _safezones.Add(new(_shapeSafe, actor.Position, Angle.FromDirection(-mid), default, Colors.SafeFromAOE, false));
             else
                 _safezones.Add(null);
         }

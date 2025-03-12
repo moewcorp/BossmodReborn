@@ -11,30 +11,37 @@ class NoblePursuit(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _charges.Count + _rings.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countCharges = _charges.Count;
         var countRings = _rings.Count;
         var total = countCharges + countRings;
         if (total == 0)
             return [];
-        var firstActivation = _charges.Count != 0 ? _charges[0].Activation : _rings.Count > 0 ? _rings[0].Activation : default;
+
+        var firstActivation = countCharges > 0 ? _charges[0].Activation : countRings > 0 ? _rings[0].Activation : default;
         var deadline = firstActivation.AddSeconds(2.5d);
-        List<AOEInstance> aoes = new(total);
-        for (var i = 0; i < countCharges; ++i)
+
+        var aoes = new AOEInstance[total];
+        var index = 0;
+        var i = 0;
+
+        while (i < countCharges)
         {
-            var aoe = _charges[i];
-            if (aoe.Activation <= deadline)
-                aoes.Add(aoe);
+            if (_charges[i].Activation <= deadline)
+                aoes[index++] = _charges[i];
+            ++i;
         }
 
-        for (var i = 0; i < countRings; ++i)
+        i = 0;
+        while (i < countRings)
         {
-            var aoe = _rings[i];
-            if (aoe.Activation <= deadline)
-                aoes.Add(aoe);
+            if (_rings[i].Activation <= deadline)
+                aoes[index++] = _rings[i];
+            ++i;
         }
-        return aoes;
+
+        return aoes.AsSpan()[..index];
     }
 
     public override void OnActorCreated(Actor actor)

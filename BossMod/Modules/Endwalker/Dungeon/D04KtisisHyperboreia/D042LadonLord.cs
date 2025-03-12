@@ -42,7 +42,7 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle angle = 120f.Degrees();
     private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

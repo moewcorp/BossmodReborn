@@ -4,68 +4,71 @@ class DivisiveOverruling(BossModule module) : Components.GenericAOEs(module)
 {
     public List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeRect _shapeNarrow = new(46, 8, 23); // note: boss variants are 23+23, clone variants are 46+0, doesn't matter too much
-    private static readonly AOEShapeRect _shapeWide = new(46, 13, 23);
+    private static readonly AOEShapeRect _shapeNarrow = new(46f, 8f);
+    private static readonly AOEShapeRect _shapeWide = new(46f, 13f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var deadline = AOEs.FirstOrDefault().Activation.AddSeconds(1);
-        return AOEs.TakeWhile(a => a.Activation < deadline);
-    }
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
 
+        var deadline = AOEs[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && AOEs[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(AOEs)[..index];
+    }
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DivisiveOverrulingSoloAOE: // first aoe
-            case AID.DivisiveRulingAOE:
-            case AID.DivisiveOverrulingBossAOE:
-                AddAOE(new(_shapeNarrow, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            case (uint)AID.DivisiveOverrulingSoloAOE:
+            case (uint)AID.DivisiveRulingAOE:
+            case (uint)AID.DivisiveOverrulingBossAOE:
+            case (uint)AID.RipplesOfGloomSoloR:
+            case (uint)AID.RipplesOfGloomCloneR:
+            case (uint)AID.RipplesOfGloomBossR:
+            case (uint)AID.RipplesOfGloomSoloL:
+            case (uint)AID.RipplesOfGloomCloneL:
+            case (uint)AID.RipplesOfGloomBossL:
+                AddAOE(_shapeNarrow);
                 break;
-            case AID.DivineRuinationSolo:
-            case AID.DivineRuinationClone:
-            case AID.DivineRuinationBoss:
-                AddAOE(new(_shapeWide, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            case (uint)AID.DivineRuinationSolo:
+            case (uint)AID.DivineRuinationClone:
+            case (uint)AID.DivineRuinationBoss:
+                AddAOE(_shapeWide);
                 break;
-            case AID.RipplesOfGloomSoloR:
-            case AID.RipplesOfGloomCloneR:
-            case AID.RipplesOfGloomBossR:
-                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoR(), spell.Rotation, Module.CastFinishAt(spell)));
-                break;
-            case AID.RipplesOfGloomSoloL:
-            case AID.RipplesOfGloomCloneL:
-            case AID.RipplesOfGloomBossL:
-                AddAOE(new(_shapeNarrow, caster.Position + 2 * _shapeNarrow.HalfWidth * spell.Rotation.ToDirection().OrthoL(), spell.Rotation, Module.CastFinishAt(spell)));
-                break;
+        }
+        void AddAOE(AOEShapeRect shape)
+        {
+            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            AOEs.SortBy(x => x.Activation);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DivisiveOverrulingSoloAOE:
-            case AID.DivisiveRulingAOE:
-            case AID.DivisiveOverrulingBossAOE:
-            case AID.DivineRuinationSolo:
-            case AID.DivineRuinationClone:
-            case AID.DivineRuinationBoss:
-            case AID.RipplesOfGloomSoloR:
-            case AID.RipplesOfGloomCloneR:
-            case AID.RipplesOfGloomBossR:
-            case AID.RipplesOfGloomSoloL:
-            case AID.RipplesOfGloomCloneL:
-            case AID.RipplesOfGloomBossL:
+            case (uint)AID.DivisiveOverrulingSoloAOE:
+            case (uint)AID.DivisiveRulingAOE:
+            case (uint)AID.DivisiveOverrulingBossAOE:
+            case (uint)AID.DivineRuinationSolo:
+            case (uint)AID.DivineRuinationClone:
+            case (uint)AID.DivineRuinationBoss:
+            case (uint)AID.RipplesOfGloomSoloR:
+            case (uint)AID.RipplesOfGloomCloneR:
+            case (uint)AID.RipplesOfGloomBossR:
+            case (uint)AID.RipplesOfGloomSoloL:
+            case (uint)AID.RipplesOfGloomCloneL:
+            case (uint)AID.RipplesOfGloomBossL:
                 if (AOEs.Count > 0)
                     AOEs.RemoveAt(0);
                 ++NumCasts;
                 break;
         }
-    }
-
-    private void AddAOE(AOEInstance aoe)
-    {
-        AOEs.Add(aoe);
-        AOEs.SortBy(x => x.Activation);
     }
 }

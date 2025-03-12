@@ -48,7 +48,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom square = new([new Square(D023Gurfurlur.ArenaCenter, 25f)], [new Square(D023Gurfurlur.ArenaCenter, 20f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HeavingHaymaker && Arena.Bounds == D023Gurfurlur.StartingBounds)
@@ -67,35 +67,54 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
 class AuraSphere(BossModule module) : BossComponent(module)
 {
-    private readonly IEnumerable<Actor> _orbs = module.Enemies(OID.AuraSphere).Where(orb => !orb.IsDead);
+    public static List<Actor> GetOrbs(BossModule module)
+    {
+        var orbs = module.Enemies((uint)OID.AuraSphere);
+        var count = orbs.Count;
+        if (count == 0)
+            return [];
+
+        var filteredorbs = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = orbs[i];
+            if (!z.IsDead)
+                filteredorbs.Add(z);
+        }
+        return filteredorbs;
+    }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (_orbs.Any())
+        var orbs = GetOrbs(Module);
+        var count = orbs.Count;
+        if (count != 0)
             hints.Add("Soak the orbs!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        Actor[] orbz = [.. _orbs];
-        var len = orbz.Length;
-        if (len != 0)
+        var orbs = GetOrbs(Module);
+        var count = orbs.Count;
+        if (count != 0)
         {
-            var orbs = new Func<WPos, float>[len];
+            var orbz = new Func<WPos, float>[count];
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
-            for (var i = 0; i < len; ++i)
+            for (var i = 0; i < count; ++i)
             {
-                var o = orbz[i];
-                orbs[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
+                var o = orbs[i];
+                orbz[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
             }
-            hints.AddForbiddenZone(ShapeDistance.Intersection(orbs), DateTime.MaxValue);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(orbz), DateTime.MaxValue);
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var orb in _orbs)
-            Arena.AddCircle(orb.Position, 1f, Colors.Safe);
+        var orbs = GetOrbs(Module);
+        var count = orbs.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(orbs[i].Position, 1f, Colors.Safe);
     }
 }
 
@@ -113,42 +132,28 @@ class GreatFlood(BossModule module) : Components.KnockbackFromCastTarget(module,
         if (Casters.Count == 0)
             return;
 
-        Source source = default;
-        var sources = Sources(slot, actor);
-        foreach (var s in sources)
-        {
-            source = s;
-            break;
-        }
-
+        var source = Casters[0];
         var component = _aoe.AOEs;
-        if (_aoe.AOEs.Count == 0 && source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(source.Origin, source.Direction, 15f, default, 20f), source.Activation);
-
+        if (_aoe.AOEs.Count == 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(source.Position, source.Rotation, 15f, default, 20f), Module.CastFinishAt(source.CastInfo));
     }
 }
 
 class Allfire(BossModule module) : Components.GenericAOEs(module)
 {
-    private const string Hint = "Be inside safespot for knockback!";
     private static readonly AOEShapeRect rect = new(10f, 5f);
     public readonly List<AOEInstance> AOEs = new(16);
     private static readonly AOEShapeRect safespot = new(15f, 10f, InvertForbiddenZone: true);
+    private bool first = true;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)
             return [];
-        Components.Knockback.Source source = default;
-        var sources = Module.FindComponent<GreatFlood>()!.Sources(slot, actor);
-        foreach (var s in sources)
-        {
-            source = s;
-            break;
-        }
-        if (source != default)
-            return [new(safespot, source.Origin, source.Direction, source.Activation, Colors.SafeFromAOE)];
+
+        if (!first)
+            return CollectionsMarshal.AsSpan(AOEs);
         else
         {
             var max = count >= 12 ? 12 : count == 8 ? 8 : 4;
@@ -165,18 +170,26 @@ class Allfire(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is (uint)AID.Allfire1 or (uint)AID.Allfire2 or (uint)AID.Allfire3)
+        if (first && spell.Action.ID is (uint)AID.Allfire1 or (uint)AID.Allfire2 or (uint)AID.Allfire3)
         {
             AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (AOEs.Count == 16)
                 AOEs.SortBy(x => x.Activation);
+        }
+        else if (!first && spell.Action.ID == (uint)AID.GreatFlood)
+        {
+            AOEs.Add(new(safespot, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Colors.SafeFromAOE));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.Allfire1 or (uint)AID.Allfire2 or (uint)AID.Allfire3)
+        {
             AOEs.RemoveAt(0);
+            if (AOEs.Count == 0)
+                first = false;
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -184,31 +197,12 @@ class Allfire(BossModule module) : Components.GenericAOEs(module)
         if (AOEs.Count == 0)
             return;
 
-        var activeAOEs = ActiveAOEs(slot, actor);
-        var hasSafeSpot = false;
-        var isActorInSafeSpot = true;
-
-        foreach (var aoe in activeAOEs)
+        if (first)
         {
-            if (aoe.Shape == safespot)
-                hasSafeSpot = true;
-            if (hasSafeSpot)
-            {
-                if (!aoe.Check(actor.Position))
-                    isActorInSafeSpot = false;
-                break;
-            }
-        }
-
-        if (!hasSafeSpot)
             base.AddHints(slot, actor, hints);
-        else
-        {
-            if (!isActorInSafeSpot)
-                hints.Add(Hint);
-            else
-                hints.Add(Hint, false);
+            return;
         }
+        hints.Add("Wait inside safespot for knockback!", !AOEs[0].Check(actor.Position));
     }
 }
 
@@ -225,15 +219,8 @@ class Windswrath1(BossModule module) : Windswrath(module, AID.Windswrath1)
     {
         if (Casters.Count == 0)
             return;
-        Source source = default;
-        var sources = Sources(slot, actor);
-        foreach (var s in sources)
-        {
-            source = s;
-            break;
-        }
-        if (source != default)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Origin, 5f), source.Activation);
+        var source = Casters[0];
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Position, 5f), Module.CastFinishAt(source.CastInfo));
     }
 }
 
@@ -255,37 +242,42 @@ class Windswrath2(BossModule module) : Windswrath(module, AID.Windswrath2)
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _aoe.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (aoes[i].Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count == 0)
             return;
-        Source source = default;
-        var sources = Sources(slot, actor);
-        foreach (var s in sources)
-        {
-            source = s;
-            break;
-        }
+        var source = Casters[0];
+
         var forbidden = new List<Func<WPos, float>>(4);
-        Components.GenericAOEs.AOEInstance[] component = [.. _aoe.ActiveAOEs(slot, actor)];
-        if (component.Length != 0 && source != default)
+
+        if (_aoe.ActiveAOEs(slot, actor).Length != 0)
         {
-            base.AddAIHints(slot, actor, assignment, hints);
-            var timespan = (source.Activation - WorldState.CurrentTime).TotalSeconds;
+            var act = Module.CastFinishAt(source.CastInfo);
+            var timespan = (act - WorldState.CurrentTime).TotalSeconds;
             if (timespan <= 3d)
             {
                 var patternWEWE = CurrentPattern == Pattern.WEWE;
-                var origin = source.Origin;
+                var origin = source.Position;
                 forbidden.Add(ShapeDistance.InvertedCone(origin, 5f, patternWEWE ? a15 : -a15, a15));
                 forbidden.Add(ShapeDistance.InvertedCone(origin, 5f, patternWEWE ? -a165 : a165, a15));
                 forbidden.Add(ShapeDistance.InvertedCone(origin, 5f, patternWEWE ? a105 : -a105, a15));
                 forbidden.Add(ShapeDistance.InvertedCone(origin, 5f, patternWEWE ? -a75 : a75, a15));
             }
             else
-                forbidden.Add(ShapeDistance.InvertedCircle(source.Origin, 8f));
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), source.Activation);
+                forbidden.Add(ShapeDistance.InvertedCircle(source.Position, 8f));
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
         }
     }
 }

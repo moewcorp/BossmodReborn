@@ -69,7 +69,7 @@ class Reflection(BossModule module) : Components.GenericAOEs(module)
         { 0x00044000, Angle.AnglesCardinals[1] }
     };
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {

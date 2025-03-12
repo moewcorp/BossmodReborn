@@ -35,7 +35,7 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle rotation = 90f.Degrees();
     private static readonly WPos[] coords = [new(280f, -142f), new(280f, -152f), new(280f, -162f), new(280f, -172f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -99,7 +99,7 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
             void AddAOE(WPos pos)
             {
                 var activation = WorldState.FutureTime(7.7d);
-                AOEs.Add(new(rect, pos, rotation, activation));
+                AOEs.Add(new(rect, WPos.ClampToGrid(pos), rotation, activation));
             }
         }
     }
@@ -123,13 +123,13 @@ class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle rotation = -90f.Degrees();
     private static readonly WPos[] coords = [new(320f, -142), new(320f, -152), new(320f, -162), new(320f, -172)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
-            yield break;
-        for (var i = 0; i < (count > 3 ? 3 : count); ++i)
-            yield return _aoes[i];
+            return [];
+        var max = count > 3 ? 3 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -154,7 +154,7 @@ class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
             void AddAOEs(int[] indices, double delay)
             {
                 for (var i = 0; i < 3; ++i)
-                    _aoes.Add(new(rect, coords[indices[i]], rotation, WorldState.FutureTime(delay)));
+                    _aoes.Add(new(rect, WPos.ClampToGrid(coords[indices[i]]), rotation, WorldState.FutureTime(delay)));
             }
         }
     }

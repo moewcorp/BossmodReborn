@@ -555,7 +555,7 @@ public sealed class ReplayParserLog : IDisposable
         var id = _input.ReadUInt(false);
         var argCount = _input.ReadInt();
         var args = new int[argCount];
-        for (var i = 0; i < argCount; i++)
+        for (var i = 0; i < argCount; ++i)
             args[i] = _input.ReadInt();
         return new(id, args);
     }
@@ -837,21 +837,21 @@ public sealed class ReplayParserLog : IDisposable
     private DeepDungeonState.OpPartyStateChange ParseDeepDungeonParty()
     {
         var pt = new DeepDungeonState.PartyMember[DeepDungeonState.NumPartyMembers];
-        for (var i = 0; i < pt.Length; i++)
+        for (var i = 0; i < pt.Length; ++i)
             pt[i] = new(_input.ReadActorID(), _input.ReadByte(false));
         return new(pt);
     }
     private DeepDungeonState.OpPomandersChange ParseDeepDungeonPomanders()
     {
         var it = new DeepDungeonState.PomanderState[DeepDungeonState.NumPomanderSlots];
-        for (var i = 0; i < it.Length; i++)
+        for (var i = 0; i < it.Length; ++i)
             it[i] = new(_input.ReadByte(false), _input.ReadByte(true));
         return new(it);
     }
     private DeepDungeonState.OpChestsChange ParseDeepDungeonChests()
     {
         var ct = new DeepDungeonState.Chest[DeepDungeonState.NumChests];
-        for (var i = 0; i < ct.Length; i++)
+        for (var i = 0; i < ct.Length; ++i)
             ct[i] = new(_input.ReadByte(false), _input.ReadByte(false));
         return new(ct);
     }

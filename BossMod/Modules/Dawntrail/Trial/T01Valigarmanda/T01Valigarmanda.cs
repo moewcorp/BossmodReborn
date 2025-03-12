@@ -49,14 +49,7 @@ class Tulidisaster2(BossModule module) : Tulidisaster(module, AID.Tulidisaster2,
 class Tulidisaster3(BossModule module) : Tulidisaster(module, AID.Tulidisaster3, 19.6f);
 
 class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption), 6);
-class IceTalon(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(6), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.IceTalon), 5, true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class IceTalon(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(6), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.IceTalon), 5f, true, tankbuster: true);
 
 class T01ValigarmandaStates : StateMachineBuilder
 {

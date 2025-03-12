@@ -17,24 +17,24 @@ class P2InfernalFetters(BossModule module) : BossComponent(module)
             var from = Raid[Fetters.LowestSetBit()];
             var to = Raid[Fetters.HighestSetBit()];
             if (from != null && to != null)
-                Arena.AddLine(from.Position, to.Position, _fettersStrength > 1 ? Colors.Danger : Colors.Safe);
+                Arena.AddLine(from.Position, to.Position, _fettersStrength > 1 ? 0 : Colors.Safe);
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.InfernalFetters)
+        if (status.ID == (uint)SID.InfernalFetters)
         {
-            Fetters.Set(Raid.FindSlot(actor.InstanceID));
+            Fetters[Raid.FindSlot(actor.InstanceID)] = true;
             _fettersStrength = status.Extra;
         }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.InfernalFetters)
+        if (status.ID == (uint)SID.InfernalFetters)
         {
-            Fetters.Clear(Raid.FindSlot(actor.InstanceID));
+            Fetters[Raid.FindSlot(actor.InstanceID)] = false;
         }
     }
 }

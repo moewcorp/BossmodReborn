@@ -33,27 +33,27 @@ public enum SID : uint
 }
 
 class FluidSwing(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.FluidSwing));
-class FluidSwingKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FluidSwing), 50, kind: Kind.DirForward);
-class SeaOfFlames(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SeaOfFlames), 6);
-class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5);
-class PillarOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarOfFlame), 8);
-class PillarOfFlame2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarOfFlame2), 8);
+class FluidSwingKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FluidSwing), 50f, kind: Kind.DirForward);
+class SeaOfFlames(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SeaOfFlames), 6f);
+class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5f);
+class PillarOfFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarOfFlame), 8f);
+class PillarOfFlame2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarOfFlame2), 8f);
 class Rush(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Rush), "GTFO from boss! (Distance based charge)");
-class FlareStar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlareStar), 10);
-class FireBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireBlast), new AOEShapeRect(74, 2));
+class FlareStar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlareStar), 10f);
+class FireBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireBlast), new AOEShapeRect(74f, 2f));
 class PyreticHint(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Pyretic), "Pyretic, stop everything! Dodge the AOE after it runs out.");
 
 class Pyretic(BossModule module) : Components.StayMove(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Pyretic)
+        if (spell.Action.ID == (uint)AID.Pyretic)
             Array.Fill(PlayerStates, new(Requirement.Stay, Module.CastFinishAt(spell), 1));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Pyretic && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.Pyretic && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
             PlayerStates[slot] = default;
     }
 }

@@ -6,26 +6,31 @@ class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
     public BitMask RequireHint;
     private BitMask _levitating;
 
-    private static readonly AOEShapeRect _shape = new(5, 5, 5);
+    private static readonly AOEShapeRect _shape = new(5f, 5f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (RequireHint[slot])
+        if (!RequireHint[slot])
+            return [];
+
+        var highlightLevitate = RequireLevitating[slot];
+        var aoes = new AOEInstance[12];
+        var index = 0;
+
+        for (var x = 0; x < 2; ++x)
         {
-            var highlightLevitate = RequireLevitating[slot];
-            for (var x = 0; x < 2; ++x)
+            for (var z = 0; z < 3; ++z)
             {
-                for (var z = 0; z < 3; ++z)
+                var cellLevitating = ((x ^ z) & 1) != 0;
+                if (cellLevitating != highlightLevitate)
                 {
-                    var cellLevitating = ((x ^ z) & 1) != 0;
-                    if (cellLevitating != highlightLevitate)
-                    {
-                        yield return new(_shape, Arena.Center + new WDir(-5 - 10 * x, -10 + 10 * z));
-                        yield return new(_shape, Arena.Center + new WDir(+5 + 10 * x, -10 + 10 * z));
-                    }
+                    aoes[index++] = new(_shape, Arena.Center + new WDir(-5f - 10f * x, -10f + 10f * z));
+                    aoes[index++] = new(_shape, Arena.Center + new WDir(+5f + 10f * x, -10f + 10f * z));
                 }
             }
         }
+
+        return aoes.AsSpan()[..index];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -36,13 +41,13 @@ class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Levitate)
-            _levitating.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Levitate)
+            _levitating[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Levitate)
-            _levitating.Clear(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Levitate)
+            _levitating[Raid.FindSlot(actor.InstanceID)] = false;
     }
 }

@@ -3,20 +3,20 @@
 class VirtualShiftIce(BossModule module) : Components.GenericAOEs(module, default, "GTFO from broken bridge!")
 {
     private readonly List<AOEInstance> _unsafeBridges = new(4);
-    private readonly List<Rectangle> _destroyedBridges = [new(new(95, 96), 3, 2), new(new(95, 104), 3, 2), new(new(105, 96), 3, 2), new(new(95, 104), 3, 2)];
+    private readonly List<Rectangle> _destroyedBridges = [new(new(95f, 96f), 3f, 2f), new(new(95f, 104f), 3f, 2f), new(new(105f, 96f), 3f, 2f), new(new(95f, 104f), 3f, 2f)];
 
     private static readonly AOEShapeRect _shape = new(2, 3, 2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _unsafeBridges;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_unsafeBridges);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         WDir offset = index switch
         {
-            0x04 => new(-5, -4),
-            0x05 => new(-5, +4),
-            0x06 => new(+5, -4),
-            0x07 => new(+5, +4),
+            0x04 => new(-5f, -4f),
+            0x05 => new(-5f, +4f),
+            0x06 => new(+5f, -4f),
+            0x07 => new(+5f, +4f),
             _ => default
         };
         if (offset == default)
@@ -55,18 +55,18 @@ class LawsOfIce(BossModule module) : Components.StayMove(module)
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.LawsOfIce)
-            SetState(Raid.FindSlot(actor.InstanceID), new(Requirement.Move, WorldState.FutureTime(4.2f)));
+            SetState(Raid.FindSlot(actor.InstanceID), new(Requirement.Move, WorldState.FutureTime(4.2d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.LawsOfIceAOE)
+        if (spell.Action.ID == (uint)AID.LawsOfIceAOE)
             ++NumCasts;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.FreezingUp)
+        if (status.ID == (uint)SID.FreezingUp)
             ClearState(Raid.FindSlot(actor.InstanceID));
     }
 }
@@ -77,8 +77,8 @@ class Rush(BossModule module) : Components.GenericBaitAway(module)
     private BitMask _unstretched;
     private readonly Ex3QueenEternalConfig _config = Service.Config.Get<Ex3QueenEternalConfig>();
 
-    private static readonly AOEShapeRect _shapeTether = new(80, 2);
-    private static readonly AOEShapeCircle _shapeUntethered = new(8); // if there is no tether, pillar will just explode; this can happen if someone is dead
+    private static readonly AOEShapeRect _shapeTether = new(80f, 2f);
+    private static readonly AOEShapeCircle _shapeUntethered = new(8f); // if there is no tether, pillar will just explode; this can happen if someone is dead
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -97,14 +97,14 @@ class Rush(BossModule module) : Components.GenericBaitAway(module)
             if (b.Target == pc)
             {
                 Arena.AddLine(b.Source.Position, b.Target.Position, _unstretched[pcSlot] ? 0 : Colors.Safe);
-                Arena.AddCircle(SafeSpot(b.Source, _config), 1, Colors.Safe);
+                Arena.AddCircle(SafeSpot(b.Source, _config), 1f, Colors.Safe);
             }
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.RushFirst or AID.RushSecond)
+        if (spell.Action.ID is (uint)AID.RushFirst or (uint)AID.RushSecond)
         {
             Activation = Module.CastFinishAt(spell, 0.2f);
             if (!CurrentBaits.Any(b => b.Source == caster))
@@ -114,26 +114,26 @@ class Rush(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.RushFirstAOE or AID.RushSecondAOE or AID.RushFirstFail or AID.RushSecondFail)
+        if (spell.Action.ID is (uint)AID.RushFirstAOE or (uint)AID.RushSecondAOE or (uint)AID.RushFirstFail or (uint)AID.RushSecondFail)
             ++NumCasts;
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID is TetherID.RushShort or TetherID.RushLong && WorldState.Actors.Find(tether.Target) is var target && target != null)
+        if (tether.ID is (uint)TetherID.RushShort or (uint)TetherID.RushLong && WorldState.Actors.Find(tether.Target) is var target && target != null)
         {
             CurrentBaits.RemoveAll(b => b.Source == source);
             CurrentBaits.Add(new(source, target, _shapeTether, Activation));
 
             var slot = Raid.FindSlot(tether.Target);
             if (slot >= 0)
-                _unstretched[slot] = (TetherID)tether.ID == TetherID.RushShort;
+                _unstretched[slot] = tether.ID == (uint)TetherID.RushShort;
         }
     }
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID is TetherID.RushShort or TetherID.RushLong)
+        if (tether.ID is (uint)TetherID.RushShort or (uint)TetherID.RushLong)
         {
             CurrentBaits.RemoveAll(b => b.Source == source);
             CurrentBaits.Add(new(source, source, _shapeUntethered, Activation));
@@ -147,18 +147,18 @@ class Rush(BossModule module) : Components.GenericBaitAway(module)
         var center = Ex3QueenEternal.ArenaCenter;
         var safeSide = source.Position.X > center.X ? -1 : +1;
         var offX = Math.Abs(source.Position.X - center.X);
-        if (source.Position.Z > 110)
+        if (source.Position.Z > 110f)
         {
             // first order
-            var inner = offX < 6;
-            return center + new WDir(safeSide * (inner ? 15 : 10), -19);
+            var inner = offX < 6f;
+            return center + new WDir(safeSide * (inner ? 15f : 10f), -19f);
         }
         else
         {
             // second order
-            var central = source.Position.Z < 96;
-            var strat = !config.SideTethersCrossStrategy ? (central ? -2 : 9) : (central ? 9 : -9);
-            return center + new WDir(safeSide * 15, strat);
+            var central = source.Position.Z < 96f;
+            var strat = !config.SideTethersCrossStrategy ? (central ? -2f : 9f) : (central ? 9f : -9f);
+            return center + new WDir(safeSide * 15f, strat);
         }
     }
 }
@@ -170,21 +170,24 @@ class IceDart(BossModule module) : Components.BaitAwayTethers(module, new AOESha
         if (spell.Action == WatchedAction)
         {
             ++NumCasts;
-            ForbiddenPlayers.Set(Raid.FindSlot(spell.MainTargetID));
+            ForbiddenPlayers[Raid.FindSlot(spell.MainTargetID)] = true;
         }
     }
 }
 
-class RaisedTribute(BossModule module) : Components.GenericWildCharge(module, 4, ActionID.MakeSpell(AID.RaisedTribute), 80)
+class RaisedTribute(BossModule module) : Components.GenericWildCharge(module, 4, ActionID.MakeSpell(AID.RaisedTribute), 80f)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.RaisedTribute)
         {
             Source = actor;
-            foreach (var (i, p) in Raid.WithSlot(true, true, true))
+            var party = Raid.WithoutSlot(true, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
             {
-                PlayerRoles[i] = p.InstanceID == targetID ? PlayerRole.Target : p.Tether.ID != 0 ? PlayerRole.Avoid : PlayerRole.Share;
+                ref var member = ref party[i];
+                PlayerRoles[i] = member.InstanceID == targetID ? PlayerRole.Target : member.Tether.ID != 0 ? PlayerRole.Avoid : PlayerRole.Share;
             }
         }
     }

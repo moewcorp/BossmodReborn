@@ -4,19 +4,20 @@ class FatefulWords(BossModule module) : Components.Knockback(module, ActionID.Ma
 {
     private readonly Kind[] _mechanics = new Kind[PartyState.MaxPartySize];
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         var kind = _mechanics[slot];
         if (kind != Kind.None)
-            yield return new(Module.Center, 6, Module.CastFinishAt(Module.PrimaryActor.CastInfo), Kind: kind);
+            return new Source[1] { new(Arena.Center, 6f, Module.CastFinishAt(Module.PrimaryActor.CastInfo), Kind: kind) };
+        return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var kind = (SID)status.ID switch
+        var kind = status.ID switch
         {
-            SID.WanderersFate => Kind.AwayFromOrigin,
-            SID.SacrificesFate => Kind.TowardsOrigin,
+            (uint)SID.WanderersFate => Kind.AwayFromOrigin,
+            (uint)SID.SacrificesFate => Kind.TowardsOrigin,
             _ => Kind.None
         };
         if (kind != Kind.None)
@@ -25,7 +26,7 @@ class FatefulWords(BossModule module) : Components.Knockback(module, ActionID.Ma
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.WanderersFate or SID.SacrificesFate)
+        if (status.ID is (uint)SID.WanderersFate or (uint)SID.SacrificesFate)
             AssignMechanic(actor, Kind.None);
     }
 

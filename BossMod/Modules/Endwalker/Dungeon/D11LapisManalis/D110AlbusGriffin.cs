@@ -18,11 +18,11 @@ public enum AID : uint
     GoldenTalons = 32787, // AlbusGriffin->self, 4.5s cast, range 8 90-degree cone
 }
 
-class TransonicBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TransonicBlast), new AOEShapeCone(9, 45.Degrees()));
+class TransonicBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TransonicBlast), new AOEShapeCone(9f, 45f.Degrees()));
 class WindsOfWinter(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.WindsOfWinter));
 class WindsOfWinterStunHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.WindsOfWinter), false, true);
-class GoldenTalons(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenTalons), new AOEShapeCone(8, 45.Degrees()));
-class Freefall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Freefall), 8);
+class GoldenTalons(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenTalons), new AOEShapeCone(8f, 45f.Degrees()));
+class Freefall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Freefall), 8f);
 
 class D110AlbusGriffinStates : StateMachineBuilder
 {
@@ -30,24 +30,48 @@ class D110AlbusGriffinStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<TransonicBlast>()
-            .Raw.Update = () => module.Enemies(D110AlbusGriffin.TrashP1).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(D110AlbusGriffin.TrashP1);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
         TrivialPhase(1)
             .ActivateOnEnter<Freefall>()
             .ActivateOnEnter<WindsOfWinter>()
             .ActivateOnEnter<WindsOfWinterStunHint>()
             .ActivateOnEnter<GoldenTalons>()
-            .Raw.Update = () => module.Enemies(D110AlbusGriffin.TrashP1).All(e => e.IsDestroyed) && module.Enemies(OID.AlbusGriffin).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(D110AlbusGriffin.TrashP1);
+                var count = enemies.Count;
+                var allDestroyed = true;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDestroyed)
+                        allDestroyed = false;
+                }
+                var albus = module.Enemies((uint)OID.AlbusGriffin);
+                return allDestroyed || albus.Count != 0 && albus[0].IsDeadOrDestroyed;
+            };
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 12245)]
-public class D110AlbusGriffin(WorldState ws, Actor primary) : BossModule(ws, primary, new(47, -570.5f), new ArenaBoundsRect(8.5f, 11.5f))
+public class D110AlbusGriffin(WorldState ws, Actor primary) : BossModule(ws, primary, new(47f, -570.5f), new ArenaBoundsRect(8.5f, 11.5f))
 {
     public static readonly uint[] TrashP1 = [(uint)OID.Boss, (uint)OID.Caladrius];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Caladrius));
-        Arena.Actors(Enemies(OID.AlbusGriffin));
+        Arena.Actors(Enemies((uint)OID.Caladrius));
+        Arena.Actors(Enemies((uint)OID.AlbusGriffin));
     }
 }

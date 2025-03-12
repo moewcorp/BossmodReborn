@@ -25,27 +25,40 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Tankbuster = 381, // player
-    Prey = 2, // player
     Spreadmarker = 96 // player
 }
 
-class Shardstrike(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.Shardstrike), 5, 5.8f);
+class Shardstrike(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.Shardstrike), 5f, 5.8f);
 class ShardstrikeCrystals(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Shardstrike _st = module.FindComponent<Shardstrike>()!;
     private static readonly AOEShapeCircle circle = new(6.6f); // for non players hitbox must not be clipped
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_st.ActiveSpreadTargets.Contains(actor))
-            foreach (var c in Module.Enemies(OID.DimCrystal).Where(x => !x.IsDead))
-                yield return new(circle, c.Position, Color: Colors.FutureVulnerable);
+        if (_st.Stacks.Count == 0)
+            return [];
+
+        var enemies = Module.Enemies((uint)OID.DimCrystal);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new List<AOEInstance>(count);
+
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                aoes[i] = new(circle, z.Position, Color: Colors.FutureVulnerable);
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveAOEs(slot, actor).Any())
+        if (_st.Stacks.Count != 0)
             hints.Add("Avoid clipping crystals!");
     }
 }
@@ -53,47 +66,67 @@ class ShardstrikeCrystals(BossModule module) : Components.GenericAOEs(module)
 class Hailfire(BossModule module) : Components.GenericAOEs(module)
 {
     private Actor? _target;
-    private const string Hint = "Hide behind crystal!";
     private const float Length = 44.2f;
+    private readonly List<RectangleSE> rects = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_target != null)
         {
-            var boss = Module.PrimaryActor;
-            List<RectangleSE> rects = [];
-            foreach (var c in Module.Enemies(OID.DimCrystal).Where(x => !x.IsDead))
-            {
-                var dir = boss.DirectionTo(c);
-                rects.Add(new(c.Position + 0.1f * dir, c.Position + Length * dir, 1.6f));
-            }
-            RectangleSE[] rectsA = [.. rects];
-            yield return _target == actor
-                ? new(new AOEShapeCustom([.. rects], InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE)
-                : new(new AOEShapeCustom([new RectangleSE(boss.Position, boss.Position + Length * boss.DirectionTo(_target), 2)], rectsA), Arena.Center);
+            var primary = Module.PrimaryActor;
+            return new AOEInstance[1] { _target == actor
+                ? new(new AOEShapeCustom(rects, InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE)
+                : new(new AOEShapeCustom([new RectangleSE(primary.Position, primary.Position + Length * primary.DirectionTo(_target), 2f)], rects), Arena.Center) };
         }
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Hailfire)
+        if (spell.Action.ID == (uint)AID.Hailfire)
+        {
+            var enemies = Module.Enemies((uint)OID.DimCrystal);
+            var count = enemies.Count;
+            var boss = Module.PrimaryActor;
+            for (var i = 0; i < count; ++i)
+            {
+                var c = enemies[i];
+                if (!c.IsDead)
+                {
+                    var dir = boss.DirectionTo(c);
+                    rects.Add(new(c.Position + 0.1f * dir, c.Position + Length * dir, 1.6f));
+                }
+            }
             _target = WorldState.Actors.Find(spell.TargetID);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Hailfire)
+        if (spell.Action.ID == (uint)AID.Hailfire)
+        {
+            rects.Clear();
             _target = null;
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (_target == actor)
         {
-            if (!ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position)))
-                hints.Add(Hint);
-            else
-                hints.Add(Hint, false);
+            var aoes = ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            var isRisky = true;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(actor.Position))
+                {
+                    isRisky = false;
+                    break;
+                }
+            }
+            hints.Add("Hide behind crystal!", isRisky);
         }
         else
             base.AddHints(slot, actor, hints);
@@ -101,13 +134,27 @@ class Hailfire(BossModule module) : Components.GenericAOEs(module)
 }
 
 class CrystalNeedle(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.CrystalNeedle));
-class Shardfall(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.Shardfall), 40)
+class Shardfall(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.Shardfall), 40f)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.DimCrystal).Where(e => !e.IsDead);
+    public override ReadOnlySpan<Actor> BlockerActors()
+    {
+        var boulders = Module.Enemies((uint)OID.DimCrystal);
+        var count = boulders.Count;
+        if (count == 0)
+            return [];
+        var actors = new List<Actor>();
+        for (var i = 0; i < count; ++i)
+        {
+            var b = boulders[i];
+            if (!b.IsDead)
+                actors.Add(b);
+        }
+        return CollectionsMarshal.AsSpan(actors);
+    }
 }
-class CrystallineFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), 3);
-class ResonantFrequency(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ResonantFrequency), 6);
-class Dissonance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dissonance), new AOEShapeDonut(5, 40));
+class CrystallineFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrystallineFracture), 3f);
+class ResonantFrequency(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ResonantFrequency), 6f);
+class Dissonance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Dissonance), new AOEShapeDonut(5f, 40f));
 
 class D131HedetetStates : StateMachineBuilder
 {
@@ -128,5 +175,5 @@ class D131HedetetStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 585, NameID = 7667)]
 public class D131Hedetet(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(174, 178), 19.5f)], [new Rectangle(new(174, 197.6f), 20, 1), new Rectangle(new(174, 158.3f), 20, 1)]);
+    private static readonly ArenaBoundsComplex arena = new([new Circle(new(174f, 178f), 19.5f)], [new Rectangle(new(174f, 197.6f), 20f, 1f), new Rectangle(new(174f, 158.3f), 20f, 1f)]);
 }

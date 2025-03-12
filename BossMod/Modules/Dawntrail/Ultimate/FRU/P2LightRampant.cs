@@ -350,8 +350,31 @@ class P2LightRampantAIStackResolve(BossModule module) : BossComponent(module)
             return;
 
         var northCamp = IsNorthCamp(actor);
-        var centerDangerous = _orbs.ActiveCasters.Any(c => c.Origin.Z - Arena.Center.Z is var off && (northCamp ? off < -15 : off > 15));
-        var destDir = (northCamp ? 180 : 0).Degrees() - (centerDangerous ? 40 : 20).Degrees();
+        var centerDangerous = false;
+        var len = _orbs.ActiveCasters.Length;
+
+        for (var i = 0; i < len; ++i)
+        {
+            var offset = _orbs.ActiveCasters[i].Origin.Z - Arena.Center.Z;
+            if (northCamp)
+            {
+                if (offset < -15f)
+                {
+                    centerDangerous = true;
+                    break;
+                }
+            }
+            else
+            {
+                if (offset > 15f)
+                {
+                    centerDangerous = true;
+                    break;
+                }
+            }
+        }
+
+        var destDir = (northCamp ? 180f : default).Degrees() - (centerDangerous ? 40f : 20f).Degrees();
         var destPos = Arena.Center + Radius * destDir.ToDirection();
         if (_stack.IsStackTarget(actor))
         {
@@ -394,31 +417,31 @@ class P2LightRampantAIOrbs(BossModule module) : BossComponent(module)
 
         // actual orb aoes; use slightly bigger radius to make dodges less sus
         foreach (var c in _orbs.ActiveCasters)
-            hints.AddForbiddenZone(ShapeDistance.Circle(c.Origin, 12), c.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(c.Origin, 12f), c.Activation);
 
         if (_orbs.NumCasts == 0)
         {
             // dodge first orbs, while staying near edge
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16));
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16f));
             // ... and close to the aoes
-            var count = _orbs.ActiveCasters.Count;
-            var orbs = new Func<WPos, float>[count];
-            for (var i = 0; i < count; ++i)
+            var len = _orbs.ActiveCasters.Length;
+            var orbs = new Func<WPos, float>[len];
+            for (var i = 0; i < len; ++i)
                 orbs[i] = ShapeDistance.Circle(_orbs.ActiveCasters[i].Origin, 13.5f);
             hints.AddForbiddenZone(ShapeDistance.InvertedUnion(orbs), DateTime.MaxValue);
         }
         else if (_orbs.Casters.Any(c => _orbs.Shape.Check(actor.Position, c.Origin, default)))
         {
             // dodge second orbs while staying near edge (tethers are still up for a bit after first dodge)
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16));
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16f));
         }
         else
         {
             // now that we're safe, move closer to the center (this is a bit sus, but whatever...)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 16), WorldState.FutureTime(30));
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 13), WorldState.FutureTime(40));
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 10), WorldState.FutureTime(50));
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 7), DateTime.MaxValue);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 16f), WorldState.FutureTime(30d));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 13f), WorldState.FutureTime(40d));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 10f), WorldState.FutureTime(50d));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 7f), DateTime.MaxValue);
         }
     }
 }

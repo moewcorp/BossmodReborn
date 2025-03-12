@@ -21,7 +21,7 @@ public enum SID : uint
     Windburn = 269, // Boss->player, extra=0x0
 }
 
-class Gust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Gust), 3);
+class Gust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Gust), 3f);
 class AlternatePlumage(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AlternatePlumage), "Prepare to dispel buff");
 class CaberToss(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.CaberToss));
 
@@ -37,15 +37,13 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var armorbuff = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.VulnerabilityDown) != null);
-        if (armorbuff != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.VulnerabilityDown) != null)
             hints.Add($"Dispel {Module.PrimaryActor.Name} with Eerie Soundwave!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var windburn = actor.FindStatus(SID.Windburn);
-        if (windburn != null)
+        if (actor.FindStatus((uint)SID.Windburn) != null)
             hints.Add("Windburn on you! Cleanse it with Exuviation.");
     }
 }

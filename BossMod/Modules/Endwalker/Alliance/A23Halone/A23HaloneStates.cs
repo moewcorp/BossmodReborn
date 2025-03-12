@@ -127,7 +127,7 @@ class A23HaloneStates : StateMachineBuilder
     private void WillOfTheFury(uint id, float delay)
     {
         Cast(id, AID.WillOfTheFury, delay, 3);
-        ComponentCondition<WillOfTheFury>(id + 0x10, 0.8f, comp => comp.Active)
+        ComponentCondition<WillOfTheFury>(id + 0x10, 0.8f, comp => comp.Sequences.Count != 0)
             .ActivateOnEnter<WillOfTheFury>();
         CastStart(id + 0x20, AID.WrathOfHalone, 3.3f);
         ComponentCondition<WillOfTheFury>(id + 0x30, 1.7f, comp => comp.NumCasts >= 1, "Ring 1");

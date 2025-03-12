@@ -6,7 +6,7 @@ class EyeThunderVortex(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeCircle = new(15f);
     private static readonly AOEShapeDonut _shapeDonut = new(8f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

@@ -17,8 +17,7 @@ class V013GladiatorStates : StateMachineBuilder
             .ActivateOnEnter<FlashOfSteel2>()
             .ActivateOnEnter<SculptorsPassion>()
             .ActivateOnEnter<GoldenFlame>()
-            .ActivateOnEnter<SilverFlame1>()
-            .ActivateOnEnter<SilverFlame2>()
+            .ActivateOnEnter<SilverFlame>()
             .ActivateOnEnter<Landing>()
             .ActivateOnEnter<MightySmite>();
     }

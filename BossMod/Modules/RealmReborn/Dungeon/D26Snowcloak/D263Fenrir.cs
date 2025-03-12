@@ -24,32 +24,54 @@ public enum AID : uint
     HeavenswardRoar = 29593, // Boss->self, 5.0s cast, range 50 60-degree cone
 }
 
-class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.LunarCry), 80)
+class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.LunarCry), 80f)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.Icicle).Where(x => x.ModelState.AnimState1 != 1);
+    public override ReadOnlySpan<Actor> BlockerActors()
+    {
+        var boulders = Module.Enemies((uint)OID.Icicle);
+        var count = boulders.Count;
+        if (count == 0)
+            return [];
+        var actors = new List<Actor>();
+        for (var i = 0; i < count; ++i)
+        {
+            var b = boulders[i];
+            if (b.ModelState.AnimState1 != 1)
+                actors.Add(b);
+        }
+        return CollectionsMarshal.AsSpan(actors);
+    }
 }
 
-class PillarImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarImpact), 4);
+class PillarImpact(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarImpact), 4f);
 
-class PillarShatter1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarShatter1), 8);
+class PillarShatter1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarShatter1), 8f);
 class PillarShatter2(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(8);
+    private static readonly AOEShapeCircle circle = new(8f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LunarCry)
-            foreach (var p in Module.Enemies(OID.Icicle).Where(x => x.ModelState.AnimState1 != 1))
-                _aoes.Add(new(circle, p.Position, default, WorldState.FutureTime(4.5f)));
-        else if ((AID)spell.Action.ID == AID.PillarShatter2)
+        if (spell.Action.ID == (uint)AID.LunarCry)
+        {
+            var icicles = Module.Enemies((uint)OID.Icicle);
+            var count = icicles.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var p = icicles[i];
+                if (p.ModelState.AnimState1 != 1)
+                    _aoes.Add(new(circle, WPos.ClampToGrid(p.Position), default, WorldState.FutureTime(4.5d)));
+            }
+        }
+        else if (spell.Action.ID == (uint)AID.PillarShatter2)
             _aoes.Clear();
     }
 }
 
-class HeavenswardRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavenswardRoar), new AOEShapeCone(50, 30.Degrees()));
+class HeavenswardRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavenswardRoar), new AOEShapeCone(50f, 30f.Degrees()));
 class EclipticBite(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.EclipticBite));
 class ThousandYearStorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ThousandYearStorm));
 
@@ -71,5 +93,5 @@ class D263FenrirStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 27, NameID = 3044, SortOrder = 4)]
 public class D263Fenrir(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(1, 65.1f), 26, 24, 7.5f.Degrees())], [new Rectangle(new(-25.4f, 65), 1f, 20f)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(1f, 65.1f), 26f, 24, 7.5f.Degrees())], [new Rectangle(new(-25.4f, 65), 1f, 20f)]);
 }

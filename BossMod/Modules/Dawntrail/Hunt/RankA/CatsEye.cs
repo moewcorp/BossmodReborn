@@ -17,55 +17,57 @@ public enum AID : uint
     BloodshotGaze2 = 39668, // Boss->players, 5.0s cast, range 8 circle, inverted.
 }
 
-class CatsEye1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CatsEye1), 40);
-
-class CatsEye2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CatsEye2), 40);
-
 class CatsEye1Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye1));
 class CatsEye2Gaze(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CatsEye2), true);
 class GravitationalWave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GravitationalWave), "Raidwide!");
 
 class BloodshotGaze1(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.BloodshotGaze1))
 {
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    private readonly BloodshotStack1 _stack = module.FindComponent<BloodshotStack1>()!;
+
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
-        var stackComponent = Module.FindComponent<BloodshotStack1>();
-
-        var targetPosition = stackComponent?.ActiveStackTargets.FirstOrDefault()?.Position;
-
-        return Eyes.Select(c => new Eye(targetPosition ?? c.Position, c.Activation));
+        Components.GenericStackSpread.Stack? stack = _stack.Stacks.Count != 0 ? _stack.Stacks[0] : null;
+        if (stack != null)
+        {
+            var v = stack.Value;
+            return new Eye[1] { new(v.Target.Position, v.Activation) };
+        }
+        return [];
     }
 }
 
 class BloodshotGaze2(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.BloodshotGaze2), true)
 {
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    private readonly BloodshotStack2 _stack = module.FindComponent<BloodshotStack2>()!;
+
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
-        var stackComponent = Module.FindComponent<BloodshotStack2>();
-
-        var targetPosition = stackComponent?.ActiveStackTargets.FirstOrDefault()?.Position;
-
-        return Eyes.Select(c => new Eye(targetPosition ?? c.Position, c.Activation));
+        Components.GenericStackSpread.Stack? stack = _stack.Stacks.Count != 0 ? _stack.Stacks[0] : null;
+        if (stack != null)
+        {
+            var v = stack.Value;
+            return new Eye[1] { new(v.Target.Position, v.Activation) };
+        }
+        return [];
     }
 }
 
-class BloodshotStack1(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BloodshotGaze1), 8);
-class BloodshotStack2(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BloodshotGaze2), 8);
+class BloodshotStack1(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BloodshotGaze1), 8f);
+class BloodshotStack2(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.BloodshotGaze2), 8f);
 
 class CatsEyeStates : StateMachineBuilder
 {
     public CatsEyeStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<CatsEye1>()
-            .ActivateOnEnter<CatsEye2>()
             .ActivateOnEnter<CatsEye1Gaze>()
             .ActivateOnEnter<CatsEye2Gaze>()
             .ActivateOnEnter<GravitationalWave>()
-            .ActivateOnEnter<BloodshotGaze1>()
-            .ActivateOnEnter<BloodshotGaze2>()
             .ActivateOnEnter<BloodshotStack1>()
-            .ActivateOnEnter<BloodshotStack2>();
+            .ActivateOnEnter<BloodshotStack2>()
+            .ActivateOnEnter<BloodshotGaze1>()
+            .ActivateOnEnter<BloodshotGaze2>();
     }
 }
 

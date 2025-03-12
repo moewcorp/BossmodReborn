@@ -8,29 +8,29 @@ class Welts(BossModule module) : Components.GenericStackSpread(module, true)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.BloomingWelt:
-                Spreads.Add(new(actor, 15));
+            case (uint)SID.BloomingWelt:
+                Spreads.Add(new(actor, 15f));
                 break;
-            case SID.FuriousWelt:
-                Stacks.Add(new(actor, 6, 4, 4)); // TODO: verify flare falloff
+            case (uint)SID.FuriousWelt:
+                Stacks.Add(new(actor, 6f, 4, 4)); // TODO: verify flare falloff
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FuriousWelt:
+            case (uint)AID.FuriousWelt:
                 NextMechanic = Mechanic.Spreads;
                 Stacks.Clear();
                 Spreads.Clear();
                 foreach (var t in Raid.WithoutSlot(false, true, true))
-                    Spreads.Add(new(t, 6));
+                    Spreads.Add(new(t, 6f));
                 break;
-            case AID.StingingWelt:
+            case (uint)AID.StingingWelt:
                 NextMechanic = Mechanic.Done;
                 Spreads.Clear();
                 break;
@@ -43,51 +43,53 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
     private Angle _offset;
     private DateTime _activation;
 
-    private static readonly AOEShapeCross _first = new(20, 6);
-    private static readonly AOEShapeRect _rest = new(8, 20);
+    private static readonly AOEShapeCross _first = new(20f, 6f);
+    private static readonly AOEShapeRect _rest = new(8f, 20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activation == default)
-            yield break;
+            return [];
 
         if (NumCasts == 0)
         {
-            yield return new(_first, Module.Center, _offset, _activation);
+            return new AOEInstance[1] { new(_first, WPos.ClampToGrid(Arena.Center), _offset, _activation) };
         }
         else
         {
+            var aoes = new AOEInstance[4];
             float offset = NumCasts == 1 ? 6 : 14;
             for (var i = 0; i < 4; ++i)
             {
-                var dir = i * 90.Degrees() + _offset;
-                yield return new(_rest, Module.Center + offset * dir.ToDirection(), dir, _activation);
+                var dir = i * 90f.Degrees() + _offset;
+                aoes[i] = new(_rest, WPos.ClampToGrid(Module.Center + offset * dir.ToDirection()), dir, _activation);
             }
+            return aoes;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FlamerakeAOE11:
-            case AID.FlamerakeAOE12:
+            case (uint)AID.FlamerakeAOE11:
+            case (uint)AID.FlamerakeAOE12:
                 if (NumCasts == 0)
                 {
                     ++NumCasts;
-                    _activation = WorldState.FutureTime(2.1f);
+                    _activation = WorldState.FutureTime(2.1d);
                 }
                 break;
-            case AID.FlamerakeAOE21:
-            case AID.FlamerakeAOE22:
+            case (uint)AID.FlamerakeAOE21:
+            case (uint)AID.FlamerakeAOE22:
                 if (NumCasts == 1)
                 {
                     ++NumCasts;
-                    _activation = WorldState.FutureTime(2.5f);
+                    _activation = WorldState.FutureTime(2.5d);
                 }
                 break;
-            case AID.FlamerakeAOE31:
-            case AID.FlamerakeAOE32:
+            case (uint)AID.FlamerakeAOE31:
+            case (uint)AID.FlamerakeAOE32:
                 if (NumCasts == 2)
                 {
                     ++NumCasts;
@@ -101,18 +103,19 @@ class Flamerake(BossModule module) : Components.GenericAOEs(module)
     {
         if (index == 4)
         {
+            var act = WorldState.FutureTime(8.5d);
             switch (state)
             {
                 // 00080004 when rotation ends
                 case 0x00010001:
                 case 0x00100010:
-                    _offset = 45.Degrees();
-                    _activation = WorldState.FutureTime(8.5f);
+                    _offset = 45f.Degrees();
+                    _activation = act;
                     break;
                 case 0x00200020:
                 case 0x00800080:
-                    _offset = 0.Degrees();
-                    _activation = WorldState.FutureTime(8.5f);
+                    _offset = default;
+                    _activation = act;
                     break;
             }
         }

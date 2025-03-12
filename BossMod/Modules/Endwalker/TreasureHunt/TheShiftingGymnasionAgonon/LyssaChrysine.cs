@@ -92,9 +92,9 @@ class HeavySmash(BossModule module) : Components.StackWithCastTargets(module, Ac
 class IcePillar(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(6);
+    private static readonly AOEShapeCircle circle = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {

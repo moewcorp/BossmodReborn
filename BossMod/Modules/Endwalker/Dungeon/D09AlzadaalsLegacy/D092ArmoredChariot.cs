@@ -50,7 +50,7 @@ class Voidzone(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(6f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEState(Actor actor, ushort state)
     {
@@ -79,21 +79,25 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     private int numCastsReflections;
     private int numCastsCannons;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countCones = _aoesCones.Count;
         var countRects = _aoesRects.Count;
         var total = countCones + countRects;
         if (total == 0)
             return [];
-        List<AOEInstance> aoes = new(total);
+
         var type = currentType == Type.TwoWaves;
         var maxCone = type && countCones > 2 ? 2 : countCones;
         var maxRect = type && countRects > 2 ? 2 : countRects;
+        var adjtotal = maxCone + maxRect;
+        var aoes = new AOEInstance[adjtotal];
+        var index = 0;
+
         for (var i = 0; i < maxCone; ++i)
-            aoes.Add(_aoesCones[i]);
+            aoes[index++] = _aoesCones[i];
         for (var i = 0; i < maxRect; ++i)
-            aoes.Add(_aoesRects[i]);
+            aoes[index++] = _aoesRects[i];
         return aoes;
     }
 
@@ -144,7 +148,7 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         foreach (var drudge in _activeDrudges)
         {
             var shape = cornerPositions.Contains(drudge.Position) ? rectShort : rectLong;
-            _aoesRects.Add(new(shape, drudge.Position, drudge.Rotation, activation));
+            _aoesRects.Add(new(shape, WPos.ClampToGrid(drudge.Position), drudge.Rotation, activation));
         }
     }
 
@@ -158,20 +162,20 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.CannonOrder)
         {
-            var activation = status.Extra == 0x180 ? 6.9f : 15;
+            var activation = status.Extra == 0x180 ? 6.9d : 15d;
             _aoesRects.Add(new(rectShort, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Assail1Wave)
+        if (spell.Action.ID == (uint)AID.Assail1Wave)
             currentType = Type.OneWave;
-        else if ((AID)spell.Action.ID == AID.Assail2Waves)
+        else if (spell.Action.ID == (uint)AID.Assail2Waves)
             currentType = Type.TwoWaves;
         else if (currentType == Type.TwoWaves)
         {
-            if ((AID)spell.Action.ID == AID.CannonReflection && _aoesCones.Count > 0)
+            if (spell.Action.ID == (uint)AID.CannonReflection && _aoesCones.Count > 0)
             {
                 if (++numCastsReflections == 14)
                 {
@@ -181,7 +185,7 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
                         currentType = Type.None;
                 }
             }
-            else if ((AID)spell.Action.ID == AID.AssaultCannonShort && _aoesRects.Count > 0)
+            else if (spell.Action.ID == (uint)AID.AssaultCannonShort && _aoesRects.Count > 0)
                 if (++numCastsCannons == 14)
                 {
                     _aoesRects.RemoveRange(0, 2);
@@ -190,7 +194,7 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         }
         else if (currentType == Type.OneWave)
         {
-            if ((AID)spell.Action.ID == AID.CannonReflection)
+            if (spell.Action.ID == (uint)AID.CannonReflection)
             {
                 if (++numCastsReflections == 14)
                 {
@@ -206,7 +210,7 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
 
 class DiffusionRay(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DiffusionRay));
 class RailCannon(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RailCannon));
-class GravitonCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GravitonCannon), 6);
+class GravitonCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GravitonCannon), 6f);
 
 class D092ArmoredChariotStates : StateMachineBuilder
 {
@@ -222,4 +226,4 @@ class D092ArmoredChariotStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 844, NameID = 11239)]
-public class D092ArmoredChariot(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -182), new ArenaBoundsSquare(19.5f));
+public class D092ArmoredChariot(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -182f), new ArenaBoundsSquare(19.5f));

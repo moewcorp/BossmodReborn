@@ -61,7 +61,7 @@ class ExtremelyBadBreathRotation(BossModule module) : Components.GenericRotating
     private bool first = true;
     private int correctSteps;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // direction seems to be server side until after first rotation
         if (Sequences.Count == 0)
@@ -133,20 +133,7 @@ class EarthyBreath(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(7.5f, 1.5f);
     private readonly List<AOEInstance> _aoes = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        var count = _aoes.Count;
-        if (count == 0)
-            return [];
-        List<AOEInstance> aoes = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if ((aoe.Activation - _aoes[0].Activation).TotalSeconds <= 1d)
-                aoes.Add(aoe);
-        }
-        return aoes;
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

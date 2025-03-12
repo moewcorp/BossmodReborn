@@ -1,53 +1,58 @@
 ﻿namespace BossMod.Stormblood.Alliance.A34UltimaP1;
 
-class HolyIVBait(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HolyIVBait), 6);
-class HolyIVSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HolyIVSpread), 6);
-class AuralightAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AuralightAOE), 20);
-class AuralightRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AuralightRect), new AOEShapeRect(70, 5));
-class GrandCrossAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrandCrossAOE), new AOEShapeCross(60, 7.5f));
+class HolyIVBait(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HolyIVBait), 6f);
+class HolyIVSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HolyIVSpread), 6f);
+class AuralightAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AuralightAOE), 20f);
+class AuralightRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AuralightRect), new AOEShapeRect(70f, 5f));
+class GrandCrossAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrandCrossAOE), new AOEShapeCross(60f, 7.5f));
 
-class TimeEruption(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.TimeEruptionVisual))
+class TimeEruption(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _castersEruptionAOEFirst = [];
-    private readonly List<Actor> _castersEruptionAOESecond = [];
+    private static readonly AOEShapeRect rect = new(20f, 10f);
+    private readonly List<AOEInstance> _aoes = new(4);
 
-    private static readonly AOEShape _shapeEruptionAOE = new AOEShapeRect(10, 10, 10);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_castersEruptionAOEFirst.Count > 0)
-            return _castersEruptionAOEFirst.Select(c => new AOEInstance(_shapeEruptionAOE, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-        else
-            return _castersEruptionAOESecond.Select(c => new AOEInstance(_shapeEruptionAOE, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Add(caster);
+        if (spell.Action.ID is (uint)AID.TimeEruptionAOEFirst or (uint)AID.TimeEruptionAOESecond)
+        {
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 9)
+                _aoes.SortBy(x => x.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Remove(caster);
+        if (spell.Action.ID is (uint)AID.TimeEruptionAOEFirst or (uint)AID.TimeEruptionAOESecond)
+            _aoes.RemoveAt(0);
     }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.TimeEruptionAOEFirst => _castersEruptionAOEFirst,
-        AID.TimeEruptionAOESecond => _castersEruptionAOESecond,
-        _ => null
-    };
 }
-class Eruption2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption2), 8);
-class ControlTower2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ControlTower2), 6);
 
-abstract class ExtremeEdge(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(60, 18));
+class Eruption2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption2), 8f);
+class ControlTower2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ControlTower2), 6f);
+
+abstract class ExtremeEdge(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(60f, 18f));
 class ExtremeEdge1(BossModule module) : ExtremeEdge(module, AID.ExtremeEdge1);
 class ExtremeEdge2(BossModule module) : ExtremeEdge(module, AID.ExtremeEdge2);
 
-class CrushWeapon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrushWeapon), 6);
-class Searchlight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Searchlight), 6);
-class HallowedBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HallowedBolt), 6);
+class CrushWeapon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrushWeapon), 6f);
+class Searchlight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Searchlight), 6f);
+class HallowedBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HallowedBolt), 6f);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 636, NameID = 7909)]
-public class A34UltimaP1(WorldState ws, Actor primary) : BossModule(ws, primary, new(600, -600), new ArenaBoundsSquare(30));
+public class A34UltimaP1(WorldState ws, Actor primary) : BossModule(ws, primary, new(600f, -600f), new ArenaBoundsSquare(30f));

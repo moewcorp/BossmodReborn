@@ -71,7 +71,7 @@ class PounceErrant(BossModule module) : Components.SpreadFromIcon(module, (uint)
         for (var i = 0; i < count; ++i)
         {
             var a = cages[i];
-            Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
+            Arena.AddCircle(a.Position, a.HitboxRadius);
         }
     }
 
@@ -152,7 +152,7 @@ class ForlornImpact(BossModule module) : Components.GenericBaitAway(module)
         for (var i = 0; i < count; ++i)
         {
             var a = cages[i];
-            Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
+            Arena.AddCircle(a.Position, a.HitboxRadius);
         }
     }
 

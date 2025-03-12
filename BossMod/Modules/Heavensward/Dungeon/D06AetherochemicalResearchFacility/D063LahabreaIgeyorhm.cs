@@ -65,7 +65,7 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
 
     private bool _tutorialFire, _tutorialIce;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {

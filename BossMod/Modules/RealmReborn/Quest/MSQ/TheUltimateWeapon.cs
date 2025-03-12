@@ -23,45 +23,54 @@ public enum AID : uint
     GripOfNight = 29337, // Boss->self, 6.0s cast, range 40 150-degree cone
 }
 
-class BurstFlare(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BurstFlare), 10)
+class BurstFlare(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BurstFlare), 10f)
 {
+    private readonly FireSphere _aoe = module.FindComponent<FireSphere>()!;
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // don't add any hints if Burst hasn't gone off yet, it tends to spook AI mode into running into deathwall
-        if (Module.Enemies(OID.Firesphere).Any(x => x.CastInfo?.RemainingTime > 0))
+        if (_aoe.ActiveAOEs(slot, actor).Length != 0)
             return;
         if (Casters.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5), Module.CastFinishAt(Casters[0].CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5f), Module.CastFinishAt(Casters[0].CastInfo));
     }
 }
 
-class GripOfNight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GripOfNight), new AOEShapeCone(40, 75.Degrees()));
-class AncientCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientCross), 6, 8);
-class AncientEruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientEruption), 6);
-class FluidFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FluidFlare), new AOEShapeCone(40, 30.Degrees()));
+class GripOfNight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GripOfNight), new AOEShapeCone(40, 75f.Degrees()));
+class AncientCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientCross), 6f, 8);
+class AncientEruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientEruption), 6f);
+class FluidFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FluidFlare), new AOEShapeCone(40f, 30f.Degrees()));
 
 class FireSphere(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Burst))
 {
     private DateTime? _predictedCast;
-    private static readonly AOEShapeCircle circle = new(8);
+    private static readonly AOEShapeCircle circle = new(8f);
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FiresphereSummon)
-            _predictedCast = WorldState.CurrentTime.AddSeconds(12);
+        if (spell.Action.ID == (uint)AID.FiresphereSummon)
+            _predictedCast = WorldState.CurrentTime.AddSeconds(12d);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Burst)
+        if (spell.Action.ID == (uint)AID.Burst)
             _predictedCast = Module.CastFinishAt(spell);
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_predictedCast is DateTime dt && dt > WorldState.CurrentTime)
-            foreach (var enemy in Module.Enemies(OID.Firesphere))
-                yield return new(circle, enemy.Position, default, dt);
+        {
+            var spheres = Module.Enemies((uint)OID.Firesphere);
+            var count = spheres.Count;
+            var aoes = new AOEInstance[count];
+            for (var i = 0; i < count; ++i)
+                aoes[i] = new(circle, WPos.ClampToGrid(spheres[i].Position), default, dt);
+            return aoes;
+        }
+        return [];
     }
 }
 
@@ -71,14 +80,14 @@ class AncientFire(BossModule module) : Components.RaidwideCast(module, ActionID.
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private bool completed;
-    private static readonly AOEShapeDonut donut = new(15, 20);
+    private static readonly AOEShapeDonut donut = new(15f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AncientFireIII && !completed)
+        if (spell.Action.ID == (uint)AID.AncientFireIII && !completed)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
     }
 
@@ -86,16 +95,35 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (index == 0 && state == 0x20001)
         {
-            Arena.Bounds = new ArenaBoundsCircle(15);
+            Arena.Bounds = Lahabrea.SmallerBounds;
             completed = true;
         }
     }
 }
 
-class DarkThunder(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkThunder), 1);
-class SeaOfPitch(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.SeaOfPitch).Where(x => x.EventState != 7));
+class DarkThunder(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkThunder), 1f);
+class SeaOfPitch(BossModule module) : Components.PersistentVoidzone(module, 4f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SeaOfPitch);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-abstract class EoD(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(60, 4));
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+abstract class EoD(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(60f, 4f));
 class EndOfDays(BossModule module) : EoD(module, AID.EndOfDays);
 class EndOfDaysAdds(BossModule module) : EoD(module, AID.EndOfDaysAdds);
 
@@ -121,5 +149,8 @@ class LahabreaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70058, NameID = 2143)]
-public class Lahabrea(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20));
+public class Lahabrea(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704f, 480f), new ArenaBoundsCircle(20f))
+{
+    public static readonly ArenaBoundsCircle SmallerBounds = new(15);
+}
 

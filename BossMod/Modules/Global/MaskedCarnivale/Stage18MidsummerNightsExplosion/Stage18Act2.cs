@@ -16,16 +16,33 @@ public enum AID : uint
     BoneShaker = 15053 // Boss->self, no cast, range 50 circle, harmless raidwide
 }
 
-class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 10);
-class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 6);
-class RipperClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RipperClaw), new AOEShapeCone(8, 45.Degrees()));
-class TailSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(15, 45.Degrees()));
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), 10f);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 6f);
+class RipperClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RipperClaw), new AOEShapeCone(8f, 45f.Degrees()));
+class TailSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSmash), new AOEShapeCone(15f, 45f.Degrees()));
 
-class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.WildCharge), 4)
+class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.WildCharge), 4f)
 {
+    public static List<Actor> GetKegs(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Keg);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var kegs = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                kegs.Add(z);
+        }
+        return kegs;
+    }
+
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Count > 0 && !Module.Enemies(OID.Keg).All(e => e.IsDead))
+        if (CurrentBaits.Count != 0 && GetKegs(Module).Count != 0)
             hints.Add("Aim charge at a keg!");
     }
 }
@@ -34,15 +51,22 @@ class KegExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var p in Module.Enemies(OID.Keg).Where(x => !x.IsDead))
-            Arena.AddCircle(p.Position, 10);
+        var kegs = WildCharge.GetKegs(Module);
+        var count = kegs.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(kegs[i].Position, 10f);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        foreach (var p in Module.Enemies(OID.Keg).Where(x => !x.IsDead))
-            if (actor.Position.InCircle(p.Position, 10))
+        var kegs = WildCharge.GetKegs(Module);
+        var count = kegs.Count;
+        for (var i = 0; i < count; ++i)
+            if (actor.Position.InCircle(kegs[i].Position, 10f))
+            {
                 hints.Add("In keg explosion radius!");
+                return;
+            }
     }
 }
 
@@ -65,7 +89,18 @@ class Stage18Act2States : StateMachineBuilder
             .ActivateOnEnter<RipperClaw>()
             .ActivateOnEnter<TailSmash>()
             .ActivateOnEnter<WildCharge>()
-            .Raw.Update = () => module.Enemies(Stage18Act2.Kegs).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage18Act2.Kegs);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -79,22 +114,34 @@ public class Stage18Act2 : BossModule
     }
     public static readonly uint[] Kegs = [(uint)OID.Boss, (uint)OID.Keg];
 
-    protected override bool CheckPull() => Enemies(Kegs).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Kegs);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Boss));
-        Arena.Actors(Enemies(OID.Keg), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Boss));
+        Arena.Actors(Enemies((uint)OID.Keg), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Boss => 1,
+                (uint)OID.Boss => 1,
                 _ => 0
             };
         }

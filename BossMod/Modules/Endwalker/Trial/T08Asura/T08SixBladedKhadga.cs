@@ -6,7 +6,7 @@ class SixBladedKhadga(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle a180 = 180f.Degrees();
     private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

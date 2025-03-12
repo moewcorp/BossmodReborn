@@ -11,52 +11,78 @@ public enum OID : uint
 public enum AID : uint
 {
     ShudderingSwipeCast = 8136, // Boss->player, 3.0s cast, single-target
-    ShudderingSwipeAOE = 8137, // 18D6->self, 3.0s cast, range 60+R 30-degree cone
-    NaldsWhisper = 8141, // 18D6->self, 9.0s cast, range 4 circle
+    ShudderingSwipeAOE = 8137, // AldisSwordOfNald->self, 3.0s cast, range 60+R 30-degree cone
+    NaldsWhisper = 8141, // AldisSwordOfNald->self, 9.0s cast, range 4 circle
     VictorySlash = 8134, // Boss->self, 3.0s cast, range 6+R 120-degree cone
 }
 
-class VictorySlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VictorySlash), new AOEShapeCone(6.5f, 60.Degrees()));
-class ShudderingSwipeCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ShudderingSwipeAOE), new AOEShapeCone(60, 15.Degrees()));
+class VictorySlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VictorySlash), new AOEShapeCone(6.5f, 60f.Degrees()));
+class ShudderingSwipeCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ShudderingSwipeAOE), new AOEShapeCone(60f, 15f.Degrees()));
 class ShudderingSwipeKB(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.ShudderingSwipeCast), stopAtWall: true)
 {
-    private TheFourWinds? winds;
-    private readonly List<Actor> Casters = [];
+    private readonly TheFourWinds _aoe = module.FindComponent<TheFourWinds>()!;
+    private Actor? _caster;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Casters.Select(c => new Source(c.Position, 10, Module.CastFinishAt(c.CastInfo), null, c.AngleTo(actor), Kind.DirForward));
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
+    {
+        if (_caster is Actor c)
+            return new Source[1] { new(c.Position, 10f, Module.CastFinishAt(c.CastInfo), null, c.AngleTo(actor), Kind.DirForward) };
+        return [];
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ShudderingSwipeCast)
-            Casters.Add(caster);
+            _caster = caster;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ShudderingSwipeCast)
-            Casters.Remove(caster);
+            _caster = null;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        winds ??= Module.FindComponent<TheFourWinds>();
-
-        var aoes = (winds?.Sources(Module) ?? []).Select(a => ShapeDistance.Circle(a.Position, 6)).ToList();
-        if (aoes.Count == 0)
-            return;
-
-        var windzone = ShapeDistance.Union(aoes);
-        if (Casters.FirstOrDefault() is Actor c)
+        if (_caster is Actor source)
+        {
+            var aoes = _aoe.ActiveAOEs(slot, actor).ToArray();
+            var len = aoes.Length;
+            if (len == 0)
+                return;
             hints.AddForbiddenZone(p =>
             {
-                var dir = c.DirectionTo(p);
-                var projected = p + dir * 10;
-                return windzone(projected);
-            }, Module.CastFinishAt(c.CastInfo));
+                ref readonly var a = ref aoes;
+                for (var i = 0; i < len; ++i)
+                    if (Intersect.RayCircle(source.Position, source.DirectionTo(p), a[i].Origin, 6f) < 1000f)
+                        return -1f;
+
+                return 1f;
+            }, Module.CastFinishAt(source.CastInfo));
+        }
     }
 }
-class NaldsWhisper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NaldsWhisper), 20);
-class TheFourWinds(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.TaintedWindSprite).Where(x => x.EventState != 7));
+class NaldsWhisper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NaldsWhisper), 20f);
+class TheFourWinds(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.TaintedWindSprite);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class AldisSwordOfNaldStates : StateMachineBuilder
 {

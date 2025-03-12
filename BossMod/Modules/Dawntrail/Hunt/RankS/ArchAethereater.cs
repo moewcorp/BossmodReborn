@@ -41,15 +41,15 @@ public enum SID : uint
     DeepFreeze = 3519 // none->player, extra=0x0
 }
 
-class Heatstroke(BossModule module) : Components.StayMove(module, 3)
+class Heatstroke(BossModule module) : Components.StayMove(module, 3f)
 {
     private BitMask _heatstroke;
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Heatstroke && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.Heatstroke && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
-            _heatstroke.Set(Raid.FindSlot(actor.InstanceID));
+            _heatstroke[slot] = true;
             PlayerStates[slot] = new(Requirement.Stay, status.ExpireAt);
         }
     }
@@ -59,7 +59,7 @@ class Heatstroke(BossModule module) : Components.StayMove(module, 3)
         if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             if (status.ID == (uint)SID.Heatstroke)
-                _heatstroke.Clear(Raid.FindSlot(actor.InstanceID));
+                _heatstroke[slot] = false;
             else if (status.ID == (uint)SID.Pyretic)
                 PlayerStates[slot] = default;
         }
@@ -69,7 +69,7 @@ class Heatstroke(BossModule module) : Components.StayMove(module, 3)
     {
         base.AddHints(slot, actor, hints);
         if (_heatstroke[slot])
-            hints.Add($"Heatstroke on you in {(actor.FindStatus(SID.Heatstroke)!.Value.ExpireAt - WorldState.CurrentTime).TotalSeconds:f1}s. (Pyretic!)");
+            hints.Add($"Heatstroke on you in {(actor.FindStatus((uint)SID.Heatstroke)!.Value.ExpireAt - WorldState.CurrentTime).TotalSeconds:f1}s. (Pyretic!)");
     }
 }
 
@@ -82,7 +82,7 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
         if (status.ID == (uint)SID.ColdSweats && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             PlayerStates[slot] = new(Requirement.Move, status.ExpireAt);
-            _coldsweats.Set(Raid.FindSlot(actor.InstanceID));
+            _coldsweats[slot] = true;
         }
     }
 
@@ -91,7 +91,7 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
         if (Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             if (status.ID == (uint)SID.ColdSweats)
-                _coldsweats.Clear(Raid.FindSlot(actor.InstanceID));
+                _coldsweats[slot] = false;
             else if (status.ID == (uint)SID.FreezingUp)
                 PlayerStates[slot] = default;
         }
@@ -101,7 +101,7 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
     {
         base.AddHints(slot, actor, hints);
         if (_coldsweats[slot])
-            hints.Add($"Cold Sweats on you in {(actor.FindStatus(SID.ColdSweats)!.Value.ExpireAt - WorldState.CurrentTime).TotalSeconds:f1}s. (Freezing!)");
+            hints.Add($"Cold Sweats on you in {(actor.FindStatus((uint)SID.ColdSweats)!.Value.ExpireAt - WorldState.CurrentTime).TotalSeconds:f1}s. (Freezing!)");
     }
 }
 
@@ -128,7 +128,7 @@ class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOE
     private static readonly AOEShapeCircle circle = new(15f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

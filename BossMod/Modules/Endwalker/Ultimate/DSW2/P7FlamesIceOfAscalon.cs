@@ -7,7 +7,7 @@ class P7FlamesIceOfAscalon(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeOut = new(8);
     private static readonly AOEShapeDonut _shapeIn = new(8, 50);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {

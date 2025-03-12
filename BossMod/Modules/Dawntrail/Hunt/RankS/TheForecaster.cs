@@ -55,7 +55,7 @@ class ForecastClimateChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCross cross = new(40f, 2.5f);
     private readonly List<AOEInstance> _aoes = new(3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

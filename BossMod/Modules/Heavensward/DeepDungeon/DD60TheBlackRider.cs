@@ -39,17 +39,17 @@ class HallOfSorrow(BossModule module) : Components.PersistentVoidzoneAtCastTarge
         return voidzones[..index];
     }
 }
-class Valfodr(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Valfodr), 3);
+class Valfodr(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Valfodr), 3f);
 class ValfodrKB(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.Valfodr), stopAtWall: true) // note actual knockback is delayed by upto 1.2s in replay
 {
     private readonly Infatuation _aoe = module.FindComponent<Infatuation>()!;
     private int _target;
     private Source? _source;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_target == slot && _source != null)
-            return [_source.Value];
+            return new Source[1] { _source.Value };
         else
             return [];
     }

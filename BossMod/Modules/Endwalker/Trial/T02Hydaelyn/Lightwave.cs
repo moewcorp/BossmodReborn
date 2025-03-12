@@ -5,7 +5,7 @@ class Lightwave(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Actor> waves = new(4);
     private static readonly AOEShapeRect rect = new(16f, 8f, 12f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = waves.Count;
         if (waves.Count == 0)

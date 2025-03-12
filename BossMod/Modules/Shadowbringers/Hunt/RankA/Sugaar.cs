@@ -57,18 +57,21 @@ class NumbingNoiseTailSnapAttract(BossModule module) : Components.Knockback(modu
 
     private static readonly AOEShapeCircle _shape = new(30f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_activation != default)
-            return [new(Module.PrimaryActor.Position, 25f, _activation, _shape, default, Kind.TowardsOrigin, Module.PrimaryActor.HitboxRadius + actor.HitboxRadius)];
+            return new Source[1] { new(Module.PrimaryActor.Position, 25f, _activation, _shape, default, Kind.TowardsOrigin, Module.PrimaryActor.HitboxRadius + actor.HitboxRadius) };
         else
             return [];
     }
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        foreach (var aoe in _rotating.ActiveAOEs(slot, actor))
+        var aoes = _rotating.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
                 return true;
         }

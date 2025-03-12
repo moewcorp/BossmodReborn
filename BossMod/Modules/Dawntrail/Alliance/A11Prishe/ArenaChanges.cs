@@ -16,7 +16,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module, ActionID.
     private static readonly AOEShapeCustom arenaChangeENVC02000100 = new(defaultSquare, differenceENVC02000100);
     public static readonly ArenaBoundsComplex ArenaENVC02000100 = new(differenceENVC02000100);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -61,13 +61,11 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module, ActionID.
 
 class CrystallineThornsHint(BossModule module) : Components.GenericAOEs(module)
 {
-    private const string RiskHint = "Go into middle to prepare for knockback!";
-
     private AOEInstance? _aoe;
     private static readonly AOEShapeCustom hintENVC00020001 = new(ArenaChanges.MiddleENVC00020001, InvertForbiddenZone: true);
     private static readonly AOEShapeCustom hintENVC02000100 = new(ArenaChanges.MiddleENVC02000100, InvertForbiddenZone: true);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -96,6 +94,6 @@ class CrystallineThornsHint(BossModule module) : Components.GenericAOEs(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (_aoe != null && !_aoe.Value.Check(actor.Position))
-            hints.Add(RiskHint);
+            hints.Add("Go into middle to prepare for knockback!");
     }
 }

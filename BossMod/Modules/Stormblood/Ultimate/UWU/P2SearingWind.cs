@@ -4,15 +4,15 @@ class P2SearingWind(BossModule module) : Components.UniformStackSpread(module, 0
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.InfernoHowl && WorldState.Actors.Find(spell.TargetID) is var target && target != null)
+        if (spell.Action.ID == (uint)AID.InfernoHowl && WorldState.Actors.Find(spell.TargetID) is var target && target != null)
         {
-            AddSpread(target, WorldState.FutureTime(8));
+            AddSpread(target, WorldState.FutureTime(8d));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SearingWind)
+        if (spell.Action.ID == (uint)AID.SearingWind)
         {
             var index = Enumerable.Range(0, Spreads.Count).MinBy(i => (spell.TargetXZ - Spreads[i].Target.Position).LengthSq());
             if (index < Spreads.Count)

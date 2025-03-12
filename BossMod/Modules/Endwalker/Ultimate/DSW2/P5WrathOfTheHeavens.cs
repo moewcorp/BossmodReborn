@@ -102,24 +102,38 @@ class P5WrathOfTheHeavensChainLightning(BossModule module) : Components.UniformS
 
 class P5WrathOfTheHeavensTwister(BossModule module) : Components.GenericAOEs(module, default, "GTFO from twister!")
 {
-    private readonly List<WPos> _predicted = [.. module.Raid.WithoutSlot(false, true, true).Select(a => a.Position)];
-    private readonly List<Actor> _voidzones = module.Enemies(OID.VoidzoneTwister);
+    private readonly List<WPos> _predicted = GetPositions(module);
+    private readonly List<Actor> _voidzones = module.Enemies((uint)OID.VoidzoneTwister);
 
-    private static readonly AOEShapeCircle _shape = new(2); // TODO: verify radius
+    private static readonly AOEShapeCircle _shape = new(2f); // TODO: verify radius
 
     public bool Active => _voidzones.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private static List<WPos> GetPositions(BossModule module)
     {
-        foreach (var p in _predicted)
-            yield return new(_shape, p); // TODO: activation
-        foreach (var p in _voidzones)
-            yield return new(_shape, p.Position);
+        var party = module.Raid.WithoutSlot(false, true, true);
+        var len = party.Length;
+        var pos = new List<WPos>(len);
+        for (var i = 0; i < len; ++i)
+            pos.Add(party[i].Position);
+        return pos;
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var countP = _predicted.Count;
+        var countV = _voidzones.Count;
+        var aoes = new AOEInstance[countP + countV];
+        for (var i = 0; i < countP; ++i)
+            aoes[i] = new(_shape, _predicted[i]); // TODO: activation
+        for (var i = 0; i < countV; ++i)
+            aoes[i] = new(_shape, _voidzones[i].Position);
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.VoidzoneTwister)
+        if (actor.OID == (uint)OID.VoidzoneTwister)
             _predicted.Clear();
     }
 }

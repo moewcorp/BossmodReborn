@@ -31,7 +31,7 @@ class DrumOfVollokKnockback(BossModule module) : Components.Knockback(module, ig
 {
     private readonly DrumOfVollok? _main = module.FindComponent<DrumOfVollok>();
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_main == null)
             return [];
@@ -48,6 +48,6 @@ class DrumOfVollokKnockback(BossModule module) : Components.Knockback(module, ig
             if (actor.Position.InCircle(s.Target.Position, s.Radius))
                 sources.Add(new(s.Target.Position, 25f, s.Activation));
         }
-        return sources;
+        return CollectionsMarshal.AsSpan(sources);
     }
 }

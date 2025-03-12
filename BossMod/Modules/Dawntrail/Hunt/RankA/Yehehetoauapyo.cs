@@ -21,7 +21,7 @@ public enum AID : uint
     Dactail3 = 38641, // Boss->self, 0.8s cast, range 40 150.000-degree cone
     WhirlingOmen3 = 39878, // Boss->self, 5.0s cast, range 50 circle
     WhirlingOmen4 = 38631, // Boss->self, 5.0s cast, single-target
-    Pteraspit3 = 38640, // Boss->self, 0.8s cast, range 40 150.000-degree cone
+    Pteraspit3 = 38640 // Boss->self, 0.8s cast, range 40 150.000-degree cone
 }
 
 public enum SID : uint
@@ -37,76 +37,68 @@ class WhirlingOmenRaidwide(BossModule module) : Components.RaidwideCast(module, 
 class TailSpit(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Angle> _windupDirections = [];
-    private readonly List<AOEInstance> _activeAOEs = [];
+    private readonly List<AOEInstance> _aoes = [];
     private int _castCount;
 
     private static readonly AOEShapeCone _cone = new(40, 75.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _activeAOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if (actor != Module.PrimaryActor)
-            return;
-
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.RightWindup:
-            case SID.RightWindup2:
-                _windupDirections.Add(-90.Degrees());
+            case (uint)SID.RightWindup:
+            case (uint)SID.RightWindup2:
+                _windupDirections.Add(-90f.Degrees());
                 break;
-            case SID.LeftWindup:
-            case SID.LeftWindup2:
-                _windupDirections.Add(90.Degrees());
+            case (uint)SID.LeftWindup:
+            case (uint)SID.LeftWindup2:
+                _windupDirections.Add(90f.Degrees());
                 break;
         }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (actor != Module.PrimaryActor)
-            return;
-
-        switch ((SID)status.ID)
-        {
-            case SID.RightWindup:
-            case SID.RightWindup2:
-            case SID.LeftWindup:
-            case SID.LeftWindup2:
-                _windupDirections.RemoveAt(0);
-                break;
-        }
+        if (_windupDirections.Count != 0)
+            switch (status.ID)
+            {
+                case (uint)SID.RightWindup:
+                case (uint)SID.RightWindup2:
+                case (uint)SID.LeftWindup:
+                case (uint)SID.LeftWindup2:
+                    _windupDirections.RemoveAt(0);
+                    break;
+            }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
+        var facingDirection = Module.PrimaryActor.Rotation;
 
-        Angle facingDirection = Module.PrimaryActor.Rotation;
-
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.TurnspitToDactail:
-                _activeAOEs.Clear();
+            case (uint)AID.TurnspitToDactail:
+                _aoes.Clear();
                 // Turnspit (uses windup, frontal) then Dactail (back, no windup)
                 facingDirection = HandleWindup(facingDirection, caster.Position, true, true); // Front cone with windup
                 HandleWindup(facingDirection, caster.Position, false, false, true); // Back cone without windup
                 break;
-            case AID.DactailToTurnspit:
-                _activeAOEs.Clear();
+            case (uint)AID.DactailToTurnspit:
+                _aoes.Clear();
                 // Dactail (back, no windup) then Turnspit (uses windup, frontal)
                 facingDirection = HandleWindup(facingDirection, caster.Position, false, false); // Back cone without windup
                 HandleWindup(facingDirection, caster.Position, true, true, true); // Front cone with second turn using windup
                 break;
-            case AID.PteraspitToTurntail:
-                _activeAOEs.Clear();
+            case (uint)AID.PteraspitToTurntail:
+                _aoes.Clear();
                 // Pteraspit (front, no windup) then Turntail (uses windup, back)
                 facingDirection = HandleWindup(facingDirection, caster.Position, true, false); // Front cone with no windup
                 HandleWindup(facingDirection, caster.Position, false, true, true); // Back cone with windup
                 break;
-            case AID.TurntailToPteraspit:
-                _activeAOEs.Clear();
+            case (uint)AID.TurntailToPteraspit:
+                _aoes.Clear();
                 // Turntail (uses windup, back) then Pteraspit (front, no windup)
                 facingDirection = HandleWindup(facingDirection, caster.Position, false, true); // Back cone with windup
                 HandleWindup(facingDirection, caster.Position, true, false, true); // Front cone with no windup
@@ -123,17 +115,17 @@ class TailSpit(BossModule module) : Components.GenericAOEs(module)
 
         if (isFront)
         {
-            _activeAOEs.Add(new(_cone, casterPosition, facingDirection, WorldState.FutureTime(5.8f), Colors.Danger));
+            _aoes.Add(new(_cone, casterPosition, facingDirection, WorldState.FutureTime(5.8d), Colors.Danger));
         }
         else
         {
-            _activeAOEs.Add(new(_cone, casterPosition, facingDirection + 180.Degrees(), WorldState.FutureTime(5.8f), Colors.Danger));
+            _aoes.Add(new(_cone, casterPosition, facingDirection + 180f.Degrees(), WorldState.FutureTime(5.8d), Colors.Danger));
         }
 
         if (second)
         {
-            var currentAOE = _activeAOEs[1];
-            _activeAOEs[1] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, WorldState.FutureTime(6.6f));
+            var currentAOE = _aoes[1];
+            _aoes[1] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, WorldState.FutureTime(6.6d));
         }
 
         return facingDirection;
@@ -141,28 +133,25 @@ class TailSpit(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
-
-        if ((AID)spell.Action.ID is AID.Dactail or AID.Dactail2 or AID.Dactail3
-            or AID.Pteraspit or AID.Pteraspit2 or AID.Pteraspit3)
+        if (spell.Action.ID is (uint)AID.Dactail or (uint)AID.Dactail2 or (uint)AID.Dactail3
+            or (uint)AID.Pteraspit or (uint)AID.Pteraspit2 or (uint)AID.Pteraspit3)
         {
             _castCount++;
 
-            if (_activeAOEs.Count > 0)
+            if (_aoes.Count > 0)
             {
-                _activeAOEs.RemoveAt(0);
+                _aoes.RemoveAt(0);
             }
 
-            if (_activeAOEs.Count > 0)
+            if (_aoes.Count > 0)
             {
-                var currentAOE = _activeAOEs[0];
-                _activeAOEs[0] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, currentAOE.Activation, Colors.Danger);
+                var currentAOE = _aoes[0];
+                _aoes[0] = new(currentAOE.Shape, currentAOE.Origin, currentAOE.Rotation, currentAOE.Activation, Colors.Danger);
             }
 
             if (_castCount >= 2)
             {
-                _activeAOEs.Clear();
+                _aoes.Clear();
                 _castCount = 0;
             }
         }

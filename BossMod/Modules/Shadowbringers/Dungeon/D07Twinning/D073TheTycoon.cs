@@ -28,30 +28,41 @@ public enum AID : uint
 
 class HighTensionDischarger(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.HighTensionDischarger));
 class RailCannon(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.RailCannon));
-class HighGravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HighGravity), 8);
-class ShatteredCrystal(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ShatteredCrystal), 5);
+class HighGravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HighGravity), 8f);
+class ShatteredCrystal(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ShatteredCrystal), 5f);
 
 class TemporalParadoxMagitekRay(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rectShort = new(10, 4);
-    private static readonly AOEShapeRect rectLong = new(40, 4);
-    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeRect rectShort = new(10f, 4f);
+    private static readonly AOEShapeRect rectLong = new(40f, 4f);
+    private readonly List<AOEInstance> _aoes = new(12);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Lasers)
+        void AddAOE(AOEShapeRect shape, double delay) => _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(delay)));
+        if (actor.OID == (uint)OID.Lasers)
         {
-            _aoes.Add(new(rectShort, actor.Position, actor.Rotation, WorldState.FutureTime(6.5f)));
-            _aoes.Add(new(rectLong, actor.Position, actor.Rotation, WorldState.FutureTime(14.3f))); // actual activation time varies a lot, depending on which mechanic it gets paired with. this is the lowest time i found in my log.
+            AddAOE(rectShort, 6.5d);
+            AddAOE(rectLong, 14.3d); // actual activation time varies a lot, depending on which mechanic it gets paired with. this is the lowest time i found in my log.
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TemporalParadox or AID.MagitekRay)
-            _aoes.RemoveAll(x => x.Origin == caster.Position);
+        if (spell.Action.ID is (uint)AID.TemporalParadox or (uint)AID.MagitekRay)
+        {
+            var count = _aoes.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin == pos)
+                {
+                    _aoes.RemoveAt(i);
+                }
+            }
+        }
     }
 }
 

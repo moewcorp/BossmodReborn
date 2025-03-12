@@ -7,7 +7,7 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeDonutSector _shape = new(20f, 30f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -62,27 +62,18 @@ class RadiantFlourish(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeCircle _shape = new(25);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         // assumption: we always have 4 moves, so flames finish where they start
-        switch ((AID)spell.Action.ID)
-        {
-            case AID.SolarFansAOE:
-                _aoes.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell, 13.8f)));
-                break;
-            case AID.RadiantFlourish:
-                // verify the assumption
-                if (!_aoes.Any(aoe => aoe.Origin.AlmostEqual(caster.Position, 1)))
-                    ReportError($"Unexpected AOE position: {caster.Position}");
-                break;
-        }
+        if (spell.Action.ID == (uint)AID.SolarFansAOE)
+            _aoes.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell, 13.8f)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.RadiantFlourish)
+        if (spell.Action.ID == (uint)AID.RadiantFlourish)
         {
             ++NumCasts;
             _aoes.Clear();

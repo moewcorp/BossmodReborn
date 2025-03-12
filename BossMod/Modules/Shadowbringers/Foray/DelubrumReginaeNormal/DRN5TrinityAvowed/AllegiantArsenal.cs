@@ -10,21 +10,22 @@ class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _pendingAOE != null;
 
-    private static readonly AOEShapeCone _shapeSword = new(70, 135.Degrees(), 180.Degrees());
-    private static readonly AOEShapeCone _shapeBow = new(70, 135.Degrees());
-    private static readonly AOEShapeCircle _shapeStaff = new(10);
+    private static readonly AOEShapeCone _shapeSword = new(70f, 135f.Degrees(), 180f.Degrees());
+    private static readonly AOEShapeCone _shapeBow = new(70f, 135f.Degrees());
+    private static readonly AOEShapeCircle _shapeStaff = new(10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_pendingAOE != null)
-            yield return new(_pendingAOE, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, _activation);
+            return new AOEInstance[1] { new(_pendingAOE, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, _activation) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.AllegiantArsenalSword:
+            case (uint)AID.AllegiantArsenalSword:
                 Activate(_shapeSword, Module.CastFinishAt(spell), Mechanics switch
                 {
                     Order.Unknown => Order.SwordSecond,
@@ -33,7 +34,7 @@ class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
                     _ => Order.Unknown
                 });
                 break;
-            case AID.AllegiantArsenalBow:
+            case (uint)AID.AllegiantArsenalBow:
                 Activate(_shapeBow, Module.CastFinishAt(spell), Mechanics switch
                 {
                     Order.Unknown => Order.BowSecond,
@@ -42,7 +43,7 @@ class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
                     _ => Order.Unknown
                 });
                 break;
-            case AID.AllegiantArsenalStaff:
+            case (uint)AID.AllegiantArsenalStaff:
                 Activate(_shapeStaff, Module.CastFinishAt(spell), Mechanics switch
                 {
                     Order.Unknown => Order.StaffSecond,
@@ -56,7 +57,7 @@ class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.InfernalSlash or AID.Flashvane or AID.FuryOfBozja)
+        if (spell.Action.ID is (uint)AID.InfernalSlash or (uint)AID.Flashvane or (uint)AID.FuryOfBozja)
             _pendingAOE = null;
     }
 

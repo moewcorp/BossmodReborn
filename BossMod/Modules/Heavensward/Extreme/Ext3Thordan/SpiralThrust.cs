@@ -7,7 +7,7 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
 
     private static readonly AOEShapeRect _shape = new(54.2f, 6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -18,27 +18,27 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
                 _predictionDelay = 0;
                 _aoes.Clear();
             }
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.KnightAppear:
-                if ((OID)caster.OID is OID.SerVellguine or OID.SerPaulecrain or OID.SerIgnasse && (caster.Position - Module.Center).LengthSq() > 625)
+            case (uint)AID.KnightAppear:
+                if (caster.OID is (uint)OID.SerVellguine or (uint)OID.SerPaulecrain or (uint)OID.SerIgnasse && (caster.Position - Arena.Center).LengthSq() > 625f)
                 {
                     // prediction
-                    _aoes.Add(new(_shape, caster.Position, Angle.FromDirection(Arena.Center - caster.Position), WorldState.FutureTime(_predictionDelay), Risky: false));
+                    _aoes.Add(new(_shape, WPos.ClampToGrid(caster.Position), Angle.FromDirection(Arena.Center - caster.Position), WorldState.FutureTime(_predictionDelay), Risky: false));
                 }
                 break;
-            case AID.SpiralThrust:
+            case (uint)AID.SpiralThrust:
                 ++NumCasts;
                 break;
         }
     }
 }
 
-class SpiralThrust1(BossModule module) : SpiralThrust(module, 10);
+class SpiralThrust1(BossModule module) : SpiralThrust(module, 10f);
 class SpiralThrust2(BossModule module) : SpiralThrust(module, 12.1f);

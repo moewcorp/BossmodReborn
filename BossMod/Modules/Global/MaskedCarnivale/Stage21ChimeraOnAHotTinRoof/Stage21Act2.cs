@@ -18,11 +18,30 @@ public enum AID : uint
     TheRamsKeeper = 15081 // Boss->location, 6.0s cast, range 9 circle
 }
 
-class TheRamsKeeper(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 9, ActionID.MakeSpell(AID.TheRamsKeeper), m => m.Enemies(OID.Voidzone).Where(e => e.EventState != 7), 0.9f);
+class TheRamsKeeper(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 9f, ActionID.MakeSpell(AID.TheRamsKeeper), GetVoidzones, 0.9f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Voidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 class TheRamsKeeperHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.TheRamsKeeper));
-class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 9);
-class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(8, 30));
-class Icefall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Icefall), 5);
+class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 9f);
+class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(8f, 30f));
+class Icefall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Icefall), 5f);
 class VoidBlizzard(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.VoidBlizzard));
 
 class Hints(BossModule module) : BossComponent(module)
@@ -37,8 +56,17 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.ArenaImp).All(e => e.IsDead))
-            hints.Add("The imps are weak to fire spells and strong against ice.\nInterrupt Void Blizzard with Flying Sardine.");
+        var imps = Module.Enemies((uint)OID.ArenaImp);
+        var count = imps.Count;
+        if (count != 0)
+            for (var i = 0; i < count; ++i)
+            {
+                if (!imps[i].IsDead)
+                {
+                    hints.Add("The imps are weak to fire spells and strong against ice.\nInterrupt Void Blizzard with Flying Sardine.");
+                    return;
+                }
+            }
     }
 }
 
@@ -69,6 +97,6 @@ public class Stage21Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ArenaImp), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.ArenaImp), Colors.Object);
     }
 }

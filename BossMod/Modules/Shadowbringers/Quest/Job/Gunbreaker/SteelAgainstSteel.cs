@@ -27,51 +27,60 @@ public enum AID : uint
     ToTheSlaughter = 17559, // Boss->self, 4.0s cast, range 40 180-degree cone
 }
 
-class ScaldingTank(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ScaldingTank1), 6);
-class ToTheSlaughter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ToTheSlaughter), new AOEShapeCone(40, 90.Degrees()));
-class Exsanguination1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination1), new AOEShapeDonutSector(2, 7, 90.Degrees()));
-class Exsanguination2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination2), new AOEShapeDonutSector(7, 12, 90.Degrees()));
-class Exsanguination3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination3), new AOEShapeDonutSector(12, 17, 90.Degrees()));
-class CaptiveBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CaptiveBolt), new AOEShapeRect(50, 5), 4);
-class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
-class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DiffractiveLaser), new AOEShapeRect(45, 2));
-class SnakeShot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SnakeShot), new AOEShapeCone(20, 120.Degrees()));
-class CullingBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CullingBlade1), new AOEShapeCone(60, 15.Degrees()));
+class ScaldingTank(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ScaldingTank1), 6f);
+class ToTheSlaughter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ToTheSlaughter), new AOEShapeCone(40f, 90f.Degrees()));
+class Exsanguination1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination1), new AOEShapeDonutSector(2f, 7f, 90f.Degrees()));
+class Exsanguination2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination2), new AOEShapeDonutSector(7f, 12f, 90f.Degrees()));
+class Exsanguination3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exsanguination3), new AOEShapeDonutSector(12f, 17f, 90f.Degrees()));
+class CaptiveBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CaptiveBolt), new AOEShapeRect(50f, 5f), 4);
+class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8f);
+class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DiffractiveLaser), new AOEShapeRect(45f, 2f));
+class SnakeShot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SnakeShot), new AOEShapeCone(20f, 120f.Degrees()));
+class CullingBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CullingBlade1), new AOEShapeCone(60f, 15f.Degrees()));
 
 class TerminusEst(BossModule module) : Components.GenericAOEs(module)
 {
-    private Actor? Caster;
-    private readonly List<Actor> Actors = [];
-    private static readonly AOEShapeRect rect = new(40, 2);
+    private bool casting;
+    private readonly List<Actor> casters = [];
+    private static readonly AOEShapeRect rect = new(40f, 2f);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (casting)
+        {
+            var count = casters.Count;
+            var aoes = new AOEInstance[count];
+            for (var i = 0; i < count; ++i)
+            {
+                var c = casters[i];
+                aoes[i] = new(rect, c.Position, c.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+            }
+            return aoes;
+        }
+        return [];
+    }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.TerminusEst)
-            Actors.Add(actor);
-    }
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (Caster is Actor c)
-            foreach (var t in Actors)
-                yield return new(rect, t.Position, t.Rotation, Module.CastFinishAt(c.CastInfo));
+            casters.Add(actor);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         // check if we already have terminuses out, because he can use this spell for a diff mechanic
-        if ((AID)spell.Action.ID == AID.TheOrder && Actors.Count > 0)
-            Caster = caster;
+        if (casters.Count != 0 && spell.Action.ID == (uint)AID.TheOrder)
+            casting = true;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.TerminusEst1)
+        if (spell.Action.ID == (uint)AID.TerminusEst1)
         {
-            Actors.Remove(caster);
+            casters.Remove(caster);
             // reset for next iteration
-            if (Actors.Count == 0)
-                Caster = null;
+            if (casters.Count == 0)
+                casting = false;
         }
     }
 }
@@ -96,4 +105,4 @@ class VitusQuoMessallaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68802, NameID = 8872)]
-public class VitusQuoMessalla(WorldState ws, Actor primary) : BossModule(ws, primary, new(-266, -507), new ArenaBoundsCircle(19.5f));
+public class VitusQuoMessalla(WorldState ws, Actor primary) : BossModule(ws, primary, new(-266f, -507f), new ArenaBoundsCircle(19.5f));

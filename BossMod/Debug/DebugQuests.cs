@@ -79,13 +79,13 @@ unsafe class DebugQuests
                     int i = 0;
                     foreach (var e in entry.HandlersNormal)
                     {
-                        _tree.LeafNode($"[Gx {i++}] {e.Value->QuestId} '{Service.LuminaRow<Quest>(0x10000u | e.Value->QuestId)?.Name}'");
+                        _tree.LeafNode($"[Gx {++i}] {e.Value->QuestId} '{Service.LuminaRow<Quest>(0x10000u | e.Value->QuestId)?.Name}'");
                     }
 
                     i = 0;
                     foreach (var e in entry.HandlersExclusive)
                     {
-                        _tree.LeafNode($"[G3 {i++}] {e.Value->QuestId} '{Service.LuminaRow<Quest>(0x10000u | e.Value->QuestId)?.Name}'");
+                        _tree.LeafNode($"[G3 {++i}] {e.Value->QuestId} '{Service.LuminaRow<Quest>(0x10000u | e.Value->QuestId)?.Name}'");
                     }
                 }
             }
@@ -100,7 +100,7 @@ unsafe class DebugQuests
                     int i = 0;
                     foreach (var q in quests.AllQuests)
                     {
-                        _tree.LeafNode($"[{i++}] G{q.Unknown11} {(IsEligible(q) ? "+" : "-")}{(quests.AvailableQuests.Contains(q) ? "+" : "-")} {q.RowId} '{q.Name}'");
+                        _tree.LeafNode($"[{++i}] G{q.Unknown11} {(IsEligible(q) ? "+" : "-")}{(quests.AvailableQuests.Contains(q) ? "+" : "-")} {q.RowId} '{q.Name}'");
                     }
                 }
             }

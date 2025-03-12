@@ -18,18 +18,19 @@ public enum AID : uint
     SandPillar = 1113 // SandPillarHelper->self, no cast, range 4.5 aoe
 }
 
-class Sandstorm(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Sandstorm), new AOEShapeCone(10.5f, 45.Degrees()));
+class Sandstorm(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Sandstorm), new AOEShapeCone(10.5f, 45f.Degrees()));
 
 // TODO: pillars teleport right before cast, so we don't show them for now...
 class Submerge(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Earthbreak))
 {
     private readonly AOEShapeCircle _shape = new(14.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: proper timings...
         if (!Module.PrimaryActor.IsTargetable)
-            yield return new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation);
+            return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation) };
+        return [];
     }
 }
 
@@ -44,4 +45,4 @@ class D092GiantTunnelWormStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12, NameID = 1589)]
-public class D092GiantTunnelWorm(WorldState ws, Actor primary) : BossModule(ws, primary, new(-140, 150), new ArenaBoundsCircle(20));
+public class D092GiantTunnelWorm(WorldState ws, Actor primary) : BossModule(ws, primary, new(-140f, 150f), new ArenaBoundsCircle(20f));

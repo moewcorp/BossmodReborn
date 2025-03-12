@@ -27,21 +27,19 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(50f, 15f.Degrees());
     private const float IntercardinalDistance = 22.627417f;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
 
-        List<AOEInstance> aoes = new(5);
-        var firstact = _aoes[0].Activation;
-        for (var i = 0; i < count; ++i)
-        {
-            var a = _aoes[i];
-            if ((a.Activation - firstact).TotalSeconds < 1d)
-                aoes.Add(a);
-        }
-        return aoes;
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

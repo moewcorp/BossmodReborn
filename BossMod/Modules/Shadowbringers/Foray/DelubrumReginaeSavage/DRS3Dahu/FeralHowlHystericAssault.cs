@@ -8,7 +8,7 @@ class FeralHowlHystericAssault(BossModule module, AID aidCast, AID aidAOE, float
     private readonly float _delay = delay;
     private Source? _source;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _source);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

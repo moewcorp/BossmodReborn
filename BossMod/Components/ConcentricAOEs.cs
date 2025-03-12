@@ -14,7 +14,7 @@ public class ConcentricAOEs(BossModule module, AOEShape[] shapes, bool showall =
     public readonly AOEShape[] Shapes = shapes;
     public readonly List<Sequence> Sequences = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Sequences.Count;
         var aoes = new AOEInstance[count];

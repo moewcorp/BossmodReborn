@@ -6,7 +6,7 @@ class Aethertithe(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCone _shape = new(100, 35.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

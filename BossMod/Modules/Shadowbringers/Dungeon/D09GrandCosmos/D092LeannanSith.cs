@@ -57,7 +57,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     public BitMask transporting;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe != null ? [_aoe.Value with { Risky = transporting[slot] }] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe != null ? new AOEInstance[1] { _aoe.Value with { Risky = transporting[slot] } } : [];
 
     private bool ShouldActivateAOEs => NumCasts == 1 ? tiles.Length > 0 : tiles.Length > 8;
 

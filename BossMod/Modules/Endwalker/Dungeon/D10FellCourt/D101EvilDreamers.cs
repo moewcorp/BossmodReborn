@@ -1,43 +1,78 @@
-﻿namespace BossMod.Endwalker.Dungeon.D10FellCourt.D101EvilDreamers;
+﻿namespace BossMod.Endwalker.Dungeon.D10FellCourtOfTroia.D101EvilDreamers;
 
 public enum OID : uint
 {
-    EvilDreamer4 = 0x3966, // R2.400-4.800, x19
-    EvilDreamer2 = 0x3967, // R2.400, x0-10 (spawn during fight)
-    EvilDreamer1 = 0x3988, // R2.400-7.200, x1
-    EvilDreamer3 = 0x3968, // R3.600, x0-7
+    Boss = 0x3988, // R2.4-7.2
+    EvilDreamer1 = 0x3966, // R2.4-4.8
+    EvilDreamer2 = 0x3967, // R2.4
+    EvilDreamer3 = 0x3968, // R3.6
 }
 
 public enum AID : uint
 {
-    AutoAttack = 30246, // EvilDreamer1/EvilDreamer3/EvilDreamer4->player, no cast, single-target
-    UnknownAbility = 29623, // SmallerBoss->location, no cast, single-target
-    UniteMare1 = 29621, // SmallerBoss->self, 11.0s cast, range 6 circle
-    UniteMare2 = 29622, // SmallerBoss->self, 11.0s cast, range 6 circle
-    UniteMare3 = 29628, // EvilDreamer1->self, 10.0s cast, range 12 circle
-    DarkVision2 = 29627, // EvilDreamer4->self, 15.0s cast, range 41 width 5 rect
-    DarkVision1 = 29624, // EvilDreamer4->self, 8.0s cast, range 40 width 5 rect
-    UnknownAbility2 = 29629, // EvilDreamer4->location, no cast, single-target
-    VoidGravity = 29626, // EvilDreamer4->player, 6.0s cast, range 6 circle
+    AutoAttack = 30246, // EvilDreamer1/EvilDreamer2/EvilDreamer3/Boss->player, no cast, single-target
+    Teleport1 = 29629, // EvilDreamer1->location, no cast, single-target
+    Teleport2 = 29623, // EvilDreamer1->location, no cast, single-target
+
+    UniteMare1 = 29621, // EvilDreamer1->self, 11.0s cast, range 6 circle
+    UniteMare2 = 29622, // EvilDreamer1->self, 11.0s cast, range 18 circle
+    UniteMare3 = 29628, // EvilDreamer3->self, 10.0s cast, range 12 circle
+    DarkVision1 = 29624, // EvilDreamer1->self, 8.0s cast, range 40 width 5 rect
+    DarkVision2 = 29627, // EvilDreamer1->self, 15.0s cast, range 41 width 5 rect
+    VoidGravity = 29626, // EvilDreamer1->player, 6.0s cast, range 6 circle, spread
+    EndlessNightmare = 29630, // Boss->self, 60.0s cast, range 20 circle, enrage
+    EndlessNightmareRepeat = 29728 // Boss->self, no cast, range 20 circle
 }
 
-public enum SID : uint
+class UniteMare1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UniteMare1), 6f, riskyWithSecondsLeft: 2.5d); // delay to improve melee greeding during enrage
+class UniteMare2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UniteMare2), 18f, riskyWithSecondsLeft: 5d);
+
+class UniteMare3(BossModule module) : Components.GenericAOEs(module)
 {
-    AreaOfInfluenceUp = 1749, // none->SmallerBoss, extra=0xC
-    HPBoost = 483, // none->SmallerBoss, extra=0x0
-}
+    private static readonly AOEShapeCircle circle = new(12f);
+    private readonly List<AOEInstance> _aoes = new(7);
 
-public enum TetherID : uint
-{
-    Tether14 = 14, // SmallerBoss->SmallerBoss
-}
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var dreamers = Module.Enemies((uint)OID.EvilDreamer3);
+        var count = dreamers.Count;
+        if (count == 0)
+            return [];
+        for (var i = 0; i < count; ++i)
+        {
+            if (dreamers[i].IsDead)
+                return CollectionsMarshal.AsSpan(_aoes);
+        }
+        return [];
+    }
 
-class UniteMare1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UniteMare1), 6);
-class UniteMare2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UniteMare2), 6);
-class UniteMare3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UniteMare3), 12);
-class DarkVision1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkVision1), new AOEShapeRect(40, 2.5f));
-class DarkVision2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkVision2), new AOEShapeRect(41, 2.5f));
-class VoidGravity(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.VoidGravity), 6, 4, 4);
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.UniteMare3)
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.UniteMare3)
+        {
+            var count = _aoes.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].ActorID == id)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+    }
+}
+class DarkVision1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkVision1), new AOEShapeRect(40f, 2.5f));
+class DarkVision2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkVision2), new AOEShapeRect(41f, 2.5f));
+class VoidGravity(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.VoidGravity), 6f);
+class EndlessNightmare(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.EndlessNightmare), "Enrage!", true);
 
 class D101EvilDreamersStates : StateMachineBuilder
 {
@@ -49,34 +84,33 @@ class D101EvilDreamersStates : StateMachineBuilder
             .ActivateOnEnter<UniteMare3>()
             .ActivateOnEnter<DarkVision1>()
             .ActivateOnEnter<DarkVision2>()
-            .ActivateOnEnter<VoidGravity>();
+            .ActivateOnEnter<VoidGravity>()
+            .ActivateOnEnter<EndlessNightmare>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", PrimaryActorOID = (uint)OID.EvilDreamer1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11382)] // 11383
-public class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(ws, primary, new(168, 90), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11382, SortOrder = 2)]
+public class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private Actor? _evilDreamer2;
-    private Actor? _evilDreamer3;
-    private Actor? _evilDreamer4;
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(168, 89.999f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(168f, 110.25f), 20f, 1.25f),
+    new Rectangle(new(188.34f, 90.007f), 1.25f, 20f)]);
+    private static readonly uint[] dreamers = [(uint)OID.Boss, (uint)OID.EvilDreamer1, (uint)OID.EvilDreamer2, (uint)OID.EvilDreamer3];
 
-    public Actor? EvilDreamer1() => PrimaryActor;
-    public Actor? EvilDreamer2() => _evilDreamer2;
-    public Actor? EvilDreamer3() => _evilDreamer3;
-    public Actor? EvilDreamer4() => _evilDreamer4;
-
-    protected override void UpdateModule()
+    protected override bool CheckPull()
     {
-        _evilDreamer2 ??= StateMachine.ActivePhaseIndex == 0 ? Enemies(OID.EvilDreamer2).FirstOrDefault() : null;
-        _evilDreamer3 ??= StateMachine.ActivePhaseIndex == 0 ? Enemies(OID.EvilDreamer3).FirstOrDefault() : null;
-        _evilDreamer4 ??= StateMachine.ActivePhaseIndex == 0 ? Enemies(OID.EvilDreamer4).FirstOrDefault() : null;
+        var enemies = Enemies((uint)OID.EvilDreamer1);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actor(_evilDreamer2);
-        Arena.Actor(_evilDreamer3);
-        Arena.Actor(_evilDreamer4);
+        Arena.Actors(Enemies(dreamers));
     }
 }

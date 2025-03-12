@@ -86,7 +86,7 @@ class CoffinNails(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCone cone = new(60f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

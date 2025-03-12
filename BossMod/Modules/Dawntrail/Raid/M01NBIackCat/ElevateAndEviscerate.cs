@@ -6,16 +6,16 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
     public (Actor source, Actor target) Tether;
     public WPos Cache;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (Tether != default && actor == Tether.target)
-            return [new(Tether.source.Position, 10f, Activation)];
+            return new Source[1] { new(Tether.source.Position, 10f, Activation) };
         return [];
     }
 
     public override void Update()
     {
-        foreach (var _ in Sources(0, Tether.target))
+        foreach (var _ in ActiveSources(0, Tether.target))
         {
             var movements = CalculateMovements(0, Tether.target);
             if (movements.Count != 0)
@@ -45,29 +45,45 @@ class ElevateAndEviscerate(BossModule module) : Components.Knockback(module, ign
         }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<ElevateAndEviscerateHint>()?.ActiveAOEs(slot, actor).Any(z => z.Check(pos)) ?? false) || !Arena.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var comp = Module.FindComponent<ElevateAndEviscerateHint>();
+        if (comp != null)
+        {
+            var aoes = comp.ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                    return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class ElevateAndEviscerateHint(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
+    private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
     public static readonly AOEShapeRect Rect = new(5f, 5f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var tether = _kb.Tether;
         if (tether != default && actor == tether.target)
         {
-            var damagedCells = Module.FindComponent<ArenaChanges>()!.DamagedCells;
+            var damagedCells = _arena.DamagedCells.SetBits();
             var tiles = ArenaChanges.Tiles;
             var aoes = new List<AOEInstance>();
-
-            foreach (var index in damagedCells.SetBits())
+            var len = damagedCells.Length;
+            for (var i = 0; i < len; ++i)
             {
-                var tile = tiles[index];
+                var tile = tiles[damagedCells[i]];
                 aoes.Add(new(Rect, tile.Center, Color: Colors.FutureVulnerable, Risky: false));
             }
-            return aoes;
+            return CollectionsMarshal.AsSpan(aoes);
         }
         return [];
     }
@@ -78,14 +94,14 @@ class ElevateAndEviscerateImpact(BossModule module) : Components.GenericAOEs(mod
     private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
     private AOEInstance? aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var aoes = new List<AOEInstance>();
         if (_kb.Tether != default && _kb.Tether.target != actor && Module.InBounds(_kb.Cache))
             aoes.Add(new(ElevateAndEviscerateHint.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, _kb.Activation.AddSeconds(3.6d)));
         if (aoe != null)
             aoes.Add(aoe.Value);
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

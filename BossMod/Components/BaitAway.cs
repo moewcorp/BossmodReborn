@@ -3,7 +3,7 @@
 // generic component for mechanics that require baiting some aoe (by proximity, by tether, etc) away from raid
 // some players can be marked as 'forbidden' - if any of them is baiting, they are warned
 // otherwise we show own bait as as outline (and warn if player is clipping someone) and other baits as filled (and warn if player is being clipped)
-public class GenericBaitAway(BossModule module, ActionID aid = default, bool alwaysDrawOtherBaits = true, bool centerAtTarget = false) : CastCounter(module, aid)
+public class GenericBaitAway(BossModule module, ActionID aid = default, bool alwaysDrawOtherBaits = true, bool centerAtTarget = false, bool tankbuster = false) : CastCounter(module, aid)
 {
     public record struct Bait(Actor Source, Actor Target, AOEShape Shape, DateTime Activation = default)
     {
@@ -205,6 +205,12 @@ public class GenericBaitAway(BossModule module, ActionID aid = default, bool alw
             bait.Shape.Outline(Arena, BaitOrigin(bait), bait.Rotation);
         }
     }
+
+    public override void AddGlobalHints(GlobalHints hints)
+    {
+        if (tankbuster && CurrentBaits.Count != 0)
+            hints.Add("Tankbuster cleave");
+    }
 }
 
 // bait on all players, requiring everyone to spread out
@@ -275,7 +281,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, A
 }
 
 // component for mechanics requiring icon targets to bait their aoe away from raid
-public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, ActionID aid = default, float activationDelay = 5.1f, bool centerAtTarget = false, Actor? source = null) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget)
+public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, ActionID aid = default, float activationDelay = 5.1f, bool centerAtTarget = false, Actor? source = null, bool tankbuster = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster)
 {
     public AOEShape Shape = shape;
     public uint IID = iconID;
@@ -298,7 +304,7 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, Action
 }
 
 // component for mechanics requiring cast targets to gtfo from raid (aoe tankbusters etc)
-public class BaitAwayCast(BossModule module, ActionID aid, AOEShape shape, bool centerAtTarget = false, bool endsOnCastEvent = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget)
+public class BaitAwayCast(BossModule module, ActionID aid, AOEShape shape, bool centerAtTarget = false, bool endsOnCastEvent = false, bool tankbuster = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster)
 {
     public AOEShape Shape = shape;
     public bool EndsOnCastEvent = endsOnCastEvent;

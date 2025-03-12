@@ -30,7 +30,7 @@ class WallRemoval(BossModule module) : BossComponent(module)
 {
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00040008 && (OID)actor.OID == OID.WallController1)
+        if (state == 0x00040008 && actor.OID == (uint)OID.WallController1)
         {
             Arena.Bounds = D260NorthernBateleur.Arena2;
             Arena.Center = D260NorthernBateleur.Arena2.Center;
@@ -40,52 +40,62 @@ class WallRemoval(BossModule module) : BossComponent(module)
 
 class Frostbite(BossModule module) : Components.GenericAOEs(module)
 {
-    private const string RiskHint = "GTFO from wind area!";
-    private const string RiskHint2 = "Leave unsafe area!";
     private static readonly AOEShapeRect rect = new(17, 17);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(3);
 
-    private readonly Dictionary<OID, (WPos Origin, Angle Angle)> frostbiteData = new()
-    {
-        { OID.WindController1, (new(1.5f, -140.75f), -135.Degrees()) },
-        { OID.WindController2, (new(-31.462f, -167.332f), -36.Degrees()) },
-        { OID.WindController3, (new(-51.839f, -132.241f), -13.Degrees()) }
-    };
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (frostbiteData.TryGetValue((OID)actor.OID, out var data))
+        (var origin, var angle) = actor.OID switch
         {
-            if (state == 0x00040008)
-                UpdateAOEs(data.Origin, data.Angle);
-            else if (state == 0x00010002)
-                UpdateAOEs(data.Origin, data.Angle, WorldState.FutureTime(5), Colors.FutureVulnerable, false);
+            (uint)OID.WindController1 => (new WPos(1.5f, -140.75f), -135f.Degrees()),
+            (uint)OID.WindController2 => (new(-31.462f, -167.332f), -36f.Degrees()),
+            (uint)OID.WindController3 => (new(-51.839f, -132.241f), -13f.Degrees()),
+            _ => default
+        };
+        if (origin == default)
+            return;
+        if (state == 0x00040008)
+            _aoes.Add(new(rect, origin, angle));
+        else if (state == 0x00010002)
+        {
+            var count = _aoes.Count;
+            var pos = actor.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var aoe = _aoes[i];
+                if (aoe.Origin == pos)
+                {
+                    _aoes[i] = new(rect, origin, angle, WorldState.FutureTime(5d), Colors.FutureVulnerable, false);
+                    break;
+                }
+            }
         }
-    }
-
-    private void UpdateAOEs(WPos origin, Angle angle, DateTime expiration = default, uint color = 0, bool risky = true)
-    {
-        _aoes.RemoveAll(x => x.Origin == origin);
-        _aoes.Add(new(rect, origin, angle, expiration, color, risky));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoes.Count == 0)
+        var count = _aoes.Count;
+        if (count == 0)
             return;
-        var activeAOEs = ActiveAOEs(slot, actor).ToList();
-        if (ActiveAOEs(slot, actor).Any(c => c.Risky && c.Check(actor.Position)))
-            hints.Add(RiskHint);
-        else if (activeAOEs.Any(c => !c.Risky && c.Check(actor.Position)))
-            hints.Add(RiskHint2 + $" {(activeAOEs.FirstOrDefault(c => !c.Risky && c.Check(actor.Position)).Activation - WorldState.CurrentTime).TotalSeconds:F1}s until activation.");
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (aoe.Check(actor.Position))
+            {
+                if (aoe.Risky)
+                    hints.Add("GTFO from wind area!");
+                else
+                    hints.Add("Leave unsafe area!" + $" {(aoe.Activation - WorldState.CurrentTime).TotalSeconds:F1}s until activation.");
+            }
+        }
     }
 }
 
-class WingCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingCutter), new AOEShapeCone(6.9f, 30.Degrees()));
-class DoubleSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DoubleSmash), new AOEShapeCone(7.69f, 60.Degrees()));
-class SicklySneeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SicklySneeze), new AOEShapeCone(7.9f, 45.Degrees()));
+class WingCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WingCutter), new AOEShapeCone(6.9f, 30f.Degrees()));
+class DoubleSmash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DoubleSmash), new AOEShapeCone(7.69f, 60f.Degrees()));
+class SicklySneeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SicklySneeze), new AOEShapeCone(7.9f, 45f.Degrees()));
 
 class D260NorthernBateleurStates : StateMachineBuilder
 {
@@ -97,8 +107,20 @@ class D260NorthernBateleurStates : StateMachineBuilder
             .ActivateOnEnter<WingCutter>()
             .ActivateOnEnter<DoubleSmash>()
             .ActivateOnEnter<SicklySneeze>()
-            .Raw.Update = () => module.Enemies(D260NorthernBateleur.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(x => x.IsDeadOrDestroyed)
-            || module.Enemies(OID.Yeti).Any(x => x.InCombat);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(D260NorthernBateleur.Trash);
+                var center = module.Arena.Center;
+                var radius = module.Bounds.Radius;
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed && enemy.Position.AlmostEqual(center, radius))
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -179,10 +201,31 @@ public class D260NorthernBateleur(WorldState ws, Actor primary) : BossModule(ws,
     private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
     public static readonly ArenaBoundsComplex Arena2 = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.IceSprite, (uint)OID.Boss, (uint)OID.Hrimthurs, (uint)OID.SnowcloakGoobbue];
-    protected override bool CheckPull() => Enemies(Trash).Any(x => x.InCombat && x.Position.AlmostEqual(Arena.Center, Bounds.Radius));
+
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash).Where(x => x.Position.AlmostEqual(Arena.Center, Bounds.Radius)));
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        var center = Arena.Center;
+        var radius = Bounds.Radius;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.Position.AlmostEqual(center, radius))
+                Arena.Actor(enemy);
+        }
     }
 }

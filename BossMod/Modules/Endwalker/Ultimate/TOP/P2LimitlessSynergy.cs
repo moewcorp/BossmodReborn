@@ -1,16 +1,16 @@
 ﻿namespace BossMod.Endwalker.Ultimate.TOP;
 
-class P2OptimizedSagittariusArrow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimizedSagittariusArrow), new AOEShapeRect(100, 5));
+class P2OptimizedSagittariusArrow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimizedSagittariusArrow), new AOEShapeRect(100f, 5f));
 
 class P2OptimizedBladedance : Components.BaitAwayTethers
 {
-    public P2OptimizedBladedance(BossModule module) : base(module, new AOEShapeCone(100, 45.Degrees()), (uint)TetherID.OptimizedBladedance, ActionID.MakeSpell(AID.OptimizedBladedanceAOE))
+    public P2OptimizedBladedance(BossModule module) : base(module, new AOEShapeCone(100f, 45f.Degrees()), (uint)TetherID.OptimizedBladedance, ActionID.MakeSpell(AID.OptimizedBladedanceAOE))
     {
         ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(p => p.Role != Role.Tank).Mask();
     }
 }
 
-class P2BeyondDefense(BossModule module) : Components.UniformStackSpread(module, 6, 5, 3, alwaysShowSpreads: true)
+class P2BeyondDefense(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 3, alwaysShowSpreads: true)
 {
     public enum Mechanic { None, Spread, Stack }
 
@@ -46,12 +46,12 @@ class P2BeyondDefense(BossModule module) : Components.UniformStackSpread(module,
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.SyntheticShield:
+            case (uint)AID.SyntheticShield:
                 _source = caster;
                 break;
-            case AID.BeyondDefense:
+            case (uint)AID.BeyondDefense:
                 _source = caster;
                 CurMechanic = Mechanic.Spread;
                 _activation = Module.CastFinishAt(spell, 0.2f);
@@ -61,15 +61,15 @@ class P2BeyondDefense(BossModule module) : Components.UniformStackSpread(module,
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.BeyondDefenseAOE:
+            case (uint)AID.BeyondDefenseAOE:
                 foreach (var t in spell.Targets)
-                    _forbiddenStack.Set(Raid.FindSlot(t.ID));
+                    _forbiddenStack[Raid.FindSlot(t.ID)] = true;
                 CurMechanic = Mechanic.Stack;
-                _activation = WorldState.FutureTime(3.2f);
+                _activation = WorldState.FutureTime(3.2d);
                 break;
-            case AID.PilePitch:
+            case (uint)AID.PilePitch:
                 CurMechanic = Mechanic.None;
                 break;
         }
@@ -91,13 +91,13 @@ class P2OptimizedPassageOfArms(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Invincibility && (OID)actor.OID == OID.OmegaM)
+        if (status.ID == (uint)SID.Invincibility && actor.OID == (uint)OID.OmegaM)
             _invincible = actor;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Invincibility && _invincible == actor)
+        if (status.ID == (uint)SID.Invincibility && _invincible == actor)
             _invincible = null;
     }
 }

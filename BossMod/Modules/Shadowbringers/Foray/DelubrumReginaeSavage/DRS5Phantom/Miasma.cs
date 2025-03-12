@@ -13,7 +13,7 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
         public WPos NextOrigin;
     }
 
-    public int NumLanesFinished { get; private set; }
+    public int NumLanesFinished;
     private readonly LaneState[,] _laneStates = new LaneState[4, 2];
     private Order _order;
 
@@ -21,21 +21,41 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeCircle = new(8);
     private static readonly AOEShapeDonut _shapeDonut = new(5, 19);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_order == Order.Unknown)
-            yield break;
+            return [];
 
         var (order1, order2) = _order == Order.HighLow ? (1, 0) : (0, 1);
+
+        var count = 0;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (_laneStates[i, order1].Shape != null)
+                ++count;
+            if (_laneStates[i, order2].Shape != null && (_laneStates[i, order1].Shape == null || _laneStates[i, order1].Shape == _shapeDonut && _laneStates[i, order2].Shape == _shapeRect))
+                ++count;
+        }
+
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
         for (var i = 0; i < 4; ++i)
         {
             var l1 = _laneStates[i, order1];
             var l2 = _laneStates[i, order2];
+
             if (l1.Shape != null)
-                yield return new(l1.Shape, l1.NextOrigin, new(), l1.Activation);
+                aoes[index++] = new(l1.Shape, l1.NextOrigin, new(), l1.Activation);
+
             if (l2.Shape != null && (l1.Shape == null || l1.Shape == _shapeDonut && l2.Shape == _shapeRect))
-                yield return new(l2.Shape, l2.NextOrigin, new(), l2.Activation);
+                aoes[index++] = new(l2.Shape, l2.NextOrigin, new(), l2.Activation);
         }
+
+        return aoes;
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -46,10 +66,10 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var order = (AID)spell.Action.ID switch
+        var order = spell.Action.ID switch
         {
-            AID.ManipulateMiasma => Order.LowHigh,
-            AID.InvertMiasma => Order.HighLow,
+            (uint)AID.ManipulateMiasma => Order.LowHigh,
+            (uint)AID.InvertMiasma => Order.HighLow,
             _ => Order.Unknown
         };
         if (order != Order.Unknown)
@@ -58,18 +78,18 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        AOEShape? shape = (AID)spell.Action.ID switch
+        AOEShape? shape = spell.Action.ID switch
         {
-            AID.CreepingMiasmaFirst or AID.CreepingMiasmaRest => _shapeRect,
-            AID.LingeringMiasmaFirst or AID.LingeringMiasmaRest => _shapeCircle,
-            AID.SwirlingMiasmaFirst or AID.SwirlingMiasmaRest => _shapeDonut,
+            (uint)AID.CreepingMiasmaFirst or (uint)AID.CreepingMiasmaRest => _shapeRect,
+            (uint)AID.LingeringMiasmaFirst or (uint)AID.LingeringMiasmaRest => _shapeCircle,
+            (uint)AID.SwirlingMiasmaFirst or (uint)AID.SwirlingMiasmaRest => _shapeDonut,
             _ => null
         };
         if (shape == null)
             return;
 
         var laneIndex = LaneIndex(shape == _shapeRect ? caster.Position : spell.TargetXZ);
-        if ((AID)spell.Action.ID is AID.CreepingMiasmaFirst or AID.LingeringMiasmaFirst or AID.SwirlingMiasmaFirst)
+        if (spell.Action.ID is (uint)AID.CreepingMiasmaFirst or (uint)AID.LingeringMiasmaFirst or (uint)AID.SwirlingMiasmaFirst)
         {
             var heightIndex = (_laneStates[laneIndex, 0].NumCasts, _laneStates[laneIndex, 1].NumCasts) switch
             {
@@ -112,21 +132,21 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
     {
         if (state != 0x00010002)
             return; // other states: 00080010 - start glowing, 00040020 - disappear
-        AOEShape? shape = (OID)actor.OID switch
+        AOEShape? shape = actor.OID switch
         {
-            OID.MiasmaLowRect or OID.MiasmaHighRect => _shapeRect,
-            OID.MiasmaLowCircle or OID.MiasmaHighCircle => _shapeCircle,
-            OID.MiasmaLowDonut or OID.MiasmaHighDonut => _shapeDonut,
+            (uint)OID.MiasmaLowRect or (uint)OID.MiasmaHighRect => _shapeRect,
+            (uint)OID.MiasmaLowCircle or (uint)OID.MiasmaHighCircle => _shapeCircle,
+            (uint)OID.MiasmaLowDonut or (uint)OID.MiasmaHighDonut => _shapeDonut,
             _ => null
         };
         if (shape == null)
             return;
-        var heightIndex = (OID)actor.OID is OID.MiasmaLowRect or OID.MiasmaLowCircle or OID.MiasmaLowDonut ? 0 : 1;
+        var heightIndex = actor.OID is (uint)OID.MiasmaLowRect or (uint)OID.MiasmaLowCircle or (uint)OID.MiasmaLowDonut ? 0 : 1;
         var laneIndex = LaneIndex(actor.Position);
-        _laneStates[laneIndex, heightIndex] = new() { Shape = shape, Activation = WorldState.FutureTime(16.1f), NextOrigin = new(actor.Position.X, Module.Center.Z - Module.Bounds.Radius + (shape == _shapeRect ? 0 : 5)) };
+        _laneStates[laneIndex, heightIndex] = new() { Shape = shape, Activation = WorldState.FutureTime(16.1d), NextOrigin = new(actor.Position.X, Arena.Center.Z - Arena.Bounds.Radius + (shape == _shapeRect ? 0 : 5)) };
     }
 
-    private int LaneIndex(WPos pos) => (pos.X - Module.Center.X) switch
+    private int LaneIndex(WPos pos) => (pos.X - Arena.Center.X) switch
     {
         < -10 => 0,
         < 0 => 1,
@@ -136,7 +156,7 @@ class Miasma(BossModule module) : Components.GenericAOEs(module)
 
     private void AdvanceLane(ref LaneState lane)
     {
-        lane.Activation = WorldState.FutureTime(1.6f);
+        lane.Activation = WorldState.FutureTime(1.6d);
         ++lane.NumCasts;
         if (lane.Shape == _shapeRect)
         {

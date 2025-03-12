@@ -41,7 +41,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(20f, 23f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FrostingFracas && Arena.Bounds == D021RyoqorTerteh.StartingBounds)
@@ -65,18 +65,18 @@ class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoesCircle = new(4), _aoesRect = new(4);
     private readonly List<Actor> circleAOE = new(4), rectAOE = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countCircle = _aoesCircle.Count;
         var countRect = _aoesRect.Count;
         if (countCircle == 0 && countRect == 0)
             return [];
-        var result = new List<AOEInstance>(4);
+        var aoes = new List<AOEInstance>(4);
         for (var i = 0; i < 2 && i < countCircle; ++i)
-            result.Add(_aoesCircle[i]);
+            aoes.Add(_aoesCircle[i]);
         for (var i = 0; i < 2 && i < countRect; ++i)
-            result.Add(_aoesRect[i]);
-        return result;
+            aoes.Add(_aoesRect[i]);
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnActorCreated(Actor actor)

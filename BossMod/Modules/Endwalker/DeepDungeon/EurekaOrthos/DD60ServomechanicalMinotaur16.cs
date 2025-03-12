@@ -29,7 +29,7 @@ class OctupleSwipe(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeCone cone = new(40f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -88,12 +88,12 @@ class Shock(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(15);
     private static readonly AOEShapeCircle circle = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.BallOfLevin)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(13d)));
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(13d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

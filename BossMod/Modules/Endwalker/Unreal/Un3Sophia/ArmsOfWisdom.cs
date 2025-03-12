@@ -4,10 +4,11 @@ class ArmsOfWisdom(BossModule module) : Components.Knockback(module, ActionID.Ma
 {
     private Actor? _caster;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_caster?.CastInfo?.TargetID == actor.InstanceID)
-            yield return new(_caster.Position, 5, Module.CastFinishAt(_caster.CastInfo));
+            return new Source[1] { new(_caster.Position, 5, Module.CastFinishAt(_caster.CastInfo)) };
+        return [];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

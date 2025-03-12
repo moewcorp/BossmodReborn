@@ -93,7 +93,7 @@ class Hammerfall(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeCircle _shape = new(37);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

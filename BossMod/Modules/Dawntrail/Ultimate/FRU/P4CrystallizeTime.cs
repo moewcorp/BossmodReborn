@@ -184,7 +184,14 @@ class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(mod
 
     private static readonly AOEShapeCircle _shape = new(12f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Take(2);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var max = count > 4 ? 4 : count;
+        return CollectionsMarshal.AsSpan(AOEs)[..max];
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
@@ -193,7 +200,7 @@ class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(mod
     {
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
-            AOEs.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(13.2d)));
+            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(13.2d)));
             AOEs.SortBy(aoe => aoe.Activation);
         }
     }
@@ -283,7 +290,7 @@ class P4CrystallizeTimeDarkAero(BossModule module) : Components.Knockback(module
 
     private static readonly AOEShapeCircle _shape = new(15f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         var count = _sources.Count;
         if (count == 0)
@@ -295,7 +302,7 @@ class P4CrystallizeTimeDarkAero(BossModule module) : Components.Knockback(module
             if (s != actor)
                 sources.Add(new(s.Position, 30f, _activation, _shape));
         }
-        return sources;
+        return CollectionsMarshal.AsSpan(sources);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -566,11 +573,21 @@ class P4CrystallizeTimeRewind(BossModule module) : Components.Knockback(module)
     private readonly P4CrystallizeTime? _ct = module.FindComponent<P4CrystallizeTime>();
     private readonly P4CrystallizeTimeTidalLight? _exalines = module.FindComponent<P4CrystallizeTimeTidalLight>();
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (!RewindDone && _ct != null && _exalines != null && _ct.Cleansed[slot])
-            foreach (var s in _exalines.StartingPositions)
-                yield return new(s.pos, 20f, Direction: s.dir, Kind: Kind.DirForward);
+        {
+            var exas = _exalines.StartingPositions;
+            var count = exas.Count;
+            var sources = new List<Source>();
+            for (var i = 0; i < count; ++i)
+            {
+                var s = exas[i];
+                sources.Add(new(s.pos, 20f, Direction: s.dir, Kind: Kind.DirForward));
+            }
+            return CollectionsMarshal.AsSpan(sources);
+        }
+        return [];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

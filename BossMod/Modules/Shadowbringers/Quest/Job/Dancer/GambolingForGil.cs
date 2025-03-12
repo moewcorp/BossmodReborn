@@ -16,53 +16,92 @@ public enum AID : uint
     RanaasFinish = 15646, // Boss->self, 6.0s cast, range 15 circle
 }
 
-class Foxshot(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Foxshot), 2);
+class Foxshot(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Foxshot), 2f);
+
 class FoxshotKB(BossModule module) : Components.Knockback(module, stopAtWall: true)
 {
-    private readonly List<Actor> Casters = [];
-    private Whirlwind? ww;
+    private Actor? _caster;
+    private readonly Whirlwind _aoe = module.FindComponent<Whirlwind>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Casters.Select(c => new Source(c.Position, 25, Module.CastFinishAt(c.CastInfo)));
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
+    {
+        if (_caster is Actor c)
+            return new Source[1] { new(c.Position, 25f, Module.CastFinishAt(c.CastInfo)) };
+        return [];
+    }
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        ww ??= Module.FindComponent<Whirlwind>();
-
-        if (Casters.FirstOrDefault() is not Actor source)
-            return;
-
-        var sources = ww?.Sources(Module).Select(p => p.Position).ToList() ?? [];
-        if (sources.Count == 0)
-            return;
-
-        hints.AddForbiddenZone(p =>
+        if (_caster is Actor source)
         {
-            foreach (var s in sources)
-                if (Intersect.RayCircle(source.Position, source.DirectionTo(p), s, 6) < 1000)
-                    return -1;
+            var aoes = _aoe.ActiveAOEs(slot, actor).ToArray();
+            var len = aoes.Length;
+            if (len == 0)
+                return;
 
-            return 1;
-        }, Module.CastFinishAt(source.CastInfo));
+            hints.AddForbiddenZone(p =>
+            {
+                ref readonly var a = ref aoes;
+                for (var i = 0; i < len; ++i)
+                    if (Intersect.RayCircle(source.Position, source.DirectionTo(p), a[i].Origin, 6f) < 1000f)
+                        return -1f;
+
+                return 1f;
+            }, Module.CastFinishAt(source.CastInfo));
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Foxshot)
-            Casters.Add(caster);
+            _caster = caster;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Foxshot)
-            Casters.Remove(caster);
+            _caster = null;
     }
 }
-class Whirlwind(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.Whirlwind).Where(x => !x.IsDead));
-class WarDance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WarDance), 5);
+
+class Whirlwind(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Whirlwind);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+class WarDance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WarDance), 5f);
 class CharmingChasse(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CharmingChasse));
-class HannishFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HannishFire1), 6);
-class HannishWaters(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HannishWaters), new AOEShapeCone(40, 15.Degrees()));
-class RanaasFinish(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RanaasFinish), 15);
+class HannishFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HannishFire1), 6f);
+class HannishWaters(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HannishWaters), new AOEShapeCone(40f, 15f.Degrees()));
+class RanaasFinish(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RanaasFinish), 15f);
 
 class RanaaMihgoStates : StateMachineBuilder
 {

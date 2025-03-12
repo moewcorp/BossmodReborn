@@ -1,23 +1,37 @@
 ﻿namespace BossMod.Heavensward.Alliance.A12IrminsulSawtooth;
 
-class WhiteBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhiteBreath), new AOEShapeCone(28, 60.Degrees()));
-class MeanThrash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeanThrash), new AOEShapeCone(12, 60.Degrees()));
-class MeanThrashKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.MeanThrash), 10, stopAtWall: true);
-class MucusBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MucusBomb), 10);
-class MucusSpray(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MucusSpray2), new AOEShapeDonut(6, 20));
+class WhiteBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhiteBreath), new AOEShapeCone(28f, 60f.Degrees()));
+class MeanThrash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeanThrash), new AOEShapeCone(12f, 60f.Degrees()));
+class MeanThrashKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.MeanThrash), 10f, stopAtWall: true);
+class MucusBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MucusBomb), 10f);
+class MucusSpray(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MucusSpray2), new AOEShapeDonut(6f, 20f));
 class Rootstorm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Rootstorm));
-class Ambush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ambush), 9);
-class AmbushKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Ambush), 30, stopAtWall: true, kind: Kind.TowardsOrigin);
+class Ambush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ambush), 9f);
+class AmbushKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Ambush), 30f, stopAtWall: true, kind: Kind.TowardsOrigin);
 
-class ShockwaveStomp(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ShockwaveStomp), 70)
+class ShockwaveStomp(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ShockwaveStomp), 70f)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.Irminsul).Where(a => !a.IsDead);
+    public override ReadOnlySpan<Actor> BlockerActors()
+    {
+        var boulders = Module.Enemies((uint)OID.Irminsul);
+        var count = boulders.Count;
+        if (count == 0)
+            return [];
+        var actors = new List<Actor>();
+        for (var i = 0; i < count; ++i)
+        {
+            var b = boulders[i];
+            if (!b.IsDead)
+                actors.Add(b);
+        }
+        return CollectionsMarshal.AsSpan(actors);
+    }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", PrimaryActorOID = (uint)OID.Irminsul, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 120, NameID = 4623)]
 public class A12IrminsulSawtooth(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 130), arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Donut(new(0, 130), 8, 35)]);
+    private static readonly ArenaBoundsComplex arena = new([new Donut(new(default, 130f), 8, 35)]);
     private Actor? _sawtooth;
 
     public Actor? Irminsul() => PrimaryActor;
@@ -27,13 +41,13 @@ public class A12IrminsulSawtooth(WorldState ws, Actor primary) : BossModule(ws, 
     {
         // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
         // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        _sawtooth ??= StateMachine.ActivePhaseIndex == 0 ? Enemies(OID.Sawtooth).FirstOrDefault() : null;
+        _sawtooth ??= StateMachine.ActivePhaseIndex == 0 ? Enemies((uint)OID.Sawtooth)[0] : null;
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
         Arena.Actor(_sawtooth);
-        Arena.Actors(Enemies(OID.ArkKed));
+        Arena.Actors(Enemies((uint)OID.ArkKed));
     }
 }

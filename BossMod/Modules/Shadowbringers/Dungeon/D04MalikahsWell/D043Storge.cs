@@ -40,7 +40,7 @@ class HereticsForkBreakingWheelStreak(BossModule module) : Components.GenericAOE
     private static readonly AOEShapeCross cross = new(60f, 5f);
     private readonly List<AOEInstance> _aoes = new(5);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

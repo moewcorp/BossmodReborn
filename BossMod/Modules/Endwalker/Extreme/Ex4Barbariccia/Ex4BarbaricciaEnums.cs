@@ -31,7 +31,7 @@ public enum AID : uint
     SavageBarberyRect2 = 29835, // Boss->self, 6.0s cast, single-target, visual
     SavageBarberyRectAOE = 30074, // Helper->self, 7.0s cast, range 40 width 12 rect
     SavageBarberyRectSword = 30075, // Helper->self, 9.1s cast, range 20 circle
-    //BrushWithDeathSavageBarbery = 30116, // Boss->self, no cast, single-target, visual ???
+    BrushWithDeathSavageBarbery = 30116, // Boss->self, no cast, single-target, visual ???
     HairRaidCone = 30076, // Boss->location, 6.0s cast, visual + teleport
     HairRaidConeAOE = 30077, // Helper->self, 8.0s cast, range 40 ?-degree cone
     HairRaidDonut = 30078, // Boss->self, 6.0s cast, single-target, visual

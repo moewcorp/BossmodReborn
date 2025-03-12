@@ -7,7 +7,7 @@ class Fireworks(BossModule module) : Components.UniformStackSpread(module, 3, 20
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (TetheredAdds[slot] is var add && add != null)
-            hints.Add($"Tether: {((OID)add.OID is OID.NSurprisingMissile or OID.SSurprisingMissile ? "missile" : "claw")}", false);
+            hints.Add($"Tether: {(add.OID is (uint)OID.NSurprisingMissile or (uint)OID.SSurprisingMissile ? "missile" : "claw")}", false);
         base.AddHints(slot, actor, hints);
     }
 
@@ -16,40 +16,40 @@ class Fireworks(BossModule module) : Components.UniformStackSpread(module, 3, 20
         if (TetheredAdds[pcSlot] is var add && add != null)
         {
             Arena.Actor(add, Colors.Object, true);
-            Arena.AddLine(add.Position, pc.Position, Colors.Danger);
+            Arena.AddLine(add.Position, pc.Position);
         }
         base.DrawArenaForeground(pcSlot, pc);
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID == TetherID.Follow && Raid.FindSlot(tether.Target) is var slot && slot >= 0 && slot < TetheredAdds.Length)
+        if (tether.ID == (uint)TetherID.Follow && Raid.FindSlot(tether.Target) is var slot && slot >= 0 && slot < TetheredAdds.Length)
             TetheredAdds[slot] = source;
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        switch ((IconID)iconID)
+        switch (iconID)
         {
-            case IconID.FireworksSpread:
-                AddSpread(actor, WorldState.FutureTime(9.1f));
+            case (uint)IconID.FireworksSpread:
+                AddSpread(actor, WorldState.FutureTime(9.1d));
                 break;
-            case IconID.FireworksEnumeration:
-                AddStack(actor, WorldState.FutureTime(8.2f));
+            case (uint)IconID.FireworksEnumeration:
+                AddStack(actor, WorldState.FutureTime(8.2d));
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.NFireworksStack:
-            case AID.SFireworksStack:
+            case (uint)AID.NFireworksStack:
+            case (uint)AID.SFireworksStack:
                 Stacks.Clear();
                 break;
-            case AID.NFireworksSpread:
-            case AID.SFireworksSpread:
+            case (uint)AID.NFireworksSpread:
+            case (uint)AID.SFireworksSpread:
                 Spreads.Clear();
                 break;
         }
@@ -74,20 +74,20 @@ class BurningChains(BossModule module) : BossComponent(module)
         {
             var partner = Raid[_chains.WithoutBit(pcSlot).LowestSetBit()];
             if (partner != null)
-                Arena.AddLine(pc.Position, partner.Position, Colors.Safe, 1);
+                Arena.AddLine(pc.Position, partner.Position, Colors.Safe, 1f);
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.BurningChains)
-            _chains.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.BurningChains)
+            _chains[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.BurningChains)
-            _chains.Clear(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.BurningChains)
+            _chains[Raid.FindSlot(actor.InstanceID)] = false;
     }
 }
 
@@ -103,41 +103,51 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
     public List<Sequence> Sequences = [];
     private Angle _rotation;
 
-    private static readonly AOEShapeRect _shape = new(20, 2.5f, -8);
-    private const int _maxShownExplosions = 3;
+    private static readonly AOEShapeRect _shape = new(20f, 2.5f, -8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        // future explosions
-        foreach (var s in Sequences)
+        var count = 0;
+
+        var countS = Sequences.Count;
+        for (var i = 0; i < countS; ++i)
         {
-            var rot = s.NextRotation + _rotation;
-            var act = s.NextActivation.AddSeconds(1.1f);
-            var max = Math.Min(s.RemainingExplosions, _maxShownExplosions);
-            for (var i = 1; i < max; ++i)
-            {
-                yield return new(_shape, Module.Center, rot, act);
-                rot += _rotation;
-                act = act.AddSeconds(1.1f);
-            }
+            var s = Sequences[i];
+            count += Math.Min(s.RemainingExplosions, 3);
         }
 
-        // imminent explosions
-        foreach (var s in Sequences)
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+        var center = WPos.ClampToGrid(Arena.Center);
+        for (var i = 0; i < countS; ++i)
         {
+            var s = Sequences[i];
+            var rot = s.NextRotation + _rotation;
+            var act = s.NextActivation.AddSeconds(1.1d);
+            var max = Math.Min(s.RemainingExplosions, 3);
+            for (var j = 1; j < max; ++j)
+            {
+                aoes[index++] = new(_shape, center, rot, act);
+                rot += _rotation;
+                act = act.AddSeconds(1.1d);
+            }
             if (s.RemainingExplosions > 0)
             {
-                yield return new(_shape, Module.Center, s.NextRotation, s.NextActivation, Colors.Danger);
+                aoes[index++] = new(_shape, center, s.NextRotation, s.NextActivation, Colors.Danger);
             }
         }
+        return aoes;
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var rot = (IconID)iconID switch
+        var rot = iconID switch
         {
-            IconID.RotateCW => -10.Degrees(),
-            IconID.RotateCCW => 10.Degrees(),
+            (uint)IconID.RotateCW => -10f.Degrees(),
+            (uint)IconID.RotateCCW => 10f.Degrees(),
             _ => default
         };
         if (rot != default)
@@ -146,13 +156,13 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NFireSpreadFirst or AID.SFireSpreadFirst)
+        if (spell.Action.ID is (uint)AID.NFireSpreadFirst or (uint)AID.SFireSpreadFirst)
             Sequences.Add(new() { NextRotation = spell.Rotation, RemainingExplosions = 12, NextActivation = Module.CastFinishAt(spell) });
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NFireSpreadFirst or AID.NFireSpreadRest or AID.SFireSpreadFirst or AID.SFireSpreadRest)
+        if (spell.Action.ID is (uint)AID.NFireSpreadFirst or (uint)AID.NFireSpreadRest or (uint)AID.SFireSpreadFirst or (uint)AID.SFireSpreadRest)
         {
             ++NumCasts;
             var index = Sequences.FindIndex(s => s.NextRotation.AlmostEqual(caster.Rotation, 0.1f));
@@ -162,7 +172,7 @@ class FireSpread(BossModule module) : Components.GenericAOEs(module)
                 if (--s.RemainingExplosions > 0)
                 {
                     s.NextRotation += _rotation;
-                    s.NextActivation = WorldState.FutureTime(1.1f);
+                    s.NextActivation = WorldState.FutureTime(1.1d);
                 }
                 else
                 {
@@ -212,44 +222,44 @@ class Fireworks1Hints(BossModule module) : BossComponent(module)
         switch (_pattern.Raw)
         {
             case 0x3: // 0+1: easy pattern, N + CW
-                AddSafeSpot(_safeSpotsClaw, -45.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 50.Degrees());
+                AddSafeSpot(_safeSpotsClaw, -45f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 50f.Degrees());
                 break;
             case 0x11: // 0+4: easy pattern, N + CCW
-                AddSafeSpot(_safeSpotsClaw, 45.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -50.Degrees());
+                AddSafeSpot(_safeSpotsClaw, 45f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -50f.Degrees());
                 break;
             case 0x5: // 0+2: hard pattern, N + CW
-                AddSafeSpot(_safeSpotsClaw, -135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 125.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -35.Degrees());
+                AddSafeSpot(_safeSpotsClaw, -135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 125f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -35f.Degrees());
                 break;
             case 0x9: // 0+3: hard pattern, N + CCW
-                AddSafeSpot(_safeSpotsClaw, 135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -125.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 35.Degrees());
+                AddSafeSpot(_safeSpotsClaw, 135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -125f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 35f.Degrees());
                 break;
             case 0x6: // 1+2: easy pattern, E
-                AddSafeSpot(_safeSpotsClaw, -135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 150.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -45.Degrees());
+                AddSafeSpot(_safeSpotsClaw, -135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 150f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -45f.Degrees());
                 break;
             case 0x18: // 3+4: easy pattern, W
-                AddSafeSpot(_safeSpotsClaw, 135.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -150.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 45.Degrees());
+                AddSafeSpot(_safeSpotsClaw, 135f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -150f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 45f.Degrees());
                 break;
             case 0xA: // 1+3: hard pattern, NE + SW
-                AddSafeSpot(_safeSpotsClaw, 150.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 30.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -120.Degrees());
+                AddSafeSpot(_safeSpotsClaw, 150f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 30f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -120f.Degrees());
                 break;
             case 0x14: // 2+4: hard pattern, NW + SE
-                AddSafeSpot(_safeSpotsClaw, -150.Degrees());
-                AddSafeSpot(_safeSpotsMissile, -30.Degrees());
-                AddSafeSpot(_safeSpotsMissile, 120.Degrees());
+                AddSafeSpot(_safeSpotsClaw, -150f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, -30f.Degrees());
+                AddSafeSpot(_safeSpotsMissile, 120f.Degrees());
                 break;
             case 0x12: // 1+4: never seen
             case 0xC: // 2+3: never seen
@@ -269,18 +279,18 @@ class Fireworks1Hints(BossModule module) : BossComponent(module)
     {
         if (_fireworks?.TetheredAdds[pcSlot] is var add && add != null)
         {
-            var safeSpots = (OID)add.OID is OID.NSurprisingClaw or OID.SSurprisingClaw ? _safeSpotsClaw : _safeSpotsMissile;
+            var safeSpots = add.OID is (uint)OID.NSurprisingClaw or (uint)OID.SSurprisingClaw ? _safeSpotsClaw : _safeSpotsMissile;
             foreach (var p in safeSpots)
-                Arena.AddCircle(p, 1, Colors.Safe);
+                Arena.AddCircle(p, 1f, Colors.Safe);
         }
         else
         {
             foreach (var p in _safeSpotsClaw)
-                Arena.AddCircle(p, 1, Colors.Enemy);
+                Arena.AddCircle(p, 1f, Colors.Enemy);
         }
     }
 
-    private void AddSafeSpot(List<WPos> list, Angle angle) => list.Add(Module.Center + 19 * angle.ToDirection());
+    private void AddSafeSpot(List<WPos> list, Angle angle) => list.Add(Arena.Center + 19f * angle.ToDirection());
 }
 
 class Fireworks2Hints(BossModule module) : BossComponent(module)
@@ -296,7 +306,7 @@ class Fireworks2Hints(BossModule module) : BossComponent(module)
         if (_relNorth == null && _fireSpread?.Sequences.Count == 3 && _dartboard != null && _dartboard.ForbiddenColor != Dartboard.Color.None)
         {
             // relative north is the direction to fire spread that has two non-forbidden colors at both sides
-            _relNorth = _fireSpread.Sequences.FirstOrDefault(s => _dartboard.DirToColor(s.NextRotation - 5.Degrees(), false) != _dartboard.ForbiddenColor && _dartboard.DirToColor(s.NextRotation + 5.Degrees(), false) != _dartboard.ForbiddenColor).NextRotation;
+            _relNorth = _fireSpread.Sequences.FirstOrDefault(s => _dartboard.DirToColor(s.NextRotation - 5f.Degrees(), false) != _dartboard.ForbiddenColor && _dartboard.DirToColor(s.NextRotation + 5.Degrees(), false) != _dartboard.ForbiddenColor).NextRotation;
         }
     }
 
@@ -305,12 +315,12 @@ class Fireworks2Hints(BossModule module) : BossComponent(module)
         if (_fireworks?.Spreads.Count > 0)
         {
             foreach (var dir in SafeSpots(pcSlot, pc))
-                Arena.AddCircle(Module.Center + 19 * dir.ToDirection(), 1, Colors.Safe);
+                Arena.AddCircle(Module.Center + 19f * dir.ToDirection(), 1f, Colors.Safe);
         }
         else if (_relNorth != null)
         {
             // show rel north before assignments are done
-            Arena.AddCircle(Module.Center + 19 * _relNorth.Value.ToDirection(), 1, Colors.Enemy);
+            Arena.AddCircle(Module.Center + 19f * _relNorth.Value.ToDirection(), 1f, Colors.Enemy);
         }
     }
 

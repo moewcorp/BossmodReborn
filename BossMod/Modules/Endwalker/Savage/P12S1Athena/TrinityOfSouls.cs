@@ -6,9 +6,9 @@ class TrinityOfSouls(BossModule module) : Components.GenericAOEs(module)
     private uint _moves; // bit 0 - move after first, bit1 - move after second
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCone _shape = new(60, 90.Degrees());
+    private static readonly AOEShapeCone _shape = new(60f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -27,65 +27,71 @@ class TrinityOfSouls(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var (angle, invert) = (AID)spell.Action.ID switch
+        var invert = spell.Action.ID switch
         {
-            AID.TrinityOfSoulsDirectTR => (-90.Degrees(), false),
-            AID.TrinityOfSoulsDirectTL => (90.Degrees(), false),
-            AID.TrinityOfSoulsInvertBR => (-90.Degrees(), true),
-            AID.TrinityOfSoulsInvertBL => (90.Degrees(), true),
-            _ => (new Angle(), false)
+            (uint)AID.TrinityOfSoulsDirectTR => false,
+            (uint)AID.TrinityOfSoulsDirectTL => false,
+            (uint)AID.TrinityOfSoulsInvertBR => true,
+            (uint)AID.TrinityOfSoulsInvertBL => true,
+            _ => (bool?)null
         };
-        if (angle != default)
+        if (invert != null)
         {
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _invertMiddle = invert;
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _invertMiddle = invert.Value;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TrinityOfSoulsDirectTR or AID.TrinityOfSoulsDirectTL or AID.TrinityOfSoulsDirectMR or AID.TrinityOfSoulsDirectML or AID.TrinityOfSoulsDirectBR or AID.TrinityOfSoulsDirectBL
-            or AID.TrinityOfSoulsInvertBR or AID.TrinityOfSoulsInvertBL or AID.TrinityOfSoulsInvertMR or AID.TrinityOfSoulsInvertML or AID.TrinityOfSoulsInvertTR or AID.TrinityOfSoulsInvertTL)
+        switch (spell.Action.ID)
         {
-            if (_aoes.Count > 0)
-                _aoes.RemoveAt(0);
-            ++NumCasts;
+            case (uint)AID.TrinityOfSoulsDirectTR or (uint)AID.TrinityOfSoulsDirectTL or
+                (uint)AID.TrinityOfSoulsDirectMR or (uint)AID.TrinityOfSoulsDirectML or
+                (uint)AID.TrinityOfSoulsDirectBR or (uint)AID.TrinityOfSoulsDirectBL or
+                (uint)AID.TrinityOfSoulsInvertBR or (uint)AID.TrinityOfSoulsInvertBL or
+                (uint)AID.TrinityOfSoulsInvertMR or (uint)AID.TrinityOfSoulsInvertML or
+                (uint)AID.TrinityOfSoulsInvertTR or (uint)AID.TrinityOfSoulsInvertTL:
+                if (_aoes.Count > 0)
+                    _aoes.RemoveAt(0);
+                ++NumCasts;
+                break;
         }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        switch ((IconID)iconID)
+        switch (iconID)
         {
-            case IconID.WingTLFirst:
-                VerifyFirstAOE(90.Degrees(), false);
+            case (uint)IconID.WingTLFirst:
+                VerifyFirstAOE(90f.Degrees(), false);
                 break;
-            case IconID.WingTRFirst:
-                VerifyFirstAOE(-90.Degrees(), false);
+            case (uint)IconID.WingTRFirst:
+                VerifyFirstAOE(-90f.Degrees(), false);
                 break;
-            case IconID.WingML:
-                AddSubsequentAOE(90.Degrees(), false);
+            case (uint)IconID.WingML:
+                AddSubsequentAOE(90f.Degrees(), false);
                 break;
-            case IconID.WingMR:
-                AddSubsequentAOE(-90.Degrees(), false);
+            case (uint)IconID.WingMR:
+                AddSubsequentAOE(-90f.Degrees(), false);
                 break;
-            case IconID.WingBLFirst:
-                VerifyFirstAOE(90.Degrees(), true);
+            case (uint)IconID.WingBLFirst:
+                VerifyFirstAOE(90f.Degrees(), true);
                 break;
-            case IconID.WingBRFirst:
-                VerifyFirstAOE(-90.Degrees(), true);
+            case (uint)IconID.WingBRFirst:
+                VerifyFirstAOE(-90f.Degrees(), true);
                 break;
-            case IconID.WingTLLast:
-                AddSubsequentAOE(90.Degrees(), true);
+            case (uint)IconID.WingTLLast:
+                AddSubsequentAOE(90f.Degrees(), true);
                 break;
-            case IconID.WingTRLast:
-                AddSubsequentAOE(-90.Degrees(), true);
+            case (uint)IconID.WingTRLast:
+                AddSubsequentAOE(-90f.Degrees(), true);
                 break;
-            case IconID.WingBLLast:
-                AddSubsequentAOE(90.Degrees(), true);
+            case (uint)IconID.WingBLLast:
+                AddSubsequentAOE(90f.Degrees(), true);
                 break;
-            case IconID.WingBRLast:
-                AddSubsequentAOE(-90.Degrees(), true);
+            case (uint)IconID.WingBRLast:
+                AddSubsequentAOE(-90f.Degrees(), true);
                 break;
         }
     }

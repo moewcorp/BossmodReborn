@@ -50,7 +50,7 @@ class ScraplineTyphoon(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(10f);
     private static readonly AOEShapeDonut donut = new(8f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? [AOEs[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? CollectionsMarshal.AsSpan(AOEs)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

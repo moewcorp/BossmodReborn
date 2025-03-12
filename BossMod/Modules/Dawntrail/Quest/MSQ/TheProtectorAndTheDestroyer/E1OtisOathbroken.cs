@@ -41,39 +41,42 @@ public enum AID : uint
 
 class StormlitShockwave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StormlitShockwave));
 class ValorousAscension(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ValorousAscension));
-class RendPower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RendPower), new AOEShapeCone(40, 15.Degrees()), 6);
+class RendPower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RendPower), new AOEShapeCone(40f, 15f.Degrees()), 6);
 
-class BastionBreaker(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BastionBreaker), 6);
-class HolyBlade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HolyBlade), 6);
+class BastionBreaker(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.BastionBreaker), 6f);
+class HolyBlade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HolyBlade), 6f);
 
-abstract class Circle8(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
+abstract class Circle8(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8f);
 class SearingSlash(BossModule module) : Circle8(module, AID.SearingSlash);
 class ThrownFlames(BossModule module) : Circle8(module, AID.ThrownFlames);
 
-class Electrobeam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Electrobeam), new AOEShapeRect(40, 2));
+class Electrobeam(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Electrobeam), new AOEShapeRect(40f, 2f));
 
 class Rush(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
-            yield break;
-        for (var i = 0; i < (count > 4 ? 4 : count); ++i)
+            return [];
+        var max = count > 4 ? 4 : count;
+        var aoes = new AOEInstance[max];
+        for (var i = 0; i < max; ++i)
         {
             var aoe = _aoes[i];
-            if (i <= 1)
-                yield return count > 2 ? aoe with { Color = Colors.Danger } : aoe;
+            if (i < 2)
+                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
             else
-                yield return aoe with { Risky = false };
+                aoes[i] = aoe with { Risky = false };
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Rush)
+        if (spell.Action.ID == (uint)AID.Rush)
         {
             var dir = spell.LocXZ - caster.Position;
             _aoes.Add(new(new AOEShapeRect(dir.Length(), 2.5f), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell)));
@@ -82,7 +85,7 @@ class Rush(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Rush)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Rush)
             _aoes.RemoveAt(0);
     }
 }

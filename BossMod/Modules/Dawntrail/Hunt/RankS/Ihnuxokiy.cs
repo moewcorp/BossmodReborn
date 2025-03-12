@@ -34,32 +34,40 @@ class AetherstockAbyssalSmog(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Aetherspark { None, Thunderspark, CyclonicRing }
     private Aetherspark currentAetherspark;
-    private static readonly AOEShapeCone cone = new(40, 90.Degrees());
-    private static readonly AOEShapeDonut donut = new(8, 40);
-    private static readonly AOEShapeCircle circle = new(12);
+    private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
+    private static readonly AOEShapeDonut donut = new(8f, 40f);
+    private static readonly AOEShapeCircle circle = new(12f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            yield return _aoes[0] with { Color = Colors.Danger };
-        if (count > 1)
-            yield return _aoes[1];
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Aetherstock1:
+            case (uint)AID.Aetherstock1:
                 currentAetherspark = Aetherspark.Thunderspark;
                 break;
-            case AID.Aetherstock2:
+            case (uint)AID.Aetherstock2:
                 currentAetherspark = Aetherspark.CyclonicRing;
                 break;
-            case AID.AbyssalSmog1:
-            case AID.AbyssalSmog2:
+            case (uint)AID.AbyssalSmog1:
+            case (uint)AID.AbyssalSmog2:
                 var position = Module.PrimaryActor.Position;
                 AOEShape? shape = currentAetherspark == Aetherspark.Thunderspark ? circle : currentAetherspark == Aetherspark.CyclonicRing ? donut : null;
                 _aoes.Add(new(cone, position, spell.Rotation, Module.CastFinishAt(spell)));
@@ -76,12 +84,12 @@ class AetherstockAbyssalSmog(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoes.Count == 0)
             return;
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.AbyssalSmog1:
-            case AID.AbyssalSmog2:
-            case AID.CyclonicRing:
-            case AID.Thunderspark:
+            case (uint)AID.AbyssalSmog1:
+            case (uint)AID.AbyssalSmog2:
+            case (uint)AID.CyclonicRing:
+            case (uint)AID.Thunderspark:
                 _aoes.RemoveAt(0);
                 break;
         }
@@ -90,7 +98,7 @@ class AetherstockAbyssalSmog(BossModule module) : Components.GenericAOEs(module)
 
 class ChaoticStormForcedMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace);
 class ChaoticStorm(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.ChaoticStorm), "Raidwide + forced march debuffs");
-class RazorZephyr(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RazorZephyr), new AOEShapeRect(50, 6));
+class RazorZephyr(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RazorZephyr), new AOEShapeRect(50f, 6f));
 class Blade(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Blade));
 
 class IhnuxokiyStates : StateMachineBuilder

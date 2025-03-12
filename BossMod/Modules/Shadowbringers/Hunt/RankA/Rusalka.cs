@@ -14,31 +14,33 @@ public enum AID : uint
     Flood = 17369 // Boss->self, no cast, range 8 circle
 }
 
-class Hydrocannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hydrocannon), 8);
-class AetherialSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSpark), new AOEShapeRect(12, 2));
+class Hydrocannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hydrocannon), 8f);
+class AetherialSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSpark), new AOEShapeRect(12f, 2f));
 
-class AetherialPull(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AetherialPull), 30, shape: new AOEShapeCircle(30), kind: Kind.TowardsOrigin)
+class AetherialPull(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AetherialPull), 30f, shape: new AOEShapeCircle(30f), kind: Kind.TowardsOrigin)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<Flood>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    private readonly Flood _aoe = module.FindComponent<Flood>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _aoe.AOE is Components.GenericAOEs.AOEInstance aoe && aoe.Check(pos);
 }
 
 class Flood(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
-    private static readonly AOEShapeCircle circle = new(8);
+    public AOEInstance? AOE;
+    private static readonly AOEShapeCircle circle = new(8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AetherialPull)
-            _aoe = new(circle, Module.PrimaryActor.Position, default, Module.CastFinishAt(spell, 3.6f));
+        if (spell.Action.ID == (uint)AID.AetherialPull)
+            AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 3.6f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Flood)
-            _aoe = null;
+        if (spell.Action.ID == (uint)AID.Flood)
+            AOE = null;
     }
 }
 
@@ -49,8 +51,8 @@ class RusalkaStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Hydrocannon>()
             .ActivateOnEnter<AetherialSpark>()
-            .ActivateOnEnter<AetherialPull>()
-            .ActivateOnEnter<Flood>();
+            .ActivateOnEnter<Flood>()
+            .ActivateOnEnter<AetherialPull>();
     }
 }
 

@@ -8,7 +8,8 @@ class CthonicFury(BossModule module) : Components.GenericAOEs(module)
     public static readonly AOEShapeCustom AOEBurningBattlements = new(def, [new Square(A14ShadowLord.ArenaCenter, 11.5f, 45f.Degrees())]);
     private static readonly AOEShapeCustom aoeCthonicFury = new(def, A14ShadowLord.Combined);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.CthonicFuryStart)
@@ -44,7 +45,7 @@ class BurningCourtMoatKeepBattlements(BossModule module) : Components.GenericAOE
     private static readonly AOEShape _shapeM = new AOEShapeDonut(5f, 15f);
     private static readonly AOEShape _shapeK = new AOEShapeRect(23f, 11.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -60,9 +61,10 @@ class BurningCourtMoatKeepBattlements(BossModule module) : Components.GenericAOE
         {
             ++NumCasts;
             var count = AOEs.Count;
+            var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].ActorID == caster.InstanceID)
+                if (AOEs[i].ActorID == id)
                 {
                     AOEs.RemoveAt(i);
                     break;

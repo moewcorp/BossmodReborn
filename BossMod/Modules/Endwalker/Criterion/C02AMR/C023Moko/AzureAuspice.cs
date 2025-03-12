@@ -27,13 +27,20 @@ class Upwell(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect _shapeWide = new(30f, 5f, 30f);
     private static readonly AOEShapeRect _shapeNarrow = new(30f, 2.5f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: think about imminent/future color/risk, esp for overlapping lines
         var imminentDeadline = WorldState.FutureTime(5d);
-        foreach (var l in _lines)
+        var count = _lines.Count;
+        var aoes = new List<AOEInstance>();
+        for (var i = 0; i < count; ++i)
+        {
+            var l = _lines[i];
             if (l.NextShape != null && l.NextActivation <= imminentDeadline)
-                yield return new(l.NextShape, l.NextOrigin, l.Rotation, l.NextActivation);
+                aoes.Add(new(l.NextShape, l.NextOrigin, l.Rotation, l.NextActivation));
+
+        }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -8,7 +8,7 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
     private byte _index;
     private WPos position;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

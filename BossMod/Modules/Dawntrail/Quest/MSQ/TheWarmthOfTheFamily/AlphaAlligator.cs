@@ -66,7 +66,21 @@ class AlphaAlligatorStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<FeedingTime>()
             .ActivateOnEnter<CriticalBite>()
-            .Raw.Update = () => module.Enemies(AlphaAlligator.All).Any(x => x.IsDestroyed) || module.Enemies(OID.AlphaAlligator).Any(x => x.IsDead);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(AlphaAlligator.All);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDestroyed)
+                        return false;
+                }
+                var alpha = module.Enemies((uint)OID.AlphaAlligator);
+                if (alpha.Count != 0 && alpha[0].IsDead)
+                    return true;
+                return true;
+            };
     }
 }
 

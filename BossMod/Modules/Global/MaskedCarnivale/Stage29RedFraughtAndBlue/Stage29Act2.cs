@@ -46,75 +46,76 @@ public enum SID : uint
 }
 
 class BigSplash(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BigSplashFirst), "Diamondback! (Multiple raidwides + knockbacks)");
-class BigSplashKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BigSplashFirst), 25);
+class BigSplashKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BigSplashFirst), 25f);
 class Cascade(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Cascade), "Raidwide + Tornados spawn");
 class WateryGrasp(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.WateryGrasp), "Spawns hands. Focus left hand first.");
 class Throttle(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Throttle), "Prepare to use Excuviation to remove debuff");
 class FluidSwing(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.FluidSwing));
-class FluidSwingKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FluidSwing), 50, kind: Kind.DirForward);
+class FluidSwingKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.FluidSwing), 50f, kind: Kind.DirForward);
 
-abstract class ProteanWave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(39, 15.Degrees()));
+abstract class ProteanWave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(39f, 15f.Degrees()));
 class ProteanWave1(BossModule module) : ProteanWave(module, AID.ProteanWave1);
 class ProteanWave3(BossModule module) : ProteanWave(module, AID.ProteanWave3);
 
 class KnockbackPull(BossModule module) : Components.Knockback(module)
 {
     private Source? _knockback;
+    private readonly FluidConvectionDynamic _aoe = module.FindComponent<FluidConvectionDynamic>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_aoe.AOE != null)
+            if (_aoe.AOE.Value.Check(pos))
+                return true;
+        return !Module.InBounds(pos);
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FerrofluidKB)
-            _knockback = new(Module.PrimaryActor.Position, 6, Module.CastFinishAt(spell));
-        else if ((AID)spell.Action.ID == AID.FerrofluidAttract)
-            _knockback = new(Module.PrimaryActor.Position, 6, Module.CastFinishAt(spell), Kind: Kind.TowardsOrigin);
+        void AddSource(Kind kind)
+            => _knockback = new(spell.LocXZ, 6f, Module.CastFinishAt(spell), Kind: kind);
+        if (spell.Action.ID == (uint)AID.FerrofluidKB)
+            AddSource(Kind.AwayFromOrigin);
+        else if (spell.Action.ID == (uint)AID.FerrofluidAttract)
+            AddSource(Kind.TowardsOrigin);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FerrofluidKB or AID.FerrofluidAttract)
+        if (spell.Action.ID is (uint)AID.FerrofluidKB or (uint)AID.FerrofluidAttract)
             _knockback = null;
     }
-
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<FluidConvectionDynamic>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 }
 
-class Unwind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Unwind), 10);
-class FluidBall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FluidBall), 5);
+class Unwind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Unwind), 10f);
+class FluidBall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FluidBall), 5f);
 
 class FluidConvectionDynamic(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(10, 40);
-    private static readonly AOEShapeCircle circle = new(6);
-    private DateTime _activation;
-    private AOEShape? shape;
+    private static readonly AOEShapeDonut donut = new(10f, 40f);
+    private static readonly AOEShapeCircle circle = new(6f);
+    public AOEInstance? AOE;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (shape != default)
-            yield return new(shape, Module.PrimaryActor.Position, default, _activation);
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        // boss can move after cast started, so we can't use aoe instance, since that would cause outdated position data to be used
-        if ((AID)spell.Action.ID == AID.FerrofluidKB)
+        AOEShape? shape = spell.Action.ID switch
         {
-            shape = donut;
-            _activation = Module.CastFinishAt(spell);
-        }
-        else if ((AID)spell.Action.ID == AID.FerrofluidAttract)
-        {
-            shape = circle;
-            _activation = Module.CastFinishAt(spell);
-        }
+            (uint)AID.FerrofluidKB => donut,
+            (uint)AID.FerrofluidAttract => circle,
+            _ => null
+        };
+        if (shape != null)
+            AOE = new(shape, spell.LocXZ, default, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.FluidConvection or AID.FluidDynamic)
-            shape = null;
+        if (spell.Action.ID is (uint)AID.FluidConvection or (uint)AID.FluidDynamic)
+            AOE = null;
     }
 }
 
@@ -122,19 +123,31 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var lefthand = Module.Enemies(OID.LeftHand).FirstOrDefault(x => !x.IsDead);
-        var righthand = Module.Enemies(OID.RightHand).FirstOrDefault(x => !x.IsDead);
-        if (lefthand != null)
-            hints.Add($"{lefthand.Name} will drain all your MP, kill it fast!");
-        if (lefthand == null && righthand != null)
-            hints.Add($"{righthand.Name} will do multiple raidwides, kill it fast!");
+        var leftHands = Module.Enemies((uint)OID.LeftHand);
+        var countL = leftHands.Count;
+        if (countL != 0)
+        {
+            var left = leftHands[0];
+            if (!left.IsDead)
+            {
+                hints.Add($"{left.Name} will drain all your MP, kill it fast!");
+                return;
+            }
+        }
+        var rightHands = Module.Enemies((uint)OID.RightHand);
+        var countR = rightHands.Count;
+        if (countR != 0)
+        {
+            var right = rightHands[0];
+            if (!right.IsDead)
+                hints.Add($"{right.Name} will do multiple raidwides, kill it fast!");
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var doomed = actor.FindStatus(SID.Throttle); //it is called throttle, but works exactly like any cleansable doom
-        if (doomed != null)
-            hints.Add("You were doomed! Cleanse it with Exuviation.");
+        if (actor.FindStatus((uint)SID.Throttle) != null)
+            hints.Add("You were doomed! Cleanse it with Exuviation."); // it is called throttle, but works exactly like any cleansable doom
     }
 }
 
@@ -152,6 +165,7 @@ class Stage29Act2States : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<FluidSwing>()
+            .ActivateOnEnter<FluidConvectionDynamic>()
             .ActivateOnEnter<FluidSwingKnockback>()
             .ActivateOnEnter<BigSplash>()
             .ActivateOnEnter<BigSplashKB>()
@@ -163,7 +177,6 @@ class Stage29Act2States : StateMachineBuilder
             .ActivateOnEnter<KnockbackPull>()
             .ActivateOnEnter<FluidBall>()
             .ActivateOnEnter<Unwind>()
-            .ActivateOnEnter<FluidConvectionDynamic>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>();
     }
@@ -180,7 +193,7 @@ public class Stage29Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.LeftHand));
-        Arena.Actors(Enemies(OID.RightHand));
+        Arena.Actors(Enemies((uint)OID.LeftHand));
+        Arena.Actors(Enemies((uint)OID.RightHand));
     }
 }

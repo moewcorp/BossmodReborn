@@ -21,15 +21,47 @@ public enum AID : uint
     SelfDetonate = 15329 // ArenaMagus->player, 3.0s cast, single-target
 }
 
-class MagicHammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagicHammer), 8);
-class PageTear(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PageTear), new AOEShapeCone(8, 45.Degrees()));
-class VacuumBlade(BossModule module) : Components.PersistentVoidzone(module, 3, m => m.Enemies(OID.VacuumWave).Where(x => !x.IsDead));
-
-class HeadDown(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.HeadDown), 4);
-
-class HeadDownKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HeadDown), 10, kind: Kind.DirForward)
+class MagicHammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagicHammer), 8f);
+class PageTear(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PageTear), new AOEShapeCone(8f, 45f.Degrees()));
+class VacuumBlade(BossModule module) : Components.PersistentVoidzone(module, 3f, GetVoidzones)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<VacuumBlade>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.VacuumWave);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class HeadDown(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.HeadDown), 4f);
+
+class HeadDownKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.HeadDown), 10f, kind: Kind.DirForward)
+{
+    private readonly VacuumBlade _aoe = module.FindComponent<VacuumBlade>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class BoneShaker(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BoneShaker), "Adds + Raidwide");
@@ -38,8 +70,19 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.ArenaMagus).All(e => e.IsDead))
-            hints.Add($"Kill {Module.Enemies(OID.ArenaMagus).FirstOrDefault()!.Name} fast or wipe!\nUse ranged physical attacks.");
+        var magi = Module.Enemies((uint)OID.ArenaMagus);
+        var count = magi.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
+        {
+            var magus = magi[i];
+            if (!magus.IsDead)
+            {
+                hints.Add($"Kill {magus.Name} fast or wipe!\nUse ranged physical attacks.");
+                return;
+            }
+        }
     }
 }
 
@@ -78,17 +121,18 @@ public class Stage24Act3 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ArenaMagus));
+        Arena.Actors(Enemies((uint)OID.ArenaMagus));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.ArenaMagus => 1, //TODO: ideally Magus should only be attacked with ranged physical abilities
+                (uint)OID.ArenaMagus => 1, // TODO: ideally Magus should only be attacked with ranged physical abilities
                 _ => 0
             };
         }

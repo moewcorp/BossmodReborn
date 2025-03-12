@@ -16,7 +16,7 @@ class P4WaveCannonProtean(BossModule module) : Components.GenericBaitAway(module
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.P4WaveCannonVisualStart)
+        if (spell.Action.ID == (uint)AID.P4WaveCannonVisualStart)
         {
             _source = caster;
             Show();
@@ -25,7 +25,7 @@ class P4WaveCannonProtean(BossModule module) : Components.GenericBaitAway(module
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.P4WaveCannonProtean)
+        if (spell.Action.ID == (uint)AID.P4WaveCannonProtean)
         {
             CurrentBaits.Clear();
             ++NumCasts;
@@ -33,7 +33,7 @@ class P4WaveCannonProtean(BossModule module) : Components.GenericBaitAway(module
     }
 }
 
-class P4WaveCannonProteanAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.P4WaveCannonProteanAOE), new AOEShapeRect(100, 3));
+class P4WaveCannonProteanAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.P4WaveCannonProteanAOE), new AOEShapeRect(100f, 3f));
 
 // TODO: generalize (line stack)
 class P4WaveCannonStack : BossComponent
@@ -43,7 +43,7 @@ class P4WaveCannonStack : BossComponent
     private readonly int[] _playerGroups = Utils.MakeArray(PartyState.MaxPartySize, -1);
     private BitMask _westStack;
 
-    private static readonly AOEShapeRect _shape = new(100, 3);
+    private static readonly AOEShapeRect _shape = new(100f, 3f);
 
     public bool Active => _targets.Any();
 
@@ -62,14 +62,14 @@ class P4WaveCannonStack : BossComponent
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
         if (SafeDir(slot) is var safeDir && safeDir != default)
-            movementHints.Add(actor.Position, Arena.Center + 12 * safeDir.ToDirection(), Colors.Safe);
+            movementHints.Add(actor.Position, Arena.Center + 12f * safeDir.ToDirection(), Colors.Safe);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (Imminent)
             foreach (var (_, p) in Raid.WithSlot(true).IncludedInMask(_targets))
-                _shape.Outline(Arena, Module.Center, Angle.FromDirection(p.Position - Arena.Center), Colors.Safe);
+                _shape.Outline(Arena, Arena.Center, Angle.FromDirection(p.Position - Arena.Center), Colors.Safe);
 
         var safeDir = SafeDir(pcSlot);
         if (safeDir != default)
@@ -78,14 +78,14 @@ class P4WaveCannonStack : BossComponent
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.P4WaveCannonStackTarget:
+            case (uint)AID.P4WaveCannonStackTarget:
                 _targets.Set(Raid.FindSlot(spell.MainTargetID));
                 if (_targets.NumSetBits() > 1)
                     InitWestStack();
                 break;
-            case AID.P4WaveCannonStack:
+            case (uint)AID.P4WaveCannonStack:
                 Imminent = false;
                 _targets.Reset();
                 _westStack.Reset();

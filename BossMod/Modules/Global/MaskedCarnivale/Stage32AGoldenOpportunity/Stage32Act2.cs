@@ -46,27 +46,27 @@ public enum SID : uint
     MagicResistance = 3621 // none->Boss, extra=0x0
 }
 
-class GoldorFireIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorFireIII), 8);
-class GoldorBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorBlast), new AOEShapeRect(60, 5));
-class GoldenCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenCross), new AOEShapeCross(100, 3.5f));
+class GoldorFireIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorFireIII), 8f);
+class GoldorBlast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorBlast), new AOEShapeRect(60f, 5f));
+class GoldenCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenCross), new AOEShapeCross(100f, 3.5f));
 
 class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCone cone = new(40, 60.Degrees());
+    private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
     private AOEInstance? _aoe;
     private readonly List<ConeV> cones = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GoldenBeam)
+        if (spell.Action.ID == (uint)AID.GoldenBeam)
         {
-            if (Module.Enemies(OID.GildedMarionette).Count == 1)
-                _aoe = new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell));
+            if (Module.Enemies((uint)OID.GildedMarionette).Count == 1)
+                _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
             else
             {
-                cones.Add(new(caster.Position, cone.Radius, spell.Rotation, cone.HalfAngle, 2));
+                cones.Add(new(spell.LocXZ, cone.Radius, spell.Rotation, cone.HalfAngle, 2));
                 if (cones.Count == 4)
                 {
                     var coneskip1 = new List<ConeV>(3);
@@ -88,7 +88,7 @@ class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GoldenBeam)
+        if (spell.Action.ID == (uint)AID.GoldenBeam)
         {
             _aoe = null;
             cones.Clear();
@@ -98,20 +98,20 @@ class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (_aoe != null && Module.Enemies(OID.GildedMarionette).Count > 1)
+        if (_aoe != null && Module.Enemies((uint)OID.GildedMarionette).Count > 1)
             hints.Add("Use Diamondback outside of marked area!");
     }
 }
 
-class TwentyFourCaratSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwentyFourCaratSwing), 12);
+class TwentyFourCaratSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwentyFourCaratSwing), 12f);
 
 class GoldorQuake(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10), new AOEShapeDonut(10, 20), new AOEShapeDonut(20, 30)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GoldorQuake1)
+        if (spell.Action.ID == (uint)AID.GoldorQuake1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -119,48 +119,58 @@ class GoldorQuake(BossModule module) : Components.ConcentricAOEs(module, _shapes
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.GoldorQuake1 => 0,
-                AID.GoldorQuake2 => 1,
-                AID.GoldorQuake3 => 2,
+                (uint)AID.GoldorQuake1 => 0,
+                (uint)AID.GoldorQuake2 => 1,
+                (uint)AID.GoldorQuake3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5d));
         }
     }
 }
 
-class GoldorAeroIII(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GoldorAeroIII), 10)
+class GoldorAeroIII(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GoldorAeroIII), 10f)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<GoldenCross>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    private readonly GoldenCross _aoe = module.FindComponent<GoldenCross>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class GoldorAeroIIIRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GoldorAeroIII));
-class GoldorRush(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GoldorRush), 10);
+class GoldorRush(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GoldorRush), 10f);
 class GoldorRushRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GoldorRush));
-class TwentyFourCaratInhale(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.TwentyFourCaratInhale), 30, kind: Kind.TowardsOrigin);
+class TwentyFourCaratInhale(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.TwentyFourCaratInhale), 30f, kind: Kind.TowardsOrigin);
 class GoldorGravity(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.GoldorGravity), ActionID.MakeSpell(AID.GoldorGravity2), 0.8f, "Dmg + Heavy debuff");
 class GoldorThunderIII(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.GoldorThunderIIIVisual), ActionID.MakeSpell(AID.GoldorThunderIII1), 0.8f, "Prepare to cleanse Electrocution");
-class GoldorThunderIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorThunderIII2), 6);
+class GoldorThunderIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldorThunderIII2), 6f);
 class GoldorBlizzardIII(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.GoldorBlizzardIIIVisual));
 
 class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var magicabsorb = Module.PrimaryActor.FindStatus(SID.MagicResistance);
-        if (magicabsorb != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.MagicResistance) != null)
             hints.Add($"{Module.PrimaryActor.Name} is immune to magic damage! (Destroy crystal to remove buff)");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var electrocution = actor.FindStatus(SID.Electrocution);
-        if (electrocution != null)
+        if (actor.FindStatus((uint)SID.Electrocution) != null)
             hints.Add($"Cleanse Electrocution!");
-        var heavy = actor.FindStatus(SID.Heavy);
-        if (heavy != null)
+        if (actor.FindStatus((uint)SID.Heavy) != null)
             hints.Add("Use Loom to dodge AOEs!");
     }
 }

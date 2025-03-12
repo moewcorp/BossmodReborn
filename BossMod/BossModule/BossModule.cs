@@ -144,7 +144,7 @@ public abstract class BossModule : IDisposable
         Obstacles = new(ws);
         WorldState = ws;
         PrimaryActor = primary;
-        Arena = new(WindowConfig, center, bounds);
+        Arena = new(center, bounds);
         Info = BossModuleRegistry.FindByOID(primary.OID);
         StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
 

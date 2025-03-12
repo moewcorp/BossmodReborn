@@ -74,7 +74,7 @@ class WrithingRiot(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone coneLeftRight = new(25f, 105f.Degrees());
     private static readonly AOEShapeCone coneRear = new(25f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

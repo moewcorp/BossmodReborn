@@ -45,23 +45,23 @@ public enum SID : uint
     Invincibility = 775 // none->Boss, extra=0x0
 }
 
-class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(100, 3));
-class ServantRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ServantRoar), new AOEShapeRect(100, 4));
-class MagitekSpread(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekSpread), new AOEShapeCone(43, 120.Degrees()));
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(100f, 3f));
+class ServantRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ServantRoar), new AOEShapeRect(100f, 4f));
+class MagitekSpread(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekSpread), new AOEShapeCone(43f, 120f.Degrees()));
 
-class TailSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSwing), 46)
+class TailSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailSwing), 46f)
 {
     private readonly MagitekSpread _aoe = module.FindComponent<MagitekSpread>()!;
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Casters.Count != 0 && _aoe.Casters.Count == 0 ? [Casters[0]] : [];
+        return Casters.Count != 0 && _aoe.Casters.Count == 0 ? CollectionsMarshal.AsSpan(Casters)[..1] : [];
     }
 }
 
-class OptimizedJudgment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimizedJudgment), new AOEShapeDonut(22, 60));
-class SapphireRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SapphireRay), new AOEShapeRect(120, 20));
+class OptimizedJudgment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OptimizedJudgment), new AOEShapeDonut(22f, 60f));
+class SapphireRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SapphireRay), new AOEShapeRect(120f, 20f));
 
-abstract class Siderays(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(128, 45.Degrees()));
+abstract class Siderays(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(128f, 45f.Degrees()));
 class SideraysLeft(BossModule module) : Siderays(module, AID.SideraysLeft);
 class SideraysRight(BossModule module) : Siderays(module, AID.SideraysRight);
 
@@ -70,7 +70,7 @@ class SelfDestruct(BossModule module) : Components.CastHint(module, ActionID.Mak
 class OptimizedUltima(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OptimizedUltima));
 class Swiftbreach(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Swiftbreach));
 class PlasmaShot(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.PlasmaShot));
-class PlasmaCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PlasmaCannon), 40);
+class PlasmaCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PlasmaCannon), 40f);
 
 class TheSapphireWeaponStates : StateMachineBuilder
 {
@@ -106,10 +106,11 @@ public class TheSapphireWeapon(WorldState ws, Actor primary) : SleepNowInSapphir
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var h = hints.PotentialTargets[i];
-            h.Priority = h.Actor.FindStatus(SID.Invincibility) == null ? 1 : AIHints.Enemy.PriorityInvincible;
+            h.Priority = h.Actor.FindStatus((uint)SID.Invincibility) == null ? 1 : AIHints.Enemy.PriorityInvincible;
         }
     }
 }

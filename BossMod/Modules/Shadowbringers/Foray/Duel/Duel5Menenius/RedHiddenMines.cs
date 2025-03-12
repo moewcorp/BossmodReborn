@@ -4,25 +4,38 @@ class RedHiddenMines(BossModule module) : Components.GenericAOEs(module)
 {
     private List<AOEInstance> _mines = [];
     private static readonly AOEShapeCircle _shapeTrigger = new(3.6f);
-    private static readonly AOEShapeCircle _shapeExplosion = new(8);
+    private static readonly AOEShapeCircle _shapeExplosion = new(8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _mines;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_mines);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ActivateRedMine)
-            _mines.Add(new(_shapeTrigger, caster.Position, Color: Colors.Trap));
-        else if ((AID)spell.Action.ID is AID.DetonateRedMine or AID.Explosion)
-            _mines.RemoveAll(t => t.Origin.AlmostEqual(caster.Position, 1));
+        if (spell.Action.ID == (uint)AID.ActivateRedMine)
+            _mines.Add(new(_shapeTrigger, WPos.ClampToGrid(caster.Position), Color: Colors.Trap));
+        else if (spell.Action.ID is (uint)AID.DetonateRedMine or (uint)AID.Explosion)
+        {
+            var count = _mines.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var m = _mines[i];
+                if (m.Origin.AlmostEqual(pos, 1f))
+                {
+                    _mines.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.IndiscriminateDetonation)
+        if (spell.Action.ID is (uint)AID.IndiscriminateDetonation)
         {
             List<AOEInstance> _detonatingMines = [];
-            for (var i = 0; i < _mines.Count; ++i)
-                _detonatingMines.Add(new(_shapeExplosion, _mines[i].Origin, Color: Colors.AOE));
+            var count = _mines.Count;
+            for (var i = 0; i < count; ++i)
+                _detonatingMines.Add(new(_shapeExplosion, _mines[i].Origin));
             _mines = _detonatingMines;
         }
     }

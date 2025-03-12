@@ -24,8 +24,8 @@ public enum AID : uint
     Germinate = 1040 // MorbolFruit->self, 15.0s cast, single-target
 }
 
-class VineProbeCleave(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(9.85f, 4), activeWhileCasting: false);
-class VineProbe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(9.85f, 4));
+class VineProbeCleave(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(9.85f, 4f), activeWhileCasting: false);
+class VineProbe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(9.85f, 4f));
 class BadBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BadBreath), new AOEShapeCone(16f, 60f.Degrees()));
 
 class GoldBilePlume(BossModule module) : Components.GenericAOEs(module)
@@ -34,7 +34,7 @@ class GoldBilePlume(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(4.5f, 1f);
     private readonly List<AOEInstance> _aoes = new(7);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {

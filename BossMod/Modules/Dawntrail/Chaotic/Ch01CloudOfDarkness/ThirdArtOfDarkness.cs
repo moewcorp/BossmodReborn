@@ -9,8 +9,13 @@ class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOEs(modul
 
     private static readonly AOEShapeCone _shape = new(15f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var count = Mechanics.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        var index = 0;
         foreach (var (caster, m) in Mechanics)
         {
             var dir = m.Count == 0 ? default : m[0].mechanic switch
@@ -20,8 +25,9 @@ class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOEs(modul
                 _ => default
             };
             if (dir != default)
-                yield return new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation + dir, m[0].activation);
+                aoes[index++] = new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation + dir, m[0].activation);
         }
+        return aoes.AsSpan(..index);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

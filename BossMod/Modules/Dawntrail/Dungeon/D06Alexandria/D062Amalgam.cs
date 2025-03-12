@@ -43,7 +43,7 @@ class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom square = new([new Square(D062Amalgam.ArenaCenter, 23f)], [new Square(D062Amalgam.ArenaCenter, 20f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == D062Amalgam.StartingBounds)

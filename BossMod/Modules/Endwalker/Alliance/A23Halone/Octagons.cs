@@ -21,7 +21,7 @@ class Octagons(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeCustom customShape = new([new Square(A23Halone.ArenaCenter, 29.5f)], [shapes[0], shapes[2], shapes[4]]); // using a square should be less cpu intensive, gets clipped with arena border anyway
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

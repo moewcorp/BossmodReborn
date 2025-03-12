@@ -8,14 +8,24 @@ class P1FlameThrower(BossModule module) : Components.GenericAOEs(module)
     private readonly TOPConfig _config = Service.Config.Get<TOPConfig>();
     private readonly P1Pantokrator? _pantokrator = module.FindComponent<P1Pantokrator>();
 
-    private static readonly AOEShapeCone _shape = new(65, 30.Degrees());
+    private static readonly AOEShapeCone _shape = new(65f, 30f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in Casters.Skip(2))
-            yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Colors.AOE, false);
-        foreach (var c in Casters.Take(2))
-            yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Colors.Danger, true);
+        var count = Casters.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Casters[i];
+            if (i < 2)
+                aoes[i] = new(_shape, c.CastInfo!.LocXZ, c.CastInfo.Rotation, Module.CastFinishAt(c.CastInfo), count > 2 ? Colors.Danger : default, true);
+            else
+                aoes[i] = new(_shape, c.CastInfo!.LocXZ, c.CastInfo.Rotation, Module.CastFinishAt(c.CastInfo), default, false);
+        }
+        return aoes;
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -33,37 +43,37 @@ class P1FlameThrower(BossModule module) : Components.GenericAOEs(module)
 
             var dir = flame1Dir.Normalized().Deg switch
             {
-                > 15 and < 45 or > -165 and < -135 => -60.Degrees(),
-                > 45 and < 75 or > -135 and < -105 => -30.Degrees(),
-                > 75 and < 105 or > -105 and < -75 => 0.Degrees(),
-                > 105 and < 135 or > -75 and < -45 => 30.Degrees(),
-                > 135 and < 165 or > -45 and < -15 => 60.Degrees(),
-                _ => -90.Degrees(), // assume groups go CW
+                > 15f and < 45f or > -165f and < -135f => -60f.Degrees(),
+                > 45f and < 75f or > -135f and < -105f => -30f.Degrees(),
+                > 75f and < 105f or > -105f and < -75f => default,
+                > 105f and < 135f or > -75f and < -45f => 30f.Degrees(),
+                > 135f and < 165f or > -45f and < -15f => 60f.Degrees(),
+                _ => -90f.Degrees(), // assume groups go CW
             };
             // undo direction adjustment to correct target safe spot
             if (_config.P1PantokratorNESW)
-                dir -= 60.Degrees();
-            var offset = 12 * (Module.PrimaryActor.Rotation + dir).ToDirection();
-            var pos = group == 1 ? Module.Center + offset : Module.Center - offset;
-            Arena.AddCircle(pos, 1, Colors.Safe);
+                dir -= 60f.Degrees();
+            var offset = 12f * (Module.PrimaryActor.Rotation + dir).ToDirection();
+            var pos = group == 1 ? Arena.Center + offset : Arena.Center - offset;
+            Arena.AddCircle(pos, 1f, Colors.Safe);
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FlameThrowerFirst or AID.FlameThrowerRest)
+        if (spell.Action.ID is (uint)AID.FlameThrowerFirst or (uint)AID.FlameThrowerRest)
             Casters.Add(caster);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FlameThrowerFirst or AID.FlameThrowerRest)
+        if (spell.Action.ID is (uint)AID.FlameThrowerFirst or (uint)AID.FlameThrowerRest)
             Casters.Remove(caster);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.FlameThrowerFirst or AID.FlameThrowerRest)
+        if (spell.Action.ID is (uint)AID.FlameThrowerFirst or (uint)AID.FlameThrowerRest)
             ++NumCasts;
     }
 }
@@ -74,7 +84,7 @@ class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
     public int NumStacksDone;
 
     private const float _spreadRadius = 5;
-    private static readonly AOEShapeRect _stackShape = new(50, 3);
+    private static readonly AOEShapeRect _stackShape = new(50f, 3f);
 
     protected override (GroupAssignmentUnique assignment, bool global) Assignments()
     {
@@ -118,19 +128,19 @@ class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
             }
             else if (order == stackOrder)
             {
-                _stackShape.Outline(Arena, Module.PrimaryActor.Position, Angle.FromDirection(p.Position - Module.PrimaryActor.Position), i == pcSlot ? Colors.Safe : Colors.Danger);
+                _stackShape.Outline(Arena, Module.PrimaryActor.Position, Angle.FromDirection(p.Position - Module.PrimaryActor.Position), i == pcSlot ? Colors.Safe : 0);
             }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.GuidedMissileKyrios:
+            case (uint)AID.GuidedMissileKyrios:
                 ++NumSpreadsDone;
                 break;
-            case AID.CondensedWaveCannonKyrios:
+            case (uint)AID.CondensedWaveCannonKyrios:
                 ++NumStacksDone;
                 break;
         }
@@ -151,7 +161,7 @@ class P1Pantokrator(BossModule module) : P1CommonAssignments(module)
 
 class P1DiffuseWaveCannonKyrios : Components.GenericBaitAway
 {
-    private static readonly AOEShape _shape = new AOEShapeCone(60, 60.Degrees()); // TODO: verify angle
+    private static readonly AOEShape _shape = new AOEShapeCone(60f, 60f.Degrees()); // TODO: verify angle
 
     public P1DiffuseWaveCannonKyrios(BossModule module) : base(module, ActionID.MakeSpell(AID.DiffuseWaveCannonKyrios))
     {
@@ -161,7 +171,20 @@ class P1DiffuseWaveCannonKyrios : Components.GenericBaitAway
     public override void Update()
     {
         CurrentBaits.Clear();
-        CurrentBaits.AddRange(Raid.WithoutSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).TakeLast(2).Select(t => new Bait(Module.PrimaryActor, t, _shape)));
+        var party = Raid.WithoutSlot(false, true, true);
+        Array.Sort(party, (a, b) =>
+            {
+                var distA = (a.Position - Arena.Center).LengthSq();
+                var distB = (b.Position - Arena.Center).LengthSq();
+                return distA.CompareTo(distB);
+            });
+        List<Bait> baits = [];
+        var len = party.Length;
+        for (var i = Math.Max(0, len - 2); i < len; ++i)
+        {
+            baits.Add(new(Module.PrimaryActor, party[i], _shape));
+        }
+        CurrentBaits.AddRange(baits);
     }
 }
 
@@ -171,7 +194,7 @@ class P1WaveCannonKyrios(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WaveCannonKyrios)
+        if (spell.Action.ID == (uint)AID.WaveCannonKyrios)
         {
             ++NumCasts;
             CurrentBaits.Clear();

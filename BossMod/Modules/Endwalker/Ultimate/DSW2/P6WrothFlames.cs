@@ -5,23 +5,28 @@ class P6WrothFlames : Components.GenericAOEs
     private readonly List<AOEInstance> _aoes = []; // cauterize, then flame blasts
     private WPos _startingSpot;
 
-    private static readonly AOEShapeRect _shapeCauterize = new(80, 11);
-    private static readonly AOEShapeCross _shapeBlast = new(44, 3);
+    private static readonly AOEShapeRect _shapeCauterize = new(80f, 11f);
+    private static readonly AOEShapeCross _shapeBlast = new(44f, 3f);
 
     public bool ShowStartingSpot => _startingSpot.X != 0 && _startingSpot.Z != 0 && NumCasts == 0;
 
     // assume it is activated when hraesvelgr is already in place; could rely on PATE 1E43 instead
     public P6WrothFlames(BossModule module) : base(module)
     {
-        var cauterizeCaster = module.Enemies(OID.HraesvelgrP6).FirstOrDefault();
+        var cauterizeCasters = module.Enemies((uint)OID.HraesvelgrP6);
+        var cauterizeCaster = cauterizeCasters.Count != 0 ? cauterizeCasters[0] : null;
         if (cauterizeCaster != null)
         {
-            _aoes.Add(new(_shapeCauterize, cauterizeCaster.Position, cauterizeCaster.Rotation, WorldState.FutureTime(8.1f)));
-            _startingSpot.X = cauterizeCaster.Position.X < 95 ? 120 : 80; // assume nidhogg is at 78, prefer uptime if possible
+            _aoes.Add(new(_shapeCauterize, WPos.ClampToGrid(cauterizeCaster.Position), cauterizeCaster.Rotation, WorldState.FutureTime(8.1d)));
+            _startingSpot.X = cauterizeCaster.Position.X < 95f ? 120f : 80f; // assume nidhogg is at 78, prefer uptime if possible
         }
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(NumCasts > 0 ? 3 : 4);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        int count = (NumCasts > 0) ? 3 : 4;
+        return _aoes.Count > count ? _aoes.AsSpan()[..count] : CollectionsMarshal.AsSpan(_aoes);
+    }
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
@@ -37,10 +42,10 @@ class P6WrothFlames : Components.GenericAOEs
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.ScarletPrice)
+        if (actor.OID == (uint)OID.ScarletPrice)
         {
             if (_aoes.Count == 4)
-                _startingSpot.Z = actor.Position.Z < Module.Center.Z ? 120 : 80;
+                _startingSpot.Z = actor.Position.Z < Arena.Center.Z ? 120 : 80;
 
             var delay = _aoes.Count switch
             {
@@ -48,13 +53,13 @@ class P6WrothFlames : Components.GenericAOEs
                 < 7 => 9.7f,
                 _ => 6.9f
             };
-            _aoes.Add(new(_shapeBlast, actor.Position, default, WorldState.FutureTime(delay)));
+            _aoes.Add(new(_shapeBlast, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(delay)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.CauterizeH or AID.FlameBlast)
+        if (spell.Action.ID is (uint)AID.CauterizeH or (uint)AID.FlameBlast)
         {
             ++NumCasts;
             if (_aoes.Count > 0)
@@ -63,24 +68,43 @@ class P6WrothFlames : Components.GenericAOEs
     }
 }
 
-class P6AkhMorn(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.AkhMornFirst), 6, 8, 8)
+class P6AkhMorn(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.AkhMornFirst), 6f, 8, 8)
 {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) { } // do not clear stacks on first cast
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AkhMornFirst or AID.AkhMornRest)
+        if (spell.Action.ID is (uint)AID.AkhMornFirst or (uint)AID.AkhMornRest)
             if (++NumFinishedStacks >= 4)
                 Stacks.Clear();
     }
 }
 
-class P6AkhMornVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.VoidzoneAhkMorn).Where(z => z.EventState != 7));
+class P6AkhMornVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.VoidzoneAhkMorn);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpread(module, 4, 5, 2, alwaysShowSpreads: true)
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpread(module, 4f, 5f, 2, alwaysShowSpreads: true)
 {
     private readonly P6HotWingTail? _wingTail = module.FindComponent<P6HotWingTail>();
-    private readonly bool _voidzonesNorth = module.Enemies(OID.VoidzoneAhkMorn).Sum(z => z.Position.Z - module.Center.Z) < 0;
+    private readonly bool _voidzonesNorth = module.Enemies((uint)OID.VoidzoneAhkMorn).Sum(z => z.Position.Z - module.Center.Z) < 0;
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
@@ -98,12 +122,12 @@ class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpr
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         // TODO: activation
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.SpreadingFlames:
+            case (uint)SID.SpreadingFlames:
                 AddSpread(actor);
                 break;
-            case SID.EntangledFlames:
+            case (uint)SID.EntangledFlames:
                 AddStack(actor);
                 break;
         }
@@ -111,12 +135,12 @@ class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpr
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.SpreadingFlames:
+            case (uint)AID.SpreadingFlames:
                 Spreads.Clear();
                 break;
-            case AID.EntangledFlames:
+            case (uint)AID.EntangledFlames:
                 Stacks.Clear();
                 break;
         }
@@ -124,23 +148,25 @@ class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpr
 
     // note: this assumes standard positions (spreads = black debuffs = under black dragon nidhogg, etc)
     // TODO: consider assigning concrete spots to each player
-    private IEnumerable<WPos> SafeSpots(Actor actor)
+    private List<WPos> SafeSpots(Actor actor)
     {
         if (_wingTail == null)
-            yield break;
-
-        var z = Arena.Center.Z + (_wingTail.NumAOEs != 1 ? 0 : _voidzonesNorth ? 10 : -10);
+            return [];
+        var safespots = new List<WPos>();
+        var x = Arena.Center.X;
+        var z = Arena.Center.Z + (_wingTail.NumAOEs != 1 ? default : _voidzonesNorth ? 10f : -10f);
         if (IsSpreadTarget(actor))
         {
-            yield return new(Arena.Center.X - 18, z);
-            yield return new(Arena.Center.X - 12, z);
-            yield return new(Arena.Center.X - 6, z);
-            yield return new(Arena.Center.X, z);
+            safespots.Add(new(x - 18f, z));
+            safespots.Add(new(x - 12f, z));
+            safespots.Add(new(x - 6f, z));
+            safespots.Add(new(x, z));
         }
         else
         {
-            yield return new(Arena.Center.X + 9, z);
-            yield return new(Arena.Center.X + 18, z);
+            safespots.Add(new(x + 9f, z));
+            safespots.Add(new(x + 18f, z));
         }
+        return safespots;
     }
 }

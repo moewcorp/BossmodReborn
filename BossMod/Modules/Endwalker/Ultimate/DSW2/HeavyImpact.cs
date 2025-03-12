@@ -10,7 +10,7 @@ class HeavyImpact(BossModule module, float activationDelay) : Components.Generic
 
     public bool Active => _aoe != null;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {

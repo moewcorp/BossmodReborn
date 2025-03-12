@@ -47,34 +47,36 @@ public enum IconID : uint
     Gaze = 73 // player
 }
 
-class TerrifyingGlanceBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(42.25f, 61.Degrees()), (uint)IconID.Gaze, ActionID.MakeSpell(AID.TerrifyingGlance), 3.1f, source: module.Enemies(OID.Calcabrina)[0]);
+class TerrifyingGlanceBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(42.25f, 61f.Degrees()), (uint)IconID.Gaze, ActionID.MakeSpell(AID.TerrifyingGlance), 3.1f, source: module.Enemies(OID.Calcabrina)[0]);
 class TerrifyingGlanceGaze(BossModule module) : Components.GenericGaze(module)
 {
     private DateTime activation;
     private readonly TerrifyingGlanceBait _bait = module.FindComponent<TerrifyingGlanceBait>()!;
+    private static readonly Angle a61 = 61f.Degrees();
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
         if (activation == default)
-            yield break;
-        var primary = Module.Enemies(OID.Calcabrina)[0].Position;
+            return [];
+        var primary = Module.Enemies((uint)OID.Calcabrina)[0].Position;
         var dir = _bait.CurrentBaits[0].Target.Position - primary;
-        if (actor.Position.InCone(primary, dir, 61.Degrees())) // 1° extra safety margin since calculated and actual rotation seems to be slightly off
+        if (actor.Position.InCone(primary, dir, a61)) // 1° extra safety margin since calculated and actual rotation seems to be slightly off
         {
-            yield return new(primary, activation);
+            return new Eye[1] { new(primary, activation) };
         }
+        return [];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Gaze)
-            activation = WorldState.FutureTime(3.1f);
+            activation = WorldState.FutureTime(3.1d);
 
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.TerrifyingGlance)
+        if (spell.Action.ID == (uint)AID.TerrifyingGlance)
             activation = default;
     }
 }
@@ -83,32 +85,38 @@ class Brace(BossModule module) : Components.DirectionalParry(module, [(uint)OID.
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Brace)
+        if (spell.Action.ID == (uint)AID.Brace)
             PredictParrySide(caster.InstanceID, Side.Back | Side.Right | Side.Left);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActorStates.Count > 0)
+        if (ActorStates.Count != 0)
         {
-            var primary = Module.Enemies(OID.Calcabrina)[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(primary.Position, primary.HitboxRadius, 20, primary.Rotation, 45.Degrees()));
+            var primary = Module.Enemies((uint)OID.Calcabrina)[0];
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(primary.Position, primary.HitboxRadius, 20f, primary.Rotation, 45f.Degrees()));
         }
     }
 }
 
-class HeatGazeBrina(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeatGazeBrina), new AOEShapeDonut(5, 10));
-class HeatGazeCalca(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeatGazeCalca), new AOEShapeCone(19.9f, 30.Degrees()));
+class HeatGazeBrina(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeatGazeBrina), new AOEShapeDonut(5f, 10f));
+class HeatGazeCalca(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeatGazeCalca), new AOEShapeCone(19.9f, 30f.Degrees()));
 class Knockout(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Knockout));
 
 class Slapstick(BossModule module) : BossComponent(module)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (actor.FindStatus(SID.Fetters) != null)
-            return;
-        if (Raid.WithoutSlot(false, true, true).Any(x => x.FindStatus(SID.Fetters) != null))
-            hints.Add("Kill the small dolls to free the players!");
+        var party = Raid.WithoutSlot(false, true, true);
+        var len = party.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (party[i].FindStatus((uint)SID.Fetters) != null)
+            {
+                hints.Add("Kill the small dolls to free the players!");
+                return;
+            }
+        }
     }
 }
 
@@ -141,7 +149,7 @@ class D113CalcabrinaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 141, NameID = 4813)]
 public class D113Calcabrina(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(232, -182), 19.5f * CosPI.Pi36th, 36)], [new Rectangle(new(252, -182), 1.15f, 20)]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(232f, -182f), 19.5f * CosPI.Pi36th, 36)], [new Rectangle(new(252f, -182f), 1.15f, 20f)]);
     private static readonly uint[] playerDolls = [(uint)OID.CalcaPlayer1, (uint)OID.CalcaPlayer2, (uint)OID.BrinaPlayer1, (uint)OID.BrinaPlayer2];
     public static readonly uint[] NpcDolls = [(uint)OID.Boss, (uint)OID.Brina, (uint)OID.Calcabrina];
 
@@ -153,12 +161,13 @@ public class D113Calcabrina(WorldState ws, Actor primary) : BossModule(ws, prima
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.BrinaPlayer1 or OID.BrinaPlayer2 or OID.CalcaPlayer1 or OID.CalcaPlayer2 => 1,
+                (uint)OID.BrinaPlayer1 or (uint)OID.BrinaPlayer2 or (uint)OID.CalcaPlayer1 or (uint)OID.CalcaPlayer2 => 1,
                 _ => 0
             };
         }

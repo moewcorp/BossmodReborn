@@ -107,7 +107,7 @@ class GallopKB(BossModule module) : Components.Knockback(module)
         return list;
     }
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => _sources;
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(_sources);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -130,7 +130,7 @@ class GallopKBHint(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle[] angles = [-89.982f.Degrees(), 89.977f.Degrees()];
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -313,7 +313,7 @@ class LightningBolt(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorCreated(Actor actor)
     {

@@ -23,10 +23,10 @@ class SlipperySoapCharge(BossModule module) : Components.Knockback(module)
 
     public bool ChargeImminent => _chargeTarget != null;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_chargeTarget != null && _color == SlipperySoap.Color.Green)
-            return [new(Module.PrimaryActor.Position, 15f, _chargeResolve, _chargeShape, _chargeDir, Kind.DirForward)];
+            return new Source[1] { new(Module.PrimaryActor.Position, 15f, _chargeResolve, _chargeShape, _chargeDir, Kind.DirForward) };
         else
             return [];
     }
@@ -106,16 +106,16 @@ class SlipperySoapAOE(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _color != SlipperySoap.Color.None;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: activation
 
         switch (_color)
         {
             case SlipperySoap.Color.Green:
-                return [new(C011Silkie.ShapeGreen, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation)];
+                return new AOEInstance[1] { new(C011Silkie.ShapeGreen, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation) };
             case SlipperySoap.Color.Blue:
-                return [new(C011Silkie.ShapeBlue, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation)];
+                return new AOEInstance[1] { new(C011Silkie.ShapeBlue, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation) };
             case SlipperySoap.Color.Yellow:
                 var aoes = new AOEInstance[4];
                 var primaryPos = Module.PrimaryActor.Position;

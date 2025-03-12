@@ -41,38 +41,62 @@ public enum SID : uint
 }
 
 class Charybdis(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charybdis), 8);
-class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Maelstrom));
+class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8f, GetMaelstrom)
+{
+    private static List<Actor> GetMaelstrom(BossModule module) => module.Enemies((uint)OID.Maelstrom);
+}
+
 class GogoFlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoFlare));
 class GogoHoly(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoHoly));
-class GogoMeteor1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor1), 5);
-class GogoMeteor2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor2), 16);
-class GogoMeteor3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor3), 8);
-class GogoMeteor4(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor4), 8);
-class GogoMeteor5(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor5), 16);
+class GogoMeteor1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor1), 5f);
+class GogoMeteor2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor2), 16f);
+class GogoMeteor3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor3), 8f);
+class GogoMeteor4(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor4), 8f);
+class GogoMeteor5(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GogoMeteor5), 16f);
 class GogoMeteorBig(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GogoMeteor6), "Use Diamondback!");
 class Icestorm(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.Icestorm), ActionID.MakeSpell(AID.Icestorm2), 0.9f, "Raidwide + Frostbite + Heavy");
-class ThunderIII(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.GogoThunderIII), m => m.Enemies(OID.Voidzone).Where(e => e.EventState != 7), 0.8f);
+class ThunderIII(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.GogoThunderIII), GetVoidzones, 0.8f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Voidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class GogoBlizzardIII(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(8);
+    private static readonly AOEShapeCircle circle = new(8f);
     private DateTime _activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activation != default)
-            yield return new(circle, Module.PrimaryActor.Position, default, _activation);
+            return new AOEInstance[1] { new(circle, Module.PrimaryActor.Position, default, _activation) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GogoFireIII)
+        if (spell.Action.ID == (uint)AID.GogoFireIII)
             _activation = Module.CastFinishAt(spell, 5.1f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.GogoBlizzardIII)
+        if (spell.Action.ID == (uint)AID.GogoBlizzardIII)
             _activation = default;
     }
 }
@@ -83,13 +107,13 @@ class Pyretic(BossModule module) : Components.StayMove(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GogoFireIII)
+        if (spell.Action.ID == (uint)AID.GogoFireIII)
             Array.Fill(PlayerStates, new(Requirement.Stay, Module.CastFinishAt(spell)));
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Pyretic && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.Pyretic && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
             PlayerStates[slot] = default;
     }
 }
@@ -98,8 +122,7 @@ class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var debuff = actor.FindStatus(SID.Heavy) != null || actor.FindStatus(SID.Frostbite) != null;
-        if (debuff)
+        if (actor.FindStatus((uint)SID.Heavy) != null || actor.FindStatus((uint)SID.Frostbite) != null)
             hints.Add($"Cleanse debuffs!");
     }
 }

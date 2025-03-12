@@ -68,10 +68,11 @@ class DreamsOfIce(BossModule module) : Components.SimpleAOEs(module, ActionID.Ma
 
 class CurtainCall(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.CurtainCall), 60f)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies((uint)OID.Ice);
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.Ice));
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Arena.Bounds == CurtainCallArenaChange.CurtaincallArena ? Safezones : [];
+        return Arena.Bounds == CurtainCallArenaChange.CurtaincallArena ? CollectionsMarshal.AsSpan(Safezones) : [];
     }
 }
 
@@ -80,16 +81,13 @@ class ThundagaForteCone(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(20f, 22.5f.Degrees());
     private readonly List<AOEInstance> _aoes = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
         var max = count > 4 ? 4 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
-            aoes[i] = _aoes[i];
-        return aoes;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

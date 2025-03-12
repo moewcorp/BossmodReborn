@@ -4,28 +4,39 @@ class P2SoarTwinSpirit(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<(Actor caster, AOEInstance aoe)> _pending = [];
 
-    private readonly AOEShapeRect _shape = new(50, 5);
+    private readonly AOEShapeRect _shape = new(50f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _pending.Select(p => p.aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _pending.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = _pending[i].aoe;
+        }
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TwinSpiritFirst)
+        if (spell.Action.ID == (uint)AID.TwinSpiritFirst)
         {
-            _pending.Add((caster, new(_shape, caster.Position, Angle.FromDirection(spell.LocXZ - caster.Position), Module.CastFinishAt(spell))));
+            _pending.Add((caster, new(_shape, spell.LocXZ, Angle.FromDirection(spell.LocXZ - caster.Position), Module.CastFinishAt(spell))));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.TwinSpiritFirst:
+            case (uint)AID.TwinSpiritFirst:
                 var index = _pending.FindIndex(p => p.caster == caster);
                 if (index >= 0)
-                    _pending[index] = (caster, new(_shape, spell.LocXZ, Angle.FromDirection(Module.Center - spell.LocXZ), WorldState.FutureTime(9.2f)));
+                    _pending[index] = (caster, new(_shape, spell.LocXZ, Angle.FromDirection(Module.Center - spell.LocXZ), WorldState.FutureTime(9.2d)));
                 break;
-            case AID.TwinSpiritSecond:
+            case (uint)AID.TwinSpiritSecond:
                 _pending.RemoveAll(p => p.caster == caster);
                 ++NumCasts;
                 break;
@@ -33,7 +44,7 @@ class P2SoarTwinSpirit(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class P2SoarFlamingHalberd(BossModule module) : Components.UniformStackSpread(module, 0, 12, alwaysShowSpreads: true)
+class P2SoarFlamingHalberd(BossModule module) : Components.UniformStackSpread(module, default, 12f, alwaysShowSpreads: true)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -43,36 +54,55 @@ class P2SoarFlamingHalberd(BossModule module) : Components.UniformStackSpread(mo
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.FlamingHalberd)
+        if (spell.Action.ID == (uint)AID.FlamingHalberd)
             Spreads.Clear(); // don't bother finding proper target, they all happen at the same time
     }
 }
 
-class P2SoarFlamingHalberdVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.FlamingHalberdVoidzone).Where(z => z.EventState != 7));
+class P2SoarFlamingHalberdVoidzone(BossModule module) : Components.PersistentVoidzone(module, 8f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.FlamingHalberdVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class P2SoarDemonicDiveCoolFlame(BossModule module) : Components.UniformStackSpread(module, 7, 8, 7, alwaysShowSpreads: true)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        switch ((IconID)iconID)
+        switch (iconID)
         {
-            case IconID.DemonicDive:
-                AddStack(actor, WorldState.FutureTime(5.1f));
+            case (uint)IconID.DemonicDive:
+                AddStack(actor, WorldState.FutureTime(5.1d));
                 break;
-            case IconID.CoolFlame:
-                AddSpread(actor, WorldState.FutureTime(5.1f));
+            case (uint)IconID.CoolFlame:
+                AddSpread(actor, WorldState.FutureTime(5.1d));
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DemonicDive:
+            case (uint)AID.DemonicDive:
                 Stacks.Clear();
                 break;
-            case AID.CoolFlame:
+            case (uint)AID.CoolFlame:
                 Spreads.Clear();
                 break;
         }

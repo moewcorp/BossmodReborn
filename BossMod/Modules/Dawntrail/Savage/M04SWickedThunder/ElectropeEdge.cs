@@ -6,7 +6,7 @@ class ElectropeEdgeWitchgleam(BossModule module) : Components.GenericAOEs(module
 
     private static readonly AOEShapeCross _shape = new(60, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -75,25 +75,51 @@ class LightningCage(BossModule module) : Components.GenericAOEs(module, ActionID
 
     private static readonly AOEShapeRect _cell = new(4, 4, 4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var i in _aoePattern.SetBits())
-            yield return new(_cell, CellCenter(i), default, _activation);
-        foreach (var i in SafeCells(slot))
-            yield return new(_cell, CellCenter(i), default, _activation, Colors.SafeFromAOE, false);
+        var patternAOE = _aoePattern.SetBits();
+        var safeCells = SafeCells(slot);
+        var len = patternAOE.Length;
+        var count = safeCells.Count;
+        var aoes = new AOEInstance[len + count];
+        var index = 0;
+        for (var i = 0; i < len; ++i)
+            aoes[index++] = new(_cell, CellCenter(patternAOE[i]), default, _activation);
+        for (var i = 0; i < count; ++i)
+            aoes[index++] = new(_cell, CellCenter(safeCells[i]), default, _activation, Colors.SafeFromAOE, false);
+        return aoes;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (NumGleams >= 8)
-            hints.Add($"Order: {Order[slot]}, position: {_gleams[slot] + Order[slot] - 1}", Active && !SafeCells(slot).Any(i => _cell.Check(actor.Position, CellCenter(i), default)));
+        {
+            var isActive = Active;
+            var safeExists = false;
+
+            if (isActive)
+            {
+                var safeCells = SafeCells(slot);
+                var count = safeCells.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (_cell.Check(actor.Position, CellCenter(safeCells[i]), default))
+                    {
+                        safeExists = true;
+                        break;
+                    }
+                }
+            }
+
+            hints.Add($"Order: {Order[slot]}, position: {_gleams[slot] + Order[slot] - 1}", isActive && !safeExists);
+        }
         base.AddHints(slot, actor, hints);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.ElectricalCondenser && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
-            Order[slot] = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30 ? 1 : 2;
+        if (status.ID == (uint)SID.ElectricalCondenser && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+            Order[slot] = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30d ? 1 : 2;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -116,54 +142,59 @@ class LightningCage(BossModule module) : Components.GenericAOEs(module, ActionID
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.LightningCageWitchgleamAOE:
+            case (uint)AID.LightningCageWitchgleamAOE:
                 ++NumGleams;
-                foreach (var t in spell.Targets)
-                    if (Raid.FindSlot(t.ID) is var slot && slot >= 0)
+                var count = spell.Targets.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (Raid.FindSlot(spell.Targets[i].ID) is var slot && slot >= 0)
                         ++_gleams[slot];
+                }
                 break;
-            case AID.LightningCageSpark2:
-            case AID.LightningCageSpark3:
+            case (uint)AID.LightningCageSpark2:
+            case (uint)AID.LightningCageSpark3:
                 ++NumSparks;
                 break;
         }
     }
 
-    private IEnumerable<int> SafeCells(int slot)
+    private List<int> SafeCells(int slot)
     {
         var pattern = Array.FindIndex(_patterns, p => p.pattern == _aoePattern);
         if (pattern < 0)
-            yield break;
+            return [];
         var nextOrder = NumSparks switch
         {
             < 4 => 1,
             < 8 => 2,
             _ => 3
         };
+        var cells = new List<int>(2);
         if (Order[slot] != nextOrder)
         {
-            yield return _patterns[pattern].safe;
+            cells.Add(_patterns[pattern].safe);
         }
         else if (_gleams[slot] + nextOrder == 3)
         {
-            yield return _patterns[pattern].two1;
-            yield return _patterns[pattern].two2;
+            cells.Add(_patterns[pattern].two1);
+            cells.Add(_patterns[pattern].two2);
         }
         else if (_gleams[slot] + nextOrder == 4)
         {
-            yield return _patterns[pattern].three1;
-            yield return _patterns[pattern].three2;
+            cells.Add(_patterns[pattern].three1);
+            cells.Add(_patterns[pattern].three2);
         }
+        return cells;
     }
 
-    private int CoordinateToIndex(float c) => c switch
+    private static int CoordinateToIndex(float c) => c switch
     {
-        < 88 => 0,
-        < 96 => 1,
-        < 104 => 2,
-        < 112 => 3,
+        < 88f => 0,
+        < 96f => 1,
+        < 104f => 2,
+        < 112f => 3,
         _ => 4
     };
     private int PositionToIndex(WPos pos) => (CoordinateToIndex(pos.Z) << 3) | CoordinateToIndex(pos.X);
@@ -173,12 +204,16 @@ class LightningCage(BossModule module) : Components.GenericAOEs(module, ActionID
 
 class LightningCageWitchgleam(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.LightningCageWitchgleamAOE))
 {
-    private static readonly AOEShapeRect _shape = new(60, 2.5f);
+    private static readonly AOEShapeRect _shape = new(60f, 2.5f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LightningCageWitchgleam)
-            foreach (var p in Raid.WithoutSlot(true, true, true))
-                CurrentBaits.Add(new(caster, p, _shape, Module.CastFinishAt(spell, 1.2f)));
+        if (spell.Action.ID == (uint)AID.LightningCageWitchgleam)
+        {
+            var party = Raid.WithoutSlot(true, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
+                CurrentBaits.Add(new(caster, party[i], _shape, Module.CastFinishAt(spell, 1.2f)));
+        }
     }
 }

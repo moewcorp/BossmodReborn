@@ -12,7 +12,7 @@ public enum AID : uint
     Mow = 14879, // Boss->self, 3.0s cast, range 6+R 120-degree cone
 }
 
-class Mow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mow), new AOEShapeCone(7.4f, 60.Degrees()));
+class Mow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mow), new AOEShapeCone(7.4f, 60f.Degrees()));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -29,7 +29,18 @@ class Stage13Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<Mow>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.Vodoriga).All(e => e.IsDead);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage13Act1.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -40,12 +51,24 @@ public class Stage13Act1 : BossModule
     {
         ActivateComponent<Hints>();
     }
+    public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Vodoriga];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.Vodoriga).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Vodoriga));
+        Arena.Actors(Enemies((uint)OID.Vodoriga));
     }
 }

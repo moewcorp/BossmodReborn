@@ -4,14 +4,15 @@ class EyeOfTheStorm(BossModule module) : Components.GenericAOEs(module, ActionID
 {
     private Actor? _caster;
     private DateTime _nextCastAt;
-    private static readonly AOEShapeDonut _shape = new(12, 25); // TODO: verify inner radius
+    private static readonly AOEShapeDonut _shape = new(12f, 25f); // TODO: verify inner radius
 
     public bool Active() => _caster?.CastInfo != null || _nextCastAt > WorldState.CurrentTime;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster != null)
-            yield return new(_shape, _caster.Position, new(), _nextCastAt);
+            return new AOEInstance[1] { new(_shape, WPos.ClampToGrid(_caster.Position), new(), _nextCastAt) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -27,7 +28,7 @@ class EyeOfTheStorm(BossModule module) : Components.GenericAOEs(module, ActionID
     {
         if (spell.Action == WatchedAction)
         {
-            _nextCastAt = WorldState.FutureTime(4.2f);
+            _nextCastAt = WorldState.FutureTime(4.2d);
         }
     }
 }

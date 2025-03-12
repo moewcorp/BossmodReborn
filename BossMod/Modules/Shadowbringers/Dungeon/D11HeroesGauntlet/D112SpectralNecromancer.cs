@@ -106,12 +106,12 @@ class Burst(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(8f);
 
     // Note: Burst5 to Burst8 locations are unknown until players unable to move, so they are irrelevant and not drawn
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
         if (modelState == 54)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(6d))); // activation time can be vastly different, even twice as high so we take a conservative delay
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(6d))); // activation time can be vastly different, even twice as high so we take a conservative delay
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -141,13 +141,13 @@ class Doom(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _doomed.Add(actor);
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _doomed.Remove(actor);
     }
 
@@ -161,18 +161,22 @@ class Doom(BossModule module) : BossComponent(module)
                 hints.Add("Cleanse yourself! (Doom).");
         }
         if (CanActorCureDoom(actor))
-            for (var i = 0; i < _doomed.Count; ++i)
+        {
+            var count = _doomed.Count;
+            for (var i = 0; i < count; ++i)
             {
                 var doomed = _doomed[i];
                 if (doomed != actor)
                     hints.Add($"Cleanse {doomed.Name}! (Doom)");
             }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_doomed.Count > 0 && CanActorCureDoom(actor))
-            for (var i = 0; i < _doomed.Count; ++i)
+        var count = _doomed.Count;
+        if (count != 0 && CanActorCureDoom(actor))
+            for (var i = 0; i < count; ++i)
             {
                 var doomed = _doomed[i];
                 if (actor.Role == Role.Healer)

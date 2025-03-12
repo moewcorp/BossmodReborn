@@ -16,7 +16,7 @@ public abstract class GenericLineOfSightAOE(BossModule module, ActionID aid, flo
     public readonly List<(float Distance, Angle Dir, Angle HalfWidth)> Visibility = [];
     public readonly List<AOEInstance> Safezones = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Safezones.Count != 0 && !IgnoredPlayers[slot] ? [Safezones[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Safezones.Count != 0 && !IgnoredPlayers[slot] ? new AOEInstance[1] { Safezones[0] } : [];
 
     public void Modify(WPos? origin, IEnumerable<(WPos Center, float Radius)> blockers, DateTime nextExplosion = default)
     {
@@ -39,8 +39,22 @@ public abstract class GenericLineOfSightAOE(BossModule module, ActionID aid, flo
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveAOEs(slot, actor).Any(c => c.Risky && !c.Check(actor.Position)) && Origin != null && ((WPos)Origin - actor.Position).LengthSq() < MaxRange * MaxRange)
-            hints.Add(WarningText);
+        var aoes = ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        if (len == 0)
+            return;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var c = ref aoes[i];
+            if (c.Risky && !c.Check(actor.Position))
+            {
+                if (Origin != null && ((WPos)Origin - actor.Position).LengthSq() < MaxRange * MaxRange)
+                {
+                    hints.Add(WarningText);
+                    return;
+                }
+            }
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -93,14 +107,34 @@ public abstract class GenericLineOfSightAOE(BossModule module, ActionID aid, flo
 public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
 {
     public readonly List<Actor> Casters = [];
-    public Actor? ActiveCaster => Casters.MinBy(c => c.CastInfo!.RemainingTime);
+    public Actor? ActiveCaster
+    {
+        get
+        {
+            var count = Casters.Count;
+            if (count == 0)
+                return null;
+            Actor? activeCaster = null;
+            var minRemainingTime = double.MaxValue;
+            for (var i = 0; i < count; ++i)
+            {
+                var caster = Casters[i];
+                if (caster.CastInfo != null && caster.CastInfo.RemainingTime < minRemainingTime)
+                {
+                    minRemainingTime = caster.CastInfo.RemainingTime;
+                    activeCaster = caster;
+                }
+            }
+            return activeCaster;
+        }
+    }
 
     protected CastLineOfSightAOE(BossModule module, ActionID aid, float maxRange, bool blockersImpassable = false, bool rect = false, bool safeInsideHitbox = true) : base(module, aid, maxRange, blockersImpassable, rect, safeInsideHitbox)
     {
         Refresh();
     }
 
-    public abstract IEnumerable<Actor> BlockerActors();
+    public abstract ReadOnlySpan<Actor> BlockerActors();
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -126,6 +160,15 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
     {
         var caster = ActiveCaster;
         WPos? position = caster != null ? caster.CastInfo!.LocXZ : null;
-        Modify(position, BlockerActors().Select(b => (b.Position, b.HitboxRadius)), Module.CastFinishAt(caster?.CastInfo));
+        var blockers = BlockerActors();
+        var len = blockers.Length;
+        var blockerData = new (WPos, float)[len];
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var b = ref blockers[i];
+            blockerData[i] = (b.Position, b.HitboxRadius);
+        }
+        Modify(position, blockerData, Module.CastFinishAt(caster?.CastInfo));
     }
 }

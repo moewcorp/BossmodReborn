@@ -21,7 +21,7 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Circle> lanterns = [lantern1, lantern2, lantern3];
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001)

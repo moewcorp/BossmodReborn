@@ -4,15 +4,16 @@ class Hydroshot(BossModule module) : Components.Knockback(module)
 {
     private Actor? _caster;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_caster?.CastInfo?.TargetID == actor.InstanceID)
-            yield return new(_caster.Position, 10, Module.CastFinishAt(_caster.CastInfo));
+            return new Source[1] { new(_caster.Position, 10f, Module.CastFinishAt(_caster.CastInfo)) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NHydroshot or AID.SHydroshot)
+        if (spell.Action.ID is (uint)AID.NHydroshot or (uint)AID.SHydroshot)
             _caster = caster;
     }
 

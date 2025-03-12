@@ -6,23 +6,24 @@ class P1ProteanWaveLiquidVisHelper(BossModule module) : Components.SimpleAOEs(mo
 // single protean ("shadow") that fires in the direction the boss is facing
 class P1ProteanWaveLiquidInvisFixed(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ProteanWaveLiquidInvisBoss))
 {
-    private readonly Actor? _source = module.Enemies(OID.BossP1).FirstOrDefault();
+    private readonly Actor? _source = module.Enemies((uint)OID.BossP1).FirstOrDefault();
 
-    private static readonly AOEShapeCone _shape = new(40, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 15f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_source != null)
-            yield return new(_shape, _source.Position, _source.Rotation);
+            return new AOEInstance[1] { new(_shape, _source.Position, _source.Rotation) };
+        return [];
     }
 }
 
 // proteans baited on 4 closest targets
 class P1ProteanWaveLiquidInvisBaited(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.ProteanWaveLiquidInvisHelper))
 {
-    private readonly Actor? _source = module.Enemies(OID.BossP1).FirstOrDefault();
+    private readonly Actor? _source = module.Enemies((uint)OID.BossP1).FirstOrDefault();
 
-    private static readonly AOEShapeCone _shape = new(40, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 15f.Degrees());
 
     public override void Update()
     {

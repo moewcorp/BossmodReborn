@@ -50,7 +50,7 @@ class Buffet(BossModule module) : Components.KnockbackFromCastTarget(module, Act
         }
     }
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => target == actor ? base.Sources(slot, actor) : [];
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => target == actor ? base.ActiveSources(slot, actor) : [];
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {

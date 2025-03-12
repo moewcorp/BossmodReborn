@@ -17,16 +17,16 @@ public enum AID : uint
     SewageWaveSecond2 = 17421 // Boss->self, no cast, range 30 180-degree cone
 }
 
-abstract class SewerWater(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(12, 90.Degrees()));
+abstract class SewerWater(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(12f, 90f.Degrees()));
 class SewerWater1(BossModule module) : SewerWater(module, AID.SewerWater1);
 class SewerWater2(BossModule module) : SewerWater(module, AID.SewerWater2);
 
 class SewageWave(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCone cone = new(30, 90.Degrees());
+    private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -45,22 +45,22 @@ class SewageWave(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SewageWaveFirst1 or AID.SewageWaveFirst2)
+        if (spell.Action.ID is (uint)AID.SewageWaveFirst1 or (uint)AID.SewageWaveFirst2)
         {
             _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 2.3f)));
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 2.3f)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.SewageWaveFirst1 or AID.SewageWaveFirst2)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.SewageWaveFirst1 or (uint)AID.SewageWaveFirst2)
             _aoes.RemoveAt(0);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.SewageWaveSecond1 or AID.SewageWaveSecond2)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.SewageWaveSecond1 or (uint)AID.SewageWaveSecond2)
             _aoes.RemoveAt(0);
     }
 }

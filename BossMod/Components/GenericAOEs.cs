@@ -10,31 +10,44 @@ public abstract class GenericAOEs(BossModule module, ActionID aid = default, str
 
     public string WarningText = warningText;
 
-    public abstract IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor);
+    public abstract ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        foreach (var aoe in ActiveAOEs(slot, actor))
+        var aoes = ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Risky && aoe.Check(actor.Position))
             {
                 hints.Add(WarningText);
-                break;
+                return;
             }
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var c in ActiveAOEs(slot, actor))
+        var aoes = ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var c = ref aoes[i];
             if (c.Risky)
                 hints.AddForbiddenZone(c.Shape, c.Origin, c.Rotation, c.Activation);
+        }
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach (var c in ActiveAOEs(pcSlot, pc))
+        var aoes = ActiveAOEs(pcSlot, pc);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var c = ref aoes[i];
             c.Shape.Draw(Arena, c.Origin, c.Rotation, c.Color == 0 ? Colors.AOE : c.Color);
+        }
     }
 }
 
@@ -52,22 +65,17 @@ public class SimpleAOEs(BossModule module, ActionID aid, AOEShape shape, int max
 
     public readonly List<AOEInstance> Casters = [];
 
-    public List<AOEInstance> ActiveCasters
+    public ReadOnlySpan<AOEInstance> ActiveCasters
     {
         get
         {
             var count = Casters.Count;
             var max = count > MaxCasts ? MaxCasts : count;
-            List<AOEInstance> aoes = new(max);
-            for (var i = 0; i < max; ++i)
-            {
-                aoes.Add(Casters[i]);
-            }
-            return aoes;
+            return CollectionsMarshal.AsSpan(Casters)[..max];
         }
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
@@ -125,7 +133,7 @@ public class ChargeAOEs(BossModule module, ActionID aid, float halfWidth, int ma
         if (spell.Action == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length(), HalfWidth), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            Casters.Add(new(new AOEShapeRect(dir.Length(), HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), ActorID: caster.InstanceID));
         }
     }
 }

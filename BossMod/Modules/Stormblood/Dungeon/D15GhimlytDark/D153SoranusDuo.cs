@@ -83,8 +83,22 @@ class CrossbonesKB(BossModule module) : Components.Knockback(module, stopAtWall:
 {
     private DateTime _activation;
     private Actor? _caster;
+    private readonly Bombardment _aoe = module.FindComponent<Bombardment>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => _caster != null ? [new(_caster.Position, 15f, _activation)] : [];
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => _caster != null ? new Source[1] { new(_caster.Position, 15f, _activation) } : [];
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -100,8 +114,6 @@ class CrossbonesKB(BossModule module) : Components.Knockback(module, stopAtWall:
         if (spell.Action.ID == (uint)AID.Crossbones)
             _caster = null;
     }
-
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<Bombardment>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
 }
 
 class AngrySalamander(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamander), new AOEShapeRect(45.6f, 3f));
@@ -120,10 +132,23 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
     private static readonly WPos[] origins = [new(370.992f, -277.028f), new(362.514f, -273.49f), new(379.485f, -273.49f), new(358.999f, -265.034f),
     new(382.986f, -265.034f), new(379.485f, -256.52f), new(362.514f, -256.52f), new(370.992f, -253.01f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var count = _aoes.Count == 9 ? 4 : _aoes.Count == 8 ? 3 : 2;
-        return _aoes.Skip(count).Take(4).Concat(_aoes.Take(count).Select(a => a with { Color = Colors.Danger }));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        var max = count == 9 ? 4 : count == 8 ? 3 : 2;
+        var result = new AOEInstance[4 + max];
+        var index = 0;
+
+        for (var i = max; i < max + 4; ++i)
+            result[index++] = _aoes[i];
+
+        for (var i = 0; i < max; ++i)
+            result[index++] = _aoes[i] with { Color = Colors.Danger };
+
+        return result;
     }
 
     public override void OnActorCreated(Actor actor)
@@ -141,9 +166,9 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
                     var set = (count + 1) * 0.5d;
                     activation = 8.8d + 2.4d * set;
                 }
-                _aoes.Add(new(circle, origins[i], default, WorldState.FutureTime(activation)));
+                _aoes.Add(new(circle, WPos.ClampToGrid(origins[i]), default, WorldState.FutureTime(activation)));
             }
-            _aoes.Add(new(circleRoundhouse, new(370.992f, -265.034f), default, WorldState.FutureTime(3.1f)));
+            _aoes.Add(new(circleRoundhouse, WPos.ClampToGrid(new(370.992f, -265.034f)), default, WorldState.FutureTime(3.1d)));
             _aoes.SortBy(x => x.Activation);
         }
     }
@@ -160,7 +185,7 @@ class Crosshatch(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeRect rect = new(40.5f, 2f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -189,7 +214,7 @@ class Crosshatch(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.CrosshatchTelegraph6:
             case (uint)AID.CrosshatchTelegraph7:
             case (uint)AID.CrosshatchTelegraph8:
-                _aoes.Add(new(rect, caster.Position, spell.Rotation, _aoes.Count == 0 ? Module.CastFinishAt(spell, 2.1f) : _aoes[0].Activation.AddSeconds(_aoes.Count * 0.5d)));
+                _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, _aoes.Count == 0 ? Module.CastFinishAt(spell, 2.1f) : _aoes[0].Activation.AddSeconds(_aoes.Count * 0.5d)));
                 break;
         }
     }
@@ -215,19 +240,25 @@ class D153SoranusDuoStates : StateMachineBuilder
             .ActivateOnEnter<Heirsbane>()
             .ActivateOnEnter<ArtificialPlasmaAnnia>()
             .ActivateOnEnter<ArtificialPlasmaJulia>()
+            .ActivateOnEnter<Bombardment>()
             .ActivateOnEnter<Crossbones>()
             .ActivateOnEnter<CrossbonesKB>()
             .ActivateOnEnter<AngrySalamander>()
             .ActivateOnEnter<Quaternity1>()
             .ActivateOnEnter<Quaternity2>()
             .ActivateOnEnter<StunningSweep>()
-            .ActivateOnEnter<Bombardment>()
             .ActivateOnEnter<MagitekMissile>()
             .ActivateOnEnter<CoveringFire>()
             .ActivateOnEnter<CeruleumTanks>()
             .ActivateOnEnter<Crosshatch>()
             .ActivateOnEnter<ImperialAuthorityAnnia>()
-            .ActivateOnEnter<ImperialAuthorityJulia>();
+            .ActivateOnEnter<ImperialAuthorityJulia>()
+            .Raw.Update = () =>
+            {
+                var julia = module.Enemies((uint)OID.JuliaQuoSoranus);
+                var count = julia.Count;
+                return module.PrimaryActor.IsDeadOrDestroyed && (count == 0 || count != 0 && julia[0].IsDeadOrDestroyed);
+            };
     }
 }
 
@@ -239,12 +270,12 @@ public class D153SoranusDuo(WorldState ws, Actor primary) : BossModule(ws, prima
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.JuliaQuoSoranus));
+        Arena.Actors(Enemies((uint)OID.JuliaQuoSoranus));
     }
 
     protected override bool CheckPull()
     {
-        var julia = Enemies(OID.JuliaQuoSoranus);
+        var julia = Enemies((uint)OID.JuliaQuoSoranus);
         return PrimaryActor.InCombat || julia.Count != 0 && julia[0].InCombat;
     }
 }

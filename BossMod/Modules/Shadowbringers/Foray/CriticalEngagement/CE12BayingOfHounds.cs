@@ -33,31 +33,31 @@ public enum AID : uint
 }
 
 class Hellclaw(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Hellclaw));
-class TailBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailBlow), new AOEShapeCone(19, 45.Degrees()));
-class LavaSpit(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LavaSpitAOE), 5);
-class ScorchingLash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchingLash), new AOEShapeRect(50, 5));
+class TailBlow(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailBlow), new AOEShapeCone(19f, 45f.Degrees()));
+class LavaSpit(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LavaSpitAOE), 5f);
+class ScorchingLash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScorchingLash), new AOEShapeRect(50f, 5f));
 
 class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Hellpounce), "GTFO from charge!")
 {
     private AOEInstance? _charge;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_charge);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _charge);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Hellpounce or AID.HellpounceSecond)
+        if (spell.Action.ID is (uint)AID.Hellpounce or (uint)AID.HellpounceSecond)
             Activate(caster.Position, spell.LocXZ, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Hellpounce:
+            case (uint)AID.Hellpounce:
                 var offset = spell.LocXZ - Arena.Center;
                 Activate(spell.LocXZ, Arena.Center - offset, WorldState.FutureTime(3.7f));
                 break;
-            case AID.HellpounceSecond:
+            case (uint)AID.HellpounceSecond:
                 _charge = null;
                 break;
         }
@@ -66,11 +66,11 @@ class Hellpounce(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     private void Activate(WPos source, WPos target, DateTime activation)
     {
         var toTarget = target - source;
-        _charge = new(new AOEShapeRect(toTarget.Length(), 5), source, Angle.FromDirection(toTarget), activation);
+        _charge = new(new AOEShapeRect(toTarget.Length(), 5f), WPos.ClampToGrid(source), Angle.FromDirection(toTarget), activation);
     }
 }
 
-abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60, 30.Degrees()));
+abstract class Breath(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(60f, 30f.Degrees()));
 class DragonsBreathR(BossModule module) : Breath(module, AID.DragonsBreathAOER);
 class DragonsBreathL(BossModule module) : Breath(module, AID.DragonsBreathAOEL);
 class LionsBreath(BossModule module) : Breath(module, AID.LionsBreathAOE);
@@ -80,22 +80,22 @@ class VoidTornado(BossModule module) : Components.CastHint(module, ActionID.Make
 class VoidQuake(BossModule module) : Components.GenericAOEs(module) // this concentric AOE can happen forwards or backwards in order with the same AID as the starter
 {
     private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCircle _shape1 = new(10f);
+    private static readonly AOEShapeDonut _shape2 = new(10f, 20f);
+    private static readonly AOEShapeDonut _shape3 = new(20f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var count = _aoes.Count;
-        if (count == 0)
-            return [];
-        return [_aoes[0]];
+        return _aoes.Count == 0 ? [] : CollectionsMarshal.AsSpan(_aoes)[..1];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        AOEShape? shape = (AID)spell.Action.ID switch
+        AOEShape? shape = spell.Action.ID switch
         {
-            AID.VoidQuakeAOE1 => new AOEShapeCircle(10),
-            AID.VoidQuakeAOE2 => new AOEShapeDonut(10, 20),
-            AID.VoidQuakeAOE3 => new AOEShapeDonut(20, 30),
+            (uint)AID.VoidQuakeAOE1 => _shape1,
+            (uint)AID.VoidQuakeAOE2 => _shape2,
+            (uint)AID.VoidQuakeAOE3 => _shape3,
             _ => null
         };
         if (shape != null)
@@ -104,7 +104,7 @@ class VoidQuake(BossModule module) : Components.GenericAOEs(module) // this conc
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.VoidQuakeAOE1 or AID.VoidQuakeAOE2 or AID.VoidQuakeAOE3)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.VoidQuakeAOE1 or (uint)AID.VoidQuakeAOE2 or (uint)AID.VoidQuakeAOE3)
             _aoes.RemoveAt(0);
     }
 }
@@ -128,4 +128,4 @@ class CE12BayingOfHoundsStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)] // bnpcname=9394
-public class CE12BayingOfHounds(WorldState ws, Actor primary) : BossModule(ws, primary, new(154, 785), new ArenaBoundsCircle(25));
+public class CE12BayingOfHounds(WorldState ws, Actor primary) : BossModule(ws, primary, new(154f, 785f), new ArenaBoundsCircle(25f));

@@ -4,36 +4,36 @@ class LeftArmMetalCutterAOE(BossModule module) : Components.GenericAOEs(module)
 {
     public enum State { FirstAOEs, SecondAOEs, Done }
 
-    public State CurState { get; private set; }
+    public State CurState;
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCone _shape = new(40, 45.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LeftArmMetalCutterAOE1)
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+        if (spell.Action.ID == (uint)AID.LeftArmMetalCutterAOE1)
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.LeftArmMetalCutterAOE1:
+            case (uint)AID.LeftArmMetalCutterAOE1:
                 if (CurState == State.FirstAOEs)
                 {
                     for (var i = 0; i < _aoes.Count; ++i)
                     {
                         var aoe = _aoes[i];
-                        aoe.Rotation += 180.Degrees();
-                        aoe.Activation = WorldState.FutureTime(5.1f);
+                        aoe.Rotation += 180f.Degrees();
+                        aoe.Activation = WorldState.FutureTime(5.1d);
                         _aoes[i] = aoe;
                     }
                     CurState = State.SecondAOEs;
                 }
                 break;
-            case AID.LeftArmMetalCutterAOE2:
+            case (uint)AID.LeftArmMetalCutterAOE2:
                 CurState = State.Done;
                 _aoes.Clear();
                 break;
@@ -46,13 +46,13 @@ class LeftArmMetalCutterKnockback(BossModule module, AID aid, float distance) : 
     private readonly float _distance = distance;
     private Source? _instance;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_instance);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _instance);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LeftArmMetalCutter or AID.ArmUnit)
+        if (spell.Action.ID is (uint)AID.LeftArmMetalCutter or (uint)AID.ArmUnit)
             _instance = new(caster.Position, _distance, Module.CastFinishAt(spell, 0.6f));
     }
 }
-class LeftArmMetalCutterKnockbackShort(BossModule module) : LeftArmMetalCutterKnockback(module, AID.LeftArmMetalCutterKnockbackShort, 5);
-class LeftArmMetalCutterKnockbackLong(BossModule module) : LeftArmMetalCutterKnockback(module, AID.LeftArmMetalCutterKnockbackLong, 15);
+class LeftArmMetalCutterKnockbackShort(BossModule module) : LeftArmMetalCutterKnockback(module, AID.LeftArmMetalCutterKnockbackShort, 5f);
+class LeftArmMetalCutterKnockbackLong(BossModule module) : LeftArmMetalCutterKnockback(module, AID.LeftArmMetalCutterKnockbackLong, 15f);

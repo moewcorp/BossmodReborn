@@ -13,25 +13,38 @@ class RapidBoltsBait(BossModule module) : Components.UniformStackSpread(module, 
 class RapidBoltsAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<(WPos pos, int numCasts)> _puddles = [];
-    private static readonly AOEShapeCircle _shape = new(5);
+    private static readonly AOEShapeCircle _shape = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _puddles.Select(p => new AOEInstance(_shape, p.pos));
+        var count = _puddles.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = new(_shape, _puddles[i].pos);
+        }
+        return aoes;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.RapidBoltsAOE)
+        if (spell.Action.ID == (uint)AID.RapidBoltsAOE)
         {
             ++NumCasts;
-            var index = _puddles.FindIndex(p => p.pos.InCircle(spell.TargetXZ, 1));
-            if (index < 0)
-                _puddles.Add((spell.TargetXZ, 1));
-            else if (_puddles[index].numCasts < 11)
-                _puddles[index] = (spell.TargetXZ, _puddles[index].numCasts + 1);
-            else
-                _puddles.RemoveAt(index);
+            var count = _puddles.Count;
+            for (var i = count - 1; i <= 0; --i)
+            {
+                var puddle = _puddles[i];
+                if (puddle.pos.InCircle(spell.TargetXZ, 1f))
+                {
+                    if (puddle.numCasts < 11)
+                        _puddles[i] = (spell.TargetXZ, puddle.numCasts + 1);
+                    else
+                        _puddles.RemoveAt(i);
+                    return;
+                }
+            }
+            _puddles.Add((spell.TargetXZ, 1));
         }
     }
 }

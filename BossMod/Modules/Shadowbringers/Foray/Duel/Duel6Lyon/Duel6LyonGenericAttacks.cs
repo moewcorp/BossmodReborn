@@ -110,10 +110,10 @@ class WindsPeakKB(BossModule module) : Components.Knockback(module)
     private bool _watched;
     private DateTime _activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_watched && WorldState.CurrentTime < _time.AddSeconds(4.4d))
-            return [new(Module.PrimaryActor.Position, 15f, _activation)];
+            return new Source[1] { new(Module.PrimaryActor.Position, 15f, _activation) };
         else
             return [];
     }

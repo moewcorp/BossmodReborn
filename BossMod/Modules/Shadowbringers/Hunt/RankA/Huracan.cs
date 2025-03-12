@@ -18,59 +18,59 @@ public enum AID : uint
     AutumnWreath = 17498 // Boss->self, 4.0s cast, range 10-20 donut
 }
 
-class SpringBreeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpringBreeze), new AOEShapeRect(80, 5));
+class SpringBreeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpringBreeze), new AOEShapeRect(80f, 5f));
 class SummerHeat(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SummerHeat));
 
 class Combos(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(10, 20);
-    private static readonly AOEShapeCircle circle = new(6);
-    private static readonly AOEShapeRect rect = new(15, 5);
-    private static readonly AOEShapeRect rect2 = new(40, 5, 40);
+    private static readonly AOEShapeDonut donut = new(10f, 20f);
+    private static readonly AOEShapeCircle circle = new(6f);
+    private static readonly AOEShapeRect rect = new(15f, 5f);
+    private static readonly AOEShapeRect rect2 = new(40f, 5f, 40f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
             if (i == 0)
-                aoes.Add(count > 1 ? aoe with { Color = Colors.Danger } : aoe);
-            else if (i == 1)
-                aoes.Add(aoe);
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
         }
         return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        AOEShape? shape = (AID)spell.Action.ID switch
+        AOEShape? shape = spell.Action.ID switch
         {
-            AID.AutumnWreath => donut,
-            AID.DawnsEdge => rect,
-            AID.WinterRain => circle,
+            (uint)AID.AutumnWreath => donut,
+            (uint)AID.DawnsEdge => rect,
+            (uint)AID.WinterRain => circle,
             _ => null
         };
         if (shape != null)
         {
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(rect2, spell.LocXZ, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 3.1f)));
+            _aoes.Add(new(rect2, spell.LocXZ, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 3.1f)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.AutumnWreath or AID.DawnsEdge or AID.WinterRain)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.AutumnWreath or (uint)AID.DawnsEdge or (uint)AID.WinterRain)
             _aoes.RemoveAt(0);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Windburst)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Windburst)
             _aoes.RemoveAt(0);
     }
 }

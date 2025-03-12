@@ -8,7 +8,7 @@ class BlowingBubbles(BossModule module) : BossComponent(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.NAiryBubbleExaflare or OID.SAiryBubbleExaflare)
+        if (actor.OID is (uint)OID.NAiryBubbleExaflare or (uint)OID.SAiryBubbleExaflare)
             _actors.Add(actor);
     }
 

@@ -5,7 +5,7 @@ class EnaeroEndeath(BossModule module) : Components.Knockback(module)
     private Source? _source;
     private Kind _delayed;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _source);
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _source?.Kind == Kind.TowardsOrigin ? (pos - _source.Value.Origin).LengthSq() <= 36f : !Module.InBounds(pos);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -88,7 +88,7 @@ class EnaeroAOE(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -136,7 +136,7 @@ class EndeathAOE(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeOut = new(6f);
     private static readonly AOEShapeDonut _shapeIn = new(6f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

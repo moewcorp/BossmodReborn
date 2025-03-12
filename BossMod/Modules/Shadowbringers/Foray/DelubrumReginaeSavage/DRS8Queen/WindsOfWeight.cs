@@ -7,17 +7,25 @@ class WindsOfWeight(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Actor> _purple = [];
     private BitMask _invertedPlayers;
 
-    private static readonly AOEShapeCircle _shape = new(20);
+    private static readonly AOEShapeCircle _shape = new(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return (_invertedPlayers[slot] ? _purple : _green).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var actors = _invertedPlayers[slot] ? _purple : _green;
+        var count = actors.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = actors[i];
+            aoes[i] = new(_shape, c.CastInfo!.LocXZ, c.CastInfo.Rotation, Module.CastFinishAt(c.CastInfo));
+        }
+        return aoes;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.ReversalOfForces)
-            _invertedPlayers.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.ReversalOfForces)
+            _invertedPlayers[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -30,10 +38,10 @@ class WindsOfWeight(BossModule module) : Components.GenericAOEs(module)
         CasterList(spell)?.Remove(caster);
     }
 
-    private List<Actor>? CasterList(ActorCastInfo spell) => (AID)spell.Action.ID switch
+    private List<Actor>? CasterList(ActorCastInfo spell) => spell.Action.ID switch
     {
-        AID.WindsOfFate => _green,
-        AID.WeightOfFortune => _purple,
+        (uint)AID.WindsOfFate => _green,
+        (uint)AID.WeightOfFortune => _purple,
         _ => null
     };
 }

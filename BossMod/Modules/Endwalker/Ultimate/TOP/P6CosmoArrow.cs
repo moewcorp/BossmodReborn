@@ -10,14 +10,22 @@ class P6CosmoArrow(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _lines.Count > 0;
 
-    private static readonly AOEShapeRect _shapeFirst = new(40, 5);
-    private static readonly AOEShapeRect _shapeRest = new(100, 2.5f);
+    private static readonly AOEShapeRect _shapeFirst = new(40f, 5f);
+    private static readonly AOEShapeRect _shapeRest = new(100f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var l in _lines)
+        var count = _lines.Count;
+        if (count == 0)
+            return [];
+        var aoes = new List<AOEInstance>();
+        for (var i = 0; i < count; ++i)
+        {
+            var l = _lines[i];
             if (l.Shape != null && l.ExplosionsLeft > 0)
-                yield return new(l.Shape, l.Next, l.Direction, l.NextExplosion);
+                aoes.Add(new(l.Shape, l.Next, l.Direction, l.NextExplosion));
+        }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -28,37 +36,40 @@ class P6CosmoArrow(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.CosmoArrowFirst)
+        if (spell.Action.ID == (uint)AID.CosmoArrowFirst)
         {
-            var offset = caster.Position - Module.Center;
+            var offset = caster.Position - Arena.Center;
             var offsetAbs = offset.Abs();
+            var act = Module.CastFinishAt(spell);
+            var rot = spell.Rotation;
+            var pos = caster.Position;
             if (offsetAbs.X < 5)
             {
                 // central vertical
-                _lines.Add(new(_shapeFirst, caster.Position, spell.Rotation, new(1, 0), Module.CastFinishAt(spell), 4));
-                _lines.Add(new(null, caster.Position, spell.Rotation, new(-1, 0), Module.CastFinishAt(spell), 4));
+                _lines.Add(new(_shapeFirst, pos, rot, new(1, 0), act, 4));
+                _lines.Add(new(null, pos, rot, new(-1, 0), act, 4));
                 if (CurPattern == Pattern.Unknown)
                     CurPattern = Pattern.InOut;
             }
             else if (offsetAbs.Z < 5)
             {
                 // central horizontal
-                _lines.Add(new(_shapeFirst, caster.Position, spell.Rotation, new(0, 1), Module.CastFinishAt(spell), 4));
-                _lines.Add(new(null, caster.Position, spell.Rotation, new(0, -1), Module.CastFinishAt(spell), 4));
+                _lines.Add(new(_shapeFirst, pos, rot, new(0, 1), act, 4));
+                _lines.Add(new(null, pos, rot, new(0, -1), act, 4));
                 if (CurPattern == Pattern.Unknown)
                     CurPattern = Pattern.InOut;
             }
             else if (offsetAbs.X < 18)
             {
                 // side vertical
-                _lines.Add(new(_shapeFirst, caster.Position, spell.Rotation, new(offset.X < 0 ? 1 : -1, 0), Module.CastFinishAt(spell), 7));
+                _lines.Add(new(_shapeFirst, pos, rot, new(offset.X < 0 ? 1 : -1, 0), act, 7));
                 if (CurPattern == Pattern.Unknown)
                     CurPattern = Pattern.OutIn;
             }
             else if (offsetAbs.Z < 18)
             {
                 // side horizontal
-                _lines.Add(new(_shapeFirst, caster.Position, spell.Rotation, new(0, offset.Z < 0 ? 1 : -1), Module.CastFinishAt(spell), 7));
+                _lines.Add(new(_shapeFirst, pos, rot, new(0, offset.Z < 0 ? 1 : -1), act, 7));
                 if (CurPattern == Pattern.Unknown)
                     CurPattern = Pattern.OutIn;
             }
@@ -71,11 +82,11 @@ class P6CosmoArrow(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        var dist = (AID)spell.Action.ID switch
+        var dist = spell.Action.ID switch
         {
-            AID.CosmoArrowFirst => 7.5f,
-            AID.CosmoArrowRest => 5.0f,
-            _ => 0
+            (uint)AID.CosmoArrowFirst => 7.5f,
+            (uint)AID.CosmoArrowRest => 5f,
+            _ => default
         };
         if (dist == 0)
             return;

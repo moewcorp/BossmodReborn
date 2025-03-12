@@ -7,7 +7,7 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, ActionID
     private static readonly AOEShapeDonutSector _shape = new(20f, 30f, 45f.Degrees());
     private readonly List<AOEInstance> _aoes = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -59,7 +59,7 @@ class RadiantFlourish(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(25f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {

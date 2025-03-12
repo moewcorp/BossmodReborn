@@ -4,10 +4,11 @@ class VulcanBurst(BossModule module, AID aid, Actor? source) : Components.Knockb
 {
     protected Actor? SourceActor = source;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (SourceActor != null)
-            yield return new(SourceActor.Position, 15); // TODO: activation
+            return new Source[1] { new(SourceActor.Position, 15f) }; // TODO: activation
+        return [];
     }
 }
 

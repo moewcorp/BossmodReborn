@@ -24,25 +24,25 @@ public enum AID : uint
 
 class TailLaser(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(20.5f, 5, 20.5f);
-    private AOEInstance? _aoe;
+    private static readonly AOEShapeRect rect = new(20.5f, 5f);
+    private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TailLaserVisual)
-            _aoe = new(rect, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 1));
+        if (spell.Action.ID is (uint)AID.TailLaserBackFirst or (uint)AID.TailLaserFrontFirst)
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 1)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TailLaserBackFirst or AID.TailLaserFrontFirst or AID.TailLaserFrontRest or AID.TailLaserBackRest)
+        if (spell.Action.ID is (uint)AID.TailLaserFrontRest or (uint)AID.TailLaserBackRest)
         {
-            if (++NumCasts == 14)
+            if (++NumCasts == 12)
             {
                 NumCasts = 0;
-                _aoe = null;
+                _aoes.Clear();
             }
         }
     }
@@ -50,16 +50,48 @@ class TailLaser(BossModule module) : Components.GenericAOEs(module)
 
 class TargetSearch(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(5);
+    private static readonly AOEShapeCircle circle = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var t in Module.Enemies(OID.Target).Where(x => x.EventState == 0))
-            yield return new(circle, t.Position);
+        var enemies = Module.Enemies((uint)OID.Target);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new List<AOEInstance>(count);
+
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState == 0)
+                aoes.Add(new(circle, z.Position));
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
 
-class LockOn(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.LockOn), m => m.Enemies(OID.FireVoidzone).Where(z => z.EventState != 7), 0.7f);
+class LockOn(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5f, ActionID.MakeSpell(AID.LockOn), GetVoidzones, 0.7f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.FireVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class ElectromagneticField(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ElectromagneticField));
 

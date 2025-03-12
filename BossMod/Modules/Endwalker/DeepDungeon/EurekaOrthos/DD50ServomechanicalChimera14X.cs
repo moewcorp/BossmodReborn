@@ -36,7 +36,7 @@ class RamsDragonVoice(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(9f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -121,7 +121,7 @@ class Cacophony(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(6);
     private readonly List<Actor> _orbs = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _orbs.Count;
         if (count == 0)

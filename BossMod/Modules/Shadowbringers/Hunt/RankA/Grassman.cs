@@ -24,7 +24,7 @@ class ChestThump(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChestThump)
+        if (spell.Action.ID == (uint)AID.ChestThump)
         {
             casting = true;
             _activation = Module.CastFinishAt(spell);
@@ -33,7 +33,7 @@ class ChestThump(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChestThump)
+        if (spell.Action.ID == (uint)AID.ChestThump)
         {
             ++NumCasts;
             if (NumCasts == 1)
@@ -43,7 +43,7 @@ class ChestThump(BossModule module) : BossComponent(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ChestThump2)
+        if (spell.Action.ID == (uint)AID.ChestThump2)
         {
             ++NumCasts2;
             if (NumCasts2 == 4)
@@ -71,9 +71,9 @@ class ChestThump(BossModule module) : BossComponent(module)
     }
 }
 
-class StoolPelt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StoolPelt), 5);
+class StoolPelt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StoolPelt), 5f);
 class Browbeat(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Browbeat));
-class Streak(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Streak), 3);
+class Streak(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.Streak), 3f);
 
 class GrassmanStates : StateMachineBuilder
 {

@@ -36,7 +36,7 @@ class TornadoIIAerogaIVDualCast(BossModule module) : Components.GenericAOEs(modu
     private bool dualCast;
     public readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

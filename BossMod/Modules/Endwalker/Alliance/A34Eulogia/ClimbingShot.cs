@@ -5,8 +5,22 @@ class ClimbingShot(BossModule module) : Components.Knockback(module)
     private readonly AsAboveSoBelow? _exaflare = module.FindComponent<AsAboveSoBelow>();
     private Source? _knockback;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos) || (_exaflare?.ActiveAOEs(slot, actor).Any(z => z.Check(pos)) ?? false);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_exaflare == null)
+            return false;
+        var aoes = _exaflare.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

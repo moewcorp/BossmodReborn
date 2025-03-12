@@ -22,15 +22,16 @@ class LeafstormRimestorm(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _leafstorm = new(10f);
     private static readonly AOEShapeCone _rimestorm = new(40f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var aoes = new List<AOEInstance>(2);
         if (Module.PrimaryActor.CastInfo?.IsSpell(AID.Leafstorm) ?? false)
-            yield return new(_leafstorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
-
+            aoes.Add(new(_leafstorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo)));
         if (Module.PrimaryActor.CastInfo?.IsSpell(AID.Rimestorm) ?? false)
-            yield return new(_rimestorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+            aoes.Add(new(_rimestorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo)));
         else if (_rimestormExpected != default)
-            yield return new(_rimestorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo?.Rotation ?? Module.PrimaryActor.Rotation, _rimestormExpected);
+            aoes.Add(new(_rimestorm, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo?.Rotation ?? Module.PrimaryActor.Rotation, _rimestormExpected));
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

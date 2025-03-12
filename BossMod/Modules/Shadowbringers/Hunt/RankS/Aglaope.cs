@@ -2,7 +2,7 @@ namespace BossMod.Shadowbringers.Hunt.RankS.Aglaope;
 
 public enum OID : uint
 {
-    Boss = 0x281E, // R=2.4
+    Boss = 0x281E // R=2.4
 }
 
 public enum AID : uint
@@ -14,52 +14,61 @@ public enum AID : uint
     Tornado = 18040, // Boss->location, 3.0s cast, range 6 circle
     AncientAero = 16823, // Boss->self, 3.0s cast, range 40+R width 6 rect
     SongOfTorment = 16825, // Boss->self, 5.0s cast, range 50 circle, interruptible raidwide with bleed
-    AncientAeroIII = 18056, // Boss->self, 3.0s cast, range 30 circle, knockback 10, away from source
+    AncientAeroIII = 18056 // Boss->self, 3.0s cast, range 30 circle, knockback 10, away from source
 }
 
 public enum SID : uint
 {
-    Seduced = 991, // Boss->player, extra=0x11
-    Bleeding = 642, // Boss->player, extra=0x0
+    Seduced = 991 // Boss->player, extra=0x11
 }
 
 class SongOfTorment(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.SongOfTorment), hintExtra: "Raidwide + Bleed");
 
-//TODO: ideally this AOE should just wait for Effect Results, since they can be delayed by over 2.1s, which would cause unknowning players and AI to run back into the death zone, 
-//not sure how to do this though considering there can be anywhere from 0-32 targets with different time for effect results each
 class SeductiveSonata(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _time;
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCircle circle = new(16.2f);
+    bool done;
+    private static readonly AOEShapeCircle circle = new(16.2f); // circle + minimum distance to survive seducing status
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _time > WorldState.CurrentTime ? Utils.ZeroOrOne(_aoe) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SeductiveSonata)
-        {
+        if (spell.Action.ID == (uint)AID.SeductiveSonata)
             _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
-            _time = Module.CastFinishAt(spell, 2.2f);
-        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.SeductiveSonata)
+            done = true;
     }
 
     public override void Update()
     {
-        if (_time < WorldState.CurrentTime)
+        // this AOE should wait for Effect Results, since they can be delayed by over 2.1s, which would cause unknowning players and AI to run back into the death zone
+        if (done)
         {
-            _time = default;
+            var player = Module.Raid.Player()!;
+            var statuses = player.PendingStatuses;
+            var count = statuses.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (statuses[i].StatusId == (uint)SID.Seduced)
+                    return;
+            }
             _aoe = null;
+            done = false;
         }
     }
 }
 
-class DeathlyVerse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathlyVerse), 6);
-class Tornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tornado), 6);
-class FourfoldSuffering(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FourfoldSuffering), new AOEShapeDonut(5, 50));
-class AncientAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientAero), new AOEShapeRect(42.4f, 3));
+class DeathlyVerse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeathlyVerse), 6f);
+class Tornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tornado), 6f);
+class FourfoldSuffering(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FourfoldSuffering), new AOEShapeDonut(5f, 50f));
+class AncientAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientAero), new AOEShapeRect(42.4f, 3f));
 class AncientAeroIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AncientAeroIII));
-class AncientAeroIIIKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AncientAeroIII), 10, shape: new AOEShapeCircle(30));
+class AncientAeroIIIKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.AncientAeroIII), 10f, shape: new AOEShapeCircle(30f));
 
 class AglaopeStates : StateMachineBuilder
 {

@@ -68,7 +68,7 @@ class CorrosiveBile(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeCone cone = new(24.875f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -97,7 +97,7 @@ class FlailingTentacles(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeCross cross = new(38.875f, 3.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

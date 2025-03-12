@@ -67,11 +67,11 @@ public enum TetherID : uint
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(20, 35);
+    private static readonly AOEShapeDonut donut = new(20f, 35f);
     private AOEInstance? _aoe;
     private bool begin;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -90,7 +90,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class UnmovingTroikaFirst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.UnmovingTroikaFirst), new AOEShapeCone(9.96f, 60.Degrees()))
+class UnmovingTroikaFirst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.UnmovingTroikaFirst), new AOEShapeCone(9.96f, 60f.Degrees()))
 {
     private bool imminent;
 
@@ -120,29 +120,29 @@ class UnmovingTroikaFirst(BossModule module) : Components.Cleave(module, ActionI
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.UnmovingTroikaFirst)
+        if (spell.Action.ID == (uint)AID.UnmovingTroikaFirst)
             imminent = false;
     }
 }
 
-abstract class UnmovingTroika(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.96f, 60.Degrees()));
+abstract class UnmovingTroika(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(9.96f, 60f.Degrees()));
 class UnmovingTroikaSecond(BossModule module) : UnmovingTroika(module, AID.UnmovingTroikaSecond);
 class UnmovingTroikaLast(BossModule module) : UnmovingTroika(module, AID.UnmovingTroikaLast);
 
-abstract class ArtOfTheStorm(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
+abstract class ArtOfTheStorm(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8f);
 class ArtOfTheStorm1(BossModule module) : ArtOfTheStorm(module, AID.ArtOfTheStorm1);
 class ArtOfTheStorm2(BossModule module) : ArtOfTheStorm(module, AID.ArtOfTheStorm2);
 
-abstract class VeinSplitter(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10);
+abstract class VeinSplitter(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 10f);
 class VeinSplitter1(BossModule module) : VeinSplitter(module, AID.VeinSplitter1);
 class VeinSplitter2(BossModule module) : VeinSplitter(module, AID.VeinSplitter2);
 
-abstract class ArtOfTheSwell(BossModule module, AID aid) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), 15)
+abstract class ArtOfTheSwell(BossModule module, AID aid) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(aid), 15f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5), Module.CastFinishAt(Casters.FirstOrDefault()!.CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5f), Module.CastFinishAt(Casters[0].CastInfo));
     }
 }
 class ArtOfTheSwell1(BossModule module) : ArtOfTheSwell(module, AID.ArtOfTheSwell1);
@@ -150,37 +150,44 @@ class ArtOfTheSwell2(BossModule module) : ArtOfTheSwell(module, AID.ArtOfTheSwel
 
 class ArtOfTheSword(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect = new(40.5f, 3);
+    private static readonly AOEShapeRect rect = new(40.5f, 3f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ArtOfTheSwordVisual1 or AID.ArtOfTheSwordVisual2)
-            foreach (var a in Raid.WithoutSlot(false, true, true))
-                CurrentBaits.Add(new(caster, a, rect, WorldState.FutureTime(6.3f)));
+        if (spell.Action.ID is (uint)AID.ArtOfTheSwordVisual1 or (uint)AID.ArtOfTheSwordVisual2)
+        {
+            var party = Raid.WithoutSlot(false, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
+                CurrentBaits.Add(new(caster, party[i], rect, WorldState.FutureTime(6.3d)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ArtOfTheSword1 or AID.ArtOfTheSword2)
+        if (spell.Action.ID is (uint)AID.ArtOfTheSword1 or (uint)AID.ArtOfTheSword2)
             CurrentBaits.Clear();
     }
 }
 
-class LightlessSparkBaitaway(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(40.96f, 45.Degrees()), (uint)TetherID.BaitAway, ActionID.MakeSpell(AID.LightlessSpark), activationDelay: 8)
+class LightlessSparkBaitaway(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(40.96f, 45f.Degrees()), (uint)TetherID.BaitAway, ActionID.MakeSpell(AID.LightlessSpark), activationDelay: 8)
 {
     private readonly ArtOfTheSwell1 _kb = module.FindComponent<ArtOfTheSwell1>()!;
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb.Casters.Count > 0) // resolve knockback before baits
+        if (_kb.Casters.Count != 0) // resolve knockback before baits
             return;
         base.AddAIHints(slot, actor, assignment, hints);
-        var bait = CurrentBaits.FirstOrDefault(x => x.Target == actor).Source;
-        if (CurrentBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(bait.Position, 10, Angle.FromDirection(bait.Position - Arena.Center), 45.Degrees()), WorldState.FutureTime(ActivationDelay));
+        var baits = ActiveBaitsOn(actor);
+        if (baits.Count != 0)
+        {
+            var bait = baits[0].Source;
+            hints.AddForbiddenZone(ShapeDistance.InvertedCone(bait.Position, 10f, Angle.FromDirection(bait.Position - Arena.Center), 45f.Degrees()), WorldState.FutureTime(ActivationDelay));
+        }
     }
 }
 
-class LightlessSparkAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.96f, 45.Degrees()));
+class LightlessSparkAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.96f, 45f.Degrees()));
 
 class Concentrativity(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Concentrativity));
 
@@ -209,10 +216,12 @@ class D063ZenosYaeGalvusStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 247, NameID = 6039)]
 public class D063ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(250, -353), new ArenaBoundsSquare(22.5f))
 {
-    public static readonly ArenaBoundsCircle DefaultBounds = new(20);
+    public static readonly ArenaBoundsCircle DefaultBounds = new(20f);
+    private static readonly uint[] swords = [(uint)OID.TheStorm, (uint)OID.TheSwell, (uint)OID.AmeNoHabakiri];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.TheStorm).Concat([PrimaryActor]).Concat(Enemies(OID.TheSwell)).Concat(Enemies(OID.AmeNoHabakiri)));
+        Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies(swords));
     }
 }

@@ -26,27 +26,26 @@ public enum AID : uint
     Earthquake = 15565, // Boss->self, 4.0s cast, range 10 circle
     TheBurningSkyVisual = 15559, // Boss->self, 5.2s cast, single-target
     TheBurningSky1 = 13642, // FallingTower->location, 3.5s cast, range 6 circle
-    TheBurningSky2 = 15560, // Helper->player, 5.2s cast, range 6 circle, spread
+    TheBurningSky2 = 15560 // Helper->player, 5.2s cast, range 6 circle, spread
 }
 
 public enum IconID : uint
 {
-    Meteor = 57, // player
-    Spreadmarker = 139, // player
+    Meteor = 57 // player
 }
 
-class VenomousBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VenomousBreath), new AOEShapeCone(9, 60.Degrees()));
-class MeteorRain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeteorRain), 6);
-class TheFallingSky(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheFallingSky), 10);
-class CosmicKiss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmicKiss), 10);
-class Towerfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Towerfall), new AOEShapeRect(35, 20));
-class Earthquake(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Earthquake), 10);
-class TheBurningSky1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheBurningSky1), 6);
-class TheBurningSky2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TheBurningSky2), 6);
+class VenomousBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VenomousBreath), new AOEShapeCone(9f, 60f.Degrees()));
+class MeteorRain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MeteorRain), 6f);
+class TheFallingSky(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheFallingSky), 10f);
+class CosmicKiss(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmicKiss), 10f);
+class Towerfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Towerfall), new AOEShapeRect(35f, 20f));
+class Earthquake(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Earthquake), 10f);
+class TheBurningSky1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheBurningSky1), 6f);
+class TheBurningSky2(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TheBurningSky2), 6f);
 
 class Meteors(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeCircle circle = new(10);
+    private static readonly AOEShapeCircle circle = new(10f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -56,28 +55,28 @@ class Meteors(BossModule module) : Components.GenericBaitAway(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.FallenStar)
+        if (actor.OID == (uint)OID.FallenStar)
             CurrentBaits.Clear();
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Place meteor!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(new(-80, 97), new(-80, 67), 15));
+        if (ActiveBaitsOn(actor).Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(new(-80f, 97f), new(-80f, 67f), 15f));
     }
 }
 
-class TheFinalSky(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.TheFinalSky), 70, safeInsideHitbox: false)
+class TheFinalSky(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.TheFinalSky), 70f, safeInsideHitbox: false)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.FallenStar);
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.FallenStar));
 }
 
 class D061FirstBeastStates : StateMachineBuilder
@@ -99,4 +98,4 @@ class D061FirstBeastStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 652, NameID = 8201)]
-public class D061FirstBeast(WorldState ws, Actor primary) : BossModule(ws, primary, new(-80, 82), new ArenaBoundsSquare(19.5f));
+public class D061FirstBeast(WorldState ws, Actor primary) : BossModule(ws, primary, new(-80f, 82f), new ArenaBoundsSquare(19.5f));

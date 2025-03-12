@@ -5,14 +5,7 @@ namespace BossMod.Endwalker.Trial.T08Asura;
 class LowerRealm(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.LowerRealm));
 class Ephemerality(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Ephemerality));
 
-class CuttingJewel(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.CuttingJewel), new AOEShapeCircle(4), true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class CuttingJewel(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.CuttingJewel), new AOEShapeCircle(4f), true, tankbuster: true);
 
 class IconographyPedestalPurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IconographyPedestalPurge), 10);
 class PedestalPurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PedestalPurge), 60);

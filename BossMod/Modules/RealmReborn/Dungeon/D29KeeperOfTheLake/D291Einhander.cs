@@ -21,10 +21,10 @@ public enum AID : uint
 }
 
 class AeroBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AeroBlast));
-class MarkXLIQuickFiringCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MarkXLIQuickFiringCannon), new AOEShapeRect(40, 2));
-class CeruleumExplosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CeruleumExplosion), 12);
+class MarkXLIQuickFiringCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MarkXLIQuickFiringCannon), new AOEShapeRect(40f, 2f));
+class CeruleumExplosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CeruleumExplosion), 12f);
 class HeavySwing(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.HeavySwing));
-class MarkXLIIIMiniCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MarkXLIIIMiniCannon), 15);
+class MarkXLIIIMiniCannon(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MarkXLIIIMiniCannon), 15f);
 
 class D291EinhanderStates : StateMachineBuilder
 {

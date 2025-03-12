@@ -5,7 +5,7 @@ class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(2);
     private static readonly AOEShapeRect rect = new(20f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)

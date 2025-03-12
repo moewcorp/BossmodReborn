@@ -10,7 +10,7 @@ class ProjectionOfTriumph(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeCircle = new(4f);
     private static readonly AOEShapeDonut _shapeDonut = new(3f, 8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var nextOrder = NextOrder();
         var count = _lines.Count;
@@ -25,11 +25,11 @@ class ProjectionOfTriumph(BossModule module) : Components.GenericAOEs(module)
                 var ortho = line.Direction.OrthoL();
                 for (var j = -15; j <= 15; j += 10)
                 {
-                    aoes.Add(new(line.Shape, lineCenter + j * ortho, default, _nextActivation));
+                    aoes.Add(new(line.Shape, WPos.ClampToGrid(lineCenter + j * ortho), default, _nextActivation));
                 }
             }
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnActorCreated(Actor actor)

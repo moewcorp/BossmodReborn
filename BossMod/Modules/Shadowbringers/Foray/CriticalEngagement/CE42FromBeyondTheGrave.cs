@@ -66,9 +66,22 @@ public enum SID : uint
 class DevourSoul(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.DevourSoul));
 class Blight(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Blight));
 
-class GallowsMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
+class GallowsMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.FindComponent<PurifyingLight>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? true;
+    private readonly PurifyingLight _aoe = module.FindComponent<PurifyingLight>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (!aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -77,58 +90,75 @@ class GallowsMarch(BossModule module) : Components.StatusDrivenForcedMarch(modul
     }
 }
 
-class ShockSphere(BossModule module) : Components.PersistentVoidzone(module, 7, m => m.Enemies(OID.ShockSphere));
+class ShockSphere(BossModule module) : Components.PersistentVoidzone(module, 7f, GetSpheres)
+{
+    private static List<Actor> GetSpheres(BossModule module) => module.Enemies((uint)OID.ShockSphere);
+}
 
 class SoulPurge(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _dualcast;
-    private readonly List<AOEInstance> _imminent = [];
+    private readonly List<AOEInstance> _aoes = new(2);
 
     private static readonly AOEShapeCircle _shapeCircle = new(10);
     private static readonly AOEShapeDonut _shapeDonut = new(10, 30);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _imminent.Take(1);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ChainMagick:
+            case (uint)AID.ChainMagick:
                 _dualcast = true;
                 break;
-            case AID.SoulPurgeCircle:
-                SetupImminentAOEs(_shapeCircle, _shapeDonut, caster.Position, Module.CastFinishAt(spell));
+            case (uint)AID.SoulPurgeCircle:
+                AddAOEs(_shapeCircle, _shapeDonut);
                 break;
-            case AID.SoulPurgeDonut:
-                SetupImminentAOEs(_shapeDonut, _shapeCircle, caster.Position, Module.CastFinishAt(spell));
+            case (uint)AID.SoulPurgeDonut:
+                AddAOEs(_shapeDonut, _shapeCircle);
                 break;
+        }
+        void AddAOEs(AOEShape main, AOEShape dual)
+        {
+            _aoes.Add(new(main, spell.LocXZ, default, Module.CastFinishAt(spell)));
+            if (_dualcast)
+            {
+                _aoes.Add(new(dual, spell.LocXZ, default, Module.CastFinishAt(spell, 2.1f)));
+                _dualcast = false;
+            }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SoulPurgeCircle or AID.SoulPurgeCircleDual or AID.SoulPurgeDonut or AID.SoulPurgeDonutDual && _imminent.Count > 0)
-            _imminent.RemoveAt(0);
-    }
-
-    private void SetupImminentAOEs(AOEShape main, AOEShape dual, WPos center, DateTime activation)
-    {
-        _imminent.Add(new(main, center, default, activation));
-        if (_dualcast)
-        {
-            _imminent.Add(new(dual, center, default, activation.AddSeconds(2.1f)));
-            _dualcast = false;
-        }
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.SoulPurgeCircle or (uint)AID.SoulPurgeCircleDual or (uint)AID.SoulPurgeDonut or (uint)AID.SoulPurgeDonutDual)
+            _aoes.RemoveAt(0);
     }
 }
 
-class CrimsonBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrimsonBlade), new AOEShapeCone(50, 90.Degrees()));
-class BloodCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BloodCyclone), 5);
-class Aethertide(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AethertideAOE), 8);
+class CrimsonBlade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrimsonBlade), new AOEShapeCone(50f, 90f.Degrees()));
+class BloodCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BloodCyclone), 5f);
+class Aethertide(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AethertideAOE), 8f);
 class MarchingBreath(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.MarchingBreath), showNameInHint: true); // heals all allies by 20% of max health (raidwide)
-class TacticalAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TacticalAero), new AOEShapeRect(40, 4));
-class EntropicFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(60, 4));
-class DarkFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkFlare), 8);
+class TacticalAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TacticalAero), new AOEShapeRect(40f, 4f));
+class EntropicFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EntropicFlame), new AOEShapeRect(60f, 4f));
+class DarkFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkFlare), 8f);
 class SoulSacrifice(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.SoulSacrifice), showNameInHint: true); // WarWraith sacrifices itself to give boss a damage buff
 
 class PurifyingLight : Components.SimpleAOEs

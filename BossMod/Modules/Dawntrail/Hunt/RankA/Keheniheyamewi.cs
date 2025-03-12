@@ -28,49 +28,57 @@ public enum SID : uint
     AboutFace = 2162
 }
 
-abstract class BodyPress(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15);
+abstract class BodyPress(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 15f);
 class BodyPress1(BossModule module) : BodyPress(module, AID.BodyPress1);
 class BodyPress2(BossModule module) : BodyPress(module, AID.BodyPress2);
 
-class Scatterscourge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Scatterscourge1), new AOEShapeDonut(10, 40));
+class Scatterscourge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Scatterscourge1), new AOEShapeDonut(10f, 40f));
 
 class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
 {
     private Actor? _caster;
     private readonly List<AOEInstance> _activeAOEs = [];
-    private static readonly AOEShapeRect _shapeRect = new(20, 5);
-    private static readonly AOEShapeDonut _shapeDonut = new(10, 40);
-    private static readonly AOEShapeCircle _shapeCircle = new(10);
+    private static readonly AOEShapeRect _shapeRect = new(20f, 5f);
+    private static readonly AOEShapeDonut _shapeDonut = new(10f, 40f);
+    private static readonly AOEShapeCircle _shapeCircle = new(10f);
     private bool _finishedCast;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster == null)
-            yield break;
+            return [];
 
-        var rectEndPos = default(WPos);
+        WPos rectEndPos = default;
         if (!_finishedCast)
             rectEndPos = GetRectEndPosition(_caster.Position, _caster.Rotation, _shapeRect.LengthFront);
 
-        foreach (var aoe in _activeAOEs)
+        var count = _activeAOEs.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+
+        for (var i = 0; i < count; ++i)
         {
+            var aoe = _activeAOEs[i];
+
             if (aoe.Shape == _shapeRect)
             {
                 if (!_finishedCast)
-                    yield return new(_shapeRect, _caster.Position, _caster.Rotation, aoe.Activation, aoe.Color, aoe.Risky);
+                    aoes[i] = new(_shapeRect, _caster.Position, _caster.Rotation, aoe.Activation, aoe.Color, aoe.Risky);
             }
             else if (aoe.Shape == _shapeDonut || aoe.Shape == _shapeCircle)
             {
                 if (!_finishedCast)
-                    yield return new(aoe.Shape, rectEndPos, aoe.Rotation, aoe.Activation, aoe.Color, aoe.Risky);
+                    aoes[i] = new(aoe.Shape, rectEndPos, aoe.Rotation, aoe.Activation, aoe.Color, aoe.Risky);
                 else
-                    yield return aoe;
+                    aoes[i] = aoe;
             }
             else
-            {
-                yield return aoe;
-            }
+                aoes[i] = aoe;
         }
+
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -78,13 +86,13 @@ class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID != (uint)AID.SlipperyScatterscourge)
             return;
 
-        var activation = WorldState.FutureTime(10);
+        var activation = WorldState.FutureTime(10d);
         _caster = caster;
         _finishedCast = false;
 
-        _activeAOEs.Add(new(_shapeRect, caster.Position, caster.Rotation, activation, Colors.Danger));
-        _activeAOEs.Add(new(_shapeDonut, caster.Position, default, activation));
-        _activeAOEs.Add(new(_shapeCircle, caster.Position, default, activation, Colors.SafeFromAOE, false));
+        _activeAOEs.Add(new(_shapeRect, spell.LocXZ, caster.Rotation, activation, Colors.Danger));
+        _activeAOEs.Add(new(_shapeDonut, spell.LocXZ, default, activation));
+        _activeAOEs.Add(new(_shapeCircle, spell.LocXZ, default, activation, Colors.SafeFromAOE, false));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -92,7 +100,7 @@ class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
         if (_caster != null && spell.Action.ID == (uint)AID.SlipperyScatterscourge)
         {
             var finalPos = GetRectEndPosition(_caster.Position, _caster.Rotation, _shapeRect.LengthFront);
-            var futureActivation = WorldState.FutureTime(10);
+            var futureActivation = WorldState.FutureTime(10d);
 
             for (int i = 0; i < _activeAOEs.Count; ++i)
             {
@@ -133,11 +141,21 @@ class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(module)
 
 class PoisonGas(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PoisonGas), "Raidwide & Forced March (13s)");
 
-class PoisonGasMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, 5)
+class PoisonGasMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, 5)
 {
+    private readonly SlipperyScatterscourge _aoe = module.FindComponent<SlipperyScatterscourge>()!;
+
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        return Module.FindComponent<SlipperyScatterscourge>()?.ActiveAOEs(slot, actor).Any(a => a.Color != Colors.SafeFromAOE && a.Shape.Check(pos, a.Origin, a.Rotation)) ?? false;
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Color != Colors.SafeFromAOE && aoe.Check(pos))
+                return true;
+        }
+        return false;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -149,7 +167,7 @@ class PoisonGasMarch(BossModule module) : Components.StatusDrivenForcedMarch(mod
 }
 
 class MalignantMucus(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.MalignantMucus));
-class PoisonMucus(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PoisonMucus), 6);
+class PoisonMucus(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PoisonMucus), 6f);
 
 class KeheniheyamewiStates : StateMachineBuilder
 {

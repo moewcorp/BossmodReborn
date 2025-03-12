@@ -30,33 +30,44 @@ class Friction(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Module.PrimaryActor.CastInfo == null) // don't forbid standing near monoliths while boss is casting to allow avoiding aoes
-            foreach (var m in Module.Enemies(OID.Monolith))
-                hints.AddForbiddenZone(ShapeDistance.Circle(m.Position, 5));
+        {
+            var monoliths = Module.Enemies((uint)OID.Monolith);
+            var count = monoliths.Count;
+            for (var i = 0; i < count; ++i)
+                hints.AddForbiddenZone(ShapeDistance.Circle(monoliths[i].Position, 5));
+        }
     }
 }
 
-class Downburst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Downburst), new AOEShapeCone(11.7f, 60.Degrees()));
-class Slipstream(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Slipstream), new AOEShapeCone(11.7f, 45.Degrees()));
+class Downburst(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Downburst), new AOEShapeCone(11.7f, 60f.Degrees()));
+class Slipstream(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Slipstream), new AOEShapeCone(11.7f, 45f.Degrees()));
 
 class MistralSongP1(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.MistralSongP1), 31.7f, true)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.Monolith);
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies(OID.Monolith));
 }
 
 // actual casts happen every ~6s after aerial blast cast
 class EyeOfTheStorm(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.AerialBlast))
 {
-    private readonly AOEShapeDonut _shape = new(12, 25);
+    private readonly AOEShapeDonut _shape = new(12f, 25f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts > 0)
-            foreach (var c in Module.Enemies(OID.EyeOfTheStormHelper))
-                yield return new(_shape, c.Position);
+        {
+            var eyes = Module.Enemies((uint)OID.EyeOfTheStormHelper);
+            var count = eyes.Count;
+            var aoes = new AOEInstance[count];
+            for (var i = 0; i < count; ++i)
+                aoes[i] = new(_shape, eyes[i].Position);
+            return aoes;
+        }
+        return [];
     }
 }
 
-class MistralSongP2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralSongP2), new AOEShapeCone(31.7f, 60.Degrees()));
+class MistralSongP2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralSongP2), new AOEShapeCone(31.7f, 60f.Degrees()));
 class MistralShriek(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MistralShriek), 24.7f);
 
 class T03GarudaNStates : StateMachineBuilder
@@ -75,16 +86,18 @@ class T03GarudaNStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 58, NameID = 1644)]
-public class T03GarudaN(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(21))
+public class T03GarudaN(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(21f))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.RazorPlumeP1 or OID.RazorPlumeP2 => 2,
-                OID.Boss => 1,
+                (uint)OID.RazorPlumeP1 or (uint)OID.RazorPlumeP2 => 2,
+                (uint)OID.Boss => 1,
                 _ => 0
             };
         }
@@ -93,6 +106,6 @@ public class T03GarudaN(WorldState ws, Actor primary) : BossModule(ws, primary, 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Monolith), Colors.Danger, true);
+        Arena.Actors(Enemies((uint)OID.Monolith), Colors.Danger, true);
     }
 }

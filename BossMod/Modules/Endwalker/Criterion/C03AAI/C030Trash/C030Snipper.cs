@@ -11,21 +11,22 @@ class BubbleShowerCrabDribble(BossModule module) : Components.GenericAOEs(module
     private static readonly AOEShapeCone _shape1 = new(9, 45.Degrees());
     private static readonly AOEShapeCone _shape2 = new(6, 60.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(1);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.NBubbleShower or AID.SBubbleShower)
+        if (spell.Action.ID is (uint)AID.NBubbleShower or (uint)AID.SBubbleShower)
         {
             _aoes.Clear();
-            _aoes.Add(new(_shape1, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(_shape2, caster.Position, spell.Rotation + 180.Degrees(), Module.CastFinishAt(spell, 3.6f)));
+            var pos = spell.LocXZ;
+            _aoes.Add(new(_shape1, pos, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(_shape2, pos, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 3.6f)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.NBubbleShower or AID.SBubbleShower or AID.NCrabDribble or AID.SCrabDribble)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.NBubbleShower or (uint)AID.SBubbleShower or (uint)AID.NCrabDribble or (uint)AID.SCrabDribble)
         {
             _aoes.RemoveAt(0);
         }
@@ -77,7 +78,7 @@ public class C030NSnipper(WorldState ws, Actor primary) : C030Trash1(ws, primary
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.NCrab));
+        Arena.Actors(Enemies((uint)OID.NCrab));
     }
 }
 
@@ -87,6 +88,6 @@ public class C030SSnipper(WorldState ws, Actor primary) : C030Trash1(ws, primary
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SCrab));
+        Arena.Actors(Enemies((uint)OID.SCrab));
     }
 }

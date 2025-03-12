@@ -1,28 +1,29 @@
 ﻿namespace BossMod.Endwalker.Extreme.Ex7Zeromus;
 
-class FlowOfTheAbyssDimensionalSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlowOfTheAbyssDimensionalSurge), new AOEShapeRect(60, 7));
+class FlowOfTheAbyssDimensionalSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlowOfTheAbyssDimensionalSurge), new AOEShapeRect(60f, 7f));
 
 class FlowOfTheAbyssSpreadStack(BossModule module) : Components.GenericStackSpread(module)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        switch ((IconID)iconID)
+        var act = WorldState.FutureTime(5d);
+        switch (iconID)
         {
-            case IconID.AkhRhai:
-                Spreads.Add(new(actor, 5, WorldState.FutureTime(5)));
+            case (uint)IconID.AkhRhai:
+                Spreads.Add(new(actor, 5f, act));
                 break;
-            case IconID.DarkBeckonsUmbralRays:
-                Stacks.Add(new(actor, 6, 8, 8, WorldState.FutureTime(5)));
+            case (uint)IconID.DarkBeckonsUmbralRays:
+                Stacks.Add(new(actor, 6f, 8, 8, act));
                 break;
-            case IconID.UmbralPrism:
-                Stacks.Add(new(actor, 5, 2, 2, WorldState.FutureTime(5)));
+            case (uint)IconID.UmbralPrism:
+                Stacks.Add(new(actor, 5f, 2, 2, act));
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AkhRhaiStart or AID.UmbralRays or AID.UmbralPrism)
+        if (spell.Action.ID is (uint)AID.AkhRhaiStart or (uint)AID.UmbralRays or (uint)AID.UmbralPrism)
         {
             Spreads.Clear();
             Stacks.Clear();
@@ -34,18 +35,18 @@ class FlowOfTheAbyssAkhRhai(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shape = new(5);
+    private static readonly AOEShapeCircle _shape = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.AkhRhaiStart:
-                _aoes.Add(new(_shape, caster.Position));
+            case (uint)AID.AkhRhaiStart:
+                _aoes.Add(new(_shape, WPos.ClampToGrid(caster.Position)));
                 break;
-            case AID.AkhRhaiAOE:
+            case (uint)AID.AkhRhaiAOE:
                 if (++NumCasts >= _aoes.Count * 10)
                     _aoes.Clear();
                 break;
@@ -55,34 +56,46 @@ class FlowOfTheAbyssAkhRhai(BossModule module) : Components.GenericAOEs(module)
 
 class ChasmicNails(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<(Angle rot, DateTime activation)> _angles = [];
+    private readonly List<AOEInstance> _aoes = new(5);
 
-    private static readonly AOEShapeCone _shape = new(60, 20.Degrees());
+    private static readonly AOEShapeCone _shape = new(60f, 20f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var a in _angles.Skip(1).Take(2))
-            yield return new(_shape, Module.PrimaryActor.Position, a.rot, a.activation);
-        if (_angles.Count > 0)
-            yield return new(_shape, Module.PrimaryActor.Position, _angles[0].rot, _angles[0].activation, Colors.Danger);
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 3 ? 3 : count;
+        var aoes = new AOEInstance[max];
+
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChasmicNailsAOE1 or AID.ChasmicNailsAOE2 or AID.ChasmicNailsAOE3 or AID.ChasmicNailsAOE4 or AID.ChasmicNailsAOE5)
+        if (spell.Action.ID is (uint)AID.ChasmicNailsAOE1 or (uint)AID.ChasmicNailsAOE2 or (uint)AID.ChasmicNailsAOE3 or (uint)AID.ChasmicNailsAOE4 or (uint)AID.ChasmicNailsAOE5)
         {
-            _angles.Add((spell.Rotation, Module.CastFinishAt(spell)));
-            _angles.SortBy(x => x.activation);
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 5)
+                _aoes.Sort((x, y) => x.Activation.CompareTo(y.Activation));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChasmicNailsAOE1 or AID.ChasmicNailsAOE2 or AID.ChasmicNailsAOE3 or AID.ChasmicNailsAOE4 or AID.ChasmicNailsAOE5)
+        if (spell.Action.ID is (uint)AID.ChasmicNailsAOE1 or (uint)AID.ChasmicNailsAOE2 or (uint)AID.ChasmicNailsAOE3 or (uint)AID.ChasmicNailsAOE4 or (uint)AID.ChasmicNailsAOE5)
         {
             ++NumCasts;
-            if (_angles.Count > 0)
-                _angles.RemoveAt(0);
+            if (_aoes.Count > 0)
+                _aoes.RemoveAt(0);
         }
     }
 }

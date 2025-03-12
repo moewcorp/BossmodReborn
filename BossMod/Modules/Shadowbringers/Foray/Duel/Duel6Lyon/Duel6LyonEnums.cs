@@ -20,8 +20,8 @@ public enum AID : uint
     NaturesPulse3 = 23847, // Helper->self, 7.0s cast, range 20-30 donut
     TasteOfBlood = 23843, // Boss->self, 4.0s cast, range 40 180-degree cone
     SoulAflame = 23852,
-    FlamesMeet1 = 23853, // VermillionFlame->self, 6.5s cast; makes the orb light up
-    FlamesMeet2 = 23854, // VermillionFlame->self, 11s cast; actual AOE
+    FlamesMeetVisual = 23853, // VermillionFlame->self, 6.5s cast; makes the orb light up
+    FlamesMeet = 23854, // VermillionFlame->self, 11s cast; actual AOE
     HeavenAndEarthCW = 23855,
     HeavenAndEarthCCW = 24554,
     HeavenAndEarthRotate = 23856, // Unused by module

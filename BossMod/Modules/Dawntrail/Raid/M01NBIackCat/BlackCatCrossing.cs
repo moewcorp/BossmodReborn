@@ -3,12 +3,12 @@ namespace BossMod.Dawntrail.Raid.M01NBlackCat;
 public class BlackCatCrossing(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
-    private static readonly AOEShapeCone cone = new(60, 22.5f.Degrees());
+    private static readonly AOEShapeCone cone = new(60f, 22.5f.Degrees());
     private enum Pattern { None, Cardinals, Intercardinals }
     private Pattern _currentPattern;
     private Actor? helper;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

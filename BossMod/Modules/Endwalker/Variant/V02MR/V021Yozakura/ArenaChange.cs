@@ -6,7 +6,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom square2 = new([new Square(V021Yozakura.ArenaCenter3, 23f)], [new Square(V021Yozakura.ArenaCenter3, 20f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.GloryNeverlasting && Arena.Bounds == V021Yozakura.StartingBounds)

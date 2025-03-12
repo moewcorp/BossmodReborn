@@ -4,14 +4,14 @@ class EntrapmentAttract(BossModule module) : Components.Knockback(module, Action
 {
     private DateTime _activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        yield return new(new(Arena.Center.X, Arena.Center.Z + Module.Bounds.Radius), 60f, _activation, Kind: Kind.TowardsOrigin);
+        return new Source[1] { new(new(Arena.Center.X, Arena.Center.Z + Module.Bounds.Radius), 60f, _activation, Kind: Kind.TowardsOrigin) };
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Entrapment)
+        if (spell.Action.ID == (uint)AID.Entrapment)
             _activation = Module.CastFinishAt(spell, 0.8f);
     }
 }
@@ -59,7 +59,7 @@ class Entrapment : Components.CastCounter
             for (var z = 0; z < 7; ++z)
                 for (var x = 0; x < 7; ++x)
                     if (player.Position.InCircle(Arena.Center + CellOffset(x, z), 10f))
-                        _uncovered.Set(IndexFromCell(x, z));
+                        _uncovered[IndexFromCell(x, z)] = true;
 
         // remove all patterns that have difference with current state in uncovered areas
         if (_possiblePatterns.Any())
@@ -101,18 +101,18 @@ class Entrapment : Components.CastCounter
 
     public override void OnActorCreated(Actor actor)
     {
-        switch ((OID)actor.OID)
+        switch (actor.OID)
         {
-            case OID.TrapNormal:
+            case (uint)OID.TrapNormal:
                 AddTrap(ref _curPattern.Normal, actor.Position, false);
                 break;
-            case OID.TrapToad:
+            case (uint)OID.TrapToad:
                 AddTrap(ref _curPattern.Toad, actor.Position, false);
                 break;
-            case OID.TrapIce:
+            case (uint)OID.TrapIce:
                 AddTrap(ref _curPattern.Ice, actor.Position, false);
                 break;
-            case OID.TrapMini:
+            case (uint)OID.TrapMini:
                 AddTrap(ref _curPattern.Mini, actor.Position, false);
                 break;
         }
@@ -120,18 +120,18 @@ class Entrapment : Components.CastCounter
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.MassiveExplosion:
+            case (uint)AID.MassiveExplosion:
                 AddTrap(ref _curPattern.Normal, spell.TargetXZ, true);
                 break;
-            case AID.Toad:
+            case (uint)AID.Toad:
                 AddTrap(ref _curPattern.Toad, spell.TargetXZ, true);
                 break;
-            case AID.TrappedUnderIce:
+            case (uint)AID.TrappedUnderIce:
                 AddTrap(ref _curPattern.Ice, spell.TargetXZ, true);
                 break;
-            case AID.Mini:
+            case (uint)AID.Mini:
                 AddTrap(ref _curPattern.Mini, spell.TargetXZ, true);
                 break;
         }
@@ -141,26 +141,26 @@ class Entrapment : Components.CastCounter
     {
         var index = IndexFromOffset(position - Module.Center);
         //ReportError($"Trap @ {position} (dist={(position - Raid.Player()!.Position).Length()}) = {index}");
-        mask.Set(index);
-        _uncovered.Set(index);
+        mask[index] = true;
+        _uncovered[index] = true;
         if (exploded)
         {
-            _exploded.Set(index);
+            _exploded[index] = true;
             ++NumCasts;
         }
         _possiblePatternsDirty = true;
     }
 
-    private int IndexFromCell(int x, int z) => x is >= 0 and <= 6 && z is >= 0 and <= 6 ? ((z << 3) | x) : -1;
-    private int IndexFromOffset(WDir offset)
+    private static int IndexFromCell(int x, int z) => x is >= 0 and <= 6 && z is >= 0 and <= 6 ? ((z << 3) | x) : -1;
+    private static int IndexFromOffset(WDir offset)
     {
         var x = (int)Math.Round(offset.X / 5) + 3;
         var z = (int)Math.Round(offset.Z / 5) + 3;
         return IndexFromCell(x, z);
     }
 
-    private WDir CellOffset(int x, int z) => 5 * new WDir(x - 3, z - 3);
-    private WDir CellOffset(int index) => CellOffset(index & 7, index >> 3);
+    private static WDir CellOffset(int x, int z) => 5 * new WDir(x - 3, z - 3);
+    private static WDir CellOffset(int index) => CellOffset(index & 7, index >> 3);
 
     private void DrawTraps(BitMask mask, bool safe, bool background)
     {
@@ -171,7 +171,7 @@ class Entrapment : Components.CastCounter
             if (background)
                 Arena.ZoneCircle(pos, 2.5f, safe ? Colors.SafeFromAOE : Colors.AOE);
             else
-                Arena.AddCircle(pos, 2.5f, safe ? Colors.Safe : Colors.Danger);
+                Arena.AddCircle(pos, 2.5f, safe ? Colors.Safe : 0);
         }
     }
 
@@ -209,7 +209,7 @@ class Entrapment : Components.CastCounter
     {
         var mask = new BitMask();
         foreach (var bit in bits)
-            mask.Set(bit);
+            mask[bit] = true;
         return mask;
     }
 }
@@ -236,11 +236,11 @@ class EntrapmentInescapable(BossModule module) : Entrapment(module, _allowedPatt
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var trap = (AID)spell.Action.ID switch
+        var trap = spell.Action.ID switch
         {
-            AID.SurgingFlames => TrapType.Ice,
-            AID.SurgingFlood => TrapType.Toad,
-            AID.WitheringCurse => TrapType.Mini,
+            (uint)AID.SurgingFlames => TrapType.Ice,
+            (uint)AID.SurgingFlood => TrapType.Toad,
+            (uint)AID.WitheringCurse => TrapType.Mini,
             _ => TrapType.Normal
         };
         if (trap != TrapType.Normal)

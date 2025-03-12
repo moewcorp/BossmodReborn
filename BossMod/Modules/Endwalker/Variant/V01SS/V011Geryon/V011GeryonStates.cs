@@ -14,8 +14,8 @@ class V011GeryonStates : StateMachineBuilder
             .ActivateOnEnter<ColossalSwing>()
             .ActivateOnEnter<ExplosionAOE>()
             .ActivateOnEnter<ExplosionDonut>()
-            .ActivateOnEnter<Shockwave>()
             .ActivateOnEnter<RunawaySludge>()
+            .ActivateOnEnter<Shockwave>()
             .ActivateOnEnter<ColossalStrike>();
     }
 }

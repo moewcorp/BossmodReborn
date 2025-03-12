@@ -1,14 +1,11 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C03AAI.C031Ketuduke;
 
-abstract class SpringCrystalsRect(BossModule module, bool moveCasters, bool risky, float delay) : Components.GenericAOEs(module)
+abstract class SpringCrystalsRect(BossModule module, bool moveCasters, bool risky, double delay) : Components.GenericAOEs(module)
 {
     public List<WPos> SafeZoneCenters = InitialSafeZoneCenters(module.Center);
     private readonly List<AOEInstance> _aoes = [];
-    private readonly bool _moveCasters = moveCasters;
-    private readonly bool _risky = risky;
-    private readonly float _delay = delay;
 
-    private static readonly AOEShapeRect _shape = new(38, 5, 38);
+    private static readonly AOEShapeRect _shape = new(38f, 5f, 38f);
 
     private static List<WPos> InitialSafeZoneCenters(WPos origin)
     {
@@ -19,64 +16,64 @@ abstract class SpringCrystalsRect(BossModule module, bool moveCasters, bool risk
         return res;
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.NSpringCrystalRect or OID.SSpringCrystalRect)
+        if (actor.OID is (uint)OID.NSpringCrystalRect or (uint)OID.SSpringCrystalRect)
         {
             var pos = actor.Position;
-            if (_moveCasters)
+            if (moveCasters)
             {
                 // crystals are moved once or twice, but never outside arena bounds
                 // orthogonal movement always happens, movement along direction happens only for half of them - but it doesn't actually affect aoe, so we can ignore it
-                pos.X += pos.X < Module.Center.X ? 20 : -20;
-                pos.Z += pos.Z < Module.Center.Z ? 20 : -20;
+                pos.X += pos.X < Arena.Center.X ? 20 : -20;
+                pos.Z += pos.Z < Arena.Center.Z ? 20 : -20;
             }
-            _aoes.Add(new(_shape, pos, actor.Rotation, WorldState.FutureTime(_delay), Risky: _risky));
+            _aoes.Add(new(_shape, pos, actor.Rotation, WorldState.FutureTime(delay), Risky: risky));
             SafeZoneCenters.RemoveAll(c => _shape.Check(c, pos, actor.Rotation));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NSaturateRect or AID.SSaturateRect)
+        if (spell.Action.ID is (uint)AID.NSaturateRect or (uint)AID.SSaturateRect)
         {
             _aoes.Clear();
             ++NumCasts;
         }
     }
 }
-class SpringCrystalsRectMove(BossModule module) : SpringCrystalsRect(module, true, false, 40.3f);
-class SpringCrystalsRectStay(BossModule module) : SpringCrystalsRect(module, false, true, 24.2f);
+class SpringCrystalsRectMove(BossModule module) : SpringCrystalsRect(module, true, false, 40.3d);
+class SpringCrystalsRectStay(BossModule module) : SpringCrystalsRect(module, false, true, 24.2d);
 
 class SpringCrystalsSphere(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
     private bool _active;
 
-    private static readonly AOEShapeCircle _shape = new(8);
+    private static readonly AOEShapeCircle _shape = new(8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _active ? _aoes : Enumerable.Empty<AOEInstance>();
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _active ? CollectionsMarshal.AsSpan(_aoes) : [];
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.NSpringCrystalSphere or OID.SSpringCrystalSphere)
+        if (actor.OID is (uint)OID.NSpringCrystalSphere or (uint)OID.SSpringCrystalSphere)
         {
-            _aoes.Add(new(_shape, actor.Position, default, WorldState.FutureTime(23.9f)));
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(23.9d)));
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((OID)actor.OID is OID.NSpringCrystalSphere or OID.SSpringCrystalSphere && (SID)status.ID == SID.Bubble)
+        if (actor.OID is (uint)OID.NSpringCrystalSphere or (uint)OID.SSpringCrystalSphere && status.ID == (uint)SID.Bubble)
         {
             _active = true;
-            var index = _aoes.FindIndex(aoe => aoe.Origin.AlmostEqual(actor.Position, 1));
+            var index = _aoes.FindIndex(aoe => aoe.Origin.AlmostEqual(actor.Position, 1f));
             if (index >= 0)
             {
                 ref var aoe = ref _aoes.Ref(index);
-                aoe.Origin += new WDir(aoe.Origin.X < Module.Center.X ? 20 : -20, 0);
+                aoe.Origin += new WDir(aoe.Origin.X < Arena.Center.X ? 20f : -20f, default);
             }
             else
             {
@@ -87,7 +84,7 @@ class SpringCrystalsSphere(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.NSaturateSphere or AID.SSaturateSphere)
+        if (spell.Action.ID is (uint)AID.NSaturateSphere or (uint)AID.SSaturateSphere)
         {
             _aoes.Clear();
             ++NumCasts;

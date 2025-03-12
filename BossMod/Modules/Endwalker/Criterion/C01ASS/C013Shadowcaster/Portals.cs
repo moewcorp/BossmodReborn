@@ -7,7 +7,7 @@ static class Portals
     // returns null if this is not arrow appear eanim
     public static WPos? DestinationForEAnim(Actor actor, uint state)
     {
-        if ((OID)actor.OID != OID.Portal)
+        if (actor.OID != (uint)OID.Portal)
             return null;
 
         var rotation = state switch
@@ -30,7 +30,7 @@ class PortalsAOE(BossModule module, AID aid, OID movedOID, float activationDelay
     private readonly AOEShape _shape = shape;
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -73,7 +73,7 @@ class PortalsWave(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.PlayerPortal)
+        if (status.ID == (uint)SID.PlayerPortal)
         {
             var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0)

@@ -2,38 +2,43 @@
 
 class CthonicVent(BossModule module) : Components.GenericAOEs(module)
 {
-    public int NumTotalCasts { get; private set; }
+    public int NumTotalCasts;
     private readonly List<WPos> _centers = [];
     private static readonly AOEShapeCircle _shape = new(23);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in _centers)
-            yield return new(_shape, c);
+        var count = _centers.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+            aoes[i] = new(_shape, _centers[i]);
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         // note: we can determine position ~0.1s earlier by using eobjanim
-        if ((AID)spell.Action.ID == AID.CthonicVentAOE1)
+        if (spell.Action.ID == (uint)AID.CthonicVentAOE1)
             _centers.Add(caster.Position);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CthonicVentMoveNear:
-                _centers.Add(caster.Position + caster.Rotation.ToDirection() * 30);
+            case (uint)AID.CthonicVentMoveNear:
+                _centers.Add(caster.Position + caster.Rotation.ToDirection() * 30f);
                 break;
-            case AID.CthonicVentMoveDiag:
+            case (uint)AID.CthonicVentMoveDiag:
                 _centers.Add(caster.Position + caster.Rotation.ToDirection() * 42.426407f);
                 break;
-            case AID.CthonicVentAOE1:
-            case AID.CthonicVentAOE2:
-            case AID.CthonicVentAOE3:
+            case (uint)AID.CthonicVentAOE1:
+            case (uint)AID.CthonicVentAOE2:
+            case (uint)AID.CthonicVentAOE3:
                 ++NumTotalCasts;
-                _centers.RemoveAll(c => c.AlmostEqual(caster.Position, 2));
+                _centers.RemoveAll(c => c.AlmostEqual(caster.Position, 2f));
                 break;
         }
     }

@@ -12,7 +12,7 @@ class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(9f), new AOEShapeDonut(9f, 16f), new AOEShapeDonut(16f, 23f), new AOEShapeDonut(23f, 30f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? [AOEs[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? CollectionsMarshal.AsSpan(AOEs)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -74,7 +74,7 @@ class Whirlwinds(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle a180 = 180f.Degrees();
     private bool moving;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countSmall = _smallWhirldwinds.Count;
         var countBig = _bigWhirldwinds.Count;
@@ -127,21 +127,25 @@ class Whirlwinds(BossModule module) : Components.GenericAOEs(module)
         var total = countSmall + countBig;
         if (countSmall == 0 && countBig == 0)
             return;
-        var forbidden = new Func<WPos, float>[total]; // merging all forbidden zones into one to make pathfinding less demanding
+        var forbiddenImminent = new Func<WPos, float>[total];
+        var forbiddenFuture = new Func<WPos, float>[total];
 
         const float length = Length + 6f;
         for (var i = 0; i < countBig; ++i)
         {
             var w = _bigWhirldwinds[i];
-            forbidden[i] = ShapeDistance.Capsule(w.Position, !moving ? w.Rotation + a180 : w.Rotation, length, 10);
+            forbiddenFuture[i] = ShapeDistance.Capsule(w.Position, !moving ? w.Rotation + a180 : w.Rotation, length, 10f);
+            forbiddenImminent[i] = ShapeDistance.Circle(w.Position, 10f);
         }
         for (var i = 0; i < countSmall; ++i)
         {
             var w = _smallWhirldwinds[i];
-            forbidden[i + countBig] = ShapeDistance.Capsule(w.Position, !moving ? w.Rotation + a180 : w.Rotation, length, 5);
+            forbiddenImminent[i + countBig] = ShapeDistance.Circle(w.Position, 5f);
+            forbiddenFuture[i + countBig] = ShapeDistance.Capsule(w.Position, !moving ? w.Rotation + a180 : w.Rotation, length, 5f);
         }
 
-        hints.AddForbiddenZone(ShapeDistance.Union(forbidden), WorldState.FutureTime(1.1d));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
     }
 }
 

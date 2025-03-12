@@ -12,37 +12,35 @@ class InfernGaleKnockback(BossModule module) : Components.KnockbackFromCastTarge
 
 class ShowOfStrength(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ShowOfStrength));
 
-class CastShadow(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.CastShadow))
+class CastShadow(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _castersShadowFirst = [];
-    private readonly List<Actor> _castersShadowNext = [];
+    private static readonly AOEShapeCone cone = new(50f, 15f.Degrees());
+    private readonly List<AOEInstance> _aoes = new(8);
 
-    private static readonly AOEShape _shapeShadow = new AOEShapeCone(50, 15.Degrees());
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_castersShadowFirst.Count > 0)
-            return _castersShadowFirst.Select(c => new AOEInstance(_shapeShadow, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-        else
-            return _castersShadowNext.Select(c => new AOEInstance(_shapeShadow, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 6 ? 6 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Add(caster);
+        if (spell.Action.ID is (uint)AID.CastShadowFirst or (uint)AID.CastShadowNext)
+        {
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 12)
+                _aoes.SortBy(x => x.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Remove(caster);
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.CastShadowFirst or (uint)AID.CastShadowNext)
+            _aoes.RemoveAt(0);
     }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.CastShadowFirst => _castersShadowFirst,
-        AID.CastShadowNext => _castersShadowNext,
-        _ => null
-    };
 }
 
 class BlazingBenifice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BlazingBenifice), new AOEShapeRect(100, 5));

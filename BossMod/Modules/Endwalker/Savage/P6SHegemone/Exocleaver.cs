@@ -2,30 +2,33 @@
 
 class Exocleaver(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ExocleaverAOE2))
 {
-    public bool FirstDone { get; private set; }
-    private readonly AOEShapeCone _cone = new(30, 15.Degrees());
+    public bool FirstDone;
+    private readonly AOEShapeCone _cone = new(30f, 15f.Degrees());
     private readonly List<Angle> _directions = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts > 0)
-            yield break;
+            return [];
 
         // TODO: timing
-        var offset = (FirstDone ? 30 : 0).Degrees();
-        foreach (var dir in _directions)
-            yield return new(_cone, Module.PrimaryActor.Position, dir + offset);
+        var offset = (FirstDone ? 30f : 0f).Degrees();
+        var count = _directions.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+            aoes[i] = new(_cone, Module.PrimaryActor.Position, _directions[i] + offset);
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ExocleaverAOE1)
+        if (spell.Action.ID == (uint)AID.ExocleaverAOE1)
             _directions.Add(caster.Rotation);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ExocleaverAOE1)
+        if (spell.Action.ID == (uint)AID.ExocleaverAOE1)
             FirstDone = true;
     }
 }

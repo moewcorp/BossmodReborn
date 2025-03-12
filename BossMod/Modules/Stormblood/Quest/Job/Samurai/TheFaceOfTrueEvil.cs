@@ -24,34 +24,40 @@ public enum AID : uint
 
 class Musojin(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Musojin));
 
-abstract class Hissatsu(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 2));
+abstract class Hissatsu(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(44.5f, 2f));
 class HissatsuKiku(BossModule module) : Hissatsu(module, AID.HissatsuKiku1);
 class HissatsuTo(BossModule module) : Hissatsu(module, AID.HissatsuTo);
 
-class Maiogi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Maiogi), new AOEShapeCone(80, 25.Degrees()));
+class Maiogi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Maiogi), new AOEShapeCone(80f, 25f.Degrees()));
 class HissatsuKyuten(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HissatsuKyuten), 5.5f);
 class Arashi(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime? Activation;
+    private static readonly AOEShapeCircle circle = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Activation == null)
-            yield break;
-
-        foreach (var e in Module.Enemies(OID.Musosai))
-            yield return new(new AOEShapeCircle(4), e.Position, default, Activation.Value);
+            return [];
+        var musosais = Module.Enemies((uint)OID.Musosai);
+        var count = musosais.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = new(circle, musosais[i].Position, default, Activation.Value);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Arashi or AID.ArashiNoKiku or AID.ArashiNoMaiogi)
+        if (spell.Action.ID is (uint)AID.Arashi or (uint)AID.ArashiNoKiku or (uint)AID.ArashiNoMaiogi)
             Activation = Module.CastFinishAt(spell);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Arashi)
+        if (spell.Action.ID == (uint)AID.Arashi)
             Activation = null;
     }
 }
@@ -73,4 +79,4 @@ class MusosaiStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68101, NameID = 6111)]
-public class Musosai(WorldState ws, Actor primary) : BossModule(ws, primary, new(-217.27f, -158.31f), new ArenaBoundsSquare(15));
+public class Musosai(WorldState ws, Actor primary) : BossModule(ws, primary, new(-217.27f, -158.31f), new ArenaBoundsSquare(15f));

@@ -367,14 +367,14 @@ public class StretchTetherDuo(BossModule module, float minimumDistance, float ac
                 case 3054: //Guard in PVP
                 case (uint)WHM.SID.Surecast:
                 case (uint)WAR.SID.ArmsLength:
-                    PlayerImmunes[slot].RoleBuffExpire = new();
+                    PlayerImmunes[slot].RoleBuffExpire = default;
                     break;
                 case 1722: //Bluemage Diamondback
                 case (uint)WAR.SID.InnerStrength:
-                    PlayerImmunes[slot].JobBuffExpire = new();
+                    PlayerImmunes[slot].JobBuffExpire = default;
                     break;
                 case 2345: //Lost Manawall in Bozja
-                    PlayerImmunes[slot].DutyBuffExpire = new();
+                    PlayerImmunes[slot].DutyBuffExpire = default;
                     break;
             }
     }

@@ -14,12 +14,12 @@ public enum AID : uint
     Beakaxe = 17857 // Boss->player, no cast, single-target, instantlyy kills petrified players
 }
 
-class BlasphemousHowl(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.BlasphemousHowl), new AOEShapeCircle(8), true)
+class BlasphemousHowl(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.BlasphemousHowl), new AOEShapeCircle(8f), true)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away + look away!");
     }
 }
@@ -37,4 +37,4 @@ class SupayStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8891)]
-public class Supay(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class Supay(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

@@ -40,14 +40,14 @@ class MagitektSlashRotation(BossModule module) : Components.GenericRotatingAOE(m
     private Angle _increment;
     private Angle _rotation;
     private DateTime _activation;
-    public static readonly AOEShapeCone Cone = new(23.5f, 30.Degrees());
+    public static readonly AOEShapeCone Cone = new(23.5f, 30f.Degrees());
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = (IconID)iconID switch
+        var increment = iconID switch
         {
-            IconID.RotateCW => -a60,
-            IconID.RotateCCW => a60,
+            (uint)IconID.RotateCW => -a60,
+            (uint)IconID.RotateCCW => a60,
             _ => default
         };
         if (increment != default)
@@ -59,7 +59,7 @@ class MagitektSlashRotation(BossModule module) : Components.GenericRotatingAOE(m
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.MagitekSlashFirst)
+        if (spell.Action.ID == (uint)AID.MagitekSlashFirst)
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell, 2.2f);
@@ -70,7 +70,7 @@ class MagitektSlashRotation(BossModule module) : Components.GenericRotatingAOE(m
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.MagitekSlashFirst or AID.MagitekSlashRest)
+        if (spell.Action.ID is (uint)AID.MagitekSlashFirst or (uint)AID.MagitekSlashRest)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 
@@ -78,7 +78,7 @@ class MagitektSlashRotation(BossModule module) : Components.GenericRotatingAOE(m
     {
         if (_rotation != default && _increment != default)
         {
-            Sequences.Add(new(Cone, D151MarkIIIBMagitekColossus.ArenaCenter, _rotation, _increment, _activation, 1.1f, 6));
+            Sequences.Add(new(Cone, WPos.ClampToGrid(D151MarkIIIBMagitekColossus.ArenaCenter), _rotation, _increment, _activation, 1.1f, 6));
             _rotation = default;
             _increment = default;
         }
@@ -89,23 +89,34 @@ class MagitektSlashVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if ((OID)actor.OID != OID.FireVoidzone)
+        if (actor.OID != (uint)OID.FireVoidzone)
             return;
         if (state == 0x001)
             _aoes.Add(new(MagitektSlashRotation.Cone, D151MarkIIIBMagitekColossus.ArenaCenter, actor.Rotation));
         else if (state == 0x004)
-            _aoes.RemoveAll(x => x.Rotation == actor.Rotation);
+        {
+            var count = _aoes.Count;
+            var rot = actor.Rotation;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Rotation == rot)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 
 class JarringBlow(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.JarringBlow));
-class Exhaust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(43.5f, 5));
-class WildFireBeam(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.WildFireBeam), 6);
-class MagitekRay(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.MagitekRay), 6, 4, 4);
+class Exhaust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(43.5f, 5f));
+class WildFireBeam(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.WildFireBeam), 6f);
+class MagitekRay(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.MagitekRay), 6f, 4, 4);
 class CeruleumVent(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CeruleumVent));
 
 class D151MarkIIIBMagitekColossusStates : StateMachineBuilder
@@ -127,5 +138,5 @@ class D151MarkIIIBMagitekColossusStates : StateMachineBuilder
 public class D151MarkIIIBMagitekColossus(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(-180.569f, 68.523f);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 19.55f, 24)], [new Rectangle(new(-180, 88.3f), 20, 1), new Rectangle(new(-160, 68), 20, 1, 102.5f.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 19.55f, 24)], [new Rectangle(new(-180f, 88.3f), 20, 1), new Rectangle(new(-160f, 68f), 20, 1, 102.5f.Degrees())]);
 }

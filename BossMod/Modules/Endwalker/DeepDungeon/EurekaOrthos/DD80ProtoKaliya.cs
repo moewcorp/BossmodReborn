@@ -49,14 +49,14 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
     private readonly NerveGasRingAndAutoCannons _aoe1 = module.FindComponent<NerveGasRingAndAutoCannons>()!;
     private readonly Barofield _aoe2 = module.FindComponent<Barofield>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_sources[slot] is Source source)
         {
             var count = _aoe1.AOEs.Count;
             for (var i = 0; i < count; ++i)
                 if (_aoe1.AOEs[i].Shape == NerveGasRingAndAutoCannons.donut)
-                    return [source];
+                    return new Source[1] { source };
         }
         return [];
     }
@@ -143,7 +143,7 @@ class Barofield(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(5f);
     public AOEInstance? AOE;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -165,7 +165,7 @@ class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(mod
     private static readonly AOEShapeCross rect = new(43f, 2.5f);
     public static readonly AOEShapeDonut donut = new(8f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -231,14 +231,7 @@ class AutoAttack(BossModule module) : Components.Cleave(module, ActionID.MakeSpe
     }
 }
 
-class Resonance(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Resonance), new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class Resonance(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Resonance), new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true);
 
 class DD80ProtoKaliyaStates : StateMachineBuilder
 {

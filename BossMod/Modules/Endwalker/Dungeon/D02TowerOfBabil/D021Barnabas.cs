@@ -45,7 +45,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(15, 19.5f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -65,17 +65,19 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
 class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes: true)
 {
+    private readonly ElectromagneticRelease1 _aoe1 = module.FindComponent<ElectromagneticRelease1>()!;
+    private readonly ElectromagneticRelease2 _aoe2 = module.FindComponent<ElectromagneticRelease2>()!;
     private enum MagneticPole { None, Plus, Minus }
     private enum Shape { None, Rect, Circle }
     private MagneticPole CurrentPole;
     private Shape CurrentShape;
-    private readonly HashSet<(Actor, uint)> iconOnActor = [];
+    private readonly List<(Actor, uint)> iconOnActor = [];
     private DateTime activation;
     private Angle rotation;
     private const int RectDistance = 9;
     private const int CircleDistance = 5;
-    private static readonly Angle offset = 90.Degrees();
-    private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
+    private static readonly Angle offset = 90f.Degrees();
+    private static readonly AOEShapeCone _shape = new(30f, offset);
 
     private bool IsKnockback(Actor actor, Shape shape, MagneticPole pole)
         => CurrentShape == shape && CurrentPole == pole && iconOnActor.Contains((actor, (uint)(pole == MagneticPole.Plus ? IconID.Plus : IconID.Minus)));
@@ -83,54 +85,62 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
     private bool IsPull(Actor actor, Shape shape, MagneticPole pole)
         => CurrentShape == shape && CurrentPole == pole && iconOnActor.Contains((actor, (uint)(pole == MagneticPole.Plus ? IconID.Minus : IconID.Plus)));
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
+        var sources = new List<Source>(2);
         if (IsKnockback(actor, Shape.Rect, MagneticPole.Plus) || IsKnockback(actor, Shape.Rect, MagneticPole.Minus))
         {
-            yield return new(Module.Center, RectDistance, activation, _shape, rotation + offset, Kind.DirForward);
-            yield return new(Module.Center, RectDistance, activation, _shape, rotation - offset, Kind.DirForward);
+            sources.Add(new(Arena.Center, RectDistance, activation, _shape, rotation + offset, Kind.DirForward));
+            sources.Add(new(Arena.Center, RectDistance, activation, _shape, rotation - offset, Kind.DirForward));
         }
         else if (IsPull(actor, Shape.Rect, MagneticPole.Plus) || IsPull(actor, Shape.Rect, MagneticPole.Minus))
         {
-            yield return new(Module.Center, RectDistance, activation, _shape, rotation + offset, Kind.DirBackward);
-            yield return new(Module.Center, RectDistance, activation, _shape, rotation - offset, Kind.DirBackward);
+            sources.Add(new(Arena.Center, RectDistance, activation, _shape, rotation + offset, Kind.DirBackward));
+            sources.Add(new(Arena.Center, RectDistance, activation, _shape, rotation - offset, Kind.DirBackward));
         }
         else if (IsKnockback(actor, Shape.Circle, MagneticPole.Plus) || IsKnockback(actor, Shape.Circle, MagneticPole.Minus))
-            yield return new(Module.Center, CircleDistance, activation);
+            sources.Add(new(Arena.Center, CircleDistance, activation));
         else if (IsPull(actor, Shape.Circle, MagneticPole.Plus) || IsPull(actor, Shape.Circle, MagneticPole.Minus))
-            yield return new(Module.Center, CircleDistance, activation, default, default, Kind.TowardsOrigin);
+            sources.Add(new(Arena.Center, CircleDistance, activation, default, default, Kind.TowardsOrigin));
+        return CollectionsMarshal.AsSpan(sources);
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<ElectromagneticRelease1>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
-        (Module.FindComponent<ElectromagneticRelease2>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_aoe1.Casters.Count != 0 && _aoe1.Casters[0].Check(pos))
+            return true;
+        if (_aoe2.Casters.Count != 0 && _aoe2.Casters[0].Check(pos))
+            return true;
+        return !Module.InBounds(pos);
+    }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is ((uint)IconID.Plus) or ((uint)IconID.Minus))
         {
             iconOnActor.Add((actor, iconID));
-            activation = WorldState.FutureTime(8.1f);
+            activation = WorldState.FutureTime(8.1d);
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DynamicPoundPlus:
-            case AID.DynamicScraplinePlus:
+            case (uint)AID.DynamicPoundPlus:
+            case (uint)AID.DynamicScraplinePlus:
                 CurrentPole = MagneticPole.Plus;
                 rotation = spell.Rotation;
                 break;
-            case AID.DynamicScraplineMinus:
-            case AID.DynamicPoundMinus:
+            case (uint)AID.DynamicScraplineMinus:
+            case (uint)AID.DynamicPoundMinus:
                 CurrentPole = MagneticPole.Minus;
                 rotation = spell.Rotation;
                 break;
-            case AID.ElectromagneticRelease1:
+            case (uint)AID.ElectromagneticRelease1:
                 CurrentShape = Shape.Rect;
                 break;
-            case AID.ElectromagneticRelease2:
+            case (uint)AID.ElectromagneticRelease2:
                 CurrentShape = Shape.Circle;
                 break;
         }
@@ -138,7 +148,7 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.DynamicPoundKB or AID.DynamicPoundPull or AID.DynamicScraplinePull or AID.DynamicScraplinePull)
+        if (spell.Action.ID is (uint)AID.DynamicPoundKB or (uint)AID.DynamicPoundPull or (uint)AID.DynamicScraplinePull or (uint)AID.DynamicScraplinePull)
         {
             CurrentPole = MagneticPole.None;
             CurrentShape = Shape.None;
@@ -148,35 +158,35 @@ class Magnetism(BossModule module) : Components.Knockback(module, ignoreImmunes:
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var forbidden = new List<Func<WPos, float>>();
+        Func<WPos, float>? forbidden = null;
         if (IsKnockback(actor, Shape.Circle, MagneticPole.Plus) || IsKnockback(actor, Shape.Circle, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.InvertedCircle(Arena.Center, 10));
+            forbidden = ShapeDistance.InvertedCircle(Arena.Center, 10f);
         else if (IsPull(actor, Shape.Circle, MagneticPole.Plus) || IsPull(actor, Shape.Circle, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.Circle(Arena.Center, 13));
+            forbidden = ShapeDistance.Circle(Arena.Center, 13f);
         else if (IsKnockback(actor, Shape.Rect, MagneticPole.Plus) || IsKnockback(actor, Shape.Rect, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.InvertedCircle(Arena.Center, 6));
+            forbidden = ShapeDistance.InvertedCircle(Arena.Center, 6f);
         else if (IsPull(actor, Shape.Rect, MagneticPole.Plus) || IsPull(actor, Shape.Rect, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.Rect(Arena.Center, rotation, 15, 15, 12));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), activation);
+            forbidden = ShapeDistance.Rect(Arena.Center, rotation, 15f, 15f, 12f);
+        if (forbidden != null)
+            hints.AddForbiddenZone(forbidden, activation);
     }
 }
 
-class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 3));
+class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 3f));
 class ElectromagneticRelease1(BossModule module) : Cleave(module, AID.ElectromagneticRelease1);
 class GroundAndPound1(BossModule module) : Cleave(module, AID.GroundAndPound1);
 class GroundAndPound2(BossModule module) : Cleave(module, AID.GroundAndPound2);
 class DynamicPoundMinus(BossModule module) : Cleave(module, AID.DynamicPoundMinus);
 class DynamicPoundPlus(BossModule module) : Cleave(module, AID.DynamicPoundPlus);
 
-class Circles(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8);
+class Circles(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 8f);
 class ElectromagneticRelease2(BossModule module) : Circles(module, AID.ElectromagneticRelease2);
 class DynamicScraplineMinus(BossModule module) : Circles(module, AID.DynamicScraplineMinus);
 class DynamicScraplinePlus(BossModule module) : Circles(module, AID.DynamicScraplinePlus);
 class RollingScrapline(BossModule module) : Circles(module, AID.RollingScrapline);
 class Shock(BossModule module) : Circles(module, AID.Shock);
 
-class ShockingForce(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ShockingForce), 6, 4, 4);
+class ShockingForce(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ShockingForce), 6f, 4, 4);
 
 class D021BarnabasStates : StateMachineBuilder
 {
@@ -184,9 +194,9 @@ class D021BarnabasStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            .ActivateOnEnter<Magnetism>()
             .ActivateOnEnter<ElectromagneticRelease1>()
             .ActivateOnEnter<ElectromagneticRelease2>()
+            .ActivateOnEnter<Magnetism>()
             .ActivateOnEnter<GroundAndPound1>()
             .ActivateOnEnter<GroundAndPound2>()
             .ActivateOnEnter<DynamicPoundMinus>()
@@ -200,8 +210,8 @@ class D021BarnabasStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 785, NameID = 10279)]
-public class D021Barnabas(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300, 71), StartingBounds)
+public class D021Barnabas(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300f, 71f), StartingBounds)
 {
     public static readonly ArenaBoundsCircle StartingBounds = new(19.5f);
-    public static readonly ArenaBoundsCircle SmallerBounds = new(15);
+    public static readonly ArenaBoundsCircle SmallerBounds = new(15f);
 }

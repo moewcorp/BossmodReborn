@@ -47,7 +47,7 @@ class PsychicWaveArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom rect = new([new Rectangle(D053Ambrose.ArenaCenter, 33f, 24f)], [new Rectangle(D053Ambrose.ArenaCenter, 15f, 19.5f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -74,7 +74,7 @@ class ExtrasensoryExpulsion(BossModule module) : Components.Knockback(module, ma
     public static readonly AOEShapeRect RectNS = new(20f, 7.5f);
     public static readonly AOEShapeRect RectEW = new(15f, 10f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Sourcez;
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(Sourcez);
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
@@ -132,43 +132,35 @@ class OverwhelmingCharge(BossModule module) : Components.GenericAOEs(module)
     public AOEInstance? AOE;
     private static readonly Angle a180 = 180f.Degrees();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var componentActive = _kb.Sourcez.Count != 0 || actor.PendingKnockbacks.Count != 0;
-        var aoes = new List<AOEInstance>();
+        var count = _kb.Sourcez.Count;
+        var componentActive = count != 0 || actor.PendingKnockbacks.Count != 0;
+
         if (AOE is AOEInstance aoe)
         {
             if (componentActive)
             {
-                Components.Knockback.Source? safezone = null;
-
-                var count = _kb.Sourcez.Count;
                 for (var i = 0; i < count; ++i)
                 {
                     var source = _kb.Sourcez[i];
                     if (aoe.Rotation.AlmostEqual(source.Direction + a180, Angle.DegToRad))
-                    {
-                        safezone = source;
-                        break;
-                    }
+                        return new AOEInstance[1] { new(rectAdj, source.Origin, source.Direction, source.Activation, Colors.SafeFromAOE, false) };
                 }
-                if (safezone is Components.Knockback.Source sz)
-                    aoes.Add(new(rectAdj, sz.Origin, sz.Direction, sz.Activation, Colors.SafeFromAOE, false));
             }
             else
-                aoes.Add(aoe);
+                return new AOEInstance[1] { aoe };
         }
         else if (componentActive)
         {
-            var count = _kb.Sourcez.Count;
             for (var i = 0; i < count; ++i)
             {
                 var recti = _kb.Sourcez[i];
                 if (recti.Shape is AOEShapeRect rect && rect == ExtrasensoryExpulsion.RectNS)
-                    aoes.Add(new(rectAdj, recti.Origin, recti.Direction, recti.Activation, Colors.SafeFromAOE, false));
+                    return new AOEInstance[1] { new(rectAdj, recti.Origin, recti.Direction, recti.Activation, Colors.SafeFromAOE, false) };
             }
         }
-        return aoes;
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -196,23 +188,17 @@ class OverwhelmingCharge(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        base.AddHints(slot, actor, hints);
+        var aoes = ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        if (len != 0)
+        {
+            base.AddHints(slot, actor, hints);
 
-        List<AOEInstance> activeSafespots = new(2);
-        foreach (var aoe in ActiveAOEs(slot, actor))
-        {
-            if (aoe.Shape == rectAdj)
-            {
-                activeSafespots.Add(aoe);
-            }
-        }
-        var count = activeSafespots.Count;
-        if (count != 0)
-        {
             var actorInSafespot = false;
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < len; ++i)
             {
-                if (activeSafespots[i].Check(actor.Position))
+                var aoe = aoes[i];
+                if (aoe.Shape == rectAdj && aoe.Check(actor.Position))
                 {
                     actorInSafespot = true;
                     break;
@@ -231,7 +217,7 @@ class Rush(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(33f, 5f);
     private readonly List<AOEInstance> _aoes = new(7);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

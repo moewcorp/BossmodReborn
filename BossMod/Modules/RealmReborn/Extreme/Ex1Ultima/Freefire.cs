@@ -6,12 +6,17 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, ActionID.Make
     private DateTime _resolve;
     public bool Active => _casters.Count > 0;
 
-    private static readonly AOEShapeCircle _shape = new(15);
+    private static readonly AOEShapeCircle _shape = new(15f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in _casters)
-            yield return new(_shape, c.Position, new(), _resolve);
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+            aoes[i] = new(_shape, _casters[i].Position, new(), _resolve);
+        return aoes;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -37,7 +42,7 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, ActionID.Make
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.Helper && id == 0x0449)
+        if (actor.OID == (uint)OID.Helper && id == 0x0449)
         {
             _casters.Add(actor);
             _resolve = WorldState.FutureTime(6);

@@ -9,48 +9,80 @@ class P3Gaols(BossModule module) : Components.GenericAOEs(module)
     public State CurState;
     private BitMask _targets;
 
-    private static readonly AOEShapeCircle _freefireShape = new(6);
+    private static readonly AOEShapeCircle _freefireShape = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (CurState == State.Fetters && !_targets[slot])
-            foreach (var (_, target) in Raid.WithSlot(true, true, true).IncludedInMask(_targets))
-                yield return new(_freefireShape, target.Position);
+        if (CurState != State.Fetters || _targets[slot])
+            return [];
+
+        var includedTargets = Raid.WithSlot(true, true, true).IncludedInMask(_targets);
+        var count = 0;
+
+        foreach (var (_, target) in includedTargets)
+            ++count;
+
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
+        foreach (var (_, target) in includedTargets)
+            aoes[index++] = new(_freefireShape, target.Position);
+
+        return aoes;
     }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (CurState == State.TargetSelection && _targets.Any())
         {
-            var hint = string.Join(" > ", _config.P3GaolPriorities.Resolve(Raid).Where(i => _targets[i.slot]).OrderBy(i => i.group).Select(i => Raid[i.slot]?.Name));
-            hints.Add($"Gaols: {hint}");
+            var hintBuilder = new StringBuilder();
+            var priorities = _config.P3GaolPriorities.Resolve(Raid);
+            foreach (var i in priorities)
+            {
+                if (_targets[i.slot])
+                {
+                    var name = Raid[i.slot]?.Name;
+                    if (name != null)
+                    {
+                        if (hintBuilder.Length > 0)
+                        {
+                            hintBuilder.Append(" > ");
+                        }
+                        hintBuilder.Append(name);
+                    }
+                }
+            }
+            hints.Add($"Gaols: {hintBuilder}");
         }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Fetters)
+        if (status.ID == (uint)SID.Fetters)
         {
             if (CurState == State.TargetSelection)
             {
                 CurState = State.Fetters;
-                _targets.Reset(); // note that if target dies, fetters is applied to random player
+                _targets = default; // note that if target dies, fetters is applied to random player
             }
-            _targets.Set(Raid.FindSlot(actor.InstanceID));
+            _targets[Raid.FindSlot(actor.InstanceID)] = true;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.RockThrowBoss:
-            case AID.RockThrowHelper:
+            case (uint)AID.RockThrowBoss:
+            case (uint)AID.RockThrowHelper:
                 CurState = State.TargetSelection;
                 _targets.Set(Raid.FindSlot(spell.MainTargetID));
                 break;
-            case AID.FreefireGaol:
+            case (uint)AID.FreefireGaol:
                 var (closestSlot, closestPlayer) = Raid.WithSlot(true, true, true).IncludedInMask(_targets).Closest(caster.Position);
                 if (closestPlayer != null)
                 {

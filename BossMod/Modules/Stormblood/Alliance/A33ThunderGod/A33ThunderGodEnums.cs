@@ -52,8 +52,8 @@ public enum AID : uint
     //This deals no damage, being purely an indicator that the circle is filled.
 
     HallowedBoltVisual = 14181, // EphemeralKnight->self, 5.0s cast, single-target
-    HallowedBoltAOE = 14182, // Helper->self, 5.0s cast, range 15 circle
-    HallowedBoltDonut = 14183, // Helper->self, 5.0s cast, range 15-30 donut
+    HallowedBolt1 = 14182, // Helper->self, 5.0s cast, range 15 circle
+    HallowedBolt2 = 14183, // Helper->self, 5.0s cast, range 15-30 donut
     HallowedBoltAOE2 = 14155, // Helper->self, no cast, range 15 circle
     HallowedBolt5 = 14184, // Helper->players, no cast, range 6 circle
 

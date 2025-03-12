@@ -2,11 +2,11 @@
 
 class P3SeventhUmbralEra(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.SeventhUmbralEra), true)
 {
-    private readonly DateTime _activation = module.WorldState.FutureTime(5.3f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(5.3d);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        yield return new(Arena.Center, 11, _activation);
+        return new Source[1] { new(Arena.Center, 11, _activation) };
     }
 }
 

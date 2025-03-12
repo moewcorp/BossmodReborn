@@ -14,7 +14,7 @@ class RokujoRevel(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _pendingLines.Count + _pendingCircles.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countLines = _pendingLines.Count;
         var countCircles = _pendingCircles.Count;
@@ -71,7 +71,7 @@ class RokujoRevel(BossModule module) : Components.GenericAOEs(module)
         {
             aoes.Add(new(_shapeLine, Arena.Center, _pendingLines[0].dir, _pendingLines[0].activation, color));
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -19,22 +19,23 @@ public enum AID : uint
 }
 
 class RimeWreath(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.RimeWreath));
-class FrostBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrostBreath), new AOEShapeCone(27, 60.Degrees()));
-class FrostBreathCleave(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.FrostBreath), new AOEShapeCone(27, 60.Degrees()), activeWhileCasting: false);
-class SheetOfIce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SheetOfIce), 5);
-class SheetOfIce2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SheetOfIce2), 5);
-class Cauterize(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(48, 10));
+class FrostBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrostBreath), new AOEShapeCone(27f, 60f.Degrees()));
+class FrostBreathCleave(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.FrostBreath), new AOEShapeCone(27f, 60f.Degrees()), activeWhileCasting: false);
+class SheetOfIce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SheetOfIce), 5f);
+class SheetOfIce2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SheetOfIce2), 5f);
+class Cauterize(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(48f, 10f));
 
 class Touchdown(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Touchdown))
 {
     private readonly Cauterize _aoe = module.FindComponent<Cauterize>()!;
-    private readonly AOEShapeCircle _shape = new(5);
+    private readonly AOEShapeCircle _shape = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: proper timings...
         if (!Module.PrimaryActor.IsTargetable && _aoe.Casters.Count == 0)
-            yield return new(_shape, D103Isgebind.ArenaCenter);
+            return new AOEInstance[1] { new(_shape, WPos.ClampToGrid(D103Isgebind.ArenaCenter)) };
+        return [];
     }
 }
 
@@ -56,8 +57,8 @@ class D103IsgebindStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1680)]
 public class D103Isgebind(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly WPos ArenaCenter = new(0, -248);
-    private static readonly Angle a45 = 45.Degrees();
+    public static readonly WPos ArenaCenter = new(default, -248f);
+    private static readonly Angle a45 = 45f.Degrees();
     private static readonly Square[] union = [new(ArenaCenter, 23.7f), new(new(-23, -259.4f), 1), new(new(3.4f, -271), 1), new(new(12.8f, -225), 1)];
     private static readonly Shape[] difference = [new Square(new(-24, -224), 5.75f, a45), new Square(new(24, -224), 5.75f, a45),
     new Square(new(-24, -272), 5.75f, a45), new Square(new(24, -272), 5.75f, a45), new Circle(new(-23.9f, -248), 4.5f),

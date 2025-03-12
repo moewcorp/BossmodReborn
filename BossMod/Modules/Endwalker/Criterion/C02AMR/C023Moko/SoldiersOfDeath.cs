@@ -9,7 +9,7 @@ class IronRainStorm(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeStorm = new(20f);
     private static readonly WDir[] _safespotDirections = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {

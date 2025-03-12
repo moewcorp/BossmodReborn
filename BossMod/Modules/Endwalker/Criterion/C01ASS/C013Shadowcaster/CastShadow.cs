@@ -7,7 +7,7 @@ class CastShadow(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShape _shape = new AOEShapeCone(65f, 15f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var countFirst = FirstAOECasters.Count;
         var countSecond = SecondAOECasters.Count;

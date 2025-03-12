@@ -31,26 +31,27 @@ class PrincessThrenody(BossModule module) : Components.GenericAOEs(module)
     private Angle _direction;
     private DateTime _activation;
 
-    private static readonly AOEShapeCone _shape = new(40, 60.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 60f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activation != default)
-            yield return new(_shape, Module.PrimaryActor.Position, _direction, _activation);
+            return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position, _direction, _activation) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.PrincessThrenodyPrepare)
+        if (spell.Action.ID == (uint)AID.PrincessThrenodyPrepare)
         {
             _direction = spell.Rotation + ThrenodyDirection();
-            _activation = Module.CastFinishAt(spell, 2); //saw delays of upto ~0.3s higher because delay between Prepare and Resolve can vary
+            _activation = Module.CastFinishAt(spell, 2f); //saw delays of upto ~0.3s higher because delay between Prepare and Resolve can vary
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.PrincessThrenodyResolve)
+        if (spell.Action.ID == (uint)AID.PrincessThrenodyResolve)
             _activation = default;
     }
 
@@ -58,12 +59,12 @@ class PrincessThrenody(BossModule module) : Components.GenericAOEs(module)
     {
         foreach (var s in Module.PrimaryActor.Statuses)
         {
-            switch ((SID)s.ID)
+            switch (s.ID)
             {
-                case SID.RightwardWhimsy: return -90.Degrees();
-                case SID.LeftwardWhimsy: return 90.Degrees();
-                case SID.BackwardWhimsy: return 180.Degrees();
-                case SID.ForwardWhimsy: return 0.Degrees();
+                case (uint)SID.RightwardWhimsy: return -90f.Degrees();
+                case (uint)SID.LeftwardWhimsy: return 90f.Degrees();
+                case (uint)SID.BackwardWhimsy: return 180f.Degrees();
+                case (uint)SID.ForwardWhimsy: return default;
             }
         }
         ReportError("Failed to find whimsy status");
@@ -72,8 +73,8 @@ class PrincessThrenody(BossModule module) : Components.GenericAOEs(module)
 }
 
 class WhimsyAlaMode(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.WhimsyAlaMode), "Select direction");
-class AmorphicFlail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AmorphicFlail), 9);
-class PrincessCacophony(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PrincessCacophony), 12);
+class AmorphicFlail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AmorphicFlail), 9f);
+class PrincessCacophony(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PrincessCacophony), 12f);
 class Banish(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Banish));
 
 class MoussePrincessStates : StateMachineBuilder

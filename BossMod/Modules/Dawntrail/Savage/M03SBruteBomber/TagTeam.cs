@@ -9,7 +9,7 @@ class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(70f, 17f);
     private ConeHA? cone;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)
@@ -25,10 +25,10 @@ class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(module)
                 aoe = new(new AOEShapeCustom(safeShapes, dangerShapes, coneShapes, true, cone != null ? OperandType.Intersection : OperandType.Union),
                     Arena.Center, default, AOEs[0].Activation, Colors.SafeFromAOE);
             }
-            return Utils.ZeroOrOne(aoe);
+            return Utils.ZeroOrOne(ref aoe);
         }
         else
-            return AOEs;
+            return CollectionsMarshal.AsSpan(AOEs);
     }
 
     private (RectangleSE[] safeShapes, RectangleSE[] dangerShapes) GetShapesForAOEs(int slot)
@@ -55,7 +55,7 @@ class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(module)
         var count = AOEs.Count;
         if (count == 0)
             return;
-        ref var aoe = ref _safespot[slot];
+        ref readonly var aoe = ref _safespot[slot];
         if (_tetherSource[slot] == null)
             base.AddHints(slot, actor, hints);
         else if (aoe != null)

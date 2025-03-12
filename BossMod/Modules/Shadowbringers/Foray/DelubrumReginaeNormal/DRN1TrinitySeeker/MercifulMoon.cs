@@ -4,11 +4,14 @@ class MercifulMoon(BossModule module) : Components.GenericGaze(module, ActionID.
 {
     private Eye? _eye;
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => Utils.ZeroOrOne(_eye);
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => Utils.ZeroOrOne(ref _eye);
 
     public override void Update()
     {
-        if (_eye == null && Module.Enemies(OID.AetherialOrb).FirstOrDefault() is var orb && orb != null)
-            _eye = new(orb.Position, WorldState.FutureTime(5.8f)); // time from spawn to cast
+        var orbs = Module.Enemies((uint)OID.AetherialOrb);
+        if (orbs.Count == 0)
+            return;
+        if (_eye == null && Module.Enemies((uint)OID.AetherialOrb)[0] is var orb)
+            _eye = new(orb.Position, WorldState.FutureTime(5.8d)); // time from spawn to cast
     }
 }

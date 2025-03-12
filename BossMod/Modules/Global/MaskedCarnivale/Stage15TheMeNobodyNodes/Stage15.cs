@@ -33,34 +33,35 @@ class HighVoltage(BossModule module) : Components.CastInterruptHint(module, Acti
 
 class Ballast(BossModule module) : Components.ConcentricAOEs(module, _shapes, true)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCone(5.5f, 135.Degrees()), new AOEShapeDonutSector(5.5f, 10.5f, 135.Degrees()), new AOEShapeDonutSector(10.5f, 15.5f, 135.Degrees())];
+    private static readonly Angle a135 = 135f.Degrees();
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(5.5f, a135), new AOEShapeDonutSector(5.5f, 10.5f, a135), new AOEShapeDonutSector(10.5f, 15.5f, a135)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BallastVisual1)
-            AddSequence(caster.Position, Module.CastFinishAt(spell, 3.6f), spell.Rotation);
+        if (spell.Action.ID == (uint)AID.BallastVisual1)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell, 3.6f), spell.Rotation);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.Ballast1 => 0,
-                AID.Ballast2 => 1,
-                AID.Ballast3 => 2,
+                (uint)AID.Ballast1 => 0,
+                (uint)AID.Ballast2 => 1,
+                (uint)AID.Ballast3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(0.6f), spell.Rotation);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(0.6d), spell.Rotation);
         }
     }
 }
 
-class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(32.3f, 4));
+class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(32.3f, 4f));
 class RepellingCannons(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RepellingCannons), 12.3f);
-class Superstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Superstorm2), new AOEShapeDonut(8, 20));
-class Spellsword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spellsword), new AOEShapeCone(7.1f, 60.Degrees()));
+class Superstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Superstorm2), new AOEShapeDonut(8f, 20f));
+class Spellsword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Spellsword), new AOEShapeCone(7.1f, 60f.Degrees()));
 class Disseminate(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Disseminate), 7.2f);
 
 class Hints(BossModule module) : BossComponent(module)
@@ -98,19 +99,20 @@ public class Stage15 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Shabti), Colors.Object);
-        Arena.Actors(Enemies(OID.Serpent), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Shabti), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Serpent), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Shabti => 2, //TODO: ideally AI would use Acorn Bomb to put it to sleep until buff runs out instead of attacking them directly
-                OID.Serpent => 1,
+                (uint)OID.Shabti => 2, // TODO: ideally AI would use Acorn Bomb to put it to sleep until buff runs out instead of attacking them directly
+                (uint)OID.Serpent => 1,
                 _ => 0
             };
         }

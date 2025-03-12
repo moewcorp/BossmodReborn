@@ -45,15 +45,15 @@ public enum AID : uint
     ActivateImaginifer = 23623 // Imaginifer->self, no cast, single-target, visual
 }
 
-class IcePillar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IcePillarAOE), 4);
-class PillarPierce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80, 2));
-class Shatter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shatter), 8);
+class IcePillar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IcePillarAOE), 4f);
+class PillarPierce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PillarPierce), new AOEShapeRect(80f, 2f));
+class Shatter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shatter), 8f);
 
-class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BracingWind), 40, false, 1, new AOEShapeRect(60, 6), Kind.DirForward)
+class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.BracingWind), 40f, false, 1, new AOEShapeRect(60f, 6f), Kind.DirForward)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var length = Module.Bounds.Radius * 2; // casters are at the border, orthogonal to borders
+        var length = Arena.Bounds.Radius * 2f; // casters are at the border, orthogonal to borders
         foreach (var c in Casters)
         {
             hints.AddForbiddenZone(ShapeDistance.Rect(c.Position, c.CastInfo!.Rotation, length, Distance - length, 6), Module.CastFinishAt(c.CastInfo!));
@@ -61,12 +61,12 @@ class BracingWind(BossModule module) : Components.KnockbackFromCastTarget(module
     }
 }
 
-class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.LunarCry), 80)
+class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.LunarCry), 80f)
 {
     private readonly List<Actor> _safePillars = [];
     private readonly BracingWind? _knockback = module.FindComponent<BracingWind>();
 
-    public override IEnumerable<Actor> BlockerActors() => _safePillars;
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(_safePillars);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -77,14 +77,14 @@ class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, Action
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Icicle)
+        if (actor.OID == (uint)OID.Icicle)
             _safePillars.Add(actor);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         base.OnCastStarted(caster, spell);
-        if ((AID)spell.Action.ID == AID.PillarPierce)
+        if (spell.Action.ID == (uint)AID.PillarPierce)
             _safePillars.Remove(caster);
     }
 }
@@ -92,88 +92,77 @@ class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, Action
 // this AOE only got 2s cast time, but the actors already spawn 4.5s earlier, so we can use that to our advantage
 class ThermalGust(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _casters = [];
-    private DateTime _activation;
+    private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape = new(60, 2);
+    private static readonly AOEShapeRect _shape = new(60f, 2f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, Module.CastFinishAt(c.CastInfo, 0, _activation)));
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Imaginifer)
-        {
-            _casters.Add(actor);
-            _activation = WorldState.FutureTime(6.5f);
-        }
+        if (actor.OID == (uint)OID.Imaginifer)
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6.5d)));
+
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ThermalGust)
-            _casters.Remove(caster);
+        if (spell.Action.ID == (uint)AID.ThermalGust)
+            _aoes.RemoveAt(0);
     }
 }
 
-class AgeOfEndlessFrost(BossModule module) : Components.GenericAOEs(module)
+class AgeOfEndlessFrost(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
-    private readonly List<Angle> _angles = [];
-    private DateTime _nextActivation;
+    private DateTime _activation;
+    private WPos _pos;
+    private readonly List<Angle> _rotation = new(6);
 
-    private static readonly AOEShapeCone _shape = new(40, 10.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 10f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private void InitIfReady()
     {
-        return _angles.Select(a => new AOEInstance(_shape, Module.PrimaryActor.Position, a, _nextActivation));
+        if (_rotation.Count == 6 && _increment != default)
+        {
+            for (var i = 0; i < 6; ++i)
+                Sequences.Add(new(_shape, _pos, _rotation[i], _increment, _activation, 2f, 7));
+            _rotation.Clear();
+            _increment = default;
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.AgeOfEndlessFrostFirstCW:
-                _increment = -40.Degrees();
-                _nextActivation = Module.CastFinishAt(spell);
+            case (uint)AID.AgeOfEndlessFrostFirstCW:
+                _increment = -40f.Degrees();
+                InitIfReady();
                 break;
-            case AID.AgeOfEndlessFrostFirstCCW:
-                _increment = 40.Degrees();
-                _nextActivation = Module.CastFinishAt(spell);
+            case (uint)AID.AgeOfEndlessFrostFirstCCW:
+                _increment = 40f.Degrees();
+                InitIfReady();
                 break;
-            case AID.AgeOfEndlessFrostFirstAOE:
-                NumCasts = 0;
-                _angles.Add(spell.Rotation);
+            case (uint)AID.AgeOfEndlessFrostFirstAOE:
+                _rotation.Add(spell.Rotation);
+                _activation = Module.CastFinishAt(spell);
+                _pos = spell.LocXZ;
+                InitIfReady();
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AgeOfEndlessFrostFirstCCW or AID.AgeOfEndlessFrostFirstCW or AID.AgeOfEndlessFrostRest)
-        {
-            if (NumCasts == 0)
-            {
-                _nextActivation = WorldState.FutureTime(2.6f);
-            }
-            else if (NumCasts < 6)
-            {
-                _nextActivation = WorldState.FutureTime(2.1f);
-            }
-            else
-            {
-                _angles.Clear();
-            }
-
-            ++NumCasts;
-            for (var i = 0; i < _angles.Count; ++i)
-                _angles[i] += _increment;
-        }
+        if (spell.Action.ID is (uint)AID.AgeOfEndlessFrostFirstCCW or (uint)AID.AgeOfEndlessFrostFirstCW or (uint)AID.AgeOfEndlessFrostRest)
+            AdvanceSequence(caster.Position, spell.Rotation, WorldState.CurrentTime);
     }
 }
 
-class StormWithout(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithout), new AOEShapeDonut(10, 40));
-class StormWithin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithin), 10);
-class AncientGlacier(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientGlacierAOE), 6);
+class StormWithout(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithout), new AOEShapeDonut(10f, 40f));
+class StormWithin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StormWithin), 10f);
+class AncientGlacier(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientGlacierAOE), 6f);
 class Glaciation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Glaciation));
 
 class CE54NeverCryWolfStates : StateMachineBuilder
@@ -196,18 +185,11 @@ class CE54NeverCryWolfStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
-public class CE54NeverCryWolf : BossModule
+public class CE54NeverCryWolf(WorldState ws, Actor primary) : BossModule(ws, primary, new(-830f, 190f), new ArenaBoundsSquare(24f))
 {
-    private readonly List<Actor> _adds;
-
-    public CE54NeverCryWolf(WorldState ws, Actor primary) : base(ws, primary, new(-830, 190), new ArenaBoundsSquare(24))
-    {
-        _adds = Enemies(OID.Imaginifer);
-    }
-
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         base.DrawEnemies(pcSlot, pc);
-        Arena.Actors(_adds, Colors.Enemy);
+        Arena.Actors(Enemies((uint)OID.Imaginifer));
     }
 }

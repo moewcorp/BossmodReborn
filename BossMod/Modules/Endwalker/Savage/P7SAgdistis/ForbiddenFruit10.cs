@@ -14,7 +14,7 @@ class ForbiddenFruit10(BossModule module) : ForbiddenFruitCommon(module, ActionI
             var source = TetherSources[slot];
             if (source != null)
             {
-                AOEShape shape = (OID)source.OID == OID.ImmatureMinotaur ? ShapeMinotaurTethered : ShapeBullBirdTethered;
+                AOEShape shape = source.OID == (uint)OID.ImmatureMinotaur ? ShapeMinotaurTethered : ShapeRect;
                 shape.Draw(Arena, source.Position, Angle.FromDirection(target.Position - source.Position));
             }
         }
@@ -25,10 +25,10 @@ class ForbiddenFruit10(BossModule module) : ForbiddenFruitCommon(module, ActionI
         var slot = TryAssignTether(source, tether);
         if (slot < 0)
             return;
-        var safe = (TetherID)tether.ID switch
+        var safe = tether.ID switch
         {
-            TetherID.Bull => _bullPlatforms,
-            TetherID.Bird => ValidPlatformsMask & ~(_minotaurPlaforms | _bullPlatforms),
+            (uint)TetherID.Bull => _bullPlatforms,
+            (uint)TetherID.Bird => ValidPlatformsMask & ~(_minotaurPlaforms | _bullPlatforms),
             _ => _minotaurPlaforms
         };
         SafePlatforms[slot] = safe;
@@ -36,14 +36,14 @@ class ForbiddenFruit10(BossModule module) : ForbiddenFruitCommon(module, ActionI
 
     protected override DateTime? PredictUntetheredCastStart(Actor fruit)
     {
-        switch ((OID)fruit.OID)
+        switch (fruit.OID)
         {
-            case OID.ForbiddenFruitMinotaur:
+            case (uint)OID.ForbiddenFruitMinotaur:
                 // minotaurs spawn on bridges, minotaur platform is adjacent => their opposite platform is never minotaur one
-                _minotaurPlaforms.Clear(PlatformIDFromOffset(Module.Center - fruit.Position));
+                _minotaurPlaforms[PlatformIDFromOffset(Arena.Center - fruit.Position)] = false;
                 break;
-            case OID.ForbiddenFruitBull:
-                _bullPlatforms.Set(PlatformIDFromOffset(fruit.Position - Module.Center));
+            case (uint)OID.ForbiddenFruitBull:
+                _bullPlatforms[PlatformIDFromOffset(fruit.Position - Arena.Center)] = true;
                 break;
         }
         return null;

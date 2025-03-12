@@ -25,15 +25,15 @@ public enum AID : uint
     MagitekRay = 21268 // MagitekBit->self, 2.5s cast, range 50 width 4 rect
 }
 
-class LightLeap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightLeap), 10);
-class ChemicalMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChemicalMissile), 12);
-class TailMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailMissileAOE), 30);
-class Shockwave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shockwave), 16);
-class ExplosiveFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExplosiveFlare), 10);
+class LightLeap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightLeap), 10f);
+class ChemicalMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChemicalMissile), 12f);
+class TailMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailMissileAOE), 30f);
+class Shockwave(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shockwave), 16f);
+class ExplosiveFlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ExplosiveFlare), 10f);
 class CripplingBlow(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.CripplingBlow));
 class PlasmaField(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PlasmaField));
-class Towers(BossModule module) : Components.CastTowersOpenWorld(module, ActionID.MakeSpell(AID.Explosion), 6);
-class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(50, 2));
+class Towers(BossModule module) : Components.CastTowersOpenWorld(module, ActionID.MakeSpell(AID.Explosion), 6f);
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(50f, 2f));
 
 class CE14VigilForLostStates : StateMachineBuilder
 {
@@ -53,4 +53,4 @@ class CE14VigilForLostStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 3)] // bnpcname=9396
-public class CE14VigilForLost(WorldState ws, Actor primary) : BossModule(ws, primary, new(451, 830), new ArenaBoundsCircle(30));
+public class CE14VigilForLost(WorldState ws, Actor primary) : BossModule(ws, primary, new(451f, 830f), new ArenaBoundsCircle(30f));

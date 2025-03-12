@@ -9,19 +9,35 @@ class Turrets(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
     private const float _distance = 17;
     private static readonly AOEShapeRect _shape = new(50, 2.5f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        foreach (var t in ImminentTurretsWithTargets())
+        var turrets = ImminentTurretsWithTargets();
+        var count = turrets.Count;
+        if (count == 0)
+            return [];
+        var sources = new List<Source>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var t = turrets[i];
             if (t.source != null && t.target != null)
-                yield return new(t.source.Position, _distance, _activation, _shape, Angle.FromDirection(t.target.Position - t.source.Position));
+                sources.Add(new(t.source.Position, _distance, _activation, _shape, Angle.FromDirection(t.target.Position - t.source.Position)));
+        }
+        return CollectionsMarshal.AsSpan(sources);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
+        var turrets = ImminentTurretsWithTargets();
+        var count = turrets.Count;
+        if (count == 0)
+            return;
+
         base.AddHints(slot, actor, hints);
         var inCount = 0;
-        foreach (var t in ImminentTurretsWithTargets())
+
+        for (var i = 0; i < count; ++i)
         {
+            var t = turrets[i];
             if (t.source == null || t.target == null || !_shape.Check(actor.Position, t.source.Position, Angle.FromDirection(t.target.Position - t.source.Position)))
                 continue; // not in aoe
             ++inCount;
@@ -33,43 +49,61 @@ class Turrets(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
             hints.Add("GTFO from knockback!");
     }
 
-    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => ImminentTurretsWithTargets().Any(t => t.target == player) ? PlayerPriority.Interesting : PlayerPriority.Irrelevant;
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
+    {
+        var turrets = ImminentTurretsWithTargets();
+        var count = turrets.Count;
+        if (count == 0)
+            return PlayerPriority.Irrelevant;
+        for (var i = 0; i < count; ++i)
+        {
+            if (turrets[i].target == player)
+            {
+                return PlayerPriority.Interesting;
+            }
+        }
+        return PlayerPriority.Irrelevant;
+    }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var t in ImminentTurretsWithTargets())
+        var turretsI = ImminentTurretsWithTargets();
+        var countI = turretsI.Count;
+        for (var i = 0; i < countI; ++i)
         {
+            var t = turretsI[i];
             Arena.Actor(t.source, Colors.Enemy, true);
             if (t.source != null && t.target != null)
                 _shape.Outline(Arena, t.source.Position, Angle.FromDirection(t.target.Position - t.source.Position));
         }
-
-        foreach (var t in FutureTurrets())
-            Arena.Actor(t, Colors.Object, true);
+        var turretsF = FutureTurrets();
+        var countF = turretsI.Count;
+        for (var i = 0; i < countF; ++i)
+            Arena.Actor(turretsF[i], Colors.Object, true);
 
         base.DrawArenaForeground(pcSlot, pc);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.DarkResistanceDown)
-            _forbidden.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.DarkResistanceDown)
+            _forbidden[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var order = (IconID)iconID switch
+        var order = iconID switch
         {
-            IconID.Order1 => 0,
-            IconID.Order2 => 1,
-            IconID.Order3 => 2,
-            IconID.Order4 => 3,
+            (uint)IconID.Order1 => 0,
+            (uint)IconID.Order2 => 1,
+            (uint)IconID.Order3 => 2,
+            (uint)IconID.Order4 => 3,
             _ => -1
         };
         if (order < 0)
             return;
 
-        _activation = WorldState.FutureTime(8.1f);
+        _activation = WorldState.FutureTime(8.1d);
         if (_turrets[order * 2] == null)
             _turrets[order * 2] = actor;
         else if (_turrets[order * 2 + 1] == null)
@@ -78,6 +112,31 @@ class Turrets(BossModule module) : Components.Knockback(module, ActionID.MakeSpe
             ReportError($"More than 2 turrets of order {order}");
     }
 
-    private IEnumerable<(Actor? source, Actor? target)> ImminentTurretsWithTargets() => _turrets.Skip(NumCasts).Take(2).Select(t => (t, WorldState.Actors.Find(t?.TargetID ?? 0)));
-    private IEnumerable<Actor?> FutureTurrets() => _turrets.Skip(NumCasts + 2).Take(2);
+    private List<(Actor? source, Actor? target)> ImminentTurretsWithTargets()
+    {
+        List<(Actor? source, Actor? target)> turrets = [];
+        var count = 0;
+        var len = _turrets.Length;
+        for (var i = NumCasts; i < len && count < 2; ++i)
+        {
+            var turret = _turrets[i];
+            var target = WorldState.Actors.Find(turret?.TargetID ?? 0);
+            turrets.Add((turret, target));
+            ++count;
+        }
+        return turrets;
+    }
+
+    private List<Actor?> FutureTurrets()
+    {
+        List<Actor?> turrets = [];
+        var count = 0;
+        var len = _turrets.Length;
+        for (var i = NumCasts + 2; i < len && count < 2; ++i)
+        {
+            turrets.Add(_turrets[i]);
+            ++count;
+        }
+        return turrets;
+    }
 }

@@ -43,10 +43,10 @@ class LightningBoltDistantClap(BossModule module) : Components.GenericAOEs(modul
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shapeBolt = new(4);
-    private static readonly AOEShapeDonut _shapeClap = new(4, 10);
+    private static readonly AOEShapeCircle _shapeBolt = new(4f);
+    private static readonly AOEShapeDonut _shapeClap = new(4f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -59,17 +59,36 @@ class LightningBoltDistantClap(BossModule module) : Components.GenericAOEs(modul
         switch (spell.Action.ID)
         {
             case (uint)AID.LightningBoltAOE:
-                if (_aoes.FindIndex(a => a.Origin.AlmostEqual(spell.TargetXZ, 1f)) is var index && index >= 0)
-                    _aoes[index] = new(_shapeClap, spell.TargetXZ, default, WorldState.FutureTime(6.1d));
+                var count1 = _aoes.Count;
+                var pos1 = spell.TargetXZ;
+                for (var i = 0; i < count1; ++i)
+                {
+                    if (_aoes[i].Origin.AlmostEqual(pos1, 1f))
+                    {
+                        _aoes[i] = new(_shapeClap, spell.TargetXZ, default, WorldState.FutureTime(6.1d));
+                        break;
+                    }
+                }
                 break;
             case (uint)AID.DistantClap:
-                _aoes.RemoveAll(a => a.Origin.AlmostEqual(caster.Position, 1f));
+                {
+                    var count2 = _aoes.Count;
+                    var pos2 = caster.Position;
+                    for (var i = 0; i < count2; ++i)
+                    {
+                        if (_aoes[i].Origin.AlmostEqual(pos2, 1f))
+                        {
+                            _aoes.RemoveAt(i);
+                            return;
+                        }
+                    }
+                }
                 break;
         }
     }
 }
 
-class TwistingWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(80, 5));
+class TwistingWinds(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwistingWinds), new AOEShapeRect(80f, 5f));
 
 class CloudToGround(BossModule module) : Components.Exaflare(module, 5f)
 {
@@ -77,7 +96,7 @@ class CloudToGround(BossModule module) : Components.Exaflare(module, 5f)
     {
         if (spell.Action.ID == (uint)AID.CloudToGroundFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 5 * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
+            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 4, MaxShownExplosions = 2 });
         }
     }
 
@@ -107,37 +126,36 @@ class Flame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSp
 
 class Burn(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _flames = module.Enemies((uint)OID.BallOfFire);
-    private readonly List<(Actor actor, AOEInstance? aoe)> _casters = [];
-
+    private readonly List<AOEInstance> _aoes = new(12);
     private static readonly AOEShapeCircle _shape = new(8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var deadline = new DateTime();
-        foreach (var c in _casters)
-        {
-            if (c.aoe == null)
-                continue;
-            if (deadline == default)
-                deadline = c.aoe.Value.Activation.AddSeconds(1d);
-            if (c.aoe.Value.Activation < deadline)
-                yield return c.aoe.Value;
-        }
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
-    public override void Update()
+    public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
-        foreach (var f in _flames.Where(f => f.ModelState.AnimState1 == 1 && _casters.FindIndex(c => c.actor == f) < 0))
-        {
-            _casters.Add((f, new(_shape, WPos.ClampToGrid(f.Position), default, WorldState.FutureTime(5d))));
-        }
+        if (actor.OID == (uint)OID.BallOfFire && animState1 == 1)
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(5d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.Burn && _casters.FindIndex(f => f.actor == caster) is var index && index >= 0)
-            _casters[index] = (caster, null);
+        if (spell.Action.ID == (uint)AID.Burn)
+        {
+            _aoes.RemoveAt(0);
+        }
     }
 }
 

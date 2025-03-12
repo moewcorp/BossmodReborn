@@ -20,14 +20,14 @@ public enum SID : uint
     PiercingResistanceDownII = 1435 // Boss->player, extra=0x0
 }
 
-class OdiousMiasma(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OdiousMiasma), new AOEShapeCone(12, 60.Degrees()));
+class OdiousMiasma(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OdiousMiasma), new AOEShapeCone(12f, 60f.Degrees()));
 
-class AllergenInjection(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AllergenInjection), new AOEShapeCircle(6), true)
+class AllergenInjection(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AllergenInjection), new AOEShapeCircle(6f), true)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away!");
     }
 }
@@ -38,24 +38,24 @@ class RootsOfAtopy(BossModule module) : Components.GenericStackSpread(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.RootsOfAtopy)
+        if (spell.Action.ID == (uint)AID.RootsOfAtopy)
             Stacks.Add(new(WorldState.Actors.Find(spell.TargetID)!, 6, 8, 8, activation: Module.CastFinishAt(spell), forbiddenPlayers: _forbidden));
     }
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.PiercingResistanceDownII)
-            _forbidden.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.PiercingResistanceDownII)
+            _forbidden[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.PiercingResistanceDownII)
-            _forbidden[Raid.FindSlot(actor.InstanceID)] = default;
+        if (status.ID == (uint)SID.PiercingResistanceDownII)
+            _forbidden[Raid.FindSlot(actor.InstanceID)] = false;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.RootsOfAtopy)
+        if (spell.Action.ID == (uint)AID.RootsOfAtopy)
             Stacks.RemoveAt(0);
     }
 }
@@ -72,4 +72,4 @@ class NariphonStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8907)]
-public class Nariphon(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class Nariphon(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

@@ -15,17 +15,17 @@ public enum AID : uint
     Repel = 1047 // Boss->self, 3.0s cast, range 40+R 180?-degree cone knockback 20 (non-immunable)
 }
 
-class LiquefyCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefyCenter), new AOEShapeRect(50, 4));
-class LiquefySides(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefySides), new AOEShapeRect(50, 3.5f));
+class LiquefyCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefyCenter), new AOEShapeRect(50f, 4f));
+class LiquefySides(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquefySides), new AOEShapeRect(50f, 3.5f));
 
-class Repel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Repel), 20, true)
+class Repel(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Repel), 20f, true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // custom hint: stay in narrow zone in center
         if (Casters.Count > 0)
         {
-            var safe = ShapeDistance.Rect(Module.PrimaryActor.Position, 0.Degrees(), 50, -2, 1);
+            var safe = ShapeDistance.Rect(Module.PrimaryActor.Position, new WDir(default, 1f), 50f, -2f, 1f);
             hints.AddForbiddenZone(p => -safe(p));
         }
     }
@@ -35,13 +35,18 @@ class ForbiddenZones(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect _shape = new(50, 10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(_shape, Module.PrimaryActor.Position, 180.Degrees()); // area behind boss
+        var aoes = new List<AOEInstance>(2)
+        {
+            new(_shape, Module.PrimaryActor.Position, 180f.Degrees()) // area behind boss
+        };
 
-        var pollen = Module.Enemies(OID.Pollen).FirstOrDefault();
+        var pollens = Module.Enemies((uint)OID.Pollen);
+        var pollen = pollens.Count != 0 ? pollens[0] : null;
         if (pollen != null && pollen.EventState == 0)
-            yield return new(_shape, new(200, -122));
+            aoes.Add(new(_shape, new(200f, -122f)));
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
 
@@ -59,4 +64,4 @@ class D162DemonWallStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1694)]
-public class D162DemonWall(WorldState ws, Actor primary) : BossModule(ws, primary, new(200, -131), new ArenaBoundsRect(10, 21));
+public class D162DemonWall(WorldState ws, Actor primary) : BossModule(ws, primary, new(200f, -131f), new ArenaBoundsRect(10f, 21f));

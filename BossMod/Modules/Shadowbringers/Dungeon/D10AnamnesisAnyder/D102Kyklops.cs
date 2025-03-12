@@ -30,34 +30,34 @@ public enum AID : uint
 }
 
 class TheFinalVerse(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.TheFinalVerse));
-class WanderersPyre(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.WanderersPyre), 5);
-class OpenHearth(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.OpenHearth), 6);
-class EyeOfTheCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheCyclone), new AOEShapeDonut(8, 25));
-class RagingGlower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingGlower), new AOEShapeRect(45, 3));
-class MinaSwipe2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwipe2000), new AOEShapeCone(12, 60.Degrees()));
-class MinaSwing2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwing2000), 12);
+class WanderersPyre(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.WanderersPyre), 5f);
+class OpenHearth(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.OpenHearth), 6f);
+class EyeOfTheCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EyeOfTheCyclone), new AOEShapeDonut(8f, 25f));
+class RagingGlower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingGlower), new AOEShapeRect(45f, 3f));
+class MinaSwipe2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwipe2000), new AOEShapeCone(12f, 60f.Degrees()));
+class MinaSwing2000(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MinaSwing2000), 12f);
 
 class TerribleBladeHammer(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(5);
-    private static readonly WPos[] xPattern = [new(10, -70), new(30, -70), new(20, -80), new(10, -90), new(30, -90)];
-    private static readonly WPos[] crossPattern = [new(20, -70), new(10, -80), new(30, -80), new(20, -90)];
-    private static readonly AOEShapeRect rect = new(5, 5, 5);
-    private const int XPatternActivationTime = 16;
-    private const float CrossPatternActivationTime = 18.2f;
+    private static readonly WPos[] xPattern = [new(10f, -70f), new(30f, -70f), new(20f, -80f), new(10f, -90f), new(30f, -90f)];
+    private static readonly WPos[] crossPattern = [new(20f, -70f), new(10f, -80f), new(30f, -80f), new(20f, -90f)];
+    private static readonly AOEShapeRect rect = new(5f, 5f, 5f);
+    private const double XPatternActivationTime = 16d, CrossPatternActivationTime = 18.2d;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> aoes = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            if ((_aoes[i].Activation - _aoes[0].Activation).TotalSeconds <= 1)
-                aoes.Add(_aoes[i]);
-        }
-        return aoes;
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -76,19 +76,20 @@ class TerribleBladeHammer(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID is AID.TerribleHammer or AID.TerribleBlade)
+        if (_aoes.Count > 0 && spell.Action.ID is (uint)AID.TerribleHammer or (uint)AID.TerribleBlade)
             _aoes.RemoveAt(0);
     }
 
-    private void SetupPattern(WPos[] primaryPattern, WPos[] secondaryPattern, float primaryTime, float secondaryTime)
+    private void SetupPattern(WPos[] primaryPattern, WPos[] secondaryPattern, double primaryTime, double secondaryTime)
     {
         AddAOEs(primaryPattern, primaryTime);
         AddAOEs(secondaryPattern, secondaryTime);
     }
 
-    private void AddAOEs(WPos[] pattern, float activationTime)
+    private void AddAOEs(WPos[] pattern, double activationTime)
     {
-        for (var i = 0; i < pattern.Length; ++i)
+        var len = pattern.Length;
+        for (var i = 0; i < len; ++i)
             _aoes.Add(new(rect, pattern[i], Angle.AnglesCardinals[1], WorldState.FutureTime(activationTime)));
     }
 }

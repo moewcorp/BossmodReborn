@@ -12,7 +12,7 @@ class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect square = new(3f, 3f, 3f);
     private static readonly Dictionary<int, (int x, int y)> _cellIndexToCoordinates = GenerateCellIndexToCoordinates();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!_config.ShowOccupiedTiles)
             return [];
@@ -35,7 +35,7 @@ class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
                     tiles[index++] = new(square, CellCenter(i), Color: Colors.FutureVulnerable);
             }
         }
-        return tiles[..index];
+        return tiles.AsSpan()[..index];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

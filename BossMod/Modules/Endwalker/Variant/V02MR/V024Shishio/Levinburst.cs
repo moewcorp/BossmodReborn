@@ -5,7 +5,7 @@ class Levinburst(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(5f, 20f, 5f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Rairin)

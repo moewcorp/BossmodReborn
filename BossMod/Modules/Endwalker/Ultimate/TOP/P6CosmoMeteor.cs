@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Ultimate.TOP;
 
-class P6CosmoMeteorPuddles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmoMeteorAOE), 10);
+class P6CosmoMeteorPuddles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CosmoMeteorAOE), 10f);
 
 class P6CosmoMeteorAddComet(BossModule module) : Components.Adds(module, (uint)OID.CosmoComet);
 
@@ -17,18 +17,18 @@ class P6CosmoMeteorSpread : Components.UniformStackSpread
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.CosmoMeteorSpread)
+        if (spell.Action.ID == (uint)AID.CosmoMeteorSpread)
             ++NumCasts;
     }
 }
 
-class P6CosmoMeteorFlares(BossModule module) : Components.UniformStackSpread(module, 6, 20, 5, alwaysShowSpreads: true) // TODO: verify flare falloff
+class P6CosmoMeteorFlares(BossModule module) : Components.UniformStackSpread(module, 6f, 20f, 5, alwaysShowSpreads: true) // TODO: verify flare falloff
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((IconID)iconID == IconID.OptimizedMeteor)
+        if (iconID == (uint)IconID.OptimizedMeteor)
         {
-            AddSpread(actor, WorldState.FutureTime(8.1f));
+            AddSpread(actor, WorldState.FutureTime(8.1d));
             if (Spreads.Count == 3)
             {
                 // TODO: how is the stack target selected?
@@ -41,7 +41,7 @@ class P6CosmoMeteorFlares(BossModule module) : Components.UniformStackSpread(mod
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.CosmoMeteorStack or AID.CosmoMeteorFlare)
+        if (spell.Action.ID is (uint)AID.CosmoMeteorStack or (uint)AID.CosmoMeteorFlare)
         {
             Spreads.Clear();
             Stacks.Clear();

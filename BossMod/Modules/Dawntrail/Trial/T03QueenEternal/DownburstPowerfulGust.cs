@@ -1,36 +1,42 @@
 namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 
-class PowerfulGustKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.PowerfulGust), 20, kind: Kind.DirForward, stopAfterWall: true)
+class PowerfulGustKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.PowerfulGust), 20f, kind: Kind.DirForward, stopAfterWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && !IsImmune(slot, source.Activation))
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(source.Origin, source.Direction, 9.5f, 0, 20), source.Activation);
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source == null)
+            return;
+        var act = Module.CastFinishAt(source.CastInfo);
+        if (source != null && !IsImmune(slot, act))
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(source.Position, source.Rotation, 9.5f, default, 20f), act);
     }
 }
 
-class DownburstKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Downburst), 10, stopAfterWall: true)
+class DownburstKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Downburst), 10f, stopAfterWall: true)
 {
     private Angle offset;
-    private static readonly WPos botLeft = new(92.5f, 100), botRight = new(107.5f, 100), topRight = new(107.5f, 85);
+    private static readonly WPos botLeft = new(92.5f, 100f), botRight = new(107.5f, 100f), topRight = new(107.5f, 85f);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && !IsImmune(slot, source.Activation))
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source == null)
+            return;
+        var act = Module.CastFinishAt(source.CastInfo);
+        if (!IsImmune(slot, act))
         {
-            if (source.Origin != Arena.Center)
+            if (source.Position != Arena.Center)
             {
-                offset = source.Origin == topRight ? -90.Degrees() : source.Origin == botLeft ? 90.Degrees() : source.Origin == botRight ? 180.Degrees() : 0.Degrees();
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Origin, 5, source.Direction + offset, 10.Degrees()), source.Activation);
+                offset = source.Position == topRight ? -90.Degrees() : source.Position == botLeft ? 90f.Degrees() : source.Position == botRight ? 180f.Degrees() : default;
+                hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Position, 5f, source.Rotation + offset, 10.Degrees()), act);
             }
             else
             {
-                var forbidden = new List<Func<WPos, float>>(4);
+                var forbidden = new Func<WPos, float>[4];
                 for (var i = 0; i < 4; ++i)
-                    forbidden.Add(ShapeDistance.InvertedCone(source.Origin, 5, source.Direction + Angle.AnglesCardinals[i], 10.Degrees()));
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), source.Activation);
+                    forbidden[i] = ShapeDistance.InvertedCone(source.Position, 5, source.Rotation + Angle.AnglesCardinals[i], 10f.Degrees());
+                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
             }
         }
     }

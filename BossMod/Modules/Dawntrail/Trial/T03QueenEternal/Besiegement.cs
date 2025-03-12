@@ -6,7 +6,7 @@ class Besiegement(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(4);
     private static readonly AOEShapeRect[] rects = [new(L, 2f), new(L, 4f), new(L, 5f), new(L, 6f), new(L, 9f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     private void States(uint state, bool check)
     {

@@ -5,21 +5,19 @@ class BindingSigil(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle _shape = new(9f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var firstactivation = _aoes[0].Activation;
-        var aoes = new AOEInstance[count];
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
         var index = 0;
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if ((aoe.Activation - firstactivation).TotalSeconds < 1d)
-                aoes[index++] = aoe;
-        }
-        return aoes[..index];
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

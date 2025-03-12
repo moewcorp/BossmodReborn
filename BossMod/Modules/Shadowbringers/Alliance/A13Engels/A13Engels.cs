@@ -4,7 +4,7 @@ class DemolishStructureArenaChange(BossModule module) : Components.GenericAOEs(m
 {
     private static readonly AOEShapeRect square = new(5, 5, 5, InvertForbiddenZone: true);
     private AOEInstance? _aoe;
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

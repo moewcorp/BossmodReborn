@@ -38,31 +38,54 @@ public enum TetherID : uint
     MindJack = 45 // EmptyVessel->player
 }
 
-class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
+class AetherochemicalGrenado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8f);
 class IntegratedAetheromodulator(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IntegratedAetheromodulator), new AOEShapeDonut(11.4f, 15.6f));
-class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(45.6f, 1));
+class MagitekRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRay), new AOEShapeRect(45.6f, 1f));
 class ManaBurst(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ManaBurst));
-class Demimagicks(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Demimagicks), 5);
+class Demimagicks(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Demimagicks), 5f);
 class MindJack(BossModule module) : BossComponent(module)
 {
-    private readonly HashSet<(Actor source, Actor target)> tethers = [];
+    private readonly List<(WPos source, ulong target)> _tethers = [];
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID == TetherID.MindJack)
-            tethers.Add(new(source, WorldState.Actors.Find(tether.Target)!));
+        if (tether.ID == (uint)TetherID.MindJack)
+            _tethers.Add(new(source.Position, tether.Target));
     }
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID == TetherID.MindJack)
-            tethers.Remove(new(source, WorldState.Actors.Find(tether.Target)!));
+        if (tether.ID == (uint)TetherID.MindJack)
+        {
+            var count = _tethers.Count;
+            var id = tether.Target;
+            for (var i = 0; i < count; ++i)
+            {
+                var t = _tethers[i];
+                if (t.target == id)
+                {
+                    _tethers.RemoveAt(0);
+                    return;
+                }
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (tethers.Any(x => x.target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(tethers.FirstOrDefault(x => x.target == actor).source.Position, 2));
+        var count = _tethers.Count;
+        if (count == 0)
+            return;
+        var id = actor.InstanceID;
+        for (var i = 0; i < count; ++i)
+        {
+            var t = _tethers[i];
+            if (t.target == id)
+            {
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(t.source, 2f));
+                return;
+            }
+        }
     }
 }
 

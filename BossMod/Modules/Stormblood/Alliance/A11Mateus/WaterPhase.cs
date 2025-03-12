@@ -5,14 +5,14 @@ class Froth(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(1.4f);
     public readonly List<AOEInstance> _aoes = new(6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
         var status = actor.FindStatus((uint)SID.Breathless);
         if (status is ActorStatus breathless && breathless.Extra >= 0x5)
-            return _aoes;
+            return CollectionsMarshal.AsSpan(_aoes);
         return [];
     }
 
@@ -57,6 +57,18 @@ class Froth(BossModule module) : Components.GenericAOEs(module)
                 if (orbs.Length != 0)
                     hints.AddForbiddenZone(ShapeDistance.Intersection(orbs), WorldState.FutureTime(10d - breathless.Extra));
             }
+        }
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return;
+        var status = actor.FindStatus((uint)SID.Breathless);
+        if (status is ActorStatus breathless && breathless.Extra >= 0x5)
+        {
+            hints.Add("Stand in an air bubble!");
         }
     }
 }

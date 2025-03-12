@@ -15,7 +15,7 @@ public enum AID : uint
     IronJustice = 14199 // Boss->self, 2.5s cast, range 8+R 120-degree cone
 }
 
-class IronJustice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice), new AOEShapeCone(9.5f, 60.Degrees()));
+class IronJustice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronJustice), new AOEShapeCone(9.5f, 60f.Degrees()));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -32,7 +32,18 @@ class Stage01States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<IronJustice>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () => module.Enemies(Stage01.Trash).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage01.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -46,11 +57,22 @@ public class Stage01 : BossModule
 
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Slime];
 
-    protected override bool CheckPull() => Enemies(Trash).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Slime));
+        Arena.Actors(Enemies((uint)OID.Slime));
     }
 }

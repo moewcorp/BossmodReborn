@@ -4,9 +4,9 @@ class DestructiveCharge(BossModule module) : Components.GenericAOEs(module)
 {
     public List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeCone _shape = new(25, 45.Degrees());
+    private static readonly AOEShapeCone _shape = new(25f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -17,20 +17,22 @@ class DestructiveCharge(BossModule module) : Components.GenericAOEs(module)
         // 00100004 = +45/-135
         var dir = state switch
         {
-            0x00080004 => -45.Degrees(),
-            0x00100004 => 45.Degrees(),
+            0x00080004 => -45f.Degrees(),
+            0x00100004 => 45f.Degrees(),
             _ => default
         };
         if (dir != default)
         {
-            AOEs.Add(new(_shape, Module.Center, dir, WorldState.FutureTime(16.1f)));
-            AOEs.Add(new(_shape, Module.Center, dir + 180.Degrees(), WorldState.FutureTime(16.1f)));
+            var pos = WPos.ClampToGrid(Arena.Center);
+            var act = WorldState.FutureTime(16.1d);
+            AOEs.Add(new(_shape, pos, dir, act));
+            AOEs.Add(new(_shape, pos, dir + 180f.Degrees(), act));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DestructiveChargeAOE)
+        if (spell.Action.ID == (uint)AID.DestructiveChargeAOE)
         {
             ++NumCasts;
             AOEs.Clear();

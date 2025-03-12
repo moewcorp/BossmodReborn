@@ -90,19 +90,19 @@ class P1ProgramLoop(BossModule module) : P1CommonAssignments(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Tower2)
+        if (actor.OID == (uint)OID.Tower2)
             _towers.Add(actor);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.StorageViolation1:
-            case AID.StorageViolationObliteration:
+            case (uint)AID.StorageViolation1:
+            case (uint)AID.StorageViolationObliteration:
                 ++NumTowersDone;
                 break;
-            case AID.BlasterAOE:
+            case (uint)AID.BlasterAOE:
                 ++NumTethersDone;
                 break;
         }

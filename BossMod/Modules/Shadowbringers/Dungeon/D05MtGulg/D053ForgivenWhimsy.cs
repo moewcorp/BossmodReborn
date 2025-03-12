@@ -35,17 +35,17 @@ class PerfectContrition(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(5, 15);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Brightsphere)
-            _aoes.Add(new(donut, actor.Position, default, WorldState.FutureTime(10.6f)));
+        if (actor.OID == (uint)OID.Brightsphere)
+            _aoes.Add(new(donut, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(10.6d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.PerfectContrition)
+        if (spell.Action.ID == (uint)AID.PerfectContrition)
             _aoes.Clear();
     }
 }
@@ -57,13 +57,13 @@ class JudgmentDay(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Towers)
-            Towers.Add(new(actor.Position, 5, activation: WorldState.FutureTime(7.6f)));
+        if (actor.OID == (uint)OID.Towers)
+            Towers.Add(new(WPos.ClampToGrid(actor.Position), 5f, activation: WorldState.FutureTime(7.6d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (Towers.Count != 0 && (AID)spell.Action.ID is AID.Judged or AID.FoundWanting)
+        if (Towers.Count != 0 && spell.Action.ID is (uint)AID.Judged or (uint)AID.FoundWanting)
             Towers.RemoveAt(0);
     }
 }
@@ -71,30 +71,29 @@ class JudgmentDay(BossModule module) : Components.GenericTowers(module)
 class Exegesis(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(5);
-    private static readonly AOEShapeRect rect = new(5, 5, 5);
-    private static readonly AOEShapeCross cross = new(15, 5);
-    private static readonly WPos[] diagonalPositions = [new(-240, -50), new(-250, -40), new(-230, -40), new(-250, -60), new(-230, -60)];
+    private static readonly AOEShapeRect rect = new(5f, 5f, 5f);
+    private static readonly AOEShapeCross cross = new(15f, 5f);
+    private static readonly WPos[] diagonalPositions = [new(-240f, -50f), new(-250f, -40f), new(-230f, -40f), new(-250f, -60f), new(-230f, -60f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
-
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var _activation = Module.CastFinishAt(spell, 0.4f);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ExegesisA: //diagonal
-                for (var i = 0; i < diagonalPositions.Length; ++i)
+            case (uint)AID.ExegesisA: //diagonal
+                for (var i = 0; i < 5; ++i)
                     _aoes.Add(new(rect, diagonalPositions[i], default, _activation));
                 break;
-            case AID.ExegesisB: //east+west
+            case (uint)AID.ExegesisB: //east+west
                 _aoes.Add(new(rect, new(-250, -50), default, _activation));
                 _aoes.Add(new(rect, new(-230, -50), default, _activation));
                 break;
-            case AID.ExegesisC: //north+south
+            case (uint)AID.ExegesisC: //north+south
                 _aoes.Add(new(rect, new(-240, -60), default, _activation));
                 _aoes.Add(new(rect, new(-240, -40), default, _activation));
                 break;
-            case AID.ExegesisD: //cross
+            case (uint)AID.ExegesisD: //cross
                 _aoes.Add(new(cross, new(-240, -50), default, _activation));
                 break;
         }
@@ -102,7 +101,7 @@ class Exegesis(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Exegesis)
+        if (spell.Action.ID == (uint)AID.Exegesis)
             _aoes.Clear();
     }
 }
@@ -121,4 +120,4 @@ class D053ForgivenWhimsyStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8261)]
-public class D053ForgivenWhimsy(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240, -50), new ArenaBoundsSquare(15)); //actually walkable arena size is 14.5, but then the tiny safespots in the corner are no longer visible
+public class D053ForgivenWhimsy(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240f, -50f), new ArenaBoundsSquare(15f)); // actually walkable arena size is 14.5, but then the tiny safespots in the corner are no longer visible

@@ -19,7 +19,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
     public virtual uint ImminentColor { get; set; } = Colors.Danger;
     public uint FutureColor = Colors.AOE;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Sequences.Count;
         if (count == 0)
@@ -54,7 +54,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
             if (remaining != 0)
                 aoes.Add(new(shape, origin, s.Rotation, nextAct, remaining > 1 ? ImminentColor : FutureColor));
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public void AdvanceSequence(int index, DateTime currentTime, bool removeWhenFinished = true)

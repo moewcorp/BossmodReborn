@@ -4,27 +4,49 @@ class BodySlamKB(BossModule module) : Components.Knockback(module, stopAtWall: t
 {
     private Source? _knockback;
     private float LeviathanZ;
+    private readonly Hydroshot _aoe1 = module.FindComponent<Hydroshot>()!;
+    private readonly Dreadstorm _aoe2 = module.FindComponent<Dreadstorm>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
 
     public override void Update()
     {
+        var z = Module.PrimaryActor.Position.Z;
         if (LeviathanZ == default)
-            LeviathanZ = Module.PrimaryActor.Position.Z;
-        if (Module.PrimaryActor.Position.Z != LeviathanZ && Module.PrimaryActor.Position.Z != 0)
+            LeviathanZ = z;
+        if (z != LeviathanZ && z != 0)
         {
-            LeviathanZ = Module.PrimaryActor.Position.Z;
-            _knockback = new(Module.Center, 25, WorldState.FutureTime(4.8f), Direction: Module.PrimaryActor.Position.Z <= 0 ? 180.Degrees() : 0.Degrees(), Kind: Kind.DirForward);
+            LeviathanZ = z;
+            _knockback = new(Arena.Center, 25f, WorldState.FutureTime(4.8d), Direction: z <= 0 ? 180f.Degrees() : default, Kind: Kind.DirForward);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BodySlamNorth or AID.BodySlamSouth)
+        if (spell.Action.ID is (uint)AID.BodySlamNorth or (uint)AID.BodySlamSouth)
             _knockback = null;
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Hydroshot>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || (Module.FindComponent<Dreadstorm>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes1 = _aoe1.ActiveAOEs(slot, actor);
+        var len1 = aoes1.Length;
+        for (var i = 0; i < len1; ++i)
+        {
+            ref readonly var aoe = ref aoes1[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        var aoes2 = _aoe2.ActiveAOEs(slot, actor);
+        var len2 = aoes1.Length;
+        for (var i = 0; i < len2; ++i)
+        {
+            ref readonly var aoe = ref aoes2[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
 
 class BodySlamAOE(BossModule module) : Components.GenericAOEs(module)
@@ -33,7 +55,7 @@ class BodySlamAOE(BossModule module) : Components.GenericAOEs(module)
     private float LeviathanZ;
     private static readonly AOEShapeRect rect = new(34.5f, 5);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void Update()
     {
@@ -42,13 +64,13 @@ class BodySlamAOE(BossModule module) : Components.GenericAOEs(module)
         if (Module.PrimaryActor.Position.Z != LeviathanZ && Module.PrimaryActor.Position.Z != 0)
         {
             LeviathanZ = Module.PrimaryActor.Position.Z;
-            _aoe = new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(2.6f));
+            _aoe = new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(2.6d));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.BodySlamRectAOE)
+        if (spell.Action.ID == (uint)AID.BodySlamRectAOE)
             _aoe = null;
     }
 }

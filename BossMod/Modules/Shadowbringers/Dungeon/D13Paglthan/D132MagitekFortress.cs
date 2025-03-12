@@ -27,99 +27,101 @@ public enum AID : uint
     Exhaust = 23705 // MarkIITelotekColossus->self, 4.0s cast, range 40 width 7 rect
 }
 
-class TwoTonzeMagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwoTonzeMagitekMissile), 12);
-class Aethershot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Aethershot), 6);
+class TwoTonzeMagitekMissile(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwoTonzeMagitekMissile), 12f);
+class Aethershot(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Aethershot), 6f);
 class DefensiveReaction(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DefensiveReaction));
-class Exhaust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(40, 3.5f));
-class GroundToGroundBallistic(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GroundToGroundBallistic), 10)
+class Exhaust(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Exhaust), new AOEShapeRect(40f, 3.5f));
+class GroundToGroundBallistic(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.GroundToGroundBallistic), 10f)
 {
-    private static readonly Func<WPos, float> distance = p => Math.Max(ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20, default, 18.Degrees())(p),
-    ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20, 180.Degrees(), 18.Degrees())(p));
+    private static readonly Angle a180 = 180f.Degrees(), a18 = 18f.Degrees();
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default)
-            hints.AddForbiddenZone(distance, source.Activation);
+        if (Casters.Count != 0)
+        {
+            var forbidden = new Func<WPos, float>[2];
+            forbidden[0] = ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20f, a180, a18);
+            forbidden[1] = ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20f, default, a18);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(Casters[0].CastInfo));
+        }
     }
 }
 
 class StableCannon(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(60, 5);
+    private static readonly AOEShapeRect rect = new(60f, 5f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    private static readonly Dictionary<byte, WPos> aoePositions = new()
-    {
-        { 0x08, new(-185, 28.3f) },
-        { 0x09, new(-175, 28.3f) },
-        { 0x0A, new(-165, 28.3f) }
-    };
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00200010 && aoePositions.TryGetValue(index, out var value))
-            _aoes.Add(new(rect, value, Angle.AnglesCardinals[1], WorldState.FutureTime(12.1f)));
+        if (state == 0x00200010 && index is >= 0x08 and <= 0x0A)
+            _aoes.Add(new(rect, WPos.ClampToGrid(new(-185f + (index - 0x08), 28.3f)), Angle.AnglesCardinals[1], WorldState.FutureTime(12.1d)));
         else if (index == 0x0D && state == 0x00020001)
             _aoes.Clear();
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.StableCannon)
+        if (spell.Action.ID == (uint)AID.StableCannon)
             _aoes.Clear();
     }
 }
 
 class MagitekMissile(BossModule module) : Components.GenericAOEs(module)
 {
-    private const int Radius = 1, Length = 10;
+    private const float Radius = 1f, Length = 10f;
     private static readonly AOEShapeCapsule capsule = new(Radius, Length);
     private readonly List<Actor> _missiles = new(15);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _missiles.Count;
         if (count == 0)
-            yield break;
-        for (var i = 0; i < _missiles.Count; ++i)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
         {
             var m = _missiles[i];
-            yield return new(capsule, m.Position, m.Rotation);
+            aoes[i] = new(capsule, m.Position, m.Rotation);
         }
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.MagitekMissile)
+        if (actor.OID == (uint)OID.MagitekMissile)
             _missiles.Add(actor);
     }
 
     public override void OnActorDestroyed(Actor actor)
     {
-        if ((OID)actor.OID == OID.MagitekMissile)
+        if (actor.OID == (uint)OID.MagitekMissile)
             _missiles.Remove(actor);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ExplosiveForce)
+        if (spell.Action.ID == (uint)AID.ExplosiveForce)
             _missiles.Remove(caster);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_missiles.Count == 0)
+        var count = _missiles.Count;
+        if (count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>(15);
-        for (var i = 0; i < _missiles.Count; ++i)
+        var forbiddenImminent = new Func<WPos, float>[count];
+        var forbiddenFuture = new Func<WPos, float>[count];
+        for (var i = 0; i < count; ++i)
         {
             var m = _missiles[i];
-            forbidden.Add(ShapeDistance.Capsule(m.Position, m.Rotation, Length, Radius)); // merging all forbidden zones into one to make pathfinding less demanding
+            forbiddenFuture[i] = ShapeDistance.Capsule(m.Position, m.Rotation, Length, Radius);
+            forbiddenImminent[i] = ShapeDistance.Circle(m.Position, Radius);
         }
-        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
     }
 }
 
@@ -127,12 +129,12 @@ class CorePlatform(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(2, true);
     private AOEInstance? _aoe;
-    private const string Hint = "Walk into the glowing circle!";
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoe != null && Arena.Bounds == D132MagitekFortress.DefaultBounds)
-            yield return _aoe.Value;
+            return new AOEInstance[1] { _aoe.Value };
+        return [];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -140,7 +142,7 @@ class CorePlatform(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x0D)
         {
             if (state == 0x00020001)
-                _aoe = new(circle, new(-175, 30), default, DateTime.MaxValue, Colors.SafeFromAOE);
+                _aoe = new(circle, new(-175f, 30f), default, DateTime.MaxValue, Colors.SafeFromAOE);
             else if (state == 0x00080004)
                 _aoe = null;
         }
@@ -158,10 +160,10 @@ class CorePlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe != null && Arena.Bounds == D132MagitekFortress.DefaultBounds)
+        if (_aoe is AOEInstance aoe && Arena.Bounds == D132MagitekFortress.DefaultBounds)
         {
-            if (!ActiveAOEs(slot, actor).Where(c => c.Color == Colors.SafeFromAOE).Any(c => c.Check(actor.Position)))
-                hints.Add(Hint);
+            if (!aoe.Check(actor.Position))
+                hints.Add("Walk into the glowing circle!");
         }
     }
 
@@ -191,8 +193,8 @@ class D132MagitekFortressStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 777, NameID = 10067)]
 public class D132MagitekFortress(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, DefaultBounds)
 {
-    public static readonly WPos DefaultCenter = new(-175, 43), CoreCenter = new(-175, 8.5f);
-    public static readonly ArenaBoundsSquare DefaultBounds = new(14.5f), CoreBounds = new(7);
+    public static readonly WPos DefaultCenter = new(-175f, 43f), CoreCenter = new(-175f, 8.5f);
+    public static readonly ArenaBoundsSquare DefaultBounds = new(14.5f), CoreBounds = new(7f);
     private static readonly uint[] trash = [(uint)OID.TelotekPredator, (uint)OID.TemperedImperial, (uint)OID.TelotekSkyArmor, (uint)OID.MarkIITelotekColossus, (uint)OID.MagitekCore];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
@@ -201,5 +203,16 @@ public class D132MagitekFortress(WorldState ws, Actor primary) : BossModule(ws, 
         Arena.Actors(Enemies(trash));
     }
 
-    protected override bool CheckPull() => Enemies(OID.TelotekPredator).Any(x => x.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies((uint)OID.TelotekPredator);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 }

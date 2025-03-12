@@ -53,7 +53,7 @@ public struct NavigationDecision
         DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120);
         float clusterG = 0;
         var lenZonesFixed = zonesFixed.Length;
-        for (var i = 0; i < lenZonesFixed; i++)
+        for (var i = 0; i < lenZonesFixed; ++i)
         {
             ref var zone = ref zones[i];
             var activation = zone.activation.Clamp(globalStart, globalEnd);
@@ -296,7 +296,7 @@ public struct NavigationDecision
 
             // The 'left' bottom corner's priority
             float bleftP = 0;
-            for (var i = 0; i < len; i++)
+            for (var i = 0; i < len; ++i)
             {
                 bleftP += goals[i](cyBottom);
             }

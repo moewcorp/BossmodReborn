@@ -38,53 +38,67 @@ class TimeEruptionBombReproduce(BossModule module) : Components.GenericAOEs(modu
 {
     private DateTime _bombsActivation;
     private DateTime _eruptionStart; // timestamp of StartTime cast start
-    private readonly List<Actor> _bombs = module.Enemies(OID.TimeBomb1); // either 1 or 2 works, dunno what's the difference
-    private readonly List<Actor> _cycloneCasters = [];
+    private readonly List<Actor> _bombs = module.Enemies((uint)OID.TimeBomb1); // either 1 or 2 works, dunno what's the difference
+    private readonly List<AOEInstance> _cycloneAOEs = [];
     private readonly List<(WPos pos, TimeSpan delay)> _clocks = [];
     private readonly List<WPos> _eruptionSafeSpots = [];
 
-    private static readonly AOEShapeCone _shapeBomb = new(60, 45.Degrees());
-    private static readonly AOEShapeRect _shapeCyclone = new(60, 10);
-    private static readonly AOEShapeRect _shapeEruption = new(10, 10, 10);
+    private static readonly AOEShapeCone _shapeBomb = new(60f, 45f.Degrees());
+    private static readonly AOEShapeRect _shapeCyclone = new(60f, 10f);
+    private static readonly AOEShapeRect _shapeEruption = new(10f, 10f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_bombsActivation != default)
         {
-            foreach (var b in _bombs)
-                yield return new(_shapeBomb, b.Position, b.Rotation, _bombsActivation);
+            var countB = _bombs.Count;
+            var aoesB = new AOEInstance[countB];
+            for (var i = 0; i < countB; ++i)
+            {
+                var b = _bombs[i];
+                aoesB[i] = new(_shapeBomb, b.Position, b.Rotation, _bombsActivation);
+            }
+            return aoesB;
         }
-        else if (_cycloneCasters.Count > 0)
+        else if (_cycloneAOEs.Count != 0)
         {
-            foreach (var c in _cycloneCasters)
-                yield return new(_shapeCyclone, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
+            return CollectionsMarshal.AsSpan(_cycloneAOEs);
         }
         else if (_eruptionStart != default)
         {
-            foreach (var e in _clocks.Count > 2 ? _clocks.Take(_clocks.Count - 2) : _clocks)
-                yield return new(_shapeEruption, e.pos, new(), _eruptionStart + e.delay);
+            var countC = _clocks.Count;
+            var max = countC > 2 ? countC - 2 : countC;
+            var aoesC = new AOEInstance[max];
+            for (var i = 0; i < max; ++i)
+            {
+                var e = _clocks[i];
+                aoesC[i] = new(_shapeEruption, e.pos, new(), _eruptionStart + e.delay);
+            }
+            return aoesC;
         }
+        return [];
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach (var p in _eruptionSafeSpots)
-            _shapeEruption.Draw(Arena, p, new(), Colors.SafeFromAOE);
+        var count = _eruptionSafeSpots.Count;
+        for (var i = 0; i < count; ++i)
+            _shapeEruption.Draw(Arena, _eruptionSafeSpots[i], default, Colors.SafeFromAOE);
         base.DrawArenaBackground(pcSlot, pc);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.TimeBomb:
+            case (uint)AID.TimeBomb:
                 if (caster == Module.PrimaryActor)
-                    _bombsActivation = WorldState.FutureTime(23.2f);
+                    _bombsActivation = WorldState.FutureTime(23.2d);
                 break;
-            case AID.CrimsonCyclone:
-                _cycloneCasters.Add(caster);
+            case (uint)AID.CrimsonCyclone:
+                _cycloneAOEs.Add(new(_shapeCyclone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
                 break;
-            case AID.StartTime:
+            case (uint)AID.StartTime:
                 _eruptionStart = WorldState.CurrentTime;
                 break;
         }
@@ -92,26 +106,34 @@ class TimeEruptionBombReproduce(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.TimeBombAOE:
-                _bombsActivation = new();
+            case (uint)AID.TimeBombAOE:
+                _bombsActivation = default;
                 break;
-            case AID.CrimsonCyclone:
-                _cycloneCasters.Remove(caster);
+            case (uint)AID.CrimsonCyclone:
+                _cycloneAOEs.RemoveAt(0);
                 break;
-            case AID.TimeEruptionAOE:
+            case (uint)AID.TimeEruptionAOE:
                 _eruptionSafeSpots.Clear();
-                _clocks.RemoveAll(c => c.pos.AlmostEqual(caster.Position, 1));
+                var count = _clocks.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (_clocks[i].pos.AlmostEqual(caster.Position, 1f))
+                    {
+                        _clocks.RemoveAt(i);
+                        break;
+                    }
+                }
                 if (_clocks.Count == 0)
-                    _eruptionStart = new();
+                    _eruptionStart = default;
                 break;
         }
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if ((OID)actor.OID != OID.Clock)
+        if (actor.OID != (uint)OID.Clock)
             return;
 
         var delay = state switch
@@ -127,12 +149,17 @@ class TimeEruptionBombReproduce(BossModule module) : Components.GenericAOEs(modu
         if (_clocks.Count == 9)
         {
             _clocks.SortBy(x => x.delay);
-            _eruptionSafeSpots.AddRange(_clocks.TakeLast(2).Select(e => e.pos));
+            var count = _clocks.Count;
+            if (count >= 2)
+            {
+                _eruptionSafeSpots.Add(_clocks[count - 2].pos);
+                _eruptionSafeSpots.Add(_clocks[count - 1].pos);
+            }
         }
     }
 }
 
-class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption), 8);
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Eruption), 8f);
 class FireTankbuster(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.FireTankbuster));
 class FireRaidwide(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FireRaidwide));
 
@@ -149,4 +176,4 @@ class CE52TimeToBurnStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 26)] // bnpcname=9930
-public class CE52TimeToBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-550, 0), new ArenaBoundsSquare(30));
+public class CE52TimeToBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-550f, default), new ArenaBoundsSquare(30f));

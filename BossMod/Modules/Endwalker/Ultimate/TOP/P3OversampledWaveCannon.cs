@@ -37,15 +37,15 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         foreach (var p in SafeSpots(pcSlot))
-            Arena.AddCircle(p.pos, 1, p.assigned ? Colors.Safe : Colors.Danger);
+            Arena.AddCircle(p.pos, 1f, p.assigned ? Colors.Safe : Colors.Danger);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var angle = (SID)status.ID switch
+        var angle = status.ID switch
         {
-            SID.OversampledWaveCannonLoadingL => 90.Degrees(),
-            SID.OversampledWaveCannonLoadingR => -90.Degrees(),
+            (uint)SID.OversampledWaveCannonLoadingL => 90f.Degrees(),
+            (uint)SID.OversampledWaveCannonLoadingR => -90f.Degrees(),
             _ => default
         };
         if (angle != default && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -66,10 +66,10 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var angle = (AID)spell.Action.ID switch
+        var angle = spell.Action.ID switch
         {
-            AID.OversampledWaveCannonL => 90.Degrees(),
-            AID.OversampledWaveCannonR => -90.Degrees(),
+            (uint)AID.OversampledWaveCannonL => 90f.Degrees(),
+            (uint)AID.OversampledWaveCannonR => -90f.Degrees(),
             _ => default
         };
         if (angle != default)
@@ -137,17 +137,17 @@ class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
     }
 }
 
-class P3OversampledWaveCannonSpread(BossModule module) : Components.UniformStackSpread(module, 0, 7)
+class P3OversampledWaveCannonSpread(BossModule module) : Components.UniformStackSpread(module, default, 7f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.OversampledWaveCannonR or AID.OversampledWaveCannonL)
+        if (spell.Action.ID is (uint)AID.OversampledWaveCannonR or (uint)AID.OversampledWaveCannonL)
             AddSpreads(Raid.WithoutSlot(true, true, true), Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.OversampledWaveCannonAOE)
+        if (spell.Action.ID == (uint)AID.OversampledWaveCannonAOE)
             Spreads.Clear();
     }
 }

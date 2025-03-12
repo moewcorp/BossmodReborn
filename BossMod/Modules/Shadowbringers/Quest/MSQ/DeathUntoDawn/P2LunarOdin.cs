@@ -20,7 +20,7 @@ public enum AID : uint
     RightZantetsuken = 24032, // LunarOdin->self, 4.0s cast, range 70 width 39 rect
 }
 
-class UriangerAI(WorldState ws) : UnmanagedRotation(ws, 25)
+class UriangerAI(WorldState ws) : UnmanagedRotation(ws, 25f)
 {
     public const ushort StatusParam = 158;
 
@@ -28,19 +28,50 @@ class UriangerAI(WorldState ws) : UnmanagedRotation(ws, 25)
 
     protected override void Exec(Actor? primaryTarget)
     {
-        var partyPositions = World.Party.WithoutSlot(false, false).Select(p => p.Position).ToList();
+        var party = World.Party.WithoutSlot(false, true);
+        var len = party.Length;
+        var positions = new WPos[len];
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var p = ref party[i];
+            positions[i] = p.Position;
+        }
 
-        Hints.GoalZones.Add(pos => partyPositions.Count(p => p.InCircle(pos, 16)));
+        Hints.GoalZones.Add(pos =>
+           {
+               var count = 0;
+               for (var i = 0; i < len; ++i)
+               {
+                   ref readonly var p = ref positions[i];
+                   if (p.InCircle(pos, 16f))
+                       ++count;
+               }
+               return count;
+           });
 
-        if (World.Party.WithoutSlot(false, false).All(p => HeliosLeft(p) < 1 && p.Position.InCircle(Player.Position, 15.5f + p.HitboxRadius)))
-            UseAction(RID.AspectedHelios, Player);
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var p = ref party[i];
+            if (!(HeliosLeft(p) < 1 && p.Position.InCircle(Player.Position, 15.5f + p.HitboxRadius)))
+            {
+                UseAction(RID.AspectedHelios, Player);
+                break;
+            }
+        }
 
-        if (World.Party.WithoutSlot(false, false).FirstOrDefault(p => p.HPMP.CurHP < p.HPMP.MaxHP * 0.4f) is Actor low)
-            UseAction(RID.Benefic, low);
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var p = ref party[i];
+            if (p.HPMP.CurHP < p.HPMP.MaxHP * 0.4f)
+            {
+                UseAction(RID.Benefic, p);
+                break;
+            }
+        }
 
         UseAction(RID.MaleficIII, primaryTarget);
 
-        if (Player.FindStatus(Roleplay.SID.DestinyDrawn) != null)
+        if (Player.FindStatus((uint)Roleplay.SID.DestinyDrawn) != null)
         {
             if (ComboAction == RID.DestinyDrawn)
                 UseAction(RID.LordOfCrowns, primaryTarget, -100);
@@ -63,15 +94,41 @@ class Fetters(BossModule module) : Components.Adds(module, (uint)OID.Fetters);
 
 class GunmetalSoul(BossModule module) : Components.GenericAOEs(module)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.Enemies(0x1EB1D5).Where(e => e.EventState != 7).Select(e => new AOEInstance(new AOEShapeDonut(4, 100), e.Position));
-}
-class LunarGungnir1(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LunarGungnir), 6);
-class LunarGungnir2(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LunarGungnir1), 6);
-class Gungnir(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GungnirAOE), 10);
-class Gagnrath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Gagnrath), new AOEShapeRect(50, 2));
-class GungnirSpread(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(10), 189, ActionID.MakeSpell(AID.GungnirSpread), 5.3f, centerAtTarget: true);
+    private static readonly AOEShapeDonut donut = new(4f, 100f);
 
-abstract class Zantetsuken(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(70, 19.5f));
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var enemies = Module.Enemies(0x1EB1D5);
+        var count = 0;
+        var countE = enemies.Count;
+        for (var i = 0; i < countE; ++i)
+        {
+            if (enemies[i].EventState != 7)
+                count++;
+        }
+
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
+        for (var i = 0; i < countE; ++i)
+        {
+            var e = enemies[i];
+            if (e.EventState != 7)
+                aoes[index++] = new(donut, e.Position);
+        }
+        return aoes;
+    }
+}
+class LunarGungnir1(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LunarGungnir), 6f);
+class LunarGungnir2(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.LunarGungnir1), 6f);
+class Gungnir(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GungnirAOE), 10f);
+class Gagnrath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Gagnrath), new AOEShapeRect(50f, 2f));
+class GungnirSpread(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(10f), 189, ActionID.MakeSpell(AID.GungnirSpread), 5.3f, centerAtTarget: true);
+
+abstract class Zantetsuken(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(70f, 19.5f));
 class RightZantetsuken(BossModule module) : Zantetsuken(module, AID.RightZantetsuken);
 class LeftZantetsuken(BossModule module) : Zantetsuken(module, AID.LeftZantetsuken);
 
@@ -94,7 +151,7 @@ public class LunarOdinStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10034)]
-public class LunarOdin(WorldState ws, Actor primary) : BossModule(ws, primary, new(146.5f, 84.5f), new ArenaBoundsCircle(20))
+public class LunarOdin(WorldState ws, Actor primary) : BossModule(ws, primary, new(146.5f, 84.5f), new ArenaBoundsCircle(20f))
 {
-    protected override bool CheckPull() => true;
+    protected override bool CheckPull() => Raid.Player()!.InCombat;
 }

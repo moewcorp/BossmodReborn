@@ -4,15 +4,19 @@ class DoomSpear(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DoomSpearAOE1 or AID.DoomSpearAOE2 or AID.DoomSpearAOE3)
-            Towers.Add(new(caster.Position, 6, 8, int.MaxValue));
+        if (spell.Action.ID is (uint)AID.DoomSpearAOE1 or (uint)AID.DoomSpearAOE2 or (uint)AID.DoomSpearAOE3)
+        {
+            Towers.Add(new(spell.LocXZ, 6f, 8, 8));
+            if (Towers.Count == 3)
+                Towers.SortBy(aoe => aoe.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DoomSpearAOE1 or AID.DoomSpearAOE2 or AID.DoomSpearAOE3)
+        if (spell.Action.ID is (uint)AID.DoomSpearAOE1 or (uint)AID.DoomSpearAOE2 or (uint)AID.DoomSpearAOE3)
         {
-            Towers.RemoveAll(t => t.Position.AlmostEqual(caster.Position, 1));
+            Towers.RemoveAt(0);
             ++NumCasts;
         }
     }

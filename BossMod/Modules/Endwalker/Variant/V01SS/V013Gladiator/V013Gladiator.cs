@@ -1,235 +1,193 @@
 namespace BossMod.Endwalker.VariantCriterion.V01SS.V013Gladiator;
 
-class SunderedRemains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SunderedRemains), 10);
-class Landing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landing), 20);
+class SunderedRemains(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SunderedRemains), 10f);
+class Landing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landing), 20f);
 
-class GoldenFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenFlame), new AOEShapeRect(60, 5));
-class SculptorsPassion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SculptorsPassion), new AOEShapeRect(60, 4));
-class RackAndRuin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RackAndRuin), new AOEShapeRect(40, 2.5f), 8);
+class GoldenFlame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GoldenFlame), new AOEShapeRect(60f, 5f));
+class SculptorsPassion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SculptorsPassion), new AOEShapeRect(60f, 4f));
+class RackAndRuin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RackAndRuin), new AOEShapeRect(40f, 2.5f), 8);
 
 class MightySmite(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.MightySmite));
 
-class BitingWindBad(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitingWindBad), 4);
+class BitingWindBad(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BitingWindBad), 4f);
 
 class ShatteringSteel(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ShatteringSteel), "Get in bigger Whirlwind to dodge");
-class ViperPoisonPatterns(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.BitingWindBad), m => m.Enemies(OID.WhirlwindBad).Where(z => z.EventState != 7), 0);
-
-class RingOfMight1(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RingOfMightVisual))
+class ViperPoisonPatterns(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.BitingWindBad), GetVoidzones, 0f)
 {
-    private readonly List<Actor> _castersRingOfMightOut = [];
-    private readonly List<Actor> _castersRingOfMightIn = [];
-
-    private static readonly AOEShape _shapeRingOfMightOut = new AOEShapeCircle(8);
-    private static readonly AOEShape _shapeRingOfMightIn = new AOEShapeDonut(8, 30);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private static Actor[] GetVoidzones(BossModule module)
     {
-        if (_castersRingOfMightOut.Count > 0)
-            return _castersRingOfMightOut.Select(c => new AOEInstance(_shapeRingOfMightOut, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-        else
-            return _castersRingOfMightIn.Select(c => new AOEInstance(_shapeRingOfMightIn, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
+        var enemies = module.Enemies((uint)OID.WhirlwindBad);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Remove(caster);
-    }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.RingOfMight1Out => _castersRingOfMightOut,
-        AID.RingOfMight1In => _castersRingOfMightIn,
-        _ => null
-    };
-}
-
-class RingOfMight2(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RingOfMightVisual))
-{
-    private readonly List<Actor> _castersRingOfMightOut = [];
-    private readonly List<Actor> _castersRingOfMightIn = [];
-
-    private static readonly AOEShape _shapeRingOfMightOut = new AOEShapeCircle(13);
-    private static readonly AOEShape _shapeRingOfMightIn = new AOEShapeDonut(13, 30);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_castersRingOfMightOut.Count > 0)
-            return _castersRingOfMightOut.Select(c => new AOEInstance(_shapeRingOfMightOut, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-        else
-            return _castersRingOfMightIn.Select(c => new AOEInstance(_shapeRingOfMightIn, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Remove(caster);
-    }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.RingOfMight2Out => _castersRingOfMightOut,
-        AID.RingOfMight2In => _castersRingOfMightIn,
-        _ => null
-    };
-}
-
-class RingOfMight3(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RingOfMightVisual))
-{
-    private readonly List<Actor> _castersRingOfMightOut = [];
-    private readonly List<Actor> _castersRingOfMightIn = [];
-
-    private static readonly AOEShape _shapeRingOfMightOut = new AOEShapeCircle(18);
-    private static readonly AOEShape _shapeRingOfMightIn = new AOEShapeDonut(18, 30);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return _castersRingOfMightOut.Count > 0
-            ? _castersRingOfMightOut.Select(c => new AOEInstance(_shapeRingOfMightOut, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersRingOfMightIn.Select(c => new AOEInstance(_shapeRingOfMightIn, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Remove(caster);
-    }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.RingOfMight3Out => _castersRingOfMightOut,
-        AID.RingOfMight3In => _castersRingOfMightIn,
-        _ => null
-    };
-}
-
-class RushOfMight(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RingOfMightVisual))
-{
-    private readonly List<Actor> _castersRushOfMightFront = [];
-    private readonly List<Actor> _castersRushOfMightBack = [];
-
-    private static readonly AOEShape _shapeRushOfMightFront = new AOEShapeCone(60, 90.Degrees());
-    private static readonly AOEShape _shapeRushOfMightBack = new AOEShapeCone(60, 90.Degrees());
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return _castersRushOfMightFront.Count > 0
-            ? _castersRushOfMightFront.Select(c => new AOEInstance(_shapeRushOfMightFront, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersRushOfMightBack.Select(c => new AOEInstance(_shapeRushOfMightBack, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        CastersForSpell(spell.Action)?.Remove(caster);
-    }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.RushOfMightFront => _castersRushOfMightFront,
-        AID.RushOfMightBack => _castersRushOfMightBack,
-        _ => null
-    };
-}
-
-class FlashOfSteel1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FlashOfSteel1), "Raidwide");
-class FlashOfSteel2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FlashOfSteel2), "Raidwide");
-class ShatteringSteelMeteor(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ShatteringSteel), 60)
-{
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.AntiqueBoulder).Where(a => !a.IsDead);
-}
-
-class SilverFlame1(BossModule module) : Components.GenericAOEs(module)
-{
-    private Actor? _source;
-    private Angle _startingRotation;
-    private Angle _increment;
-    private DateTime _startingActivation;
-
-    private static readonly AOEShapeRect _shape = new(60, 4);
-    private const int _maxCasts = 8;
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_source == null)
-            yield break;
-
-        for (var i = NumCasts + 1; i < _maxCasts; ++i)
-            yield return new(_shape, _source.Position, _startingRotation + i * _increment, _startingActivation.AddSeconds(0.5f * i));
-        if (NumCasts < _maxCasts)
-            yield return new(_shape, _source.Position, _startingRotation + NumCasts * _increment, _startingActivation.AddSeconds(0.5f * NumCasts), Colors.Danger);
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID == AID.SilverFlameFirst1)
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
         {
-            _source = caster;
-            _startingRotation = spell.Rotation;
-            _increment = _startingRotation.Rad > 0 ? 7.Degrees() : -7.Degrees();
-            _startingActivation = Module.CastFinishAt(spell);
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
         }
+        return voidzones[..index];
+    }
+}
+
+class RingOfMight1(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+{
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(8f), new AOEShapeDonut(8f, 30f)];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.RingOfMight1Out)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (Sequences.Count != 0)
+        {
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.RingOfMight1Out => 0,
+                (uint)AID.RingOfMight1In => 1,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
+        }
+    }
+}
+
+class RingOfMight2(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+{
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(13f), new AOEShapeDonut(13f, 30f)];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.RingOfMight2Out)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (Sequences.Count != 0)
+        {
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.RingOfMight2Out => 0,
+                (uint)AID.RingOfMight2In => 1,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
+        }
+    }
+}
+
+class RingOfMight3(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+{
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(18f), new AOEShapeDonut(18f, 30f)];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.RingOfMight3Out)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (Sequences.Count != 0)
+        {
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.RingOfMight3Out => 0,
+                (uint)AID.RingOfMight3In => 1,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
+        }
+    }
+}
+
+class RushOfMight(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeCone _shape = new(60f, 90f.Degrees());
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
+        }
+        return aoes;
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.RushOfMightFront or (uint)AID.RushOfMightBack)
+        {
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 2)
+                _aoes.SortBy(x => x.Activation);
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.RushOfMightFront or (uint)AID.RushOfMightBack)
+            _aoes.RemoveAt(0);
+    }
+}
+
+class FlashOfSteel1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FlashOfSteel1));
+class FlashOfSteel2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FlashOfSteel2));
+class ShatteringSteelMeteor(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.ShatteringSteel), 60f)
+{
+    public override ReadOnlySpan<Actor> BlockerActors()
+    {
+        var boulders = Module.Enemies((uint)OID.AntiqueBoulder);
+        var count = boulders.Count;
+        if (count == 0)
+            return [];
+        var actors = new List<Actor>();
+        for (var i = 0; i < count; ++i)
+        {
+            var b = boulders[i];
+            if (!b.IsDead)
+                actors.Add(b);
+        }
+        return CollectionsMarshal.AsSpan(actors);
+    }
+}
+
+class SilverFlame(BossModule module) : Components.GenericRotatingAOE(module)
+{
+    private static readonly AOEShapeRect _shape = new(60f, 4f);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var increment = spell.Action.ID switch
+        {
+            (uint)AID.SilverFlameFirstCW => -10f.Degrees(),
+            (uint)AID.SilverFlameFirstCCW => 10f.Degrees(),
+            _ => default
+        };
+        if (increment != default)
+            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 2f, 5));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SilverFlameFirst1 or AID.SilverFlameRest)
-            ++NumCasts;
-    }
-}
-
-class SilverFlame2(BossModule module) : Components.GenericAOEs(module)
-{
-    private Actor? _source;
-    private Angle _startingRotation;
-    private Angle _increment;
-    private DateTime _startingActivation;
-
-    private static readonly AOEShapeRect _shape = new(60, 4);
-    private const int _maxCasts = 8;
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_source == null)
-            yield break;
-
-        for (var i = NumCasts + 1; i < _maxCasts; ++i)
-            yield return new(_shape, _source.Position, _startingRotation + i * _increment, _startingActivation.AddSeconds(0.5f * i));
-        if (NumCasts < _maxCasts)
-            yield return new(_shape, _source.Position, _startingRotation + NumCasts * _increment, _startingActivation.AddSeconds(0.5f * NumCasts), Colors.Danger);
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID == AID.SilverFlameFirst2)
-        {
-            _source = caster;
-            _startingRotation = spell.Rotation;
-            _increment = _startingRotation.Rad > 0 ? 7.Degrees() : -7.Degrees();
-            _startingActivation = Module.CastFinishAt(spell);
-        }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if ((AID)spell.Action.ID is AID.SilverFlameFirst2 or AID.SilverFlameRest)
-            ++NumCasts;
+        if (spell.Action.ID is (uint)AID.SilverFlameFirstCCW or (uint)AID.SilverFlameFirstCW or (uint)AID.SilverFlameRest)
+            AdvanceSequence(caster.Position, spell.Rotation, WorldState.CurrentTime);
     }
 }
 

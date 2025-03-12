@@ -1,29 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.Duel.Duel5Menenius;
 
-class RuinationCross(BossModule module) : Components.GenericAOEs(module)
-{
-    private static readonly AOEShapeRect _aoeShape = new(20, 4, 20);
-    private readonly List<AOEInstance> _aoes = [];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID is AID.Ruination)
-        {
-            _aoes.Add(new(_aoeShape, caster.Position));
-            _aoes.Add(new(_aoeShape, caster.Position, 90.Degrees()));
-        }
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID is AID.Ruination)
-        {
-            _aoes.Clear();
-        }
-    }
-}
+class RuinationCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ruination), new AOEShapeCross(40f, 4f));
 
 class RuinationExaflare(BossModule module) : Components.Exaflare(module, 4f)
 {

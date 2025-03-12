@@ -6,7 +6,7 @@ class Rampage(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shapeLast = new(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)

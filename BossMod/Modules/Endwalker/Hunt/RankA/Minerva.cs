@@ -26,13 +26,14 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
     private AOEShape? _activeMissile;
     private Actor? _activeTarget;
     private WPos _activeLocation;
-    private static readonly AOEShapeCircle circle = new(6);
-    private static readonly AOEShapeDonut donut = new(6, 20);
+    private static readonly AOEShapeCircle circle = new(6f);
+    private static readonly AOEShapeDonut donut = new(6f, 20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activeMissile != null)
-            yield return new(_activeMissile, _activeTarget?.Position ?? _activeLocation);
+            return new AOEInstance[1] { new(_activeMissile, _activeTarget?.Position ?? _activeLocation) };
+        return [];
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -40,10 +41,10 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
         if (!(Module.PrimaryActor.CastInfo?.IsSpell() ?? false))
             return;
 
-        var hint = (AID)Module.PrimaryActor.CastInfo.Action.ID switch
+        var hint = Module.PrimaryActor.CastInfo.Action.ID switch
         {
-            AID.AntiPersonnelBuild or AID.RingBuild => "Select next AOE type",
-            AID.BallisticMissileCircleWarning or AID.BallisticMissileDonutWarning => "Select next AOE target",
+            (uint)AID.AntiPersonnelBuild or (uint)AID.RingBuild => "Select next AOE type",
+            (uint)AID.BallisticMissileCircleWarning or (uint)AID.BallisticMissileDonutWarning => "Select next AOE target",
             _ => "",
         };
         if (hint.Length > 0)
@@ -52,18 +53,18 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.BallisticMissileCircleWarning:
+            case (uint)AID.BallisticMissileCircleWarning:
                 _activeMissile = circle;
                 _activeTarget = WorldState.Actors.Find(spell.TargetID);
                 break;
-            case AID.BallisticMissileDonutWarning:
+            case (uint)AID.BallisticMissileDonutWarning:
                 _activeMissile = donut;
                 _activeTarget = WorldState.Actors.Find(spell.TargetID);
                 break;
-            case AID.BallisticMissileCircle:
-            case AID.BallisticMissileDonut:
+            case (uint)AID.BallisticMissileCircle:
+            case (uint)AID.BallisticMissileDonut:
                 _activeLocation = spell.LocXZ;
                 break;
         }
@@ -71,22 +72,22 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.BallisticMissileCircleWarning:
-            case AID.BallisticMissileDonutWarning:
+            case (uint)AID.BallisticMissileCircleWarning:
+            case (uint)AID.BallisticMissileDonutWarning:
                 _activeLocation = _activeTarget?.Position ?? new();
                 _activeTarget = null;
                 break;
-            case AID.BallisticMissileCircle:
-            case AID.BallisticMissileDonut:
+            case (uint)AID.BallisticMissileCircle:
+            case (uint)AID.BallisticMissileDonut:
                 _activeMissile = null;
                 break;
         }
     }
 }
 
-class Hyperflame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hyperflame), new AOEShapeCone(60, 30.Degrees()));
+class Hyperflame(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Hyperflame), new AOEShapeCone(60f, 30f.Degrees()));
 class SonicAmplifier(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SonicAmplifier));
 class HammerKnuckles(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HammerKnuckles));
 

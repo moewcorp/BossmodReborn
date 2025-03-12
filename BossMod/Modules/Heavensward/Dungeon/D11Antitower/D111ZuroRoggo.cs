@@ -34,7 +34,7 @@ public enum SID : uint
     Concussion = 3513 // Boss->player, extra=0xF43
 }
 
-abstract class WaterBomb(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6);
+abstract class WaterBomb(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
 class WaterBomb1(BossModule module) : WaterBomb(module, AID.WaterBomb1);
 class WaterBomb2(BossModule module) : WaterBomb(module, AID.WaterBomb2);
 class WaterBomb3(BossModule module) : WaterBomb(module, AID.WaterBomb3);
@@ -42,13 +42,13 @@ class WaterBomb3(BossModule module) : WaterBomb(module, AID.WaterBomb3);
 class OdiousCroak(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCone cone = new(14, 60.Degrees());
+    private static readonly AOEShapeCone cone = new(14f, 60f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.OdiousCroak)
+        if (spell.Action.ID == (uint)AID.OdiousCroak)
         {
             if (_aoe == null)
                 _aoe = new(cone, caster.Position, caster.Rotation);
@@ -63,20 +63,20 @@ class OdiousCroak(BossModule module) : Components.GenericAOEs(module)
 
 class DiscordantHarmony(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(6);
+    private static readonly AOEShapeCircle circle = new(6f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Chirp)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(8.7f)));
+        if (actor.OID == (uint)OID.Chirp)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(8.7d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DiscordantHarmony)
+        if (spell.Action.ID == (uint)AID.DiscordantHarmony)
             _aoes.Clear();
     }
 }
@@ -89,13 +89,13 @@ class Concussion(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Concussion)
+        if (status.ID == (uint)SID.Concussion)
             _concussion = actor;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Concussion)
+        if (status.ID == (uint)SID.Concussion)
             _concussion = null;
     }
 
@@ -125,10 +125,16 @@ class FrogSong(BossModule module) : BossComponent(module)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (actor.FindStatus(SID.Toad) != null)
-            return;
-        if (Raid.WithoutSlot(false, true, true).Any(x => x.FindStatus(SID.Toad) != null))
-            hints.Add("Kill the adds to stop the frog song.");
+        var party = Raid.WithoutSlot(false, true, true);
+        var len = party.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (party[i].FindStatus((uint)SID.Toad) != null)
+            {
+                hints.Add("Kill the adds to stop the frog song.");
+                return;
+            }
+        }
     }
 }
 

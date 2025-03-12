@@ -13,11 +13,11 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
         public int PartnerSlot;
     }
 
-    public int NumPlayerTethers { get; private set; }
-    public int NumShapeTethers { get; private set; }
-    private readonly List<Actor> _hexa = module.Enemies(OID.ConceptOfWater);
-    private readonly List<Actor> _tri = module.Enemies(OID.ConceptOfFire);
-    private readonly List<Actor> _sq = module.Enemies(OID.ConceptOfEarth);
+    public int NumPlayerTethers;
+    public int NumShapeTethers;
+    private readonly List<Actor> _hexa = module.Enemies((uint)OID.ConceptOfWater);
+    private readonly List<Actor> _tri = module.Enemies((uint)OID.ConceptOfFire);
+    private readonly List<Actor> _sq = module.Enemies((uint)OID.ConceptOfEarth);
     private readonly (WPos hexa, WPos tri, WPos sq)[] _resolvedShapes = new (WPos, WPos, WPos)[4];
     private readonly PlayerState[] _states = Utils.MakeArray(PartyState.MaxPartySize, new PlayerState() { Column = -1, PartnerSlot = -1 });
     private readonly bool _invert = invert;
@@ -51,7 +51,7 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
             var safespot = shapes.hexa + (shapes.linked - shapes.hexa) / 3;
             Arena.AddCircle(safespot, 1, Colors.Safe);
             if (_invert)
-                Arena.AddCircle(InvertedPos(safespot), 1, Colors.Danger);
+                Arena.AddCircle(InvertedPos(safespot), 1f);
         }
         if (_showTethers && Raid[_states[pcSlot].PartnerSlot] is var partner && partner != null)
         {
@@ -61,7 +61,7 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.ConceptOfFire or OID.ConceptOfWater or OID.ConceptOfEarth && _hexa.Count + _tri.Count + _sq.Count == 12)
+        if (actor.OID is (uint)OID.ConceptOfFire or (uint)OID.ConceptOfWater or (uint)OID.ConceptOfEarth && _hexa.Count + _tri.Count + _sq.Count == 12)
         {
             for (var col = 0; col < _resolvedShapes.Length; ++col)
             {
@@ -83,10 +83,10 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var debuff = (SID)status.ID switch
+        var debuff = status.ID switch
         {
-            SID.AlphaTarget => Debuff.Alpha,
-            SID.BetaTarget => Debuff.Beta,
+            (uint)SID.AlphaTarget => Debuff.Alpha,
+            (uint)SID.BetaTarget => Debuff.Beta,
             _ => Debuff.None
         };
         if (debuff != Debuff.None && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -95,12 +95,12 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var column = (IconID)iconID switch
+        var column = iconID switch
         {
-            IconID.ClassicalConceptsCross => 0, // B
-            IconID.ClassicalConceptsSquare => 1, // P
-            IconID.ClassicalConceptsCircle => 2, // O
-            IconID.ClassicalConceptsTriangle => 3, // G
+            (uint)IconID.ClassicalConceptsCross => 0, // B
+            (uint)IconID.ClassicalConceptsSquare => 1, // P
+            (uint)IconID.ClassicalConceptsCircle => 2, // O
+            (uint)IconID.ClassicalConceptsTriangle => 3, // G
             _ => -1
         };
         if (column >= 0 && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -117,13 +117,13 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        switch ((TetherID)tether.ID)
+        switch (tether.ID)
         {
-            case TetherID.ClassicalConceptsPlayers:
+            case (uint)TetherID.ClassicalConceptsPlayers:
                 ++NumPlayerTethers;
                 // note: tethers could be between players of different columns, if some people are dead
                 break;
-            case TetherID.ClassicalConceptsShapes:
+            case (uint)TetherID.ClassicalConceptsShapes:
                 _showShapes = false; // stop showing shapes, now that they are baited
                 ++NumShapeTethers;
                 break;
@@ -132,13 +132,13 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
-        switch ((TetherID)tether.ID)
+        switch (tether.ID)
         {
-            case TetherID.ClassicalConceptsPlayers:
+            case (uint)TetherID.ClassicalConceptsPlayers:
                 --NumPlayerTethers;
                 _showTethers = false; // stop showing tethers, now that they are resolved
                 break;
-            case TetherID.ClassicalConceptsShapes:
+            case (uint)TetherID.ClassicalConceptsShapes:
                 --NumShapeTethers;
                 break;
         }
@@ -171,13 +171,13 @@ class ClassicalConcepts(BossModule module, bool invert) : BossComponent(module)
 class ClassicalConcepts1(BossModule module) : ClassicalConcepts(module, false);
 class ClassicalConcepts2(BossModule module) : ClassicalConcepts(module, true);
 
-class Implode(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Implode), 4);
+class Implode(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Implode), 4f);
 
 class PalladianRayBait(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.PalladianRayAOEFirst))
 {
-    private static readonly Actor[] _dummies = [new(0, 0, -1, "L dummy", 0, ActorType.None, Class.None, 0, new(92, 0, 92, 0)), new(0, 0, -1, "R dummy", 0, ActorType.None, Class.None, 0, new(108, 0, 92, 0))];
+    private static readonly Actor[] _dummies = [new(default, default, -1, "L dummy", default, default, default, default, new(92f, default, 92f, default)), new(default, default, -1, "R dummy", default, default, default, default, new(108f, default, 92f, default))];
 
-    private static readonly AOEShapeCone _shape = new(100, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(100f, 15f.Degrees());
 
     public override void Update()
     {
@@ -193,14 +193,14 @@ class PalladianRayAOE(BossModule module) : Components.GenericAOEs(module, Action
     private readonly List<AOEInstance> _aoes = [];
     public int NumConcurrentAOEs => _aoes.Count;
 
-    private static readonly AOEShapeCone _shape = new(100, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(100f, 15f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        if ((AID)spell.Action.ID == AID.PalladianRayAOEFirst)
-            _aoes.Add(new(_shape, caster.Position, caster.Rotation));
+        if (spell.Action.ID == (uint)AID.PalladianRayAOEFirst)
+            _aoes.Add(new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation));
     }
 }

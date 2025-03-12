@@ -35,59 +35,67 @@ public enum AID : uint
     SelfDetonate = 18792, // MagitekBit->self, 7.0s cast, range 40+R circle, enrage if bits are not killed before cast
 }
 
-abstract class MagitekRay(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(45, 4));
+abstract class MagitekRay(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(45f, 4f));
 class MagitekRayRightArm(BossModule module) : MagitekRay(module, AID.MagitekRayRightArm);
 class MagitekRayLeftArm(BossModule module) : MagitekRay(module, AID.MagitekRayLeftArm);
 
-class AngrySalamander(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamander), new AOEShapeRect(40, 3));
+class AngrySalamander(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamander), new AOEShapeRect(40f, 3f));
 class TerminusEstRects(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect _shape = new(40, 2);
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    private static readonly AOEShapeRect _shape = new(40f, 2f);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TerminusEstLocationHelper)
+        if (spell.Action.ID == (uint)AID.TerminusEstLocationHelper)
         {
+            var act = Module.CastFinishAt(spell);
             _aoes.AddRange(
             [
-                new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)),
-                new(_shape, spell.LocXZ, spell.Rotation - 90.Degrees(), Module.CastFinishAt(spell)),
-                new(_shape, spell.LocXZ, spell.Rotation + 90.Degrees(), Module.CastFinishAt(spell))
+                new(_shape, spell.LocXZ, spell.Rotation, act),
+                new(_shape, spell.LocXZ, spell.Rotation - 90f.Degrees(), act),
+                new(_shape, spell.LocXZ, spell.Rotation + 90f.Degrees(), act)
             ]);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.TerminusEstVisual)
+        if (spell.Action.ID == (uint)AID.TerminusEstVisual)
         {
             _aoes.Clear();
             ++NumCasts;
         }
     }
 }
-class TerminusEstCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TerminusEstLocationHelper), 3);
-class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5);
-class GarleanFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GarleanFire), 5);
-class MetalCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MetalCutter), new AOEShapeCone(30, 10.Degrees()));
-class MagitekRayBits(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRayBit), new AOEShapeRect(50, 1));
-class AtomicRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AtomicRay), 10);
+class TerminusEstCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TerminusEstLocationHelper), 3f);
+class FireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FireII), 5f);
+class GarleanFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GarleanFire), 5f);
+class MetalCutter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MetalCutter), new AOEShapeCone(30f, 10f.Degrees()));
+class MagitekRayBits(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekRayBit), new AOEShapeRect(50f, 1f));
+class AtomicRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AtomicRay), 10f);
 class SelfDetonate(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SelfDetonate), "Enrage if bits are not killed before cast");
 
-class EstinienAI(WorldState ws) : UnmanagedRotation(ws, 3)
+class EstinienAI(WorldState ws) : UnmanagedRotation(ws, 3f)
 {
     protected override void Exec(Actor? primaryTarget)
     {
         if (primaryTarget == null)
             return;
-
-        if (Hints.PotentialTargets.Any(x => (OID)x.Actor.OID is OID.SigniferPraetorianus or OID.MagitekBit))
-            UseAction(Roleplay.AID.HorridRoar, Player);
+        var hints = Hints.PotentialTargets;
+        var count = hints.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            if (hints[i].Actor.OID is (uint)OID.SigniferPraetorianus or (uint)OID.MagitekBit)
+            {
+                UseAction(Roleplay.AID.HorridRoar, Player);
+                break;
+            }
+        }
 
         if (World.Party.LimitBreakCur == 10000)
-            UseAction(Roleplay.AID.DragonshadowDive, primaryTarget, 100);
+            UseAction(Roleplay.AID.DragonshadowDive, primaryTarget, 100f);
 
         if (primaryTarget.OID == (uint)OID.Boss)
         {
@@ -124,17 +132,18 @@ class ArchUltimaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "croizat", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69218, NameID = 9189)]
-public class ArchUltima(WorldState ws, Actor primary) : BossModule(ws, primary, new(240, 230), new ArenaBoundsSquare(19.5f))
+public class ArchUltima(WorldState ws, Actor primary) : BossModule(ws, primary, new(240f, 230f), new ArenaBoundsSquare(19.5f))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var h = hints.PotentialTargets[i];
-            h.Priority = (OID)h.Actor.OID switch
+            h.Priority = h.Actor.OID switch
             {
-                OID.MagitekBit => 2,
-                OID.LembusPraetorianus => 1,
+                (uint)OID.MagitekBit => 2,
+                (uint)OID.LembusPraetorianus => 1,
                 _ => 0
             };
         }

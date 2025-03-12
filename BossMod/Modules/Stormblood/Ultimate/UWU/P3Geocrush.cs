@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Stormblood.Ultimate.UWU;
 
-class P3Geocrush1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Geocrush1), 18);
+class P3Geocrush1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Geocrush1), 18f);
 
 // TODO: add prediction after PATE xxx - need non-interpolated actor rotation for that...
 class P3Geocrush2(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Geocrush2))
@@ -9,14 +9,15 @@ class P3Geocrush2(BossModule module) : Components.GenericAOEs(module, ActionID.M
     private AOEShapeDonut? _shapeReduced;
 
     //private static WDir[] _possibleOffsets = { new(14, 0), new(0, 14), new(-14, 0), new(0, -14) };
-    private static readonly AOEShapeCircle _shapeCrush = new(24);
+    private static readonly AOEShapeCircle _shapeCrush = new(24f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster != null)
-            yield return new(_shapeCrush, _caster.Position, _caster.CastInfo!.Rotation, Module.CastFinishAt(_caster.CastInfo));
+            return new AOEInstance[1] { new(_shapeCrush, _caster.Position, _caster.CastInfo!.Rotation, Module.CastFinishAt(_caster.CastInfo)) };
         if (_shapeReduced != null)
-            yield return new(_shapeReduced, Module.Center);
+            return new AOEInstance[1] { new(_shapeReduced, Arena.Center) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -24,7 +25,7 @@ class P3Geocrush2(BossModule module) : Components.GenericAOEs(module, ActionID.M
         if (spell.Action == WatchedAction)
         {
             _caster = caster;
-            _shapeReduced = new(NumCasts == 0 ? 16 : 12, Module.Bounds.Radius); // TODO: verify second radius
+            _shapeReduced = new(NumCasts == 0 ? 16 : 12, Arena.Bounds.Radius); // TODO: verify second radius
         }
     }
 

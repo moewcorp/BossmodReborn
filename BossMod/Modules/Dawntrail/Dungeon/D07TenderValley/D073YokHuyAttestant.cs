@@ -43,7 +43,7 @@ class AncientWrath(BossModule module) : Components.GenericAOEs(module)
         [(new(-112.5f, -486.5f), rectMedium), (new(-147.5f, -471.5f), rectMedium),
         (new(-147.5f, -486.5f), rectShort), (new(-112.5f, -471.5f), rectShort)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {

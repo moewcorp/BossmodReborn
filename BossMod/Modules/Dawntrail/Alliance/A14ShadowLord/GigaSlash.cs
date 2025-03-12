@@ -5,9 +5,9 @@ class GigaSlash(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(3);
     private static readonly AOEShapeCone[] _shapes = [new(60f, 112.5f.Degrees()), new(60f, 135f.Degrees()), new(60f, 105f.Degrees())];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return AOEs.Count != 0 ? [AOEs[0] with { Risky = Module.FindComponent<DarkNebula>()?.Casters.Count == 0 }] : [];
+        return AOEs.Count != 0 ? new AOEInstance[1] { AOEs[0] with { Risky = Module.FindComponent<DarkNebula>()?.Casters.Count == 0 } } : [];
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

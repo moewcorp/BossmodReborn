@@ -24,7 +24,7 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(15.75f, 22);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEState(Actor actor, ushort state)
     {
@@ -43,7 +43,7 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.VirginTears && Arena.Bounds == D013Lorelei.DefaultArena)
+        if (spell.Action.ID == (uint)AID.VirginTears && Arena.Bounds == D013Lorelei.DefaultArena)
         {
             if (++NumCasts > 3)
                 _aoe = new(donut, D013Lorelei.ArenaCenter, default, Module.CastFinishAt(spell, 0.7f));
@@ -51,19 +51,64 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MorbidAdvance(BossModule module) : Components.ActionDrivenForcedMarch(module, ActionID.MakeSpell(AID.MorbidAdvance), 3, default, 1)
+class MorbidAdvance(BossModule module) : Components.ActionDrivenForcedMarch(module, ActionID.MakeSpell(AID.MorbidAdvance), 3f, default, 1f)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Voidzone>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation) && z.Risky) ?? false) || !Module.InBounds(pos);
+    private readonly Voidzone _aoe = module.FindComponent<Voidzone>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
-class MorbidRetreat(BossModule module) : Components.ActionDrivenForcedMarch(module, ActionID.MakeSpell(AID.MorbidRetreat), 3, 180.Degrees(), 1)
+class MorbidRetreat(BossModule module) : Components.ActionDrivenForcedMarch(module, ActionID.MakeSpell(AID.MorbidRetreat), 3f, 180f.Degrees(), 1f)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Voidzone>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation) && z.Risky) ?? false) || !Module.InBounds(pos);
+    private readonly Voidzone _aoe = module.FindComponent<Voidzone>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 class SomberMelody(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.SomberMelody));
-class VoidWaterIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidWaterIII), 8);
-class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 7, m => m.Enemies(OID.Voidzone).Where(z => z.EventState != 7));
+class VoidWaterIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidWaterIII), 8f);
+class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 7f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Voidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class D013LoreleiStates : StateMachineBuilder
 {

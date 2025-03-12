@@ -28,10 +28,10 @@ class AllaganThunder(BossModule module) : Components.SpreadFromCastTargets(modul
 
 class Shock(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(6);
-    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circle = new(6f);
+    private readonly List<AOEInstance> _aoes = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {

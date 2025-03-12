@@ -28,7 +28,7 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(15f, 15f.Degrees());
     public List<AOEInstance> _aoes = new(3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
@@ -41,12 +41,13 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.Towerfall)
         {
             var count = _aoes.Count; // remove preliminary AOE
+            var pos = caster.Position;
             for (var i = 0; i < count; ++i)
             {
                 var aoe = _aoes[i];
-                if (aoe.Origin == caster.Position)
+                if (aoe.Origin == pos)
                 {
-                    _aoes.Remove(aoe);
+                    _aoes.RemoveAt(i);
                     break;
                 }
             }

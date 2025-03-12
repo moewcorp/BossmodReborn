@@ -20,8 +20,8 @@ public enum SID : uint
     Stun = 149,
 }
 
-class Sabotendance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sabotendance), 8);
-class TwentyKNeedles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwentyKNeedles), new AOEShapeRect(20, 4));
+class Sabotendance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Sabotendance), 8f);
+class TwentyKNeedles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TwentyKNeedles), new AOEShapeRect(20f, 4f));
 
 class Haste(BossModule module) : BossComponent(module)
 {
@@ -29,7 +29,7 @@ class Haste(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Haste)
+        if (spell.Action.ID == (uint)AID.Haste)
             HasteB = true;
     }
 
@@ -40,7 +40,7 @@ class Haste(BossModule module) : BossComponent(module)
     }
 }
 
-class NineNineNineKNeedles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NineNineNineKNeedles), new AOEShapeRect(20, 4));
+class NineNineNineKNeedles(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NineNineNineKNeedles), new AOEShapeRect(20f, 4f));
 
 class MaliktenderStates : StateMachineBuilder
 {
@@ -55,4 +55,4 @@ class MaliktenderStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8901)]
-public class Maliktender(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class Maliktender(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

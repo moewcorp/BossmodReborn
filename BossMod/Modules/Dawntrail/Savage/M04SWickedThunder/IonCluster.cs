@@ -7,22 +7,22 @@ class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(40, 15);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.IonClusterVisualR:
+            case (uint)AID.IonClusterVisualR:
                 AOE = new(_shape, caster.Position - new WDir(5, 0), caster.Rotation, WorldState.FutureTime(2.4f));
                 break;
-            case AID.IonClusterVisualL:
+            case (uint)AID.IonClusterVisualL:
                 AOE = new(_shape, caster.Position + new WDir(5, 0), caster.Rotation, WorldState.FutureTime(2.4f));
                 break;
-            case AID.StampedingThunderAOE:
+            case (uint)AID.StampedingThunderAOE:
                 ++NumCasts;
                 break;
-            case AID.StampedingThunderFinish:
+            case (uint)AID.StampedingThunderFinish:
                 ++NumCasts;
                 AOE = null;
                 Arena.Bounds = M04SWickedThunder.IonClusterBounds;
@@ -52,12 +52,14 @@ class ElectronStream(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(40, 5);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var aoes = new List<AOEInstance>();
         if (_posCaster?.CastInfo != null)
-            yield return new(_shape, _posCaster.Position, _posCaster.CastInfo.Rotation, Module.CastFinishAt(_posCaster.CastInfo), _positron[slot] ? Colors.AOE : Colors.SafeFromAOE, _positron[slot]);
+            aoes.Add(new(_shape, _posCaster.Position, _posCaster.CastInfo.Rotation, Module.CastFinishAt(_posCaster.CastInfo), _positron[slot] ? 0 : Colors.SafeFromAOE, _positron[slot]));
         if (_negCaster?.CastInfo != null)
-            yield return new(_shape, _negCaster.Position, _negCaster.CastInfo.Rotation, Module.CastFinishAt(_negCaster.CastInfo), _negatron[slot] ? Colors.AOE : Colors.SafeFromAOE, _negatron[slot]);
+            aoes.Add(new(_shape, _negCaster.Position, _negCaster.CastInfo.Rotation, Module.CastFinishAt(_negCaster.CastInfo), _negatron[slot] ? 0 : Colors.SafeFromAOE, _negatron[slot]));
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -81,25 +83,25 @@ class ElectronStream(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.Positron:
-                _positron.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.Positron:
+                _positron[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
-            case SID.Negatron:
-                _negatron.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.Negatron:
+                _negatron[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.PositronStream:
+            case (uint)AID.PositronStream:
                 _posCaster = caster;
                 break;
-            case AID.NegatronStream:
+            case (uint)AID.NegatronStream:
                 _negCaster = caster;
                 break;
         }
@@ -107,12 +109,12 @@ class ElectronStream(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.PositronStream:
+            case (uint)AID.PositronStream:
                 _posCaster = null;
                 break;
-            case AID.NegatronStream:
+            case (uint)AID.NegatronStream:
                 _negCaster = null;
                 break;
         }
@@ -121,47 +123,52 @@ class ElectronStream(BossModule module) : Components.GenericAOEs(module)
 
 class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.AxeCurrent))
 {
-    private readonly SID[] _status = new SID[PartyState.MaxPartySize];
+    private readonly uint[] _status = new uint[PartyState.MaxPartySize];
     private DateTime _activation;
 
-    private static readonly AOEShapeCircle _shapeCircle = new(2);
-    private static readonly AOEShapeDonut _shapeDonut = new(10, 25);
-    private static readonly AOEShapeCone _shapeBait = new(50, 12.5f.Degrees());
+    private static readonly AOEShapeCircle _shapeCircle = new(2f);
+    private static readonly AOEShapeDonut _shapeDonut = new(10f, 25f);
+    private static readonly AOEShapeCone _shapeBait = new(50f, 12.5f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var actorOffset = actor.Position.Z - Module.PrimaryActor.Position.Z;
-        foreach (var (i, p) in Raid.WithSlot(false, true, true).Exclude(slot))
+        var aoes = new List<AOEInstance>();
+        var party = Raid.WithoutSlot(false, true, true);
+        var len = party.Length;
+        for (var i = 0; i < len; ++i)
         {
+            ref readonly var p = ref party[i];
             switch (_status[i])
             {
-                case SID.RemoteCurrent:
-                    if (_status[slot] == SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset < 0)
+                case (uint)SID.RemoteCurrent:
+                    if (_status[slot] == (uint)SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset < 0)
                         break; // we're gonna bait this
                     if (FindBaitTarget(i, p) is var tf && tf != null)
-                        yield return new(_shapeBait, p.Position, Angle.FromDirection(tf.Position - p.Position), _activation, Risky: _status[slot] != SID.RemoteCurrent); // common strat has two remotes hitting each other, which is fine
+                        aoes.Add(new(_shapeBait, p.Position, Angle.FromDirection(tf.Position - p.Position), _activation, Risky: _status[slot] != (uint)SID.RemoteCurrent)); // common strat has two remotes hitting each other, which is fine
                     break;
-                case SID.ProximateCurrent:
-                    if (_status[slot] == SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset > 0)
+                case (uint)SID.ProximateCurrent:
+                    if (_status[slot] == (uint)SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset > 0)
                         break; // we're gonna bait this
                     if (FindBaitTarget(i, p) is var tc && tc != null)
-                        yield return new(_shapeBait, p.Position, Angle.FromDirection(tc.Position - p.Position), _activation);
+                        aoes.Add(new(_shapeBait, p.Position, Angle.FromDirection(tc.Position - p.Position), _activation));
                     break;
-                case SID.SpinningConductor:
-                    yield return new(_shapeCircle, p.Position, default, _activation);
+                case (uint)SID.SpinningConductor:
+                    aoes.Add(new(_shapeCircle, p.Position, default, _activation));
                     break;
-                case SID.RoundhouseConductor:
-                    yield return new(_shapeDonut, p.Position, default, _activation);
+                case (uint)SID.RoundhouseConductor:
+                    aoes.Add(new(_shapeDonut, p.Position, default, _activation));
                     break;
             }
         }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
 
-        if (_status[slot] == SID.ColliderConductor)
+        if (_status[slot] == (uint)SID.ColliderConductor)
         {
             var source = FindDesignatedBaitSource(actor);
             if (source.actor != null)
@@ -177,21 +184,21 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
     {
         switch (_status[pcSlot])
         {
-            case SID.RemoteCurrent:
+            case (uint)SID.RemoteCurrent:
                 if (FindBaitTarget(pcSlot, pc) is var tf && tf != null)
                     _shapeBait.Outline(Arena, pc.Position, Angle.FromDirection(tf.Position - pc.Position));
                 break;
-            case SID.ProximateCurrent:
+            case (uint)SID.ProximateCurrent:
                 if (FindBaitTarget(pcSlot, pc) is var tc && tc != null)
                     _shapeBait.Outline(Arena, pc.Position, Angle.FromDirection(tc.Position - pc.Position));
                 break;
-            case SID.SpinningConductor:
+            case (uint)SID.SpinningConductor:
                 _shapeCircle.Outline(Arena, pc);
                 break;
-            case SID.RoundhouseConductor:
+            case (uint)SID.RoundhouseConductor:
                 _shapeDonut.Outline(Arena, pc);
                 break;
-            case SID.ColliderConductor:
+            case (uint)SID.ColliderConductor:
                 var source = FindDesignatedBaitSource(pc);
                 if (source.actor != null && FindBaitTarget(source.slot, source.actor) is var target && target != null)
                     _shapeBait.Outline(Arena, source.actor.Position, Angle.FromDirection(target.Position - source.actor.Position), Colors.Safe);
@@ -210,11 +217,11 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.RemoteCurrent or SID.ProximateCurrent or SID.SpinningConductor or SID.RoundhouseConductor or SID.ColliderConductor)
+        if (status.ID is (uint)SID.RemoteCurrent or (uint)SID.ProximateCurrent or (uint)SID.SpinningConductor or (uint)SID.RoundhouseConductor or (uint)SID.ColliderConductor)
         {
             var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0)
-                _status[slot] = (SID)status.ID;
+                _status[slot] = status.ID;
             _activation = status.ExpireAt;
         }
     }
@@ -224,8 +231,8 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
         var targetOffset = target.Position.Z - Module.PrimaryActor.Position.Z;
         bool isBaiter(int slot, Actor actor) => _status[slot] switch
         {
-            SID.RemoteCurrent => (actor.Position.Z - Module.PrimaryActor.Position.Z) * targetOffset < 0,
-            SID.ProximateCurrent => (actor.Position.Z - Module.PrimaryActor.Position.Z) * targetOffset > 0,
+            (uint)SID.RemoteCurrent => (actor.Position.Z - Module.PrimaryActor.Position.Z) * targetOffset < 0,
+            (uint)SID.ProximateCurrent => (actor.Position.Z - Module.PrimaryActor.Position.Z) * targetOffset > 0,
             _ => false
         };
         return Raid.WithSlot(false, true, true).FirstOrDefault(ip => isBaiter(ip.Item1, ip.Item2));
@@ -233,28 +240,30 @@ class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(module, 
 
     private Actor? FindBaitTarget(int slot, Actor source) => _status[slot] switch
     {
-        SID.RemoteCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Farthest(source.Position),
-        SID.ProximateCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Closest(source.Position),
+        (uint)SID.RemoteCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Farthest(source.Position),
+        (uint)SID.ProximateCurrent => Raid.WithoutSlot(false, true, true).Exclude(source).Closest(source.Position),
         _ => null
     };
 
-    private IEnumerable<WPos> SafeSpots(int slot, Actor actor)
+    private List<WPos> SafeSpots(int slot, Actor actor)
     {
         var dirZ = actor.Position.Z - Module.PrimaryActor.Position.Z > 0 ? 1 : -1;
+        var positions = new List<WPos>(2);
         switch (_status[slot])
         {
-            case SID.RemoteCurrent:
-            case SID.ProximateCurrent:
-                yield return Module.PrimaryActor.Position + new WDir(0, 5 * dirZ);
+            case (uint)SID.RemoteCurrent:
+            case (uint)SID.ProximateCurrent:
+                positions.Add(Module.PrimaryActor.Position + new WDir(0, 5 * dirZ));
                 break;
-            case SID.SpinningConductor:
-            case SID.RoundhouseConductor:
-                yield return Module.PrimaryActor.Position + new WDir(-2.5f, 2.5f * dirZ);
-                yield return Module.PrimaryActor.Position + new WDir(+2.5f, 2.5f * dirZ);
+            case (uint)SID.SpinningConductor:
+            case (uint)SID.RoundhouseConductor:
+                positions.Add(Module.PrimaryActor.Position + new WDir(-2.5f, 2.5f * dirZ));
+                positions.Add(Module.PrimaryActor.Position + new WDir(+2.5f, 2.5f * dirZ));
                 break;
-            case SID.ColliderConductor:
-                yield return Module.PrimaryActor.Position + new WDir(0, 6 * dirZ);
+            case (uint)SID.ColliderConductor:
+                positions.Add(Module.PrimaryActor.Position + new WDir(0, 6 * dirZ));
                 break;
         }
+        return positions;
     }
 }

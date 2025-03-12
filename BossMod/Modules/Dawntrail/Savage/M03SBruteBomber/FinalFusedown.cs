@@ -6,27 +6,38 @@ class FinalFusedownSelfDestruct(BossModule module) : Components.GenericAOEs(modu
 
     private static readonly AOEShapeCircle _shape = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Skip(NumCasts).Take(4);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 4 ? 4 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
+    }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var delay = (SID)status.ID switch
+        var delay = status.ID switch
         {
-            SID.FinalFusedownFutureSelfDestructShort => 12.2f,
-            SID.FinalFusedownFutureSelfDestructLong => 17.2f,
-            _ => 0
+            (uint)SID.FinalFusedownFutureSelfDestructShort => 12.2d,
+            (uint)SID.FinalFusedownFutureSelfDestructLong => 17.2d,
+            _ => default
         };
         if (delay > 0)
         {
-            _aoes.Add(new(_shape, actor.Position, default, WorldState.FutureTime(delay)));
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(delay)));
             _aoes.SortBy(aoe => aoe.Activation);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.FinalFusedownSelfDestructShort or AID.FinalFusedownSelfDestructLong)
+        if (spell.Action.ID is (uint)AID.FinalFusedownSelfDestructShort or (uint)AID.FinalFusedownSelfDestructLong)
+        {
             ++NumCasts;
+            if (_aoes.Count != 0)
+                _aoes.RemoveAt(0);
+        }
     }
 }
 
@@ -40,24 +51,24 @@ class FinalFusedownExplosion(BossModule module) : Components.GenericStackSpread(
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        (var list, var delay) = (SID)status.ID switch
+        (var list, var delay) = status.ID switch
         {
-            SID.FinalFusedownFutureExplosionShort => (_spreads1, 12.2f),
-            SID.FinalFusedownFutureExplosionLong => (_spreads2, 17.2f),
-            _ => (null, 0)
+            (uint)SID.FinalFusedownFutureExplosionShort => (_spreads1, 12.2d),
+            (uint)SID.FinalFusedownFutureExplosionLong => (_spreads2, 17.2d),
+            _ => (null, default)
         };
-        list?.Add(new(actor, 6, WorldState.FutureTime(delay)));
+        list?.Add(new(actor, 6f, WorldState.FutureTime(delay)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FinalFusedownExplosionShort:
+            case (uint)AID.FinalFusedownExplosionShort:
                 ++NumCasts;
                 Spreads = _spreads2;
                 break;
-            case AID.FinalFusedownExplosionLong:
+            case (uint)AID.FinalFusedownExplosionLong:
                 ++NumCasts;
                 Spreads.Clear();
                 break;

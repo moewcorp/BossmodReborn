@@ -4,15 +4,15 @@ class P1Platforms(BossModule module) : Components.GenericAOEs(module)
 {
     public List<AOEInstance> ForbiddenPlatforms = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ForbiddenPlatforms;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(ForbiddenPlatforms);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        var dir = (OID)actor.OID switch
+        var dir = actor.OID switch
         {
-            OID.PlatformE => 90.Degrees(),
-            OID.PlatformN => 180.Degrees(),
-            OID.PlatformW => -90.Degrees(),
+            (uint)OID.PlatformE => 90f.Degrees(),
+            (uint)OID.PlatformN => 180f.Degrees(),
+            (uint)OID.PlatformW => -90f.Degrees(),
             _ => default
         };
         if (dir == default)
@@ -21,7 +21,7 @@ class P1Platforms(BossModule module) : Components.GenericAOEs(module)
         switch (state)
         {
             case 0x00040008:
-                ForbiddenPlatforms.Add(new(new AOEShapeCone(20, 45.Degrees()), Module.Center, dir, WorldState.FutureTime(5)));
+                ForbiddenPlatforms.Add(new(new AOEShapeCone(20f, 45f.Degrees()), Module.Center, dir, WorldState.FutureTime(5d)));
                 break;
             case 0x00100020:
                 ++NumCasts;

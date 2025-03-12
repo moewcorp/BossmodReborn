@@ -23,10 +23,10 @@ class DivideAndConquerBait(BossModule module) : Components.GenericBaitAway(modul
 
 class DivideAndConquerAOE(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.DivideAndConquerBait))
 {
-    private static readonly AOEShapeRect rect = new(60, 2.5f);
-    public readonly List<AOEInstance> AOEs = [];
+    private static readonly AOEShapeRect rect = new(60f, 2.5f);
+    public readonly List<AOEInstance> AOEs = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -36,7 +36,7 @@ class DivideAndConquerAOE(BossModule module) : Components.GenericAOEs(module, Ac
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.DivideAndConquerAOE)
+        if (spell.Action.ID == (uint)AID.DivideAndConquerAOE)
         {
             ++NumCasts;
             AOEs.Clear();

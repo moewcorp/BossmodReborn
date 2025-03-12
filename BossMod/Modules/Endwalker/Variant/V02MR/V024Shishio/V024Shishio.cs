@@ -16,14 +16,7 @@ class ThunderOnefold(BossModule module) : Thunder(module, AID.ThunderOnefold);
 class ThunderTwofold(BossModule module) : Thunder(module, AID.ThunderTwofold);
 class ThunderThreefold(BossModule module) : Thunder(module, AID.ThunderThreefold);
 
-class SplittingCry(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(60f, 7f), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.SplittingCry), 5f)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class SplittingCry(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(60f, 7f), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.SplittingCry), 5f, tankbuster: true);
 
 class ThunderVortex(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThunderVortex), new AOEShapeDonut(8f, 30f));
 

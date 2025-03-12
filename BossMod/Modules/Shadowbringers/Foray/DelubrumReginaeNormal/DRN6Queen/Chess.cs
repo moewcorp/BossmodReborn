@@ -9,22 +9,35 @@ abstract class Chess(BossModule module) : Components.GenericAOEs(module)
     }
 
     protected GuardState[] GuardStates = new GuardState[4];
-    protected static readonly AOEShapeCross Shape = new(60, 5);
+    protected static readonly AOEShapeCross Shape = new(60f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts >= 4)
-            yield break;
+            return [];
 
-        var imminent = NumCasts < 2 ? GuardStates.Take(2) : GuardStates.Skip(2);
-        foreach (var g in imminent)
-            if (g.Actor != null)
-                yield return new(Shape, g.FinalPosition, g.Actor.Rotation);
+        var start = NumCasts < 2 ? 0 : 2;
+        var count = Math.Min(2, GuardStates.Length - start);
+
+        if (count <= 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
+        for (var i = start; i < start + count; ++i)
+        {
+            ref readonly var gs = ref GuardStates[i];
+            if (gs.Actor != null)
+                aoes[index++] = new(Shape, gs.FinalPosition, gs.Actor.Rotation);
+        }
+
+        return aoes.AsSpan()[..index];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.MovementIndicator)
+        if (status.ID == (uint)SID.MovementIndicator)
         {
             var distance = status.Extra switch
             {
@@ -36,23 +49,23 @@ abstract class Chess(BossModule module) : Components.GenericAOEs(module)
             var index = GuardIndex(actor);
             if (distance != 0 && index >= 0 && GuardStates[index].Actor == null)
             {
-                GuardStates[index] = new() { Actor = actor, FinalPosition = actor.Position + distance * 10 * actor.Rotation.ToDirection() };
+                GuardStates[index] = new() { Actor = actor, FinalPosition = actor.Position + distance * 10f * actor.Rotation.ToDirection() };
             }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.EndsKnight or AID.MeansWarrior or AID.EndsSoldier or AID.MeansGunner)
+        if (spell.Action.ID is (uint)AID.EndsKnight or (uint)AID.MeansWarrior or (uint)AID.EndsSoldier or (uint)AID.MeansGunner)
             ++NumCasts;
     }
 
-    protected int GuardIndex(Actor actor) => (OID)actor.OID switch
+    protected static int GuardIndex(Actor actor) => actor.OID switch
     {
-        OID.QueensKnight => 0,
-        OID.QueensWarrior => 1,
-        OID.QueensSoldier => 2,
-        OID.QueensGunner => 3,
+        (uint)OID.QueensKnight => 0,
+        (uint)OID.QueensWarrior => 1,
+        (uint)OID.QueensSoldier => 2,
+        (uint)OID.QueensGunner => 3,
         _ => -1
     };
 }
@@ -69,7 +82,7 @@ class QueensEdict(BossModule module) : Chess(module)
         public List<WPos> Safespots = [];
     }
 
-    public int NumStuns { get; private set; }
+    public int NumStuns;
     private readonly Dictionary<ulong, PlayerState> _playerStates = [];
     private int _safespotZOffset;
 
@@ -88,27 +101,27 @@ class QueensEdict(BossModule module) : Chess(module)
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         base.OnStatusGain(actor, status);
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.Stun:
+            case (uint)SID.Stun:
                 ++NumStuns;
                 break;
-            case SID.MovementEdictShort2:
+            case (uint)SID.MovementEdictShort2:
                 _playerStates.GetOrAdd(actor.InstanceID).FirstEdict = 2;
                 break;
-            case SID.MovementEdictShort3:
+            case (uint)SID.MovementEdictShort3:
                 _playerStates.GetOrAdd(actor.InstanceID).FirstEdict = 3;
                 break;
-            case SID.MovementEdictShort4:
+            case (uint)SID.MovementEdictShort4:
                 _playerStates.GetOrAdd(actor.InstanceID).FirstEdict = 4;
                 break;
-            case SID.MovementEdictLong2:
+            case (uint)SID.MovementEdictLong2:
                 _playerStates.GetOrAdd(actor.InstanceID).SecondEdict = 2;
                 break;
-            case SID.MovementEdictLong3:
+            case (uint)SID.MovementEdictLong3:
                 _playerStates.GetOrAdd(actor.InstanceID).SecondEdict = 3;
                 break;
-            case SID.MovementEdictLong4:
+            case (uint)SID.MovementEdictLong4:
                 _playerStates.GetOrAdd(actor.InstanceID).SecondEdict = 4;
                 break;
         }
@@ -116,7 +129,7 @@ class QueensEdict(BossModule module) : Chess(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Stun)
+        if (status.ID == (uint)SID.Stun)
             --NumStuns;
     }
 
@@ -126,27 +139,42 @@ class QueensEdict(BossModule module) : Chess(module)
             _safespotZOffset = index == 0x1D ? 2 : -2;
     }
 
-    private IEnumerable<(WPos from, WPos to, uint color)> GetSafeSpotMoves(Actor actor)
+    private List<(WPos from, WPos to, uint color)> GetSafeSpotMoves(Actor actor)
     {
         var state = _playerStates.GetValueOrDefault(actor.InstanceID);
         if (state == null)
-            yield break;
+            return [];
 
         if (state.Safespots.Count == 0)
         {
             // try initializing safespots on demand
-            if (_safespotZOffset == 0 || state.FirstEdict == 0 || state.SecondEdict == 0 || GuardStates.Any(g => g.Actor == null))
-                yield break; // not ready yet...
-
+            if (_safespotZOffset == 0 || state.FirstEdict == 0 || state.SecondEdict == 0 ||
+                GuardStates[0].Actor == null || GuardStates[1].Actor == null || GuardStates[2].Actor == null || GuardStates[3].Actor == null)
+                return [];
             // initialize second safespot: select cells that are SecondEdict distance from safespot and not in columns clipped by second set of guards
-            var forbiddenCol1 = OffsetToCell(GuardStates[2].FinalPosition.X - Module.Center.X);
-            var forbiddenCol2 = OffsetToCell(GuardStates[3].FinalPosition.X - Module.Center.X);
-            var forbiddenRow1 = OffsetToCell(GuardStates[0].FinalPosition.Z - Module.Center.Z);
-            var forbiddenRow2 = OffsetToCell(GuardStates[1].FinalPosition.Z - Module.Center.Z);
-            foreach (var s2 in CellsAtManhattanDistance((0, _safespotZOffset), state.SecondEdict).Where(s2 => s2.x != forbiddenCol1 && s2.x != forbiddenCol2))
+            var centerX = Arena.Center.X;
+            var centerZ = Arena.Center.Z;
+            var forbiddenCol1 = OffsetToCell(GuardStates[2].FinalPosition.X - centerX);
+            var forbiddenCol2 = OffsetToCell(GuardStates[3].FinalPosition.X - centerX);
+            var forbiddenRow1 = OffsetToCell(GuardStates[0].FinalPosition.Z - centerZ);
+            var forbiddenRow2 = OffsetToCell(GuardStates[1].FinalPosition.Z - centerZ);
+
+            var secondSafeSpots = CellsAtManhattanDistance((0, _safespotZOffset), state.SecondEdict);
+            var countSS = secondSafeSpots.Count;
+            for (var i = 0; i < countSS; ++i)
             {
-                foreach (var s1 in CellsAtManhattanDistance(s2, state.FirstEdict).Where(s1 => s1.z != forbiddenRow1 && s1.z != forbiddenRow2))
+                var s2 = secondSafeSpots[i];
+                if (s2.x == forbiddenCol1 || s2.x == forbiddenCol2)
+                    continue;
+
+                var firstSafeSpots = CellsAtManhattanDistance(s2, state.FirstEdict);
+                var countFS = firstSafeSpots.Count;
+                for (var j = 0; j < countFS; ++j)
                 {
+                    var s1 = firstSafeSpots[i];
+                    if (s1.z == forbiddenRow1 || s1.z == forbiddenRow2)
+                        continue;
+
                     state.Safespots.Add(CellCenter(s1));
                     state.Safespots.Add(CellCenter(s2));
                     state.Safespots.Add(CellCenter((0, _safespotZOffset)));
@@ -159,45 +187,52 @@ class QueensEdict(BossModule module) : Chess(module)
 
         var color = Colors.Safe;
         var from = actor.Position;
-        foreach (var p in state.Safespots.Skip(NumCasts / 2))
+        var moves = new List<(WPos, WPos, uint)>();
+        var count = state.Safespots.Count;
+        for (var i = NumCasts / 2; i < count; ++i)
         {
-            yield return (from, p, color);
+            var p = state.Safespots[i];
+            moves.Add((from, p, color));
             from = p;
             color = Colors.Danger;
         }
+
+        return moves;
     }
 
-    private int OffsetToCell(float offset) => offset switch
+    private static int OffsetToCell(float offset) => offset switch
     {
-        < -25 => -3,
-        < -15 => -2,
-        < -5 => -1,
-        < 5 => 0,
-        < 15 => 1,
-        < 25 => 2,
+        < -25f => -3,
+        < -15f => -2,
+        < -5f => -1,
+        < 5f => 0,
+        < 15f => 1,
+        < 25f => 2,
         _ => 3
     };
 
-    private WPos CellCenter((int x, int z) cell) => Module.Center + 10 * new WDir(cell.x, cell.z);
+    private WPos CellCenter((int x, int z) cell) => Arena.Center + 10 * new WDir(cell.x, cell.z);
 
-    private IEnumerable<(int x, int z)> CellsAtManhattanDistance((int x, int z) origin, int distance)
+    private List<(int x, int z)> CellsAtManhattanDistance((int x, int z) origin, int distance)
     {
+        var cells = new List<(int x, int z)>();
         for (var x = -2; x <= 2; ++x)
         {
             var dz = distance - Math.Abs(x - origin.x);
             if (dz == 0)
             {
-                yield return (x, origin.z);
+                cells.Add((x, origin.z));
             }
             else if (dz > 0)
             {
                 var z1 = origin.z - dz;
                 var z2 = origin.z + dz;
                 if (z1 >= -2)
-                    yield return (x, z1);
+                    cells.Add((x, z1));
                 if (z2 <= +2)
-                    yield return (x, z2);
+                    cells.Add((x, z2));
             }
         }
+        return cells;
     }
 }

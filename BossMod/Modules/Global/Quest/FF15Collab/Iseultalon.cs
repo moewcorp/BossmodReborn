@@ -8,7 +8,7 @@ public enum OID : uint
     Helper3 = 0x260C,
     Helper4 = 0x25B3,
     Helper5 = 0x273D,
-    Noctis = 0x2650,
+    Noctis = 0x2650
 }
 
 public enum AID : uint
@@ -44,7 +44,7 @@ class Thunderbolt(BossModule module) : Components.UniformStackSpread(module, 0, 
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Thunderbolt2)
+        if (spell.Action.ID == (uint)AID.Thunderbolt2)
             Spreads.Clear();
     }
 }
@@ -53,18 +53,18 @@ class Electrocution(BossModule module) : Components.GenericTowers(module)
 { // Noctis always goes to soak this tower, except on first cast as a tutorial
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Electrocution)
+        if (spell.Action.ID == (uint)AID.Electrocution)
         {
             if (NumCasts > 0)
                 Towers.Add(new(DeterminePosition(caster, spell), 3, forbiddenSoakers: Raid.WithSlot(true, true, false).WhereActor(p => p.InstanceID == Raid.Player()!.InstanceID).Mask()));
-            if (NumCasts == 0)
+            else
                 Towers.Add(new(DeterminePosition(caster, spell), 3));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Electrocution or AID.FatalCurrent)
+        if (spell.Action.ID is (uint)AID.Electrocution or (uint)AID.FatalCurrent)
         {
             Towers.RemoveAll(t => t.Position.AlmostEqual(DeterminePosition(caster, spell), 1));
             ++NumCasts;
@@ -74,12 +74,12 @@ class Electrocution(BossModule module) : Components.GenericTowers(module)
     private WPos DeterminePosition(Actor caster, ActorCastInfo spell) => spell.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ;
 }
 
-class Electrocution2(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Electrocution2), 3)
+class Electrocution2(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.Electrocution2), 3f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Towers.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Towers[0].Position, 3));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Towers[0].Position, 3f));
     }
 }
 
@@ -87,39 +87,40 @@ class Stomp(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSp
 
 class DeathRay : Components.SimpleAOEs
 {
-    public DeathRay(BossModule module) : base(module, ActionID.MakeSpell(AID.DeathRay2), new AOEShapeRect(40, 1))
+    public DeathRay(BossModule module) : base(module, ActionID.MakeSpell(AID.DeathRay2), new AOEShapeRect(40f, 1f))
     {
         Color = Colors.Danger;
     }
 }
 
-class TailWhip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailWhip), new AOEShapeCone(12, 135.Degrees()));
+class TailWhip(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TailWhip), new AOEShapeCone(12f, 135f.Degrees()));
 
 class DeathRay2(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40, 11);
     private DateTime _activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activation != default)
-            yield return new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, _activation);
+            return new AOEInstance[1] { new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, _activation) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DeathRay)
+        if (spell.Action.ID is (uint)AID.DeathRay)
             _activation = WorldState.FutureTime(6.1f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DeathRay3)
+        if (spell.Action.ID == (uint)AID.DeathRay3)
             _activation = default;
     }
 }
 
-class NeedleShot(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.NeedleShot), 5);
+class NeedleShot(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.NeedleShot), 5f);
 
 class IseultalonStates : StateMachineBuilder
 {
@@ -143,6 +144,6 @@ public class Iseultalon(WorldState ws, Actor primary) : BossModule(ws, primary, 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Noctis), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.Noctis), Colors.Vulnerable);
     }
 }

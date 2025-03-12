@@ -6,7 +6,7 @@ class StrewnBubbles(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(20f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -44,7 +44,7 @@ class RecedingEncroachingTwintides(BossModule module) : Components.GenericAOEs(m
     private static readonly AOEShapeCircle _shapeOut = new(14f);
     private static readonly AOEShapeDonut _shapeIn = new(8f, 60f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? [_aoes[0]] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

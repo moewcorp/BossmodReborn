@@ -9,9 +9,9 @@ class Touchdown(BossModule module) : Components.SimpleAOEs(module, ActionID.Make
 {
     public override bool KeepOnPhaseChange => true;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Casters.Count != 0 && (Module.FindComponent<DragonBreath>()?.AOE == null || Arena.Bounds != A12Fafnir.FireArena) ? [Casters[0]] : [];
+        return Casters.Count != 0 && (Module.FindComponent<DragonBreath>()?.AOE == null || Arena.Bounds != A12Fafnir.FireArena) ? new AOEInstance[1] { Casters[0] } : [];
     }
 }
 
@@ -22,7 +22,7 @@ class DragonBreath(BossModule module) : Components.GenericAOEs(module, ActionID.
 
     private static readonly AOEShapeDonut donut = new(16f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

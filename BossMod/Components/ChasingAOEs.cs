@@ -26,14 +26,31 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, ActionID 
 
     public List<Chaser> Chasers = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public bool IsChaserTarget(Actor? actor)
     {
-        foreach (var c in Chasers)
+        var count = Chasers.Count;
+        for (var i = 0; i < count; ++i)
         {
+            if (Chasers[i].Target == actor)
+                return true;
+        }
+        return false;
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = Chasers.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Chasers[i];
             var pos = c.PredictedPosition();
             var off = pos - c.PrevPos;
-            yield return new(c.Shape, pos, off.LengthSq() > 0 ? Angle.FromDirection(off) : default, c.NextActivation);
+            aoes[i] = new(c.Shape, pos, off.LengthSq() > 0 ? Angle.FromDirection(off) : default, c.NextActivation);
         }
+        return aoes;
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => Chasers.Any(c => c.Target == player) ? PlayerPriority.Interesting : PlayerPriority.Irrelevant;
@@ -134,7 +151,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
             {
                 Actors.Remove(target);
                 Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
-                ExcludedTargets.Set(slot);
+                ExcludedTargets[slot] = true;
             }
         }
     }
@@ -147,7 +164,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, ActionID act
             Advance(WPos.ClampToGrid(pos), MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetExcludedTargets)
             {
-                ExcludedTargets.Reset();
+                ExcludedTargets = default;
                 NumCasts = 0;
             }
         }

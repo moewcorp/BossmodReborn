@@ -30,14 +30,7 @@ public enum AID : uint
     OdiEtAmo = 25675 // Boss->self, 3.0s cast, single-target
 }
 
-class AglaeaBite(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AglaeaBite), new AOEShapeCone(9f, 60f.Degrees()), endsOnCastEvent: true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class AglaeaBite(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.AglaeaBite), new AOEShapeCone(9f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
 
 class AglaeaShot(BossModule module) : Components.GenericAOEs(module)
 {
@@ -46,11 +39,11 @@ class AglaeaShot(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Actor> casters = new(8);
     private DateTime activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoes.Count != 0)
-            return _aoes;
-        else if ((activation - WorldState.CurrentTime).TotalSeconds < 5d)
+            return CollectionsMarshal.AsSpan(_aoes);
+        if ((activation - WorldState.CurrentTime).TotalSeconds < 5d)
         {
             var count = casters.Count;
             var aoes = new AOEInstance[count];

@@ -19,20 +19,59 @@ public enum AID : uint
     MagitekRay = 15048 // Boss->location, 3.0s cast, range 6 circle, voidzone, interruptible
 }
 
-class GrandStrike(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrandStrike), new AOEShapeRect(77.5f, 2));
+class GrandStrike(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GrandStrike), new AOEShapeRect(77.5f, 2f));
 class MagitekField(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.MagitekField));
-class MagitekRay(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.MagitekRay), m => m.Enemies(OID.MagitekRayVoidzone).Where(e => e.EventState != 7), 1.1f);
-class TheHand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheHand), new AOEShapeCone(8, 60.Degrees()));
-class Shred(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shred), new AOEShapeRect(6, 2));
+class MagitekRay(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.MagitekRay), GetVoidzones, 1.1f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.MagitekRayVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+class TheHand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheHand), new AOEShapeCone(8f, 60f.Degrees()));
+class Shred(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shred), new AOEShapeRect(6f, 2f));
 
 class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.LeftClaw).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.LeftClaw).FirstOrDefault()?.Name} counters magical damage!");
-        if (!Module.Enemies(OID.RightClaw).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.RightClaw).FirstOrDefault()?.Name} counters physical damage!");
+        var clawsL = Module.Enemies((uint)OID.LeftClaw);
+        var countL = clawsL.Count;
+        if (countL != 0)
+            for (var i = 0; i < countL; ++i)
+            {
+                var clawL = clawsL[i];
+                if (!clawL.IsDead)
+                {
+                    hints.Add($"{clawL.Name} counters magical damage!");
+                    break;
+                }
+            }
+        var clawsR = Module.Enemies((uint)OID.RightClaw);
+        var countR = clawsR.Count;
+        if (countR != 0)
+            for (var i = 0; i < countR; ++i)
+            {
+                var clawR = clawsR[i];
+                if (!clawR.IsDead)
+                {
+                    hints.Add($"{clawR.Name} counters physical damage!");
+                    return;
+                }
+            }
     }
 }
 
@@ -70,18 +109,19 @@ public class Stage17Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.LeftClaw), Colors.Object);
-        Arena.Actors(Enemies(OID.RightClaw), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.LeftClaw), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.RightClaw), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.LeftClaw or OID.RightClaw => 1, //TODO: ideally left claw should only be attacked with magical abilities and right claw should only be attacked with physical abilities
+                (uint)OID.LeftClaw or (uint)OID.RightClaw => 1, //TODO: ideally left claw should only be attacked with magical abilities and right claw should only be attacked with physical abilities
                 _ => 0
             };
         }

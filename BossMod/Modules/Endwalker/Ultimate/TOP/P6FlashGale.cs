@@ -8,7 +8,7 @@ class P6FlashGale : Components.GenericBaitAway
 
     public P6FlashGale(BossModule module) : base(module, centerAtTarget: true)
     {
-        _source = module.Enemies(OID.BossP6).FirstOrDefault();
+        _source = module.Enemies((uint)OID.BossP6)[0];
         ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(p => p.Role != Role.Tank).Mask();
     }
 
@@ -28,7 +28,7 @@ class P6FlashGale : Components.GenericBaitAway
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.FlashGale)
+        if (spell.Action.ID is (uint)AID.FlashGale)
             ++NumCasts;
     }
 }

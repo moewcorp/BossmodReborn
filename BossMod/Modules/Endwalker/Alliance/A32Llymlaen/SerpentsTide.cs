@@ -5,7 +5,7 @@ class SerpentsTide(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = [];
     private static readonly AOEShapeRect _shape = new(80f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

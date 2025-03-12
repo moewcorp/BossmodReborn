@@ -3,10 +3,9 @@
 class DireStraits(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
-
     private static readonly AOEShapeRect _shape = new(40f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -51,16 +50,30 @@ class NavigatorsTridentKnockback(BossModule module) : Components.Knockback(modul
 
     private static readonly AOEShapeCone _shape = new(30f, 90f.Degrees());
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => _sources;
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos) || (_serpentsTide?.AOEs.Any(z => z.Check(pos)) ?? false);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(_sources);
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_serpentsTide == null)
+            return false;
+        var aoes = _serpentsTide.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.NavigatorsTridentAOE)
         {
             _sources.Clear();
-            _sources.Add(new(spell.LocXZ, 20, Module.CastFinishAt(spell), _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
-            _sources.Add(new(spell.LocXZ, 20, Module.CastFinishAt(spell), _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
         }
     }
 

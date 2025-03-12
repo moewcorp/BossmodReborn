@@ -50,15 +50,18 @@ class DeepestPit(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => _real && _targets.Contains(player) ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_real)
-            foreach (var t in _targets)
-                Arena.AddCircle(t.Position, _shape.Radius);
+        {
+            var count = _targets.Count;
+            for (var i = 0; i < count; ++i)
+                Arena.AddCircle(_targets[i].Position, _shape.Radius);
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

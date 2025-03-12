@@ -84,7 +84,7 @@ class Mouser(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(19);
     private static readonly AOEShapeRect rect = new(10f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

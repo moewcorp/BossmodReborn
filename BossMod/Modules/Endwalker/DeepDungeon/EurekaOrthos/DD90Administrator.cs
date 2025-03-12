@@ -51,7 +51,7 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
     new AOEShapeCross(60f, 5f), new AOEShapeDonut(5f, 60f)];
     public readonly List<AOEInstance> AOEs = new(6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)
@@ -70,7 +70,7 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
                 break;
             aoes[index++] = aoe with { Color = comp ? color : 0, Risky = comp };
         }
-        return aoes[..index];
+        return aoes.AsSpan()[..index];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -139,7 +139,7 @@ class AetherLaserLine : Components.SimpleAOEs
         _aoe = module.FindComponent<AetheroChemicalLaserCombo>()!;
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Count != 0 && _aoe.AOEs.Count == 0 ? base.ActiveAOEs(slot, actor) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Count != 0 && _aoe.AOEs.Count == 0 ? base.ActiveAOEs(slot, actor) : [];
 }
 
 class AetherLaserLine2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine2), new AOEShapeRect(40f, 2.5f));

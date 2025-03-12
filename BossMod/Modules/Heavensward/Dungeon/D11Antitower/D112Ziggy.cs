@@ -27,12 +27,12 @@ public enum TetherID : uint
 }
 
 class GyratingGlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GyratingGlare));
-class MysticLight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MysticLight), 12);
-class DeepFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepFracture), 11);
-class JitteringGlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.JitteringGlare), new AOEShapeCone(40, 15.Degrees()));
+class MysticLight(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MysticLight), 12f);
+class DeepFracture(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeepFracture), 11f);
+class JitteringGlare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.JitteringGlare), new AOEShapeCone(40f, 15f.Degrees()));
 class JitteringJab(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.JitteringJab));
 
-class JitteringJounceBait(BossModule module) : Components.BaitAwayChargeTether(module, 3, 0, ActionID.MakeSpell(AID.JitteringJounce), tetherIDBad: (uint)TetherID.JitteringJounce)
+class JitteringJounceBait(BossModule module) : Components.BaitAwayChargeTether(module, 3f, default, ActionID.MakeSpell(AID.JitteringJounce), tetherIDBad: (uint)TetherID.JitteringJounce)
 {
     public Actor? Target;
 
@@ -45,7 +45,7 @@ class JitteringJounceBait(BossModule module) : Components.BaitAwayChargeTether(m
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        if ((AID)spell.Action.ID == AID.JitteringJounce)
+        if (spell.Action.ID == (uint)AID.JitteringJounce)
             Target = null;
     }
 
@@ -56,29 +56,56 @@ class JitteringJounceLOS(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly JitteringJounceBait _bait = module.FindComponent<JitteringJounceBait>()!;
     private static readonly Angle halfAngle = Angle.Asin(1.5f / 11);
-    private const string hint = "Hide behind meteor!";
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_bait.Target == actor)
         {
-            List<DonutSegmentHA> cones = [];
-            foreach (var c in Module.Enemies(OID.Stardust).Where(x => !x.IsDead))
+            var stardust = GetStardust(Module);
+            var count = stardust.Count;
+            var cones = new DonutSegmentHA[count];
+            for (var i = 0; i < count; ++i)
             {
-                cones.Add(new(D112Ziggy.ArenaCenter, 11.1f, 20, Angle.FromDirection(Module.PrimaryActor.DirectionTo(c)), halfAngle));
+                cones[i] = new(D112Ziggy.ArenaCenter, 11.1f, 20f, Angle.FromDirection(Module.PrimaryActor.DirectionTo(stardust[i])), halfAngle);
             }
-            yield return new(new AOEShapeCustom([.. cones], InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE);
+            return new AOEInstance[1] { new(new AOEShapeCustom([.. cones], InvertForbiddenZone: true), Arena.Center, Color: Colors.SafeFromAOE) };
         }
+        return [];
+    }
+
+    public static List<Actor> GetStardust(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Stardust);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var kegs = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                kegs.Add(z);
+        }
+        return kegs;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (_bait.Target == actor)
         {
-            if (!ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position)))
-                hints.Add(hint);
-            else
-                hints.Add(hint, false);
+            var aoes = ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            var risky = true;
+            for (var i = 0; i < len; ++i)
+            {
+                if (aoes[i].Check(actor.Position))
+                {
+                    risky = false;
+                    break;
+                }
+            }
+            hints.Add("Hide behind meteor!", risky);
         }
     }
 }
@@ -102,6 +129,6 @@ class D112ZiggyStates : StateMachineBuilder
 public class D112Ziggy(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(185.8f, 137.5f);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 20.06f * CosPI.Pi36th, 36)], [new Rectangle(new(166, 138), 20, 1.1f, 90.Degrees()),
-    new Rectangle(new(207, 137), 20, 2.6f, 90.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 20.06f * CosPI.Pi36th, 36)], [new Rectangle(new(166, 138), 1.1f, 20f),
+    new Rectangle(new(207, 137), 2.6f, 20f)]);
 }

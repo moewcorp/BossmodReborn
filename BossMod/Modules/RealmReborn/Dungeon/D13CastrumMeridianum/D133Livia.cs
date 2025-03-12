@@ -39,30 +39,30 @@ public enum AID : uint
 
 class AglaeaClimb(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.AglaeaClimb));
 class ArtificialPlasma(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ArtificialPlasma));
-class AngrySalamanderAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamanderAOE), new AOEShapeCross(20, 2));
-class ThermobaricCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 13)
+class AngrySalamanderAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AngrySalamanderAOE), new AOEShapeCross(20f, 2f));
+class ThermobaricCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 13f)
 {
     private readonly StunningSweepDischarge _aoe = module.FindComponent<StunningSweepDischarge>()!;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _aoe.Casters.Count != 0 ? [] : Casters;
+        return _aoe.Casters.Count != 0 ? [] : CollectionsMarshal.AsSpan(Casters);
     }
 }
-class StunningSweepAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StunningSweepAOE), 8);
-class StunningSweepDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StunningSweepDischarge), 8);
-class InfiniteReachDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.InfiniteReachDischarge), 8, 6);
-class RoundhouseAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoundhouseAOE), 10);
-class RoundhouseDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoundhouseDischarge), 8)
+class StunningSweepAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StunningSweepAOE), 8f);
+class StunningSweepDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.StunningSweepDischarge), 8f);
+class InfiniteReachDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.InfiniteReachDischarge), 8f, 6);
+class RoundhouseAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoundhouseAOE), 10f);
+class RoundhouseDischarge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoundhouseDischarge), 8f)
 {
     private readonly RoundhouseAOE _aoe = module.FindComponent<RoundhouseAOE>()!;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _aoe.Casters.Count != 0 ? [] : Casters;
+        return _aoe.Casters.Count != 0 ? [] : CollectionsMarshal.AsSpan(Casters);
     }
 }
-class InfiniteReachAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.InfiniteReachAOE), new AOEShapeRect(40, 2));
+class InfiniteReachAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.InfiniteReachAOE), new AOEShapeRect(40f, 2f));
 
 class D133LiviaStates : StateMachineBuilder
 {
@@ -86,6 +86,6 @@ class D133LiviaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2118)]
 public class D133Livia(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-98, -33), 19.5f * CosPI.Pi36th, 36)],
-    [new Rectangle(new(-78.187f, -36.886f), 20, 1.25f, -79.Degrees())]);
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-98f, -33f), 19.5f * CosPI.Pi36th, 36)],
+    [new Rectangle(new(-78.187f, -36.886f), 20f, 1.25f, -79f.Degrees())]);
 }

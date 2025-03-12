@@ -23,33 +23,49 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
     private static readonly float halfPIHalfAngleP = Angle.HalfPi + _eyeHalfAngle;
     private static readonly float halfPIHalfAngleM = Angle.HalfPi - _eyeHalfAngle;
 
-    public abstract IEnumerable<Eye> ActiveEyes(int slot, Actor actor);
+    public abstract ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveEyes(slot, actor).Any(eye => actor.Position.InCircle(eye.Position, eye.Range) && HitByEye(actor, eye) != Inverted))
-            hints.Add(Inverted ? "Face the eye!" : "Turn away from gaze!");
+        var eyes = ActiveEyes(slot, actor);
+        var len = eyes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var eye = ref eyes[i];
+            if (actor.Position.InCircle(eye.Position, eye.Range) && HitByEye(ref actor, eye) != Inverted)
+            {
+                hints.Add(Inverted ? "Face the eye!" : "Turn away from gaze!");
+                break;
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Inverted)
+        var eyes = ActiveEyes(slot, actor);
+        var len = eyes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            foreach (var eye in ActiveEyes(slot, actor).Where(eye => actor.Position.InCircle(eye.Position, eye.Range)))
-                hints.ForbiddenDirections.Add((Angle.FromDirection(actor.Position - eye.Position) - eye.Forward, 135f.Degrees(), eye.Activation));
-        }
-        else
-        {
-            foreach (var eye in ActiveEyes(slot, actor).Where(eye => actor.Position.InCircle(eye.Position, eye.Range)))
-                hints.ForbiddenDirections.Add((Angle.FromDirection(eye.Position - actor.Position) - eye.Forward, 45f.Degrees(), eye.Activation));
+            ref readonly var eye = ref eyes[i];
+            if (actor.Position.InCircle(eye.Position, eye.Range))
+            {
+                var direction = Inverted ? Angle.FromDirection(actor.Position - eye.Position) - eye.Forward
+                    : Angle.FromDirection(eye.Position - actor.Position) - eye.Forward;
+
+                var angle = Inverted ? 135f.Degrees() : 45f.Degrees();
+                hints.ForbiddenDirections.Add((direction, angle, eye.Activation));
+            }
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var eye in ActiveEyes(pcSlot, pc))
+        var eyes = ActiveEyes(pcSlot, pc);
+        var len = eyes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            var danger = HitByEye(pc, eye) != Inverted;
+            ref readonly var eye = ref eyes[i];
+            var danger = HitByEye(ref pc, eye) != Inverted;
             var eyeCenter = IndicatorScreenPos(eye.Position);
             DrawEye(eyeCenter, danger);
 
@@ -71,7 +87,7 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
         dl.AddCircleFilled(eyeCenter, _eyeInnerR, Colors.Border);
     }
 
-    public static bool HitByEye(Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
+    public static bool HitByEye(ref Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
 
     private Vector2 IndicatorScreenPos(WPos eye)
     {
@@ -88,11 +104,27 @@ public abstract class GenericGaze(BossModule module, ActionID aid = new(), bool 
 }
 
 // gaze that happens on cast end
-public class CastGaze(BossModule module, ActionID aid, bool inverted = false, float range = 10000) : GenericGaze(module, aid, inverted)
+public class CastGaze(BossModule module, ActionID aid, bool inverted = false, float range = 10000, int maxCasts = int.MaxValue) : GenericGaze(module, aid, inverted)
 {
     public readonly List<Eye> Eyes = [];
+    public int MaxCasts = maxCasts; // used for staggered gazes, when showing all active would be pointless
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => Eyes;
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
+    {
+        var count = Eyes.Count;
+        if (count == 0)
+            return [];
+
+        var max = count > MaxCasts ? MaxCasts : count;
+
+        var eyes = new Eye[max];
+        for (var i = 0; i < max; ++i)
+        {
+            var eye = Eyes[i];
+            eyes[i] = eye;
+        }
+        return eyes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -126,12 +158,30 @@ public class CastWeakpoint(BossModule module, ActionID aid, AOEShape shape, uint
     private readonly List<Actor> _casters = [];
     private readonly Dictionary<ulong, Angle> _playerWeakpoints = [];
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+        Actor? caster = null;
+        var minRemainingTime = float.MaxValue;
         // if there are multiple casters, take one that finishes first
-        var caster = _casters.Where(a => Shape.Check(actor.Position, a.Position, a.CastInfo!.Rotation)).MinBy(a => a.CastInfo!.RemainingTime);
+        for (var i = 0; i < count; ++i)
+        {
+            var a = _casters[i];
+            if (Shape.Check(actor.Position, a.Position, a.CastInfo!.Rotation))
+            {
+                if (a.CastInfo!.RemainingTime < minRemainingTime)
+                {
+                    caster = a;
+                    minRemainingTime = a.CastInfo.RemainingTime;
+                }
+            }
+        }
+
         if (caster != null && _playerWeakpoints.TryGetValue(actor.InstanceID, out var angle))
-            yield return new(caster.Position, Module.CastFinishAt(caster.CastInfo), angle);
+            return new Eye[1] { new(caster.Position, Module.CastFinishAt(caster.CastInfo), angle) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

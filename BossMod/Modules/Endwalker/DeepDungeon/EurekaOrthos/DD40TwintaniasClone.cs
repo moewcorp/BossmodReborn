@@ -57,7 +57,7 @@ class TwistingDive(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(50f, 7.5f);
     private bool preparing;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {

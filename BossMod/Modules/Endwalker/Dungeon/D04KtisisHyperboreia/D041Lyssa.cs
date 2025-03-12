@@ -42,7 +42,7 @@ class PunishingSlice(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeRect rect = new(50f, 25f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

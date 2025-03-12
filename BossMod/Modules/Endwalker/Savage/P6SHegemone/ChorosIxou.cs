@@ -4,31 +4,34 @@ class ChorosIxou(BossModule module) : Components.GenericAOEs(module)
 {
     public bool FirstDone;
     public bool SecondDone;
-    private readonly AOEShapeCone _cone = new(40, 45.Degrees());
+    private readonly AOEShapeCone _cone = new(40f, 45f.Degrees());
     private readonly List<Angle> _directions = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (SecondDone)
-            yield break;
+            return [];
 
         // TODO: timing
-        var offset = (FirstDone ? 90 : 0).Degrees();
-        foreach (var dir in _directions)
-            yield return new(_cone, Module.PrimaryActor.Position, dir + offset);
+        var offset = (FirstDone ? 90f : 0f).Degrees();
+        var count = _directions.Count;
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+            aoes[i] = new(_cone, Module.PrimaryActor.Position, _directions[i] + offset);
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChorosIxouFSFrontAOE or AID.ChorosIxouSFSidesAOE)
+        if (spell.Action.ID is (uint)AID.ChorosIxouFSFrontAOE or (uint)AID.ChorosIxouSFSidesAOE)
             _directions.Add(caster.Rotation);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ChorosIxouFSFrontAOE or AID.ChorosIxouSFSidesAOE)
+        if (spell.Action.ID is (uint)AID.ChorosIxouFSFrontAOE or (uint)AID.ChorosIxouSFSidesAOE)
             FirstDone = true;
-        else if ((AID)spell.Action.ID is AID.ChorosIxouFSSidesAOE or AID.ChorosIxouSFFrontAOE)
+        else if (spell.Action.ID is (uint)AID.ChorosIxouFSSidesAOE or (uint)AID.ChorosIxouSFFrontAOE)
             SecondDone = true;
     }
 }

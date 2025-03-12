@@ -11,8 +11,17 @@ class FortuneFluxOrder(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var order = string.Join(" > ", Mechanics.Skip(NumComplete).Select(m => m.mechanic));
-        if (order.Length > 0)
+        var orderBuilder = new StringBuilder();
+        var count = Mechanics.Count;
+        for (var i = NumComplete; i < count; ++i)
+        {
+            if (i > NumComplete)
+                orderBuilder.Append(" > ");
+            orderBuilder.Append(Mechanics[i].mechanic);
+        }
+
+        var order = orderBuilder.ToString();
+        if (order.Length != 0)
             hints.Add($"Order: {order}");
     }
 
@@ -27,36 +36,36 @@ class FortuneFluxOrder(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FiredUp1AOE:
-            case AID.FiredUp2AOE:
-            case AID.FiredUp3AOE:
+            case (uint)AID.FiredUp1AOE:
+            case (uint)AID.FiredUp2AOE:
+            case (uint)AID.FiredUp3AOE:
                 _currentMechanic = Mechanic.AOE;
                 TryAdd();
                 break;
-            case AID.FiredUp1Knockback:
-            case AID.FiredUp2Knockback:
-            case AID.FiredUp3Knockback:
+            case (uint)AID.FiredUp1Knockback:
+            case (uint)AID.FiredUp2Knockback:
+            case (uint)AID.FiredUp3Knockback:
                 _currentMechanic = Mechanic.Knockback;
                 TryAdd();
                 break;
-            case AID.FortuneFluxAOE1:
+            case (uint)AID.FortuneFluxAOE1:
                 UpdateActivation(0, Mechanic.AOE, spell);
                 break;
-            case AID.FortuneFluxAOE2:
+            case (uint)AID.FortuneFluxAOE2:
                 UpdateActivation(1, Mechanic.AOE, spell);
                 break;
-            case AID.FortuneFluxAOE3:
+            case (uint)AID.FortuneFluxAOE3:
                 UpdateActivation(2, Mechanic.AOE, spell);
                 break;
-            case AID.FortuneFluxKnockback1:
+            case (uint)AID.FortuneFluxKnockback1:
                 UpdateActivation(0, Mechanic.Knockback, spell);
                 break;
-            case AID.FortuneFluxKnockback2:
+            case (uint)AID.FortuneFluxKnockback2:
                 UpdateActivation(1, Mechanic.Knockback, spell);
                 break;
-            case AID.FortuneFluxKnockback3:
+            case (uint)AID.FortuneFluxKnockback3:
                 UpdateActivation(2, Mechanic.Knockback, spell);
                 break;
         }
@@ -64,7 +73,8 @@ class FortuneFluxOrder(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.FortuneFluxAOE1 or AID.FortuneFluxAOE2 or AID.FortuneFluxAOE3 or AID.FortuneFluxKnockback1 or AID.FortuneFluxKnockback2 or AID.FortuneFluxKnockback3)
+        if (spell.Action.ID is (uint)AID.FortuneFluxAOE1 or (uint)AID.FortuneFluxAOE2 or (uint)AID.FortuneFluxAOE3 or (uint)AID.FortuneFluxKnockback1
+        or (uint)AID.FortuneFluxKnockback2 or (uint)AID.FortuneFluxKnockback3)
             ++NumComplete;
     }
 
@@ -111,13 +121,34 @@ class FortuneFluxAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly FortuneFluxOrder? _order = module.FindComponent<FortuneFluxOrder>();
 
-    private static readonly AOEShapeCircle _shape = new(20);
+    private static readonly AOEShapeCircle _shape = new(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_order != null)
-            foreach (var m in _order.Mechanics.Skip(_order.NumComplete).Where(m => m.mechanic == FortuneFluxOrder.Mechanic.AOE))
-                yield return new(_shape, m.source, default, m.activation);
+
+        if (_order == null || _order.Mechanics.Count <= _order.NumComplete)
+            return [];
+        var count = _order.Mechanics.Count;
+        var validCount = 0;
+        for (var i = _order.NumComplete; i < count; ++i)
+        {
+            if (_order.Mechanics[i].mechanic == FortuneFluxOrder.Mechanic.AOE)
+                ++validCount;
+        }
+
+        if (validCount == 0)
+            return [];
+
+        var aoes = new AOEInstance[validCount];
+        var index = 0;
+
+        for (var i = _order.NumComplete; i < count; ++i)
+        {
+            var m = _order.Mechanics[i];
+            if (m.mechanic == FortuneFluxOrder.Mechanic.AOE)
+                aoes[index++] = new(_shape, m.source, default, m.activation);
+        }
+        return aoes;
     }
 }
 
@@ -125,10 +156,35 @@ class FortuneFluxKnockback(BossModule module) : Components.Knockback(module)
 {
     private readonly FortuneFluxOrder? _order = module.FindComponent<FortuneFluxOrder>();
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        if (_order != null)
-            foreach (var m in _order.Mechanics.Skip(_order.NumComplete).Where(m => m.mechanic == FortuneFluxOrder.Mechanic.Knockback))
-                yield return new(m.source, 30, m.activation);
+        if (_order == null || _order.Mechanics.Count <= _order.NumComplete)
+            return [];
+
+        var mechanics = _order.Mechanics;
+        var countM = mechanics.Count;
+
+        var count = 0;
+
+        for (var i = _order.NumComplete; i < countM; ++i)
+        {
+            if (mechanics[i].mechanic == FortuneFluxOrder.Mechanic.Knockback)
+                ++count;
+        }
+
+        if (count == 0)
+            return [];
+
+        var sources = new Source[count];
+        var index = 0;
+
+        for (var i = _order.NumComplete; i < countM; ++i)
+        {
+            var m = _order.Mechanics[i];
+            if (m.mechanic == FortuneFluxOrder.Mechanic.Knockback)
+                sources[index++] = new(m.source, 30f, m.activation);
+        }
+
+        return sources;
     }
 }

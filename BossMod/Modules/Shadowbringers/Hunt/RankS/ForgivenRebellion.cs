@@ -46,7 +46,7 @@ class SanctifiedBlizzardChain(BossModule module) : Components.GenericRotatingAOE
     public static readonly AOEShapeCone Cone = new(40f, 22.5f.Degrees());
     private readonly List<AOEInstance> _aoes = new(3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // direction seems to be server side until after first rotation
         if (Sequences.Count == 0)

@@ -3,5 +3,5 @@
 // TODO: implement!
 class ForbiddenFruit9(BossModule module) : ForbiddenFruitCommon(module, ActionID.MakeSpell(AID.StymphalianStrike))
 {
-    protected override DateTime? PredictUntetheredCastStart(Actor fruit) => (OID)fruit.OID == OID.ForbiddenFruitBird ? WorldState.FutureTime(12.5f) : null;
+    protected override DateTime? PredictUntetheredCastStart(Actor fruit) => fruit.OID == (uint)OID.ForbiddenFruitBird ? WorldState.FutureTime(12.5d) : null;
 }

@@ -5,22 +5,23 @@ class P4CeruleumVent(BossModule module) : Components.GenericAOEs(module, ActionI
     private Actor? _source;
     private DateTime _activation;
 
-    private static readonly AOEShapeCircle _shape = new(14);
+    private static readonly AOEShapeCircle _shape = new(14f);
 
     public bool Active => _source != null;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_source != null)
-            yield return new(_shape, _source.Position, _source.Rotation, _activation);
+            return new AOEInstance[1] { new(_shape, _source.Position, _source.Rotation, _activation) };
+        return [];
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.UltimaWeapon && id == 0x1E43)
+        if (actor.OID == (uint)OID.UltimaWeapon && id == 0x1E43)
         {
             _source = actor;
-            _activation = WorldState.FutureTime(10.1f);
+            _activation = WorldState.FutureTime(10.1d);
         }
     }
 }

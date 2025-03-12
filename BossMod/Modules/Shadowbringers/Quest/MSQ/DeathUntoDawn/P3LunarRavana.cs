@@ -22,23 +22,41 @@ public enum SID : uint
     Invincibility = 325
 }
 
-class GrahaAI(WorldState ws) : UnmanagedRotation(ws, 25)
+class GrahaAI(BossModule module, WorldState ws) : UnmanagedRotation(ws, 25)
 {
-    private IEnumerable<Actor> Adds => World.Actors.Where(x => (OID)x.OID is OID.MoonGana or OID.SpiritGana or OID.RavanasWill && x.IsTargetable && !x.IsDead);
+    private static readonly uint[] _adds = [(uint)OID.MoonGana, (uint)OID.SpiritGana, (uint)OID.RavanasWill];
 
     // Ravana's Wills just move to boss, whereas butterflies are only a threat once they start casting
-    private bool ShouldBreak(Actor a) => StatusDetails(a, Roleplay.SID.Break, Player.InstanceID).Left == 0 && ((OID)a.OID == OID.RavanasWill || a.CastInfo != null);
+    private bool ShouldBreak(Actor a) => StatusDetails(a, (uint)Roleplay.SID.Break, Player.InstanceID).Left == 0 && (a.OID == (uint)OID.RavanasWill || a.CastInfo != null);
 
     protected override void Exec(Actor? primaryTarget)
     {
-        var adds = Adds.ToList();
+        var alladds = module.Enemies(_adds);
+        var count = alladds.Count;
+        var adds = new List<Actor>(count);
 
-        if (adds.Any(ShouldBreak))
+        for (var i = 0; i < count; ++i)
         {
-            Hints.GoalZones.Add(p => adds.Count(a => a.Position.InCircle(p, 20)));
-            if (adds.Any(a => ShouldBreak(a) && a.Position.InCircle(Player.Position, 20)))
+            var a = adds[i];
+            if (a.IsTargetable && !a.IsDead)
+            {
+                adds.Add(a);
+                continue;
+            }
+            if (ShouldBreak(a) && a.Position.InCircle(Player.Position, 20f))
                 UseAction(RID.Break, Player);
         }
+
+        Hints.GoalZones.Add(pos =>
+           {
+               var count = 0;
+               for (var i = 0; i < count; ++i)
+               {
+                   if (adds[i].Position.InCircle(pos, 20f))
+                       ++count;
+               }
+               return count;
+           });
 
         if (MP >= 1000 && Player.HPMP.CurHP * 3 < Player.HPMP.MaxHP)
             UseAction(RID.CureII, Player);
@@ -46,10 +64,10 @@ class GrahaAI(WorldState ws) : UnmanagedRotation(ws, 25)
         if (MP < 800)
             UseAction(RID.AllaganBlizzardIV, primaryTarget);
 
-        if (primaryTarget?.OID == 0x3201)
+        if (primaryTarget?.OID == (uint)OID.Boss)
         {
             var thunder = StatusDetails(primaryTarget, Roleplay.SID.ThunderIV, Player.InstanceID);
-            if (thunder.Left < 3)
+            if (thunder.Left < 3f)
                 UseAction(RID.ThunderIV, primaryTarget);
         }
 
@@ -94,10 +112,14 @@ public class LunarRavana(WorldState ws, Actor primary) : BossModule(ws, primary,
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.CalculateModuleAIHints(slot, actor, assignment, hints);
-        foreach (var h in hints.PotentialTargets)
-            if (h.Actor.FindStatus(SID.Invincibility) != null)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var h = hints.PotentialTargets[i];
+            if (h.Actor.FindStatus((uint)SID.Invincibility) != null)
                 h.Priority = AIHints.Enemy.PriorityInvincible;
+        }
     }
 
-    protected override bool CheckPull() => true;
+    protected override bool CheckPull() => Raid.Player()!.InCombat;
 }

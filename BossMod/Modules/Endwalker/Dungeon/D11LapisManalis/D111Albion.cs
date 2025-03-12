@@ -52,16 +52,17 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     private static Stampede NewStampede(WPos stampede) => new(true, stampede, stampede.X == 4 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], new(40));
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         foreach (var stampede in stampedes)
             if (stampede.Active)
-                yield return stampede.Beasts.Count > 0 ? CreateAOEInstance(stampede) : new(rect, stampede.Position, Angle.AnglesCardinals[3]);
+                return stampede.Beasts.Count != 0 ? CreateAOEInstance(stampede) : [new(rect, stampede.Position, Angle.AnglesCardinals[3])];
+        return [];
     }
 
-    private static AOEInstance CreateAOEInstance(Stampede stampede)
+    private static AOEInstance[] CreateAOEInstance(Stampede stampede)
     {
-        return new(new AOEShapeRect(CalculateStampedeLength(stampede.Beasts) + 30f, 5f), new(stampede.Beasts[^1].Position.X, stampede.Position.Z), stampede.Rotation);
+        return [new(new AOEShapeRect(CalculateStampedeLength(stampede.Beasts) + 30f, 5f), new(stampede.Beasts[^1].Position.X, stampede.Position.Z), stampede.Rotation)];
     }
 
     private static float CalculateStampedeLength(List<Actor> beasts) => (beasts[0].Position - beasts[^1].Position).Length();
@@ -185,7 +186,7 @@ public record struct Stampede(bool Active, WPos Position, Angle Rotation, List<A
     public List<Actor> Beasts = Beasts;
 }
 
-class Icebreaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17);
+class Icebreaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Icebreaker), 17f);
 
 class IcyThroes(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
 class IcyThroes1(BossModule module) : IcyThroes(module, AID.IcyThroes1);
@@ -202,7 +203,7 @@ class AlbionsEmbrace(BossModule module) : Components.SingleTargetCast(module, Ac
 
 class RoarOfAlbion(BossModule module) : Components.CastLineOfSightAOE(module, ActionID.MakeSpell(AID.RoarOfAlbion), 60f)
 {
-    public override IEnumerable<Actor> BlockerActors() => Module.Enemies(OID.IcyCrystal);
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.IcyCrystal));
 }
 
 class D111AlbionStates : StateMachineBuilder

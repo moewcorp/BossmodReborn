@@ -14,12 +14,12 @@ class P2MirrorMirrorReflectedScytheKickBlue : Components.GenericAOEs
             _rangedSpots[slot] = group >= 4;
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (_aoe == null && Module.Enemies(OID.BossP2).FirstOrDefault() is var boss && boss != null && boss.TargetID == actor.InstanceID)
+        if (_aoe == null && Module.Enemies((uint)OID.BossP2).FirstOrDefault() is var boss && boss != null && boss.TargetID == actor.InstanceID)
         {
             // main tank should drag the boss away
             // note: before mirror appears, we want to stay near center (to minimize movement no matter where mirror appears), so this works fine if blue mirror is zero
@@ -32,7 +32,7 @@ class P2MirrorMirrorReflectedScytheKickBlue : Components.GenericAOEs
     {
         if (_blueMirror != default)
         {
-            Arena.Actor(Arena.Center + 20 * _blueMirror, Angle.FromDirection(-_blueMirror), Colors.Object);
+            Arena.Actor(Arena.Center + 20f * _blueMirror, Angle.FromDirection(-_blueMirror), Colors.Object);
             if (_aoe == null)
             {
                 // draw preposition hint
@@ -102,10 +102,10 @@ class P2MirrorMirrorHouseOfLight(BossModule module) : Components.GenericBaitAway
         {
             dir = _blueMirror.Value + (group & 3) switch
             {
-                0 => -135.Degrees(),
-                1 => 135.Degrees(),
-                2 => -95.Degrees(),
-                3 => 95.Degrees(),
+                0 => -135f.Degrees(),
+                1 => 135f.Degrees(),
+                2 => -95f.Degrees(),
+                3 => 95f.Degrees(),
                 _ => default
             };
         }
@@ -113,40 +113,40 @@ class P2MirrorMirrorHouseOfLight(BossModule module) : Components.GenericBaitAway
         {
             dir = Angle.FromDirection(origin.Actor.Position - Arena.Center) + group switch
             {
-                0 => (RedRangedLeftOfMelee ? -95 : 95).Degrees(),
-                1 => (RedRangedLeftOfMelee ? 95 : -95).Degrees(),
-                2 => 180.Degrees(),
-                3 => (RedRangedLeftOfMelee ? -135 : 135).Degrees(),
-                4 => -95.Degrees(),
-                5 => 95.Degrees(),
-                6 => (RedRangedLeftOfMelee ? 180 : -135).Degrees(),
-                7 => (RedRangedLeftOfMelee ? 135 : 180).Degrees(),
+                0 => (RedRangedLeftOfMelee ? -95f : 95f).Degrees(),
+                1 => (RedRangedLeftOfMelee ? 95f : -95f).Degrees(),
+                2 => 180f.Degrees(),
+                3 => (RedRangedLeftOfMelee ? -135f : 135f).Degrees(),
+                4 => -95f.Degrees(),
+                5 => 95f.Degrees(),
+                6 => (RedRangedLeftOfMelee ? 180f : -135f).Degrees(),
+                7 => (RedRangedLeftOfMelee ? 135f : 180f).Degrees(),
                 _ => default
             };
         }
-        hints.AddForbiddenZone(ShapeDistance.InvertedCone(origin.Actor.Position, 4, dir, 15.Degrees()), origin.Activation);
+        hints.AddForbiddenZone(ShapeDistance.InvertedCone(origin.Actor.Position, 4f, dir, 15f.Degrees()), origin.Activation);
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index is >= 1 and <= 8 && state == 0x00020001)
         {
-            _blueMirror = (225 - index * 45).Degrees();
+            _blueMirror = (225f - index * 45f).Degrees();
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ScytheKick:
+            case (uint)AID.ScytheKick:
                 var activation = Module.CastFinishAt(spell, 0.7f);
                 FirstSources.Add(new(caster, activation));
-                var mirror = _blueMirror != null ? Module.Enemies(OID.FrozenMirror).Closest(Arena.Center + 20 * _blueMirror.Value.ToDirection()) : null;
+                var mirror = _blueMirror != null ? Module.Enemies((uint)OID.FrozenMirror).Closest(Arena.Center + 20 * _blueMirror.Value.ToDirection()) : null;
                 if (mirror != null)
                     FirstSources.Add(new(mirror, activation));
                 break;
-            case AID.ReflectedScytheKickRed:
+            case (uint)AID.ReflectedScytheKickRed:
                 SecondSources.Add(new(caster, Module.CastFinishAt(spell, 0.6f)));
                 if (SecondSources.Count == 2 && _blueMirror != null)
                 {
@@ -213,8 +213,8 @@ class P2MirrorMirrorBanish : P2Banish
     }
 
     private WPos? PrepositionLocation(int slot, PartyRolesConfig.Assignment assignment)
-        => Stacks.Count > 0 && Stacks[0].Activation > WorldState.FutureTime(2.5f) ? CalculatePrepositionLocation(_aroundRanged[slot], _leftSide[slot], 90.Degrees())
-        : Spreads.Count > 0 && Spreads[0].Activation > WorldState.FutureTime(2.5f) ? CalculatePrepositionLocation(_aroundRanged[slot], _leftSide[slot], (_closerToCenter[slot] ? 135 : 45).Degrees())
+        => Stacks.Count > 0 && Stacks[0].Activation > WorldState.FutureTime(2.5d) ? CalculatePrepositionLocation(_aroundRanged[slot], _leftSide[slot], 90.Degrees())
+        : Spreads.Count > 0 && Spreads[0].Activation > WorldState.FutureTime(2.5d) ? CalculatePrepositionLocation(_aroundRanged[slot], _leftSide[slot], (_closerToCenter[slot] ? 135 : 45).Degrees())
         : null;
 
     private WPos CalculatePrepositionLocation(bool aroundRanged, bool leftSide, Angle angle)

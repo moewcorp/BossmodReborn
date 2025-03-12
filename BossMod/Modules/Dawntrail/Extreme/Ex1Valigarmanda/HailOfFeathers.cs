@@ -2,20 +2,17 @@
 
 class HailOfFeathers(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(6);
 
     private static readonly AOEShapeCircle _shape = new(20f); // TODO: verify falloff
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
         var max = count > 2 ? 2 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
-            aoes[i] = _aoes[i];
-        return aoes;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -28,7 +25,7 @@ class HailOfFeathers(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.HailOfFeathersAOE4:
             case (uint)AID.HailOfFeathersAOE5:
             case (uint)AID.HailOfFeathersAOE6:
-                _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+                _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
                 if (_aoes.Count == 6)
                     _aoes.SortBy(x => x.Activation);
                 break;
@@ -67,7 +64,9 @@ class BlightedBolt : Components.GenericAOEs
         var platform = module.FindComponent<ThunderPlatform>();
         if (platform != null)
         {
-            foreach (var (i, _) in module.Raid.WithSlot(true, true, true))
+            var party = module.Raid.WithSlot(true, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
             {
                 platform.RequireHint[i] = true;
                 platform.RequireLevitating[i] = false;
@@ -75,23 +74,46 @@ class BlightedBolt : Components.GenericAOEs
         }
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_targets.Count < 6 || _targets.Any(t => t.IsDead))
-            foreach (var t in _targets.Where(t => !t.IsDead))
-                yield return new(_shape, t.Position, default, _activation);
+        var count = _targets.Count;
+        if (count == 6)
+            return [];
+        var targetsspan = CollectionsMarshal.AsSpan(_targets);
+        var aoes = new AOEInstance[count];
+        var index = 0;
+        var hasDead = false;
+
+        for (var i = 0; i < count; ++i)
+        {
+            ref var span = ref targetsspan[i];
+            if (span.IsDead)
+                hasDead = true;
+            else
+                aoes[index++] = new(_shape, span.Position, default, _activation);
+        }
+        return hasDead ? aoes.AsSpan(0, index) : [];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (_targets.Count == 6 && !_targets.Any(t => t.IsDead))
-            hints.Add("Kill feather!");
+        var count = _targets.Count;
+
+        if (count == 6)
+        {
+            for (var i = 0; i < 6; ++i)
+            {
+                if (_targets[i].IsDead)
+                    return;
+            }
+            hints.Add("Kill a feather!");
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BlightedBoltAOE)
+        if (spell.Action.ID == (uint)AID.BlightedBoltAOE)
         {
             _targets.AddIfNonNull(WorldState.Actors.Find(spell.TargetID));
             _activation = Module.CastFinishAt(spell);
@@ -100,10 +122,19 @@ class BlightedBolt : Components.GenericAOEs
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BlightedBoltAOE)
+        if (spell.Action.ID == (uint)AID.BlightedBoltAOE)
         {
             ++NumCasts;
-            _targets.RemoveAll(t => t.InstanceID == spell.TargetID);
+            var count = _targets.Count;
+            var id = spell.TargetID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_targets[i].InstanceID == id)
+                {
+                    _targets.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

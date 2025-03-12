@@ -30,10 +30,10 @@ class ChitinousTrace(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(8f, 40f);
     private readonly List<AOEShape> _pendingShapes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_active && _pendingShapes.Count != 0)
-            return [new(_pendingShapes[0], Module.PrimaryActor.Position)]; // TODO: activation
+            return new AOEInstance[1] { new(_pendingShapes[0], Module.PrimaryActor.Position) }; // TODO: activation
         else
             return [];
     }

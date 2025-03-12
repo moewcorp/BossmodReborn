@@ -22,40 +22,37 @@ public enum AID : uint
     ReverseCode2 = 38459, // Boss->self, 5.0s cast
 }
 
-class TargetedAdvance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TargetedAdvance), 18);
+class TargetedAdvance(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TargetedAdvance), 18f);
 
 class CodeExecution(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(10);
-    private static readonly AOEShapeDonut donut = new(10, 40);
-    private static readonly AOEShapeCross cross = new(40, 5, 45.Degrees());
+    private static readonly AOEShapeCircle circle = new(10f);
+    private static readonly AOEShapeDonut donut = new(10f, 40f);
+    private static readonly AOEShapeCross cross = new(40f, 5f, 45f.Degrees());
 
     private readonly List<AOEShape> _pendingShapes = [];
-    private readonly List<AOEInstance> _activeAOEs = [];
+    private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _activeAOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (caster != Module.PrimaryActor)
-            return;
-
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CodeExecution1:
-            case AID.CodeExecution5:
+            case (uint)AID.CodeExecution1:
+            case (uint)AID.CodeExecution5:
                 UpdateAOEs(caster);
                 break;
-            case AID.ExecutionModel1:
+            case (uint)AID.ExecutionModel1:
                 _pendingShapes.Add(circle);
                 break;
-            case AID.ExecutionModel2:
+            case (uint)AID.ExecutionModel2:
                 _pendingShapes.Add(donut);
                 break;
-            case AID.ExecutionModel3:
+            case (uint)AID.ExecutionModel3:
                 _pendingShapes.Add(cross);
                 break;
-            case AID.Reversal:
+            case (uint)AID.Reversal:
                 _pendingShapes.Reverse();
                 UpdateAOEs(caster);
                 break;
@@ -64,8 +61,9 @@ class CodeExecution(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (caster == Module.PrimaryActor && _pendingShapes.Count > 0 &&
-            (AID)spell.Action.ID is AID.CodeExecution1 or AID.CodeExecution2 or AID.CodeExecution3 or AID.CodeExecution4 or AID.CodeExecution5 or AID.ReverseCode1 or AID.ReverseCode2 or AID.TargetedAdvance)
+        if (_pendingShapes.Count != 0 &&
+            spell.Action.ID is (uint)AID.CodeExecution1 or (uint)AID.CodeExecution2 or (uint)AID.CodeExecution3
+            or (uint)AID.CodeExecution4 or (uint)AID.CodeExecution5 or (uint)AID.ReverseCode1 or (uint)AID.ReverseCode2 or (uint)AID.TargetedAdvance)
         {
             _pendingShapes.RemoveAt(0);
             UpdateAOEs(caster);
@@ -74,15 +72,15 @@ class CodeExecution(BossModule module) : Components.GenericAOEs(module)
 
     private void UpdateAOEs(Actor actor)
     {
-        _activeAOEs.Clear();
+        _aoes.Clear();
 
         if (_pendingShapes.Count > 0)
         {
-            _activeAOEs.Add(new(_pendingShapes[0], actor.Position, actor.Rotation, WorldState.FutureTime(15), Colors.Danger));
+            _aoes.Add(new(_pendingShapes[0], actor.Position, actor.Rotation, WorldState.FutureTime(15d), Colors.Danger));
 
             if (_pendingShapes.Count > 1)
             {
-                _activeAOEs.Add(new(_pendingShapes[1], actor.Position, actor.Rotation, WorldState.FutureTime(15), Risky: false));
+                _aoes.Add(new(_pendingShapes[1], actor.Position, actor.Rotation, WorldState.FutureTime(15d), Risky: false));
             }
         }
     }

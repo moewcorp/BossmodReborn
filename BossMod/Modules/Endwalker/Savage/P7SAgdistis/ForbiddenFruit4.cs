@@ -18,13 +18,13 @@ class ForbiddenFruit4(BossModule module) : ForbiddenFruitCommon(module, ActionID
         var slot = TryAssignTether(source, tether);
         if (slot < 0)
             return;
-        switch ((TetherID)tether.ID)
+        switch (tether.ID)
         {
-            case TetherID.Bull:
+            case (uint)TetherID.Bull:
                 SafePlatforms[slot].Set(_bullPlatform);
                 break;
-            case TetherID.MinotaurFar:
-            case TetherID.MinotaurClose:
+            case (uint)TetherID.MinotaurFar:
+            case (uint)TetherID.MinotaurClose:
                 var safePlatforms = ValidPlatformsMask;
                 safePlatforms.Clear(_bullPlatform);
                 safePlatforms.Clear(PlatformIDFromOffset(source.Position - Module.Center));
@@ -35,7 +35,7 @@ class ForbiddenFruit4(BossModule module) : ForbiddenFruitCommon(module, ActionID
 
     protected override DateTime? PredictUntetheredCastStart(Actor fruit)
     {
-        if ((OID)fruit.OID == OID.ForbiddenFruitBull)
+        if (fruit.OID == (uint)OID.ForbiddenFruitBull)
             _bullPlatform = PlatformIDFromOffset(fruit.Position - Module.Center);
         return null;
     }

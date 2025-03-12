@@ -14,7 +14,7 @@ class FlamingCrush(BossModule module) : Components.UniformStackSpread(module, 4,
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.FlamingCrush)
+        if (spell.Action.ID == (uint)AID.FlamingCrush)
         {
             Stacks.Clear();
         }

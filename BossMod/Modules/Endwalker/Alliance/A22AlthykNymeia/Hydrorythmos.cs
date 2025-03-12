@@ -8,23 +8,25 @@ class Hydrorythmos(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect _shapeFirst = new(25, 5, 25);
     private static readonly AOEShapeRect _shapeRest = new(25, 2.5f, 25);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var aoes = new List<AOEInstance>();
         if (NumCasts > 0)
         {
-            var offset = ((NumCasts + 1) >> 1) * 5 * _dir.ToDirection().OrthoL();
-            yield return new(_shapeRest, Arena.Center + offset, _dir, _activation);
-            yield return new(_shapeRest, Arena.Center - offset, _dir, _activation);
+            var offset = ((NumCasts + 1) >> 1) * 5f * _dir.ToDirection().OrthoL();
+            aoes.Add(new(_shapeRest, Arena.Center + offset, _dir, _activation));
+            aoes.Add(new(_shapeRest, Arena.Center - offset, _dir, _activation));
         }
         else if (_activation != default)
         {
-            yield return new(_shapeFirst, Arena.Center, _dir, _activation);
+            aoes.Add(new(_shapeFirst, Arena.Center, _dir, _activation));
         }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HydrorythmosFirst)
+        if (spell.Action.ID == (uint)AID.HydrorythmosFirst)
         {
             _dir = spell.Rotation;
             _activation = Module.CastFinishAt(spell);
@@ -33,10 +35,10 @@ class Hydrorythmos(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.HydrorythmosFirst or AID.HydrorythmosRest)
+        if (spell.Action.ID is (uint)AID.HydrorythmosFirst or (uint)AID.HydrorythmosRest)
         {
             ++NumCasts;
-            _activation = WorldState.FutureTime(2.1f);
+            _activation = WorldState.FutureTime(2.1d);
         }
     }
 }

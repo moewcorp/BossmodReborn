@@ -81,7 +81,7 @@ class Inhale(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     public static readonly AOEShapeCone Cone = new(100f, 30f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -109,7 +109,7 @@ class BuryDecay(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(12f), new AOEShapeRect(35f, 5f), new AOEShapeCircle(8f), new AOEShapeCircle(4f),
     new AOEShapeRect(25f, 3f), new AOEShapeCircle(6f), new AOEShapeRect(25f, 3f), new AOEShapeRect(35f, 5f), new AOEShapeDonut(6f, 40f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -128,37 +128,21 @@ class BuryDecay(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-        switch (spell.Action.ID)
+        var shape = spell.Action.ID switch
         {
-            case (uint)AID.Bury1:
-                AddAOE(_shapes[0]);
-                break;
-            case (uint)AID.Bury2:
-                AddAOE(_shapes[1]);
-                break;
-            case (uint)AID.Bury3:
-                AddAOE(_shapes[2]);
-                break;
-            case (uint)AID.Bury4:
-                AddAOE(_shapes[3]);
-                break;
-            case (uint)AID.Bury5:
-                AddAOE(_shapes[4]);
-                break;
-            case (uint)AID.Bury6:
-                AddAOE(_shapes[5]);
-                break;
-            case (uint)AID.Bury7:
-                AddAOE(_shapes[6]);
-                break;
-            case (uint)AID.Bury8:
-                AddAOE(_shapes[7]);
-                break;
-            case (uint)AID.Decay:
-                AddAOE(_shapes[8]);
-                break;
-        }
+            (uint)AID.Bury1 => _shapes[0],
+            (uint)AID.Bury2 => _shapes[1],
+            (uint)AID.Bury3 => _shapes[2],
+            (uint)AID.Bury4 => _shapes[3],
+            (uint)AID.Bury5 => _shapes[4],
+            (uint)AID.Bury6 => _shapes[5],
+            (uint)AID.Bury7 => _shapes[6],
+            (uint)AID.Bury8 => _shapes[7],
+            (uint)AID.Decay => _shapes[8],
+            _ => null
+        };
+        if (shape != null)
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -205,7 +189,7 @@ class ShoreShaker(BossModule module) : Components.ConcentricAOEs(module, _shapes
                 (uint)AID.ShoreShaker3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, Arena.Center, WorldState.FutureTime(2d));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }

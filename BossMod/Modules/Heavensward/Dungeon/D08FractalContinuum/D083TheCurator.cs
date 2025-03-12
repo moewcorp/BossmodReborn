@@ -69,7 +69,7 @@ class Educator(BossModule module) : Components.GenericAOEs(module)
         return D083TheCurator.ArenaCenter + new WDir(x, z);
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -152,7 +152,7 @@ class AetherochemicalMine(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(5f);
     private readonly List<AOEInstance> _aoes = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

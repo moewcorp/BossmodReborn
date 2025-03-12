@@ -35,44 +35,84 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(2.5f);
     private bool active;
-    private bool addedCircles;
-    private readonly List<Actor> chests = [.. module.Enemies((uint)OID.Helper).Where(x => x.NameID == 6274)];
+    private readonly List<Actor> chests = new(4);
     private readonly List<Circle> closedChests = [];
     private readonly List<Circle> openChests = [];
+    private AOEShapeCustom? closedAOE;
 
     public static bool IsOld(Actor actor) => actor.FindStatus((uint)SID.Old) != null;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        foreach (var c in openChests)
-            yield return new(circle, c.Center);
-        yield return new(new AOEShapeCustom([.. closedChests]) with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, Color: IsOld(actor) || !active ? Colors.AOE : Colors.SafeFromAOE);
-    }
-
     public override void Update()
     {
-        if (closedChests.Count == 0 && !addedCircles)
+        if (closedAOE != null && closedChests.Count == 0)
         {
-            foreach (var c in chests)
-                closedChests.Add(new(c.Position, 2.5f));
-            addedCircles = true;
+            var helpers = Module.Enemies((uint)OID.Helper);
+            var countH = helpers.Count;
+
+            for (var i = 0; i < countH; ++i)
+            {
+                var c = helpers[i];
+                if (c.NameID == 6274)
+                {
+                    chests.Add(c);
+                }
+            }
+            var count = chests.Count;
+            for (var i = 0; i < count; ++i)
+                closedChests.Add(new(chests[i].Position, 2.5f));
+            closedAOE = new AOEShapeCustom([.. closedChests]);
         }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = openChests.Count;
+        var aoes = new AOEInstance[count + 1];
+        for (var i = 0; i < count; ++i)
+        {
+            aoes[i] = new(circle, openChests[i].Center);
+        }
+        if (closedAOE is AOEShapeCustom aoe)
+            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, Color: IsOld(actor) || !active ? 0 : Colors.SafeFromAOE);
+        return aoes;
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        var chest = chests.FirstOrDefault(x => x.Position.AlmostEqual(actor.Position, 5f));
-        if (chest != null)
+        var count = chests.Count;
+        for (var i = 0; i < count; ++i)
         {
-            if (state == 0x00040008)
+            var c = chests[i];
+            if (c.Position.AlmostEqual(actor.Position, 5f))
             {
-                closedChests.RemoveAll(x => x.Center == chest.Position);
-                openChests.Add(new(chest.Position, 2.5f));
-            }
-            else if (state == 0x00100020)
-            {
-                closedChests.Add(new(chest.Position, 2.5f));
-                openChests.RemoveAll(x => x.Center == chest.Position);
+                if (state == 0x00040008)
+                {
+                    var countC = closedChests.Count;
+                    for (var j = 0; j < countC; ++i)
+                    {
+                        if (c.Position == closedChests[j].Center)
+                        {
+                            closedChests.RemoveAt(j);
+                            openChests.Add(new(c.Position, 2.5f));
+                            break;
+                        }
+                    }
+                }
+                else if (state == 0x00100020)
+                {
+                    var countO = openChests.Count;
+                    for (var j = 0; j < countO; ++i)
+                    {
+                        if (c.Position == openChests[j].Center)
+                        {
+                            openChests.RemoveAt(j);
+                            closedChests.Add(new(c.Position, 2.5f));
+                            break;
+                        }
+                    }
+                }
+                closedAOE = new AOEShapeCustom([.. closedChests]);
+                return;
             }
         }
     }
@@ -91,9 +131,15 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if ((IsOld(actor) && active || !active) && ActiveAOEs(slot, actor).Any(c => c.Check(actor.Position) && c.Color != Colors.SafeFromAOE))
-            hints.Add("GTFO from chests!");
-        else if (!IsOld(actor) && active)
+        var isOld = IsOld(actor);
+        if (isOld && active || !active)
+        {
+            var aoes = ActiveAOEs(slot, actor);
+            ref readonly var aoe = ref aoes[0];
+            if (aoe.Color != Colors.SafeFromAOE && aoe.Check(actor.Position))
+                hints.Add("GTFO from chests!");
+        }
+        else if (!isOld && active)
             hints.Add("Get morphed!");
     }
 }
@@ -103,12 +149,12 @@ class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(13);
     public AOEInstance? AOE;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Seduce)
-            AOE = new(circle, D022RubyPrincess.ArenaCenter, default, Module.CastFinishAt(spell, 8f));
+            AOE = new(circle, WPos.ClampToGrid(D022RubyPrincess.ArenaCenter), default, Module.CastFinishAt(spell, 8f));
         else if (spell.Action.ID == (uint)AID.CoriolisKick)
             AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
     }

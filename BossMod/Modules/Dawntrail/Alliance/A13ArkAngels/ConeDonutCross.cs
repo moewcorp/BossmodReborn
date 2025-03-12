@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Alliance.A13ArkAngels;
 
 class ConcertedDissolution(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ConcertedDissolution), new AOEShapeCone(40f, 20f.Degrees()))
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
@@ -25,7 +25,7 @@ class LightsChain(BossModule module) : Components.SimpleAOEs(module, ActionID.Ma
 {
     private readonly ConcertedDissolution? _aoe = module.FindComponent<ConcertedDissolution>();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Casters.Count == 0)
             return [];
@@ -34,18 +34,18 @@ class LightsChain(BossModule module) : Components.SimpleAOEs(module, ActionID.Ma
         var check = _aoe != null && _aoe.Casters.Count != 0;
         var check2 = reaver != null && reaver.Casters.Count != 0;
 
-        return [Casters[0] with { Color = check2 ? Colors.Danger : 0, Risky = !check }];
+        return new AOEInstance[1] { Casters[0] with { Color = check2 ? Colors.Danger : 0, Risky = !check } };
     }
 }
 
 class CrossReaver(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrossReaverAOE), new AOEShapeCross(50f, 6f))
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Casters.Count == 0)
             return [];
         var chain = Module.FindComponent<LightsChain>();
         var check = chain != null && chain.Casters.Count != 0;
-        return [Casters[0] with { Risky = !check }];
+        return new AOEInstance[1] { Casters[0] with { Risky = !check } };
     }
 }

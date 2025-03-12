@@ -33,10 +33,10 @@ public enum AID : uint
 
 class DecimationArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeDonut donut = new(16, 20);
+    private static readonly AOEShapeDonut donut = new(16f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -50,48 +50,64 @@ class DecimationArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Decimation && Arena.Bounds == D062Peacekeeper.StartingBounds)
+        if (spell.Action.ID == (uint)AID.Decimation && Arena.Bounds == D062Peacekeeper.StartingBounds)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.4f));
     }
 }
 
-class ElectromagneticRepellant(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 9, ActionID.MakeSpell(AID.ElectromagneticRepellant), m => m.Enemies(OID.ElectricVoidzone).Where(z => z.EventState != 7), 0.7f);
-class InfantryDeterrent(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.InfantryDeterrent), 6);
-class NoFutureSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.NoFutureSpread), 6);
-
-class NoFutureAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NoFutureAOE), 6);
-class Peacefire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Peacefire), 10);
-class SmallBoreLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SmallBoreLaser), new AOEShapeRect(20, 2));
-
-class Elimination(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Elimination), new AOEShapeRect(46, 5), endsOnCastEvent: true)
+class ElectromagneticRepellant(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 9f, ActionID.MakeSpell(AID.ElectromagneticRepellant), GetVoidzone, 0.7f)
 {
-    public override void AddGlobalHints(GlobalHints hints)
+    private static Actor[] GetVoidzone(BossModule module)
     {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
+        var enemies = module.Enemies((uint)OID.ElectricVoidzone);
+        if (enemies.Count != 0 && enemies[0].EventState != 7)
+            return [.. enemies];
+        return [];
     }
 }
+class InfantryDeterrent(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.InfantryDeterrent), 6f);
+class NoFutureSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.NoFutureSpread), 6f);
+
+class NoFutureAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NoFutureAOE), 6f);
+class Peacefire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Peacefire), 10f);
+class SmallBoreLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SmallBoreLaser), new AOEShapeRect(20f, 2f));
+
+class Elimination(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Elimination), new AOEShapeRect(46f, 5f), endsOnCastEvent: true, tankbuster: true);
 
 class Decimation(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Decimation));
 class EclipsingExhaust(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.EclipsingExhaust));
 
-class EclipsingExhaustKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.EclipsingExhaust), 11)
+class EclipsingExhaustKnockback(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.EclipsingExhaust), 11f)
 {
-    private static readonly Angle a36 = 36.Degrees();
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Peacefire>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    private static readonly Angle a36 = 36f.Degrees();
+    private readonly Peacefire _aoe = module.FindComponent<Peacefire>()!;
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var component = Module.FindComponent<Peacefire>()?.ActiveAOEs(slot, actor)?.ToList();
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (component != null && source != default)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null)
         {
-            var forbidden = new List<Func<WPos, float>>(6);
-            for (var i = 0; i < component.Count; ++i)
-
-                forbidden.Add(ShapeDistance.Cone(Arena.Center, 16, Angle.FromDirection(component[i].Origin - Arena.Center), a36));
-            forbidden.Add(ShapeDistance.InvertedCircle(Arena.Center, 4));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), source.Activation);
+            var component = _aoe.Casters;
+            var count = component.Count;
+            var forbidden = new Func<WPos, float>[count + 1];
+            var center = Arena.Center;
+            for (var i = 0; i < count; ++i)
+                forbidden[i] = ShapeDistance.Cone(center, 16f, Angle.FromDirection(component[i].Origin - center), a36);
+            forbidden[count] = ShapeDistance.InvertedCircle(center, 4f);
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 }
@@ -118,9 +134,9 @@ class D062PeacekeeperStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 792, NameID = 10315)]
 public class D062Peacekeeper(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
-    public static readonly WPos ArenaCenter = new(-105, -210);
+    public static readonly WPos ArenaCenter = new(-105f, -210f);
     private static readonly Angle offset = 5.625f.Degrees();
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi32th, 32, offset)], [new Rectangle(new(-105, -229), 20, 0.78f),
-    new Rectangle(new(-105, -190), 20, 1.1f)]);
-    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(ArenaCenter, 16, 32, offset)]);
+    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi32th, 32, offset)], [new Rectangle(new(-105f, -229f), 20, 0.78f),
+    new Rectangle(new(-105f, -190f), 20f, 1.1f)]);
+    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(ArenaCenter, 16f, 32, offset)]);
 }

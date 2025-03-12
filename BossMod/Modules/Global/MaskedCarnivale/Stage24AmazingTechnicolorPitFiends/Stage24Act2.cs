@@ -20,9 +20,9 @@ public enum AID : uint
     Silence = 15321 // 2736->player, 5.0s cast, single-target
 }
 
-class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
-class Mechanogravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mechanogravity), 6);
-class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
+class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5f);
+class Mechanogravity(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Mechanogravity), 6f);
+class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5f, 45f.Degrees()));
 class CondensedLibra(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.CondensedLibra), "Use Diamondback!");
 class TripleHit(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TripleHit), "Use Diamondback!");
 class Silence(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.Silence));
@@ -31,10 +31,30 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.ArenaMagus).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.ArenaMagus).FirstOrDefault()!.Name} is immune to magical damage!");
-        if (!Module.Enemies(OID.ArenaViking).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.ArenaViking).FirstOrDefault()!.Name} is immune to physical damage!");
+        var magi = Module.Enemies((uint)OID.ArenaMagus);
+        var countM = magi.Count;
+        if (countM != 0)
+            for (var i = 0; i < countM; ++i)
+            {
+                var magus = magi[i];
+                if (!magus.IsDead)
+                {
+                    hints.Add($"{magus.Name} is immune to magical damage!");
+                    break;
+                }
+            }
+        var vikings = Module.Enemies((uint)OID.ArenaMagus);
+        var countV = vikings.Count;
+        if (countV != 0)
+            for (var i = 0; i < countV; ++i)
+            {
+                var viking = vikings[i];
+                if (!viking.IsDead)
+                {
+                    hints.Add($"{viking.Name} is immune to physical damage!");
+                    return;
+                }
+            }
     }
 }
 
@@ -73,18 +93,19 @@ public class Stage24Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ArenaViking));
-        Arena.Actors(Enemies(OID.ArenaMagus));
+        Arena.Actors(Enemies((uint)OID.ArenaViking));
+        Arena.Actors(Enemies((uint)OID.ArenaMagus));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.ArenaMagus or OID.ArenaViking => 1, //TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
+                (uint)OID.ArenaMagus or (uint)OID.ArenaViking => 1, //TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
                 _ => 0
             };
         }

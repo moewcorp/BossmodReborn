@@ -13,7 +13,7 @@ public enum OID : uint
     HelperSingleRect = 0x1EAE99,
     HelperDoubleRect = 0x1EAE9A,
     HelperCircle = 0x1EAE9B,
-    Pileofgold = 0x1EAE9C,
+    Pileofgold = 0x1EAE9C
 }
 
 public enum AID : uint
@@ -34,58 +34,73 @@ public enum AID : uint
     BambooSpawn = 18327, // Bamboo->self, no cast, range 3 circle
     FirstGilJump = 18335, // Daigoro->location, 2.5s cast, width 7 rect charge
     NextGilJump = 18336, // Daigoro->location, 1.5s cast, width 7 rect charge
-    BadCup = 18337, // Daigoro->self, 1.0s cast, range 15+R 120-degree cone
+    BadCup = 18337 // Daigoro->self, 1.0s cast, range 15+R 120-degree cone
 }
 
 class BambooSplits(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
-    private static readonly AOEShapeRect rect = new(28, 2.5f);
-    private static readonly AOEShapeCircle circle = new(11);
-    private static readonly AOEShapeCircle bamboospawn = new(3);
-    private static readonly Angle a90 = 90.Degrees();
+    private static readonly AOEShapeRect rect = new(28f, 2.5f);
+    private static readonly AOEShapeCircle circle = new(11f);
+    private static readonly AOEShapeCircle bamboospawn = new(3f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.HelperCircle or OID.HelperDoubleRect or OID.HelperSingleRect)
-            _aoes.Add(new(bamboospawn, actor.Position, default, WorldState.FutureTime(2.7f)));
+        if (actor.OID is (uint)OID.HelperCircle or (uint)OID.HelperDoubleRect or (uint)OID.HelperSingleRect)
+            _aoes.Add(new(bamboospawn, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(2.7d)));
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
         if (state == 0x00010002)
         {
-            var activation = WorldState.FutureTime(7); // activation varies per set, taking the lowest we can find
-            if ((OID)actor.OID == OID.HelperCircle)
-                _aoes.Add(new(circle, actor.Position, actor.Rotation, activation));
-            else if ((OID)actor.OID == OID.HelperSingleRect)
-                _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, activation));
-            else if ((OID)actor.OID == OID.HelperDoubleRect)
+            void AddAOE(AOEShape shape, Angle offset) => _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation + offset, WorldState.FutureTime(7d)));
+            switch (actor.OID)
             {
-                _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, activation));
-                _aoes.Add(new(rect, actor.Position, actor.Rotation - a90, activation));
+                case (uint)OID.HelperCircle:
+                    AddAOE(circle, default);
+                    break;
+                case (uint)OID.HelperSingleRect:
+                    AddAOE(rect, 90.Degrees());
+                    break;
+                case (uint)OID.HelperDoubleRect:
+                    AddAOE(rect, 90.Degrees());
+                    AddAOE(rect, -90.Degrees());
+                    break;
             }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0)
+        var count = _aoes.Count;
+        if (count != 0)
         {
-            switch ((AID)spell.Action.ID)
+            void RemoveAOE(AOEShape shape)
             {
-                case AID.BambooSpawn:
-                    _aoes.RemoveAll(x => x.Origin == caster.Position && x.Shape == bamboospawn);
+                var pos = WPos.ClampToGrid(caster.Position);
+                for (var i = 0; i < count; ++i)
+                {
+                    var aoe = _aoes[i];
+                    if (aoe.Origin == pos && aoe.Shape == shape)
+                    {
+                        _aoes.RemoveAt(i);
+                        return;
+                    }
+                }
+            }
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.BambooSpawn:
+                    RemoveAOE(bamboospawn);
                     break;
-                case AID.BambooSplit:
-                case AID.BambooCircleFall:
-                    AOEInstance[] aoesToRemove = [.. _aoes.Where((aoe, index) => aoe.Origin == caster.Position).Take(2)];
-                    if (aoesToRemove.Length >= 1)
-                        _aoes.Remove(aoesToRemove[0]);
-                    if (aoesToRemove.Length == 2 && aoesToRemove[0].Activation == aoesToRemove[1].Activation)
-                        _aoes.Remove(aoesToRemove[1]);
+                case (uint)AID.BambooSplit:
+                    RemoveAOE(rect);
+                    break;
+                case (uint)AID.BambooCircleFall:
+                    RemoveAOE(circle);
                     break;
             }
         }
@@ -102,13 +117,14 @@ class TheSliceIsRightStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<BambooSplits>()
             .ActivateOnEnter<DaigoroFirstGilJump>()
-            .ActivateOnEnter<DaigoroNextGilJump>();
+            .ActivateOnEnter<DaigoroNextGilJump>()
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed || !module.InBounds(module.Raid.Player()!.Position);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.GoldSaucer, GroupID = 181, NameID = 9066)]
 public class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(70.5f, -36), 15 * CosPI.Pi28th, 28)]);
-    protected override bool CheckPull() => PrimaryActor != null;
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(70.5f, -36f), 15f * CosPI.Pi28th, 28)]);
+    protected override bool CheckPull() => InBounds(Raid.Player()!.Position); // only activate module if player is taking part in the event
 }

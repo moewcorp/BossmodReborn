@@ -7,13 +7,23 @@ class GaleSphere(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Side> _sides = [];
     private readonly List<Actor>[] _spheres = [[], [], [], []];
 
-    private static readonly AOEShapeRect _shape = new(30, 2.5f);
+    private static readonly AOEShapeRect _shape = new(30f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts < _spheres.Length)
-            foreach (var s in _spheres[NumCasts])
-                yield return new(_shape, s.Position, s.CastInfo?.Rotation ?? s.Rotation, Module.CastFinishAt(s.CastInfo));
+        {
+            var spheres = _spheres[NumCasts];
+            var count = spheres.Count;
+            var aoes = new AOEInstance[count];
+            for (var i = 0; i < count; ++i)
+            {
+                var s = spheres[i];
+                aoes[i] = new(_shape, WPos.ClampToGrid(s.Position), s.CastInfo?.Rotation ?? s.Rotation, Module.CastFinishAt(s.CastInfo));
+            }
+            return aoes;
+        }
+        return [];
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -41,29 +51,29 @@ class GaleSphere(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.GaleSpherePrepareN:
+            case (uint)AID.GaleSpherePrepareN:
                 _sides.Add(Side.N);
                 break;
-            case AID.GaleSpherePrepareE:
+            case (uint)AID.GaleSpherePrepareE:
                 _sides.Add(Side.E);
                 break;
-            case AID.GaleSpherePrepareW:
+            case (uint)AID.GaleSpherePrepareW:
                 _sides.Add(Side.W);
                 break;
-            case AID.GaleSpherePrepareS:
+            case (uint)AID.GaleSpherePrepareS:
                 _sides.Add(Side.S);
                 break;
         }
     }
 
-    private int CastOrder(ActionID aid) => (AID)aid.ID switch
+    private static int CastOrder(ActionID aid) => aid.ID switch
     {
-        AID.GaleSphereAOE1 => 0,
-        AID.GaleSphereAOE2 => 1,
-        AID.GaleSphereAOE3 => 2,
-        AID.GaleSphereAOE4 => 3,
+        (uint)AID.GaleSphereAOE1 => 0,
+        (uint)AID.GaleSphereAOE2 => 1,
+        (uint)AID.GaleSphereAOE3 => 2,
+        (uint)AID.GaleSphereAOE4 => 3,
         _ => -1
     };
 }

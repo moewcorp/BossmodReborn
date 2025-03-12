@@ -20,44 +20,54 @@ public enum AID : uint
 }
 
 class GigaTempest(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GigaTempest));
-class Ruination(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ruination1), new AOEShapeCross(40, 4));
-class Ruination2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ruination2), new AOEShapeRect(30, 4));
-class ResinBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ResinBomb), 5);
-class MagitekCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MagitekCannon), 6);
-class Bombardment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bombardment), 6);
+class Ruination(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ruination1), new AOEShapeCross(40f, 4f));
+class Ruination2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ruination2), new AOEShapeRect(30f, 4f));
+class ResinBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.ResinBomb), 5f);
+class MagitekCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MagitekCannon), 6f);
+class Bombardment(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bombardment), 6f);
 
 class LockOn(BossModule module) : Components.GenericAOEs(module)
 {
-    private class Caster
+    private readonly List<(Actor, DateTime)> _casters = [];
+    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circle = new(6);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        public required Actor Actor;
-        public required DateTime FinishAt;
+        var countC = _casters.Count;
+        var countA = _aoes.Count;
+        if (countC == 0 && countA == 0)
+            return [];
+        var aoes = new List<AOEInstance>(countC + countA);
+        if (countC != 0)
+            for (var i = 0; i < countC; ++i)
+            {
+                var c = _casters[i];
+                aoes[i] = new(circle, c.Item1.Position, default, c.Item2);
+            }
+        aoes.AddRange(_aoes);
+        return CollectionsMarshal.AsSpan(aoes);
     }
-
-    private readonly List<Caster> Casters = [];
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Select(c => new AOEInstance(new AOEShapeCircle(6), c.Actor.Position, default, c.FinishAt));
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.LockOn)
-            Casters.Add(new() { Actor = actor, FinishAt = WorldState.FutureTime(6.6f) });
+            _casters.Add((actor, WorldState.FutureTime(6.6d)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LockOn1 or AID.LockOn2)
+        if (spell.Action.ID is (uint)AID.LockOn1 or (uint)AID.LockOn2)
         {
-            var c = Casters.FindIndex(p => p.Actor == caster);
-            if (c >= 0)
-                Casters[c].FinishAt = Module.CastFinishAt(spell);
+            _casters.RemoveAt(_casters.FindIndex(p => p.Item1 == caster));
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.LockOn1 or AID.LockOn2)
-            Casters.RemoveAll(c => c.Actor == caster);
+        if (spell.Action.ID is (uint)AID.LockOn1 or (uint)AID.LockOn2)
+            _aoes.RemoveAt(0);
     }
 }
 

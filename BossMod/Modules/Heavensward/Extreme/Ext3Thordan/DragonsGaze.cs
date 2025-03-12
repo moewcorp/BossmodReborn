@@ -2,39 +2,39 @@
 
 class DragonsGaze(BossModule module) : Components.GenericGaze(module)
 {
-    private readonly List<Actor> _casters = [];
+    private readonly List<Eye> _eyes = new(2);
     private WPos _posHint;
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => _casters.Select(c => new Eye(c.Position, Module.CastFinishAt(c.CastInfo!)));
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => CollectionsMarshal.AsSpan(_eyes);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
         if (_posHint != default)
-            Arena.AddCircle(_posHint, 1, Colors.Safe);
+            Arena.AddCircle(_posHint, 1f, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DragonsGaze or AID.DragonsGlory)
+        if (spell.Action.ID is (uint)AID.DragonsGaze or (uint)AID.DragonsGlory)
         {
-            _casters.Add(caster);
+            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell)));
             _posHint = default;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.DragonsGaze or AID.DragonsGlory)
-            _casters.Remove(caster);
+        if (spell.Action.ID is (uint)AID.DragonsGaze or (uint)AID.DragonsGlory)
+            _eyes.RemoveAt(0);
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00040008 && (OID)actor.OID is >= OID.DragonEyeN and <= OID.DragonEyeNW)
+        if (state == 0x00040008 && actor.OID is >= (uint)OID.DragonEyeN and <= (uint)OID.DragonEyeNW)
         {
             var index = actor.OID - (uint)OID.DragonEyeN; // 0 = N, then CW
-            _posHint = Arena.Center + 19 * (180 - (int)index * 45).Degrees().ToDirection();
+            _posHint = Arena.Center + 19f * (180f - (int)index * 45f).Degrees().ToDirection();
         }
     }
 }

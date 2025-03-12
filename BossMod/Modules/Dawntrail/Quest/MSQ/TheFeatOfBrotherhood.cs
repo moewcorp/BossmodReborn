@@ -88,7 +88,7 @@ class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(modul
     private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
     private static readonly AOEShapeCross cross = new(30f, 4f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -145,17 +145,17 @@ class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect rect = new(50f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (id == 0x1E46)
-            _aoes.Add(new(rect, actor.Position, actor.Rotation, WorldState.FutureTime(8.5f)));
+            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(8.5d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.RoaringStarRect)
+        if (spell.Action.ID == (uint)AID.RoaringStarRect)
             _aoes.Clear();
     }
 }
@@ -165,7 +165,7 @@ class SublimeHeat(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(9);
     private static readonly AOEShapeCircle circle = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -194,7 +194,7 @@ class NobleTrail(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe != null && Module.PrimaryActor.IsTargetable ? [_aoe.Value] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe != null && Module.PrimaryActor.IsTargetable ? new AOEInstance[1] { _aoe.Value } : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

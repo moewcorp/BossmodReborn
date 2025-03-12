@@ -25,37 +25,67 @@ class RegulaVanHydrusStates : StateMachineBuilder
     }
 }
 
-class HandOfTheEmpire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HandOfTheEmpire), 2);
-class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Puddle));
+class HandOfTheEmpire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HandOfTheEmpire), 2f);
+class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 8f, GetPuddles)
+{
+    private static List<Actor> GetPuddles(BossModule module) => module.Enemies((uint)OID.Puddle);
+}
 
 class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.TerminusEstAOE))
 {
     private bool _active;
     private static readonly AOEShapeRect rect = new(40, 2);
 
-    private IEnumerable<Actor> Adds => Module.Enemies(OID.TerminusEst).Where(x => !x.IsDead);
+    public static List<Actor> GetTerminusEst(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.TerminusEst);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var terminus = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                terminus.Add(z);
+        }
+        return terminus;
+    }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actors(Adds, Colors.Danger, true);
+        Arena.Actors(GetTerminusEst(Module), Colors.Danger, true);
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-        => _active ? Adds.Select(x => new AOEInstance(rect, x.Position, x.Rotation)) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var terminus = GetTerminusEst(Module);
+        var count = terminus.Count;
+        if (!_active || count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var t = terminus[i];
+            aoes[i] = new(rect, WPos.ClampToGrid(t.Position), t.Rotation);
+        }
+        return aoes;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TerminusEstBoss)
+        if (spell.Action.ID == (uint)AID.TerminusEstBoss)
             _active = true;
     }
 
     public override void OnActorDestroyed(Actor actor)
     {
-        if ((OID)actor.OID == OID.TerminusEst)
+        if (actor.OID == (uint)OID.TerminusEst)
             _active = false;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67203, NameID = 3818)]
-public class RegulaVanHydrus(WorldState ws, Actor primary) : BossModule(ws, primary, new(252.75f, 553), new ArenaBoundsCircle(19.5f));
+public class RegulaVanHydrus(WorldState ws, Actor primary) : BossModule(ws, primary, new(252.75f, 553f), new ArenaBoundsCircle(19.5f));
 

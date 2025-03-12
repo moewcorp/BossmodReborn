@@ -205,13 +205,13 @@ class WaveOfNausea(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(6f, 40f);
     private static readonly Shape[] differenceShapes = [new Circle(new(271.473f, -178.027f), 6f), new Circle(new(261.494f, -178.027f), 6f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         void AddAOE(Angle start, Angle end)
                 => AOEs.Add(new(new AOEShapeCustom([new ConeHA(spell.LocXZ, 6f, start, end)], differenceShapes, InvertForbiddenZone: true), Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE));
-        if ((AID)spell.Action.ID == AID.WaveOfNausea)
+        if (spell.Action.ID == (uint)AID.WaveOfNausea)
         {
             AOEs.Add(new(donut, spell.LocXZ, default, Module.CastFinishAt(spell)));
             if (_exa.CurrentWind == NecroticFluidMist.Pattern.Southward)

@@ -2,11 +2,11 @@
 
 class RightArmRayNormal(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightArmRayNormalAOE), 10);
 
-class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
+class RightArmRayBuffed(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    public class SphereState(Actor sphere, Angle increment)
+    public struct SphereState(Actor sphere, Angle increment)
     {
-        public Actor Sphere = sphere;
+        public readonly Actor Sphere = sphere;
         public Angle RotNext = sphere.Rotation;
         public Angle RotIncrement = increment;
         public int NumCastsLeft = 11;
@@ -14,39 +14,37 @@ class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
 
     private readonly List<SphereState> _spheres = [];
     private DateTime _activation;
-    private static readonly AOEShapeCross _shape = new(16, 3);
+    private static readonly AOEShapeCross _shape = new(16f, 3f);
 
-    public bool Active => _spheres.Count > 0;
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_activation == default)
-            yield break;
-
-        foreach (var s in _spheres.Where(s => s.NumCastsLeft > 1))
-            yield return new(_shape, s.Sphere.Position, s.RotNext + s.RotIncrement, _activation, Risky: false);
-        foreach (var s in _spheres)
-            yield return new(_shape, s.Sphere.Position, s.RotNext, _activation, Colors.Danger);
-    }
+    public bool Active => Sequences.Count > 0;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (_spheres.Count == 4 && NumCasts == 0)
+        var count = _spheres.Count;
+        if (count == 4 && NumCasts == 0)
         {
             // show positioning hint: find a pair of nearby spheres with opposite rotations, such that CCW is to the left of midpoint (if facing center)
-            foreach (var ccwSphere in _spheres.Where(s => s.RotIncrement.Rad > 0))
+            for (var i = 0; i < count; ++i)
             {
-                var ccwOffset = ccwSphere.Sphere.Position - Module.Center;
-                foreach (var cwSphere in _spheres.Where(s => s.RotIncrement.Rad < 0))
+                var ccwSphere = _spheres[i];
+                if (ccwSphere.RotIncrement.Rad > 0f)
                 {
-                    // nearby spheres have distance ~20
-                    var cwOffset = cwSphere.Sphere.Position - Module.Center;
-                    if ((ccwOffset - cwOffset).LengthSq() < 500)
+                    var ccwOffset = ccwSphere.Sphere.Position - Arena.Center;
+                    for (var j = 0; j < count; ++j)
                     {
-                        var midpointOffset = (ccwOffset + cwOffset) * 0.5f;
-                        if (midpointOffset.OrthoL().Dot(ccwOffset) < 0)
+                        var cwSphere = _spheres[j];
+                        if (cwSphere.RotIncrement.Rad < 0f)
                         {
-                            Arena.AddCircle(Module.Center + midpointOffset, 1, Colors.Safe);
+                            // nearby spheres have distance ~20
+                            var cwOffset = cwSphere.Sphere.Position - Arena.Center;
+                            if ((ccwOffset - cwOffset).LengthSq() < 500f)
+                            {
+                                var midpointOffset = (ccwOffset + cwOffset) * 0.5f;
+                                if (midpointOffset.OrthoL().Dot(ccwOffset) < 0f)
+                                {
+                                    Arena.AddCircle(Arena.Center + midpointOffset, 1f, Colors.Safe);
+                                }
+                            }
                         }
                     }
                 }
@@ -56,38 +54,64 @@ class RightArmRayBuffed(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.RightArmRayAOEFirst)
+        if (spell.Action.ID == (uint)AID.RightArmRayAOEFirst)
             _activation = Module.CastFinishAt(spell);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.RightArmRayAOEFirst or AID.RightArmRayAOERest)
+        if (spell.Action.ID is (uint)AID.RightArmRayAOEFirst or (uint)AID.RightArmRayAOERest)
         {
             ++NumCasts;
-            var sphereIndex = _spheres.FindIndex(s => s.Sphere.Position.AlmostEqual(caster.Position, 1));
-            if (sphereIndex >= 0)
+            var count = _spheres.Count;
+            for (var i = 0; i < count; ++i)
             {
-                var sphere = _spheres[sphereIndex];
-                sphere.RotNext += sphere.RotIncrement;
-                if (--sphere.NumCastsLeft == 0)
-                    _spheres.RemoveAt(sphereIndex);
+                var s = _spheres[i];
+                if (s.Sphere.Position.AlmostEqual(caster.Position, 1f))
+                {
+                    var sphere = _spheres[i];
+                    sphere.RotNext += sphere.RotIncrement;
+                    if (--sphere.NumCastsLeft == 0)
+                        _spheres.RemoveAt(i);
+                    return;
+                }
             }
-            _activation = WorldState.FutureTime(1.6f);
         }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var increment = (IconID)iconID switch
+        var increment = iconID switch
         {
-            IconID.AtomicSphereCW => -15.Degrees(),
-            IconID.AtomicSphereCCW => 15.Degrees(),
+            (uint)IconID.AtomicSphereCW => -15f.Degrees(),
+            (uint)IconID.AtomicSphereCCW => 15f.Degrees(),
             _ => default
         };
         if (increment != default)
+        {
+            Sequences.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, increment, _activation, 1.6f, 11));
             _spheres.Add(new(actor, increment));
+        }
     }
 }
 
-class RightArmRayVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.RightArmRayVoidzone), m => m.Enemies(OID.AtomicSphereVoidzone), 0.9f);
+class RightArmRayVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5f, ActionID.MakeSpell(AID.RightArmRayVoidzone), GetVoidzones, 0.9f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.AtomicSphereVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}

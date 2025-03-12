@@ -55,7 +55,7 @@ class LitPath(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(5);
     private static readonly AOEShapeRect rect = new(50f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)
@@ -69,7 +69,7 @@ class LitPath(BossModule module) : Components.GenericAOEs(module)
             if ((aoe.Activation - firstact).TotalSeconds < 1d)
                 aoes.Add(aoe);
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -105,7 +105,7 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(16);
     private static readonly AOEShapeCircle circle = new(10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

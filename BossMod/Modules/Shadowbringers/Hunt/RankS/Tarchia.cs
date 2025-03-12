@@ -19,37 +19,31 @@ public enum AID : uint
     Groundstorm = 18023, // Boss->self, 5.0s cast, range 5-40 donut
 }
 
-class WildHorn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(17, 60.Degrees()));
-class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(40, 30.Degrees()));
-class Groundstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Groundstorm), new AOEShapeDonut(5, 40));
-class MightySpin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MightySpin), 14);
-class ForestFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ForestFire), 15);
+class WildHorn(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WildHorn), new AOEShapeCone(17f, 60f.Degrees()));
+class Trounce(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Trounce), new AOEShapeCone(40f, 30f.Degrees()));
+class Groundstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Groundstorm), new AOEShapeDonut(5f, 40f));
+class MightySpin(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MightySpin), 14f);
+class ForestFire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ForestFire), 15f);
 class BafflementBulb(BossModule module) : Components.TemporaryMisdirection(module, ActionID.MakeSpell(AID.BafflementBulb), "Pull + Temporary Misdirection -> Donut -> Out");
 class MetamorphicBlast(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MetamorphicBlast));
 
 class MightySpin2(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _activation;
-    private static readonly AOEShapeCircle circle = new(14);
+    private static readonly AOEShapeCircle circle = new(14f);
+    private AOEInstance? _aoe = new(circle, WPos.ClampToGrid(module.PrimaryActor.Position));
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_activation != default || NumCasts == 0)
-            yield return new(circle, Module.PrimaryActor.Position, default, _activation);
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Groundstorm)
-            _activation = Module.CastFinishAt(spell, 4);
+        if (spell.Action.ID == (uint)AID.Groundstorm)
+            _aoe = new(circle, WPos.ClampToGrid(Module.PrimaryActor.Position), default, Module.CastFinishAt(spell, 4f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.MightySpin2 or AID.Trounce or AID.AutoAttack or AID.MightySpin or AID.WildHorn or AID.Groundstorm or AID.BafflementBulb or AID.MetamorphicBlast or AID.Groundstorm) //everything but Mightyspin2 is a failsafe incase player joins fight/starts replay record late and Numcasts is 0 because of it
-            ++NumCasts;
-        if ((AID)spell.Action.ID == AID.MightySpin2)
-            _activation = default;
+        if (caster == Module.PrimaryActor && spell.Action.ID != (uint)AID.Groundstorm)
+            _aoe = null;
     }
 }
 

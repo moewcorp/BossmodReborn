@@ -61,32 +61,64 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
     private const float _chargeHalfWidth = 3;
     private static readonly AOEShapeCircle _brightflareShape = new(9);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in Charges)
+        var count = 0;
+        var countC = Charges.Count;
+        for (var i = 0; i < countC; ++i)
         {
-            foreach (var aoe in c.ChargeAOEs)
-                yield return aoe;
-            foreach (var s in c.Spheres.Take(6))
-                yield return new(_brightflareShape, s);
+            var c = Charges[i];
+            count += c.ChargeAOEs.Count + Math.Min(c.Spheres.Count, 6);
         }
+
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
+        for (var i = 0; i < countC; ++i)
+        {
+            var c = Charges[i];
+            var charges = c.ChargeAOEs;
+            var spheres = c.Spheres;
+            var countCC = charges.Count;
+            for (var j = 0; j < countCC; ++j)
+                aoes[index++] = charges[j];
+            var countS = spheres.Count;
+            var max = countS > 6 ? 6 : countS;
+            for (var k = 0; k < max; ++k)
+                aoes[index++] = new AOEInstance(_brightflareShape, spheres[k]);
+        }
+        return aoes;
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actors(Charges.Where(c => c.ChargeAOEs.Count > 0).Select(c => c.Source), Colors.Enemy, true);
+        List<Actor> enemies = [];
+        var count = Charges.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var charge = Charges[i];
+            if (charge.ChargeAOEs.Count != 0)
+            {
+                enemies.Add(charge.Source);
+            }
+        }
+
+        Arena.Actors(enemies, allowDeadAndUntargetable: true);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ShiningBlade:
+            case (uint)AID.ShiningBlade:
                 var charge = Charges.Find(c => c?.Source == caster);
                 if (charge?.ChargeAOEs.Count > 0)
                     charge.ChargeAOEs.RemoveAt(0);
                 break;
-            case AID.BrightFlare:
+            case (uint)AID.BrightFlare:
                 foreach (var c in Charges)
                     c.Spheres.RemoveAll(s => s.AlmostEqual(caster.Position, 2));
                 ++NumCasts;
@@ -100,8 +132,8 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
         if (iconID != (uint)IconID.SacredSever1)
             return;
 
-        var a1 = BuildChargeInfo(OID.SerAdelphel);
-        var a2 = BuildChargeInfo(OID.SerJanlenoux);
+        var a1 = BuildChargeInfo((uint)OID.SerAdelphel);
+        var a2 = BuildChargeInfo((uint)OID.SerJanlenoux);
         if (Charges.Count == 2 && a1 == a2)
         {
             ChargeAngle = a1;
@@ -113,9 +145,10 @@ class P2SanctityOfTheWard1Flares(BossModule module) : Components.GenericAOEs(mod
     }
 
     // returns angle between successive charges (>0 if CCW, <0 if CW, 0 on failure)
-    private Angle BuildChargeInfo(OID oid)
+    private Angle BuildChargeInfo(uint oid)
     {
-        var actor = Module.Enemies(oid).FirstOrDefault();
+        var actors = Module.Enemies(oid);
+        var actor = actors.Count != 0 ? actors[0] : null;
         if (actor == null)
             return default;
 
@@ -220,7 +253,7 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
             var severDirEast = _severStartDir;
             if (severDirEast.Rad < 0)
                 severDirEast += 180.Degrees();
-            var severDiagonalSE = severDirEast.Rad < MathF.PI * 0.5f;
+            var severDiagonalSE = severDirEast.Rad < Angle.HalfPi;
             var chargeCW = _flares.ChargeAngle.Rad < 0;
             _chargeEarly = severDiagonalSE == chargeCW;
         }
@@ -291,20 +324,24 @@ class P2SanctityOfTheWard1Hints(BossModule module) : BossComponent(module)
     private WDir SafeSpotOffset(int slot, Angle dirOffset)
     {
         var dir = _severStartDir + (_flares?.ChargeAngle.Rad < 0 ? -1 : 1) * dirOffset;
-        if (dir.Rad < 0 == _groupEast[slot])
-            dir += 180.Degrees();
-        return 20 * dir.ToDirection();
+        if ((dir.Rad < 0) == _groupEast[slot])
+            dir += 180f.Degrees();
+        return 20f * dir.ToDirection();
     }
 
-    private IEnumerable<WDir> MovementHintOffsets(int slot)
+    private List<WDir> MovementHintOffsets(int slot)
     {
         if (_inited && _flares?.Charges.Count == 2)
         {
+            var hints = new List<WDir>(1);
+            var count = _flares.Charges[0].Spheres.Count;
             // second safe spot could be either 3rd or 5th explosion
-            if (_flares.Charges[0].Spheres.Count > (_chargeEarly ? 6 : 4))
-                yield return SafeSpotOffset(slot, _chargeEarly ? 15.Degrees() : 11.7f.Degrees());
-            if (_flares.Charges[0].Spheres.Count > 0)
-                yield return SafeSpotOffset(slot, 33.3f.Degrees());
+            if (count > (_chargeEarly ? 6 : 4))
+                hints.Add(SafeSpotOffset(slot, _chargeEarly ? 15f.Degrees() : 11.7f.Degrees()));
+            if (count > 0)
+                hints.Add(SafeSpotOffset(slot, 33.3f.Degrees()));
+            return hints;
         }
+        return [];
     }
 }

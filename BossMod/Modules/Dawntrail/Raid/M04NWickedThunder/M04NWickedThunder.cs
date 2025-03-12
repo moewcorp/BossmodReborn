@@ -1,13 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Raid.M04NWickedThunder;
 
-class WickedJolt(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.WickedJolt), new AOEShapeRect(60, 2.5f), endsOnCastEvent: true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class WickedJolt(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.WickedJolt), new AOEShapeRect(60, 2.5f), endsOnCastEvent: true, tankbuster: true);
 
 class WickedBolt(BossModule module) : Components.StackWithIcon(module, (uint)IconID.WickedBolt, ActionID.MakeSpell(AID.WickedBolt), 5, 5, 8, 8, 5);
 class SoaringSoulpress(BossModule module) : Components.StackWithIcon(module, (uint)IconID.SoaringSoulpress, ActionID.MakeSpell(AID.SoaringSoulpress), 6, 5.4f, 8, 8);

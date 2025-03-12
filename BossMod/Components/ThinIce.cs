@@ -9,10 +9,11 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
     private static readonly WDir offset = new(0f, 1f);
     public BitMask Mask;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (Mask[slot] != default)
-            yield return new(actor.Position, Distance, default, default, actor.Rotation, Kind.DirForward);
+            return new Source[1] { new(actor.Position, Distance, default, default, actor.Rotation, Kind.DirForward) };
+        return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)

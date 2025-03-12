@@ -34,7 +34,7 @@ class RightRound(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -77,8 +77,6 @@ public class D041GreaterArmadillo(WorldState ws, Actor primary) : BossModule(ws,
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
-        if (count == 0)
-            return;
         for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];

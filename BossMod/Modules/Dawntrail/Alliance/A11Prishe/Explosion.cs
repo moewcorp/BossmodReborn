@@ -5,7 +5,7 @@ class Explosion(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
     private static readonly AOEShapeCircle circle = new(8f);
     private readonly List<AOEInstance> _aoes = new(28);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

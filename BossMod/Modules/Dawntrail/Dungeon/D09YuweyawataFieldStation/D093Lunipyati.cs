@@ -43,7 +43,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(11f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -74,7 +74,7 @@ class RagingClaw(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeCone cone = new(45f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -103,7 +103,7 @@ class BoulderDance(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(6);
     private static readonly AOEShapeCircle circle = new(7f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -148,7 +148,7 @@ class LeapingEarth(BossModule module) : Components.GenericAOEs(module)
     new(42.9f, -701.2f), new(38.5f, -697f), new(32.5f, -695.199f)];
     private int maxCasts;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -233,7 +233,7 @@ class RockBlast(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly WPos[] clockPositions = [new(34f, -697f), new(48f, -710f), new(21f, -710f), new(34f, -724f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

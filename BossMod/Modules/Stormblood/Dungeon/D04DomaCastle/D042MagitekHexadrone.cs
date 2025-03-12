@@ -31,23 +31,36 @@ public enum IconID : uint
     Stackmarker = 62 // player
 }
 
-class MagitekMissile(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.MagitekMissiles), 6);
+class MagitekMissile(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.MagitekMissiles), 6f);
 class CircleOfDeath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfDeath), 8.24f);
-class TwoTonzeMagitekMissile(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.TwoTonzeMagitekMissile), 6, 5.1f, 4, 4);
+class TwoTonzeMagitekMissile(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stackmarker, ActionID.MakeSpell(AID.TwoTonzeMagitekMissile), 6f, 5.1f, 4, 4);
 class ChainMine(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40, 2, 10);
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    private static readonly AOEShapeRect rect = new(40f, 2f, 10f);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HexadroneBits)
-            _aoes.Add(new(rect, source.Position, source.Rotation, WorldState.FutureTime(5.6f)));
+            _aoes.Add(new(rect, WPos.ClampToGrid(source.Position), source.Rotation, WorldState.FutureTime(5.6d)));
     }
+
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HexadroneBits)
-            _aoes.RemoveAll(x => x.Origin == source.Position);
+        {
+            var count = _aoes.Count;
+            var pos = source.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin.AlmostEqual(pos, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -64,4 +77,4 @@ class D042MagitekHexadroneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 241, NameID = 6203)]
-public class D042MagitekHexadrone(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240, 130.5f), new ArenaBoundsSquare(19.5f));
+public class D042MagitekHexadrone(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240f, 130.5f), new ArenaBoundsSquare(19.5f));

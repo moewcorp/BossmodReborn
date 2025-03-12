@@ -6,7 +6,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.NFizzlingSuds or (uint)AID.SFizzlingSuds && Arena.Bounds == C011Silkie.StartingBounds)

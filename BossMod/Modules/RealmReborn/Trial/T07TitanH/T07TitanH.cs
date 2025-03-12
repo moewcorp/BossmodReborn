@@ -48,10 +48,10 @@ class Hints(BossModule module) : BossComponent(module)
 }
 
 // also handles rockbuster, which is just a smaller cleave...
-class MountainBuster(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.MountainBuster), new AOEShapeCone(21.25f, 60.Degrees())); // TODO: verify angle
+class MountainBuster(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.MountainBuster), new AOEShapeCone(21.25f, 60f.Degrees())); // TODO: verify angle
 
-class WeightOfTheLand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WeightOfTheLandAOE), 6);
-class Landslide(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landslide), new AOEShapeRect(40.25f, 3));
+class WeightOfTheLand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WeightOfTheLandAOE), 6f);
+class Landslide(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Landslide), new AOEShapeRect(40.25f, 3f));
 
 class Geocrush(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Geocrush))
 {
@@ -60,12 +60,13 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, ActionID.Make
     private AOEShapeCircle? _inner;
     private DateTime _innerFinish;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_outer != null)
-            yield return new(_outer, Arena.Center);
+            return new AOEInstance[1] { new(_outer, Arena.Center) };
         if (_inner != null)
-            yield return new(_inner, Arena.Center, new(), _innerFinish);
+            return new AOEInstance[1] { new(_inner, Arena.Center, new(), _innerFinish) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -96,7 +97,7 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, ActionID.Make
 
 class Burst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Burst), new AOEShapeCircle(6.3f))
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // pattern 1: one-by-one explosions every ~0.4-0.5s, 8 clockwise then center
         // pattern 2: center -> 4 cardinals at small offset ~1s later -> 4 intercardinals at bigger offset ~1s later
@@ -105,16 +106,14 @@ class Burst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpel
         var count = Casters.Count;
         if (count == 0)
             return [];
-        var timeLimit = Casters[0].Activation.AddSeconds(2.25f);
 
-        List<AOEInstance> result = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var caster = Casters[i];
-            if (caster.Activation <= timeLimit)
-                result.Add(caster);
-        }
-        return result;
+        var deadline = Casters[0].Activation.AddSeconds(2.25d);
+
+        var index = 0;
+        while (index < count && Casters[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(Casters)[..index];
     }
 }
 
@@ -140,21 +139,23 @@ public class T07TitanH : BossModule
 
     public T07TitanH(WorldState ws, Actor primary) : base(ws, primary, default, new ArenaBoundsCircle(25))
     {
-        _heart = Enemies(OID.TitansHeart);
+        _heart = Enemies((uint)OID.TitansHeart);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var enemy in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            enemy.Priority = (OID)enemy.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.GraniteGaol => 3,
-                OID.TitansHeart => 2,
-                OID.Boss => 1,
+                (uint)OID.GraniteGaol => 3,
+                (uint)OID.TitansHeart => 2,
+                (uint)OID.Boss => 1,
                 _ => 0
             };
-            enemy.AttackStrength = (OID)enemy.Actor.OID == OID.Boss ? enemy.Actor.HPMP.CurHP < 0.6f * enemy.Actor.HPMP.MaxHP ? 0.3f : 0.1f : 0;
+            e.AttackStrength = (OID)e.Actor.OID == OID.Boss ? e.Actor.HPMP.CurHP < 0.6f * e.Actor.HPMP.MaxHP ? 0.3f : 0.1f : 0;
         }
     }
 }

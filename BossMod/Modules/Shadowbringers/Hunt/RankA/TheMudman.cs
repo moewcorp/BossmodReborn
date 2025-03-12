@@ -15,16 +15,16 @@ public enum AID : uint
     GravityForce = 16829 // Boss->player, 5.0s cast, range 6 circle, interruptible, applies heavy
 }
 
-class BogBequest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BogBequest), new AOEShapeDonut(5, 20));
-class FeculentFlood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FeculentFlood), new AOEShapeCone(40, 30.Degrees()));
-class RoyalFlush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoyalFlush), 8);
+class BogBequest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BogBequest), new AOEShapeDonut(5f, 20f));
+class FeculentFlood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FeculentFlood), new AOEShapeCone(40f, 30f.Degrees()));
+class RoyalFlush(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RoyalFlush), 8f);
 
-class GravityForce(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.GravityForce), new AOEShapeCircle(6), true)
+class GravityForce(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.GravityForce), new AOEShapeCircle(6f), true)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away or interrupt!");
     }
 }
@@ -45,4 +45,4 @@ class TheMudmanStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8654)]
-public class TheMudman(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class TheMudman(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

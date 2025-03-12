@@ -7,7 +7,7 @@ class BladeOfDarkness(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonutSector _shapeIn = new(12f, 60f, 75f.Degrees());
     private static readonly AOEShapeCone _shapeOut = new(30f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

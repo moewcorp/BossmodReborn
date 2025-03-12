@@ -56,29 +56,28 @@ public enum TetherID : uint
     BombTether = 97 // Grenade2->Alphinaud
 }
 
-class TenTrolleyTorque(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyTorque), 16);
-class TenTrolleyTap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyTap), new AOEShapeCone(8, 60.Degrees()));
-class TenTrolleyWallop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyWallop), new AOEShapeCone(40, 30.Degrees()));
-class SelfDestruct2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SelfDestruct2), 10);
+class TenTrolleyTorque(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyTorque), 16f);
+class TenTrolleyTap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyTap), new AOEShapeCone(8f, 60f.Degrees()));
+class TenTrolleyWallop(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTrolleyWallop), new AOEShapeCone(40f, 30f.Degrees()));
+class SelfDestruct2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SelfDestruct2), 10f);
 
 class Breakthrough(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
-    private const string Hint = "Share damage inside wildcharge!";
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Breakthrough)
+        if (spell.Action.ID == (uint)AID.Breakthrough)
         {
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell), Colors.SafeFromAOE));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), Colors.SafeFromAOE));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID == AID.Breakthrough)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Breakthrough)
             _aoes.RemoveAt(0);
     }
 
@@ -104,20 +103,17 @@ class Breakthrough(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return;
 
-        var shouldAddHint = true;
+        var risky = true;
         for (var i = 0; i < count; ++i)
         {
             var aoe = _aoes[i];
             if (aoe.Check(actor.Position))
             {
-                shouldAddHint = false;
+                risky = false;
                 break;
             }
         }
-        if (shouldAddHint)
-            hints.Add(Hint);
-        else
-            hints.Add(Hint, false);
+        hints.Add("Share damage inside wildcharge!", risky);
     }
 }
 
@@ -125,7 +121,7 @@ class Bulldoze(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -144,26 +140,26 @@ class Bulldoze(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BulldozeTelegraph2)
+        if (spell.Action.ID == (uint)AID.BulldozeTelegraph2)
         {
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 3), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell)));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 3f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.BulldozeTelegraph1 or AID.Bulldoze)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.BulldozeTelegraph1 or (uint)AID.Bulldoze)
             _aoes.RemoveAt(0);
     }
 }
 
-class TunnelShaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TunnelShaker1), new AOEShapeCone(60, 15.Degrees()));
-class Uplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShapeCircle(10), new AOEShapeDonut(10, 20), new AOEShapeDonut(20, 30)])
+class TunnelShaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TunnelShaker1), new AOEShapeCone(60f, 15f.Degrees()));
+class Uplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)])
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Uplift1)
+        if (spell.Action.ID == (uint)AID.Uplift1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -171,11 +167,11 @@ class Uplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShap
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.Uplift1 => 0,
-                AID.Uplift2 => 1,
-                AID.Uplift3 => 2,
+                (uint)AID.Uplift1 => 0,
+                (uint)AID.Uplift2 => 1,
+                (uint)AID.Uplift3 => 2,
                 _ => -1
             };
             AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
@@ -194,7 +190,7 @@ class BombTether(BossModule module) : Components.InterceptTetherAOE(module, Acti
             if (tether.Player != Module.Raid.Player())
             {
                 var source = tether.Enemy;
-                var target = Module.Enemies(OID.Alphinaud)[0];
+                var target = Module.Enemies((uint)OID.Alphinaud)[0];
                 hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), Activation);
             }
         }
@@ -204,7 +200,7 @@ class BombTether(BossModule module) : Components.InterceptTetherAOE(module, Acti
     {
         base.OnTethered(source, tether);
         if (Activation != default && tether.ID == TID)
-            Activation = WorldState.FutureTime(15);
+            Activation = WorldState.FutureTime(15d);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -228,7 +224,7 @@ public class SecondOrderRocksplitterStates : StateMachineBuilder
             .ActivateOnEnter<TunnelShaker>()
             .ActivateOnEnter<Uplift>()
             .ActivateOnEnter<BombTether>()
-            .Raw.Update = () => module.Enemies(OID.SecondOrderRocksplitter) is var boss && boss.Count != 0 && boss[0].HPMP.CurHP == 1 || module.WorldState.CurrentCFCID != 764;
+            .Raw.Update = () => module.Enemies((uint)OID.SecondOrderRocksplitter) is var boss && boss.Count != 0 && boss[0].HPMP.CurHP == 1 || module.WorldState.CurrentCFCID != 764;
     }
 }
 
@@ -244,7 +240,7 @@ public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var aether = Enemies(OID.ChannelAether);
+        var aether = Enemies((uint)OID.ChannelAether);
         var aethercount = aether.Count;
         if (aethercount != 0)
             for (var i = 0; i < aethercount; ++i)
@@ -257,11 +253,11 @@ public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(
                 }
             }
 
-        if (Enemies(OID.Grenade2).Count != 0)
+        if (Enemies((uint)OID.Grenade2).Count != 0)
             for (var i = 0; i < hints.PotentialTargets.Count; ++i)
             {
                 var e = hints.PotentialTargets[i];
-                if ((OID)e.Actor.OID == OID.Grenade2)
+                if (e.Actor.OID == (uint)OID.Grenade2)
                     e.Priority = AIHints.Enemy.PriorityPointless;
             }
     }

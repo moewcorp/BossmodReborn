@@ -24,35 +24,36 @@ public enum AID : uint
 }
 
 class OneOneOneOneTonzeSwing(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OneOneOneOneTonzeSwing), "Use Diamondback!");
-class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), 12);
+class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), 12f);
 class CryOfRage(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.CryOfRage));
 
-abstract class TenTonzeCone(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(44, 30.Degrees()));
+abstract class TenTonzeCone(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(44f, 30f.Degrees()));
 class TenTonzeSlash(BossModule module) : TenTonzeCone(module, AID.TenTonzeSlash);
 class TenTonzeWaveCone(BossModule module) : TenTonzeCone(module, AID.TenTonzeWaveCone);
 
-class TenTonzeWaveDonut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTonzeWaveDonut), new AOEShapeDonut(10, 20));
-class ZoomIn(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.ZoomIn), 4);
+class TenTonzeWaveDonut(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTonzeWaveDonut), new AOEShapeDonut(10f, 20f));
+class ZoomIn(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.ZoomIn), 4f);
 
 class ZoomInKB(BossModule module) : Components.Knockback(module) // actual knockback happens ~0.7s after snapshot
 {
     private DateTime _activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_activation != default)
-            yield return new(Module.PrimaryActor.Position, 20, _activation);
+            return new Source[1] { new(Module.PrimaryActor.Position, 20f, _activation) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ZoomIn)
+        if (spell.Action.ID == (uint)AID.ZoomIn)
             _activation = Module.CastFinishAt(spell);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ZoomIn)
+        if (spell.Action.ID == (uint)AID.ZoomIn)
             _activation = default;
     }
 }
@@ -93,17 +94,18 @@ public class Stage16Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Cyclops), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Cyclops), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.Cyclops => 1,
+                (uint)OID.Cyclops => 1,
                 _ => 0
             };
         }

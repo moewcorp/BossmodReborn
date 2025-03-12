@@ -7,7 +7,7 @@ class Tetrapagos(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(10f, 30f);
     private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

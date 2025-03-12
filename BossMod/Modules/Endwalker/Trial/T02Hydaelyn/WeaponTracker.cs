@@ -7,7 +7,7 @@ class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(10f);
     private static readonly AOEShapeCross cross = new(40f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -20,7 +20,7 @@ class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
                 _ => null
             };
             if (shape != null)
-                _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(6d));
+                _aoe = new(shape, WPos.ClampToGrid(Arena.Center), default, WorldState.FutureTime(6d));
         }
     }
 

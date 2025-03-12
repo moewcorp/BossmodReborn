@@ -14,6 +14,6 @@ class ForbiddenFruit5(BossModule module) : ForbiddenFruitCommon(module, ActionID
             Arena.AddLine(tetherSource.Position, pc.Position, TetherColor(tetherSource));
 
         for (var i = 0; i < _towers.Count; ++i)
-            Arena.AddCircle(_towers[i].Position, _towerRadius, tetherSource == null ? Colors.Safe : Colors.Danger);
+            Arena.AddCircle(_towers[i].Position, _towerRadius, tetherSource == null ? Colors.Safe : 0);
     }
 }

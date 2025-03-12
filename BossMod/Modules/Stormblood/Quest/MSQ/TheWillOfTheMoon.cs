@@ -31,47 +31,47 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    Invincibility = 775, // none->Boss, extra=0x0
+    Invincibility = 775 // none->Boss, extra=0x0
 }
 
-class DispellingWind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DispellingWind), new AOEShapeRect(40, 4));
-class Epigraph(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Epigraph), new AOEShapeRect(45, 4));
-class Whisper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhisperOfLivesPast), new AOEShapeDonut(6, 12));
-class Blizzard(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientBlizzard), new AOEShapeCone(40, 22.5f.Degrees()));
-class Tornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tornado), 6);
-class Epigraph1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Epigraph2), new AOEShapeRect(45, 4));
+class DispellingWind(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DispellingWind), new AOEShapeRect(40f, 4f));
+class Epigraph(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Epigraph), new AOEShapeRect(45f, 4f));
+class Whisper(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WhisperOfLivesPast), new AOEShapeDonut(6f, 12f));
+class Blizzard(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AncientBlizzard), new AOEShapeCone(40f, 22.5f.Degrees()));
+class Tornado(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tornado), 6f);
+class Epigraph1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Epigraph2), new AOEShapeRect(45f, 4f));
 
-public class FlatlandFury(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlatlandFury), 10)
+public class FlatlandFury(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlatlandFury), 10f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // if all 9 adds are alive, instead of drawing forbidden zones (which would fill the whole arena), force AI to target nearest one to kill it
-        if (ActiveCasters.Count == 9)
-            hints.ForcedTarget = Module.Enemies(OID.TheScaleOfTheFather).MinBy(actor.DistanceToHitbox);
+        if (ActiveCasters.Length == 9)
+            hints.ForcedTarget = Module.Enemies((uint)OID.TheScaleOfTheFather).MinBy(actor.DistanceToHitbox);
         else
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
 
-public class FlatlandFuryEnrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlatlandFuryEnrage), 10)
+public class FlatlandFuryEnrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FlatlandFuryEnrage), 10f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveCasters.Count < 9)
+        if (ActiveCasters.Length < 9)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
 
-public class ViolentEarth(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ViolentEarth), 6);
-public class WindChisel(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindChisel), new AOEShapeCone(34, 10.Degrees()));
+public class ViolentEarth(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ViolentEarth), 6f);
+public class WindChisel(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WindChisel), new AOEShapeCone(34f, 10f.Degrees()));
 
 public class Scales(BossModule module) : Components.Adds(module, (uint)OID.TheScaleOfTheFather);
 
-class AutoYshtola(WorldState ws) : UnmanagedRotation(ws, 25)
+class AutoYshtola(BossModule module, WorldState ws) : UnmanagedRotation(ws, 25f)
 {
-    private Actor Magnai => World.Actors.First(x => (OID)x.OID == OID.Magnai);
-    private Actor Hien => World.Actors.First(x => (OID)x.OID == OID.Hien);
-    private Actor Daidukul => World.Actors.First(x => (OID)x.OID == OID.Daidukul);
+    private Actor Magnai => module.Enemies((uint)OID.Magnai)[0];
+    private Actor Hien => module.Enemies((uint)OID.Hien)[0];
+    private Actor Daidukul => module.Enemies((uint)OID.Daidukul)[0];
 
     protected override void Exec(Actor? primaryTarget)
     {
@@ -81,16 +81,16 @@ class AutoYshtola(WorldState ws) : UnmanagedRotation(ws, 25)
 
         if (Hien.PredictedHPRaw < hienMinHP)
         {
-            if (Player.DistanceToHitbox(Hien) > 25)
+            if (Player.DistanceToHitbox(Hien) > 25f)
                 Hints.ForcedMovement = Player.DirectionTo(Hien).ToVec3();
 
             UseAction(RPID.CureIISeventhDawn, Hien);
         }
 
         if (Hien.CastInfo?.Action.ID == 13234)
-            Hints.GoalZones.Add(Hints.GoalSingleTarget(Hien.Position, 2, 5));
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(Hien.Position, 2f, 5f));
 
-        var aero = StatusDetails(Magnai, WHM.SID.AeroII, Player.InstanceID);
+        var aero = StatusDetails(Magnai, (uint)WHM.SID.AeroII, Player.InstanceID);
         if (aero.Left < 4.6f)
             UseAction(RPID.AeroIISeventhDawn, Magnai);
 
@@ -107,14 +107,15 @@ class P1Hints(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            if (e.Actor.FindStatus(SID.Invincibility) != null)
+            if (e.Actor.FindStatus((uint)SID.Invincibility) != null)
                 e.Priority = AIHints.Enemy.PriorityInvincible;
 
             // they do very little damage and sadu will raise them after a short delay, no point in attacking
-            if ((OID)e.Actor.OID == OID.KhunShavar)
+            if (e.Actor.OID == (uint)OID.KhunShavar)
                 e.Priority = AIHints.Enemy.PriorityPointless;
         }
     }
@@ -124,7 +125,8 @@ class P2Hints(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID == (uint)OID.Magnai ? 1 : 0;
@@ -144,7 +146,7 @@ class SaduHeavensflameStates : StateMachineBuilder
             .ActivateOnEnter<Blizzard>()
             .ActivateOnEnter<Tornado>()
             .ActivateOnEnter<Epigraph1>()
-            .Raw.Update = () => Module.Enemies(OID.Magnai).Count != 0;
+            .Raw.Update = () => module.Enemies((uint)OID.Magnai).Count != 0;
         TrivialPhase(1)
             .ActivateOnEnter<P2Hints>()
             .ActivateOnEnter<YshtolaAI>()
@@ -155,9 +157,9 @@ class SaduHeavensflameStates : StateMachineBuilder
             .ActivateOnEnter<WindChisel>()
             .OnEnter(() =>
             {
-                Module.Arena.Center = new(-186.5f, 550.5f);
+                module.Arena.Center = new(-186.5f, 550.5f);
             })
-            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
+            .Raw.Update = () => module.Raid.Player()?.IsDeadOrDestroyed ?? true;
     }
 }
 

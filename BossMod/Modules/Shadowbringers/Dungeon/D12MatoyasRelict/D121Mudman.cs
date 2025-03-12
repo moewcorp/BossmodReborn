@@ -47,17 +47,21 @@ public enum TetherID : uint
 
 class StoneAge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StoneAge));
 class HardRock(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HardRock));
-class MudVoidzone(BossModule module) : Components.PersistentVoidzone(module, 5, m => m.Enemies(OID.MudVoidzone));
-class Quagmire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quagmire), 6);
-class FallingRock(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FallingRock), 6, 4, 4);
+class MudVoidzone(BossModule module) : Components.PersistentVoidzone(module, 5f, GetVoidzone)
+{
+    private static List<Actor> GetVoidzone(BossModule module) => module.Enemies((uint)OID.MudVoidzone);
+}
+class Quagmire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quagmire), 6f);
+class FallingRock(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FallingRock), 6f, 4, 4);
 
 class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, 135.Degrees()), new AOEShapeDonutSector(6.5f, 12.5f, 135.Degrees()), new AOEShapeDonutSector(12.5f, 18.5f, 135.Degrees())];
+    private static readonly Angle a135 = 135f.Degrees();
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, a135), new AOEShapeDonutSector(6.5f, 12.5f, a135), new AOEShapeDonutSector(12.5f, 18.5f, a135)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.BrittleBreccia1)
+        if (spell.Action.ID == (uint)AID.BrittleBreccia1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell), spell.Rotation);
     }
 
@@ -65,70 +69,82 @@ class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _sha
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.BrittleBreccia1 => 0,
-                AID.BrittleBreccia2 => 1,
-                AID.BrittleBreccia3 => 2,
+                (uint)AID.BrittleBreccia1 => 0,
+                (uint)AID.BrittleBreccia2 => 1,
+                (uint)AID.BrittleBreccia3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f), spell.Rotation);
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5d), spell.Rotation);
         }
     }
 }
 
 class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
 {
-    private static readonly AOEShapeRect rect1 = new(60, 2), rect2 = new(60, 3), rect3 = new(60, 4);
-    private readonly List<WPos> activeHoles = [];
-
-    private static readonly Dictionary<byte, WPos> holePositions = new()
-    {
-        { 0x0A, new(-202.627f, -162.627f) },
-        { 0x0B, new(-157.373f, -162.627f) },
-        { 0x0C, new(-202.627f, -117.373f) },
-        { 0x0D, new(-157.373f, -117.373f) }
-    };
+    private static readonly AOEShapeRect rect1 = new(60f, 2f), rect2 = new(60f, 3f), rect3 = new(60f, 4f);
+    private readonly List<WPos> activeHoles = new(4);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (holePositions.TryGetValue(index, out var value))
+        var pos = index switch
+        {
+            0x0A => new(-202.627f, -162.627f),
+            0x0B => new(-157.373f, -162.627f),
+            0x0C => new(-202.627f, -117.373f),
+            0x0D => new(-157.373f, -117.373f),
+            _ => new WPos(),
+        };
+        if (pos != default)
         {
             if (state == 0x00020001)
-                activeHoles.Add(value);
+                activeHoles.Add(pos);
             else if (state == 0x00080004)
-                activeHoles.Remove(value);
+                activeHoles.Remove(pos);
         }
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Mudball)
-            CurrentBaits.Add(new(source, WorldState.Actors.Find(tether.Target)!, rect1, WorldState.FutureTime(8.2f)));
+            CurrentBaits.Add(new(source, WorldState.Actors.Find(tether.Target)!, rect1, WorldState.FutureTime(8.2d)));
     }
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Mudball)
-            CurrentBaits.RemoveAll(x => x.Source == source);
+        {
+            var count = CurrentBaits.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (CurrentBaits[i].Source == source)
+                {
+                    CurrentBaits.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        for (var i = 0; i < activeHoles.Count; ++i)
-            Arena.AddCircle(activeHoles[i], 5, Colors.Safe, 5);
+        var count = activeHoles.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(activeHoles[i], 5f, Colors.Safe, 5f);
     }
 
     public override void Update()
     {
-        if (CurrentBaits.Count == 0)
+        var count = CurrentBaits.Count;
+        if (count == 0)
             return;
 
-        for (var i = 0; i < CurrentBaits.Count; ++i)
+        for (var i = 0; i < count; ++i)
         {
             var b = CurrentBaits[i];
-            var activation = WorldState.FutureTime(9.7f);
+            var activation = WorldState.FutureTime(9.7d);
             if (b.Source.HitboxRadius is > 2 and <= 3 && b.Shape == rect1)
             {
                 b.Shape = rect2;
@@ -146,18 +162,23 @@ class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (CurrentBaits.Any(x => x.Source == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait into a hole!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        var forbidden = new List<Func<WPos, float>>(4);
-        foreach (var b in ActiveBaitsOn(actor))
-            for (var i = 0; i < activeHoles.Count; ++i)
-                forbidden.Add(ShapeDistance.InvertedRect(b.Source.Position, activeHoles[i], 1));
-        if (forbidden.Count != 0)
+        var baits = ActiveBaitsOn(actor);
+        var count = baits.Count;
+        if (count == 0)
+            return;
+        var actHolesCount = activeHoles.Count;
+        var forbidden = new Func<WPos, float>[count];
+        var b = baits[0];
+        for (var i = 0; i < actHolesCount; ++i)
+            forbidden[i] = ShapeDistance.InvertedRect(b.Source.Position, activeHoles[i], 1f);
+        if (actHolesCount != 0)
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden));
     }
 }
@@ -178,4 +199,4 @@ class D121MudmanStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 746, NameID = 9735)]
-public class D121Mudman(WorldState ws, Actor primary) : BossModule(ws, primary, new(-180, -140), new ArenaBoundsCircle(19.5f));
+public class D121Mudman(WorldState ws, Actor primary) : BossModule(ws, primary, new(-180f, -140f), new ArenaBoundsCircle(19.5f));

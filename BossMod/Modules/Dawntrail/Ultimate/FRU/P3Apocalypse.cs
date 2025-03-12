@@ -6,7 +6,7 @@ class P3Apocalypse(BossModule module) : Components.GenericAOEs(module)
     public Angle Rotation;
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shape = new(9);
+    private static readonly AOEShapeCircle _shape = new(9f);
 
     public void Show(float delay)
     {
@@ -30,46 +30,47 @@ class P3Apocalypse(BossModule module) : Components.GenericAOEs(module)
             addAt(i + 1, activation);
             addAt(i, activation);
             addAt(i - 1, activation);
-            activation = activation.AddSeconds(2);
+            activation = activation.AddSeconds(2d);
         }
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Take(6);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 6 ? 6 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // we have dedicated components for this...
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.ApocalypseLight)
+        if (actor.OID == (uint)OID.ApocalypseLight)
         {
             if (actor.Position.AlmostEqual(Module.Center, 1))
             {
                 if (Starting == null)
                     Starting = actor.Rotation;
-                else if (!Starting.Value.AlmostEqual(actor.Rotation + 180.Degrees(), 0.1f))
-                    ReportError($"Inconsistent starting dir");
             }
             else
             {
-                var rot = 0.5f * (actor.Rotation - Angle.FromDirection(actor.Position - Module.Center)).Normalized();
+                var rot = 0.5f * (actor.Rotation - Angle.FromDirection(actor.Position - Arena.Center)).Normalized();
                 if (Rotation == default)
                     Rotation = rot;
-                else if (!Rotation.AlmostEqual(rot, 0.1f))
-                    ReportError($"Inconsistent rotation dir");
             }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ApocalypseAOE)
+        if (spell.Action.ID == (uint)AID.ApocalypseAOE)
         {
             ++NumCasts;
             var index = _aoes.FindIndex(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
             if (index >= 0)
                 _aoes.RemoveAt(index);
-            else
-                ReportError($"Failed to find aoe @ {caster.Position}");
         }
     }
 }
@@ -120,7 +121,7 @@ class P3ApocalypseDarkWater(BossModule module) : Components.UniformStackSpread(m
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.SpellInWaitingDarkWater && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.SpellInWaitingDarkWater && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             States[slot].Expiration = status.ExpireAt;
             States[slot].Order = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds switch
@@ -136,7 +137,7 @@ class P3ApocalypseDarkWater(BossModule module) : Components.UniformStackSpread(m
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DarkWater)
+        if (spell.Action.ID == (uint)AID.DarkWater)
             Stacks.Clear();
     }
 
@@ -165,7 +166,7 @@ class P3ApocalypseDarkWater(BossModule module) : Components.UniformStackSpread(m
 
             // find partner to swap with; prioritize same position > neighbour position (eg melee with melee) > anyone that also swaps
             int partnerRole = -1, partnerQuality = -1;
-            for (int candidateRole = role + 1; candidateRole < slotPerAssignment.Length; ++candidateRole)
+            for (var candidateRole = role + 1; candidateRole < slotPerAssignment.Length; ++candidateRole)
             {
                 if (!swap[candidateRole])
                     continue; // this guy doesn't want to swap, skip
@@ -207,7 +208,7 @@ class P3ApocalypseDarkWater(BossModule module) : Components.UniformStackSpread(m
     private bool IsSwapValid(BitMask assignmentSwaps, ReadOnlySpan<int> slotPerAssignment)
     {
         BitMask result = default; // bits 0-3 are set if order N is in G1, 4-7 for G2
-        for (int role = 0; role < slotPerAssignment.Length; ++role)
+        for (var role = 0; role < slotPerAssignment.Length; ++role)
         {
             ref var state = ref States[slotPerAssignment[role]];
             var isGroup2 = state.AssignedGroup == (assignmentSwaps[role] ? 1 : 2);
@@ -256,7 +257,7 @@ class P3ApocalypseSpiritTaker(BossModule module) : SpiritTaker(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        hints.AddForbiddenZone(ShapeDistance.Circle(Module.Center, 6), DateTime.MaxValue); // don't dodge into center...
+        hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 6), DateTime.MaxValue); // don't dodge into center...
     }
 }
 
@@ -314,7 +315,7 @@ class P3ApocalypseDarkEruption(BossModule module) : Components.SpreadFromIcon(mo
         var midIsForG2 = midDir.Deg is >= -20 and < 160;
         if (midIsForG2 != (group == 2))
         {
-            midDir += 180.Degrees();
+            midDir += 180f.Degrees();
             reference = -reference;
         }
 
@@ -327,8 +328,8 @@ class P3ApocalypseDarkEruption(BossModule module) : Components.SpreadFromIcon(mo
         else
         {
             // ranged spot
-            var offset = (pos == 2 ? -15 : +15).Degrees();
-            return 19 * (midDir + offset).ToDirection();
+            var offset = (pos == 2 ? -15f : +15f).Degrees();
+            return 19f * (midDir + offset).ToDirection();
         }
     }
 }
@@ -353,7 +354,7 @@ class P3DarkestDanceBait(BossModule module) : Components.GenericBaitAway(module,
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.DarkestDance)
+        if (spell.Action.ID == (uint)AID.DarkestDance)
         {
             ForbiddenPlayers = Raid.WithSlot(true, true, true).WhereActor(p => p.Role != Role.Tank).Mask();
             _source = caster;
@@ -367,21 +368,22 @@ class P3DarkestDanceKnockback(BossModule module) : Components.Knockback(module, 
     public Actor? Caster;
     public DateTime Activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (Caster != null)
-            yield return new(Caster.Position, 21, Activation);
+            return new Source[1] { new(Caster.Position, 21, Activation) };
+        return [];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DarkestDanceBait:
+            case (uint)AID.DarkestDanceBait:
                 Caster = caster;
-                Activation = WorldState.FutureTime(2.8f);
+                Activation = WorldState.FutureTime(2.8d);
                 break;
-            case AID.DarkestDanceKnockback:
+            case (uint)AID.DarkestDanceKnockback:
                 ++NumCasts;
                 break;
         }
@@ -404,16 +406,16 @@ class P3ApocalypseAIWater1(BossModule module) : BossComponent(module)
 
         var (dir, range) = state.AssignedPosition switch
         {
-            0 => (-15.Degrees(), 5),
-            1 => (15.Degrees(), 5),
-            2 => (-10.Degrees(), 8),
-            3 => (10.Degrees(), 8),
-            _ => (default, 0)
+            0 => (-15f.Degrees(), 5f),
+            1 => (15f.Degrees(), 5f),
+            2 => (-10f.Degrees(), 8f),
+            3 => (10f.Degrees(), 8f),
+            _ => (default, default)
         };
         dir += _config.P3ApocalypseDarkWater1ReferenceDirection.Degrees();
         if (state.AssignedGroup == 2)
-            dir += 180.Degrees();
-        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center + range * dir.ToDirection(), 1), _water.Stacks.Count > 0 ? _water.Stacks[0].Activation : DateTime.MaxValue);
+            dir += 180f.Degrees();
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center + range * dir.ToDirection(), 1f), _water.Stacks.Count > 0 ? _water.Stacks[0].Activation : DateTime.MaxValue);
     }
 }
 
@@ -452,7 +454,7 @@ class P3ApocalypseAIWater2(BossModule module) : BossComponent(module)
         }
 
         var destOff = distance * (midDir - _apoc.Rotation).ToDirection();
-        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center + destOff, 1), DateTime.MaxValue);
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center + destOff, 1), DateTime.MaxValue);
     }
 }
 
@@ -471,7 +473,7 @@ class P3ApocalypseAIWater3(BossModule module) : BossComponent(module)
         if (toCenter.LengthSq() < 1)
             return; // did not jump yet, wait...
 
-        var angle = 20.Degrees(); //(_knockback.NumCasts == 0 ? 30 : 45).Degrees();
+        var angle = 20f.Degrees(); //(_knockback.NumCasts == 0 ? 30 : 45).Degrees();
         var dir = Angle.FromDirection(toCenter) + _water.States[slot].AssignedGroup switch
         {
             1 => -angle,
@@ -482,12 +484,12 @@ class P3ApocalypseAIWater3(BossModule module) : BossComponent(module)
         if (_knockback.NumCasts == 0)
         {
             // preposition for knockback
-            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(_knockback.Caster.Position + 2 * dir.ToDirection(), new(0, 1), Module.Bounds.MapResolution, actor.Position, 0.1f), _knockback.Activation);
+            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(_knockback.Caster.Position + 2f * dir.ToDirection(), new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _knockback.Activation);
         }
         else if (_water.Stacks.Count > 0)
         {
             // stack at maxmelee
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(_knockback.Caster.Position + 10 * dir.ToDirection(), 1), _water.Stacks[0].Activation);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(_knockback.Caster.Position + 10f * dir.ToDirection(), 1f), _water.Stacks[0].Activation);
         }
     }
 }

@@ -6,8 +6,12 @@ class ThunderousBreath : Components.CastCounter
     {
         var platform = module.FindComponent<ThunderPlatform>();
         if (platform != null)
-            foreach (var (i, _) in module.Raid.WithSlot(true, true, true))
+        {
+            var party = module.Raid.WithSlot(true, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
                 platform.RequireHint[i] = platform.RequireLevitating[i] = true;
+        }
     }
 }
 
@@ -15,15 +19,15 @@ class ArcaneLighning(BossModule module) : Components.GenericAOEs(module, ActionI
 {
     public readonly List<AOEInstance> AOEs = [];
 
-    private static readonly AOEShapeRect _shape = new(50, 2.5f);
+    private static readonly AOEShapeRect _shape = new(50f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.ArcaneSphere)
+        if (actor.OID == (uint)OID.ArcaneSphere)
         {
-            AOEs.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(8.6f)));
+            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(8.6d)));
         }
     }
 }

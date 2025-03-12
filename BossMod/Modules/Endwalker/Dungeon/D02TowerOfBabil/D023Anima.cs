@@ -43,13 +43,13 @@ public enum AID : uint
     MegaGraviton = 25344, // Boss->self, 5.0s cast, range 60 circle, tether mechanic
     GravitonSpark = 25346, // MegaGraviton->player, no cast, single-target, on touching the graviton
 
+    PaterPatriaeVisual = 25350, // Boss->self, 3.5s cast, single-target
     PaterPatriaeAOE = 24168, // Helper->self, 3.5s cast, range 60 width 8 rect
-    PaterPatriae2 = 25350, // Boss->self, 3.5s cast, single-target
 
-    PhantomPain1 = 21182, // Boss->self, 7.0s cast, single-target
-    PhantomPain2 = 25343, // Helper->self, 7.0s cast, range 20 width 20 rect
+    PhantomPainVisual = 21182, // Boss->self, 7.0s cast, single-target
+    PhantomPain = 25343, // Helper->self, 7.0s cast, range 20 width 20 rect
 
-    VisualModelChange = 27228, // LowerAnima->self, no cast, single-target
+    LowerAnimaVisual = 27228, // LowerAnima->self, no cast, single-target
 
     EruptingPainVisual = 25351, // Boss->self, 5.0s cast, single-target
     EruptingPain = 25352 // Helper->player, 5.0s cast, range 6 circle
@@ -67,35 +67,14 @@ public enum IconID : uint
 
 class ArenaChange(BossModule module) : BossComponent(module)
 {
-    private bool pausedAI;
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index == 0x03)
         {
             if (state == 0x00020001)
                 Arena.Center = D023Anima.LowerArenaCenter;
-            if (state == 0x00080004)
+            else if (state == 0x00080004)
                 Arena.Center = D023Anima.UpperArenaCenter;
-        }
-    }
-
-    // TODO: This hack is required because otherwise the game crashes on phase change if AI is on and player is following an NPC
-    // can be removed if the source of the bug is found and fixed
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if ((AID)spell.Action.ID == AID.Imperatum && AI.AIManager.Instance?.MasterSlot != 0)
-        {
-            AI.AIManager.Instance?.SwitchToIdle();
-            pausedAI = true;
-        }
-    }
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if ((OID)actor.OID == OID.LowerAnima && pausedAI)
-        {
-            AI.AIManager.Instance?.SwitchToFollow(Service.Config.Get<AI.AIConfig>().FollowSlot);
-            pausedAI = false;
         }
     }
 }
@@ -103,18 +82,18 @@ class ArenaChange(BossModule module) : BossComponent(module)
 class BoundlessPain(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCircle circle = new(18);
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    private static readonly AOEShapeCircle circle = new(18f);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.BoundlessPainPull:
+            case (uint)AID.BoundlessPainPull:
                 _aoe = new(circle, Arena.Center);
                 break;
-            case AID.BoundlessPainFirst:
-            case AID.BoundlessPainRest:
+            case (uint)AID.BoundlessPainFirst:
+            case (uint)AID.BoundlessPainRest:
                 if (++NumCasts == 20)
                 {
                     _aoe = null;
@@ -127,37 +106,59 @@ class BoundlessPain(BossModule module) : Components.GenericAOEs(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveAOEs(slot, actor).Any())
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, Arena.Center + new WDir(0, 20), 20));
+        if (ActiveAOEs(slot, actor).Length != 0)
+            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, Arena.Center + new WDir(default, 20f), 20f));
     }
 }
 
-class Gravitons(BossModule module) : Components.PersistentVoidzone(module, 1, m => m.Enemies(OID.MegaGraviton).Where(x => !x.IsDead));
-class AetherialPull(BossModule module) : Components.StretchTetherDuo(module, 33, 7.9f, tetherIDGood: (uint)TetherID.AetherialPullGood, knockbackImmunity: true);
-class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(3), ActionID.MakeSpell(AID.CoffinScratchFirst), ActionID.MakeSpell(AID.CoffinScratchRest), 6, 1, 5, true, (uint)IconID.ChasingAOE)
+class Gravitons(BossModule module) : Components.PersistentVoidzone(module, 1f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.MegaGraviton);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
+class AetherialPull(BossModule module) : Components.StretchTetherDuo(module, 33f, 7.9f, tetherIDGood: (uint)TetherID.AetherialPullGood, knockbackImmunity: true);
+class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(3f), ActionID.MakeSpell(AID.CoffinScratchFirst), ActionID.MakeSpell(AID.CoffinScratchRest), 6f, 1, 5, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (Actors.Contains(actor))
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(19, 0), Arena.Center + new WDir(-19, 0), 20), Activation);
-        else if (Chasers.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(actor.Position, new WDir(1, 0), 40, 40, 3));
+            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(18.5f, default), Arena.Center + new WDir(-18.5f, default), 20f), Activation);
+        else if (IsChaserTarget(actor))
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(actor.Position, new WDir(1f, default), 40f, 40f, 3f));
     }
 
-    public override void Update()
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        base.Update();
-        if (Chasers.Count > 0 && Module.Enemies(OID.LowerAnima).Any(x => !x.IsTargetable))
+        base.OnCastStarted(caster, spell);
+        if (spell.Action.ID == (uint)AID.OblivionVisual)
+        {
             Chasers.Clear();
+        }
     }
 }
 
-class PhantomPain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomPain2), new AOEShapeRect(20, 10));
-class PaterPatriaeAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PaterPatriaeAOE), new AOEShapeRect(60, 4));
-class CharnelClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CharnelClaw), new AOEShapeRect(40, 2.5f), 5);
-class ErruptingPain(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.EruptingPain), 6);
-class ObliviatingClawSpawnAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ObliviatingClawSpawnAOE), 3);
+class PhantomPain(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomPain), new AOEShapeRect(20f, 10f));
+class PaterPatriaeAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PaterPatriaeAOE), new AOEShapeRect(60f, 4f));
+class CharnelClaw(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CharnelClaw), new AOEShapeRect(40f, 2.5f), 5);
+class ErruptingPain(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.EruptingPain), 6f);
+class ObliviatingClawSpawnAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ObliviatingClawSpawnAOE), 3f);
 class Oblivion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.OblivionVisual), "Raidwide x16");
 class MegaGraviton(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MegaGraviton));
 
@@ -184,11 +185,11 @@ class D023AnimaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 785, NameID = 10285)]
 public class D023Anima(WorldState ws, Actor primary) : BossModule(ws, primary, UpperArenaCenter, new ArenaBoundsSquare(19.5f))
 {
-    public static readonly WPos UpperArenaCenter = new(0, -180);
-    public static readonly WPos LowerArenaCenter = new(0, -400);
+    public static readonly WPos UpperArenaCenter = new(default, -180f);
+    public static readonly WPos LowerArenaCenter = new(default, -400f);
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.LowerAnima));
+        Arena.Actors(Enemies((uint)OID.LowerAnima));
     }
 }

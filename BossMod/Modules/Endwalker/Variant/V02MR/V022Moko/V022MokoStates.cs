@@ -16,8 +16,8 @@ class V022MokoOtherPathsStates : StateMachineBuilder
             .ActivateOnEnter<BoundlessScarlet>()
             .ActivateOnEnter<Explosion>()
             // Route 3
-            .ActivateOnEnter<YamaKagura>()
             .ActivateOnEnter<GhastlyGrasp>()
+            .ActivateOnEnter<YamaKagura>()
             // Route 4
             .ActivateOnEnter<Spiritflame>()
             .ActivateOnEnter<Spiritflames>()

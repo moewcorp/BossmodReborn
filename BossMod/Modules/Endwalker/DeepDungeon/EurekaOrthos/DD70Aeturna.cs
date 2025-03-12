@@ -38,7 +38,7 @@ class Shatter(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(23.95f, 75.Degrees());
     private static readonly AOEShapeCircle circle = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

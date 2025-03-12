@@ -27,16 +27,36 @@ class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.M
 {
     private readonly List<Actor> Termini = [];
     private DateTime? CastFinish;
+    private static readonly AOEShapeRect rect = new(41f, 2f);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = Termini.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var t = Termini[i];
+            aoes[i] = new(rect, t.Position, t.Rotation, Activation: CastFinish ?? WorldState.FutureTime(10d));
+        }
+        return aoes;
+    }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actors(Module.Enemies(OID.TerminusEst).Where(x => !x.IsDead), Colors.Object, true);
-    }
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        foreach (var t in Termini)
-            yield return new(new AOEShapeRect(41f, 2), t.Position, t.Rotation, Activation: CastFinish ?? WorldState.FutureTime(10));
+        var terminii = Module.Enemies((uint)OID.TerminusEst);
+        var count = terminii.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
+        {
+            var m = terminii[i];
+            if (!m.IsDead)
+            {
+                Arena.Actor(m, Colors.Object, true);
+            }
+        }
     }
 
     public override void OnActorCreated(Actor actor)
@@ -60,61 +80,79 @@ class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.M
 
 class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.Gunblade), stopAtWall: true)
 {
-    public readonly List<Actor> Casters = [];
+    private Actor? _caster;
+    private readonly ChoppingBlock _aoe = module.FindComponent<ChoppingBlock>()!;
+
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
+    {
+        if (_caster is Actor c)
+            return new Source[1] { new(c.Position, 10f, Module.CastFinishAt(c.CastInfo)) };
+        return [];
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var caster = Casters.FirstOrDefault();
-        if (caster == null)
-            return;
-
-        var voidzones = Module.Enemies(OID.ChoppingBlock).Where(x => x.EventState != 7).Select(v => ShapeDistance.Circle(v.Position, 5)).ToList();
-        if (voidzones.Count == 0)
-            return;
-
-        var combined = ShapeDistance.Union(voidzones);
-
-        float projectedDist(WPos pos)
+        if (_caster is Actor source)
         {
-            var direction = (pos - caster.Position).Normalized();
-            var projected = pos + 10 * direction;
-            return combined(projected);
+            var aoes = _aoe.ActiveAOEs(slot, actor).ToArray();
+            var len = aoes.Length;
+            if (len == 0)
+                return;
+            hints.AddForbiddenZone(p =>
+            {
+                ref readonly var a = ref aoes;
+                for (var i = 0; i < len; ++i)
+                    if (Intersect.RayCircle(source.Position, source.DirectionTo(p), a[i].Origin, 5f) < 1000f)
+                        return -1f;
+
+                return 1f;
+            }, Module.CastFinishAt(source.CastInfo));
         }
-
-        hints.AddForbiddenZone(projectedDist, Module.CastFinishAt(caster.CastInfo));
-    }
-
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
-    {
-        foreach (var c in Casters)
-            yield return new(c.Position, 10, Module.CastFinishAt(c.CastInfo));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            Casters.Add(caster);
+            _caster = caster;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            Casters.Remove(caster);
+            _caster = null;
     }
 }
 
-class ChoppingBlock(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.ChoppingBlock1), m => m.Enemies(OID.ChoppingBlock).Where(x => x.EventState != 7), 0);
+class ChoppingBlock(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5f, ActionID.MakeSpell(AID.ChoppingBlock1), GetVoidzones, 0f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.ChoppingBlock);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class FordolaRemLupisStates : StateMachineBuilder
 {
     public FordolaRemLupisStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<ChoppingBlock>()
             .ActivateOnEnter<Gunblade>()
             .ActivateOnEnter<TerminusEst>()
-            .ActivateOnEnter<DiffractiveLaser>()
-            .ActivateOnEnter<ChoppingBlock>()
-            ;
+            .ActivateOnEnter<DiffractiveLaser>();
     }
 }
 

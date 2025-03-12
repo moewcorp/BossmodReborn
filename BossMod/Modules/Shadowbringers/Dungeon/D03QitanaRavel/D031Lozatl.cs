@@ -34,7 +34,7 @@ class RonkanLight(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(60f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {

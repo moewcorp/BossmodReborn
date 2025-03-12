@@ -10,14 +10,7 @@ abstract class HoneyBeeline(BossModule module, AID aid) : Components.SimpleAOEs(
 class HoneyBeeline1(BossModule module) : HoneyBeeline(module, AID.HoneyBeeline1);
 class HoneyBeeline2(BossModule module) : HoneyBeeline(module, AID.HoneyBeeline2);
 
-class HoneyedBreeze(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(40, 15.Degrees()), (uint)IconID.HoneyedBreezeTB, ActionID.MakeSpell(AID.HoneyedBreeze), 5)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class HoneyedBreeze(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(40, 15.Degrees()), (uint)IconID.HoneyedBreezeTB, ActionID.MakeSpell(AID.HoneyedBreeze), 5f, tankbuster: true);
 
 class HoneyBLive(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.HoneyBLiveVisual), ActionID.MakeSpell(AID.HoneyBLive), 8.3f);
 class Heartsore(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Heartsore), 6);

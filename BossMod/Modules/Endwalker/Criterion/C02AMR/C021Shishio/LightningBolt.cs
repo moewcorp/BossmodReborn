@@ -14,23 +14,19 @@ class CloudToCloud(BossModule module) : Components.GenericAOEs(module)
 
     public bool Active => _aoes.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
 
         var deadline = _aoes[0].Activation.AddSeconds(1.4d);
-        List<AOEInstance> aoes = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (aoe.Activation <= deadline)
-                aoes.Add(aoe);
-            else
-                break;
-        }
-        return aoes;
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -19,19 +19,29 @@ public enum AID : uint
     SeaOfPitch = 962 // VoidPitch->location, no cast, range 4 circle
 }
 
-class GrimFate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.GrimFate), new AOEShapeCone(12.6f, 60.Degrees())); // TODO: verify angle
-class Desolation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Desolation), new AOEShapeRect(60, 3));
-class AetherialSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSurge), 6);
+class GrimFate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.GrimFate), new AOEShapeCone(12.6f, 60f.Degrees())); // TODO: verify angle
+class Desolation(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Desolation), new AOEShapeRect(60f, 3f));
+class AetherialSurge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherialSurge), 6f);
 
 // note: actor 'dies' immediately after casting
-class SeaOfPitch(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SeaOfPitch))
+class SeaOfPitch(BossModule module) : Components.PersistentVoidzone(module, 4f, GetEnemies)
 {
-    private readonly AOEShape _shape = new AOEShapeCircle(4);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private static Actor[] GetEnemies(BossModule module)
     {
-        // TODO: proper timings...
-        return Module.Enemies(OID.VoidPitch).Where(a => !a.IsDead).Select(a => new AOEInstance(_shape, a.Position));
+        var enemies = module.Enemies((uint)OID.VoidPitch);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
     }
 }
 

@@ -10,7 +10,7 @@ class SwordShieldOfTheHeavens(BossModule module) : BossComponent(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.SerAdelphel or OID.SerJanlenoux)
+        if (actor.OID is (uint)OID.SerAdelphel or (uint)OID.SerJanlenoux)
             _adds.Add((actor, Buff.None));
     }
 
@@ -24,7 +24,7 @@ class SwordShieldOfTheHeavens(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (_adds.Count(a => !AddActive(a.actor)) == 2 && _adds[0].actor.Position.InCircle(_adds[1].actor.Position, 10)) // TODO: verify range
+        if (_adds.Count(a => !AddActive(a.actor)) == 2 && _adds[0].actor.Position.InCircle(_adds[1].actor.Position, 10f)) // TODO: verify range
             hints.Add("Separate adds!");
 
         var focus = _adds.Find(a => a.buff == Buff.Sword);
@@ -60,10 +60,10 @@ class SwordShieldOfTheHeavens(BossModule module) : BossComponent(module)
         }
     }
 
-    private Buff ClassifyStatus(uint sid) => (SID)sid switch
+    private static Buff ClassifyStatus(uint sid) => sid switch
     {
-        SID.ShieldOfTheHeavens => Buff.Shield,
-        SID.SwordOfTheHeavens => Buff.Sword,
+        (uint)SID.ShieldOfTheHeavens => Buff.Shield,
+        (uint)SID.SwordOfTheHeavens => Buff.Sword,
         _ => Buff.None
     };
 

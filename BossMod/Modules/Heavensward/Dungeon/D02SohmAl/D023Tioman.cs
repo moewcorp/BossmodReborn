@@ -37,14 +37,14 @@ class HeavensfallBait(BossModule module) : Components.BaitAwayIcon(module, new A
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(D023Tioman.ArenaCenter, 27));
+        if (ActiveBaitsOn(actor).Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Circle(D023Tioman.ArenaCenter, 27f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away!");
     }
 }
@@ -54,14 +54,14 @@ class Meteor(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCi
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(D023Tioman.ArenaCenter, 27));
+        if (ActiveBaitsOn(actor).Count != 0)
+            hints.AddForbiddenZone(ShapeDistance.Circle(D023Tioman.ArenaCenter, 27f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away!");
     }
 
@@ -77,29 +77,29 @@ class Meteor(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCi
 class MeteorImpact(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(20);
+    private static readonly AOEShapeCircle circle = new(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.MeteorImpactVisual)
-            _aoes.Add(new(circle, caster.Position, default, Module.CastFinishAt(spell, 1.5f)));
+        if (spell.Action.ID == (uint)AID.MeteorImpactVisual)
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 1.5f)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.MeteorImpact)
+        if (spell.Action.ID == (uint)AID.MeteorImpact)
             _aoes.Clear();
     }
 }
 
 class DarkStar(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DarkStar));
-class ChaosBlastCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastCircle), 2);
-class ChaosBlastRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastRect), new AOEShapeRect(50.5f, 2));
-class AbyssicBuster(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssicBuster), new AOEShapeCone(31.84f, 45.Degrees()));
-class Comet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Comet), 4);
-class Heavensfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Heavensfall2), 5);
+class ChaosBlastCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastCircle), 2f);
+class ChaosBlastRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ChaosBlastRect), new AOEShapeRect(50.5f, 2f));
+class AbyssicBuster(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.AbyssicBuster), new AOEShapeCone(31.84f, 45f.Degrees()));
+class Comet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Comet), 4f);
+class Heavensfall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Heavensfall2), 5f);
 
 class D023TiomanStates : StateMachineBuilder
 {
@@ -121,7 +121,7 @@ class D023TiomanStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 37, NameID = 3798)]
 public class D023Tioman(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly WPos ArenaCenter = new(-104, -395);
+    public static readonly WPos ArenaCenter = new(-104f, -395f);
     private static readonly ArenaBoundsComplex arena = new([new Circle(ArenaCenter, 27.5f)], [new Rectangle(new(-112.465f, -368.177f), 20, 1.25f, -19.24f.Degrees())]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

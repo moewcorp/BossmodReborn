@@ -10,7 +10,7 @@ class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
         Math.Max(ShapeDistance.InvertedRect(T03QueenEternal.LeftSplitCenter + offset2, T03QueenEternal.LeftSplitCenter - offset2, 4f)(p),
             ShapeDistance.InvertedRect(T03QueenEternal.RightSplitCenter + offset2, T03QueenEternal.RightSplitCenter - offset2, 4f)(p));
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0 || _aoe.AOEs.Count != 0)
@@ -27,7 +27,7 @@ class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
             else if (i == 1 && compare)
                 aoes[index++] = aoe with { Risky = false };
         }
-        return aoes[..index];
+        return aoes.AsSpan()[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

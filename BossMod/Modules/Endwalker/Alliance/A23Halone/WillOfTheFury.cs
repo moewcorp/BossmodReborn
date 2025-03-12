@@ -1,45 +1,29 @@
 ﻿namespace BossMod.Endwalker.Alliance.A23Halone;
 
-class WillOfTheFury(BossModule module) : Components.GenericAOEs(module)
+class WillOfTheFury(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private AOEInstance? _aoe;
-    private const float _impactRadiusIncrement = 6f;
-    public bool Active => _aoe != null;
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    private static readonly AOEShape[] _shapes = [new AOEShapeDonut(24f, 30f), new AOEShapeDonut(18f, 24f), new AOEShapeDonut(12f, 18f), new AOEShapeDonut(6f, 12f), new AOEShapeCircle(6f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.WillOfTheFuryAOE1)
-        {
-            UpdateAOE(Module.CastFinishAt(spell));
-        }
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch (spell.Action.ID)
+        if (Sequences.Count != 0)
         {
-            case (uint)AID.WillOfTheFuryAOE1:
-            case (uint)AID.WillOfTheFuryAOE2:
-            case (uint)AID.WillOfTheFuryAOE3:
-            case (uint)AID.WillOfTheFuryAOE4:
-            case (uint)AID.WillOfTheFuryAOE5:
-                ++NumCasts;
-                UpdateAOE(WorldState.FutureTime(2d));
-                break;
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.WillOfTheFuryAOE1 => 0,
+                (uint)AID.WillOfTheFuryAOE2 => 1,
+                (uint)AID.WillOfTheFuryAOE3 => 2,
+                (uint)AID.WillOfTheFuryAOE4 => 3,
+                (uint)AID.WillOfTheFuryAOE5 => 4,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
-    }
-
-    private void UpdateAOE(DateTime activation)
-    {
-        var outerRadius = (5 - NumCasts) * _impactRadiusIncrement;
-        AOEShape? shape = NumCasts switch
-        {
-            < 4 => new AOEShapeDonut(outerRadius - _impactRadiusIncrement, outerRadius),
-            4 => new AOEShapeCircle(outerRadius),
-            _ => null
-        };
-        _aoe = shape != null ? new(shape, Arena.Center, default, activation) : null;
     }
 }

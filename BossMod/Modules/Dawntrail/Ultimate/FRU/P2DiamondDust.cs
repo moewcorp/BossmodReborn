@@ -1,37 +1,37 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.FRU;
 
-class P2AxeKick(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AxeKick), 16);
-class P2ScytheKick(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheKick), new AOEShapeDonut(4, 20));
+class P2AxeKick(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AxeKick), 16f);
+class P2ScytheKick(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ScytheKick), new AOEShapeDonut(4f, 20f));
 
 class P2IcicleImpact(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.IcicleImpact))
 {
     public readonly List<AOEInstance> AOEs = []; // note: we don't remove finished aoes, since we use them in other components to detect safespots
 
-    private static readonly AOEShapeCircle _shape = new(10);
+    private static readonly AOEShapeCircle _shape = new(10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Skip(NumCasts);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
         {
             // initially all aoes start as non-risky
-            AOEs.Add(new(_shape, caster.Position, default, Module.CastFinishAt(spell), 0, false));
+            AOEs.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), 0, false));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.IcicleImpact:
+            case (uint)AID.IcicleImpact:
                 ++NumCasts;
                 break;
-            case AID.HouseOfLight:
+            case (uint)AID.HouseOfLight:
                 // after proteans are baited, first two aoes become risky; remaining are still not - stones are supposed to be baited into them
                 MarkAsRisky(0, Math.Min(2, AOEs.Count));
                 break;
-            case AID.FrigidStone:
+            case (uint)AID.FrigidStone:
                 // after stones are baited, all aoes should be marked as risky
                 MarkAsRisky(2, AOEs.Count);
                 break;
@@ -45,8 +45,8 @@ class P2IcicleImpact(BossModule module) : Components.GenericAOEs(module, ActionI
     }
 }
 
-class P2FrigidNeedleCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidNeedleCircle), 5);
-class P2FrigidNeedleCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidNeedleCross), new AOEShapeCross(40, 2.5f));
+class P2FrigidNeedleCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidNeedleCircle), 5f);
+class P2FrigidNeedleCross(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FrigidNeedleCross), new AOEShapeCross(40f, 2.5f));
 
 class P2FrigidStone : Components.BaitAwayIcon
 {
@@ -64,14 +64,29 @@ class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBaitAway(
     private Actor? _source;
     private DateTime _activation;
 
-    private static readonly AOEShapeCone _shape = new(60, 15.Degrees());
+    private static readonly AOEShapeCone _shape = new(60f, 15f.Degrees());
 
     public override void Update()
     {
         CurrentBaits.Clear();
         if (_source != null && ForbiddenPlayers.Any())
-            foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(_source.Position).Take(4))
+        {
+            var party = Raid.WithoutSlot(false, true, true);
+            Array.Sort(party, (a, b) =>
+            {
+                var distA = (a.Position - _source.Position).LengthSq();
+                var distB = (b.Position - _source.Position).LengthSq();
+                return distA.CompareTo(distB);
+            });
+
+            var len = party.Length;
+            var max = len > 4 ? 4 : len;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var p = ref party[i];
                 CurrentBaits.Add(new(_source, p, _shape, _activation));
+            }
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -101,7 +116,7 @@ class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBaitAway(
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.AxeKick or AID.ScytheKick)
+        if (spell.Action.ID is (uint)AID.AxeKick or (uint)AID.ScytheKick)
         {
             _source = caster;
             _activation = Module.CastFinishAt(spell, 0.8f);
@@ -140,20 +155,20 @@ class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.IcicleImpact:
+            case (uint)AID.IcicleImpact:
                 if (_conesAtCardinals == null)
                 {
                     _conesAtCardinals = IsCardinal(caster.Position - Arena.Center);
                     InitIfReady();
                 }
                 break;
-            case AID.AxeKick:
+            case (uint)AID.AxeKick:
                 _out = true;
                 InitIfReady();
                 break;
-            case AID.ScytheKick:
+            case (uint)AID.ScytheKick:
                 _out = false;
                 InitIfReady();
                 break;
@@ -162,15 +177,15 @@ class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.AxeKick:
+            case (uint)AID.AxeKick:
                 // out done => cone baiters go in, ice baiters stay
                 for (var i = 0; i < _safeOffs.Length; ++i)
                     if (_safeOffs[i] != default && Raid[i]?.Class.IsSupport() == _supportsBaitCones)
                         _safeOffs[i] = 4 * _safeOffs[i].Normalized();
                 break;
-            case AID.ScytheKick:
+            case (uint)AID.ScytheKick:
                 // in done => cone baiters stay, ice baiters go out
                 for (var i = 0; i < _safeOffs.Length; ++i)
                     if (_safeOffs[i] != default && Raid[i]?.Class.IsSupport() != _supportsBaitCones)
@@ -193,13 +208,13 @@ class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
         if (_out == null || _supportsBaitCones == null || _conesAtCardinals == null)
             return;
         var supportsAtCardinals = _supportsBaitCones == _conesAtCardinals;
-        var offsetTH = supportsAtCardinals ? 0.Degrees() : _config.P2DiamondDustSupportsCCW ? 45.Degrees() : -45.Degrees();
-        var offsetDD = !supportsAtCardinals ? 0.Degrees() : _config.P2DiamondDustDDCCW ? 45.Degrees() : -45.Degrees();
+        var offsetTH = supportsAtCardinals ? default : _config.P2DiamondDustSupportsCCW ? 45f.Degrees() : -45f.Degrees();
+        var offsetDD = !supportsAtCardinals ? default : _config.P2DiamondDustDDCCW ? 45f.Degrees() : -45f.Degrees();
         foreach (var (slot, group) in _config.P2DiamondDustCardinals.Resolve(Raid))
         {
             var support = group < 4;
             var baitCone = _supportsBaitCones == support;
-            var dir = 180.Degrees() - (group & 3) * 90.Degrees();
+            var dir = 180f.Degrees() - (group & 3) * 90f.Degrees();
             dir += support ? offsetTH : offsetDD;
             var radius = (_out.Value ? 16 : 0) + (baitCone ? 1 : 3);
             _safeOffs[slot] = radius * dir.ToDirection();
@@ -212,24 +227,24 @@ class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
 class P2HeavenlyStrike(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.HeavenlyStrike))
 {
     private readonly WDir[] _safeDirs = BuildSafeDirs(module);
-    private readonly DateTime _activation = module.WorldState.FutureTime(3.9f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(3.9d);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        yield return new(Arena.Center, 12, _activation);
+        return new Source[1] { new(Arena.Center, 12, _activation) };
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (_safeDirs[slot] != default)
-            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(Arena.Center + 6 * _safeDirs[slot], new(1, 0), Arena.Bounds.MapResolution, actor.Position, 0.25f), _activation);
+            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(Arena.Center + 6f * _safeDirs[slot], new(1, 0), Arena.Bounds.MapResolution, actor.Position, 0.25f), _activation);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
         if (_safeDirs[pcSlot] != default)
-            Arena.AddCircle(Arena.Center + 18 * _safeDirs[pcSlot], 1, Colors.Safe);
+            Arena.AddCircle(Arena.Center + 18f * _safeDirs[pcSlot], 1f, Colors.Safe);
     }
 
     private static WDir[] BuildSafeDirs(BossModule module)
@@ -248,7 +263,7 @@ class P2HeavenlyStrike(BossModule module) : Components.Knockback(module, ActionI
     }
 }
 
-class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4, 4)
+class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4, 4)
 {
     public int NumCasts;
     private DateTime _nextExplosion;
@@ -260,7 +275,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
         // if oracle jumps directly to one of the initial safespots, both groups run opposite in one (arbitrary, CW) direction, and the one that ends up behind boss slides across - in that case we return zero destination
         // note: we assume that when this is called oracle is already at position
         var icicles = module.FindComponent<P2IcicleImpact>();
-        var oracle = module.Enemies(OID.OraclesReflection).FirstOrDefault();
+        var oracle = module.Enemies((uint)OID.OraclesReflection).FirstOrDefault();
         if (icicles == null || icicles.AOEs.Count == 0 || oracle == null)
             return default;
 
@@ -302,7 +317,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
             // non-healers should just stack with whatever closest healer is
             // before first cast, ignore master's movements
             var moveDir = NumCasts > 0 ? master.LastFrameMovement.Normalized() : default;
-            var capsule = ShapeDistance.Capsule(master.Position + 2 * moveDir, moveDir, 4, 1.5f);
+            var capsule = ShapeDistance.Capsule(master.Position + 2f * moveDir, moveDir, 4f, 1.5f);
             hints.AddForbiddenZone(p => -capsule(p), DateTime.MaxValue);
         }
 
@@ -311,7 +326,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
         var hintTime = WorldState.FutureTime(50);
 
         // stay near border
-        hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16), hintTime);
+        hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16f), hintTime);
 
         // prefer moving towards safety (CW is arbitrary)
         var planeOffset = moveQuickly ? 2 : -2; // if we're moving quickly, mark our current spot as forbidden
@@ -320,7 +335,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SinboundHoly)
+        if (spell.Action.ID == (uint)AID.SinboundHoly)
         {
             AddStacks(Raid.WithoutSlot(false, true, true).Where(p => p.Role == Role.Healer), Module.CastFinishAt(spell, 0.9f));
         }
@@ -328,7 +343,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.SinboundHolyAOE && WorldState.CurrentTime > _nextExplosion)
+        if (spell.Action.ID == (uint)AID.SinboundHolyAOE && WorldState.CurrentTime > _nextExplosion)
         {
             if (NumCasts == 0)
                 foreach (var (i, p) in Raid.WithSlot(false, true, true))
@@ -340,7 +355,7 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
     }
 }
 
-class P2SinboundHolyVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.SinboundHolyVoidzone).Where(z => z.EventState != 7))
+class P2SinboundHolyVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
 {
     public bool AIHintsEnabled = true;
 
@@ -349,6 +364,24 @@ class P2SinboundHolyVoidzone(BossModule module) : Components.PersistentVoidzone(
         if (AIHintsEnabled)
             base.AddAIHints(slot, actor, assignment, hints);
     }
+
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SinboundHolyVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
 }
 
 class P2ShiningArmor(BossModule module) : Components.GenericGaze(module, ActionID.MakeSpell(AID.ShiningArmor))
@@ -356,18 +389,19 @@ class P2ShiningArmor(BossModule module) : Components.GenericGaze(module, ActionI
     private Actor? _source;
     private DateTime _activation;
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
         if (_source != null)
-            yield return new(_source.Position, _activation);
+            return new Eye[1] { new(_source.Position, _activation) };
+        return [];
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.BossP2 && id == 0x1E43)
+        if (actor.OID == (uint)OID.BossP2 && id == 0x1E43)
         {
             _source = actor;
-            _activation = WorldState.FutureTime(7.2f);
+            _activation = WorldState.FutureTime(7.2d);
         }
     }
 }
@@ -381,15 +415,15 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
     private P2SinboundHolyVoidzone? _voidzones; // used for hints only
     private const float SlideDistance = 32;
 
-    private readonly AOEShapeCone _shapeFront = new(30, 135.Degrees());
-    private readonly AOEShapeCone _shapeBack = new(30, 45.Degrees());
+    private readonly AOEShapeCone _shapeFront = new(30f, 135f.Degrees());
+    private readonly AOEShapeCone _shapeBack = new(30f, 45f.Degrees());
 
     public void EnableAIHints()
     {
         _voidzones = Module.FindComponent<P2SinboundHolyVoidzone>();
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Take(1);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? CollectionsMarshal.AsSpan(AOEs)[..1] : [];
 
     public override void Update()
     {
@@ -412,9 +446,9 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
             // the actual shape is quite complicated ('primary' shape is a set of points at distance X from a cone behind boss, 'secondary' is a set of points at distance X from primary), so we use a rough approximation
 
             // first, find a set of allowed angles along the border
-            var zoneList = new ArcList(Arena.Center, 17);
+            var zoneList = new ArcList(Arena.Center, 17f);
             foreach (var z in _voidzones.Sources(Module))
-                zoneList.ForbidCircle(z.Position, 6);
+                zoneList.ForbidCircle(z.Position, 6f);
 
             // now find closest allowed zone
             var actorDir = Angle.FromDirection(actor.Position - Module.Center);
@@ -432,8 +466,8 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
                     var oppositeDist = (sourceDir + 180.Degrees()).DistanceToRange(closest.min + halfWidth, closest.max - halfWidth);
                     desiredDir = oppositeDist.Abs().Rad < sourceDist.Abs().Rad ? (sourceDir + 180.Degrees() + oppositeDist) : (sourceDir + sourceDist);
                 }
-                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16), WorldState.FutureTime(50));
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 100, desiredDir, halfWidth), DateTime.MaxValue);
+                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 16f), WorldState.FutureTime(50));
+                hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 100f, desiredDir, halfWidth), DateTime.MaxValue);
             }
         }
         else if (actor.LastFrameMovement == default)
@@ -501,22 +535,22 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var (shape1, off1, shape2, off2) = (AID)spell.Action.ID switch
+        var (shape1, off1, shape2, off2) = spell.Action.ID switch
         {
-            AID.TwinStillnessFirst => (_shapeFront, 0.Degrees(), _shapeBack, 180.Degrees()),
-            AID.TwinSilenceFirst => (_shapeBack, 0.Degrees(), _shapeFront, 180.Degrees()),
+            (uint)AID.TwinStillnessFirst => (_shapeFront, new Angle(), _shapeBack, 180f.Degrees()),
+            (uint)AID.TwinSilenceFirst => (_shapeBack, default, _shapeFront, 180f.Degrees()),
             _ => (null, default, null, default)
         };
         if (shape1 != null && shape2 != null)
         {
-            AOEs.Add(new(shape1, caster.Position, spell.Rotation + off1, Module.CastFinishAt(spell)));
-            AOEs.Add(new(shape2, caster.Position, spell.Rotation + off2, Module.CastFinishAt(spell, 2.1f)));
+            AOEs.Add(new(shape1, spell.LocXZ, spell.Rotation + off1, Module.CastFinishAt(spell)));
+            AOEs.Add(new(shape2, spell.LocXZ, spell.Rotation + off2, Module.CastFinishAt(spell, 2.1f)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.TwinStillnessFirst or AID.TwinStillnessSecond or AID.TwinSilenceFirst or AID.TwinSilenceSecond)
+        if (spell.Action.ID is (uint)AID.TwinStillnessFirst or (uint)AID.TwinStillnessSecond or (uint)AID.TwinSilenceFirst or (uint)AID.TwinSilenceSecond)
         {
             ++NumCasts;
             if (AOEs.Count != 0)
@@ -526,13 +560,27 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.ThinIce)
-            _thinIce.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.ThinIce)
+            _thinIce[Raid.FindSlot(actor.InstanceID)] = true;
     }
 }
 
-class P2ThinIce(BossModule module) : Components.ThinIce(module, 32)
+class P2ThinIce(BossModule module) : Components.ThinIce(module, 32f)
 {
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<P2TwinStillnessSilence>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) ||
-    !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var comp = Module.FindComponent<P2TwinStillnessSilence>();
+        if (comp != null)
+        {
+            var aoes = comp.ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                    return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }

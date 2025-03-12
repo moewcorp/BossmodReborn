@@ -1,13 +1,13 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN1TrinitySeeker;
 
-class MercifulBreeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MercifulBreeze), new AOEShapeRect(50, 2.5f));
-class MercifulBlooms(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MercifulBlooms), 20);
-class MercifulArc(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(12, 45.Degrees()), (uint)IconID.MercifulArc, ActionID.MakeSpell(AID.MercifulArc)); // TODO: verify angle
+class MercifulBreeze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MercifulBreeze), new AOEShapeRect(50f, 2.5f));
+class MercifulBlooms(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MercifulBlooms), 20f);
+class MercifulArc(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(12f, 45f.Degrees()), (uint)IconID.MercifulArc, ActionID.MakeSpell(AID.MercifulArc)); // TODO: verify angle
 
 class BurningChains(BossModule module) : Components.Chains(module, (uint)TetherID.BurningChains, ActionID.MakeSpell(AID.ScorchingShackle));
 
 class IronImpact(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.IronImpact));
-class IronRose(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronRose), new AOEShapeRect(50, 4));
+class IronRose(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronRose), new AOEShapeRect(50f, 4f));
 
 class DeadIron : Components.BaitAwayTethers
 {

@@ -1,39 +1,27 @@
 ﻿namespace BossMod.RealmReborn.Trial.T08ThornmarchH;
 
-class PomStone(BossModule module) : Components.GenericAOEs(module)
+class PomStone(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private readonly List<(Actor caster, AOEShape shape)> _casters = [];
-    private static readonly AOEShapeCircle _shapeIn = new(10);
-    private static readonly AOEShapeDonut _shapeMid = new(10, 20);
-    private static readonly AOEShapeDonut _shapeOut = new(20, 30);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_casters.Count > 0)
-        {
-            var deadline = _casters[0].caster.CastInfo!.RemainingTime + 1;
-            foreach (var c in _casters)
-                if (c.caster.CastInfo!.RemainingTime < deadline)
-                    yield return new(c.shape, c.caster.Position, c.caster.CastInfo!.Rotation, Module.CastFinishAt(c.caster.CastInfo));
-        }
-    }
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        AOEShape? shape = (AID)spell.Action.ID switch
-        {
-            AID.PomStoneIn => _shapeIn,
-            AID.PomStoneMid => _shapeMid,
-            AID.PomStoneOut => _shapeOut,
-            _ => null
-        };
-        if (shape != null)
-            _casters.Add((caster, shape));
+        if (spell.Action.ID == (uint)AID.PomStoneIn)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.PomStoneIn or AID.PomStoneMid or AID.PomStoneOut)
-            _casters.RemoveAll(c => c.caster == caster);
+        if (Sequences.Count != 0)
+        {
+            var order = spell.Action.ID switch
+            {
+                (uint)AID.PomStoneIn => 0,
+                (uint)AID.PomStoneMid => 1,
+                (uint)AID.PomStoneOut => 2,
+                _ => -1
+            };
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
+        }
     }
 }

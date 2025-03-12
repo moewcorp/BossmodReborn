@@ -21,31 +21,55 @@ public enum AID : uint
     ArtOfTheSword1 = 8993, // 1CEE->self, 3.0s cast, range 40+R width 6 rect
 }
 
-class ArtOfTheSword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword1), new AOEShapeRect(41, 3));
-class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeinSplitter), 10);
+class ArtOfTheSword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword1), new AOEShapeRect(41f, 3f));
+class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeinSplitter), 10f);
 class Concentrativity(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Concentrativity));
 class LightlessFlame(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.LightlessFlame))
 {
-    private readonly Dictionary<ulong, (WPos position, DateTime activation)> Flames = [];
+    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circle = new(11f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Flames.Values.Select(p => new AOEInstance(new AOEShapeCircle(11), p.position, Activation: p.activation));
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.LightlessFlame)
-            Flames.Add(actor.InstanceID, (actor.Position, WorldState.CurrentTime.AddSeconds(7)));
+        if (actor.OID == (uint)OID.LightlessFlame)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.CurrentTime.AddSeconds(7d)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LightlessFlame)
-            Flames[caster.InstanceID] = (caster.Position, Module.CastFinishAt(spell));
+        if (spell.Action.ID == (uint)AID.LightlessFlame)
+        {
+            var count = _aoes.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                var a = _aoes[i];
+                if (a.ActorID == id)
+                {
+                    _aoes[i] = a with { Activation = Module.CastFinishAt(spell) };
+                    return;
+                }
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.LightlessFlame)
-            Flames.Remove(caster.InstanceID);
+        if (spell.Action.ID == (uint)AID.LightlessFlame)
+        {
+            var count = _aoes.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].ActorID == id)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 class LightlessSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.92f, 45.Degrees()));

@@ -1,24 +1,38 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RuinfallAOE), 6);
+class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RuinfallAOE), 6f);
 
-class RuinfallKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.RuinfallKB), 21, stopAfterWall: true, kind: Kind.DirForward)
+class RuinfallKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.RuinfallKB), 21f, stopAfterWall: true, kind: Kind.DirForward)
 {
     private readonly RuinfallTower _tower = module.FindComponent<RuinfallTower>()!;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Sources(slot, actor).FirstOrDefault();
-        if (source != default && actor.Role != Role.Tank)
+        var source = Casters.Count != 0 ? Casters[0] : null;
+        if (source != null && actor.Role != Role.Tank)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new Angle(), 1, 0, 20), source.Activation);
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new Angle(), 1f, default, 20f), Module.CastFinishAt(source.CastInfo));
         }
-        if (_tower.Towers.Any(x => x.IsInside(actor) && (source.Activation - WorldState.CurrentTime).TotalSeconds < 5))
+        var towers = _tower.Towers;
+        var count = towers.Count;
+        if (count == 0)
+            return;
+        var isDelayDeltaLow = (towers[0].Activation - WorldState.CurrentTime).TotalSeconds < 5d;
+        var isActorInsideTower = false;
+        for (var i = 0; i < count; ++i)
+        {
+            if (towers[i].IsInside(actor))
+            {
+                isActorInsideTower = true;
+                break;
+            }
+        }
+        if (isDelayDeltaLow && isActorInsideTower)
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.ArmsLength), actor, ActionQueue.Priority.High);
     }
 }
 
-class RuinfallTower(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.RuinfallTower), 6, 2, 2)
+class RuinfallTower(BossModule module) : Components.CastTowers(module, ActionID.MakeSpell(AID.RuinfallTower), 6f, 2, 2)
 {
     public override void Update()
     {

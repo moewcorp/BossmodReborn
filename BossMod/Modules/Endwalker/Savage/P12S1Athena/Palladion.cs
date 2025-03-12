@@ -19,16 +19,16 @@ class Palladion(BossModule module) : BossComponent(module)
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var (target, partner) = (IconID)iconID switch
+        var (target, partner) = iconID switch
         {
-            IconID.Palladion1 => (0, 2),
-            IconID.Palladion2 => (1, 3),
-            IconID.Palladion3 => (2, 0),
-            IconID.Palladion4 => (3, 1),
-            IconID.Palladion5 => (4, 6),
-            IconID.Palladion6 => (5, 7),
-            IconID.Palladion7 => (6, 4),
-            IconID.Palladion8 => (7, 5),
+            (uint)IconID.Palladion1 => (0, 2),
+            (uint)IconID.Palladion2 => (1, 3),
+            (uint)IconID.Palladion3 => (2, 0),
+            (uint)IconID.Palladion4 => (3, 1),
+            (uint)IconID.Palladion5 => (4, 6),
+            (uint)IconID.Palladion6 => (5, 7),
+            (uint)IconID.Palladion7 => (6, 4),
+            (uint)IconID.Palladion8 => (7, 5),
             _ => (-1, -1)
         };
         if (target >= 0)
@@ -40,7 +40,7 @@ class Palladion(BossModule module) : BossComponent(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.Anthropos)
+        if (actor.OID == (uint)OID.Anthropos)
         {
             switch (id)
             {
@@ -60,7 +60,7 @@ class Palladion(BossModule module) : BossComponent(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ClearCut or AID.WhiteFlame)
+        if (spell.Action.ID is (uint)AID.ClearCut or (uint)AID.WhiteFlame)
             ++NumBaitsDone;
     }
 }
@@ -72,7 +72,7 @@ class PalladionArena(BossModule module) : BossComponent(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         for (var i = 0; i < 8; ++i)
-            Arena.PathLineTo(Module.Center + 14 * (i * 45).Degrees().ToDirection());
+            Arena.PathLineTo(Arena.Center + 14f * (i * 45f).Degrees().ToDirection());
         MiniArena.PathStroke(true, Colors.Border, 2);
     }
 }
@@ -84,13 +84,14 @@ class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
     private WPos _origin = module.PrimaryActor.Position;
     private DateTime _activation = module.CastFinishAt(module.PrimaryActor.CastInfo, 0.3f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && target != null && actor != target && actor != _palladion.Partners[NumCasts])
         {
-            var toTarget = target.Position - _origin;
-            yield return new(new AOEShapeRect(toTarget.Length(), 2), _origin, Angle.FromDirection(toTarget), _activation);
+            var toTarget = WPos.ClampToGrid(target.Position) - _origin;
+            return new AOEInstance[1] { new(new AOEShapeRect(toTarget.Length(), 2f), _origin, Angle.FromDirection(toTarget), _activation) };
         }
+        return [];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -105,17 +106,17 @@ class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
         if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && target != null && (pc == target || pc == _palladion.Partners[NumCasts]))
         {
             var toTarget = target.Position - _origin;
-            Arena.AddRect(_origin, toTarget.Normalized(), toTarget.Length(), 0, 2, Colors.Safe);
+            Arena.AddRect(_origin, toTarget.Normalized(), toTarget.Length(), default, 2f, Colors.Safe);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         // note: shockwave cast happens at exactly the same time, but it targets a player rather than location, making it slightly harder to work with
-        if ((AID)spell.Action.ID == AID.PalladionAOE)
+        if (spell.Action.ID == (uint)AID.PalladionAOE)
         {
             _origin = spell.TargetXZ;
-            _activation = WorldState.FutureTime(3);
+            _activation = WorldState.FutureTime(3d);
             ++NumCasts;
         }
     }
@@ -136,10 +137,10 @@ class PalladionStack : Components.UniformStackSpread
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.PalladionAOE)
+        if (spell.Action.ID == (uint)AID.PalladionAOE)
         {
             ++_numCasts;
-            UpdateStack(WorldState.FutureTime(3));
+            UpdateStack(WorldState.FutureTime(3d));
         }
     }
 
@@ -151,7 +152,26 @@ class PalladionStack : Components.UniformStackSpread
     }
 }
 
-class PalladionVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.PalladionAOE), m => m.Enemies(OID.PalladionVoidzone).Where(z => z.EventState != 7), 0.9f);
+class PalladionVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.PalladionAOE), GetVoidzones, 0.9f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.PalladionVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 {
@@ -159,10 +179,11 @@ class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(4); // note: it's really a 270? degree cone, but we don't really know rotation early enough, and we just shouldn't stay in center anyway
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_palladion != null && _palladion.NumBaitsDone < _palladion.NumBaitsAssigned && !_palladion.BaitOrder[_palladion.NumBaitsDone])
-            yield return new(_shape, Module.Center);
+            return new AOEInstance[1] { new(_shape, Arena.Center) };
+        return [];
     }
 }
 
@@ -170,8 +191,8 @@ class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 class PalladionWhiteFlame : Components.GenericBaitAway
 {
     private readonly Palladion? _palladion;
-    public static readonly Actor FakeActor = new(0, 0, -1, "dummy", 0, ActorType.None, Class.None, 0, new(100, 0, 100, 0));
-    private static readonly AOEShapeRect _shape = new(100, 2);
+    public static readonly Actor FakeActor = new(default, default, -1, "dummy", default, ActorType.None, Class.None, default, new(100f, default, 100f, default));
+    private static readonly AOEShapeRect _shape = new(100f, 2f);
 
     public PalladionWhiteFlame(BossModule module) : base(module)
     {
@@ -203,7 +224,7 @@ class PalladionWhiteFlame : Components.GenericBaitAway
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WhiteFlame)
+        if (spell.Action.ID == (uint)AID.WhiteFlame)
         {
             ++NumCasts;
             UpdateBaiters();
@@ -230,10 +251,10 @@ class PalladionWhiteFlame : Components.GenericBaitAway
 
 class PalladionDestroyPlatforms(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.PalladionDestroyPlatforms), "Go to safe platform!")
 {
-    private static readonly AOEShapeRect _shape = new(10, 20, 10);
+    private static readonly AOEShapeRect _shape = new(10f, 20f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(_shape, Arena.Center);
+        return new AOEInstance[1] { new(_shape, Arena.Center) };
     }
 }

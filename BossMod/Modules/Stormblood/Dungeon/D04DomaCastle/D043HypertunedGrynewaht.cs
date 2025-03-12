@@ -46,27 +46,21 @@ public enum SID : uint
     Prey = 1253 // Boss->player, extra=0x0
 }
 
-class CleanCut(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.CleanCut), 4);
-class DelayActionCharge(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.DelayActionCharge), 6, 4);
-class ThermobaricCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 30);
+class CleanCut(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.CleanCut), 4f);
+class DelayActionCharge(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.DelayActionCharge), 6f, 4);
+class ThermobaricCharge(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricCharge), 30f);
 
 class Chainsaw(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(4.6f, 1);
+    private static readonly AOEShapeRect rect = new(4.6f, 1f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_aoe is AOEInstance aoe)
-            return [aoe with { Origin = Module.PrimaryActor.Position, Rotation = Module.PrimaryActor.Rotation }];
-        else
-            return [];
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ChainsawFirst)
-            _aoe = new(rect, Module.PrimaryActor.Position, spell.Rotation, Module.CastFinishAt(spell));
+            _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -88,19 +82,30 @@ class Chainsaw(BossModule module) : Components.GenericAOEs(module)
 class ChainMine(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40, 2, 10);
+    private static readonly AOEShapeRect rect = new(40f, 2f, 10f);
     private readonly ThermobaricCharge _aoe = module.FindComponent<ThermobaricCharge>()!;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HexadroneBits)
-            _aoes.Add(new(rect, source.Position, source.Rotation, WorldState.FutureTime(5.6f)));
+            _aoes.Add(new(rect, WPos.ClampToGrid(source.Position), source.Rotation, WorldState.FutureTime(5.6d)));
     }
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HexadroneBits)
-            _aoes.RemoveAll(x => x.Origin == source.Position);
+        {
+            var count = _aoes.Count;
+            var pos = source.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin.AlmostEqual(pos, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -112,7 +117,7 @@ class ChainMine(BossModule module) : Components.GenericAOEs(module)
 
 class ThermobaricChargeBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
-    private static readonly AOEShapeCircle circle = new(30);
+    private static readonly AOEShapeCircle circle = new(30f);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -149,9 +154,17 @@ class Gunsaw(BossModule module) : Components.GenericBaitAway(module)
     {
         if (spell.Action.ID == (uint)AID.GunsawFirst)
         {
-            var target = Raid.WithoutSlot(false, true, true).FirstOrDefault(x => x.Position.InRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f));
-            if (target != default)
-                CurrentBaits.Add(new(caster, target, rect));
+            var party = Raid.WithoutSlot(false, true, true);
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var p = ref party[i];
+                if (p.Position.InRect(WPos.ClampToGrid(Module.PrimaryActor.Position), Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f))
+                {
+                    CurrentBaits.Add(new(caster, p, rect));
+                    return;
+                }
+            }
         }
         else if (spell.Action.ID == (uint)AID.GunsawRest)
             if (++NumCasts == 4)

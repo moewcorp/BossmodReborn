@@ -10,13 +10,13 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeSmall = new(8f);
     private static readonly AOEShapeCircle _shapeLarge = new(18f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         Arena.Actors(_orbs, Colors.Object, true);
         if (_miniTarget != null)
-            Arena.AddCircle(_miniTarget.Position, 3f, Colors.Danger);
+            Arena.AddCircle(_miniTarget.Position, 3f);
         if (_safeOrb != null)
             Arena.AddCircle(_safeOrb.Position, 1f, Colors.Safe);
     }
@@ -28,8 +28,9 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
             _orbs.AddRange(Module.Enemies((uint)OID.NBallOfLevin));
             _orbs.AddRange(Module.Enemies((uint)OID.SBallOfLevin));
             WDir center = new();
-            foreach (var o in _orbs)
-                center += o.Position - Arena.Center;
+            var count = _orbs.Count;
+            for (var i = 0; i < count; ++i)
+                center += _orbs[i].Position - Arena.Center;
             _safeOrb = _orbs.Farthest(Arena.Center + center);
             _miniTarget = WorldState.Actors.Find(spell.TargetID);
         }
@@ -57,7 +58,7 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Flintlock(BossModule module) : Components.GenericWildCharge(module, 4)
+class Flintlock(BossModule module) : Components.GenericWildCharge(module, 4f)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

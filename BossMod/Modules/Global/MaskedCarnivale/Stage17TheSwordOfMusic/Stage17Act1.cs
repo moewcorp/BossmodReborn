@@ -13,8 +13,8 @@ public enum AID : uint
     Shred = 14759 // Boss/RightClaw->self, 2.5s cast, range 4+R width 4 rect, stuns player
 }
 
-class TheHand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheHand), new AOEShapeCone(8, 60.Degrees()));
-class Shred(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shred), new AOEShapeRect(6, 2));
+class TheHand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheHand), new AOEShapeCone(8f, 60f.Degrees()));
+class Shred(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Shred), new AOEShapeRect(6f, 2f));
 
 class Hints2(BossModule module) : BossComponent(module)
 {
@@ -22,8 +22,13 @@ class Hints2(BossModule module) : BossComponent(module)
     {
         if (!Module.PrimaryActor.IsDead)
             hints.Add($"{Module.PrimaryActor.Name} counters magical damage!");
-        if (!Module.Enemies(OID.RightClaw).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.RightClaw).FirstOrDefault()!.Name} counters physical damage!");
+        var rightClaws = Module.Enemies((uint)OID.RightClaw);
+        var count = rightClaws.Count;
+        if (count == 0)
+            return;
+        var claw = rightClaws[0];
+        if (!claw.IsDead)
+            hints.Add($"{claw.Name} counters physical damage!");
     }
 }
 
@@ -31,7 +36,7 @@ class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        hints.Add($"The {Module.PrimaryActor.Name} counters magical attacks, the {Module.Enemies(OID.RightClaw).FirstOrDefault()!.Name} counters physical\nattacks. If you have healing spells you can just tank the counter damage\nand kill them however you like anyway. All opponents in this stage are\nweak to lightning.\nThe Ram's Voice and Ultravibration combo can be used in Act 2.");
+        hints.Add($"The {Module.PrimaryActor.Name} counters magical attacks, the {Module.Enemies((uint)OID.RightClaw)[0].Name} counters physical\nattacks. If you have healing spells you can just tank the counter damage\nand kill them however you like anyway. All opponents in this stage are\nweak to lightning.\nThe Ram's Voice and Ultravibration combo can be used in Act 2.");
     }
 }
 
@@ -44,7 +49,18 @@ class Stage17Act1States : StateMachineBuilder
             .ActivateOnEnter<Shred>()
             .ActivateOnEnter<TheHand>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () => module.Enemies(Stage17Act1.Hands).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage17Act1.Hands);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -57,24 +73,36 @@ public class Stage17Act1 : BossModule
     }
     public static readonly uint[] Hands = [(uint)OID.Boss, (uint)OID.RightClaw];
 
-    protected override bool CheckPull() => Enemies(Hands).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Hands);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.RightClaw));
+        Arena.Actors(Enemies((uint)OID.RightClaw));
     }
 
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
-        {
-            var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
-            {
-                OID.Boss or OID.RightClaw => 0, //TODO: ideally left claw should only be attacked with magical abilities and right claw should only be attacked with physical abilities
-                _ => 0
-            };
-        }
-    }
+    // protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    // {
+    //     var count = hints.PotentialTargets.Count;
+    //     for (var i = 0; i < count; ++i)
+    //     {
+    //         var e = hints.PotentialTargets[i];
+    //         e.Priority = e.Actor.OID switch
+    //         {
+    //             (uint)OID.Boss or (uint)OID.RightClaw => 0, // TODO: ideally left claw should only be attacked with magical abilities and right claw should only be attacked with physical abilities
+    //             _ => 0
+    //         };
+    //     }
+    // }
 }

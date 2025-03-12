@@ -76,13 +76,11 @@ public enum SID : uint
     LeftUnseen = 1708, // none->player, extra=0xEA
     MagicVulnerabilityUp1 = 1138, // Helper->player, extra=0x0
     MagicVulnerabilityUp2 = 1138, // Helper->player, extra=0x0
-    Transcendent = 418, // none->player, extra=0x0
     Transfiguration = 2548, // none->Boss, extra=0x1A5
     Unknown1 = 2056, // none->Huma, extra=0x132
     Unknown2 = 2056, // none->Huma, extra=0x132
     VulnerabilityUp1 = 1789, // Helper/player->player, extra=0x4/0x3/0x1/0x2
     VulnerabilityUp2 = 1789, // Huma/player/Helper/Boss->player, extra=0x1/0x2/0x3
-    Weakness = 43, // none->player, extra=0x0
     WhisperingDawn = 315, // player->player, extra=0x0
     RightUnseen = 1707, // none->player, extra=0xE9
 }

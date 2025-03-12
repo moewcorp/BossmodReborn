@@ -8,8 +8,8 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 870, // Boss->player, no cast, single-target
-    RightWingblade = 37164, // Boss->self, 3.0s cast, range 25 90 degree cone
-    LeftWingblade = 37165, // Boss->self, 3.0s cast, range 25 90 degree cone
+    RightWingblade1 = 37164, // Boss->self, 3.0s cast, range 25 90 degree cone
+    LeftWingblade1 = 37165, // Boss->self, 3.0s cast, range 25 90 degree cone
     LaughingLeap = 37372, // Boss->self, 4.0s cast, range 15 width 5 rect
     TriplicateReflex = 37170, // Boss->self, 5.0s cast, single-target
     HiddenRightWingblade = 37171, // Boss->self, no cast, range 25 90 degree cone
@@ -18,31 +18,44 @@ public enum AID : uint
     LeftWingblade2 = 37167, // Boss->self, 3.0s cast, range 25 90 degree cone
 }
 
-class RightWingblade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightWingblade), new AOEShapeCone(25, 90.Degrees()));
-class LeftWingblade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LeftWingblade), new AOEShapeCone(25, 90.Degrees()));
-class RightWingblade2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RightWingblade2), new AOEShapeCone(25, 90.Degrees()));
-class LeftWingblade2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LeftWingblade2), new AOEShapeCone(25, 90.Degrees()));
+abstract class Wingblade(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), HiddenWingblades.Cone);
+class RightWingblade1(BossModule module) : Wingblade(module, AID.RightWingblade1);
+class LeftWingblade1(BossModule module) : Wingblade(module, AID.LeftWingblade1);
+class RightWingblade2(BossModule module) : Wingblade(module, AID.RightWingblade2);
+class LeftWingblade2(BossModule module) : Wingblade(module, AID.LeftWingblade2);
+
 class LaughingLeap(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LaughingLeap), new AOEShapeRect(15, 2.5f));
 class TriplicateReflex(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.TriplicateReflex), "Last 3 wingblades repeat in rapid succession, stay close to the middle!");
 
 class HiddenWingblades(BossModule module) : Components.GenericAOEs(module)
 {
     private Actor? _caster;
-    private readonly Queue<(AID, Angle)> _wingbladeCasts = new();
-    private readonly List<AOEInstance> _activeAOEs = [];
-    private static readonly AOEShapeCone _shape = new(25, 90.Degrees());
+    private readonly Queue<(uint, Angle)> _wingbladeCasts = new();
+    private readonly List<AOEInstance> _aoes = [];
+    public static readonly AOEShapeCone Cone = new(25f, 90f.Degrees());
     private int _castCount;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _activeAOEs.Where(aoe => WorldState.CurrentTime < aoe.Activation.AddSeconds(10));
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+
+        var index = 0;
+        while (index < count && WorldState.CurrentTime < _aoes[index].Activation.AddSeconds(10d))
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         _caster ??= caster;
 
-        if (spell.Action.ID is (uint)AID.RightWingblade or (uint)AID.LeftWingblade or (uint)AID.RightWingblade2 or (uint)AID.LeftWingblade2)
+        if (spell.Action.ID is (uint)AID.RightWingblade1 or (uint)AID.LeftWingblade1 or (uint)AID.RightWingblade2 or (uint)AID.LeftWingblade2)
         {
-            var rotation = spell.Action.ID is (uint)AID.RightWingblade or (uint)AID.RightWingblade2 ? -90.Degrees() : 90.Degrees();
-            _wingbladeCasts.Enqueue(((AID)spell.Action.ID, rotation));
+            var rotation = spell.Action.ID is (uint)AID.RightWingblade1 or (uint)AID.RightWingblade2 ? -90f.Degrees() : 90f.Degrees();
+            _wingbladeCasts.Enqueue((spell.Action.ID, rotation));
             if (_wingbladeCasts.Count > 3)
                 _wingbladeCasts.Dequeue();
         }
@@ -53,30 +66,30 @@ class HiddenWingblades(BossModule module) : Components.GenericAOEs(module)
             if (_wingbladeCasts.Count != 3)
                 return;
 
-            _activeAOEs.Clear();
+            _aoes.Clear();
             var activationTime = WorldState.FutureTime(10);
-            _activeAOEs.Add(new(_shape, _caster.Position, _caster.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Colors.Danger));
-            _activeAOEs.Add(new(_shape, _caster.Position, _caster.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Risky: false));
+            _aoes.Add(new(Cone, spell.LocXZ, spell.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Colors.Danger));
+            _aoes.Add(new(Cone, spell.LocXZ, spell.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Risky: false));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.HiddenRightWingblade or AID.HiddenLeftWingblade && _activeAOEs.Count > 0)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.HiddenRightWingblade or (uint)AID.HiddenLeftWingblade)
         {
-            _activeAOEs.RemoveAt(0);
+            _aoes.RemoveAt(0);
             _castCount++;
             if (_castCount == 1 && _caster != null)
             {
-                DateTime activationTime = WorldState.FutureTime(10);
-                _activeAOEs.Add(new(_shape, _caster.Position, _caster.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Risky: false));
-                _activeAOEs[0] = new(_shape, _activeAOEs[0].Origin, _activeAOEs[0].Rotation, _activeAOEs[0].Activation, Colors.Danger, true);
+                var activationTime = WorldState.FutureTime(10d);
+                _aoes.Add(new(Cone, _caster.Position, _caster.Rotation + _wingbladeCasts.Dequeue().Item2, activationTime, Risky: false));
+                _aoes[0] = new(Cone, _aoes[0].Origin, _aoes[0].Rotation, _aoes[0].Activation, Colors.Danger, true);
             }
             else if (_castCount == 2)
-                _activeAOEs[0] = new(_shape, _activeAOEs[0].Origin, _activeAOEs[0].Rotation, _activeAOEs[0].Activation, Colors.Danger, true);
+                _aoes[0] = new(Cone, _aoes[0].Origin, _aoes[0].Rotation, _aoes[0].Activation, Colors.Danger, true);
             else if (_castCount == 3)
             {
-                _activeAOEs.Clear();
+                _aoes.Clear();
                 _wingbladeCasts.Clear();
                 _castCount = 0;
             }
@@ -89,8 +102,8 @@ class RraxYityaStates : StateMachineBuilder
     public RraxYityaStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<RightWingblade>()
-            .ActivateOnEnter<LeftWingblade>()
+            .ActivateOnEnter<RightWingblade1>()
+            .ActivateOnEnter<LeftWingblade1>()
             .ActivateOnEnter<RightWingblade2>()
             .ActivateOnEnter<LeftWingblade2>()
             .ActivateOnEnter<LaughingLeap>()

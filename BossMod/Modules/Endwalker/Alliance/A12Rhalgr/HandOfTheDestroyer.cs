@@ -4,19 +4,19 @@ class HandOfTheDestroyer(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape = new(90, 20);
+    private static readonly AOEShapeRect _shape = new(90f, 20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HandOfTheDestroyerWrathAOE or AID.HandOfTheDestroyerJudgmentAOE)
-            _aoes.Add(new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+        if (spell.Action.ID is (uint)AID.HandOfTheDestroyerWrathAOE or (uint)AID.HandOfTheDestroyerJudgmentAOE)
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HandOfTheDestroyerWrathAOE or AID.HandOfTheDestroyerJudgmentAOE)
+        if (spell.Action.ID is (uint)AID.HandOfTheDestroyerWrathAOE or (uint)AID.HandOfTheDestroyerJudgmentAOE)
         {
             _aoes.Clear();
             ++NumCasts;
@@ -24,7 +24,7 @@ class HandOfTheDestroyer(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BrokenWorld(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrokenWorldAOE), 30); // TODO: determine falloff
+class BrokenWorld(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BrokenWorldAOE), 30f); // TODO: determine falloff
 
 // this is not an official mechanic name - it refers to broken world + hand of the destroyer combo, which creates multiple small aoes
 class BrokenShards(BossModule module) : Components.GenericAOEs(module)
@@ -35,7 +35,7 @@ class BrokenShards(BossModule module) : Components.GenericAOEs(module)
     private static readonly WPos[] _westLocations = [new(-6.925f, 268.0f), new(-0.175f, 285.0f), new(-25.625f, 298.5f), new(-34.225f, 283.5f), new(-11.625f, 293.5f), new(-46.125f, 270.5f), new(-18.125f, 279.0f), new(-40.325f, 290.5f), new(-2.125f, 252.0f)];
     private static readonly AOEShapeCircle _shape = new(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -69,4 +69,4 @@ class BrokenShards(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class LightningStorm(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.LightningStorm), 5);
+class LightningStorm(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.LightningStorm), 5f);

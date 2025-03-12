@@ -9,7 +9,7 @@ class UpwellFirst : Components.SimpleAOEs
 }
 class UpwellRest(BossModule module) : Components.Exaflare(module, new AOEShapeRect(30f, 2.5f, 30f))
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var linesCount = Lines.Count;
         if (linesCount == 0)
@@ -34,7 +34,7 @@ class UpwellRest(BossModule module) : Components.Exaflare(module, new AOEShapeRe
             if (aoe.Item2 <= imminentDeadline)
                 aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, ImminentColor);
         }
-        return aoes[..index];
+        return aoes.AsSpan()[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

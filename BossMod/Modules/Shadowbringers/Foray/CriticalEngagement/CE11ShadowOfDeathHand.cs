@@ -52,14 +52,17 @@ public enum AID : uint
 class BestialLoyalty(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.BestialLoyalty), "Summon crows");
 class RunWild(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.RunWild), showNameInHint: true);
 class HardBeak(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HardBeak));
-class Helldive(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Helldive), 6);
-class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BroadsideBarrage), new AOEShapeRect(40, 20));
+class Helldive(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Helldive), 6f);
+class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BroadsideBarrage), new AOEShapeRect(40f, 20f));
 class BlindsideBarrage(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BlindsideBarrage), "Raidwide + deathwall appears");
-class RollingBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RollingBarrageAOE), 8);
-class Whirlwind(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.Whirlwind));
-class Wind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.WindVisual), 30, kind: Kind.DirForward);
+class RollingBarrage(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RollingBarrageAOE), 8f);
+class Whirlwind(BossModule module) : Components.PersistentVoidzone(module, 4f, GetWhirlwind)
+{
+    private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.Whirlwind);
+}
+class Wind(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.WindVisual), 30f, kind: Kind.DirForward);
 
-abstract class PiercingBarrage(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 4));
+abstract class PiercingBarrage(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 4f));
 class PiercingBarrageBoss(BossModule module) : PiercingBarrage(module, AID.PiercingBarrageBoss);
 class PiercingBarrageCrow(BossModule module) : PiercingBarrage(module, AID.PiercingBarrageCrow);
 

@@ -83,7 +83,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private readonly AOEShapeDonut donut = new(20f, 25f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -178,7 +178,7 @@ class EpeaPteroenta(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeCone cone = new(20f, 60f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

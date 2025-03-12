@@ -39,13 +39,13 @@ class Doom(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _doomed.Add(actor);
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Doom)
+        if (status.ID == (uint)SID.Doom)
             _doomed.Remove(actor);
     }
 
@@ -58,18 +58,23 @@ class Doom(BossModule module) : BossComponent(module)
                 else
                     hints.Add("Heal yourself to full! (Doom).");
             else if (actor.Role == Role.Healer)
-                foreach (var c in _doomed)
-                    hints.Add($"Heal to full {c.Name}! (Doom)");
+            {
+                var count = _doomed.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    hints.Add($"Heal to full {_doomed[i].Name}! (Doom)");
+                }
+            }
     }
 }
 
-class LamellarLightCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight1), 15, 3);
-class Lifesbreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Lifesbreath), new AOEShapeRect(50, 5));
-class LamellarLightRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight3), new AOEShapeRect(40, 2));
-class StillEmbrace(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.StillEmbrace), 6);
-class Benevolence(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Benevolence), 6, 4, 4);
+class LamellarLightCircle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight1), 15f, 3);
+class Lifesbreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Lifesbreath), new AOEShapeRect(50f, 5f));
+class LamellarLightRect(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LamellarLight3), new AOEShapeRect(40f, 2f));
+class StillEmbrace(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.StillEmbrace), 6f);
+class Benevolence(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Benevolence), 6f, 4, 4);
 
-class LovingEmbrace(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(45, 90.Degrees()));
+class LovingEmbrace(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(45f, 90f.Degrees()));
 class LovingEmbraceLeft(BossModule module) : LovingEmbrace(module, AID.LovingEmbraceLeft);
 class LovingEmbraceRight(BossModule module) : LovingEmbrace(module, AID.LovingEmbraceRight);
 

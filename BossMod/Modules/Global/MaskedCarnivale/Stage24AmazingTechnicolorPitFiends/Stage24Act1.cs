@@ -16,8 +16,8 @@ public enum AID : uint
     LightningSpark = 15318 // Boss->player, 6.0s cast, single-target
 }
 
-class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5);
-class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5, 45.Degrees()));
+class Starstorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Starstorm), 5f);
+class RagingAxe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RagingAxe), new AOEShapeCone(5f, 45f.Degrees()));
 class LightningSpark(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.LightningSpark));
 
 class Hints2(BossModule module) : BossComponent(module)
@@ -26,8 +26,13 @@ class Hints2(BossModule module) : BossComponent(module)
     {
         if (!Module.PrimaryActor.IsDead)
             hints.Add($"{Module.PrimaryActor.Name} is immune to magical damage!");
-        if (!Module.Enemies(OID.ArenaViking).All(e => e.IsDead))
-            hints.Add($"{Module.Enemies(OID.ArenaViking).FirstOrDefault()!.Name} is immune to physical damage!");
+        var vikings = Module.Enemies((uint)OID.ArenaViking);
+        var count = vikings.Count;
+        if (count == 0)
+            return;
+        var viking = vikings[0];
+        if (!viking.IsDead)
+            hints.Add($"{viking.Name} is immune to physical damage!");
     }
 }
 
@@ -35,7 +40,7 @@ class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        hints.Add($"The {Module.PrimaryActor.Name} is immune to magic, the {Module.Enemies(OID.ArenaViking).FirstOrDefault()!.Name} is immune to\nphysical attacks. For the 2nd act Diamondback is highly recommended.\nFor the 3rd act a ranged physical spell such as Fire Angon\nis highly recommended.");
+        hints.Add($"The {Module.PrimaryActor.Name} is immune to magic, the {Module.Enemies((uint)OID.ArenaViking)[0].Name} is immune to\nphysical attacks. For the 2nd act Diamondback is highly recommended.\nFor the 3rd act a ranged physical spell such as Fire Angon\nis highly recommended.");
     }
 }
 
@@ -49,7 +54,18 @@ class Stage24Act1States : StateMachineBuilder
             .ActivateOnEnter<RagingAxe>()
             .ActivateOnEnter<LightningSpark>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && module.Enemies(OID.ArenaViking).All(e => e.IsDead);
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies(Stage24Act1.Trash);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return true;
+            };
     }
 }
 
@@ -60,25 +76,37 @@ public class Stage24Act1 : BossModule
     {
         ActivateComponent<Hints>();
     }
+    public static readonly uint[] Trash = [(uint)OID.ArenaViking, (uint)OID.Boss];
 
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.ArenaViking).Any(e => e.InCombat);
+    protected override bool CheckPull()
+    {
+        var enemies = Enemies(Trash);
+        var count = enemies.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies[i];
+            if (enemy.InCombat)
+                return true;
+        }
+        return false;
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ArenaViking));
+        Arena.Actors(Enemies((uint)OID.ArenaViking));
     }
 
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
-        {
-            var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
-            {
-                OID.Boss or OID.ArenaViking => 0, // TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
-                _ => 0
-            };
-        }
-    }
+    // protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    // {
+    //     for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+    //     {
+    //         var e = hints.PotentialTargets[i];
+    //         e.Priority = e.Actor.OID switch
+    //         {
+    //             (uint)OID.Boss or (uint)OID.ArenaViking => 0, // TODO: ideally Viking should only be attacked with magical abilities and Magus should only be attacked with physical abilities
+    //             _ => 0
+    //         };
+    //     }
+    // }
 }

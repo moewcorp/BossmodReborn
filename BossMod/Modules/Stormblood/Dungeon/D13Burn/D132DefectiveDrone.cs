@@ -35,35 +35,61 @@ public enum IconID : uint
 class Throttle(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rectSmall = new(50, 1.5f);
-    private static readonly AOEShapeRect rectBig = new(50, 2.5f);
+    private static readonly AOEShapeRect rectSmall = new(50f, 1.5f);
+    private static readonly AOEShapeRect rectBig = new(50f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ThrottleVisual1)
+        if (spell.Action.ID == (uint)AID.ThrottleVisual1)
         {
-            var activation = WorldState.FutureTime(8.2f);
-            foreach (var e in Module.Enemies(OID.MiningDrone).Where(x => x.ModelState.AnimState1 != 1))
-                _aoes.Add(new(rectSmall, e.Position, e.Rotation, activation));
+            var activation = WorldState.FutureTime(8.2d);
+            var enemies = Module.Enemies((uint)OID.MiningDrone);
+            var count = enemies.Count;
+
+            for (var i = 0; i < count; ++i)
+            {
+                var e = enemies[i];
+                if (e.EventState != 1)
+                    _aoes.Add(new(rectSmall, WPos.ClampToGrid(e.Position), e.Rotation, activation));
+            }
             var offset = _aoes[0].Origin.X < 0 ? -1 : 1;
-            _aoes.Add(new(rectBig, new(offset * 18, -71.5f), -90.Degrees() * offset, activation));
+            _aoes.Add(new(rectBig, WPos.ClampToGrid(new(offset * 18, -71.5f)), -90f.Degrees() * offset, activation));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.FullThrottle)
+        if (spell.Action.ID == (uint)AID.FullThrottle)
             _aoes.Clear();
     }
 }
 
 class AetherochemicalFlame(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AetherochemicalFlame));
 class AetherochemicalResidue(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5), (uint)IconID.Baitaway, ActionID.MakeSpell(AID.AetherochemicalResidue), 4.1f, true);
-class AditDriver(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AditDriver), new AOEShapeRect(33, 3));
+class AditDriver(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AditDriver), new AOEShapeRect(33f, 3f));
 class AetherochemicalCoil(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.AetherochemicalCoil));
-class SludgeVoidzone(BossModule module) : Components.PersistentVoidzone(module, 2.5f, m => m.Enemies(OID.SludgeVoidzone).Where(z => z.EventState != 7));
+class SludgeVoidzone(BossModule module) : Components.PersistentVoidzone(module, 2.5f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.SludgeVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class D132DefectiveDroneStates : StateMachineBuilder
 {
@@ -80,22 +106,23 @@ class D132DefectiveDroneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 585, NameID = 7669)]
-public class D132DefectiveDrone(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -70), new ArenaBoundsRect(10, 9.5f))
+public class D132DefectiveDrone(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -70f), new ArenaBoundsRect(10f, 9.5f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.RepurposedDreadnaught));
+        Arena.Actors(Enemies((uint)OID.RepurposedDreadnaught));
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.RepurposedDreadnaught => 1,
+                (uint)OID.RepurposedDreadnaught => 1,
                 _ => 0
             };
         }

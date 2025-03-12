@@ -32,6 +32,8 @@ class Firebomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeS
 
 class MagitekTurret(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SelfDetonate))
 {
+    private static readonly AOEShapeCircle circle = new(6f);
+
     class Mine(Actor source, Actor target, WPos sourcePosLastFrame, DateTime tethered)
     {
         public Actor source = source;
@@ -49,18 +51,28 @@ class MagitekTurret(BossModule module) : Components.GenericAOEs(module, ActionID
 
     private readonly List<Mine> Mines = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var m in Mines.Where(m => m.target == actor))
+        var count = Mines.Count;
+        if (count == 0)
+            return [];
+        var aoes = new List<AOEInstance>();
+        for (var i = 0; i < count; ++i)
         {
-            var mineToPlayer = m.target.Position - m.source.Position;
-            var projectedExplosion = mineToPlayer.Length() > m.DistanceLeft(WorldState)
-                ? (m.target.Position - m.source.Position).Normalized() * m.DistanceLeft(WorldState)
-                // offset danger zone slightly toward mine so that AI can dodge
-                // if centered on player it doesn't know which direction to go
-                : mineToPlayer * 0.9f;
-            yield return new(new AOEShapeCircle(6), m.source.Position + projectedExplosion, default, Activation: m.tethered.AddSeconds(12));
+            var m = Mines[i];
+            if (m.target == actor)
+            {
+                var mineToPlayer = m.target.Position - m.source.Position;
+                var distance = m.DistanceLeft(WorldState);
+                var projectedExplosion = mineToPlayer.LengthSq() > distance * distance
+                    ? (m.target.Position - m.source.Position).Normalized() * distance
+                    // offset danger zone slightly toward mine so that AI can dodge
+                    // if centered on player it doesn't know which direction to go
+                    : mineToPlayer * 0.9f;
+                aoes.Add(new(circle, m.source.Position + projectedExplosion, default, Activation: m.tethered.AddSeconds(12d)));
+            }
         }
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
@@ -72,18 +84,48 @@ class MagitekTurret(BossModule module) : Components.GenericAOEs(module, ActionID
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.SelfDetonate)
-            Mines.RemoveAll(m => m.source == caster);
+        {
+            var count = Mines.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var m = Mines[i];
+                if (m.source == caster)
+                {
+                    Mines.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 
     public override void OnActorDestroyed(Actor actor)
     {
-        Mines.RemoveAll(m => m.source == actor);
+        var count = Mines.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var m = Mines[i];
+            if (m.source == actor)
+            {
+                Mines.RemoveAt(i);
+                return;
+            }
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var m in Mines.Where(m => m.target == pc))
-            Arena.AddLine(m.source.Position, pc.Position, Colors.Danger);
+        var count = Mines.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
+        {
+            var m = Mines[i];
+            if (m.target == pc)
+            {
+                Arena.AddLine(m.source.Position, pc.Position);
+                return;
+            }
+        }
     }
 }
 
@@ -127,14 +169,10 @@ class MagitekVanguardIPrototypeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67989, NameID = 5650)]
-public class MagitekVanguardIPrototype(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, CustomBounds)
+public class MagitekVanguardIPrototype(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly List<WDir> vertices = [
-        new(-487.40f, -230.79f), new(-487.56f, -188.08f), new(-478.75f, -181.25f), new(-439.37f, -183.46f), new(-457.85f, -211.90f), new(-461.13f, -228.75f)
-    ];
-
-    public static readonly WPos ArenaCenter = new(-465.40f, -202.09f);
-    public static readonly ArenaBoundsCustom CustomBounds = new(30, new(vertices.Select(v => v - ArenaCenter.ToWDir())));
+    private static readonly WPos[] vertices = [new(-487.40f, -230.79f), new(-487.56f, -188.08f), new(-478.75f, -181.25f), new(-439.37f, -183.46f), new(-457.85f, -211.90f), new(-461.13f, -228.75f)];
+    public static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -143,7 +181,8 @@ public class MagitekVanguardIPrototype(WorldState ws, Actor primary) : BossModul
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var h = hints.PotentialTargets[i];
             if (h.Actor.OID == 0x1A52)

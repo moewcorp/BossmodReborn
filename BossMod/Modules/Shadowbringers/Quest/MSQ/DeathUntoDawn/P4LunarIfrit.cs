@@ -20,10 +20,10 @@ public enum AID : uint
 class Hellfire1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Hellfire1));
 class Hellfire2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Hellfire2));
 class AgonyOfTheDamned(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AgonyOfTheDamned1));
-class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlume1), 8);
-class CrimsonCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone), new AOEShapeRect(49, 9), 3);
+class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlume1), 8f);
+class CrimsonCyclone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone), new AOEShapeRect(49f, 9f), 3);
 class InfernalNail(BossModule module) : Components.Adds(module, (uint)OID.InfernalNail, 5);
-class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCross(80, 5), 2);
+class Explosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Explosion), new AOEShapeCross(80f, 5f), 2);
 
 class LunarIfritStates : StateMachineBuilder
 {
@@ -41,4 +41,4 @@ class LunarIfritStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10041)]
-public class LunarIfrit(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20));
+public class LunarIfrit(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsCircle(20f));

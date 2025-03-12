@@ -37,74 +37,76 @@ public enum SID : uint
     JealousAnaphylaxis = 2302, // Helper->player, extra=0x0
 }
 
-class Pheromones(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.Pheromones));
+class Pheromones(BossModule module) : Components.PersistentVoidzone(module, 4f, GetVoidzones, 3f)
+{
+    private static List<Actor> GetVoidzones(BossModule module) => module.Enemies((uint)OID.Pheromones);
+}
 
 class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "Go to different color!")
 {
     private BitMask _tenderStatuses;
     private BitMask _jealousStatuses;
-    private readonly List<Actor> _tenderCasters = [];
-    private readonly List<Actor> _jealousCasters = [];
+    private readonly List<AOEInstance> _tenderAOEs = new(2);
+    private readonly List<AOEInstance> _jealousAOEs = new(2);
 
-    private static readonly AOEShapeCone _shape = new(30, 45.Degrees());
+    private static readonly AOEShapeCone _shape = new(30f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_tenderStatuses[slot])
-            foreach (var c in _tenderCasters)
-                yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
-        if (_jealousStatuses[slot])
-            foreach (var c in _jealousCasters)
-                yield return new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
+            return CollectionsMarshal.AsSpan(_tenderAOEs);
+        else if (_jealousStatuses[slot])
+            return CollectionsMarshal.AsSpan(_jealousAOEs);
+        return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.TenderAnaphylaxis:
-                _tenderStatuses.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.TenderAnaphylaxis:
+                _tenderStatuses[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
-            case SID.JealousAnaphylaxis:
-                _jealousStatuses.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.JealousAnaphylaxis:
+                _jealousStatuses[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
         }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.TenderAnaphylaxis:
-                _tenderStatuses.Clear(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.TenderAnaphylaxis:
+                _tenderStatuses[Raid.FindSlot(actor.InstanceID)] = false;
                 break;
-            case SID.JealousAnaphylaxis:
-                _jealousStatuses.Clear(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.JealousAnaphylaxis:
+                _jealousStatuses[Raid.FindSlot(actor.InstanceID)] = false;
                 break;
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForAction(spell.Action)?.Add(caster);
+        CastersForAction(spell.Action)?.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForAction(spell.Action)?.Remove(caster);
+        CastersForAction(spell.Action)?.Remove(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
-    private List<Actor>? CastersForAction(ActionID action) => (AID)action.ID switch
+    private List<AOEInstance>? CastersForAction(ActionID action) => action.ID switch
     {
-        AID.TenderAnaphylaxis => _tenderCasters,
-        AID.JealousAnaphylaxis => _jealousCasters,
+        (uint)AID.TenderAnaphylaxis => _tenderAOEs,
+        (uint)AID.JealousAnaphylaxis => _jealousAOEs,
         _ => null
     };
 }
 
-class AnaphylacticShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AnaphylacticShock), new AOEShapeRect(30, 1));
-class SplashBomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SplashBombAOE), 6);
-class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.SplashGrenadeAOE), 6, 8, 24);
+class AnaphylacticShock(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AnaphylacticShock), new AOEShapeRect(30f, 1f));
+class SplashBomb(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SplashBombAOE), 6f);
+class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.SplashGrenadeAOE), 6f, 8, 24);
 class PlayfulBreeze(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PlayfulBreeze));
 class Budbutt(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Budbutt));
 
@@ -124,4 +126,4 @@ class CE13KillItWithFireStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
-public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, new(-90, 700), new ArenaBoundsCircle(25));
+public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, new(-90f, 700f), new ArenaBoundsCircle(25f));

@@ -3,15 +3,16 @@
 // aoe starts at cast and ends with envcontrol; it's not considered 'risky' when paired with quick march
 class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FlamesOfBozjaAOE))
 {
-    public AOEInstance? AOE { get; private set; }
+    public AOEInstance? AOE;
     private readonly bool _risky = risky;
+    private static readonly AOEShapeRect rect = new(45f, 25f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            AOE = new(new AOEShapeRect(45, 25), caster.Position, spell.Rotation, Module.CastFinishAt(spell), Risky: _risky);
+            AOE = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: _risky);
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -37,34 +38,34 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
     private readonly float _spawnToActivation = spawnToActivation;
     private DateTime _activation;
 
-    private static readonly AOEShapeRect _shapeCell = new(5, 5, 5);
+    private static readonly AOEShapeRect _shapeCell = new(5f, 5f, 5f);
     private static readonly int[,] _remap = { { 0, 1, 2, 3, 4 }, { 4, 2, 3, 0, 1 }, { 3, 4, 1, 2, 0 }, { 3, 4, 1, 2, 0 }, { 4, 2, 3, 0, 1 } };
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_arrowsInited.Raw != 0x1B)
-            yield break;
+            return [];
         var temp = Temperature(actor);
         var cell = Array.IndexOf(_slotTempAdjustments, -temp);
         if (cell < 0)
-            yield break;
+            return [];
 
         var xOffset = _pattern is Pattern.EWNormal or Pattern.EWInverted ? -20 : +20;
         var zOffset = 10 * (cell - 2);
-        yield return new(_shapeCell, Module.Center + new WDir(xOffset, zOffset), new(), _activation, Colors.SafeFromAOE, false);
+        return new AOEInstance[1] { new(_shapeCell, Arena.Center + new WDir(xOffset, zOffset), new(), _activation, Colors.SafeFromAOE, false) };
     }
 
     public override void Update()
     {
-        InitArrow(OID.SparkArrow, +1);
-        InitArrow(OID.FlameArrow, +2);
-        InitArrow(OID.FrostArrow, -1);
-        InitArrow(OID.GlacierArrow, -2);
+        InitArrow((uint)OID.SparkArrow, +1);
+        InitArrow((uint)OID.FlameArrow, +2);
+        InitArrow((uint)OID.FrostArrow, -1);
+        InitArrow((uint)OID.GlacierArrow, -2);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ChillArrow or AID.FreezingArrow or AID.HeatedArrow or AID.SearingArrow)
+        if (spell.Action.ID is (uint)AID.ChillArrow or (uint)AID.FreezingArrow or (uint)AID.HeatedArrow or (uint)AID.SearingArrow)
             ++NumCasts;
     }
 
@@ -100,7 +101,7 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
         return _slotTempAdjustments[row] != -Temperature(actor);
     }
 
-    protected int RowIndex(WPos pos) => (pos.Z - Module.Center.Z) switch
+    protected int RowIndex(WPos pos) => (pos.Z - Arena.Center.Z) switch
     {
         < -15 => 0,
         < -5 => 1,
@@ -109,15 +110,16 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
         _ => 4
     };
 
-    private void InitArrow(OID oid, int temp)
+    private void InitArrow(uint oid, int temp)
     {
         if (_arrowsInited[temp + 2])
             return;
-        var arrow = Module.Enemies(oid).FirstOrDefault();
+        var arrows = Module.Enemies(oid);
+        var arrow = arrows.Count != 0 ? arrows[0] : null;
         if (arrow == null)
             return;
 
-        if ((arrow.Position.X < Module.Center.X) != _pattern is Pattern.WENormal or Pattern.WEInverted)
+        if ((arrow.Position.X < Arena.Center.X) != _pattern is Pattern.WENormal or Pattern.WEInverted)
             ReportError("Unexpected arrow X coord");
         var srcRow = RowIndex(arrow.Position);
         var destRow = _remap[(int)_pattern, srcRow];

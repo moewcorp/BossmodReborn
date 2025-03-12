@@ -4,16 +4,16 @@ class HeatAboveFlamesBelow(BossModule module) : Components.GenericAOEs(module)
 {
     public List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shapeOut = new(8);
-    private static readonly AOEShapeDonut _shapeIn = new(8, 30);
+    private static readonly AOEShapeCircle _shapeOut = new(8f);
+    private static readonly AOEShapeDonut _shapeIn = new(8f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var shape = ShapeForAction(spell.Action);
         if (shape != null)
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -30,10 +30,10 @@ class HeatAboveFlamesBelow(BossModule module) : Components.GenericAOEs(module)
             ++NumCasts;
     }
 
-    private static AOEShape? ShapeForAction(ActionID action) => (AID)action.ID switch
+    private static AOEShape? ShapeForAction(ActionID action) => action.ID switch
     {
-        AID.FlamesOfTheDeadReal => _shapeIn,
-        AID.LivingHeatReal => _shapeOut,
+        (uint)AID.FlamesOfTheDeadReal => _shapeIn,
+        (uint)AID.LivingHeatReal => _shapeOut,
         _ => null
     };
 }

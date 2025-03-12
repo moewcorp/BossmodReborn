@@ -110,7 +110,7 @@ class WildSpeedHaywire(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(4);
     private static readonly AOEShapeRect rect = new(40.5f, 3f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)

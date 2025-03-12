@@ -5,7 +5,7 @@ class P1SwingingDraw(BossModule module) : Components.GenericAOEs(module, ActionI
     public readonly List<AOEInstance> AOEs = [];
     private static readonly AOEShapeCone _shape = new(60f, 60f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -18,7 +18,7 @@ class P1SwingingDraw(BossModule module) : Components.GenericAOEs(module, ActionI
         if (dir != default)
         {
             dir += Angle.FromDirection(caster.Position - Arena.Center);
-            AOEs.Add(new(_shape, WPos.ClampToGrid(Arena.Center + 25 * dir.ToDirection()), dir + 180.Degrees(), Module.CastFinishAt(spell, 6.2f)));
+            AOEs.Add(new(_shape, WPos.ClampToGrid(Arena.Center + 25f * dir.ToDirection()), dir + 180f.Degrees(), Module.CastFinishAt(spell, 6.2f)));
         }
     }
 }

@@ -55,7 +55,7 @@ class Bunkerbuster(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(9);
     public static readonly AOEShapeRect Square = new(10f, 10f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -99,7 +99,7 @@ class BouncingBomb(BossModule module) : Components.GenericAOEs(module)
     // either 9 or 15 explosions depending on pattern
     // pattern 1: 1, 3, 5 explosions
     // pattern 2: 2, 5, 8 explosions
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -145,7 +145,7 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(16f, 60f);
     private static readonly AOEShapeRect rect = new(120f, 16f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -220,14 +220,7 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Hellburner(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Hellburner2), new AOEShapeCircle(5f), true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class Hellburner(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Hellburner2), new AOEShapeCircle(5f), true, tankbuster: true);
 
 class MissileShower(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MissileShowerVisual), "Raidwide x2");
 class ThermobaricExplosive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricExplosive2), 25f);

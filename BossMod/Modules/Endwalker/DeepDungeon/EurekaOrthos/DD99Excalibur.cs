@@ -69,16 +69,16 @@ class Steelstrike(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle a45 = 45f.Degrees();
     private bool? nextRaidwide; // null = none, false = fire, true = ice
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (nextRaidwide == null)
-            return _aoes;
+            return CollectionsMarshal.AsSpan(_aoes);
 
         var fire = actor.FindStatus((uint)SID.SoulOfFire) != null;
         var ice = actor.FindStatus((uint)SID.SoulOfIce) != null;
 
         return ice && (bool)nextRaidwide ? GetSafeAOEs(swordsFire)
-            : fire && !(bool)nextRaidwide ? GetSafeAOEs(swordsIce) : _aoes;
+            : fire && !(bool)nextRaidwide ? GetSafeAOEs(swordsIce) : CollectionsMarshal.AsSpan(_aoes);
     }
 
     private AOEInstance[] GetSafeAOEs(List<AOEInstance> swordAOEs)
@@ -247,7 +247,7 @@ class ThermalDivideSides(BossModule module) : Components.GenericAOEs(module)
     private WDir offset;
     private DateTime activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (pattern != null)
         {
@@ -310,7 +310,7 @@ class IceBloomCross(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(6);
     private static readonly AOEShapeCross cross = new(40f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

@@ -23,7 +23,7 @@ public class Exaflare(BossModule module, AOEShape shape, ActionID aid = default)
 
     public Exaflare(BossModule module, float radius, ActionID aid = new()) : this(module, new AOEShapeCircle(radius), aid) { }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var linesCount = Lines.Count;
         if (linesCount == 0)

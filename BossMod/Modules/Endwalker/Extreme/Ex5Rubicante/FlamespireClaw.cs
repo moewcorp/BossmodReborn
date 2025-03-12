@@ -5,7 +5,7 @@ class FlamespireClaw(BossModule module) : Components.GenericBaitAway(module, Act
     private readonly int[] _order = new int[PartyState.MaxPartySize];
     private readonly BitMask _tethers;
 
-    private static readonly AOEShapeCone _shape = new(20, 45.Degrees()); // TODO: verify angle
+    private static readonly AOEShapeCone _shape = new(20f, 45f.Degrees()); // TODO: verify angle
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {

@@ -6,7 +6,7 @@ class OnmyoSerpentEyeSigil(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(7f, 30f);
     private static readonly AOEShapeCircle circle = new(12f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {

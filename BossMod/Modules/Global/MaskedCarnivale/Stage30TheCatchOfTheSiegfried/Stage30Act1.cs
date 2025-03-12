@@ -28,29 +28,41 @@ public enum SID : uint
 }
 
 class MagicDrain(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.MagicDrain), "Reflect magic damage for 30s");
-class HyperdriveFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5);
-class HyperdriveRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5);
+class HyperdriveFirst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveFirst), 5f);
+class HyperdriveRest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HyperdriveRest), 5f);
 class AnkleGraze(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.AnkleGraze), "Applies bind, prepare to use Excuviation!");
 
 class RubberBullet(BossModule module) : Components.Knockback(module)
 {
     private Source? _knockback;
+    private readonly Explosion _aoe = module.FindComponent<Explosion>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return !Module.InBounds(pos);
+    }
+
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Bomb)
-            _knockback = new(Module.PrimaryActor.Position, 20, WorldState.FutureTime(6.3f));
+        if (actor.OID == (uint)OID.Bomb)
+            _knockback = new(Module.PrimaryActor.Position, 20f, WorldState.FutureTime(6.3d));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.RubberBullet)
+        if (spell.Action.ID == (uint)AID.RubberBullet)
             _knockback = null;
     }
-
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Explosion>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
 }
 
 class Explosion(BossModule module) : Components.GenericAOEs(module)
@@ -58,17 +70,17 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(8);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Bomb)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(8.4f)));
+        if (actor.OID == (uint)OID.Bomb)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(8.4d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Explosion)
+        if (spell.Action.ID == (uint)AID.Explosion)
             _aoes.Clear();
     }
 }
@@ -77,15 +89,13 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var magicabsorb = Module.PrimaryActor.FindStatus(SID.MagitekField);
-        if (magicabsorb != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.MagitekField) != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all magic damage!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var bound = actor.FindStatus(SID.Bind);
-        if (bound != null)
+        if (actor.FindStatus((uint)SID.Bind) != null)
             hints.Add("You were bound! Cleanse it with Exuviation.");
     }
 }
@@ -111,8 +121,8 @@ class Stage30Act1States : StateMachineBuilder
             .ActivateOnEnter<HyperdriveFirst>()
             .ActivateOnEnter<HyperdriveRest>()
             .ActivateOnEnter<AnkleGraze>()
-            .ActivateOnEnter<RubberBullet>()
             .ActivateOnEnter<Explosion>()
+            .ActivateOnEnter<RubberBullet>()
             .ActivateOnEnter<MagicDrain>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>();

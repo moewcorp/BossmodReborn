@@ -9,24 +9,39 @@ public class PersistentVoidzone(BossModule module, float radius, Func<BossModule
     public readonly AOEShape Shape = moveHintLength == 0 ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
     public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var aoes = new List<AOEInstance>();
         foreach (var source in Sources(Module))
         {
             aoes.Add(new(Shape, WPos.ClampToGrid(source.Position), source.Rotation));
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (!Sources(Module).Any())
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var s in Sources(Module))
-            forbidden.Add(Shape.Distance(WPos.ClampToGrid(s.Position), s.Rotation));
-        hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+        if (moveHintLength == 0)
+        {
+            var forbidden = new List<Func<WPos, float>>();
+            foreach (var s in Sources(Module))
+                forbidden.Add(ShapeDistance.Circle(WPos.ClampToGrid(s.Position), radius));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+        }
+        else
+        {
+            var forbiddenImminent = new List<Func<WPos, float>>();
+            var forbiddenFuture = new List<Func<WPos, float>>();
+            foreach (var s in Sources(Module))
+            {
+                forbiddenFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, moveHintLength, radius));
+                forbiddenImminent.Add(ShapeDistance.Circle(s.Position, radius));
+            }
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
+        }
     }
 }
 
@@ -43,7 +58,7 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
 
     public bool HaveCasters => _predicted.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var aoes = new List<AOEInstance>();
         var count = _predicted.Count;
@@ -57,7 +72,7 @@ public class PersistentVoidzoneAtCastTarget(BossModule module, float radius, Act
         foreach (var z in Sources(Module))
             aoes.Add(new(Shape, WPos.ClampToGrid(z.Position)));
 
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void Update()

@@ -55,19 +55,7 @@ public enum AID : uint
     GoldenFlame = 30290, // HatefulVisage->self, 8.0s cast, range 60 width 10 rect
 
     //12
-    SilverFlameFirst1 = 30292, // HatefulVisage->self, 8.0s cast, range 60 width 10 rect
-    SilverFlameFirst2 = 30291, // HatefulVisage->self, 8.0s cast, range 60 width 10 rect
+    SilverFlameFirstCW = 30291, // HatefulVisage->self, 8.0s cast, range 60 width 10 rect
+    SilverFlameFirstCCW = 30292, // HatefulVisage->self, 8.0s cast, range 60 width 10 rect
     SilverFlameRest = 30293, // HatefulVisage->self, no cast, range 60 width 10 rect
-}
-
-public enum SID : uint
-{
-    UnknownStatus = 2056, // none->Boss/Whirlwind1, extra=0x1D8/0x1D9/0x1F2/0x1D7
-    VulnerabilityUp = 1789, // Helper->player, extra=0x1/0x2
-    Liftoff = 3262, // Helper->player, extra=0x0
-}
-
-public enum IconID : uint
-{
-    Tankbuster = 218, // player
 }

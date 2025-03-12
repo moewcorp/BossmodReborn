@@ -36,6 +36,7 @@ public enum IconID : uint
 
 class Magnetism(BossModule module) : Components.Knockback(module)
 {
+    private readonly MagnetismCircleDonut? _aoe = module.FindComponent<MagnetismCircleDonut>();
     private enum MagneticPole { None, Plus, Minus }
     private MagneticPole CurrentPole;
     private enum Shape { None, Donut, Circle, Any }
@@ -51,15 +52,29 @@ class Magnetism(BossModule module) : Components.Knockback(module)
     private bool IsPull(Actor actor, Shape shape, MagneticPole pole)
         => (shape == Shape.Any || CurrentShape == shape) && CurrentPole == pole && statusOnActor.Contains((actor, (uint)(pole == MagneticPole.Plus ? SID.NegativeCharge : SID.PositiveCharge)));
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (IsKnockback(actor, Shape.Any, MagneticPole.Plus) || IsKnockback(actor, Shape.Any, MagneticPole.Minus))
-            yield return new(Module.PrimaryActor.Position, 10, activation);
+            return new Source[1] { new(Module.PrimaryActor.Position, 10f, activation) };
         else if (IsPull(actor, Shape.Any, MagneticPole.Plus) || IsPull(actor, Shape.Any, MagneticPole.Minus))
-            yield return new(Module.PrimaryActor.Position, 10, activation, Kind: Kind.TowardsOrigin);
+            return new Source[1] { new(Module.PrimaryActor.Position, 10f, activation, Kind: Kind.TowardsOrigin) };
+        return [];
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<MagnetismCircleDonut>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_aoe == null)
+            return false;
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -78,14 +93,14 @@ class Magnetism(BossModule module) : Components.Knockback(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Magnetoplasma1:
-            case AID.Magnetoplasma2:
+            case (uint)AID.Magnetoplasma1:
+            case (uint)AID.Magnetoplasma2:
                 CurrentShape = Shape.Circle;
                 break;
-            case AID.Magnetoring1:
-            case AID.Magnetoring2:
+            case (uint)AID.Magnetoring1:
+            case (uint)AID.Magnetoring2:
                 CurrentShape = Shape.Donut;
                 break;
         }
@@ -100,7 +115,7 @@ class Magnetism(BossModule module) : Components.Knockback(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Magnetoring1 or AID.Magnetoring2 or AID.Magnetoplasma1 or AID.Magnetoplasma2)
+        if (spell.Action.ID is (uint)AID.Magnetoring1 or (uint)AID.Magnetoring2 or (uint)AID.Magnetoplasma1 or (uint)AID.Magnetoplasma2)
         {
             done = true;
             activation2 = WorldState.FutureTime(1);
@@ -121,43 +136,43 @@ class Magnetism(BossModule module) : Components.Knockback(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Sources(slot, actor).Any() && IsImmune(slot, Sources(slot, actor).FirstOrDefault().Activation))
+        if (ActiveSources(slot, actor).Length != 0 && IsImmune(slot, ActiveSources(slot, actor)[0].Activation))
             return;
 
-        var forbidden = new List<Func<WPos, float>>();
+        Func<WPos, float>? forbidden = null;
         if (IsKnockback(actor, Shape.Circle, MagneticPole.Plus) || IsKnockback(actor, Shape.Circle, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.Circle(Module.PrimaryActor.Position, 10));
+            forbidden = ShapeDistance.Circle(Module.PrimaryActor.Position, 10f);
         else if (IsPull(actor, Shape.Circle, MagneticPole.Plus) || IsPull(actor, Shape.Circle, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.Circle(Module.PrimaryActor.Position, 30));
+            forbidden = ShapeDistance.Circle(Module.PrimaryActor.Position, 30f);
         else if (IsKnockback(actor, Shape.Donut, MagneticPole.Plus) || IsKnockback(actor, Shape.Donut, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, 1));
+            forbidden = ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, 1f);
         else if (IsPull(actor, Shape.Donut, MagneticPole.Plus) || IsPull(actor, Shape.Donut, MagneticPole.Minus))
-            forbidden.Add(ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, 18));
-        if (forbidden.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), activation);
+            forbidden = ShapeDistance.InvertedCircle(Module.PrimaryActor.Position, 18f);
+        if (forbidden != null)
+            hints.AddForbiddenZone(forbidden, activation);
     }
 }
 
 class MagnetismCircleDonut(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Magnetism _kb = module.FindComponent<Magnetism>()!;
-    private static readonly AOEShapeDonut donut = new(8, 60);
-    private static readonly AOEShapeCircle circle = new(20);
+    private static readonly AOEShapeDonut donut = new(8f, 60f);
+    private static readonly AOEShapeCircle circle = new(20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         void AddAOE(AOEShape shape) => _aoe = new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, 2.5f));
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Magnetoplasma1:
-            case AID.Magnetoplasma2:
+            case (uint)AID.Magnetoplasma1:
+            case (uint)AID.Magnetoplasma2:
                 AddAOE(circle);
                 break;
-            case AID.Magnetoring1:
-            case AID.Magnetoring2:
+            case (uint)AID.Magnetoring1:
+            case (uint)AID.Magnetoring2:
                 AddAOE(donut);
                 break;
         }
@@ -165,21 +180,21 @@ class MagnetismCircleDonut(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ProximityPlasma2 or AID.RingLightning2)
+        if (spell.Action.ID is (uint)AID.ProximityPlasma2 or (uint)AID.RingLightning2)
             _aoe = null;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var kb = _kb.Sources(slot, actor).ToList();
-        if (kb.Count == 0 || kb.Count != 0 && _kb.IsImmune(slot, kb.FirstOrDefault().Activation))
+        var kb = _kb.ActiveSources(slot, actor);
+        if (kb.Length == 0 || kb.Length != 0 && _kb.IsImmune(slot, kb[0].Activation))
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
 
-class ProximityPlasma1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ProximityPlasma1), 20);
-class RingLightning1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RingLightning1), new AOEShapeDonut(8, 60));
-class ThunderousShower(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ThunderousShower), 6, 8);
+class ProximityPlasma1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ProximityPlasma1), 20f);
+class RingLightning1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RingLightning1), new AOEShapeDonut(8f, 60f));
+class ThunderousShower(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.ThunderousShower), 6f, 8);
 class Electrowave(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Electrowave));
 class Magnetron(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Magnetron));
 

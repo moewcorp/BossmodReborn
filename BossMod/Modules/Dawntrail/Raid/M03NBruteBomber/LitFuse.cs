@@ -7,7 +7,7 @@ public class LitFuse(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(8);
     private bool fusesOfFury;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

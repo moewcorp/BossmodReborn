@@ -14,12 +14,20 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, ActionID.M
     private BitMask _dangerCells;
     private bool _dangerDirty;
 
-    private static readonly AOEShape _shape = new AOEShapeRect(5, 5, 5);
+    private static readonly AOEShape _shape = new AOEShapeRect(5f, 5f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        // TODO: timing...
-        return _dangerCells.SetBits().Select(index => new AOEInstance(_shape, IndexToPosition(index)));
+        var indices = _dangerCells.SetBits();
+        var count = indices.Length;
+
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+            aoes[i] = new(_shape, IndexToPosition(indices[i]));
+        return aoes;
     }
 
     public override void Update()
@@ -37,7 +45,8 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, ActionID.M
 
         _dangerDirty = false;
         _dangerCells = new();
-        for (var i = 0; i < effStates.Length; ++i)
+        var len = effStates.Length;
+        for (var i = 0; i < len; ++i)
         {
             switch (effStates[i])
             {
@@ -116,32 +125,32 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, ActionID.M
         _dangerDirty = true;
     }
 
-    private int CoordinateToIndex(float c) => c switch
+    private static int CoordinateToIndex(float c) => c switch
     {
         < 90 => 0,
         < 100 => 1,
         < 110 => 2,
         _ => 3
     };
-    private int PositionToIndex(WPos pos) => CoordinateToIndex(pos.Z) * 4 + CoordinateToIndex(pos.X);
-    private float IndexToCoordinate(int i) => 85 + 10 * i;
-    private WPos IndexToPosition(int i) => new(IndexToCoordinate(i & 3), IndexToCoordinate(i >> 2));
+    private static int PositionToIndex(WPos pos) => CoordinateToIndex(pos.Z) * 4 + CoordinateToIndex(pos.X);
+    private static float IndexToCoordinate(int i) => 85 + 10 * i;
+    private static WPos IndexToPosition(int i) => new(IndexToCoordinate(i & 3), IndexToCoordinate(i >> 2));
 
     private void AddPlus(int sq)
     {
         var x = sq & 0x3;
         var z = sq & 0xC;
         for (var i = 0; i < 4; ++i)
-            _dangerCells.Set(z + i);
+            _dangerCells[z + i] = true;
         for (var i = 0; i < 4; ++i)
-            _dangerCells.Set(x + i * 4);
+            _dangerCells[x + i * 4] = true;
     }
 
     private void AddCross(int sq)
     {
         var x = sq & 0x3;
         var z = sq & 0xC;
-        _dangerCells.Set(sq);
+        _dangerCells[sq] = true;
         for (var i = 1; i < 4; ++i)
         {
             var x1 = x + i;
@@ -149,13 +158,13 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, ActionID.M
             var z1 = z + i * 4;
             var z2 = z - i * 4;
             if (x1 < 4 && z1 < 16)
-                _dangerCells.Set(x1 + z1);
+                _dangerCells[x1 + z1] = true;
             if (x1 < 4 && z2 >= 0)
-                _dangerCells.Set(x1 + z2);
+                _dangerCells[x1 + z2] = true;
             if (x2 >= 0 && z1 < 16)
-                _dangerCells.Set(x2 + z1);
+                _dangerCells[x2 + z1] = true;
             if (x2 >= 0 && z2 >= 0)
-                _dangerCells.Set(x2 + z2);
+                _dangerCells[x2 + z2] = true;
         }
     }
 }

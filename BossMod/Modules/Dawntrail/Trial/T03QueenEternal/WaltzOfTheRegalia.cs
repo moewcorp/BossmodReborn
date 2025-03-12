@@ -10,7 +10,7 @@ class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(MathF.Sqrt(212) * 0.5f);
     private readonly List<(Actor, DateTime)> _targets = new(3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _targets.Count;
         if (count == 0)
@@ -26,20 +26,20 @@ class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.QueenEternal3 && id == 0x11D7)
+        if (actor.OID == (uint)OID.QueenEternal3 && id == 0x11D7)
             _targets.Add((actor, WorldState.FutureTime(7)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.WaltzOfTheRegaliaVisual)
+        if (spell.Action.ID == (uint)AID.WaltzOfTheRegaliaVisual)
             _targets.RemoveAll(x => x.Item1.Position.AlmostEqual(caster.Position, 0.5f));
     }
 
     public override void OnActorDestroyed(Actor actor)
     {
         // not sure if needed, just a safeguard incase the removal by OnEventCast failed for whatever reason
-        if (_targets.Count != 0 && (OID)actor.OID == OID.QueenEternal3)
+        if (_targets.Count != 0 && actor.OID == (uint)OID.QueenEternal3)
             _targets.RemoveAll(x => x.Item1 == actor);
     }
 }

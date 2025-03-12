@@ -6,15 +6,15 @@ class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     public enum Stance { None, Sword, Staff, Chakram }
     public Stance CurStance;
-    private static readonly AOEShapeDonut donut = new(5, 40);
-    private static readonly AOEShapeCircle circle = new(10);
-    private static readonly AOEShapeCross cross = new(40, 5);
+    private static readonly AOEShapeDonut donut = new(5f, 40f);
+    private static readonly AOEShapeCircle circle = new(10f);
+    private static readonly AOEShapeCross cross = new(40f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.HydaelynsWeapon)
+        if (status.ID == (uint)SID.HydaelynsWeapon)
         {
             var activation = WorldState.FutureTime(6);
             if (status.Extra == 0x1B4)
@@ -34,9 +34,9 @@ class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.HydaelynsWeapon)
+        if (status.ID == (uint)SID.HydaelynsWeapon)
         {
-            _aoe = new(cross, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(6.9f));
+            _aoe = new(cross, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(6.9d));
             AOEImminent = true;
             CurStance = Stance.Sword;
         }
@@ -44,7 +44,7 @@ class WeaponTracker(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.WeaponChangeAOEChakram or AID.WeaponChangeAOEStaff or AID.WeaponChangeAOESword)
+        if (spell.Action.ID is (uint)AID.WeaponChangeAOEChakram or (uint)AID.WeaponChangeAOEStaff or (uint)AID.WeaponChangeAOESword)
         {
             AOEImminent = false;
             _aoe = null;

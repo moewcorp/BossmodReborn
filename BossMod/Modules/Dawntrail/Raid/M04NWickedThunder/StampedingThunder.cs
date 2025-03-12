@@ -5,7 +5,7 @@ class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(40, 15);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

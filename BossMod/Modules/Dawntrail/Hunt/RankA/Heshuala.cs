@@ -77,10 +77,10 @@ class ShockingCrossXMarksTheShock(BossModule module) : Components.GenericAOEs(mo
     private static readonly AOEShapeCross _cross = new(50f, 5f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoe is AOEInstance aoe && _rotation.Spins < 3)
-            return [aoe];
+            return new AOEInstance[1] { aoe };
         else
             return [];
     }
@@ -112,7 +112,7 @@ class ShockingCrossXMarksTheShock(BossModule module) : Components.GenericAOEs(mo
         if (_aoe == null && currentCross != Cross.None && _rotation.Sequences.Count > 0)
         {
             var sequence = _rotation.Sequences[0];
-            var rotationOffset = currentCross == Cross.Cardinal ? default : 45.Degrees();
+            var rotationOffset = currentCross == Cross.Cardinal ? default : 45f.Degrees();
             var activation = WorldState.FutureTime(11.5d + _rotation.Spins * 2d);
             _aoe = new(_cross, sequence.Origin, sequence.Rotation + rotationOffset, activation);
         }

@@ -11,7 +11,7 @@ public enum AID : uint
     TheLastSong = 14756 // Boss->self, 6.0s cast, range 60 circle, heavy dmg, applies silence to player
 }
 
-class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.TheLastSong), 60, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
+class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, ActionID.MakeSpell(AID.TheLastSong), 60f, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
 
 class LastSongHint(BossModule module) : BossComponent(module)
 {
@@ -19,13 +19,13 @@ class LastSongHint(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TheLastSong)
+        if (spell.Action.ID == (uint)AID.TheLastSong)
             Casting = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TheLastSong)
+        if (spell.Action.ID == (uint)AID.TheLastSong)
             Casting = false;
     }
     public override void AddGlobalHints(GlobalHints hints)
@@ -51,7 +51,18 @@ class Stage14Act2States : StateMachineBuilder
             .DeactivateOnEnter<Hints>()
             // .ActivateOnEnter<LastSong>()
             .ActivateOnEnter<LastSongHint>()
-            .Raw.Update = () => module.Enemies(OID.Boss).All(e => e.IsDead) && !module.FindComponent<LastSongHint>()!.Casting;
+            .Raw.Update = () =>
+            {
+                var enemies = module.Enemies((uint)OID.Boss);
+                var count = enemies.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var enemy = enemies[i];
+                    if (!enemy.IsDeadOrDestroyed)
+                        return false;
+                }
+                return !module.FindComponent<LastSongHint>()!.Casting;
+            };
     }
 }
 
@@ -65,6 +76,6 @@ public class Stage14Act2 : BossModule
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.Boss));
+        Arena.Actors(Enemies((uint)OID.Boss));
     }
 }

@@ -4,7 +4,7 @@ class Hydrostasis(BossModule module) : Components.Knockback(module)
 {
     private readonly List<Source> _sources = new(3);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => _sources;
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(_sources);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

@@ -5,10 +5,11 @@ class Upheaval(BossModule module) : Components.Knockback(module, ActionID.MakeSp
 {
     private DateTime _remainInPosition;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_remainInPosition > WorldState.CurrentTime)
-            yield return new(Module.PrimaryActor.Position, 13);
+            return new Source[1] { new(Module.PrimaryActor.Position, 13f) };
+        return [];
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -16,8 +17,8 @@ class Upheaval(BossModule module) : Components.Knockback(module, ActionID.MakeSp
         if (_remainInPosition > WorldState.CurrentTime)
         {
             // stack just behind boss, this is a good place to bait imminent landslide correctly
-            var dirToCenter = (Module.Center - Module.PrimaryActor.Position).Normalized();
-            var pos = Module.PrimaryActor.Position + 2 * dirToCenter;
+            var dirToCenter = (Arena.Center - Module.PrimaryActor.Position).Normalized();
+            var pos = Module.PrimaryActor.Position + 2f * dirToCenter;
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(pos, 1.5f), _remainInPosition);
         }
     }
@@ -31,6 +32,6 @@ class Upheaval(BossModule module) : Components.Knockback(module, ActionID.MakeSp
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            _remainInPosition = WorldState.FutureTime(1); // TODO: just wait for effectresult instead...
+            _remainInPosition = WorldState.FutureTime(1d); // TODO: just wait for effectresult instead...
     }
 }

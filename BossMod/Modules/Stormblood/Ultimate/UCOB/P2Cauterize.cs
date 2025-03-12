@@ -4,15 +4,12 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
 {
     public int[] BaitOrder = new int[PartyState.MaxPartySize];
     public int NumBaitsAssigned;
-    public List<Actor> Casters = [];
+    public List<AOEInstance> Casters = [];
     private readonly List<(Actor actor, int position)> _dragons = []; // position 0 is N, then CW
 
-    private static readonly AOEShapeRect _shape = new(52, 10);
+    private static readonly AOEShapeRect _shape = new(52f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return Casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(Casters);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -25,8 +22,11 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
     {
         if (BaitOrder[pcSlot] >= NextBaitOrder)
         {
-            foreach (var d in DragonsForOrder(BaitOrder[pcSlot]))
+            var order = DragonsForOrder(BaitOrder[pcSlot]);
+            var len = order.Length;
+            for (var i = 0; i < len; ++i)
             {
+                var d = order[i];
                 Arena.Actor(d, Colors.Object, true);
                 _shape.Outline(Arena, d.Position, Angle.FromDirection(pc.Position - d.Position));
             }
@@ -36,10 +36,10 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.Firehorn or OID.Iceclaw or OID.Thunderwing or OID.TailOfDarkness or OID.FangOfLight)
+        if (actor.OID is (uint)OID.Firehorn or (uint)OID.Iceclaw or (uint)OID.Thunderwing or (uint)OID.TailOfDarkness or (uint)OID.FangOfLight)
         {
-            var dir = 180.Degrees() - Angle.FromDirection(actor.Position - Module.Center);
-            var pos = (int)MathF.Round(dir.Deg / 45) & 7;
+            var dir = 180.Degrees() - Angle.FromDirection(actor.Position - Arena.Center);
+            var pos = (int)MathF.Round(dir.Deg / 45f) & 7;
             _dragons.Add((actor, pos));
             if (_dragons.Count == 5)
             {
@@ -51,24 +51,24 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Cauterize1 or AID.Cauterize2 or AID.Cauterize3 or AID.Cauterize4 or AID.Cauterize5)
+        if (spell.Action.ID is (uint)AID.Cauterize1 or (uint)AID.Cauterize2 or (uint)AID.Cauterize3 or (uint)AID.Cauterize4 or (uint)AID.Cauterize5)
         {
-            Casters.Add(caster);
+            Casters.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.Cauterize1 or AID.Cauterize2 or AID.Cauterize3 or AID.Cauterize4 or AID.Cauterize5)
+        if (spell.Action.ID is (uint)AID.Cauterize1 or (uint)AID.Cauterize2 or (uint)AID.Cauterize3 or (uint)AID.Cauterize4 or (uint)AID.Cauterize5)
         {
-            Casters.Remove(caster);
+            Casters.RemoveAt(0);
             ++NumCasts;
         }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((IconID)iconID is IconID.Cauterize && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (iconID is (uint)IconID.Cauterize && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             BaitOrder[slot] = ++NumBaitsAssigned;
         }
@@ -82,25 +82,43 @@ class P2Cauterize(BossModule module) : Components.GenericAOEs(module)
         _ => 4
     };
 
-    private IEnumerable<Actor> DragonsForOrder(int order)
+    private Actor[] DragonsForOrder(int order)
     {
         if (_dragons.Count != 5)
-            yield break;
-        switch (order)
+            return [];
+        return order switch
         {
-            case 1:
-                yield return _dragons[0].actor;
-                yield return _dragons[1].actor;
-                break;
-            case 2:
-                yield return _dragons[2].actor;
-                break;
-            case 3:
-                yield return _dragons[3].actor;
-                yield return _dragons[4].actor;
-                break;
-        }
+            1 => [
+                    _dragons[0].actor,
+                    _dragons[1].actor
+                 ],
+            2 => [_dragons[2].actor],
+            3 => [
+                    _dragons[3].actor,
+                    _dragons[4].actor
+                 ],
+            _ => [],
+        };
     }
 }
 
-class P2Hypernova(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.Hypernova), m => m.Enemies(OID.VoidzoneHypernova).Where(z => z.EventState != 7), 1.4f);
+class P2Hypernova(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5f, ActionID.MakeSpell(AID.Hypernova), GetVoidzones, 1.4f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.VoidzoneHypernova);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}

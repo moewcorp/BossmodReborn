@@ -52,21 +52,21 @@ public enum AID : uint
 }
 
 class Bladestorm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Bladestorm), new AOEShapeCone(20f, 45f.Degrees()));
-class KeenTempest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KeenTempest), 8)
+class KeenTempest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.KeenTempest), 8f)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
             return [];
-        List<AOEInstance> list = new(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = Casters[i];
-            if ((aoe.Activation - Casters[0].Activation).TotalSeconds <= 1d)
-                list.Add(aoe);
-        }
-        return list;
+
+        var deadline = Casters[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && Casters[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(Casters)[..index];
     }
 }
 
@@ -122,7 +122,7 @@ class CradleOfTheSleepless(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCone cone = new(8f, 60f.Degrees(), InvertForbiddenZone: true);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -136,10 +136,7 @@ class CradleOfTheSleepless(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoe == null)
             return;
-        if (!_aoe.Value.Check(actor.Position))
-            hints.Add(Hint);
-        else
-            hints.Add(Hint, false);
+        hints.Add(Hint, !_aoe.Value.Check(actor.Position));
     }
 }
 

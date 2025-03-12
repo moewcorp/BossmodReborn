@@ -7,14 +7,12 @@ class Lochos(BossModule module, float activationDelay) : Components.GenericAOEs(
 
     private static readonly AOEShapeRect _shape = new(60f, 15f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.LochosFirst or (uint)AID.LochosRest)
         {
-            if (!_aoes.Any(aoe => aoe.Origin.AlmostEqual(caster.Position, 1) && aoe.Rotation.AlmostEqual(caster.Rotation, 0.1f)))
-                ReportError("Unexpected caster position/rotation");
             ++NumCasts;
         }
     }
@@ -25,15 +23,15 @@ class Lochos(BossModule module, float activationDelay) : Components.GenericAOEs(
         {
             (var offset, var dir) = index switch
             {
-                8 => (new(+15, -30), 0.Degrees()),
-                9 => (new(-30, -15), 90.Degrees()),
-                10 => (new(+30, +15), -90.Degrees()),
-                11 => (new(-15, +30), 180.Degrees()),
-                _ => (new WDir(), 0.Degrees())
+                8 => (new(+15f, -30f), default),
+                9 => (new(-30f, -15f), 90f.Degrees()),
+                10 => (new(+30f, +15), -90f.Degrees()),
+                11 => (new(-15f, +30f), 180f.Degrees()),
+                _ => (new WDir(), new Angle())
             };
             if (offset != default)
             {
-                _aoes.Add(new(_shape, Arena.Center + offset, dir, WorldState.FutureTime(_activationDelay)));
+                _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center + offset), dir, WorldState.FutureTime(_activationDelay)));
             }
         }
     }

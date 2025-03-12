@@ -4,38 +4,37 @@ class Stance(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
-    private static readonly AOEShapeCone _shapeCone = new(50, 40.Degrees()); // TODO: verify origin
-    private static readonly AOEShapeCone _shapeOut = new(24, 90.Degrees());
-    private static readonly AOEShapeDonut _shapeIn = new(8, 30);
+    private static readonly AOEShapeCone _shapeCone = new(50f, 40f.Degrees());
+    private static readonly AOEShapeCone _shapeOut = new(24f, 90f.Degrees());
+    private static readonly AOEShapeDonut _shapeIn = new(8f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        // TODO: origin should be spell.LocXZ (once it's fully fixed)
-        (var shape, var origin) = (AID)spell.Action.ID switch
+        AOEShape? shape = spell.Action.ID switch
         {
-            AID.SusurrantBreathAOE => (_shapeCone, new(100, 75)),
-            AID.SlitheringStrikeAOE => (_shapeOut, caster.Position),
-            AID.StranglingCoilAOE => (_shapeIn, Arena.Center),
-            _ => ((AOEShape?)null, default(WPos))
+            (uint)AID.SusurrantBreathAOE => _shapeCone,
+            (uint)AID.SlitheringStrikeAOE => _shapeOut,
+            (uint)AID.StranglingCoilAOE => _shapeIn,
+            _ => null
         };
         if (shape != null)
-            _aoe = new(shape, origin, spell.Rotation, Module.CastFinishAt(spell));
+            _aoe = new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SusurrantBreathAOE or AID.SlitheringStrikeAOE or AID.StranglingCoilAOE)
+        if (spell.Action.ID is (uint)AID.SusurrantBreathAOE or (uint)AID.SlitheringStrikeAOE or (uint)AID.StranglingCoilAOE)
             ++NumCasts;
     }
 }
 
-class CharringCataclysm(BossModule module) : Components.UniformStackSpread(module, 4, 0, 2, 2)
+class CharringCataclysm(BossModule module) : Components.UniformStackSpread(module, 4f, default, 2, 2)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SusurrantBreathAOE or AID.SlitheringStrikeAOE or AID.StranglingCoilAOE)
+        if (spell.Action.ID is (uint)AID.SusurrantBreathAOE or (uint)AID.SlitheringStrikeAOE or (uint)AID.StranglingCoilAOE)
         {
             // note: dd vs supports is random, select supports arbitrarily
             AddStacks(Module.Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), Module.CastFinishAt(spell, 0.7f));
@@ -44,10 +43,8 @@ class CharringCataclysm(BossModule module) : Components.UniformStackSpread(modul
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.CharringCataclysm)
-        {
+        if (spell.Action.ID == (uint)AID.CharringCataclysm)
             Stacks.Clear();
-        }
     }
 }
 
@@ -55,18 +52,20 @@ class ChillingCataclysm(BossModule module) : Components.GenericAOEs(module, Acti
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCross _shape = new(40, 2.5f);
+    private static readonly AOEShapeCross _shape = new(40f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.ChillingCataclysmArcaneSphere)
+        if (actor.OID == (uint)OID.ChillingCataclysmArcaneSphere)
         {
-            _aoes.Add(new(_shape, actor.Position, -0.003f.Degrees(), WorldState.FutureTime(5.6f)));
-            _aoes.Add(new(_shape, actor.Position, 44.998f.Degrees(), WorldState.FutureTime(5.6f)));
+            var act = WorldState.FutureTime(5.6d);
+            var pos = WPos.ClampToGrid(actor.Position);
+            _aoes.Add(new(_shape, pos, Angle.AnglesCardinals[1], act));
+            _aoes.Add(new(_shape, pos, Angle.AnglesIntercardinals[1], act));
         }
     }
 }
 
-class CracklingCataclysm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CracklingCataclysm), 6);
+class CracklingCataclysm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CracklingCataclysm), 6f);

@@ -32,16 +32,17 @@ public enum IconID : uint
 class EnterNightPull(BossModule module) : Components.Knockback(module)
 {
     private (Actor, DateTime) target;
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (target.Item1 == actor)
-            yield return new(Module.PrimaryActor.Position, 40, target.Item2, default, default, Kind.TowardsOrigin);
+            return new Source[1] { new(Module.PrimaryActor.Position, 40f, target.Item2, default, default, Kind.TowardsOrigin) };
+        return [];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is ((uint)IconID.EnterNight))
-            target = (actor, WorldState.FutureTime(3));
+            target = (actor, WorldState.FutureTime(3d));
     }
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
@@ -60,33 +61,34 @@ class EnterNightPull(BossModule module) : Components.Knockback(module)
     }
 }
 
-class EnterNight(BossModule module) : Components.StretchTetherSingle(module, (uint)TetherID.EnterNight, 16, activationDelay: 4.3f);
+class EnterNight(BossModule module) : Components.StretchTetherSingle(module, (uint)TetherID.EnterNight, 16f, activationDelay: 4.3f);
 
 class ShadowFlow(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(6);
-    private static readonly AOEShapeCone cone = new(22, 23.Degrees());
-    private readonly List<AOEInstance> aoes = [];
+    private static readonly AOEShapeCircle circle = new(6f);
+    private static readonly AOEShapeCone cone = new(22f, 23.Degrees());
+    private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoes.Count > 5 ? aoes : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count > 5 ? CollectionsMarshal.AsSpan(_aoes) : [];
 
     public override void Update()
     {
-        if (aoes.Count > 0)
-            aoes.RemoveAll(aoe => aoe.Activation < WorldState.CurrentTime);
+        if (_aoes.Count != 0)
+            _aoes.RemoveAll(aoe => aoe.Activation < WorldState.CurrentTime);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ShadowFlowCone)
+        if (spell.Action.ID == (uint)AID.ShadowFlowCone)
         {
-            var activation = WorldState.FutureTime(8);
-            aoes.Add(new(cone, DO12TheGovernor.ArenaCenter, caster.Rotation, activation));
-            if (aoes.Count == 6)
+            var activation = WorldState.FutureTime(8d);
+            var pos = WPos.ClampToGrid(DO12TheGovernor.ArenaCenter);
+            _aoes.Add(new(cone, pos, caster.Rotation, activation));
+            if (_aoes.Count == 6)
             {
-                aoes.Add(new(circle, DO12TheGovernor.ArenaCenter, default, activation));
-                foreach (var g in Module.Enemies(OID.TheGroveller))
-                    aoes.Add(new(circle, g.Position, default, activation));
+                _aoes.Add(new(circle, pos, default, activation));
+                foreach (var g in Module.Enemies((uint)OID.TheGroveller))
+                    _aoes.Add(new(circle, WPos.ClampToGrid(g.Position), default, activation));
             }
         }
     }

@@ -38,46 +38,46 @@ public enum AID : uint
     Condescension = 29602, // Boss->player, 5.0s cast, single-target
 }
 
-abstract class TurmoilInner(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 22);
+abstract class TurmoilInner(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 22f);
 class InnerTurmoil(BossModule module) : TurmoilInner(module, AID.InnerTurmoil);
 class PhantomInnerTurmoil(BossModule module) : TurmoilInner(module, AID.PhantomInnerTurmoil);
 
-class PhantomOuterTurmoil(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomOuterTurmoil), new AOEShapeDonutSector(20.5f, 39, 90.Degrees()));
+class PhantomOuterTurmoil(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PhantomOuterTurmoil), new AOEShapeDonutSector(20.5f, 39f, 90f.Degrees()));
 class Animadversion(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Animadversion));
 class Condescension(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Condescension));
 class Disgust(BossModule module) : Components.RaidwideCastDelay(module, ActionID.MakeSpell(AID.DisgustVisual), ActionID.MakeSpell(AID.Disgust), 0.5f);
 
-abstract class Admonishments(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40, 6));
+abstract class Admonishments(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(40f, 6f));
 class Admonishment(BossModule module) : Admonishments(module, AID.Admonishment);
 class PhantomAdmonishment(BossModule module) : Admonishments(module, AID.PhantomAdmonishment);
 
 class MirageAdmonishment(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
-    private static readonly AOEShapeRect rect = new(40, 6);
+    private static readonly AOEShapeRect rect = new(40f, 6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x11D3 && (OID)actor.OID is OID.MirageDragon1 or OID.MirageDragon2)
-            _aoes.Add(new(rect, actor.Position, actor.Rotation, WorldState.FutureTime(12)));
+        if (id == 0x11D3 && actor.OID is (uint)OID.MirageDragon1 or (uint)OID.MirageDragon2)
+            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(12d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.MirageAdmonishment)
+        if (spell.Action.ID == (uint)AID.MirageAdmonishment)
             _aoes.Clear();
     }
 }
 
 class Antipathy(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(6), new AOEShapeDonut(6, 12), new AOEShapeDonut(12, 20)];
+    private static readonly AOEShape[] _shapes = [new AOEShapeCircle(6f), new AOEShapeDonut(6f, 12f), new AOEShapeDonut(12f, 20f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Antipathy1)
+        if (spell.Action.ID == (uint)AID.Antipathy1)
             AddSequence(spell.LocXZ, Module.CastFinishAt(spell));
     }
 
@@ -85,11 +85,11 @@ class Antipathy(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     {
         if (Sequences.Count != 0)
         {
-            var order = (AID)spell.Action.ID switch
+            var order = spell.Action.ID switch
             {
-                AID.Antipathy1 => 0,
-                AID.Antipathy2 => 1,
-                AID.Antipathy3 => 2,
+                (uint)AID.Antipathy1 => 0,
+                (uint)AID.Antipathy2 => 1,
+                (uint)AID.Antipathy3 => 2,
                 _ => -1
             };
             AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
@@ -97,19 +97,19 @@ class Antipathy(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     }
 }
 
-class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4, 4)
+class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4, 4)
 {
     private int numCasts;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AkhMornFirst)
+        if (spell.Action.ID == (uint)AID.AkhMornFirst)
             AddStack(WorldState.Actors.Find(spell.TargetID)!, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AkhMornFirst or AID.AkhMornRest)
+        if (spell.Action.ID is (uint)AID.AkhMornFirst or (uint)AID.AkhMornRest)
         {
             if (++numCasts == 4)
             {

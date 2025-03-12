@@ -147,26 +147,26 @@ class P3HelloWorld(BossModule module) : Components.GenericTowers(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.HWPrepStack:
+            case (uint)SID.HWPrepStack:
                 AssignRole(actor, PlayerRole.Stack);
                 break;
-            case SID.HWPrepDefamation:
+            case (uint)SID.HWPrepDefamation:
                 AssignRole(actor, PlayerRole.Defamation);
                 break;
-            case SID.HWPrepRedRot:
+            case (uint)SID.HWPrepRedRot:
                 AssignRot(actor, TowerColor.Red);
                 break;
-            case SID.HWPrepBlueRot:
+            case (uint)SID.HWPrepBlueRot:
                 AssignRot(actor, TowerColor.Blue);
                 break;
-            case SID.HWPrepLocalTether:
-                if ((status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30)
+            case (uint)SID.HWPrepLocalTether:
+                if ((status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30d)
                     AssignRole(actor, PlayerRole.LocalTether);
                 break;
-            case SID.HWPrepRemoteTether:
-                if ((status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30)
+            case (uint)SID.HWPrepRemoteTether:
+                if ((status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30d)
                     AssignRole(actor, PlayerRole.RemoteTether);
                 break;
         }
@@ -174,10 +174,10 @@ class P3HelloWorld(BossModule module) : Components.GenericTowers(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var color = (AID)spell.Action.ID switch
+        var color = spell.Action.ID switch
         {
-            AID.HWRedTower => TowerColor.Red,
-            AID.HWBlueTower => TowerColor.Blue,
+            (uint)AID.HWRedTower => TowerColor.Red,
+            (uint)AID.HWBlueTower => TowerColor.Blue,
             _ => TowerColor.None
         };
         if (color != TowerColor.None)
@@ -185,39 +185,39 @@ class P3HelloWorld(BossModule module) : Components.GenericTowers(module)
             var isDefamationTower = color == _defamationTowerColor;
             var soakerRole = isDefamationTower ? PlayerRole.Defamation : PlayerRole.Stack;
             _defamationTowers[Towers.Count] = isDefamationTower; // note: this works, because tower casts never overlap
-            Towers.Add(new(caster.Position, 6, forbiddenSoakers: Raid.WithSlot(true, true, true).WhereSlot(s => RoleForNextTowers(s) != soakerRole).Mask()));
+            Towers.Add(new(spell.LocXZ, 6f, forbiddenSoakers: Raid.WithSlot(true, true, true).WhereSlot(s => RoleForNextTowers(s) != soakerRole).Mask()));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.HWRedTower or AID.HWBlueTower)
+        if (spell.Action.ID is (uint)AID.HWRedTower or (uint)AID.HWBlueTower)
         {
-            Towers.RemoveAll(t => t.Position.AlmostEqual(caster.Position, 1));
+            Towers.RemoveAll(t => t.Position.AlmostEqual(caster.Position, 1f));
             ++NumCasts;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.HWRedRot:
+            case (uint)AID.HWRedRot:
                 if (_defamationTowerColor == TowerColor.Red)
-                    _defamationRotDone.Set(Raid.FindSlot(spell.MainTargetID));
+                    _defamationRotDone[Raid.FindSlot(spell.MainTargetID)] = true;
                 else
-                    _stackRotDone.Set(Raid.FindSlot(spell.MainTargetID));
+                    _stackRotDone[Raid.FindSlot(spell.MainTargetID)] = true;
                 ++NumRotExplodes;
                 break;
-            case AID.HWBlueRot:
+            case (uint)AID.HWBlueRot:
                 if (_defamationTowerColor == TowerColor.Blue)
-                    _defamationRotDone.Set(Raid.FindSlot(spell.MainTargetID));
+                    _defamationRotDone[Raid.FindSlot(spell.MainTargetID)] = true;
                 else
-                    _stackRotDone.Set(Raid.FindSlot(spell.MainTargetID));
+                    _stackRotDone[Raid.FindSlot(spell.MainTargetID)] = true;
                 ++NumRotExplodes;
                 break;
-            case AID.HWTetherBreak:
-            case AID.HWTetherFail:
+            case (uint)AID.HWTetherBreak:
+            case (uint)AID.HWTetherFail:
                 ++NumTetherBreaks;
                 break;
         }

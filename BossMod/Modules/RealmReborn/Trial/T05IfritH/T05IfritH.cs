@@ -40,23 +40,32 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Incinerate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Incinerate), new AOEShapeCone(15, 60.Degrees()));
-class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8);
+class Incinerate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Incinerate), new AOEShapeCone(15f, 60f.Degrees()));
+class Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8f);
 
 class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.CrimsonCyclone))
 {
     private readonly List<Actor> _casters = [];
 
-    private static readonly AOEShape _shape = new AOEShapeRect(43, 6);
+    private static readonly AOEShape _shape = new AOEShapeRect(43f, 6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _casters.Select(c => new AOEInstance(_shape, c.Position, c.CastInfo?.Rotation ?? c.Rotation, Module.CastFinishAt(c.CastInfo, 0, WorldState.FutureTime(4))));
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = _casters[i];
+            aoes[i] = new(_shape, c.CastInfo?.LocXZ ?? c.Position, c.CastInfo?.Rotation ?? c.Rotation, Module.CastFinishAt(c.CastInfo, 0, WorldState.FutureTime(4d)));
+        }
+        return aoes;
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.Boss && actor != Module.PrimaryActor && id == 0x008D)
+        if (actor.OID == (uint)OID.Boss && actor != Module.PrimaryActor && id == 0x008D)
             _casters.Add(actor);
     }
 
@@ -67,7 +76,7 @@ class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionI
     }
 }
 
-class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
+class RadiantPlume(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8f);
 
 class T05IfritHStates : StateMachineBuilder
 {
@@ -90,17 +99,19 @@ public class T05IfritH : BossModule
 
     public T05IfritH(WorldState ws, Actor primary) : base(ws, primary, default, new ArenaBoundsCircle(20))
     {
-        _nails = Enemies(OID.InfernalNail);
+        _nails = Enemies((uint)OID.InfernalNail);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
-            e.Priority = (OID)e.Actor.OID switch
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
             {
-                OID.InfernalNail => 2,
-                OID.Boss => e.Actor == PrimaryActor ? 1 : 0,
+                (uint)OID.InfernalNail => 2,
+                (uint)OID.Boss => e.Actor == PrimaryActor ? 1 : 0,
                 _ => 0,
             };
         }

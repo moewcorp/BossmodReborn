@@ -7,7 +7,7 @@ class Clearout(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCone _shape = new(27f, 90f.Degrees()); // TODO: verify range, it's definitely bigger than what table suggests... maybe origin is wrong?
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {

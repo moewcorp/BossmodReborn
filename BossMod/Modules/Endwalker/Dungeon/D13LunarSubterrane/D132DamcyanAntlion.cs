@@ -30,14 +30,14 @@ class Sandblast(BossModule module) : Components.RaidwideCast(module, ActionID.Ma
 
 class SandblastVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom rect = new([new Rectangle(D132DamcyanAntlion.ArenaCenter, 19.5f, 25)], [new Rectangle(D132DamcyanAntlion.ArenaCenter, 19.5f, 20)]);
+    private static readonly AOEShapeCustom rect = new([new Rectangle(D132DamcyanAntlion.ArenaCenter, 19.5f, 25f)], [new Rectangle(D132DamcyanAntlion.ArenaCenter, 19.5f, 20f)]);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Sandblast && Arena.Bounds == D132DamcyanAntlion.StartingBounds)
+        if (spell.Action.ID == (uint)AID.Sandblast && Arena.Bounds == D132DamcyanAntlion.StartingBounds)
             _aoe = new(rect, Arena.Center, default, Module.CastFinishAt(spell));
     }
     public override void OnEventEnvControl(byte index, uint state)
@@ -53,30 +53,22 @@ class SandblastVoidzone(BossModule module) : Components.GenericAOEs(module)
 class Landslip(BossModule module) : Components.Knockback(module)
 {
     public bool TowerDanger;
-    private readonly List<Actor> _casters = [];
-    public DateTime Activation;
-    private static readonly AOEShapeRect rect = new(40, 5);
+    public readonly List<Source> Sourcez = new(4);
+    private static readonly AOEShapeRect rect = new(40f, 5f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
-    {
-        foreach (var c in _casters)
-            yield return new(c.Position, 20, Activation, rect, c.Rotation, Kind.DirForward);
-    }
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(Sourcez);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Landslip)
-        {
-            Activation = Module.CastFinishAt(spell);
-            _casters.Add(caster);
-        }
+        if (spell.Action.ID == (uint)AID.Landslip)
+            Sourcez.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), rect, spell.Rotation, Kind.DirForward));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Landslip)
+        if (spell.Action.ID == (uint)AID.Landslip)
         {
-            _casters.Remove(caster);
+            Sourcez.Clear();
             if (++NumCasts > 4)
                 TowerDanger = true;
         }
@@ -84,111 +76,142 @@ class Landslip(BossModule module) : Components.Knockback(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        var count = Sourcez.Count;
+        if (count == 0)
+            return;
         var length = Arena.Bounds.Radius * 2; // casters are at the border, orthogonal to borders
-        foreach (var c in _casters)
-            hints.AddForbiddenZone(ShapeDistance.Rect(c.Position, c.Rotation, length, 20 - length, 5), Activation);
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Sourcez[i];
+            hints.AddForbiddenZone(ShapeDistance.Rect(c.Origin, c.Direction, length, 20f - length, 5f), c.Activation);
+        }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => (Module.FindComponent<Towerfall>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var comp = Module.FindComponent<Towerfall>();
+        if (comp != null)
+        {
+            var aoes = comp.ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                    return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
-class EarthenGeyser(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.EarthenGeyser), 10, 4, 4);
-class QuicksandVoidzone(BossModule module) : Components.PersistentVoidzone(module, 10, m => m.Enemies(OID.QuicksandVoidzone).Where(z => z.EventState != 7));
-class PoundSand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PoundSand), 12);
+class EarthenGeyser(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.EarthenGeyser), 10f, 4, 4);
+class QuicksandVoidzone(BossModule module) : Components.PersistentVoidzone(module, 10f, GetVoidzone)
+{
+    private static Actor[] GetVoidzone(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.QuicksandVoidzone);
+        if (enemies.Count != 0 && enemies[0].EventState != 7)
+            return [.. enemies];
+        return [];
+    }
+}
+class PoundSand(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PoundSand), 12f);
 
 class AntlionMarch(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private DateTime _activation;
+    private readonly List<AOEInstance> _aoes = new(5);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
-            yield return _aoes[0] with { Activation = _activation, Color = Colors.Danger };
-        if (_aoes.Count > 1)
-            yield return _aoes[1] with { Activation = _activation };
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i == 0)
+                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AntilonMarchTelegraph)
+        if (spell.Action.ID == (uint)AID.AntilonMarchTelegraph)
         {
+            // actual charge is only 4 halfwidth, but the telegraphs and actual AOEs can be in different positions by upto 0.5y according to my logs
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4.5f), caster.Position, Angle.FromDirection(dir))); // actual charge is only 4 halfwidth, but the telegraphs and actual AOEs can be in different positions by upto 0.5y according to my logs
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4.5f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell, 4.2f)));
         }
-        if ((AID)spell.Action.ID == AID.AntlionMarch)
-            _activation = Module.CastFinishAt(spell, 0.2f); // since these are charges of different length with 0s cast time, the activation times are different for each and there are different patterns, so we just pretend that they all start after the telegraphs end
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.AntlionMarch)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.AntlionMarch)
             _aoes.RemoveAt(0);
     }
 }
 
 class Towerfall(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeRect rect = new(40, 5);
-    private const int X = 20;
-    private static readonly Dictionary<byte, (WPos position, Angle direction)> _towerPositions = [];
+    private readonly Landslip _kb = module.FindComponent<Landslip>()!;
+    private readonly List<AOEInstance> _aoes = new(2);
+    private static readonly AOEShapeRect rect = new(40f, 5f);
 
-    static Towerfall()
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        int[] xPositions = [-X, X];
-        Angle[] angles = [Angle.AnglesCardinals[3], Angle.AnglesCardinals[0]];
-        var zStart = 45;
-        var zStep = 10;
-        byte index = 1;
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var risky = _kb.TowerDanger;
+        var aoes = new AOEInstance[count];
 
-        for (var i = 0; i < 2; ++i)
-            for (var j = 0; j < 4; ++j)
-                _towerPositions[index++] = new(new(xPositions[i], zStart + j * zStep), angles[i]);
-    }
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        for (var i = 0; i < _aoes.Count; ++i)
-            yield return new(rect, _aoes[i].Origin, _aoes[i].Rotation, Module.FindComponent<Landslip>()!.Activation.AddSeconds(0.7f), Risky: Module.FindComponent<Landslip>()!.TowerDanger);
+        for (var i = 0; i < count; ++i)
+        {
+            var aoe = _aoes[i];
+            aoes[i] = risky ? aoe : aoe with { Risky = false };
+        }
+        return aoes;
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && _towerPositions.TryGetValue(index, out var towers))
-            _aoes.Add(new(rect, towers.position, towers.direction));
+        if (state == 0x00020001 && index > 0x00)
+        {
+            var posX = index < 0x05 ? -20f : 20f;
+            var posZ = posX == -20f ? 35f + index * 10f : -5f + index * 10f;
+            var rot = posX == -20f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
+            _aoes.Add(new(rect, WPos.ClampToGrid(new(posX, posZ)), rot, WorldState.FutureTime(13d - _aoes.Count)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Towerfall)
+        if (spell.Action.ID == (uint)AID.Towerfall)
         {
             _aoes.Clear();
-            Module.FindComponent<Landslip>()!.TowerDanger = false;
+            _kb.TowerDanger = false;
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Module.FindComponent<Landslip>()!.Sources(slot, actor).Any())
+        if (_kb.Sourcez.Count != 0 & _aoes.Count == 2)
         {
-            var forbiddenInverted = new List<Func<WPos, float>>();
-            var forbidden = new List<Func<WPos, float>>();
-            if (_aoes.Count == 2)
+            var activation = _kb.Sourcez[0].Activation;
+            var distance = MathF.Round(Math.Abs(_aoes[0].Origin.Z - _aoes[1].Origin.Z));
+            var forbidden = new Func<WPos, float>[2];
+            var check = distance is 10 or 30;
+            for (var i = 0; i < 2; ++i)
             {
-                var distance = Math.Abs(_aoes[0].Origin.Z - _aoes[1].Origin.Z);
-                if (distance is 10 or 30)
-                    for (var i = 0; i < _aoes.Count; ++i)
-                        forbiddenInverted.Add(ShapeDistance.InvertedRect(_aoes[i].Origin, _aoes[i].Rotation, rect.LengthFront, default, rect.HalfWidth));
-                else
-                    for (var i = 0; i < _aoes.Count; ++i)
-                        forbidden.Add(ShapeDistance.Rect(_aoes[i].Origin, _aoes[i].Rotation, rect.LengthFront, default, rect.HalfWidth));
+                var aoe = _aoes[i];
+                forbidden[i] = check ? ShapeDistance.InvertedRect(aoe.Origin, aoe.Rotation, 40f, default, 5f) : ShapeDistance.Rect(aoe.Origin, aoe.Rotation, 40f, default, 5f);
             }
-            var activation = Module.FindComponent<Landslip>()!.Activation.AddSeconds(0.7f);
-            if (forbiddenInverted.Count != 0)
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), activation);
-            if (forbidden.Count != 0)
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), activation);
+            hints.AddForbiddenZone(check ? ShapeDistance.Intersection(forbidden) : ShapeDistance.Union(forbidden), activation);
         }
         else
             base.AddAIHints(slot, actor, assignment, hints);
@@ -214,7 +237,7 @@ class D132DamcyanAntlionStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12484)]
 public class D132DamcyanAntlion(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
-    public static readonly WPos ArenaCenter = new(0, 60);
-    public static readonly ArenaBounds StartingBounds = new ArenaBoundsRect(19.5f, 25);
-    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsRect(19.5f, 20);
+    public static readonly WPos ArenaCenter = new(default, 60f);
+    public static readonly ArenaBounds StartingBounds = new ArenaBoundsRect(19.5f, 25f);
+    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsRect(19.5f, 20f);
 }

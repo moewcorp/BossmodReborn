@@ -101,11 +101,11 @@ class ShieldSkewer(BossModule module) : Components.SimpleAOEs(module, ActionID.M
 {
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Casters.Count == 0)
             return [];
-        return [Casters[0] with { Risky = !_arena.Safespots }];
+        return new AOEInstance[1] { Casters[0] with { Risky = !_arena.Safespots } };
     }
 }
 
@@ -142,7 +142,7 @@ class Shrapnel(BossModule module) : Components.GenericAOEs(module)
             new(27.97f, 160.998f), new(20.981f, 160.998f), new(13.992f, 140.978f)
         ];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void Update()
     {

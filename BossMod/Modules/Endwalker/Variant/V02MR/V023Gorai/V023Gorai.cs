@@ -29,14 +29,7 @@ class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     }
 }
 
-class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(6f), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.TorchingTorment), 5.9f, true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(6f), (uint)IconID.Tankbuster, ActionID.MakeSpell(AID.TorchingTorment), 5.9f, true, tankbuster: true);
 
 class PureShock(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PureShock));
 class HumbleHammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HumbleHammer), 3f);

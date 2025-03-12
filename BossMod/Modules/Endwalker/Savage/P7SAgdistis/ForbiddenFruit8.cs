@@ -16,7 +16,7 @@ class ForbiddenFruit8(BossModule module) : ForbiddenFruitCommon(module, ActionID
 
     protected override DateTime? PredictUntetheredCastStart(Actor fruit)
     {
-        if ((OID)fruit.OID != OID.ForbiddenFruitBird)
+        if (fruit.OID != (uint)OID.ForbiddenFruitBird)
             return null;
 
         _noBirdsPlatforms.Clear(PlatformIDFromOffset(fruit.Position - Module.Center));

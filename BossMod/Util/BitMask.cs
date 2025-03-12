@@ -55,15 +55,24 @@ public record struct BitMask(ulong Raw)
         return res;
     }
 
-    public readonly IEnumerable<int> SetBits()
+    public readonly int[] SetBits()
     {
         var v = Raw;
+        var count = BitOperations.PopCount(v);
+        if (count == 0)
+            return [];
+
+        var indices = new int[count];
+        var index = 0;
+
         while (v != 0)
         {
-            var index = BitOperations.TrailingZeroCount(v);
-            yield return index;
-            v &= ~(1ul << index);
+            var bitIndex = BitOperations.TrailingZeroCount(v);
+            indices[index++] = bitIndex;
+            v &= ~(1ul << bitIndex);
         }
+
+        return indices;
     }
 
     private static ulong MaskForBit(int index) => (uint)index < 64 ? (1ul << index) : 0;

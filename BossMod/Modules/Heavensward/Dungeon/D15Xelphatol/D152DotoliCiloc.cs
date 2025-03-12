@@ -32,7 +32,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private bool begin;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -127,7 +127,7 @@ class OnHigh(BossModule module) : Components.Knockback(module)
 
     private static WPos GenerateRotatedVertice(WPos vertex, float rotationAngle) => WPos.RotateAroundOrigin(rotationAngle, D152DotoliCiloc.ArenaCenter, vertex);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _source);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -150,7 +150,7 @@ class OnHighHint(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle angle = 11.25f.Degrees();
     private DateTime activation;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

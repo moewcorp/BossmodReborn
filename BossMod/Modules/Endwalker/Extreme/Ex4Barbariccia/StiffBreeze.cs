@@ -1,11 +1,23 @@
 ﻿namespace BossMod.Endwalker.Extreme.Ex4Barbariccia;
 
-class StiffBreeze(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Tousle))
+class StiffBreeze(BossModule module) : Components.PersistentVoidzone(module, 1f, GetVoidzones)
 {
-    private static readonly AOEShape _shape = new AOEShapeCircle(1); // note: actual aoe, if triggered, has radius 2, but we care about triggering radius
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    // note: actual aoe, if triggered, has radius 2, but we care about triggering radius
+    private static Actor[] GetVoidzones(BossModule module)
     {
-        return Module.Enemies(OID.StiffBreeze).Select(o => new AOEInstance(_shape, o.Position));
+        var enemies = module.Enemies((uint)OID.StiffBreeze);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
     }
 }

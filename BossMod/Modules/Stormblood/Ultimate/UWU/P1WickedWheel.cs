@@ -8,22 +8,32 @@ class WickedWheel(BossModule module) : Components.GenericAOEs(module)
     public List<(Actor source, AOEShape shape, DateTime activation)> Sources = [];
 
     public static readonly AOEShapeCircle ShapeWheel = new(8.7f);
-    public static readonly AOEShapeDonut ShapeTornado = new(7, 20);
+    public static readonly AOEShapeDonut ShapeTornado = new(7f, 20f);
     public static readonly AOEShapeCircle ShapeSister = new(8.36f);
-    public static readonly AOEShapeCircle ShapeCombined = new(20); // wheel+tornado, used when players are expected to outrange both - e.g. during ultimate predation
+    public static readonly AOEShapeCircle ShapeCombined = new(20f); // wheel+tornado, used when players are expected to outrange both - e.g. during ultimate predation
 
     public bool Active => Sources.Count > 0;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Sources.Select(s => new AOEInstance(s.shape, s.source.Position, s.source.Rotation, s.activation));
+        var count = Sources.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+
+        for (var i = 0; i < count; ++i)
+        {
+            var s = Sources[i];
+            aoes[i] = new(s.shape, s.source.Position, s.source.Rotation, s.activation);
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.WickedWheel:
+            case (uint)AID.WickedWheel:
                 // if wheel was predicted, keep the shape, but update the activation time
                 var predictedIndex = Sources.FindIndex(s => s.source == caster);
                 if (predictedIndex >= 0)
@@ -31,7 +41,7 @@ class WickedWheel(BossModule module) : Components.GenericAOEs(module)
                 else
                     Sources.Add((caster, ShapeWheel, Module.CastFinishAt(spell)));
                 break;
-            case AID.WickedWheelSister:
+            case (uint)AID.WickedWheelSister:
                 Sources.Add((caster, ShapeSister, Module.CastFinishAt(spell)));
                 break;
         }
@@ -39,20 +49,20 @@ class WickedWheel(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.WickedWheel:
+            case (uint)AID.WickedWheel:
                 Sources.RemoveAll(s => s.source == caster);
                 AwakenedResolve = WorldState.FutureTime(2.1f); // for tornado
-                if (caster.FindStatus(SID.Woken) != null)
+                if (caster.FindStatus((uint)SID.Woken) != null)
                     Sources.Add((caster, ShapeTornado, AwakenedResolve));
                 ++NumCasts;
                 break;
-            case AID.WickedTornado:
+            case (uint)AID.WickedTornado:
                 Sources.RemoveAll(s => s.shape == ShapeTornado);
                 ++NumCasts;
                 break;
-            case AID.WickedWheelSister:
+            case (uint)AID.WickedWheelSister:
                 Sources.RemoveAll(s => s.source == caster);
                 ++NumCasts;
                 break;
@@ -66,7 +76,7 @@ class P4WickedWheel(BossModule module) : WickedWheel(module)
 {
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.Garuda && id == 0x1E43)
-            Sources.Add((actor, ShapeCombined, WorldState.FutureTime(8.1f)));
+        if (actor.OID == (uint)OID.Garuda && id == 0x1E43)
+            Sources.Add((actor, ShapeCombined, WorldState.FutureTime(8.1d)));
     }
 }

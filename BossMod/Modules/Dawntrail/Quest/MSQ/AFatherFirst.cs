@@ -67,7 +67,7 @@ class DualBlowsSteeledStrike(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
     private static readonly AOEShapeCross cross = new(30f, 4f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -126,7 +126,7 @@ class BurningSun(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(26);
     private static readonly AOEShapeCircle circleSmall = new(4f), circleBig = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -145,10 +145,11 @@ class BurningSun(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
         if (spell.Action.ID == (uint)AID.BurningSunTelegraph1)
-            _aoes.Add(new(circleSmall, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
+            AddAOE(circleSmall);
         else if (spell.Action.ID == (uint)AID.BurningSunTelegraph2)
-            _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell, 4f)));
+            AddAOE(circleBig);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -161,14 +162,27 @@ class BurningSun(BossModule module) : Components.GenericAOEs(module)
 class BrawlEnder(BossModule module) : Components.Knockback(module, stopAtWall: true)
 {
     private DateTime activation;
+    private readonly FireVoidzone _aoe = module.FindComponent<FireVoidzone>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (activation != default)
-            yield return new(actor.Position, 20, activation, default, actor.Rotation, Kind.DirForward);
+            return new Source[1] { new(actor.Position, 20f, activation, default, actor.Rotation, Kind.DirForward) };
+        return [];
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<FireVoidzone>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -187,7 +201,27 @@ abstract class TheThrill(BossModule module, AID aid) : Components.CastTowers(mod
 class TheThrill1(BossModule module) : TheThrill(module, AID.TheThrill1);
 class TheThrill2(BossModule module) : TheThrill(module, AID.TheThrill2);
 
-class FireVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, m => m.Enemies(OID.FireVoidzone).Where(z => z.EventState != 7));
+class FireVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.FireVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+
 class FancyBladework(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FancyBladework));
 class CoiledStrike(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CoiledStrike), new AOEShapeCone(30f, 75f.Degrees()));
 class GloryBlaze(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GloryBlaze), new AOEShapeRect(40f, 3f));
@@ -218,4 +252,4 @@ class AFatherFirstStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70419, NameID = 12675)]
-public class AFatherFirst(WorldState ws, Actor primary) : BossModule(ws, primary, new(0f, 49f), new ArenaBoundsRect(14.55f, 19.5f));
+public class AFatherFirst(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, 49f), new ArenaBoundsRect(14.55f, 19.5f));

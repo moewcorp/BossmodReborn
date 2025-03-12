@@ -1,33 +1,45 @@
 ﻿namespace BossMod.Endwalker.Savage.P9SKokytos;
 
-class ArchaicRockbreakerCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerCenter), 6);
+class ArchaicRockbreakerCenter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerCenter), 6f);
 
 class ArchaicRockbreakerShockwave(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.ArchaicRockbreakerShockwave), true)
 {
-    private readonly DateTime _activation = module.WorldState.FutureTime(6.5f);
-    private static readonly List<SafeWall> Walls0 = [new(new(93, 117.5f), new(108, 117.5f)), new(new(82.5f, 93), new(82.5f, 108)),
-    new(new(117.5f, 93), new(117.5f, 108)), new(new(93, 82.5f), new(108, 82.5f))];
-    private static readonly List<SafeWall> Walls45 = [.. Walls0.Select(wall => RotatedSafeWall(wall.Vertex1, wall.Vertex2))];
+    private readonly DateTime _activation = module.WorldState.FutureTime(6.5d);
+    private static readonly SafeWall[] Walls0 = [new(new(93f, 117.5f), new(108f, 117.5f)), new(new(82.5f, 93f), new(82.5f, 108f)),
+    new(new(117.5f, 93f), new(117.5f, 108f)), new(new(93f, 82.5f), new(108f, 82.5f))];
+    private static readonly SafeWall[] Walls45 = CreateRotatedWalls();
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    private static SafeWall[] CreateRotatedWalls()
     {
-        if (Arena.Bounds == P9SKokytos.arenaUplift0)
-            yield return new(Arena.Center, 21, _activation, SafeWalls: Walls0);
-        else if (Arena.Bounds == P9SKokytos.arenaUplift45)
-            yield return new(Arena.Center, 21, _activation, SafeWalls: Walls45);
+        var walls = new SafeWall[4];
+        for (var i = 0; i < 4; ++i)
+        {
+            var wall = Walls0[i];
+            walls[i] = RotatedSafeWall(ref wall);
+        }
+        return walls;
     }
 
-    private static SafeWall RotatedSafeWall(WPos start, WPos end)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        var rotatedStart = WPos.RotateAroundOrigin(45, P9SKokytos.center, start);
-        var rotatedEnd = WPos.RotateAroundOrigin(45, P9SKokytos.center, end);
+        if (Arena.Bounds == P9SKokytos.arenaUplift0)
+            return new Source[1] { new(Arena.Center, 21f, _activation, SafeWalls: Walls0) };
+        else if (Arena.Bounds == P9SKokytos.arenaUplift45)
+            return new Source[1] { new(Arena.Center, 21f, _activation, SafeWalls: Walls45) };
+        return [];
+    }
+
+    private static SafeWall RotatedSafeWall(ref SafeWall wall)
+    {
+        var rotatedStart = WPos.RotateAroundOrigin(45f, P9SKokytos.center, wall.Vertex1);
+        var rotatedEnd = WPos.RotateAroundOrigin(45f, P9SKokytos.center, wall.Vertex2);
         return new(rotatedStart, rotatedEnd);
     }
 }
 
 class ArchaicRockbreakerPairs : Components.UniformStackSpread
 {
-    public ArchaicRockbreakerPairs(BossModule module) : base(module, 6, 0, 2)
+    public ArchaicRockbreakerPairs(BossModule module) : base(module, 6f, default, 2)
     {
         foreach (var p in Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()))
             AddStack(p, WorldState.FutureTime(7.8f));
@@ -35,63 +47,64 @@ class ArchaicRockbreakerPairs : Components.UniformStackSpread
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ArchaicRockbreakerPairs)
+        if (spell.Action.ID == (uint)AID.ArchaicRockbreakerPairs)
             Stacks.Clear();
     }
 }
 
-class ArchaicRockbreakerLine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerLine), 8, maxCasts: 8);
+class ArchaicRockbreakerLine(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArchaicRockbreakerLine), 8f, maxCasts: 8);
 
 class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeCircle _shapeOut = new(12);
-    private static readonly AOEShapeDonut _shapeIn = new(8, 20);
-    private static readonly AOEShapeCone _shapeCleave = new(40, 90.Degrees());
+    private static readonly AOEShapeCircle _shapeOut = new(12f);
+    private static readonly AOEShapeDonut _shapeIn = new(8f, 20f);
+    private static readonly AOEShapeCone _shapeCleave = new(40f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return _aoes.Take(1);
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {
-        foreach (var p in SafeSpots())
-            movementHints.Add(actor.Position, p, Colors.Safe);
+        var safespots = SafeSpots();
+        var count = safespots.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
+            movementHints.Add(actor.Position, safespots[i], Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var (inOutShape, offset) = (AID)spell.Action.ID switch
+        var (inOutShape, offset) = spell.Action.ID switch
         {
-            AID.FrontCombinationOut => (_shapeOut, 0.Degrees()),
-            AID.FrontCombinationIn => (_shapeIn, 0.Degrees()),
-            AID.RearCombinationOut => (_shapeOut, 180.Degrees()),
-            AID.RearCombinationIn => (_shapeIn, 180.Degrees()),
-            _ => ((AOEShape?)null, 0.Degrees())
+            (uint)AID.FrontCombinationOut => (_shapeOut, default),
+            (uint)AID.FrontCombinationIn => (_shapeIn, default),
+            (uint)AID.RearCombinationOut => (_shapeOut, 180f.Degrees()),
+            (uint)AID.RearCombinationIn => (_shapeIn, 180f.Degrees()),
+            _ => ((AOEShape?)null, new Angle())
         };
         if (inOutShape != null)
         {
-            _aoes.Add(new(inOutShape, Module.PrimaryActor.Position, default, WorldState.FutureTime(6.9f)));
-            _aoes.Add(new(_shapeCleave, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + offset, WorldState.FutureTime(10)));
+            _aoes.Add(new(inOutShape, Module.PrimaryActor.Position, default, WorldState.FutureTime(6.9d)));
+            _aoes.Add(new(_shapeCleave, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + offset, WorldState.FutureTime(10d)));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.InsideRoundhouseAOE:
+            case (uint)AID.InsideRoundhouseAOE:
                 PopAOE();
                 _aoes.Add(new(_shapeIn, Module.PrimaryActor.Position, default, WorldState.FutureTime(6)));
                 break;
-            case AID.OutsideRoundhouseAOE:
+            case (uint)AID.OutsideRoundhouseAOE:
                 PopAOE();
                 _aoes.Add(new(_shapeOut, Module.PrimaryActor.Position, default, WorldState.FutureTime(6)));
                 break;
-            case AID.SwingingKickFrontAOE:
-            case AID.SwingingKickRearAOE:
+            case (uint)AID.SwingingKickFrontAOE:
+            case (uint)AID.SwingingKickRearAOE:
                 PopAOE();
                 break;
         }
@@ -104,11 +117,12 @@ class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(
             _aoes.RemoveAt(0);
     }
 
-    private IEnumerable<WPos> SafeSpots()
+    private List<WPos> SafeSpots()
     {
         if (NumCasts == 0 && _aoes.Count > 0 && _aoes[0].Shape == _shapeOut && Module.FindComponent<ArchaicRockbreakerLine>() is var forbidden && forbidden?.NumCasts == 0)
         {
             var safespots = new ArcList(_aoes[0].Origin, _shapeOut.Radius + 0.25f);
+            var spots = new List<WPos>();
             foreach (var f in forbidden.ActiveCasters)
                 safespots.ForbidCircle(f.Origin, 8);
             if (safespots.Forbidden.Segments.Count > 0)
@@ -116,24 +130,26 @@ class ArchaicRockbreakerCombination(BossModule module) : Components.GenericAOEs(
                 foreach (var a in safespots.Allowed(default))
                 {
                     var mid = ((a.min.Rad + a.max.Rad) * 0.5f).Radians();
-                    yield return safespots.Center + safespots.Radius * mid.ToDirection();
+                    spots.Add(safespots.Center + safespots.Radius * mid.ToDirection());
                 }
             }
+            return spots;
         }
+        return [];
     }
 }
 
-class ArchaicDemolish(BossModule module) : Components.UniformStackSpread(module, 6, 0, 4)
+class ArchaicDemolish(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ArchaicDemolish)
+        if (spell.Action.ID == (uint)AID.ArchaicDemolish)
             AddStacks(Raid.WithoutSlot(true, true, true).Where(a => a.Role == Role.Healer), Module.CastFinishAt(spell, 1.2f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.ArchaicDemolishAOE)
+        if (spell.Action.ID == (uint)AID.ArchaicDemolishAOE)
             Stacks.Clear();
     }
 }

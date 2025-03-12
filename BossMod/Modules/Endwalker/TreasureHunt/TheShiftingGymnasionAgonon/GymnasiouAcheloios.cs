@@ -51,7 +51,7 @@ class DoubleHammer(BossModule module) : Components.GenericAOEs(module)
     public static readonly AOEShapeCone Cone = new(30f, 90f.Degrees());
     private static readonly Angle[] angles = [89.999f.Degrees(), -90.004f.Degrees()];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

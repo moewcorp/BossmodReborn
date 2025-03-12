@@ -16,7 +16,7 @@ class Hieroglyphika(BossModule module) : Components.GenericAOEs(module, ActionID
     private static readonly AOEShapeRect _shape = new(6f, 6f, 6f);
     private static readonly WDir[] _canonicalSafespots = [new(6f, -18f), new(-18f, 18f)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {

@@ -6,7 +6,7 @@ class P6HallowedWings(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(50, 11);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -43,7 +43,7 @@ class P6CauterizeN : Components.GenericAOEs
             AOE = new(_shape, caster.Position, caster.Rotation, WorldState.FutureTime(8.6f));
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 }
 
 abstract class P6HallowedPlume(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.HallowedPlume), centerAtTarget: true)

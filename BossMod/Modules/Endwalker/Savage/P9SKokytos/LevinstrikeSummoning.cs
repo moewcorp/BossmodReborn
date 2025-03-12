@@ -80,17 +80,18 @@ class LevinstrikeSummoningFiremeld(BossModule module) : Components.GenericBaitAw
 // both explosions and towers
 class LevinstrikeSummoningShock(BossModule module) : Components.GenericAOEs(module)
 {
-    public int NumTowers { get; private set; } // NumCasts counts explosions
+    public int NumTowers; // NumCasts counts explosions
     private readonly WPos[] _explodeOrder = [default, default, default, default];
     private readonly Actor?[] _soakerOrder = [null, null, null, null];
     private DateTime _firstExplosion;
 
     private static readonly AOEShapeCircle _shape = new(6);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (NumCasts < _explodeOrder.Length)
-            yield return new(_shape, _explodeOrder[NumCasts], default, _firstExplosion.AddSeconds(NumCasts * 5.6f));
+            return new AOEInstance[1] { new(_shape, _explodeOrder[NumCasts], default, _firstExplosion.AddSeconds(NumCasts * 5.6d)) };
+        return [];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -108,7 +109,7 @@ class LevinstrikeSummoningShock(BossModule module) : Components.GenericAOEs(modu
 
         if (NumTowers < NumCasts)
         {
-            var inTower = actor.Position.InCircle(_explodeOrder[NumTowers], 3);
+            var inTower = actor.Position.InCircle(_explodeOrder[NumTowers], 3f);
             var shouldSoak = _soakerOrder[NumTowers] == actor;
             if (shouldSoak != inTower)
                 hints.Add(shouldSoak ? "Soak the tower!" : "GTFO from tower!");
@@ -120,30 +121,30 @@ class LevinstrikeSummoningShock(BossModule module) : Components.GenericAOEs(modu
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (NumTowers < NumCasts)
-            Arena.AddCircle(_explodeOrder[NumTowers], 3, _soakerOrder[NumTowers] == pc ? Colors.Safe : Colors.Danger, 2);
+            Arena.AddCircle(_explodeOrder[NumTowers], 3, _soakerOrder[NumTowers] == pc ? Colors.Safe : 0, 2f);
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        var (order, isBall) = (IconID)iconID switch
+        var (order, isBall) = iconID switch
         {
-            IconID.Icon1 => (0, true),
-            IconID.Icon3 => (1, true),
-            IconID.Icon5 => (2, true),
-            IconID.Icon7 => (3, true),
-            IconID.Icon2 => (2, false),
-            IconID.Icon4 => (3, false),
-            IconID.Icon6 => (0, false),
-            IconID.Icon8 => (1, false),
+            (uint)IconID.Icon1 => (0, true),
+            (uint)IconID.Icon3 => (1, true),
+            (uint)IconID.Icon5 => (2, true),
+            (uint)IconID.Icon7 => (3, true),
+            (uint)IconID.Icon2 => (2, false),
+            (uint)IconID.Icon4 => (3, false),
+            (uint)IconID.Icon6 => (0, false),
+            (uint)IconID.Icon8 => (1, false),
             _ => (-1, false)
         };
         if (order < 0)
             return;
         if (isBall)
         {
-            var dir = (actor.Position - Module.Center).Normalized();
-            _explodeOrder[order] = Module.Center - 16 * dir;
-            _firstExplosion = WorldState.FutureTime(12.7f);
+            var dir = (actor.Position - Arena.Center).Normalized();
+            _explodeOrder[order] = WPos.ClampToGrid(Arena.Center - 16 * dir);
+            _firstExplosion = WorldState.FutureTime(12.7d);
         }
         else
         {
@@ -153,13 +154,13 @@ class LevinstrikeSummoningShock(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ShockExplosion:
+            case (uint)AID.ShockExplosion:
                 ++NumCasts;
                 break;
-            case AID.ShockTowerSoak:
-            case AID.ShockTowerFail:
+            case (uint)AID.ShockTowerSoak:
+            case (uint)AID.ShockTowerFail:
                 ++NumTowers;
                 break;
         }

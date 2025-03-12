@@ -36,30 +36,30 @@ public enum IconID : uint
     KanRhai = 260 // player->self
 }
 
-class Upburst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Upburst), 2);
-class BigBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BigBurst), 9);
-class PerigeanBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PerigeanBreath), new AOEShapeCone(30, 45.Degrees()));
-class MegaflareAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MegaflareAOE), 6);
-class MegaflareSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MegaflareSpread), 5);
-class MegaflareDive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MegaflareDive), new AOEShapeRect(41, 6));
-class LunarFlareBig(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LunarFlareBig), 11);
-class LunarFlareSmall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LunarFlareSmall), 6);
+class Upburst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Upburst), 2f);
+class BigBurst(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BigBurst), 9f);
+class PerigeanBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PerigeanBreath), new AOEShapeCone(30f, 45f.Degrees()));
+class MegaflareAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MegaflareAOE), 6f);
+class MegaflareSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.MegaflareSpread), 5f);
+class MegaflareDive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MegaflareDive), new AOEShapeRect(41f, 6f));
+class LunarFlareBig(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LunarFlareBig), 11f);
+class LunarFlareSmall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LunarFlareSmall), 6f);
 class Gigaflare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Gigaflare));
 class Flatten(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.Flatten));
 
-class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 4, 0, 4, 4)
+class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 4f, default, 4, 4)
 {
     private int numCasts;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.AkhMornFirst)
+        if (spell.Action.ID == (uint)AID.AkhMornFirst)
             AddStack(WorldState.Actors.Find(spell.TargetID)!, Module.CastFinishAt(spell));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.AkhMornFirst or AID.AkhMornRest)
+        if (spell.Action.ID is (uint)AID.AkhMornFirst or (uint)AID.AkhMornRest)
         {
             if (++numCasts == 4)
             {
@@ -72,23 +72,23 @@ class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 4, 0, 4
 
 class KanRhaiBait(BossModule module) : Components.GenericBaitAway(module)
 {
-    public static readonly AOEShapeCross Cross = new(15, 3);
+    public static readonly AOEShapeCross Cross = new(15f, 3f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.KanRhai)
-            CurrentBaits.Add(new(actor, actor, Cross, WorldState.FutureTime(5.6f), default));
+            CurrentBaits.Add(new(actor, actor, Cross, WorldState.FutureTime(5.6d), default));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.KanRhaiVisual2)
+        if (spell.Action.ID == (uint)AID.KanRhaiVisual2)
             CurrentBaits.Clear();
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away and move!");
     }
 }
@@ -97,11 +97,11 @@ class KanRhaiAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.KanRhai)
+        if (spell.Action.ID == (uint)AID.KanRhai)
         {
             ++NumCasts;
             var count = _aoes.Count;
@@ -111,8 +111,8 @@ class KanRhaiAOE(BossModule module) : Components.GenericAOEs(module)
                 NumCasts = 0;
             }
         }
-        else if ((AID)spell.Action.ID == AID.KanRhaiVisual2)
-            _aoes.Add(new(KanRhaiBait.Cross, caster.Position, default));
+        else if (spell.Action.ID == (uint)AID.KanRhaiVisual2)
+            _aoes.Add(new(KanRhaiBait.Cross, WPos.ClampToGrid(caster.Position), Angle.AnglesCardinals[1]));
     }
 }
 

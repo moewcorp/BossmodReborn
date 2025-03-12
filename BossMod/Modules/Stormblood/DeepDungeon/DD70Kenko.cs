@@ -23,7 +23,7 @@ class InnerspacePredict(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? Next;
     private static readonly AOEShapeCircle circle = new(3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(Next);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref Next);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

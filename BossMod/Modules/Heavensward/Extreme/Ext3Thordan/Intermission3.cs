@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Heavensward.Extreme.Ex3Thordan;
 
-class HiemalStormSpread(BossModule module) : Components.UniformStackSpread(module, 0, 6, alwaysShowSpreads: true)
+class HiemalStormSpread(BossModule module) : Components.UniformStackSpread(module, default, 6f, alwaysShowSpreads: true)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -10,22 +10,43 @@ class HiemalStormSpread(BossModule module) : Components.UniformStackSpread(modul
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.HiemalStormAOE)
+        if (spell.Action.ID == (uint)AID.HiemalStormAOE)
             Spreads.Clear();
     }
 }
 
-class HiemalStormVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.HiemalStorm).Where(x => x.EventState != 7));
+class HiemalStormVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.HiemalStorm);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 class SpiralPierce(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50, 6), (uint)TetherID.SpiralPierce, ActionID.MakeSpell(AID.SpiralPierce));
-class DimensionalCollapse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9);
+class DimensionalCollapse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DimensionalCollapseAOE), 9f);
 
 class FaithUnmoving(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.FaithUnmoving), true)
 {
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        var grinnaux = Module.Enemies(OID.SerGrinnaux).FirstOrDefault();
+        var grinnauxs = Module.Enemies((uint)OID.SerGrinnaux);
+        var grinnaux = grinnauxs.Count != 0 ? grinnauxs[0] : null;
         if (grinnaux != default)
-            yield return new(grinnaux.Position, 16);
+            return new Source[1] { new(grinnaux.Position, 16f) };
+        return [];
     }
 }
 
@@ -34,25 +55,26 @@ class MeteorCircle(BossModule module) : Components.Adds(module, (uint)OID.Meteor
 
 class HeavyImpact(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
-    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, 135.Degrees()), new AOEShapeDonutSector(6.5f, 12.5f, 135.Degrees()), new AOEShapeDonutSector(12.5f, 18.5f, 135.Degrees()), new AOEShapeDonutSector(18.5f, 27.5f, 135.Degrees())];
+    private static readonly Angle a135 = 135f.Degrees();
+    private static readonly AOEShape[] _shapes = [new AOEShapeCone(6.5f, a135), new AOEShapeDonutSector(6.5f, 12.5f, a135), new AOEShapeDonutSector(12.5f, 18.5f, a135), new AOEShapeDonutSector(18.5f, 27.5f, a135)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavyImpactAOE1)
-            AddSequence(caster.Position, Module.CastFinishAt(spell), spell.Rotation);
+        if (spell.Action.ID == (uint)AID.HeavyImpactAOE1)
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell), spell.Rotation);
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        var order = (AID)spell.Action.ID switch
+        var order = spell.Action.ID switch
         {
-            AID.HeavyImpactAOE1 => 0,
-            AID.HeavyImpactAOE2 => 1,
-            AID.HeavyImpactAOE3 => 2,
-            AID.HeavyImpactAOE4 => 3,
+            (uint)AID.HeavyImpactAOE1 => 0,
+            (uint)AID.HeavyImpactAOE2 => 1,
+            (uint)AID.HeavyImpactAOE3 => 2,
+            (uint)AID.HeavyImpactAOE4 => 3,
             _ => -1
         };
-        if (!AdvanceSequence(order, caster.Position, WorldState.FutureTime(2), caster.Rotation))
+        if (!AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d), caster.Rotation))
             ReportError($"Unexpected ring {order}");
     }
 }

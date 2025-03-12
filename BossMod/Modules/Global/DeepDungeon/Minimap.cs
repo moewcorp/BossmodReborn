@@ -51,7 +51,7 @@ public sealed record class Minimap(DeepDungeonState State, Angle PlayerRotation,
         var silverTex = Service.Texture.GetFromGameIcon(new((uint)IconID.ChestSilver)).GetWrapOrEmpty();
         var goldTex = Service.Texture.GetFromGameIcon(new((uint)IconID.ChestGold)).GetWrapOrEmpty();
 
-        for (var i = 0; i < 25; i++)
+        for (var i = 0; i < 25; ++i)
         {
             var highlight = CurrentDestination > 0 && CurrentDestination == i;
 

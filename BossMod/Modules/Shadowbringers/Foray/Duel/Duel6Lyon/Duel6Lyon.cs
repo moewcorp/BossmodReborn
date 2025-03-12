@@ -20,23 +20,13 @@ class Duel6LyonStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "SourP", GroupType = BossModuleInfo.GroupType.BozjaDuel, GroupID = 778, NameID = 31)]
-public class Duel6Lyon(WorldState ws, Actor primary) : BossModule(ws, primary, new(50, -410), new ArenaBoundsCircle(20))
+class FlamesMeet : Components.SimpleAOEs
 {
-    protected override void DrawEnemies(int pcSlot, Actor pc)
+    public FlamesMeet(BossModule module) : base(module, ActionID.MakeSpell(AID.FlamesMeet), new AOEShapeCross(40f, 7f), 2)
     {
-        var tasteOfBlood = FindComponent<TasteOfBloodAndDuelOrDie>();
-        if (tasteOfBlood?.Casters.Count > 0)
-        {
-            foreach (var caster in tasteOfBlood.Casters)
-            {
-                var isDueler = tasteOfBlood.Duelers.Contains(caster);
-                Arena.Actor(caster, isDueler ? Colors.Danger : Colors.Enemy, true);
-            }
-        }
-        else
-        {
-            base.DrawEnemies(pcSlot, pc);
-        }
+        MaxDangerColor = 1;
     }
 }
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "SourP", GroupType = BossModuleInfo.GroupType.BozjaDuel, GroupID = 778, NameID = 31)]
+public class Duel6Lyon(WorldState ws, Actor primary) : BossModule(ws, primary, new(50f, -410f), new ArenaBoundsCircle(20f));

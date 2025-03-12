@@ -5,7 +5,7 @@ class HauntingCrySwipes(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCone _shape = new(40f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -44,7 +44,7 @@ class HauntingCryReisho(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCircle _shape = new(6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _ghosts.Count;
         if (count == 0)
@@ -57,8 +57,12 @@ class HauntingCryReisho(BossModule module) : Components.GenericAOEs(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var g in _ghosts)
+        var count = _ghosts.Count;
+        if (count == 0)
+            return;
+        for (var i = 0; i < count; ++i)
         {
+            var g = _ghosts[i];
             Arena.Actor(g, Colors.Object, true);
             var target = WorldState.Actors.Find(g.Tether.Target);
             if (target != null)
@@ -71,7 +75,7 @@ class HauntingCryReisho(BossModule module) : Components.GenericAOEs(module)
         if (source.OID is (uint)OID.NHauntingThrall or (uint)OID.SHauntingThrall)
         {
             _ghosts.Add(source);
-            _activation = WorldState.FutureTime(5.1f);
+            _activation = WorldState.FutureTime(5.1d);
         }
     }
 

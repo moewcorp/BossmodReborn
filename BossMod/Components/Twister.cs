@@ -10,8 +10,25 @@ public class GenericTwister(BossModule module, float radius, uint oid, ActionID 
     protected DateTime PredictedActivation;
     protected readonly List<WPos> PredictedPositions = [];
 
-    public IEnumerable<Actor> ActiveTwisters => Twisters.Where(v => v.EventState != 7);
-    public bool Active => ActiveTwisters.Any();
+    public ReadOnlySpan<Actor> ActiveTwisters
+    {
+        get
+        {
+            var count = Twisters.Count;
+            var result = new Actor[count];
+            var index = 0;
+
+            for (var i = 0; i < count; ++i)
+            {
+                var twister = Twisters[i];
+                if (twister.EventState != 7)
+                    result[index++] = twister;
+            }
+            return result.AsSpan(0, index);
+        }
+    }
+
+    public bool Active => ActiveTwisters.Length != 0;
 
     public void AddPredicted(float activationDelay)
     {
@@ -20,12 +37,26 @@ public class GenericTwister(BossModule module, float radius, uint oid, ActionID 
         PredictedActivation = WorldState.FutureTime(activationDelay);
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var p in PredictedPositions)
-            yield return new(_shape, p, default, PredictedActivation);
-        foreach (var p in ActiveTwisters)
-            yield return new(_shape, p.Position);
+        var countPredictedPositions = PredictedPositions.Count;
+        var active = ActiveTwisters;
+        var lenActiveTwisters = active.Length;
+        var predictedSpan = CollectionsMarshal.AsSpan(PredictedPositions);
+
+        var count = countPredictedPositions + lenActiveTwisters;
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        var index = 0;
+
+        for (var i = 0; i < countPredictedPositions; ++i)
+            aoes[index++] = new AOEInstance(_shape, predictedSpan[i], default, PredictedActivation);
+        for (var i = 0; i < lenActiveTwisters; ++i)
+            aoes[index++] = new AOEInstance(_shape, active[i].Position);
+
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)

@@ -20,30 +20,31 @@ public enum AID : uint
 
 class Divebomb(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(30, 5.5f);
+    private static readonly AOEShapeRect rect = new(30f, 5.5f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoe != null)
-            yield return _aoe.Value with { Rotation = Module.PrimaryActor.Rotation }; // aoe aims at a player, so rotation can change for a moment after cast started
+            return new AOEInstance[1] { _aoe.Value with { Rotation = Module.PrimaryActor.Rotation } }; // aoe aims at a player, so rotation can change for a moment after cast started
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Divebomb)
+        if (spell.Action.ID == (uint)AID.Divebomb)
             _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Divebomb)
+        if (spell.Action.ID == (uint)AID.Divebomb)
             _aoe = null;
     }
 }
 
-class LiquidHell(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquidHell), 6);
-class Plummet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plummet), new AOEShapeCone(8, 45.Degrees()));
+class LiquidHell(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LiquidHell), 6f);
+class Plummet(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plummet), new AOEShapeCone(8f, 45f.Degrees()));
 class DeathSentence(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.DeathSentence));
 class CycloneWing(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.CycloneWing));
 

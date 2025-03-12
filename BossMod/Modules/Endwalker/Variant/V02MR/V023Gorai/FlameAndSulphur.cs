@@ -8,7 +8,7 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle _shapeRockExpand = new(11f);
     private static readonly AOEShapeDonut _shapeRockSplit = new(5f, 16f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

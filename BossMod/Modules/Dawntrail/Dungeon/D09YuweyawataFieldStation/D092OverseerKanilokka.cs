@@ -40,7 +40,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donutSmall = new(5f, 15f), donutBig = new(15f, 20f);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.FreeSpirits)
@@ -86,7 +86,7 @@ class Soulweave(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(28f, 32f);
     private readonly List<AOEInstance> _aoes = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -128,16 +128,13 @@ class DarkII(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(35f, 15f.Degrees());
     private readonly List<AOEInstance> _aoes = new(12);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
         var max = count > 6 ? 6 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
-            aoes[i] = _aoes[i];
-        return aoes;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

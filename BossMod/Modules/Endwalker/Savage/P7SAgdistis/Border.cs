@@ -15,8 +15,8 @@ class Border(BossModule module) : BossComponent(module)
     public const float SmallPlatformOffset = 16.5f;
     public const float BridgeHalfWidth = 4;
     public static readonly WDir PlatformSOffset = SmallPlatformOffset * new WDir(0, 1);
-    public static readonly WDir PlatformEOffset = SmallPlatformOffset * 120.Degrees().ToDirection();
-    public static readonly WDir PlatformWOffset = SmallPlatformOffset * (-120.Degrees()).ToDirection();
+    public static readonly WDir PlatformEOffset = SmallPlatformOffset * 120f.Degrees().ToDirection();
+    public static readonly WDir PlatformWOffset = SmallPlatformOffset * (-120f.Degrees()).ToDirection();
     public static readonly float BridgeStartOffset = MathF.Sqrt(SmallPlatformRadius * SmallPlatformRadius - BridgeHalfWidth * BridgeHalfWidth);
     public static readonly float BridgeCenterOffset = BridgeHalfWidth / 60.Degrees().Tan();
 

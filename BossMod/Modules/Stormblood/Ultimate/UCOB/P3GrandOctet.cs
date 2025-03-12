@@ -16,7 +16,7 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect _shapeBahamut = new(60, 6);
     private static readonly AOEShapeRect _shapeDrake = new(52, 10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -49,7 +49,7 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.Firehorn or OID.Iceclaw or OID.Thunderwing or OID.TailOfDarkness or OID.FangOfLight)
+        if (actor.OID is (uint)OID.Firehorn or (uint)OID.Iceclaw or (uint)OID.Thunderwing or (uint)OID.TailOfDarkness or (uint)OID.FangOfLight)
             Casters.Add(actor);
     }
 
@@ -58,7 +58,7 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         var shape = CastShape(spell.Action);
         if (shape != null)
         {
-            AOEs.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
         }
     }
 
@@ -67,7 +67,16 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         var shape = CastShape(spell.Action);
         if (shape != null)
         {
-            AOEs.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1));
+            var count = Casters.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (AOEs[i].ActorID == id)
+                {
+                    Casters.RemoveAt(i);
+                    break;
+                }
+            }
             ++NumCasts;
         }
     }
@@ -78,37 +87,40 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         if (slot < 0)
             return;
 
-        switch ((IconID)iconID)
+        switch (iconID)
         {
-            case IconID.LunarDive: // this happens at the same time (so arbitrary order) as first cauterize
+            case (uint)IconID.LunarDive: // this happens at the same time (so arbitrary order) as first cauterize
                 _baitOrder[slot] = 1;
                 break;
-            case IconID.Cauterize:
+            case (uint)IconID.Cauterize:
                 _baitOrder[slot] = ++NumBaitsAssigned;
                 break;
-            case IconID.MegaflareDive:
+            case (uint)IconID.MegaflareDive:
                 _baitOrder[slot] = ++NumBaitsAssigned;
                 if (NumBaitsAssigned == 7)
-                    for (var i = 0; i < _baitOrder.Length; ++i)
+                {
+                    var len = _baitOrder.Length;
+                    for (var i = 0; i < len; ++i)
                         if (_baitOrder[i] == 0)
                             _baitOrder[i] = 8; // twintania bait
+                }
                 break;
         }
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.NaelDeusDarnus && id == 0x1E43)
+        if (actor.OID == (uint)OID.NaelDeusDarnus && id == 0x1E43)
         {
             _nael = actor;
             InitIfReady();
         }
-        else if ((OID)actor.OID == OID.Twintania && id == 0x1E44)
+        else if (actor.OID == (uint)OID.Twintania && id == 0x1E44)
         {
             _twin = actor;
             InitIfReady();
         }
-        else if ((OID)actor.OID == OID.BahamutPrime && id == 0x1E43)
+        else if (actor.OID == (uint)OID.BahamutPrime && id == 0x1E43)
         {
             _baha = actor;
             InitIfReady();
@@ -127,7 +139,7 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
 
         // bahamut on cardinal => CCW dive order
         // bahamut on intercardinal => CW dive order
-        var bahamutIntercardinal = ((int)MathF.Round(dirToBaha.Deg / 45) & 1) != 0;
+        var bahamutIntercardinal = ((int)MathF.Round(dirToBaha.Deg / 45f) & 1) != 0;
         _diveOrder = bahamutIntercardinal ? -1 : +1;
         var orders = Casters.Select(c => _diveOrder * CCWDirection(Angle.FromDirection(c.Position - Arena.Center), dirToBaha)).ToList();
         MemoryExtensions.Sort(orders.AsSpan(), Casters.AsSpan());
@@ -136,10 +148,10 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         Casters.Add(_twin);
 
         // safespot is opposite of bahamut; if nael is there - adjusted 45 degrees
-        var dirToSafespot = dirToBaha + 180.Degrees();
+        var dirToSafespot = dirToBaha + 180f.Degrees();
         if (dirToSafespot.AlmostEqual(dirToNael, 0.1f))
-            dirToSafespot += _diveOrder * 45.Degrees();
-        _initialSafespot = Arena.Center + 20 * dirToSafespot.ToDirection();
+            dirToSafespot += _diveOrder * 45f.Degrees();
+        _initialSafespot = Arena.Center + 20f * dirToSafespot.ToDirection();
     }
 
     private float CCWDirection(Angle direction, Angle reference)
@@ -151,14 +163,14 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
     }
 
     private int NextBaitOrder => AOEs.Count + NumCasts + 1;
-    private AOEShapeRect BaitShape(int order) => order switch
+    private static AOEShapeRect BaitShape(int order) => order switch
     {
         1 or 8 => _shapeNaelTwin,
         7 => _shapeBahamut,
         _ => _shapeDrake
     };
 
-    private AOEShapeRect? CastShape(ActionID aid) => (AID)aid.ID switch
+    private static AOEShapeRect? CastShape(ActionID aid) => (AID)aid.ID switch
     {
         AID.Cauterize1 => _shapeDrake,
         AID.Cauterize2 => _shapeDrake,

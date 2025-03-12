@@ -24,17 +24,10 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
         Angle Direction = default, // irrelevant for non-directional knockback/attract
         Kind Kind = Kind.AwayFromOrigin,
         float MinDistance = 0, // irrelevant for knockbacks
-        IEnumerable<SafeWall>? SafeWalls = null
+        IReadOnlyList<SafeWall>? SafeWalls = null
     );
 
-    public record struct SafeWall(
-        WPos Vertex1 = default, // for line segments
-        WPos Vertex2 = default,
-        WPos Center = default, // for circle segments
-        float Radius = default,
-        Angle StartAngle = default,
-        Angle EndAngle = default
-    );
+    public readonly record struct SafeWall(WPos Vertex1, WPos Vertex2);
 
     protected struct PlayerImmuneState
     {
@@ -45,13 +38,13 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
         public readonly bool ImmuneAt(DateTime time) => RoleBuffExpire > time || JobBuffExpire > time || DutyBuffExpire > time;
     }
 
-    public readonly List<SafeWall> SafeWalls = safeWalls ?? [];
     public readonly bool IgnoreImmunes = ignoreImmunes;
     public readonly bool StopAtWall = stopAtWall; // use if wall is solid rather than deadly
     public readonly bool StopAfterWall = stopAfterWall; // use if the wall is a polygon where you need to check for intersections
     public readonly int MaxCasts = maxCasts; // use to limit number of drawn knockbacks
     private const float approxHitBoxRadius = 0.499f; // calculated because due to floating point errors this does not result in 0.001
     private const float maxIntersectionError = 0.5f - approxHitBoxRadius; // calculated because due to floating point errors this does not result in 0.001
+    public readonly List<SafeWall> SafeWalls = safeWalls ?? [];
 
     protected readonly PlayerImmuneState[] PlayerImmunes = new PlayerImmuneState[PartyState.MaxAllies];
 
@@ -71,7 +64,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
     public static void DrawKnockback(Actor actor, WPos adjPos, MiniArena arena) => DrawKnockback(actor.Position, adjPos, actor.Rotation, arena);
 
     // note: if implementation returns multiple sources, it is assumed they are applied sequentially (so they should be pre-sorted in activation order)
-    public abstract IEnumerable<Source> Sources(int slot, Actor actor);
+    public abstract ReadOnlySpan<Source> ActiveSources(int slot, Actor actor);
 
     // called to determine whether we need to show hint
     public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !StopAtWall && !Module.InBounds(pos);
@@ -137,7 +130,7 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
         var movements = new List<(WPos, WPos)>();
         var from = actor.Position;
         var count = 0;
-        foreach (var s in Sources(slot, actor))
+        foreach (var s in ActiveSources(slot, actor))
         {
             if (IsImmune(slot, s.Activation))
                 continue; // this source won't affect player due to immunity
@@ -175,32 +168,15 @@ public abstract class Knockback(BossModule module, ActionID aid = new(), bool ig
             if (StopAfterWall)
                 distance = Math.Min(distance, Arena.IntersectRayBounds(from, dir) + maxIntersectionError);
 
-            var sourceSafeWalls = s.SafeWalls ?? SafeWalls;
-
-            if (sourceSafeWalls.Any())
+            var walls = s.SafeWalls ?? SafeWalls;
+            var countW = walls.Count;
+            if (countW != 0)
             {
                 var distanceToWall = float.MaxValue;
-                foreach (var wall in sourceSafeWalls)
+                for (var i = 0; i < countW; ++i)
                 {
-                    var t = float.MaxValue;
-
-                    if (wall.Vertex1 != default && wall.Vertex2 != default)
-                        t = Intersect.RaySegment(from, dir, wall.Vertex1, wall.Vertex2);
-                    else if (wall.Center != default && wall.Radius != 0)
-                    {
-                        t = Intersect.RayCircle(from, dir, wall.Center, wall.Radius);
-                        if (t < float.MaxValue)
-                        {
-                            var intersection = from + t * dir;
-                            var intersectionAngle = Angle.FromDirection(intersection - wall.Center).Normalized();
-                            // Angle wraps around at 0°
-                            var isWithinAngles = wall.StartAngle <= wall.EndAngle
-                                ? intersectionAngle >= wall.StartAngle && intersectionAngle <= wall.EndAngle
-                                : intersectionAngle >= wall.StartAngle || intersectionAngle <= wall.EndAngle;
-                            if (!isWithinAngles)
-                                t = float.MaxValue;
-                        }
-                    }
+                    var wall = walls[i];
+                    var t = Intersect.RaySegment(from, dir, wall.Vertex1, wall.Vertex2);
                     if (t < distanceToWall && t <= s.Distance)
                         distanceToWall = t;
                 }
@@ -233,22 +209,28 @@ public class KnockbackFromCastTarget(BossModule module, ActionID aid, float dist
     public readonly bool MinDistanceBetweenHitboxes = minDistanceBetweenHitboxes;
     public readonly List<Actor> Casters = [];
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        foreach (var c in Casters)
+        var count = Casters.Count;
+        if (count == 0)
+            return [];
+        var sources = new Source[count];
+        for (var i = 0; i < count; ++i)
         {
+            var c = Casters[i];
             // note that majority of knockback casts are self-targeted
             var minDist = MinDistance + (MinDistanceBetweenHitboxes ? actor.HitboxRadius + c.HitboxRadius : 0);
             if (c.CastInfo!.TargetID == c.InstanceID)
             {
-                yield return new(c.CastInfo.LocXZ, Distance, Module.CastFinishAt(c.CastInfo), Shape, c.CastInfo.Rotation, KnockbackKind, minDist);
+                sources[i] = new(c.CastInfo.LocXZ, Distance, Module.CastFinishAt(c.CastInfo), Shape, c.CastInfo.Rotation, KnockbackKind, minDist);
             }
             else
             {
                 var origin = c.CastInfo.LocXZ;
-                yield return new(origin, Distance, Module.CastFinishAt(c.CastInfo), Shape, Angle.FromDirection(origin - c.Position), KnockbackKind, minDist);
+                sources[i] = new(origin, Distance, Module.CastFinishAt(c.CastInfo), Shape, Angle.FromDirection(origin - c.Position), KnockbackKind, minDist);
             }
         }
+        return sources;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

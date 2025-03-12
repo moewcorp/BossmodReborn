@@ -8,7 +8,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom P2Transition = new(DefaultPolygon, Ch01CloudOfDarkness.Phase2ShapesWD);
     private static readonly AOEShapeDonut donut = new(34f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

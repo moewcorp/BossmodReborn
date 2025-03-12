@@ -21,26 +21,26 @@ class GoblinSlash(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private static readonly AOEShapeCircle circle = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.GobthunderII && spell.LocXZ == caster.Position)
+        if (spell.Action.ID == (uint)AID.GobthunderII && spell.LocXZ == caster.Position)
             _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 2.6f));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.GoblinSlash)
+        if (spell.Action.ID == (uint)AID.GoblinSlash)
             _aoe = null;
     }
 }
 
-class GobthunderIII(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GobthunderIII), 20);
+class GobthunderIII(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.GobthunderIII), 20f);
 class GobthunderIIIHint(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.GobthunderIII));
 class GoblinPunch(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.GoblinPunch));
 class Gobhaste(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.Gobhaste), "Attack speed buff");
-class GobthunderII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GobthunderII), 8);
+class GobthunderII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.GobthunderII), 8f);
 
 class LilMurdererStates : StateMachineBuilder
 {
@@ -57,4 +57,4 @@ class LilMurdererStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8911)]
-public class LilMurderer(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+public class LilMurderer(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

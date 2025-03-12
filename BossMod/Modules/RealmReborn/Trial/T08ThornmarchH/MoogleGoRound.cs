@@ -3,11 +3,22 @@
 class MoogleGoRound(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Actor> _casters = [];
-    private static readonly AOEShape _shape = new AOEShapeCircle(20);
+    private static readonly AOEShape _shape = new AOEShapeCircle(20f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _casters.Take(2).Select(c => new AOEInstance(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!)));
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+        var max = count > 2 ? 2 : count;
+        var aoes = new AOEInstance[max];
+
+        for (var i = 0; i < max; ++i)
+        {
+            var c = _casters[i];
+            aoes[i] = new(_shape, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo!));
+        }
+        return aoes;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -17,21 +28,21 @@ class MoogleGoRound(BossModule module) : Components.GenericAOEs(module)
         // if there is a third cast, add a smaller shape to ensure people stay closer to eventual safespot
         if (_casters.Count > 2)
         {
-            var f1 = ShapeDistance.InvertedCircle(_casters[0].Position, 23);
-            var f2 = ShapeDistance.Circle(_casters[2].Position, 10);
+            var f1 = ShapeDistance.InvertedCircle(_casters[0].Position, 23f);
+            var f2 = ShapeDistance.Circle(_casters[2].Position, 10f);
             hints.AddForbiddenZone(p => Math.Min(f1(p), f2(p)), Module.CastFinishAt(_casters[1].CastInfo!));
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.MoogleGoRoundBoss or AID.MoogleGoRoundAdd)
+        if (spell.Action.ID is (uint)AID.MoogleGoRoundBoss or (uint)AID.MoogleGoRoundAdd)
             _casters.Add(caster);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.MoogleGoRoundBoss or AID.MoogleGoRoundAdd)
+        if (spell.Action.ID is (uint)AID.MoogleGoRoundBoss or (uint)AID.MoogleGoRoundAdd)
             _casters.Remove(caster);
     }
 }

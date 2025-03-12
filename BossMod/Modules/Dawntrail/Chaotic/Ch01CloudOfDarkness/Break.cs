@@ -4,7 +4,7 @@ class Break(BossModule module) : Components.GenericGaze(module)
 {
     public readonly List<Eye> Eyes = new(3);
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor) => Eyes;
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => CollectionsMarshal.AsSpan(Eyes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -20,10 +20,9 @@ class Break(BossModule module) : Components.GenericGaze(module)
             var pos = caster.Position;
             for (var i = 0; i < count; ++i)
             {
-                var eye = Eyes[i];
-                if (eye.Position == pos)
+                if (Eyes[i].Position == pos)
                 {
-                    Eyes.Remove(eye);
+                    Eyes.RemoveAt(i);
                     break;
                 }
             }

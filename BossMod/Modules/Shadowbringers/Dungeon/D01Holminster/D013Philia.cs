@@ -116,7 +116,8 @@ class Fetters(BossModule module) : BossComponent(module)
                     _ => 0
                 };
             }
-        var ironchain = Module.Enemies((uint)OID.IronChain).FirstOrDefault();
+        var chain = Module.Enemies((uint)OID.IronChain);
+        var ironchain = chain.Count != 0 ? chain[0] : null;
         if (ironchain != null && !ironchain.IsDead)
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(ironchain.Position, 3.6f));
     }
@@ -140,15 +141,15 @@ class Fetters(BossModule module) : BossComponent(module)
 class Aethersup(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(24f, 60f.Degrees());
-    private AOEInstance _aoe;
+    private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe != default)
+        if (_aoe is AOEInstance aoe)
         {
-            var chainL = Module.Enemies((uint)OID.IronChain);
-            var count = chainL.Count;
-            return [_aoe with { Risky = count == 0 || count != 0 && chainL[0].IsDead }];
+            var chain = Module.Enemies((uint)OID.IronChain);
+            var count = chain.Count;
+            return new AOEInstance[1] { aoe with { Risky = count == 0 || count != 0 && chain[0].IsDead } };
         }
         else
             return [];
@@ -181,14 +182,14 @@ class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, new AOE
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.AddForbiddenZone(ShapeDistance.Circle(D013Philia.ArenaCenter, 18.5f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+        if (ActiveBaitsOn(actor).Count != 0)
             hints.Add("Bait away!");
     }
 }
@@ -225,7 +226,7 @@ class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
     private static readonly AOEShapeCircle circle = new(4f);
     private readonly List<AOEInstance> _aoes = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var linesCount = Lines.Count;
         if (linesCount == 0)
@@ -339,6 +340,6 @@ public class D013Philia(WorldState ws, Actor primary) : BossModule(ws, primary, 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.IronChain), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.IronChain), Colors.Vulnerable);
     }
 }

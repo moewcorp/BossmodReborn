@@ -3,14 +3,14 @@
 class ChasmOfVollokFangSmall(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.ChasmOfVollokFangSmallAOE))
 {
     public readonly List<AOEInstance> AOEs = [];
-    private static readonly float platformOffset = 30 / MathF.Sqrt(2);
+    private const float platformOffset = 21.2132f;
     private static readonly AOEShapeRect _shape = new(5f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ChasmOfVollokFangSmall)
+        if (spell.Action.ID == (uint)AID.ChasmOfVollokFangSmall)
         {
             // the visual cast happens on one of the side platforms at intercardinals, offset by 30
             var pos = spell.LocXZ;
@@ -27,7 +27,7 @@ class ChasmOfVollokFangLarge(BossModule module) : Components.GenericAOEs(module,
 
     private static readonly AOEShapeRect _shape = new(10, 5);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -53,7 +53,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
     private static readonly WDir _localX = (-135f).Degrees().ToDirection();
     private static readonly WDir _localZ = 135f.Degrees().ToDirection();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!Active)
             return [];
@@ -82,7 +82,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
             if (platformOffset != default)
                 aoes.Add(new(_shape, cellCenter + platformOffset, 45f.Degrees(), _activation));
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void Update()
@@ -91,7 +91,7 @@ class ChasmOfVollokPlayer(BossModule module) : Components.GenericAOEs(module, Ac
         var count = _targets.Count;
         if (count == 0)
             return;
-        for (var i = 0; i < count; ++i)
+        for (var i = count - 1; i >= 0; --i)
         {
             if (_targets[i].IsDead)
                 _targets.RemoveAt(i);

@@ -5,7 +5,7 @@ class ImpurePurgation(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(60f, 22.5f.Degrees());
     public readonly List<AOEInstance> AOEs = new(8);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)

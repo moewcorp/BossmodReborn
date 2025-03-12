@@ -2,28 +2,29 @@ namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 
 class RuthlessRegalia(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(100, 6);
+    private static readonly AOEShapeRect rect = new(100f, 6f);
     private (Actor, DateTime)? _source;
     private readonly List<Actor> _tethered = new(2);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_source != null)
         {
             var s = _source.Value;
-            yield return new(rect, s.Item1.Position, s.Item1.Rotation, s.Item2);
+            return new AOEInstance[1] { new(rect, s.Item1.Position, s.Item1.Rotation, s.Item2) };
         }
+        return [];
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.QueenEternal2 && id == 0x11D2)
-            _source = new(actor, WorldState.FutureTime(11.1f));
+        if (actor.OID == (uint)OID.QueenEternal2 && id == 0x11D2)
+            _source = new(actor, WorldState.FutureTime(11.1d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.RuthlessRegalia)
+        if (spell.Action.ID == (uint)AID.RuthlessRegalia)
             _source = null;
     }
 

@@ -66,7 +66,7 @@ class StraightSpindle(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(6);
     public static readonly AOEShapeRect rect = new(51.08f, 2.5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -123,7 +123,7 @@ class Shield(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private const string Hint = "Go under shield!";
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnActorCreated(Actor actor)
     {

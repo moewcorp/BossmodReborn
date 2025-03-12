@@ -446,7 +446,7 @@ public sealed unsafe class DebugCollision() : IDisposable
             {
                 int i = 0;
                 foreach (ref var prim in node->Primitives)
-                    if (_tree.LeafNode2($"[{i++}]: {prim.V1}x{prim.V2}x{prim.V3}, material={prim.Material:X8}").SelectedOrHovered)
+                    if (_tree.LeafNode2($"[{++i}]: {prim.V1}x{prim.V2}x{prim.V3}, material={prim.Material:X8}").SelectedOrHovered)
                         VisualizeTriangle(node, ref prim, ref world, Colors.CollisionColor2);
             }
         }
@@ -490,7 +490,7 @@ public sealed unsafe class DebugCollision() : IDisposable
                 {
                     var cast = (ColliderBox*)coll;
                     Span<Vector3> corners = stackalloc Vector3[8];
-                    for (var i = 0; i < 8; i++)
+                    for (var i = 0; i < 8; ++i)
                         corners[i] = cast->World.TransformCoordinate(_boxCorners[i]);
 
                     foreach (var (start, end) in _boxEdges)

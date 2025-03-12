@@ -7,47 +7,58 @@ class MidnightSabbath(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShape _shapeCannon = new AOEShapeRect(40, 5);
     private static readonly AOEShape _shapeBird = new AOEShapeDonut(5, 15);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Skip(NumCasts).Take(4);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = AOEs.Count;
+        if (count == 0)
+            return [];
+        var max = count > 4 ? 4 : count;
+        return CollectionsMarshal.AsSpan(AOEs)[..max];
+    }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID != OID.WickedReplica)
+        if (actor.OID != (uint)OID.WickedReplica)
             return;
         var (shape, delay) = id switch
         {
-            0x11D1 => (_shapeCannon, 8.1f),
-            0x11D2 => (_shapeCannon, 12.1f),
-            0x11D3 => (_shapeBird, 8.1f),
-            0x11D4 => (_shapeBird, 12.1f),
+            0x11D1 => (_shapeCannon, 8.1d),
+            0x11D2 => (_shapeCannon, 12.1d),
+            0x11D3 => (_shapeBird, 8.1d),
+            0x11D4 => (_shapeBird, 12.1d),
             _ => default
         };
         if (shape != default)
         {
-            AOEs.Add(new(shape, actor.Position, actor.Rotation, WorldState.FutureTime(delay)));
+            AOEs.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(delay)));
             AOEs.SortBy(aoe => aoe.Activation);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.MidnightSabbathThundering or AID.MidnightSabbathWickedCannon)
+        if (spell.Action.ID is (uint)AID.MidnightSabbathThundering or (uint)AID.MidnightSabbathWickedCannon)
+        {
             ++NumCasts;
+            if (AOEs.Count != 0)
+                AOEs.RemoveAt(0);
+        }
     }
 }
 
-class ConcentratedScatteredBurst(BossModule module) : Components.UniformStackSpread(module, 5, 5)
+class ConcentratedScatteredBurst(BossModule module) : Components.UniformStackSpread(module, 5f, 5f)
 {
     public int NumFinishedStacks;
     public int NumFinishedSpreads;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ConcentratedBurst:
+            case (uint)AID.ConcentratedBurst:
                 ShowStacks(Module.CastFinishAt(spell, 0.1f));
                 break;
-            case AID.ScatteredBurst:
+            case (uint)AID.ScatteredBurst:
                 ShowSpreads(Module.CastFinishAt(spell, 0.1f));
                 break;
         }
@@ -55,19 +66,19 @@ class ConcentratedScatteredBurst(BossModule module) : Components.UniformStackSpr
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.WickedSpark:
+            case (uint)AID.WickedSpark:
                 ++NumFinishedSpreads;
                 Spreads.Clear();
                 if (NumFinishedStacks == 0)
-                    ShowStacks(WorldState.FutureTime(3.1f));
+                    ShowStacks(WorldState.FutureTime(3.1d));
                 break;
-            case AID.WickedFlare:
+            case (uint)AID.WickedFlare:
                 ++NumFinishedStacks;
                 Stacks.Clear();
                 if (NumFinishedSpreads == 0)
-                    ShowSpreads(WorldState.FutureTime(3.1f));
+                    ShowSpreads(WorldState.FutureTime(3.1d));
                 break;
         }
     }

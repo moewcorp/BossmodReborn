@@ -2,58 +2,67 @@
 
 class ManeuverVoltArray(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.ManeuverVoltArray));
 
-class LowerLaser1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LowerLaser1), new AOEShapeCone(30, 30.Degrees()));
-class UpperLaser1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser1), new AOEShapeDonutSector(6, 16, 30.Degrees()));
-class UpperLaser2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser2), new AOEShapeDonutSector(16, 23, 30.Degrees()));
-class UpperLaser3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UpperLaser3), new AOEShapeDonutSector(23, 30, 30.Degrees()));
+class LowerLaser1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LowerLaser1), new AOEShapeCone(30f, 30f.Degrees()));
 
 class EnergyBombardment2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.EnergyBombardment2), 4);
 class UnknownWeaponskill(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.UnknownWeaponskill), 8);
-class ManeuverRevolvingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManeuverRevolvingLaser), new AOEShapeDonut(4, 60));
+class ManeuverRevolvingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManeuverRevolvingLaser), new AOEShapeDonut(4f, 60f));
 
-class R010Laser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R010Laser), new AOEShapeRect(60, 6));
-class R030Hammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R030Hammer), 18);
+class R010Laser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R010Laser), new AOEShapeRect(60f, 6f));
+class R030Hammer(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.R030Hammer), 18f);
 
-class UpperLaser(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.UpperLaser4))
+class UpperLaser(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> _castersUpperLaser1 = [];
-    private readonly List<Actor> _castersUpperLaser2 = [];
-    private readonly List<Actor> _castersUpperLaser3 = [];
+    private readonly List<AOEInstance> _aoes = new(9);
+    private static readonly AOEShapeDonutSector _shapeUpperLaser1 = new(6f, 16f, 30f.Degrees());
+    private static readonly AOEShapeDonutSector _shapeUpperLaser2 = new(16f, 23f, 30f.Degrees());
+    private static readonly AOEShapeDonutSector _shapeUpperLaser3 = new(23f, 30f, 30f.Degrees());
 
-    private static readonly AOEShape _shapeUpperLaser1 = new AOEShapeDonutSector(6, 16, 30.Degrees());
-    private static readonly AOEShape _shapeUpperLaser2 = new AOEShapeDonutSector(16, 23, 30.Degrees());
-    private static readonly AOEShape _shapeUpperLaser3 = new AOEShapeDonutSector(23, 30, 30.Degrees());
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return _castersUpperLaser1.Count > 0
-            ? _castersUpperLaser1.Select(c => new AOEInstance(_shapeUpperLaser1, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersUpperLaser2.Count > 0
-            ? _castersUpperLaser2.Select(c => new AOEInstance(_shapeUpperLaser2, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
-            : _castersUpperLaser3.Select(c => new AOEInstance(_shapeUpperLaser3, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 6 ? 6 : count;
+        var aoes = new AOEInstance[max];
+
+        for (var i = 0; i < max; ++i)
+        {
+            var aoe = _aoes[i];
+            if (i < 3)
+                aoes[i] = count > 3 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe;
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Add(caster);
+        var shape = spell.Action.ID switch
+        {
+            (uint)AID.UpperLaser1 => _shapeUpperLaser1,
+            (uint)AID.UpperLaser2 => _shapeUpperLaser2,
+            (uint)AID.UpperLaser3 => _shapeUpperLaser3,
+            _ => null
+        };
+        if (shape != null)
+        {
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            if (_aoes.Count == 9)
+                _aoes.SortBy(x => x.Activation);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        CastersForSpell(spell.Action)?.Remove(caster);
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.UpperLaser2 or (uint)AID.UpperLaser2 or (uint)AID.UpperLaser3)
+            _aoes.RemoveAt(0);
     }
-
-    private List<Actor>? CastersForSpell(ActionID spell) => (AID)spell.ID switch
-    {
-        AID.UpperLaser1 => _castersUpperLaser1,
-        AID.UpperLaser2 => _castersUpperLaser2,
-        AID.UpperLaser3 => _castersUpperLaser3,
-        _ => null
-    };
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 736, NameID = 9650)]
 public class A23ArtilleryUnit(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(200, -100), 29.5f)], [new Circle(new(200, -100), 6)]);
+    public static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(200f, -100f), 29.5f)], [new Circle(new(200f, -100f), 6)]);
 }

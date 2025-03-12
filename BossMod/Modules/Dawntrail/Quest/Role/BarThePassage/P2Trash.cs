@@ -45,7 +45,7 @@ class IceAegis(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCone cone = new(5f, 60f.Degrees(), InvertForbiddenZone: true);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

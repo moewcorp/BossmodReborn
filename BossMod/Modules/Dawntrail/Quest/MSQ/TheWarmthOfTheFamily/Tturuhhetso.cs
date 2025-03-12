@@ -70,8 +70,8 @@ class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(modul
     {
         if (Target == null)
             return;
-        var koanas = Module.Enemies(OID.Koana);
-        var wuks = Module.Enemies(OID.WukLamat);
+        var koanas = Module.Enemies((uint)OID.Koana);
+        var wuks = Module.Enemies((uint)OID.WukLamat);
         var koana = koanas.Count != 0 ? koanas[0] : null;
         var wuk = wuks.Count != 0 ? wuks[0] : null;
         var primary = Module.PrimaryActor;
@@ -98,37 +98,52 @@ class PrimordialRoar2(BossModule module) : Components.RaidwideCast(module, Actio
 
 class OrbCollecting(BossModule module) : BossComponent(module)
 {
-    private readonly List<Actor> _orbs = module.Enemies((uint)OID.Orbs);
+    public static List<Actor> GetOrbs(BossModule module)
+    {
+        var orbs = module.Enemies((uint)OID.Orbs);
+        var count = orbs.Count;
+        if (count == 0)
+            return [];
 
-    private IEnumerable<Actor> ActiveOrbs => _orbs.Where(x => x.Tether.ID != 0);
+        var filteredorbs = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var z = orbs[i];
+            if (z.Tether.ID != 0)
+                filteredorbs.Add(z);
+        }
+        return filteredorbs;
+    }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (ActiveOrbs.Any())
+        if (GetOrbs(Module).Count != 0)
             hints.Add("Soak the orbs!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        Actor[] orbz = [.. ActiveOrbs];
-        var len = orbz.Length;
-        if (len != 0)
+        var orbs = GetOrbs(Module);
+        var count = orbs.Count;
+        if (count != 0)
         {
-            var orbs = new Func<WPos, float>[len];
+            var orbz = new Func<WPos, float>[count];
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
-            for (var i = 0; i < len; ++i)
+            for (var i = 0; i < count; ++i)
             {
-                var o = orbz[i];
-                orbs[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
+                var o = orbs[i];
+                orbz[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
             }
-            hints.AddForbiddenZone(ShapeDistance.Intersection(orbs), DateTime.MaxValue);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(orbz), DateTime.MaxValue);
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var orb in ActiveOrbs)
-            Arena.AddCircle(orb.Position, 1f, Colors.Safe);
+        var orbs = GetOrbs(Module);
+        var count = orbs.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.AddCircle(orbs[i].Position, 1f, Colors.Safe);
     }
 }
 
@@ -138,27 +153,30 @@ class FlameBlast(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = [];
     private static readonly Angle a90 = 90f.Degrees();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
-            yield break;
+            return [];
         var compare = count > 5 && _aoes[0].Rotation.AlmostEqual(_aoes[5].Rotation, Angle.DegToRad);
+        var max = count > 10 ? 10 : count;
+        var aoes = new AOEInstance[max];
 
-        for (var i = 0; i < count; ++i)
+        for (var i = 0; i < max; ++i)
         {
             var aoe = _aoes[i];
             if (i < 5)
-                yield return count > 5 ? aoe with { Color = Colors.Danger } : aoe;
-            else if (i is > 4 and < 10)
-                yield return compare ? aoe with { Risky = false } : aoe;
+                aoes[i] = count > 5 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = compare ? aoe with { Risky = false } : aoe;
         }
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.BallOfFire)
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation + a90, WorldState.FutureTime(6.7d)));
+            _aoes.Add(new(rect, actor.Position, actor.Rotation + a90, WorldState.FutureTime(6.7d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -171,24 +189,27 @@ class FlameBlast(BossModule module) : Components.GenericAOEs(module)
 class Firestorm(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(10);
+    private static readonly AOEShapeCircle circle = new(10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count > 0)
-            for (var i = 0; i < count; ++i)
-            {
-                var aoe = _aoes[i];
-                if ((aoe.Activation - _aoes[0].Activation).TotalSeconds <= 1)
-                    yield return aoe;
-            }
+        if (count == 0)
+            return [];
+
+        var deadline = _aoes[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && _aoes[index].Activation < deadline)
+            ++index;
+
+        return CollectionsMarshal.AsSpan(_aoes)[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Firestorm)
-            _aoes.Add(new(circle, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(circle, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -224,6 +245,6 @@ public class Tturuhhetso(WorldState ws, Actor primary) : BossModule(ws, primary,
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.ScaleArmoredLeg));
+        Arena.Actors(Enemies((uint)OID.ScaleArmoredLeg));
     }
 }

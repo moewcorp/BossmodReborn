@@ -14,10 +14,10 @@ class SpellforgeSteelstingHint(BossModule module) : BossComponent(module)
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        var hint = (TetherID)tether.ID switch
+        var hint = tether.ID switch
         {
-            TetherID.PhysicalVulnerabilityDown => "Spellforge",
-            TetherID.MagicVulnerabilityDown => "Steelsting",
+            (uint)TetherID.PhysicalVulnerabilityDown => "Spellforge",
+            (uint)TetherID.MagicVulnerabilityDown => "Steelsting",
             _ => ""
         };
         if (hint.Length > 0)
@@ -26,7 +26,7 @@ class SpellforgeSteelstingHint(BossModule module) : BossComponent(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID is SID.PhysicalVulnerabilityDown or SID.MagicVulnerabilityDown)
+        if (status.ID is (uint)SID.PhysicalVulnerabilityDown or (uint)SID.MagicVulnerabilityDown)
             _hint = "";
     }
 }

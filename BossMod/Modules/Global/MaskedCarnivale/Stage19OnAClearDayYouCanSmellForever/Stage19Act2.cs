@@ -26,7 +26,7 @@ public enum SID : uint
 class ExplosiveDehiscence(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.ExplosiveDehiscence))
 {
     public bool casting;
-    public readonly BitMask _blinded;
+    public BitMask _blinded;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -36,29 +36,29 @@ class ExplosiveDehiscence(BossModule module) : Components.CastGaze(module, Actio
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Schizocarps)
+        if (spell.Action.ID == (uint)AID.Schizocarps)
             casting = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ExplosiveDehiscence)
+        if (spell.Action.ID == (uint)AID.ExplosiveDehiscence)
             casting = false;
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Blind)
-            _blinded.Set(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Blind)
+            _blinded[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Blind)
-            _blinded.Clear(Raid.FindSlot(actor.InstanceID));
+        if (status.ID == (uint)SID.Blind)
+            _blinded[Raid.FindSlot(actor.InstanceID)] = false;
     }
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
         return _blinded[slot] ? [] : base.ActiveEyes(slot, actor);
     }
@@ -71,13 +71,13 @@ class Reflect(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Reflect)
+        if (spell.Action.ID == (uint)AID.Reflect)
             casting = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Reflect)
+        if (spell.Action.ID == (uint)AID.Reflect)
         {
             reflect = true;
             casting = false;
@@ -93,10 +93,29 @@ class Reflect(BossModule module) : BossComponent(module)
     }
 }
 
-class BadBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BadBreath), new AOEShapeCone(17.775f, 60.Degrees()));
-class VineProbe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(11.775f, 4));
+class BadBreath(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.BadBreath), new AOEShapeCone(17.775f, 60f.Degrees()));
+class VineProbe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VineProbe), new AOEShapeRect(11.775f, 4f));
 class OffalBreath(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.OffalBreath));
-class OffalBreathVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID.OffalBreath), m => m.Enemies(OID.Voidzone).Where(e => e.EventState != 7), 1.6f);
+class OffalBreathVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.OffalBreath), GetVoidzones, 1.6f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.Voidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class Hints(BossModule module) : BossComponent(module)
 {

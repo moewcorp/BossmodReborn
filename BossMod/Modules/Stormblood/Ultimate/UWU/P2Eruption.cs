@@ -26,7 +26,7 @@ class P2Eruption(BossModule module) : Components.SimpleAOEs(module, ActionID.Mak
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         base.OnCastStarted(caster, spell);
-        if ((AID)spell.Action.ID == AID.EruptionAOE)
+        if (spell.Action.ID == (uint)AID.EruptionAOE)
         {
             if (NumCastsStarted < 2)
             {

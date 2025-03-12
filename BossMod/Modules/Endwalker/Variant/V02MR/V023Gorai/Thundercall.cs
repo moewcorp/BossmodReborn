@@ -6,13 +6,13 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     private int counter;
     private static readonly AOEShapeCircle circleSmall = new(8f), circleBig = new(18f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
         if (counter < 2 && actor.OID == (uint)OID.BallOfLevin)
         {
-            _aoes.Add(new(circleBig, actor.Position, default, WorldState.FutureTime(10.8d)));
+            _aoes.Add(new(circleBig, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(10.8d)));
             ++counter;
         }
     }

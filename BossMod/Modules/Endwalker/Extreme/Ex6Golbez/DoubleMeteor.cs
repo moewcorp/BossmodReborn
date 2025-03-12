@@ -5,10 +5,11 @@ class DragonsDescent(BossModule module) : Components.Knockback(module, ActionID.
     private Actor? _source;
     private DateTime _activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_source != null && _source != actor)
-            yield return new(_source.Position, 13, _activation);
+            return new Source[1] { new(_source.Position, 13f, _activation) };
+        return [];
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -26,20 +27,20 @@ class DoubleMeteor(BossModule module) : Components.UniformStackSpread(module, 0,
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DoubleMeteor)
-            AddSpread(actor, WorldState.FutureTime(11.1f));
+            AddSpread(actor, WorldState.FutureTime(11.1d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.DoubleMeteorAOE1 or AID.DoubleMeteorAOE2)
+        if (spell.Action.ID is (uint)AID.DoubleMeteorAOE1 or (uint)AID.DoubleMeteorAOE2)
             Spreads.RemoveAll(s => s.Target.InstanceID == spell.MainTargetID);
     }
 }
 
 class Explosion(BossModule module) : BossComponent(module)
 {
-    public bool Done { get; private set; }
-    private readonly BitMask _forbidden;
+    public bool Done;
+    private BitMask _forbidden;
     private Actor? _towerTH;
     private Actor? _towerDD;
 
@@ -47,7 +48,7 @@ class Explosion(BossModule module) : BossComponent(module)
     {
         var tower = _forbidden[slot] ? null : actor.Class.IsSupport() ? _towerTH : _towerDD;
         if (tower != null)
-            hints.Add("Soak the tower!", !actor.Position.InCircle(tower.Position, 4));
+            hints.Add("Soak the tower!", !actor.Position.InCircle(tower.Position, 4f));
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -58,12 +59,12 @@ class Explosion(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ExplosionDouble:
+            case (uint)AID.ExplosionDouble:
                 _towerTH = caster;
                 break;
-            case AID.ExplosionTriple:
+            case (uint)AID.ExplosionTriple:
                 _towerDD = caster;
                 break;
         }
@@ -71,13 +72,13 @@ class Explosion(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ExplosionDouble:
+            case (uint)AID.ExplosionDouble:
                 _towerTH = null;
                 Done = true;
                 break;
-            case AID.ExplosionTriple:
+            case (uint)AID.ExplosionTriple:
                 _towerDD = null;
                 Done = true;
                 break;
@@ -86,24 +87,26 @@ class Explosion(BossModule module) : BossComponent(module)
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((IconID)iconID is IconID.DoubleMeteor or IconID.DragonsDescent)
-            _forbidden.Set(Raid.FindSlot(actor.InstanceID));
+        if (iconID is (uint)IconID.DoubleMeteor or (uint)IconID.DragonsDescent)
+            _forbidden[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
     private void DrawTower(Actor? tower, bool safe)
     {
         if (tower != null)
-            Arena.AddCircle(tower.Position, 4, safe ? Colors.Safe : Colors.Danger, 2);
+            Arena.AddCircle(tower.Position, 4f, safe ? Colors.Safe : 0, 2f);
     }
 }
 
 class Cauterize(BossModule module) : Components.GenericBaitAway(module, ActionID.MakeSpell(AID.Cauterize))
 {
+    private static readonly AOEShapeRect rect = new(50f, 6f);
+
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Cauterize && WorldState.Actors.Find(tether.Target) is var target && target != null)
         {
-            CurrentBaits.Add(new(source, target, new AOEShapeRect(50, 6)));
+            CurrentBaits.Add(new(source, target, rect));
         }
     }
 }

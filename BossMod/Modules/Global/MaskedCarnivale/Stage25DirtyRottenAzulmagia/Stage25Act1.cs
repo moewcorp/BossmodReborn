@@ -21,16 +21,16 @@ public enum AID : uint
 public enum SID : uint
 {
     IceSpikes = 1307, // Boss->Boss, extra=0x64
-    Doom = 910, // Boss->player, extra=0x0
+    Doom = 910 // Boss->player, extra=0x0
 }
 
-class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4));
-class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60.Degrees()));
-class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8);
-class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6, 30));
+class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 45f));
+class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60f.Degrees()));
+class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8f);
+class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6f, 30f));
 class Plaincracker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plaincracker), 7.2f);
-class TremblingEarth1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth1), new AOEShapeDonut(10, 20));
-class TremblingEarth2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth2), new AOEShapeDonut(20, 30));
+class TremblingEarth1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth1), new AOEShapeDonut(10f, 20f));
+class TremblingEarth2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth2), new AOEShapeDonut(20f, 30f));
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -49,15 +49,13 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var physicalreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.IceSpikes) != null);
-        if (physicalreflect != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.IceSpikes) != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all physical damage!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var doomed = actor.FindStatus(SID.Doom);
-        if (doomed != null)
+        if (actor.FindStatus((uint)SID.Doom) != null)
             hints.Add("You were doomed! Cleanse it with Exuviation or finish the act fast.");
     }
 }

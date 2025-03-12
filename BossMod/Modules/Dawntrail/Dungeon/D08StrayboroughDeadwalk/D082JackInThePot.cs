@@ -41,27 +41,27 @@ public enum SID : uint
 
 class PipingPour(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(8);
+    private static readonly AOEShapeCircle circle = new(8f);
     private readonly List<AOEInstance> _aoes = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (_aoes.Count > 0 && id == 0x11DD && (OID)actor.OID == OID.SpectralSamovar)
+        if (_aoes.Count != 0 && id == 0x11DD && actor.OID == (uint)OID.SpectralSamovar)
             _aoes.RemoveAt(0);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.AreaOfInfluenceUp && status.Extra == 0x1)
-            _aoes.Add(new(circle, actor.Position));
+        if (status.ID == (uint)SID.AreaOfInfluenceUp && status.Extra == 0x1)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position)));
     }
 }
 
 class TeaAwhirl : Components.GenericAOEs
 {
-    private static readonly AOEShapeCircle circle = new(19);
+    private static readonly AOEShapeCircle circle = new(19f);
     private readonly List<Actor> _cups = [];
     private readonly List<AOEInstance> _aoes = [];
     private readonly Dictionary<uint, Action> cupPositions;
@@ -70,7 +70,7 @@ class TeaAwhirl : Components.GenericAOEs
     {
         cupPositions = new Dictionary<uint, Action>
         {
-            { 0x02000100, () => HandleActivation(11.5f,
+            { 0x02000100, () => HandleActivation(11.5d,
                 [
                     (new(17, -163), new(17, -177), [new(3.5f, -161.5f), new(30.5f, -178.5f)]),
                     (new(17, -153), new(10, -170), [new(25.5f, -156.5f), new(20.5f, -178.5f)]),
@@ -79,14 +79,14 @@ class TeaAwhirl : Components.GenericAOEs
                     (new(0, -170), null, [new(25.5f, -166.5f)])
                 ])
             },
-            { 0x10000800, () => HandleActivation(14.5f,
+            { 0x10000800, () => HandleActivation(14.5d,
                 [
                     (new(0, -170), new(34, -170), [new(8.5f, -156.5f), new(25.5f, -183.5f)]),
                     (new(0, -170), new(17, -187), [new(3.5f, -178.5f), new(8.5f, -156.5f)]),
                     (new(17, -187), new(17, -153), [new(30.5f, -161.5f), new(3.5f, -178.5f)])
                 ])
             },
-            { 0x00100001, () => AddAOEs(WorldState.FutureTime(16), _cups[0].Position, _cups[1].Position) },
+            { 0x00100001, () => AddAOEs(WorldState.FutureTime(16d), _cups[0].Position, _cups[1].Position) },
             { 0x00400020, () => HandleActivation(19f,
                 [
                     (new(0, -170), new(17, -163), [new(5, -165), new(22, -182)]),
@@ -96,7 +96,7 @@ class TeaAwhirl : Components.GenericAOEs
         };
     }
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
@@ -113,7 +113,7 @@ class TeaAwhirl : Components.GenericAOEs
         }
     }
 
-    private void HandleActivation(float futureTime, List<(WPos pos1, WPos? pos2, WPos[] positions)> cups)
+    private void HandleActivation(double futureTime, List<(WPos pos1, WPos? pos2, WPos[] positions)> cups)
     {
         var activation = WorldState.FutureTime(futureTime);
         foreach (var (pos1, pos2, positions) in cups)

@@ -10,7 +10,7 @@ class TetraktysBorder(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     public bool Active;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -47,7 +47,7 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle _rot2 = -180.Degrees();
     private static readonly Angle _rot3 = 179.995f.Degrees();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -157,7 +157,7 @@ class TetraktuosKosmos(BossModule module) : Components.GenericAOEs(module)
         (_shapeRect, new(-949f, 955.428f), 3)
     ];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

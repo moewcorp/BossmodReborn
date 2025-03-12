@@ -41,7 +41,7 @@ class WhispersOfTheWood(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(30, a90);
     private readonly List<AOEInstance> _aoes = new(4);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

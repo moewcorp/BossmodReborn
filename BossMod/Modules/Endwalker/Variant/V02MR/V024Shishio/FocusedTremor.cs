@@ -7,14 +7,14 @@ class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private AOEInstance? _aoeCache;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_aoe == null)
             return [];
         else
         {
             var aoe = _aoe.Value;
-            return [aoe.Shape == rect ? aoe with { Activation = actor.FindStatus((uint)SID.SixFulmsUnder)?.ExpireAt ?? DateTime.MaxValue } : aoe];
+            return new AOEInstance[1] { aoe.Shape == rect ? aoe with { Activation = actor.FindStatus((uint)SID.SixFulmsUnder)?.ExpireAt ?? DateTime.MaxValue } : aoe };
         }
     }
 

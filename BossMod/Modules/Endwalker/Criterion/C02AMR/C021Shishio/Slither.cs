@@ -7,12 +7,12 @@ class Slither(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCone _shape = new(25f, 45f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_caster?.CastInfo != null)
-            return [new(_shape, _caster.Position, _caster.CastInfo.Rotation, Module.CastFinishAt(_caster.CastInfo))];
+            return new AOEInstance[1] { new(_shape, _caster.Position, _caster.CastInfo.Rotation, Module.CastFinishAt(_caster.CastInfo)) };
         else if (_predictedActivation != default)
-            return [new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 180f.Degrees(), _predictedActivation)];
+            return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation + 180f.Degrees(), _predictedActivation) };
         else
             return [];
     }

@@ -8,10 +8,10 @@ class MatronsBreath(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeDonut _shape = new(8f, 50f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_flowers.Count != 0)
-            return [_flowers[0]];
+            return new AOEInstance[1] { _flowers[0] };
         else
             return [];
     }

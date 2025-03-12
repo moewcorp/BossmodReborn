@@ -4,7 +4,7 @@ class SwordQuiverRaidwide(BossModule module) : Components.CastCounter(module, de
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.SwordQuiverRaidwide1 or AID.SwordQuiverRaidwide2 or AID.SwordQuiverRaidwide3 or AID.SwordQuiverRaidwide4)
+        if (spell.Action.ID is (uint)AID.SwordQuiverRaidwide1 or (uint)AID.SwordQuiverRaidwide2 or (uint)AID.SwordQuiverRaidwide3 or (uint)AID.SwordQuiverRaidwide4)
             ++NumCasts;
     }
 }
@@ -13,23 +13,24 @@ class SwordQuiverBurst(BossModule module) : Components.GenericAOEs(module, Actio
 {
     private readonly List<AOEInstance> _aoes = new(4);
 
-    private static readonly AOEShapeRect _shape = new(30, 6, 30);
+    private static readonly AOEShapeRect _shape = new(30f, 6f, 30f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SwordQuiverN or AID.SwordQuiverC or AID.SwordQuiverS)
+        if (spell.Action.ID is (uint)AID.SwordQuiverN or (uint)AID.SwordQuiverC or (uint)AID.SwordQuiverS)
         {
             var activation = Module.CastFinishAt(spell, 8.9f);
-            _aoes.Add(new(_shape, Arena.Center, -0.003f.Degrees(), activation));
-            _aoes.Add(new(_shape, Arena.Center, 117.998f.Degrees(), activation));
-            _aoes.Add(new(_shape, Arena.Center, -118.003f.Degrees(), activation));
+            var pos = Arena.Center;
+            _aoes.Add(new(_shape, pos, -0.003f.Degrees(), activation));
+            _aoes.Add(new(_shape, pos, 117.998f.Degrees(), activation));
+            _aoes.Add(new(_shape, pos, -118.003f.Degrees(), activation));
 
-            var zOffset = (AID)spell.Action.ID switch
+            var zOffset = spell.Action.ID switch
             {
-                AID.SwordQuiverN => -10,
-                AID.SwordQuiverS => +10,
+                (uint)AID.SwordQuiverN => -10f,
+                (uint)AID.SwordQuiverS => +10f,
                 _ => 0
             };
             _aoes.Add(new(_shape, Arena.Center + new WDir(0, zOffset), 89.999f.Degrees(), activation));
@@ -39,11 +40,11 @@ class SwordQuiverBurst(BossModule module) : Components.GenericAOEs(module, Actio
 
 class SwordQuiverLaceration(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.SwordQuiverLaceration))
 {
-    private static readonly AOEShapeCone _shape = new(40, 30.Degrees()); // TODO: verify angle
+    private static readonly AOEShapeCone _shape = new(40f, 30f.Degrees()); // TODO: verify angle
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var dir = Angle.FromDirection(actor.Position - Module.Center);
+        var dir = Angle.FromDirection(actor.Position - Arena.Center);
         var clipped = Raid.WithoutSlot(false, true, true).Exclude(actor).InShape(_shape, Module.Center, dir).CountByCondition(p => p.Class.IsSupport() == actor.Class.IsSupport());
         if (clipped.match != 0 || clipped.mismatch != 1)
             hints.Add("Spread by roles!");
@@ -51,6 +52,6 @@ class SwordQuiverLaceration(BossModule module) : Components.CastCounter(module, 
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        _shape.Outline(Arena, Module.Center, Angle.FromDirection(pc.Position - Module.Center));
+        _shape.Outline(Arena, Arena.Center, Angle.FromDirection(pc.Position - Module.Center));
     }
 }

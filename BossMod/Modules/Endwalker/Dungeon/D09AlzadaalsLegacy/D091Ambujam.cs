@@ -37,57 +37,54 @@ class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAOEs(modu
     private readonly Dictionary<byte, Dictionary<uint, WPos>> _statePositions = new()
     {
         {0x11, new Dictionary<uint, WPos>
-            {{ 0x00080004, new(117, -97) }, { 0x00800004, new(131, -83) },
-            { 0x00200004, new(131, -97) }, { 0x02000004, new(117, -83) }}},
+            {{ 0x00080004, new(117f, -97f) }, { 0x00800004, new(131f, -83f) },
+            { 0x00200004, new(131f, -97f) }, { 0x02000004, new(117f, -83f) }}},
         {0x10, new Dictionary<uint, WPos>
-            {{ 0x00200004, new(109, -90) }, { 0x02000004, new(139, -90) },
-            { 0x00080004, new(124, -75) }, { 0x00800004, new(124, -105) }}}
+            {{ 0x00200004, new(109f, -90f) }, { 0x02000004, new(139f, -90f) },
+            { 0x00080004, new(124f, -75f) }, { 0x00800004, new(124f, -105f) }}}
     };
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (_statePositions.TryGetValue(index, out var statePosition) && statePosition.TryGetValue(state, out var position))
         {
-            var activation = WorldState.FutureTime(10.5f);
-            _aoes.Add(new(circle, position, default, activation));
+            var activation = WorldState.FutureTime(10.5d);
+            _aoes.Add(new(circle, WPos.ClampToGrid(position), default, activation));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.CorrosiveVenom or AID.ToxinShower)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.CorrosiveVenom or (uint)AID.ToxinShower)
             _aoes.RemoveAt(0);
     }
 }
 
 class ToxicCorrosiveFountain(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(8);
+    private static readonly AOEShapeCircle circle = new(8f);
     private readonly List<AOEInstance> _aoes = new(12);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
         var max = count > 10 ? 10 : count;
-        List<AOEInstance> aoes = new(max);
-        for (var i = 0; i < max; ++i)
-            aoes.Add(_aoes[i]);
-        return aoes;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.ToxicFountain or AID.CorrosiveFountain)
+        if (spell.Action.ID is (uint)AID.ToxicFountain or (uint)AID.CorrosiveFountain)
             _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && (AID)spell.Action.ID is AID.ToxicFountain or AID.CorrosiveFountain)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.ToxicFountain or (uint)AID.CorrosiveFountain)
             _aoes.RemoveAt(0);
     }
 }
@@ -108,5 +105,5 @@ class D091AmbujamStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 844, NameID = 11241)]
 public class D091Ambujam(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    private static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(124, -90), 19.5f)], [new Rectangle(new(124, -110.25f), 20, 2), new Rectangle(new(124, -69.5f), 20, 2)]);
+    private static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(124f, -90f), 19.5f)], [new Rectangle(new(124f, -110.25f), 20f, 2f), new Rectangle(new(124f, -69.5f), 20f, 2f)]);
 }

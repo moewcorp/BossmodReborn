@@ -7,9 +7,9 @@ class Sandspheres(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoesSmall = [];
     private readonly List<AOEInstance> _aoesBig = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        int aliveSandSpheres = 0;
+        var aliveSandSpheres = 0;
         var sandspheres = Module.Enemies((uint)OID.SandSphere);
         var count = sandspheres.Count;
         for (var i = 0; i < count; ++i)
@@ -26,14 +26,14 @@ class Sandspheres(BossModule module) : Components.GenericAOEs(module)
         var countB = _aoesBig.Count;
 
         var aoes = new List<AOEInstance>(max * 2);
-        for (var i = 0; i < max; i++)
+        for (var i = 0; i < max; ++i)
         {
             if (countS > i)
                 aoes.Add(_aoesSmall[i]);
             if (countB > i)
                 aoes.Add(_aoesBig[i]);
         }
-        return aoes;
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

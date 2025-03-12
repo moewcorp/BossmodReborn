@@ -40,7 +40,7 @@ abstract class LineVoltage(BossModule module, AID narrow, float delay, AID? wide
     private static readonly AOEShapeRect rectNarrow = new(50, 2.5f), rectWide = new(50, 5);
     public readonly List<AOEInstance> AOEs = new(18);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = AOEs.Count;
         if (count == 0)
@@ -97,7 +97,7 @@ class CellShock(BossModule module) : Components.GenericAOEs(module)
         { 0x0D, 0x10 }, { 0x0E, 0x0F }, { 0x0F, 0x0E }, { 0x10, 0x0D }
     };
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.AOEs.Count == 0 ? Utils.ZeroOrOne(_aoe) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.AOEs.Count == 0 ? Utils.ZeroOrOne(ref _aoe) : [];
 
     public override void OnEventEnvControl(byte index, uint state)
     {

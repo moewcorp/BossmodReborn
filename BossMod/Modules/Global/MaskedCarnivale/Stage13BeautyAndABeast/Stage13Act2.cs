@@ -25,13 +25,13 @@ public enum AID : uint
     BloodRain = 14882 // Boss->location, 3.0s cast, range 50 circle
 }
 
-class VoidFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireII), 5);
-class VoidFireIV(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV), 10);
-class VoidFireIV3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV3), 6);
-class VoidAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidAero), new AOEShapeRect(42, 4));
+class VoidFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireII), 5f);
+class VoidFireIV(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV), 10f);
+class VoidFireIV3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidFireIV3), 6f);
+class VoidAero(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VoidAero), new AOEShapeRect(42f, 4f));
 class DarkSabbath(BossModule module) : Components.CastGaze(module, ActionID.MakeSpell(AID.DarkSabbath));
-class DarkMist(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkMist), 10);
-class CircleOfBlood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfBlood2), new AOEShapeDonut(10, 20));
+class DarkMist(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DarkMist), 10f);
+class CircleOfBlood(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.CircleOfBlood2), new AOEShapeDonut(10f, 20f));
 class BeguilingMist(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.BeguilingMist));
 class BloodRain(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.BloodRain), "Harmless raidwide unless you failed to kill succubus in time");
 
@@ -72,6 +72,6 @@ public class Stage13Act2 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Succubus), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Succubus), Colors.Object);
     }
 }

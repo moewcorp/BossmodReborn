@@ -65,13 +65,13 @@ class Dhrupad(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Dhrupad)
+        if (spell.Action.ID == (uint)AID.Dhrupad)
             active = true;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ManusyaFire1 or AID.ManusyaBlizzard1 or AID.ManusyaThunder1)
+        if (spell.Action.ID is (uint)AID.ManusyaFire1 or (uint)AID.ManusyaBlizzard1 or (uint)AID.ManusyaThunder1)
         {
             ++NumCasts;
             if (NumCasts == 3)
@@ -97,13 +97,13 @@ class Poison(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Poison)
+        if (status.ID == (uint)SID.Poison)
             _poisoned.Add(actor);
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Poison)
+        if (status.ID == (uint)SID.Poison)
             _poisoned.Remove(actor);
     }
 
@@ -112,7 +112,7 @@ class Poison(BossModule module) : BossComponent(module)
         if (_poisoned.Count != 0)
             if (_poisoned.Contains(actor))
             {
-                if (!(actor.Role == Role.Healer || actor.Class == Class.BRD)) // theoretically only the tank can ge poisoned, this is just in here incase of bad tanks
+                if (!(actor.Role == Role.Healer || actor.Class == Class.BRD)) // in practice only the tank can ge poisoned, this is just in here incase of bad tanks
                     hints.Add("You were poisoned! Get cleansed fast.");
                 else if (actor.Role == Role.Healer || actor.Class == Class.BRD)
                     hints.Add("Cleanse yourself! (Poison).");
@@ -137,51 +137,42 @@ class Poison(BossModule module) : BossComponent(module)
 
 class IsitvaSiddhi(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.IsitvaSiddhi));
 class Samsara(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Samsara));
-class DeltaThunderIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII1), 3);
-class DeltaThunderIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII2), 5);
-class DeltaThunderIII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII3), new AOEShapeRect(40, 5));
-class DeltaThunderIII4(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeltaThunderIII4), 5, 4, 4);
-class DeltaBlizzardIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII1), new AOEShapeCone(40.5f, 10.Degrees()));
-class DeltaBlizzardIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII2), new AOEShapeRect(44, 2));
-class DeltaBlizzardIII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII3), 15);
-class DeltaFireIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaFireIII1), new AOEShapeDonut(5, 40));
-class DeltaFireIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaFireIII2), new AOEShapeRect(44, 5));
-class DeltaFireIII3(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DeltaFireIII3), 6);
-class PraptiSiddhi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PraptiSiddhi), new AOEShapeRect(40, 2));
+class DeltaThunderIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII1), 3f);
+class DeltaThunderIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII2), 5f);
+class DeltaThunderIII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaThunderIII3), new AOEShapeRect(40f, 5f));
+class DeltaThunderIII4(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.DeltaThunderIII4), 5f, 4, 4);
+class DeltaBlizzardIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII1), new AOEShapeCone(40.5f, 10f.Degrees()));
+class DeltaBlizzardIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII2), new AOEShapeRect(44f, 2f));
+class DeltaBlizzardIII3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaBlizzardIII3), 15f);
+class DeltaFireIII1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaFireIII1), new AOEShapeDonut(5f, 40f));
+class DeltaFireIII2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaFireIII2), new AOEShapeRect(44f, 5f));
+class DeltaFireIII3(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.DeltaFireIII3), 6f);
+class PraptiSiddhi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PraptiSiddhi), new AOEShapeRect(40f, 2f));
 
 class SphereShatter(BossModule module) : Components.GenericAOEs(module)
 {
-    private DateTime _activation;
-    private readonly List<Actor> _casters = [];
-    private static readonly AOEShapeCircle circle = new(15);
+    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circle = new(15f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (_casters.Count > 0)
-            foreach (var c in _casters)
-                yield return new(circle, c.Position, default, _activation);
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.BerserkerSphere)
-        {
-            _casters.Add(actor);
-            _activation = WorldState.FutureTime(7.3f);
-        }
+        if (actor.OID == (uint)OID.BerserkerSphere)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(7.3d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SphereShatter)
+        if (spell.Action.ID == (uint)AID.SphereShatter)
         {
-            _casters.Remove(caster);
+            _aoes.Clear();
             ++NumCasts;
         }
     }
 }
 
-class PrakamyaSiddhi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PrakamyaSiddhi), 5);
+class PrakamyaSiddhi(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PrakamyaSiddhi), 5f);
 class ManusyaBlizzardIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ManusyaBlizzardIII2), new AOEShapeCone(40.5f, 10.Degrees()));
 
 class D013MagusSistersStates : StateMachineBuilder

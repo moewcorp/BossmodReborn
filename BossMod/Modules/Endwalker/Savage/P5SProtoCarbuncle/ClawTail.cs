@@ -2,28 +2,29 @@
 
 class ClawTail(BossModule module) : Components.GenericAOEs(module)
 {
-    public int Progress { get; private set; } // 7 claws + 1 tail total
+    public int Progress; // 7 claws + 1 tail total
     private bool _tailFirst;
 
-    private static readonly AOEShapeCone _shape = new(45, 90.Degrees());
+    private static readonly AOEShapeCone _shape = new(45f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var rotation = Module.PrimaryActor.CastInfo?.Rotation ?? Module.PrimaryActor.Rotation;
         if (_tailFirst ? Progress == 0 : Progress >= 7)
-            rotation += 180.Degrees();
-        yield return new(_shape, Module.PrimaryActor.Position, rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+            rotation += 180f.Degrees();
+        return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position, rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo)) };
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TailToClaw)
+        if (spell.Action.ID == (uint)AID.TailToClaw)
             _tailFirst = true;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.RagingClawFirst or AID.RagingClawFirstRest or AID.RagingTailSecond or AID.RagingTailFirst or AID.RagingClawSecond or AID.RagingClawSecondRest)
+        if (spell.Action.ID is (uint)AID.RagingClawFirst or (uint)AID.RagingClawFirstRest or (uint)AID.RagingTailSecond or (uint)AID.RagingTailFirst
+        or (uint)AID.RagingClawSecond or (uint)AID.RagingClawSecondRest)
             ++Progress;
     }
 }

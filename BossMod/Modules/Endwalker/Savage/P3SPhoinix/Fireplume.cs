@@ -3,33 +3,39 @@
 // state related to 'single' and 'multi' fireplumes (normal or parts of gloryplume)
 class Fireplume(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circleBig = new(15);
-    private static readonly AOEShapeCircle circleSmall = new(10);
-    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShapeCircle circleBig = new(15f);
+    private static readonly AOEShapeCircle circleSmall = new(10f);
+    private readonly List<AOEInstance> _aoes = new(10);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        for (var i = 0; i < count; ++i)
+        if (count == 0)
+            return [];
+        var max = count > 8 ? 8 : count;
+        var aoes = new AOEInstance[max];
+
+        for (var i = 0; i < max; ++i)
         {
             var aoe = _aoes[i];
             if (i < 2)
-                yield return count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else if (i is > 1 and < 8)
-                yield return aoe with { Risky = false };
+                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
+            else
+                aoes[i] = aoe with { Risky = false };
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ExperimentalFireplumeSingleAOE:
-            case AID.ExperimentalGloryplumeSingleAOE:
+            case (uint)AID.ExperimentalFireplumeSingleAOE:
+            case (uint)AID.ExperimentalGloryplumeSingleAOE:
                 _aoes.Add(new(circleBig, spell.LocXZ, default, Module.CastFinishAt(spell)));
                 break;
-            case AID.ExperimentalFireplumeMultiAOE:
-            case AID.ExperimentalGloryplumeMultiAOE:
+            case (uint)AID.ExperimentalFireplumeMultiAOE:
+            case (uint)AID.ExperimentalGloryplumeMultiAOE:
                 if (_aoes.Count == 0)
                 {
                     var startingDirection = Angle.FromDirection(caster.Position - Arena.Center);
@@ -49,12 +55,12 @@ class Fireplume(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0)
-            switch ((AID)spell.Action.ID)
+            switch (spell.Action.ID)
             {
-                case AID.ExperimentalFireplumeSingleAOE:
-                case AID.ExperimentalGloryplumeSingleAOE:
-                case AID.ExperimentalFireplumeMultiAOE:
-                case AID.ExperimentalGloryplumeMultiAOE:
+                case (uint)AID.ExperimentalFireplumeSingleAOE:
+                case (uint)AID.ExperimentalGloryplumeSingleAOE:
+                case (uint)AID.ExperimentalFireplumeMultiAOE:
+                case (uint)AID.ExperimentalGloryplumeMultiAOE:
                     _aoes.RemoveAt(0);
                     break;
             }

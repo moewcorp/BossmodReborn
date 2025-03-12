@@ -1,26 +1,30 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class Aeroquell(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Aeroquell), 5, 4);
-class AeroquellTwister(BossModule module) : Components.PersistentVoidzone(module, 5, m => m.Enemies(OID.Twister));
-class MissingLink(BossModule module) : Components.Chains(module, (uint)TetherID.MissingLink, default, 25);
+class Aeroquell(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Aeroquell), 5f, 4);
+class AeroquellTwister(BossModule module) : Components.PersistentVoidzone(module, 5f, GetTwister)
+{
+    private static List<Actor> GetTwister(BossModule module) => module.Enemies((uint)OID.Twister);
+}
+class MissingLink(BossModule module) : Components.Chains(module, (uint)TetherID.MissingLink, default, 25f);
 
 class WindOfChange(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.WindOfChange), true)
 {
     private readonly Angle[] _directions = new Angle[PartyState.MaxPartySize];
     private DateTime _activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_directions[slot] != default)
-            yield return new(actor.Position, 20, _activation, null, _directions[slot], Kind.DirForward);
+            return new Source[1] { new(actor.Position, 20f, _activation, null, _directions[slot], Kind.DirForward) };
+        return [];
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var dir = (SID)status.ID switch
+        var dir = status.ID switch
         {
-            SID.WestWindOfChange => 90.Degrees(),
-            SID.EastWindOfChange => -90.Degrees(),
+            (uint)SID.WestWindOfChange => 90f.Degrees(),
+            (uint)SID.EastWindOfChange => -90f.Degrees(),
             _ => default
         };
         if (dir != default && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)

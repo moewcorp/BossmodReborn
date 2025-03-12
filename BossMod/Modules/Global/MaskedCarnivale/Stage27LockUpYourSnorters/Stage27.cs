@@ -19,49 +19,59 @@ public enum AID : uint
     MassiveExplosion = 19261 // MagitekExplosive->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
 }
 
-class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 8);
-class Snort(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Snort), 15, stopAtWall: true);
+class Fireball(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Fireball), 8f);
+class Snort(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Snort), 15f, stopAtWall: true);
 
 class Fungah(BossModule module) : Components.Knockback(module, stopAtWall: true)
 {
     private DateTime _activation;
-    private readonly List<Actor> _bombs = [];
     private bool otherpatterns;
-    private static readonly AOEShapeCone cone = new(12.5f, 45.Degrees());
+    private static readonly AOEShapeCone cone = new(12.5f, 45f.Degrees());
+    private readonly Explosion _aoe = module.FindComponent<Explosion>()!;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        if (_bombs.Count != 0 && _activation != default || otherpatterns)
-            yield return new(Module.PrimaryActor.Position, 15, _activation, cone, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position));
+        if (_activation != default || otherpatterns)
+            return new Source[1] { new(Module.PrimaryActor.Position, 15f, _activation, cone, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)) };
+        return [];
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        var MagitekExplosive = Module.Enemies(OID.MagitekExplosive).FirstOrDefault();
-        if ((OID)actor.OID == OID.Bomb)
-            _bombs.Add(actor);
-        if (_bombs.Count == 8)
-            _activation = WorldState.FutureTime(5);
-        if (MagitekExplosive != null)
-            if (MagitekExplosive.Position.AlmostEqual(new(96, 94), 3) || MagitekExplosive.Position.AlmostEqual(new(92, 100), 3) || MagitekExplosive.Position.AlmostEqual(new(96, 106), 3) || MagitekExplosive.Position.AlmostEqual(new(108, 100), 3))
+        if (actor.OID == (uint)OID.Bomb && Module.Enemies((uint)OID.Bomb).Count == 8)
+        {
+            _activation = WorldState.FutureTime(5d);
+            var magitekExplosives = Module.Enemies((uint)OID.MagitekExplosive);
+            var explosive = magitekExplosives.Count != 0 ? magitekExplosives[0] : null;
+            if (explosive != null && (explosive.Position.AlmostEqual(new(96f, 94f), 3f) || explosive.Position.AlmostEqual(new(92f, 100f), 3f) ||
+             explosive.Position.AlmostEqual(new(96f, 106f), 3) || explosive.Position.AlmostEqual(new(108f, 100f), 3f)))
             {
-                _activation = WorldState.FutureTime(5.3f);
+                _activation = WorldState.FutureTime(5.3d);
                 otherpatterns = true;
             }
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_bombs.Count != 0 && (AID)spell.Action.ID == AID.Explosion)
-            _bombs.Clear();
-        if ((AID)spell.Action.ID is AID.Fungah or AID.Fungahhh)
-        {
+        if (spell.Action.ID == (uint)AID.Explosion)
             _activation = default;
+        else if (spell.Action.ID is (uint)AID.Fungah or (uint)AID.Fungahhh)
             otherpatterns = false;
-        }
     }
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => Module.FindComponent<Explosion>()?.ActiveAOEs(slot, actor).Any(z => z.Shape.Check(pos, z.Origin, z.Rotation)) ?? false;
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+                return true;
+        }
+        return false;
+    }
 }
 
 class Explosion(BossModule module) : Components.GenericAOEs(module)
@@ -71,24 +81,41 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
     private DateTime _activation;
     private DateTime _snortingeffectends;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_casters.Count > 0 && _snortingeffectends == default)
-            foreach (var c in _casters)
-                yield return new(circle, c.Position, default, _activation);
-        if (_casters.Count > 0 && _snortingeffectends > WorldState.CurrentTime)
-            foreach (var c in _casters)
-                yield return new(circle, c.Position + Math.Min(15, Module.Arena.IntersectRayBounds(c.Position, (c.Position - Module.PrimaryActor.Position).Normalized()) - c.HitboxRadius / 2) * (c.Position - Module.PrimaryActor.Position).Normalized(), Activation: _activation);
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+
+        var aoes = new AOEInstance[count];
+        if (_snortingeffectends == default)
+        {
+            for (var i = 0; i < count; ++i)
+                aoes[i] = new(circle, _casters[i].Position, default, _activation);
+            return aoes;
+        }
+        else if (_snortingeffectends > WorldState.CurrentTime)
+        {
+            var primary = Module.PrimaryActor.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var pos = _casters[i].Position;
+                var raydir = (pos - primary).Normalized();
+                aoes[i] = new(circle, pos + Math.Min(15f, Module.Arena.IntersectRayBounds(pos, raydir) - 0.4f) * raydir, default, _activation); // 0.4f = half of hitbox radius is used for some reason
+            }
+            return aoes;
+        }
+        return [];
     }
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
-        if ((OID)actor.OID == OID.Bomb)
+        if (actor.OID == (uint)OID.Bomb)
         {
             if (animState1 == 1)
             {
                 _casters.Add(actor);
-                _activation = WorldState.FutureTime(6);
+                _activation = WorldState.FutureTime(6d);
             }
         }
     }
@@ -101,13 +128,13 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_casters.Count > 0 && (AID)spell.Action.ID == AID.Explosion)
+        if (_casters.Count > 0 && spell.Action.ID == (uint)AID.Explosion)
             _casters.Remove(caster);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Snort)
+        if (spell.Action.ID == (uint)AID.Snort)
             _snortingeffectends = Module.CastFinishAt(spell, 2.5f);
     }
 }
@@ -126,19 +153,29 @@ class Hints2(BossModule module) : BossComponent(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (!Module.Enemies(OID.MagitekExplosive).All(e => e.IsDead))
-            hints.Add($"A {Module.Enemies(OID.MagitekExplosive).FirstOrDefault()!.Name} spawned, destroy it asap.");
+        var explosives = Module.Enemies((uint)OID.MagitekExplosive);
+        var count = explosives.Count;
+        if (count == 0)
+            return;
+        var explosive = explosives[0];
+        if (!explosive.IsDead)
+            hints.Add($"A {explosive!.Name} spawned, destroy it asap.");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (Module.Enemies(OID.MagitekExplosive).Any(e => e.IsTargetable))
+        var explosives = Module.Enemies((uint)OID.MagitekExplosive);
+        var count = explosives.Count;
+        if (count == 0)
+            return;
+        var explosive = explosives[0];
+        if (explosive.IsTargetable)
             hints.Add($"Explosion in ca.: {Math.Max(35 - (WorldState.CurrentTime - _activation).TotalSeconds, 0.0f):f1}s");
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.MagitekExplosive)
+        if (actor.OID == (uint)OID.MagitekExplosive)
             _activation = WorldState.CurrentTime;
     }
 }
@@ -150,8 +187,8 @@ class Stage27States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Fireball>()
             .ActivateOnEnter<Snort>()
-            .ActivateOnEnter<Fungah>()
             .ActivateOnEnter<Explosion>()
+            .ActivateOnEnter<Fungah>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>();
     }
@@ -168,21 +205,21 @@ public class Stage27 : BossModule
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Bomb), Colors.Object);
-        Arena.Actors(Enemies(OID.MagitekExplosive), Colors.Vulnerable);
+        Arena.Actors(Enemies((uint)OID.Bomb), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.MagitekExplosive), Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.MagitekExplosive => 2,
-                OID.Boss => 1,
-                OID.Bomb => AIHints.Enemy.PriorityPointless,
-                _ => 0
+                (uint)OID.MagitekExplosive => 1,
+                (uint)OID.Boss => 0,
+                _ => AIHints.Enemy.PriorityPointless,
             };
         }
     }

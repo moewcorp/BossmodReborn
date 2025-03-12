@@ -9,10 +9,11 @@ class Tilt(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(
     public Angle Direction;
     public DateTime Activation;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (Distance > 0)
-            yield return new(new(), Distance, Activation, null, Direction, Kind.DirForward);
+            return new Source[1] { new(new(), Distance, Activation, null, Direction, Kind.DirForward) };
+        return [];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -30,24 +31,24 @@ class ScalesOfWisdom(BossModule module) : Tilt(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ScalesOfWisdomStart:
+            case (uint)AID.ScalesOfWisdomStart:
                 // prepare for first tilt
                 Distance = DistanceShort;
-                Direction = -90.Degrees();
-                Activation = WorldState.FutureTime(8);
+                Direction = -90f.Degrees();
+                Activation = WorldState.FutureTime(8d);
                 break;
-            case AID.QuasarTilt:
+            case (uint)AID.QuasarTilt:
                 if (NumCasts == 1)
                 {
                     // prepare for second tilt
                     Distance = DistanceShort;
                     Direction = 90.Degrees();
-                    Activation = WorldState.FutureTime(4.9f);
+                    Activation = WorldState.FutureTime(4.9d);
                 }
                 break;
-            case AID.ScalesOfWisdomRaidwide:
+            case (uint)AID.ScalesOfWisdomRaidwide:
                 RaidwideDone = true;
                 break;
         }

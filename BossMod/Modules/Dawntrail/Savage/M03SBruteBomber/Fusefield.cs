@@ -26,25 +26,25 @@ class Fusefield(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Bombarium && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
-            _orders[slot] = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30 ? 1 : 2;
+        if (status.ID == (uint)SID.Bombarium && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+            _orders[slot] = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds < 30d ? 1 : 2;
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Bombarium && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        if (status.ID == (uint)SID.Bombarium && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
             _orders[slot] = 0;
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if ((OID)source.OID == OID.SinisterSpark && tether.ID == (uint)TetherID.Fusefield && WorldState.Actors.Find(tether.Target) is var target && target != null)
-            _sparks.Add((source, target, (source.Position - target.Position).LengthSq() < 55 ? 1 : 2));
+        if (source.OID == (uint)OID.SinisterSpark && tether.ID == (uint)TetherID.Fusefield && WorldState.Actors.Find(tether.Target) is var target && target != null)
+            _sparks.Add((source, target, (source.Position - target.Position).LengthSq() < 55f ? 1 : 2));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ManaExplosion or AID.ManaExplosionKill)
+        if (spell.Action.ID is (uint)AID.ManaExplosion or (uint)AID.ManaExplosionKill)
         {
             _sparks.RemoveAll(s => s.spark == caster);
         }
@@ -57,7 +57,7 @@ class FusefieldVoidzone(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(5);
     private AOEInstance? _aoe;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

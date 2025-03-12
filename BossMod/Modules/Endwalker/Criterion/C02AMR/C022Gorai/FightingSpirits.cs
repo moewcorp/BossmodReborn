@@ -64,9 +64,9 @@ class WorldlyPursuitLast(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeCross _shape = new(60f, 10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return [new(_shape, Arena.Center, Angle.FromDirection(Arena.Center - Module.PrimaryActor.Position), _activation)];
+        return new AOEInstance[1] { new(_shape, Arena.Center, Angle.FromDirection(Arena.Center - Module.PrimaryActor.Position), _activation) };
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

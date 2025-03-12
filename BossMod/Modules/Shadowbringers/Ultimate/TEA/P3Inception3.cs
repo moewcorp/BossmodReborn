@@ -6,13 +6,14 @@ class P3Inception3Sacrament(BossModule module) : Components.GenericAOEs(module, 
     public bool Active => _source != null;
 
     private readonly Actor? _source = ((TEA)module).AlexPrime();
-    private readonly DateTime _activation = module.WorldState.FutureTime(4.1f);
-    private static readonly AOEShapeCross _shape = new(100, 8);
+    private readonly DateTime _activation = module.WorldState.FutureTime(4.1d);
+    private static readonly AOEShapeCross _shape = new(100f, 8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_source != null)
-            yield return new(_shape, _source.Position, _source.Rotation, _activation);
+            return new AOEInstance[1] { new(_shape, _source.Position, _source.Rotation, _activation) };
+        return [];
     }
 }
 
@@ -29,7 +30,7 @@ class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpread(mod
         {
             _inited = true;
             if (_sharedSentence != null)
-                Stacks.Add(new(_sharedSentence, 4, 3, int.MaxValue, WorldState.FutureTime(4), _avoid));
+                Stacks.Add(new(_sharedSentence, 4f, 3, int.MaxValue, WorldState.FutureTime(4d), _avoid));
         }
         base.Update();
     }
@@ -37,7 +38,7 @@ class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpread(mod
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (_tethered[slot] && FindPartner(slot) is var partner && partner != null && (partner.Position - actor.Position).LengthSq() < 30 * 30)
+        if (_tethered[slot] && FindPartner(slot) is var partner && partner != null && (partner.Position - actor.Position).LengthSq() < 900f)
             hints.Add("Stay farther from partner!");
     }
 
@@ -46,21 +47,21 @@ class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpread(mod
         base.DrawArenaForeground(pcSlot, pc);
 
         if (_tethered[pcSlot] && FindPartner(pcSlot) is var partner && partner != null)
-            Arena.AddLine(pc.Position, partner.Position, (partner.Position - pc.Position).LengthSq() < 30 * 30 ? Colors.Danger : Colors.Safe);
+            Arena.AddLine(pc.Position, partner.Position, (partner.Position - pc.Position).LengthSq() < 900f ? 0 : Colors.Safe);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.AggravatedAssault:
-                _avoid.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.AggravatedAssault:
+                _avoid[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
-            case SID.SharedSentence:
+            case (uint)SID.SharedSentence:
                 _sharedSentence = actor;
                 break;
-            case SID.RestrainingOrder:
-                _tethered.Set(Raid.FindSlot(actor.InstanceID));
+            case (uint)SID.RestrainingOrder:
+                _tethered[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
         }
     }
@@ -68,7 +69,7 @@ class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpread(mod
     private Actor? FindPartner(int slot)
     {
         var remaining = _tethered;
-        remaining.Clear(slot);
+        remaining[slot] = false;
         return remaining.Any() ? Raid[remaining.LowestSetBit()] : null;
     }
 }

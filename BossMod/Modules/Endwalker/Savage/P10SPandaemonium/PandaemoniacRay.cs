@@ -1,26 +1,42 @@
 ﻿namespace BossMod.Endwalker.Savage.P10SPandaemonium;
 
-class PandaemoniacRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PandaemoniacRayAOE), new AOEShapeRect(30, 25));
+class PandaemoniacRay(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PandaemoniacRayAOE), new AOEShapeRect(30f, 25f));
 
 class JadePassage(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.JadePassage))
 {
-    private readonly List<Actor> _spheres = module.Enemies(OID.ArcaneSphere);
-    private readonly DateTime _activation = module.WorldState.FutureTime(3.6f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(3.6d);
 
-    private static readonly AOEShapeRect _shape = new(40, 1, 40);
+    private static readonly AOEShapeRect _shape = new(40f, 1f, 40f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    private static Actor[] GetSpheres(BossModule module)
     {
-        Actor[] spheres = [.. _spheres.Where(actor => !actor.IsDead)];
+        var enemies = module.Enemies((uint)OID.ArcaneSphere);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (!z.IsDead)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var spheres = GetSpheres(Module);
         var count = spheres.Length;
         if (count == 0)
             return [];
-        var aoes = new List<AOEInstance>(count);
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var s = spheres[i];
-            AOEInstance aoeInstance = new(_shape, s.Position, s.Rotation, Module.CastFinishAt(s.CastInfo, 0, _activation));
-            aoes.Add(aoeInstance);
+            aoes[i] = new(_shape, s.Position, s.Rotation, Module.CastFinishAt(s.CastInfo, 0, _activation));
         }
         return aoes;
     }

@@ -71,8 +71,8 @@ class P5SStates : StateMachineBuilder
         RubyGlow(id, delay)
             .ActivateOnEnter<RubyGlow1>();
         Cast(id + 0x1000, AID.TopazStones, 3.2f, 4);
-        ComponentCondition<RubyGlow1>(id + 0x1010, 0.5f, comp => comp.MagicStones.Any());
-        ComponentCondition<RubyGlow1>(id + 0x1020, 13.5f, comp => !comp.MagicStones.Any(), "Cells");
+        ComponentCondition<RubyGlow1>(id + 0x1010, 0.5f, comp => comp.MagicStones.Count != 0);
+        ComponentCondition<RubyGlow1>(id + 0x1020, 13.5f, comp => comp.MagicStones.Count == 0, "Cells");
         // note: poison disappears later, during next mechanic...
     }
 
@@ -83,7 +83,7 @@ class P5SStates : StateMachineBuilder
             .ActivateOnEnter<RubyGlow2>();
         Cast(id + 0x1000, AID.TopazStones, 3.2f, 4);
         DoubleRush(id + 0x1010, 4.5f);
-        ComponentCondition<RubyGlow2>(id + 0x1020, 1.5f, comp => !comp.MagicStones.Any(), "Cells");
+        ComponentCondition<RubyGlow2>(id + 0x1020, 1.5f, comp => comp.MagicStones.Count == 0, "Cells");
         // note: poison disappears later, during next mechanic...
     }
 
@@ -108,7 +108,7 @@ class P5SStates : StateMachineBuilder
         Cast(id + 0x1000, AID.TopazStones, 2.1f, 4);
         Cast(id + 0x1010, AID.VenomPoolRecolor, 2.1f, 5);
         ComponentCondition<RubyGlow4>(id + 0x1020, 3.9f, comp => comp.NumCasts > 0, "Recolor");
-        ComponentCondition<RubyGlow4>(id + 0x1030, 3, comp => !comp.MagicStones.Any(), "Cells");
+        ComponentCondition<RubyGlow4>(id + 0x1030, 3, comp => comp.MagicStones.Count == 0, "Cells");
         CastMulti(id + 0x2000, [AID.SearingRay, AID.RagingClaw], 0.2f, 5, "Searing ray / Raging claw");
         // note: poison disappears later, during next mechanic...
         // note: raging claw continues hitting for ~2.5s, searing ray resolves immediately - next mechanic is fixed relative to cast end
@@ -120,10 +120,10 @@ class P5SStates : StateMachineBuilder
         RubyGlow(id, delay)
             .ActivateOnEnter<RubyGlow5>();
         Cast(id + 0x1000, AID.TopazStones, 3.1f, 4);
-        ComponentCondition<RubyGlow5>(id + 0x1010, 0.5f, comp => comp.MagicStones.Any());
+        ComponentCondition<RubyGlow5>(id + 0x1010, 0.5f, comp => comp.MagicStones.Count != 0);
         // note: we next part is same as venom squall/surge, except that order is fixed; magic explosion happens ~0.1s before squall cast end
         CastStart(id + 0x1020, AID.VenomSquall, 8.6f);
-        ComponentCondition<RubyGlow5>(id + 0x1021, 4.9f, comp => !comp.MagicStones.Any(), "Cells");
+        ComponentCondition<RubyGlow5>(id + 0x1021, 4.9f, comp => comp.MagicStones.Count == 0, "Cells");
         CastEnd(id + 0x1022, 0.1f)
             .ActivateOnEnter<VenomSquallSurge>(); // note: activating only after cells resolve to reduce visual clutter
         ComponentCondition<VenomSquallSurge>(id + 0x1023, 3.8f, comp => comp.Progress > 0, "Spread");
@@ -144,7 +144,7 @@ class P5SStates : StateMachineBuilder
         Cast(id + 0x1000, AID.TopazStones, 2.1f, 4);
         Cast(id + 0x1010, AID.VenomPoolRecolor, 2.1f, 5);
         ComponentCondition<RubyGlow6>(id + 0x1020, 3.9f, comp => comp.NumCasts > 0, "Recolor");
-        ComponentCondition<RubyGlow6>(id + 0x1030, 3, comp => !comp.MagicStones.Any(), "Cells");
+        ComponentCondition<RubyGlow6>(id + 0x1030, 3, comp => comp.MagicStones.Count == 0, "Cells");
         DoubleRush(id + 0x1040, 4);
         // note: poison disappears later, during next mechanic...
     }

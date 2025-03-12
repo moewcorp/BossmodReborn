@@ -19,16 +19,16 @@ class P1CyclonicBreakSpreadStack(BossModule module) : Components.UniformStackSpr
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CyclonicBreakBossStack:
-            case AID.CyclonicBreakImageStack:
+            case (uint)AID.CyclonicBreakBossStack:
+            case (uint)AID.CyclonicBreakImageStack:
                 // TODO: this can target either supports or dd
                 Activation = Module.CastFinishAt(spell, 2.7f);
                 AddStacks(Raid.WithoutSlot(true, true, true).Where(p => p.Class.IsSupport()), Activation);
                 break;
-            case AID.CyclonicBreakBossSpread:
-            case AID.CyclonicBreakImageSpread:
+            case (uint)AID.CyclonicBreakBossSpread:
+            case (uint)AID.CyclonicBreakImageSpread:
                 Activation = Module.CastFinishAt(spell, 2.7f);
                 AddSpreads(Raid.WithoutSlot(true, true, true), Activation);
                 break;
@@ -37,15 +37,15 @@ class P1CyclonicBreakSpreadStack(BossModule module) : Components.UniformStackSpr
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CyclonicBreakSinsmoke:
+            case (uint)AID.CyclonicBreakSinsmoke:
                 Stacks.Clear();
                 break;
-            case AID.CyclonicBreakSinsmite:
+            case (uint)AID.CyclonicBreakSinsmite:
                 Spreads.Clear();
                 break;
-            case AID.CyclonicBreakAOEFirst:
+            case (uint)AID.CyclonicBreakAOEFirst:
                 _fullHints = true;
                 break;
         }
@@ -62,29 +62,27 @@ class P1CyclonicBreakCone(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = [];
     private DateTime _currentBundle;
 
-    public static readonly AOEShapeCone Shape = new(60, 11.5f.Degrees()); // TODO: verify angle
+    public static readonly AOEShapeCone Shape = new(60f, 11.5f.Degrees()); // TODO: verify angle
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by dedicated component
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.CyclonicBreakAOEFirst:
-                AOEs.Add(new(Shape, caster.Position, spell.Rotation, WorldState.FutureTime(2)));
+            case (uint)AID.CyclonicBreakAOEFirst:
+                AOEs.Add(new(Shape, WPos.ClampToGrid(caster.Position), spell.Rotation, WorldState.FutureTime(2d)));
                 break;
-            case AID.CyclonicBreakAOERest:
+            case (uint)AID.CyclonicBreakAOERest:
                 if (WorldState.CurrentTime > _currentBundle)
                 {
-                    _currentBundle = WorldState.CurrentTime.AddSeconds(1);
+                    _currentBundle = WorldState.CurrentTime.AddSeconds(1d);
                     ++NumCasts;
                     foreach (ref var aoe in AOEs.AsSpan())
                         aoe.Rotation -= 22.5f.Degrees();
                 }
-                if (!AOEs.Any(aoe => aoe.Rotation.AlmostEqual(spell.Rotation - 22.5f.Degrees(), 0.1f)))
-                    ReportError($"Failed to find protean @ {spell.Rotation}");
                 break;
         }
     }
@@ -100,9 +98,9 @@ class P1CyclonicBreakAIBait(BossModule module) : BossComponent(module)
         var clockspot = _config.P1CyclonicBreakSpots[assignment];
         if (clockspot < 0 || _spreadStack == null || !_spreadStack.Active)
             return; // no assignment
-        var assignedDirection = (180 - 45 * clockspot).Degrees();
+        var assignedDirection = (180f - 45f * clockspot).Degrees();
         // TODO: think about melee vs ranged distance...
-        hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, assignedDirection, 15, -5, 1), _spreadStack.Activation);
+        hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, assignedDirection, 15f, -5f, 1f), _spreadStack.Activation);
     }
 }
 

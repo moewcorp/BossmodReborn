@@ -4,7 +4,7 @@ class RheognosisKnockback(BossModule module) : Components.Knockback(module)
 {
     private Source? _knockback;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_knockback);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

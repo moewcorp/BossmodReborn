@@ -33,7 +33,7 @@ public enum SID : uint
     Doom = 910 // Boss->player, extra=0x0
 }
 
-class Charybdis(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charybdis2), 8);
+class Charybdis(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Charybdis2), 8f);
 
 class Web(BossModule module) : BossComponent(module)
 {
@@ -41,13 +41,13 @@ class Web(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Web)
+        if (spell.Action.ID == (uint)AID.Web)
             casting = true;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Web)
+        if (spell.Action.ID == (uint)AID.Web)
             casting = false;
     }
 
@@ -59,15 +59,37 @@ class Web(BossModule module) : BossComponent(module)
 }
 
 class Plaincracker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Plaincracker), 7.2f);
-class TremblingEarth(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth), new AOEShapeDonut(10, 20));
-class TremblingEarth2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth2), new AOEShapeDonut(20, 30));
-class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4));
-class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60.Degrees()));
-class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8);
-class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6, 30));
-class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Maelstrom));
-class Meteor(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Meteor), 15);
-class MeteorVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 10, ActionID.MakeSpell(AID.Meteor), m => m.Enemies(OID.LavaVoidzone).Where(z => z.EventState != 7), 1.2f);
+class TremblingEarth(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth), new AOEShapeDonut(10f, 20f));
+class TremblingEarth2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TremblingEarth2), new AOEShapeDonut(20f, 30f));
+class ApocalypticBolt(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticBolt), new AOEShapeRect(51.2f, 4f));
+class ApocalypticRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ApocalypticRoar), new AOEShapeCone(36.2f, 60f.Degrees()));
+class TheRamsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheRamsVoice), 8f);
+class TheDragonsVoice(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TheDragonsVoice), new AOEShapeDonut(6f, 30f));
+class Maelstrom(BossModule module) : Components.PersistentVoidzone(module, 8f, GetMaelstrom)
+{
+    private static List<Actor> GetMaelstrom(BossModule module) => module.Enemies((uint)OID.Maelstrom);
+}
+class Meteor(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Meteor), 15f);
+class MeteorVoidzone(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 10f, ActionID.MakeSpell(AID.Meteor), GetVoidzones, 1.2f)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.LavaVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
+
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
 
 class Hints(BossModule module) : BossComponent(module)
 {
@@ -81,18 +103,15 @@ class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
-        var magicreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.RepellingSpray) != null);
-        var physicalreflect = Module.Enemies(OID.Boss).FirstOrDefault(x => x.FindStatus(SID.IceSpikes) != null);
-        if (magicreflect != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.RepellingSpray) != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all magic damage!");
-        if (physicalreflect != null)
+        if (Module.PrimaryActor.FindStatus((uint)SID.IceSpikes) != null)
             hints.Add($"{Module.PrimaryActor.Name} will reflect all physical damage!");
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var doomed = actor.FindStatus(SID.Doom);
-        if (doomed != null)
+        if (actor.FindStatus((uint)SID.Doom) != null)
             hints.Add("You were doomed! Cleanse it with Exuviation or finish the act fast.");
     }
 }

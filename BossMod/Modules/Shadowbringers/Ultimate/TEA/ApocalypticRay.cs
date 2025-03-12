@@ -2,24 +2,25 @@
 
 class ApocalypticRay(BossModule module, bool faceCenter) : Components.GenericAOEs(module)
 {
-    public Actor? Source { get; private set; }
+    public Actor? Source;
     private readonly bool _faceCenter = faceCenter;
     private Angle _rotation;
     private DateTime _activation;
 
-    private readonly AOEShapeCone _shape = new(25.5f, 45.Degrees()); // TODO: verify angle
+    private readonly AOEShapeCone _shape = new(25.5f, 45f.Degrees()); // TODO: verify angle
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Source != null)
-            yield return new(_shape, Source.Position, _rotation, _activation);
+            return new AOEInstance[1] { new(_shape, Source.Position, _rotation, _activation) };
+        return [];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.ApocalypticRay:
+            case (uint)AID.ApocalypticRay:
                 Source = caster;
                 if (_faceCenter)
                 {
@@ -30,11 +31,11 @@ class ApocalypticRay(BossModule module, bool faceCenter) : Components.GenericAOE
                     var target = WorldState.Actors.Find(caster.TargetID);
                     _rotation = target != null ? Angle.FromDirection(target.Position - caster.Position) : caster.Rotation; // this seems to be how it is baited
                 }
-                _activation = WorldState.FutureTime(0.6f);
+                _activation = WorldState.FutureTime(0.6d);
                 break;
-            case AID.ApocalypticRayAOE:
+            case (uint)AID.ApocalypticRayAOE:
                 ++NumCasts;
-                _activation = WorldState.FutureTime(1.1f);
+                _activation = WorldState.FutureTime(1.1d);
                 _rotation = caster.Rotation; // fix possible mistake
                 break;
         }

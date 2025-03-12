@@ -1,28 +1,29 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS8Queen;
 
-class HeavensWrathAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavensWrathVisual), new AOEShapeRect(25, 5, 25));
+class HeavensWrathAOE(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HeavensWrathVisual), new AOEShapeRect(60f, 50f));
 
 // TODO: generalize
 class HeavensWrathKnockback(BossModule module) : Components.Knockback(module)
 {
-    private readonly List<Source> _sources = [];
-    private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
+    private readonly List<Source> _sources = new(2);
+    private static readonly AOEShapeCone _shape = new(30f, 90f.Degrees());
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => _sources;
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => CollectionsMarshal.AsSpan(_sources);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavensWrathVisual)
+        if (spell.Action.ID == (uint)AID.HeavensWrathKnockback)
         {
             _sources.Clear();
-            _sources.Add(new(caster.Position, 15, Module.CastFinishAt(spell), _shape, spell.Rotation + 90.Degrees(), Kind.DirForward));
-            _sources.Add(new(caster.Position, 15, Module.CastFinishAt(spell), _shape, spell.Rotation - 90.Degrees(), Kind.DirForward));
+            var act = Module.CastFinishAt(spell);
+            _sources.Add(new(caster.Position, 15f, act, _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(caster.Position, 15f, act, _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.HeavensWrathVisual)
+        if (spell.Action.ID == (uint)AID.HeavensWrathKnockback)
         {
             _sources.Clear();
             ++NumCasts;

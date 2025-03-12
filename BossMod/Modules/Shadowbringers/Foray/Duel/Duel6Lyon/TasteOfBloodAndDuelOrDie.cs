@@ -6,29 +6,34 @@ class TasteOfBloodAndDuelOrDie(BossModule module) : Components.GenericAOEs(modul
     public readonly List<Actor> Casters = [];
     public readonly List<Actor> Duelers = [];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var caster in Casters)
+        var count = Casters.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
         {
+            var caster = Casters[i];
             // If the caster did Duel Or Die, the player must get hit by their attack.
             // This is represented by pointing the AOE behind the caster so their front is safe.
-            var angle = Duelers.Contains(caster) ? caster.Rotation + 180.Degrees() : caster.Rotation;
-            yield return new AOEInstance(_tasteOfBloodShape, caster.Position, angle);
+            var angle = Duelers.Contains(caster) ? caster.Rotation + 180f.Degrees() : caster.Rotation;
+            aoes[i] = new(_tasteOfBloodShape, WPos.ClampToGrid(caster.Position), angle);
         }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TasteOfBlood)
+        if (spell.Action.ID == (uint)AID.TasteOfBlood)
             Casters.Add(caster);
-
-        if ((AID)spell.Action.ID == AID.DuelOrDie)
+        else if (spell.Action.ID == (uint)AID.DuelOrDie)
             Duelers.Add(caster);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.TasteOfBlood)
+        if (spell.Action.ID == (uint)AID.TasteOfBlood)
         {
             Casters.Remove(caster);
             Duelers.Remove(caster);
@@ -40,7 +45,7 @@ class TasteOfBloodAndDuelOrDie(BossModule module) : Components.GenericAOEs(modul
         foreach (var caster in Casters)
         {
             var isDueler = Duelers.Contains(caster);
-            Arena.Actor(caster, isDueler ? Colors.Danger : Colors.Enemy, true);
+            Arena.Actor(caster, isDueler ? Colors.Danger : 0, true);
         }
     }
 

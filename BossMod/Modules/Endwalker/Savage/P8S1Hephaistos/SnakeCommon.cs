@@ -2,46 +2,82 @@
 
 class SnakingKick(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.SnakingKick))
 {
-    private static readonly AOEShapeCircle _shape = new(10);
+    private static readonly AOEShapeCircle _shape = new(10f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        yield return new(_shape, Module.PrimaryActor.Position);
+        return new AOEInstance[1] { new(_shape, Module.PrimaryActor.Position) };
     }
 }
 
 // snake 'priority' depends on position, CW from N: N is 0, NE is 1, and so on
 abstract class PetrifactionCommon(BossModule module) : Components.GenericGaze(module, ActionID.MakeSpell(AID.PetrifactionAOE))
 {
-    public int NumEyeCasts { get; private set; }
-    public int NumBloodCasts { get; private set; }
-    public int NumCrownCasts { get; private set; }
-    public int NumBreathCasts { get; private set; }
+    public int NumEyeCasts;
+    public int NumBloodCasts;
+    public int NumCrownCasts;
+    public int NumBreathCasts;
     protected List<(Actor caster, DateTime activation, int priority)> ActiveGorgons = [];
 
-    public override IEnumerable<Eye> ActiveEyes(int slot, Actor actor)
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
-        if (ActiveGorgons.Count > NumCasts)
+        if (ActiveGorgons.Count <= NumCasts)
+            return [];
+
+        var gorgons = ActiveGorgons;
+        var maxActivation = gorgons[NumCasts].activation.AddSeconds(1d);
+        var count = 0;
+        var countG = gorgons.Count;
+        for (var i = NumCasts; i < countG; ++i)
         {
-            var maxActivation = ActiveGorgons[NumCasts].activation.AddSeconds(1);
-            foreach (var g in ActiveGorgons.Skip(NumCasts).TakeWhile(g => g.activation < maxActivation))
-                yield return new(g.caster.Position, g.activation);
+            if (gorgons[i].activation >= maxActivation)
+                break;
+            ++count;
         }
+
+        if (count == 0)
+            return [];
+
+        var eyes = new Eye[count];
+        var index = 0;
+
+        for (var i = NumCasts; i < countG && gorgons[i].activation < maxActivation; ++i)
+        {
+            var gorgon = gorgons[i];
+            eyes[index++] = new(gorgon.caster.Position, gorgon.activation);
+        }
+        return eyes;
+    }
+
+    private static List<Actor> GetGorgons(BossModule module)
+    {
+        var gorgons = module.Enemies((uint)OID.Gorgon);
+        var count = gorgons.Count;
+        var filtered = new List<Actor>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var gorgon = gorgons[i];
+            if (!gorgon.IsDead)
+                filtered.Add(gorgon);
+        }
+        return filtered;
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var g in Module.Enemies(OID.Gorgon).Where(g => !g.IsDead))
-            Arena.Actor(g, Colors.Enemy, true);
+        var gorgons = GetGorgons(Module);
+        var count = gorgons.Count;
+        for (var i = 0; i < count; ++i)
+            Arena.Actor(gorgons[i], allowDeadAndUntargetable: true);
         base.DrawArenaForeground(pcSlot, pc);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Petrifaction)
+        if (spell.Action.ID == (uint)AID.Petrifaction)
         {
             var dir = Angle.FromDirection(caster.Position - Module.Center);
-            var priority = (int)MathF.Round((180 - dir.Deg) / 45) % 8;
+            var priority = (int)MathF.Round((180f - dir.Deg) / 45f) % 8;
             ActiveGorgons.Add((caster, Module.CastFinishAt(spell, 1.1f), priority));
         }
     }
@@ -49,23 +85,23 @@ abstract class PetrifactionCommon(BossModule module) : Components.GenericGaze(mo
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.EyeOfTheGorgon:
+            case (uint)AID.EyeOfTheGorgon:
                 ++NumEyeCasts;
                 break;
-            case AID.BloodOfTheGorgon:
+            case (uint)AID.BloodOfTheGorgon:
                 ++NumBloodCasts;
                 break;
-            case AID.CrownOfTheGorgon:
+            case (uint)AID.CrownOfTheGorgon:
                 ++NumCrownCasts;
                 break;
-            case AID.BreathOfTheGorgon:
+            case (uint)AID.BreathOfTheGorgon:
                 ++NumBreathCasts;
                 break;
         }
     }
 
-    public void DrawPetrify(Actor source, bool delayed) => Arena.AddCone(source.Position, 25, source.Rotation, 45.Degrees(), delayed ? Colors.Safe : Colors.Danger);
-    public void DrawExplode(Actor source, bool delayed) => Arena.AddCircle(source.Position, 5, delayed ? Colors.Safe : Colors.Danger);
+    public void DrawPetrify(Actor source, bool delayed) => Arena.AddCone(source.Position, 25f, source.Rotation, 45f.Degrees(), delayed ? Colors.Safe : 0);
+    public void DrawExplode(Actor source, bool delayed) => Arena.AddCircle(source.Position, 5f, delayed ? Colors.Safe : 0);
 }

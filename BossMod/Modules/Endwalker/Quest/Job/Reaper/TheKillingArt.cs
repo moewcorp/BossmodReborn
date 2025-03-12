@@ -45,7 +45,7 @@ class CarnemLevareDonut(BossModule module) : Components.GenericAOEs(module)
     private static readonly Angle a90 = 90.Degrees();
     private static readonly AOEShapeDonutSector[] sectors = [new(12, 17, a90), new(2, 7, a90), new(17, 22, a90), new(7, 12, a90)];
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)

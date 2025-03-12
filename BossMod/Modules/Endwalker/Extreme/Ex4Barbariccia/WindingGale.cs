@@ -5,12 +5,20 @@ class WindingGale(BossModule module) : Components.GenericAOEs(module, ActionID.M
 {
     private readonly List<Actor> _casters = [];
 
-    private static readonly AOEShapeDonutSector _shape = new(9, 11, 90.Degrees());
+    private static readonly AOEShapeDonutSector _shape = new(9f, 11f, 90f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var c in _casters)
-            yield return new(_shape, c.Position + _shape.OuterRadius * c.Rotation.ToDirection(), c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
+        var count = _casters.Count;
+        if (count == 0)
+            return [];
+        var aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = _casters[i];
+            aoes[i] = new(_shape, c.Position + _shape.OuterRadius * c.Rotation.ToDirection(), c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo));
+        }
+        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

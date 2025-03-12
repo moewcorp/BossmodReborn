@@ -23,26 +23,28 @@ class InhaleGoobbuesGrief(BossModule module) : Components.GenericAOEs(module)
     private bool _showGrief;
     private DateTime _griefActivation;
 
-    private static readonly AOEShapeCone _shapeInhale = new(22.85f, 45.Degrees());
+    private static readonly AOEShapeCone _shapeInhale = new(22.85f, 45f.Degrees());
     private static readonly AOEShapeCircle _shapeGrief = new(8.85f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
+        var aoes = new List<AOEInstance>(2);
         if (_showInhale)
-            yield return new(_shapeInhale, Module.PrimaryActor.Position, Module.PrimaryActor.CastInfo!.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+            aoes.Add(new(_shapeInhale, Module.PrimaryActor.CastInfo!.LocXZ, Module.PrimaryActor.CastInfo.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo)));
         if (_showGrief)
-            yield return new(_shapeGrief, Module.PrimaryActor.Position, new(), _griefActivation);
+            aoes.Add(new(_shapeGrief, Module.PrimaryActor.Position, new(), _griefActivation));
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Inhale:
+            case (uint)AID.Inhale:
                 _showInhale = _showGrief = true;
                 _griefActivation = Module.CastFinishAt(spell, 1.1f);
                 break;
-            case AID.GoobbuesGrief:
+            case (uint)AID.GoobbuesGrief:
                 _griefActivation = Module.CastFinishAt(spell);
                 break;
         }
@@ -50,19 +52,19 @@ class InhaleGoobbuesGrief(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.Inhale:
+            case (uint)AID.Inhale:
                 _showInhale = false;
                 break;
-            case AID.GoobbuesGrief:
+            case (uint)AID.GoobbuesGrief:
                 _showGrief = false;
                 break;
         }
     }
 }
 
-class MoldyPhlegm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoldyPhlegm), 6);
+class MoldyPhlegm(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MoldyPhlegm), 6f);
 
 class D151KeeperOfHalidomStates : StateMachineBuilder
 {
@@ -76,4 +78,4 @@ class D151KeeperOfHalidomStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1548)]
-public class D151KeeperOfHalidom(WorldState ws, Actor primary) : BossModule(ws, primary, new(125, 108), new ArenaBoundsSquare(20));
+public class D151KeeperOfHalidom(WorldState ws, Actor primary) : BossModule(ws, primary, new(125f, 108f), new ArenaBoundsSquare(20f));

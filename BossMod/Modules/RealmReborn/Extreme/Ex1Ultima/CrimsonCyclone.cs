@@ -7,12 +7,13 @@ class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionI
 
     public bool Active => _ifrit != null;
 
-    private static readonly AOEShapeRect _shape = new(43, 6, 5);
+    private static readonly AOEShapeRect _shape = new(43f, 6f, 5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_ifrit != null)
-            yield return new(_shape, _ifrit.Position, _ifrit.Rotation, _resolve);
+            return new AOEInstance[1] { new(_shape, _ifrit.Position, _ifrit.Rotation, _resolve) };
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -32,10 +33,10 @@ class CrimsonCyclone(BossModule module) : Components.GenericAOEs(module, ActionI
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID == OID.UltimaIfrit && id == 0x008D)
+        if (actor.OID == (uint)OID.UltimaIfrit && id == 0x008D)
         {
             _ifrit = actor;
-            _resolve = WorldState.FutureTime(5);
+            _resolve = WorldState.FutureTime(5d);
         }
     }
 }

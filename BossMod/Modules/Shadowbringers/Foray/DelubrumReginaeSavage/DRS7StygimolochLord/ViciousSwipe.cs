@@ -4,12 +4,12 @@ class ViciousSwipe(BossModule module) : Components.Knockback(module, ActionID.Ma
 {
     private Source? _source = new(module.PrimaryActor.Position, 15, module.WorldState.FutureTime(module.StateMachine.ActiveState?.Duration ?? 0), _shape);
 
-    private static readonly AOEShapeCircle _shape = new(8);
+    private static readonly AOEShapeCircle _shape = new(8f);
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor) => Utils.ZeroOrOne(_source);
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor) => Utils.ZeroOrOne(ref _source);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.AddCircle(Module.PrimaryActor.Position, _shape.Radius, Colors.Danger);
+        Arena.AddCircle(Module.PrimaryActor.Position, _shape.Radius);
     }
 }

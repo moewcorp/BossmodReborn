@@ -91,7 +91,8 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
 
     public bool IsStackTarget(Actor? actor)
     {
-        for (var i = 0; i < Stacks.Count; ++i)
+        var count = Stacks.Count;
+        for (var i = 0; i < count; ++i)
         {
             if (Stacks[i].Target == actor)
                 return true;
@@ -101,7 +102,8 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
 
     public bool IsSpreadTarget(Actor? actor)
     {
-        for (var i = 0; i < Spreads.Count; ++i)
+        var count = Spreads.Count;
+        for (var i = 0; i < count; ++i)
         {
             if (Spreads[i].Target == actor)
                 return true;
@@ -283,8 +285,8 @@ public class CastStackSpread(BossModule module, ActionID stackAID, ActionID spre
 {
     public readonly ActionID StackAction = stackAID;
     public readonly ActionID SpreadAction = spreadAID;
-    public int NumFinishedStacks { get; protected set; }
-    public int NumFinishedSpreads { get; protected set; }
+    public int NumFinishedStacks;
+    public int NumFinishedSpreads;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

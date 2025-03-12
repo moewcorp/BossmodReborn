@@ -6,7 +6,7 @@ class VolcanicDrop(BossModule module) : Components.GenericAOEs(module, ActionID.
 
     private static readonly AOEShapeCircle _shape = new(20);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnEventEnvControl(byte index, uint state)
     {

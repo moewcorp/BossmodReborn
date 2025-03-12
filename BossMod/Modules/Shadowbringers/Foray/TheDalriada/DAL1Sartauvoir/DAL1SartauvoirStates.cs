@@ -7,7 +7,6 @@ class DAL1SartauvoirStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<PyrokinesisAOE>()
             .ActivateOnEnter<TimeEruption>()
-            .ActivateOnEnter<ReverseTimeEruption>()
             .ActivateOnEnter<ThermalGustAOE>()
             .ActivateOnEnter<GrandCrossflameAOE>()
             .ActivateOnEnter<Flamedive>()

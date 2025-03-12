@@ -6,13 +6,35 @@ class DarkMatter(BossModule module) : Components.GenericBaitAway(module, centerA
 
     private static readonly AOEShapeCircle _shape = new(8);
 
-    public int RemainingCasts => _remainingCasts.Count > 0 ? _remainingCasts.Min() : 0;
+    public int RemainingCasts
+    {
+        get
+        {
+            if (_remainingCasts.Count > 0)
+            {
+                var minValue = _remainingCasts[0];
+                var count = _remainingCasts.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var value = _remainingCasts[i];
+                    if (value < minValue)
+                        minValue = value;
+                }
+                return minValue;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
 
     public override void Update()
     {
         for (var i = CurrentBaits.Count - 1; i >= 0; --i)
         {
-            if (CurrentBaits[i].Target.IsDestroyed || CurrentBaits[i].Target.IsDead)
+            var bait = CurrentBaits[i].Target;
+            if (bait.IsDestroyed || bait.IsDead)
             {
                 CurrentBaits.RemoveAt(i);
                 _remainingCasts.RemoveAt(i);
@@ -31,43 +53,47 @@ class DarkMatter(BossModule module) : Components.GenericBaitAway(module, centerA
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.DarkMatterAOE)
+        if (spell.Action.ID == (uint)AID.DarkMatterAOE)
         {
             ++NumCasts;
-            var index = CurrentBaits.FindIndex(b => b.Target.InstanceID == spell.MainTargetID);
-            if (index >= 0)
+            var count = CurrentBaits.Count;
+            for (var i = 0; i < count; ++i)
             {
-                --_remainingCasts[index];
+                if (CurrentBaits[i].Target.InstanceID == spell.MainTargetID)
+                {
+                    --_remainingCasts[i];
+                    return;
+                }
             }
         }
     }
 }
 
-class ForkedLightningDarkBeckons(BossModule module) : Components.UniformStackSpread(module, 6, 5, 4, alwaysShowSpreads: true)
+class ForkedLightningDarkBeckons(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, alwaysShowSpreads: true)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.ForkedLightning)
+        if (status.ID == (uint)SID.ForkedLightning)
             AddSpread(actor, status.ExpireAt);
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        switch ((IconID)iconID)
+        switch (iconID)
         {
-            case IconID.DarkBeckonsUmbralRays:
-                AddStack(actor, WorldState.FutureTime(5.1f));
+            case (uint)IconID.DarkBeckonsUmbralRays:
+                AddStack(actor, WorldState.FutureTime(5.1d));
                 break;
-            case IconID.DarkMatter:
+            case (uint)IconID.DarkMatter:
                 foreach (ref var s in Stacks.AsSpan())
-                    s.ForbiddenPlayers.Set(Raid.FindSlot(actor.InstanceID));
+                    s.ForbiddenPlayers[Raid.FindSlot(actor.InstanceID)] = true;
                 break;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.ForkedLightning or AID.DarkBeckons)
+        if (spell.Action.ID is (uint)AID.ForkedLightning or (uint)AID.DarkBeckons)
         {
             Spreads.Clear();
             Stacks.Clear();

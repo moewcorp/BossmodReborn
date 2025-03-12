@@ -46,7 +46,7 @@ class Fetters(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        var fetters = chaintarget?.FindStatus(SID.Fetters) != null;
+        var fetters = chaintarget?.FindStatus((uint)SID.Fetters) != null;
         if (fetters)
             chainsactive = true;
         if (fetters && !chained)
@@ -68,21 +68,28 @@ class Fetters(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (chained && actor != chaintarget)
-            foreach (var e in hints.PotentialTargets)
-                e.Priority = (OID)e.Actor.OID switch
+        {
+            var count = hints.PotentialTargets.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var e = hints.PotentialTargets[i];
+                e.Priority = e.Actor.OID switch
                 {
-                    OID.TheSablePrice => 1,
-                    OID.Boss => -1,
+                    (uint)OID.TheSablePrice => 1,
+                    (uint)OID.Boss => -1,
                     _ => 0
                 };
-        var fetters = Module.Enemies(OID.TheSablePrice).FirstOrDefault();
-        if (fetters != null && !fetters.IsDead)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(fetters.Position, fetters.HitboxRadius + 3));
+            }
+        }
+        var fetters = Module.Enemies((uint)OID.TheSablePrice);
+        var fetter = fetters.Count != 0 ? fetters[0] : null;
+        if (fetter != null && !fetter.IsDead)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(fetter.Position, fetter.HitboxRadius + 3));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SableWeave)
+        if (spell.Action.ID == (uint)AID.SableWeave)
         {
             chaintarget = WorldState.Actors.Find(spell.TargetID)!;
             casting = true;
@@ -91,22 +98,22 @@ class Fetters(BossModule module) : BossComponent(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.SableWeave)
+        if (spell.Action.ID == (uint)AID.SableWeave)
             casting = false;
     }
 }
 
 class DeafeningBellow(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.DeafeningBellow));
 
-class HotTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotTail), new AOEShapeRect(68, 8));
-class HotWing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotWing), new AOEShapeRect(30, 34));
-class Cauterize(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(80, 11));
-class HorridRoarSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HorridRoarSpread), 6);
-class HorridRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HorridRoar), 6);
-class HorridBlaze(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HorridBlaze), 6, 4, 4);
+class HotTail(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotTail), new AOEShapeRect(68f, 8f));
+class HotWing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HotWing), new AOEShapeRect(30f, 34f));
+class Cauterize(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Cauterize), new AOEShapeRect(80f, 11f));
+class HorridRoarSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.HorridRoarSpread), 6f);
+class HorridRoar(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HorridRoar), 6f);
+class HorridBlaze(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.HorridBlaze), 6f, 4, 4);
 class Massacre(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Massacre));
 class TheScarletPrice(BossModule module) : Components.SingleTargetDelayableCast(module, ActionID.MakeSpell(AID.TheScarletPrice));
-class Roast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Roast), new AOEShapeRect(30, 4));
+class Roast(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Roast), new AOEShapeRect(30f, 4f));
 
 class D033NidhoggStates : StateMachineBuilder
 {
@@ -135,20 +142,21 @@ public class D033Nidhogg(WorldState ws, Actor primary) : BossModule(ws, primary,
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Liegedrake));
-        Arena.Actors(Enemies(OID.Ahleh));
-        Arena.Actors(Enemies(OID.TheSablePrice), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.Liegedrake));
+        Arena.Actors(Enemies((uint)OID.Ahleh));
+        Arena.Actors(Enemies((uint)OID.TheSablePrice), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.TheSablePrice => 2,
-                OID.Ahleh or OID.Liegedrake => 1,
+                (uint)OID.TheSablePrice => 2,
+                (uint)OID.Ahleh or (uint)OID.Liegedrake => 1,
                 _ => 0
             };
         }

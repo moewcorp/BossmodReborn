@@ -41,14 +41,14 @@ class P6WaveCannonProteans(BossModule module) : Components.GenericBaitAway(modul
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.P6WaveCannonProtean)
+        if (spell.Action.ID == (uint)AID.P6WaveCannonProtean)
             foreach (var p in Raid.WithoutSlot(true, true, true))
                 CurrentBaits.Add(new(caster, p, _shape));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.P6WaveCannonProteanAOE)
+        if (spell.Action.ID == (uint)AID.P6WaveCannonProteanAOE)
         {
             ++NumCasts;
             if (spell.Targets.Count == 1)
@@ -57,11 +57,11 @@ class P6WaveCannonProteans(BossModule module) : Components.GenericBaitAway(modul
     }
 }
 
-class P6WaveCannonWildCharge(BossModule module) : Components.GenericWildCharge(module, 4, ActionID.MakeSpell(AID.P6WaveCannonWildCharge), 100)
+class P6WaveCannonWildCharge(BossModule module) : Components.GenericWildCharge(module, 4f, ActionID.MakeSpell(AID.P6WaveCannonWildCharge), 100)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.P6WaveCannonProtean)
+        if (spell.Action.ID == (uint)AID.P6WaveCannonProtean)
         {
             Source = caster;
             // TODO: find out how it selects target...

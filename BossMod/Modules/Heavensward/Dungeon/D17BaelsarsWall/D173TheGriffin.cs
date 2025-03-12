@@ -95,10 +95,10 @@ class RestraintCollar(BossModule module) : BossComponent(module)
 class BigBoot(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID.BigBoot), true, stopAtWall: true)
 {
     private Actor? _target;
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         if (_target != null && _target == actor)
-            return [new(Module.PrimaryActor.Position, 15f)];
+            return new Source[1] { new(Module.PrimaryActor.Position, 15f) };
         return [];
     }
 
@@ -120,16 +120,16 @@ class Corrosion(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCircle circle = new(9f);
     private readonly List<AOEInstance> _aoes = new(9);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var blades = Module.Enemies(OID.BladeOfTheGriffin);
+        var blades = Module.Enemies((uint)OID.BladeOfTheGriffin);
         var countB = blades.Count;
         if (countB == 0)
             return [];
         for (var i = 0; i < countB; ++i)
         {
             if (blades[i].IsDead)
-                return _aoes;
+                return CollectionsMarshal.AsSpan(_aoes);
         }
 
         return [];

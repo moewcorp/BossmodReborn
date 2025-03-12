@@ -7,10 +7,24 @@ class WickedStep(BossModule module) : Components.Knockback(module, ignoreImmunes
     private const float _towerRadius = 4;
     private const float _knockbackRadius = 36;
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
-        foreach (var s in _towers.Where(s => s?.Position.InCircle(actor.Position, _towerRadius) ?? false))
-            yield return new(s!.Position, _knockbackRadius, Module.CastFinishAt(s!.CastInfo));
+        var len = _towers.Length;
+        if (len == 0)
+            return [];
+
+        var sources = new List<Source>();
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var s = ref _towers[i];
+            if (s != null && s.Position.InCircle(actor.Position, _towerRadius))
+            {
+                sources.Add(new(s.Position, _knockbackRadius, Module.CastFinishAt(s.CastInfo)));
+            }
+        }
+
+        return CollectionsMarshal.AsSpan(sources);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -26,9 +40,15 @@ class WickedStep(BossModule module) : Components.Knockback(module, ignoreImmunes
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        foreach (var t in _towers)
+        var len = _towers.Length;
+        if (len == 0)
+            return;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var t = ref _towers[i];
             if (t != null)
                 Components.GenericTowers.DrawTower(Arena, t.Position, _towerRadius, pc.Role == Role.Tank);
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -48,10 +68,10 @@ class WickedStep(BossModule module) : Components.Knockback(module, ignoreImmunes
         }
     }
 
-    private int ActionToIndex(ActionID aid) => (AID)aid.ID switch
+    private static int ActionToIndex(ActionID aid) => aid.ID switch
     {
-        AID.WickedStepAOE1 => 0,
-        AID.WickedStepAOE2 => 1,
+        (uint)AID.WickedStepAOE1 => 0,
+        (uint)AID.WickedStepAOE2 => 1,
         _ => -1
     };
 }

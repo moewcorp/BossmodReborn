@@ -13,9 +13,9 @@ class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebuffs(mod
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.FateCalibrationBeta:
+            case (uint)SID.FateCalibrationBeta:
                 var fcbSlot = _proj?.ProjectionOwner(actor.InstanceID) ?? -1;
                 if (fcbSlot >= 0)
                 {
@@ -27,10 +27,10 @@ class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebuffs(mod
                     };
                 }
                 break;
-            case SID.ContactProhibitionOrdained:
-            case SID.ContactRegulationOrdained:
-            case SID.EscapeProhibitionOrdained:
-            case SID.EscapeDetectionOrdained:
+            case (uint)SID.ContactProhibitionOrdained:
+            case (uint)SID.ContactRegulationOrdained:
+            case (uint)SID.EscapeProhibitionOrdained:
+            case (uint)SID.EscapeDetectionOrdained:
                 Done = true;
                 break;
         }
@@ -38,13 +38,13 @@ class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebuffs(mod
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        switch ((TetherID)tether.ID)
+        switch (tether.ID)
         {
-            case TetherID.RestrainingOrder:
+            case (uint)TetherID.RestrainingOrder:
                 _farTethers[0] = _proj?.ProjectionOwner(source.InstanceID) ?? -1;
                 _farTethers[1] = _proj?.ProjectionOwner(tether.Target) ?? -1;
                 break;
-            case TetherID.HouseArrest:
+            case (uint)TetherID.HouseArrest:
                 _nearTethers[0] = _proj?.ProjectionOwner(source.InstanceID) ?? -1;
                 _nearTethers[1] = _proj?.ProjectionOwner(tether.Target) ?? -1;
                 break;
@@ -53,15 +53,15 @@ class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebuffs(mod
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FateCalibrationAlphaSharedSentence:
+            case (uint)AID.FateCalibrationAlphaSharedSentence:
                 _sharedSentence = _proj?.ProjectionOwner(spell.MainTargetID) ?? -1;
                 // note: at this point, we can distinguish light beacon vs light untethered (shared sentence hits untethered), but not darks
                 InitColor(Color.Light, GuessLightBeacon());
                 break;
-            case AID.FateCalibrationBetaKillBeaconSpread:
-            case AID.FateCalibrationBetaKillBeaconStack:
+            case (uint)AID.FateCalibrationBetaKillBeaconSpread:
+            case (uint)AID.FateCalibrationBetaKillBeaconStack:
                 // these are always cast at two beacons
                 var slot = _proj?.ProjectionOwner(spell.MainTargetID) ?? -1;
                 if (slot >= 0)
@@ -134,12 +134,12 @@ class P4FateCalibrationBetaJJump(BossModule module) : Components.GenericBaitAway
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FateCalibrationBetaJump:
+            case (uint)AID.FateCalibrationBetaJump:
                 _jumpers.Add(caster);
                 break;
-            case AID.FateCalibrationBetaJJump:
+            case (uint)AID.FateCalibrationBetaJJump:
                 ++NumCasts;
                 _jumpers.Remove(caster);
                 break;
@@ -147,11 +147,11 @@ class P4FateCalibrationBetaJJump(BossModule module) : Components.GenericBaitAway
     }
 }
 
-class P4FateCalibrationBetaOpticalSight(BossModule module) : Components.UniformStackSpread(module, 6, 6, 4)
+class P4FateCalibrationBetaOpticalSight(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 4)
 {
     private enum Mechanic { Unknown, Stack, Spread }
 
-    public bool Done { get; private set; }
+    public bool Done;
     private Mechanic _mechanic;
     private readonly List<Actor> _stackTargets = [];
 
@@ -160,10 +160,10 @@ class P4FateCalibrationBetaOpticalSight(BossModule module) : Components.UniformS
         switch (_mechanic)
         {
             case Mechanic.Stack:
-                AddStacks(_stackTargets, WorldState.FutureTime(6.1f));
+                AddStacks(_stackTargets, WorldState.FutureTime(6.1d));
                 break;
             case Mechanic.Spread:
-                AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(6.1f));
+                AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(6.1d));
                 break;
         }
     }
@@ -176,22 +176,22 @@ class P4FateCalibrationBetaOpticalSight(BossModule module) : Components.UniformS
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FateCalibrationBetaKillBeaconSpread:
+            case (uint)AID.FateCalibrationBetaKillBeaconSpread:
                 _mechanic = Mechanic.Spread;
                 break;
-            case AID.FateCalibrationBetaKillBeaconStack:
+            case (uint)AID.FateCalibrationBetaKillBeaconStack:
                 _mechanic = Mechanic.Stack;
                 var target = Raid[Module.FindComponent<P4FateProjection>()?.ProjectionOwner(spell.MainTargetID) ?? -1];
                 if (target != null)
                     _stackTargets.Add(target);
                 break;
-            case AID.IndividualReprobation:
+            case (uint)AID.IndividualReprobation:
                 Spreads.RemoveAll(s => s.Target.InstanceID == spell.MainTargetID);
                 Done = true;
                 break;
-            case AID.CollectiveReprobation:
+            case (uint)AID.CollectiveReprobation:
                 Stacks.RemoveAll(s => s.Target.InstanceID == spell.MainTargetID);
                 Done = true;
                 break;
@@ -204,24 +204,25 @@ class P4FateCalibrationBetaRadiantSacrament(BossModule module) : Components.Gene
     private Actor? _caster;
     private bool _enabled;
 
-    private static readonly AOEShapeDonut _shape = new(8, 60);
+    private static readonly AOEShapeDonut _shape = new(8f, 60f);
 
     public void Show() => _enabled = true;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_enabled && _caster != null)
-            yield return new(_shape, _caster.Position);
+            return new AOEInstance[1] { new(_shape, _caster.Position) };
+        return [];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.FateCalibrationBetaDonut:
+            case (uint)AID.FateCalibrationBetaDonut:
                 _caster = caster;
                 break;
-            case AID.FateCalibrationBetaRadiantSacrament:
+            case (uint)AID.FateCalibrationBetaRadiantSacrament:
                 ++NumCasts;
                 _caster = null;
                 break;

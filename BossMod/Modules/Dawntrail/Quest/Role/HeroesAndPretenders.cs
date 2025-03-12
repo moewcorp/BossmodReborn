@@ -41,14 +41,7 @@ class FledglingFury(BossModule module) : Components.SimpleAOEs(module, ActionID.
 class PromisedFall(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PromisedFall), 13f);
 class GoldDust(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.GoldDust), 8f, 2, 2);
 class AcidRain(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.AcidRain), 8f);
-class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.UnboundArrow), new AOEShapeCircle(5f), true)
-{
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("Tankbuster cleave");
-    }
-}
+class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.UnboundArrow), new AOEShapeCircle(5f), true, tankbuster: true);
 
 class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4f)
 {

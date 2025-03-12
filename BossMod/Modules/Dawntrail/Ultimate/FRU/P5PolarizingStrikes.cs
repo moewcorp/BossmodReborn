@@ -11,7 +11,7 @@ class P5PolarizingStrikes(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly AOEShapeRect _shape = new(100, 3);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void Update()
     {

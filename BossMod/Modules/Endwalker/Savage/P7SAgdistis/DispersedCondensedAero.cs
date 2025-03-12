@@ -59,13 +59,13 @@ class DispersedCondensedAero(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.CondensedAero)
+        if (spell.Action.ID == (uint)AID.CondensedAero)
             _condensed = true;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.CondensedAeroAOE or AID.DispersedAeroAOE)
+        if (spell.Action.ID is (uint)AID.CondensedAeroAOE or (uint)AID.DispersedAeroAOE)
             Done = true;
     }
 }

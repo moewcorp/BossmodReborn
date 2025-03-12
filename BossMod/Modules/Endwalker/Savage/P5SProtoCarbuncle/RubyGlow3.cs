@@ -6,7 +6,7 @@ class RubyGlow3(BossModule module) : RubyGlowCommon(module, ActionID.MakeSpell(A
 {
     private readonly BitMask[] _aoeQuadrants = new BitMask[4]; // [i] = danger quardants at explosion #i, bits: 0=NW, 1=NE, 2=SW, 3=SE
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var aoeQuadrants = NumCasts switch
         {
@@ -17,8 +17,12 @@ class RubyGlow3(BossModule module) : RubyGlowCommon(module, ActionID.MakeSpell(A
             _ => new BitMask()
         };
         // TODO: correct explosion time
-        foreach (var q in aoeQuadrants.SetBits())
-            yield return new(ShapeQuadrant, QuadrantCenter(q));
+        var quadrants = aoeQuadrants.SetBits();
+        var len = quadrants.Length;
+        var aoes = new AOEInstance[len];
+        for (var i = 0; i < len; ++i)
+            aoes[i] = new(ShapeQuadrant, QuadrantCenter(quadrants[i]));
+        return aoes;
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -36,16 +40,16 @@ class RubyGlow3(BossModule module) : RubyGlowCommon(module, ActionID.MakeSpell(A
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var order = (AID)spell.Action.ID switch
+        var order = spell.Action.ID switch
         {
-            AID.TopazClusterHit1 => 0,
-            AID.TopazClusterHit2 => 1,
-            AID.TopazClusterHit3 => 2,
-            AID.TopazClusterHit4 => 3,
+            (uint)AID.TopazClusterHit1 => 0,
+            (uint)AID.TopazClusterHit2 => 1,
+            (uint)AID.TopazClusterHit3 => 2,
+            (uint)AID.TopazClusterHit4 => 3,
             _ => -1
         };
 
         if (order >= 0)
-            _aoeQuadrants[order].Set(QuadrantForPosition(caster.Position));
+            _aoeQuadrants[order][QuadrantForPosition(caster.Position)] = true;
     }
 }

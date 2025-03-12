@@ -43,79 +43,92 @@ public enum TetherID : uint
 
 class Gurgle(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(60, 5);
+    private static readonly AOEShapeRect rect = new(60f, 5f);
     private readonly List<AOEInstance> _aoes = new(3);
-    private static readonly Dictionary<byte, WPos> aoePositions = new()
-    {
-        { 0x13, new(-20, -165) },
-        { 0x14, new(-20, -155) },
-        { 0x15, new(-20, -145) },
-        { 0x16, new(-20, -135) },
-        { 0x17, new(20, -165) },
-        { 0x18, new(20, -155) },
-        { 0x19, new(20, -145) },
-        { 0x1A, new(20, -135) }
-    };
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && aoePositions.TryGetValue(index, out var value))
-            _aoes.Add(new(rect, value, index < 0x17 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], WorldState.FutureTime(9)));
+        if (state == 0x00020001 && index is > 0x12 and < 0x1B)
+        {
+            var posX = index < 0x17 ? -20f : 20f;
+            var posZ = posX == -20f ? -165 + (index - 0x13) * 10f : -165f + (index - 0x17) * 10f;
+            var rot = posX == -20f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
+            _aoes.Add(new(rect, WPos.ClampToGrid(new(posX, posZ)), rot, WorldState.FutureTime(9d)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Gurgle)
+        if (spell.Action.ID == (uint)AID.Gurgle)
             _aoes.Clear();
     }
 }
 
-class Crack(BossModule module) : Components.GenericBaitAway(module)
+class Crack(BossModule module) : Components.GenericBaitAway(module, tankbuster: true)
 {
-    private static readonly AOEShapeRect rect = new(80, 1.5f);
+    private static readonly AOEShapeRect rect = new(80f, 1.5f);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Tankbuster)
-            CurrentBaits.Add(new(source, WorldState.Actors.Find(tether.Target)!, rect, WorldState.FutureTime(5.4f)));
+            CurrentBaits.Add(new(source, WorldState.Actors.Find(tether.Target)!, rect, WorldState.FutureTime(5.4d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Crack)
-            CurrentBaits.RemoveAll(x => x.Source == caster);
-    }
-
-    public override void AddGlobalHints(GlobalHints hints)
-    {
-        if (CurrentBaits.Count != 0)
-            hints.Add("4x Tankbuster cleave");
+        if (spell.Action.ID == (uint)AID.Crack)
+        {
+            var count = CurrentBaits.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (CurrentBaits[i].Source == caster)
+                {
+                    CurrentBaits.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 
 class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCircle circle = new(6);
+    private static readonly AOEShapeCircle circle = new(6f);
     private readonly List<AOEInstance> _aoes = new(5);
     private bool active;
-    private const string RiskHint = "Go to correct geyser!";
-    private const string StayHint = "Wait for erruption!";
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count != 0 && Arena.Bounds == D122Nixie.DefaultArena)
         {
-            var closestGeysir = _aoes.MinBy(a => (a.Origin - D122Nixie.CloudCenter).LengthSq());
+            AOEInstance? closestGeysir = null;
+            if (active)
+            {
+                var minDistanceSq = float.MaxValue;
+                for (var i = 0; i < count; ++i)
+                {
+                    var aoe = _aoes[i];
+                    var distanceSq = (aoe.Origin - D122Nixie.CloudCenter).LengthSq();
+                    if (distanceSq < minDistanceSq)
+                    {
+                        minDistanceSq = distanceSq;
+                        closestGeysir = aoe;
+                    }
+                }
+            }
+            var aoes = new AOEInstance[count];
             for (var i = 0; i < count; ++i)
             {
                 var a = _aoes[i];
-                var safeGeysir = active && a == closestGeysir;
-                yield return a with { Shape = safeGeysir ? circle with { InvertForbiddenZone = true } : circle, Color = safeGeysir ? Colors.SafeFromAOE : Colors.AOE };
+                var safeGeysir = closestGeysir != null;
+                aoes[i] = a with { Shape = safeGeysir ? circle with { InvertForbiddenZone = true } : circle, Color = safeGeysir ? Colors.SafeFromAOE : 0 };
             }
+            return aoes;
         }
+        return [];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -131,14 +144,25 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID == OID.Geyser)
-            _aoes.Add(new(circle, actor.Position, default, WorldState.FutureTime(3.9f)));
+        if (actor.OID == (uint)OID.Geyser)
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.9d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.Sploosh)
-            _aoes.RemoveAll(x => x.Origin == caster.Position);
+        if (spell.Action.ID == (uint)AID.Sploosh)
+        {
+            var count = _aoes.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin.AlmostEqual(pos, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
@@ -159,20 +183,29 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var activeSafespot = ActiveAOEs(slot, actor).Where(c => c.Color == Colors.SafeFromAOE).ToList();
-        if (activeSafespot.Count != 0)
+        if (active)
         {
-            if (!activeSafespot.Any(c => c.Check(actor.Position)))
-                hints.Add(RiskHint);
-            else
-                hints.Add(StayHint, false);
+            var aoes = ActiveAOEs(slot, actor);
+            var len = aoes.Length;
+            var isRisky = true;
+            var color = Colors.SafeFromAOE;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Color == color && aoe.Check(actor.Position))
+                {
+                    isRisky = false;
+                    break;
+                }
+            }
+            hints.Add("Go to correct geyser and wait for erruption!", isRisky);
         }
         else
             base.AddHints(slot, actor, hints);
     }
 }
 
-class Sputter(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Sputter), 6);
+class Sputter(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Sputter), 6f);
 
 class D122NixieStates : StateMachineBuilder
 {
@@ -189,14 +222,14 @@ class D122NixieStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 746, NameID = 9738)]
 public class D122Nixie(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
 {
-    public static readonly WPos ArenaCenter = new(0, -150);
-    public static readonly WPos CloudCenter = new(0, -175);
+    public static readonly WPos ArenaCenter = new(default, -150f);
+    public static readonly WPos CloudCenter = new(default, -175f);
     public static readonly ArenaBoundsRect Cloud = new(9.5f, 5.5f);
     public static readonly ArenaBoundsSquare DefaultArena = new(19.5f);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.UnfinishedNixie));
+        Arena.Actors(Enemies((uint)OID.UnfinishedNixie));
     }
 }

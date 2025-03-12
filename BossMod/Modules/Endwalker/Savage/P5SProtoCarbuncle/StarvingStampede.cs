@@ -2,26 +2,32 @@
 
 class StarvingStampede(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.StarvingStampede))
 {
-    private readonly List<WPos> _positions = [];
+    private readonly List<AOEInstance> _aoes = [];
+    private static readonly AOEShape _shape = new AOEShapeCircle(12f);
 
-    private static readonly AOEShape _shape = new AOEShapeCircle(12);
-
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        // TODO: timings...
-        return _positions.Skip(NumCasts).Take(3).Select(p => new AOEInstance(_shape, p));
+        var count = _aoes.Count;
+        if (count == 0)
+            return [];
+        var max = count > 3 ? 3 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        switch ((AID)spell.Action.ID)
+        if (spell.Action.ID == (uint)AID.JawsTeleport)
         {
-            case AID.JawsTeleport:
-                if (_positions.Count == 0)
-                    _positions.Add(caster.Position);
-                _positions.Add(new(spell.TargetPos.XZ()));
-                break;
+            if (_aoes.Count == 0)
+                _aoes.Add(new(_shape, caster.Position));
+            _aoes.Add(new(_shape, spell.TargetXZ));
         }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (_aoes.Count != 0 && spell.Action == WatchedAction)
+            _aoes.RemoveAt(0);
     }
 }

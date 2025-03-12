@@ -72,19 +72,19 @@ class ScaldingScolding(BossModule module) : Components.Cleave(module, ActionID.M
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Count == 0)
+        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Length == 0)
             base.AddHints(slot, actor, hints);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Count == 0)
+        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Length == 0)
             base.AddAIHints(slot, actor, assignment, hints);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Count == 0)
+        if (!_raidwide1.Active && _locationaoe1.ActiveCasters.Length == 0)
             base.DrawArenaForeground(pcSlot, pc);
     }
 }
@@ -94,7 +94,7 @@ class SelfDestruct(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle circle = new(6.6f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {

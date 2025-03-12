@@ -16,7 +16,7 @@ class DarkNebula(BossModule module) : Components.Knockback(module)
         (pos => pos.AlmostEqual(new WPos(142f, 808f), 1), [1, 2], 135f.Degrees().ToDirection())  // -135°
     ];
 
-    public override IEnumerable<Source> Sources(int slot, Actor actor)
+    public override ReadOnlySpan<Source> ActiveSources(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
@@ -73,6 +73,6 @@ class DarkNebula(BossModule module) : Components.Knockback(module)
             forbidden.Add(CreateForbiddenZone(circleIndex, mapping.Directions));
         }
 
-        hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Sources(slot, actor).FirstOrDefault().Activation);
+        hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(Casters[0].CastInfo));
     }
 }

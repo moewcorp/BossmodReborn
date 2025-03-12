@@ -5,14 +5,27 @@ class RubyGlow2(BossModule module) : RubyGlowCommon(module, ActionID.MakeSpell(A
 {
     private string _hint = "";
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // TODO: correct explosion time
-        var magic = NumCasts > 0 ? MagicStones.FirstOrDefault() : null;
+        var stones = MagicStones;
+        var countS = stones.Count;
+        var stone = countS != 0 ? stones[0] : null;
+        var magic = NumCasts > 0 ? stone : null;
+
+        var poison = ActivePoisonAOEs();
+
+        var countSadj = magic != null ? 1 : 0;
+        var len = poison.Length;
+        var aoes = new AOEInstance[countSadj + len];
+        var index = 0;
         if (magic != null)
-            yield return new(ShapeHalf, Module.Center, Angle.FromDirection(QuadrantDir(QuadrantForPosition(magic.Position))));
-        foreach (var p in ActivePoisonAOEs())
-            yield return p;
+            aoes[index++] = new(ShapeHalf, Module.Center, Angle.FromDirection(QuadrantDir(QuadrantForPosition(magic.Position))));
+        for (var i = 0; i < len; ++i)
+        {
+            aoes[index++] = poison[i];
+        }
+        return aoes;
     }
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -25,7 +38,8 @@ class RubyGlow2(BossModule module) : RubyGlowCommon(module, ActionID.MakeSpell(A
     {
         if (spell.Action == WatchedAction)
         {
-            var magic = MagicStones.FirstOrDefault();
+            var stones = MagicStones;
+            var magic = stones.Count != 0 ? MagicStones[0] : null;
             if (magic != null)
             {
                 _hint = QuadrantDir(QuadrantForPosition(magic.Position)).Dot(spell.LocXZ - caster.Position) > 0 ? "Stay after charge" : "Swap sides after charge";

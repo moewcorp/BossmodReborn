@@ -60,7 +60,7 @@ class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
     private static readonly Angle a180 = 180f.Degrees();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
@@ -81,7 +81,7 @@ class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.VioletVoltageTelegraph)
-            _aoes.Add(new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 6)));
+            _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 6)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -91,7 +91,7 @@ class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class RoaringBoltKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.RoaringBoltKB), 12, stopAtWall: true)
+class RoaringBoltKB(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.RoaringBoltKB), 12f, stopAtWall: true)
 {
     private readonly RoaringBolt _aoe = module.FindComponent<RoaringBolt>()!;
     private static readonly Angle a25 = 25f.Degrees();
@@ -109,22 +109,15 @@ class RoaringBoltKB(BossModule module) : Components.KnockbackFromCastTarget(modu
     {
         if (Casters.Count == 0)
             return;
-
-        var forbidden = new List<Func<WPos, float>>(6);
         var aoes = _aoe.Casters;
-
-        Source source = default;
-        foreach (var s in Sources(slot, actor))
-        {
-            source = s;
-            break;
-        }
+        var source = Casters[0];
         var count = aoes.Count;
-        if (source != default && count != 0)
+        if (count != 0)
         {
+            var forbidden = new List<Func<WPos, float>>(count);
             for (var i = 0; i < count; ++i)
                 forbidden.Add(ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(aoes[i].Origin - Arena.Center), a25));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), source.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 }
@@ -143,7 +136,7 @@ class UntamedCurrentAOEs(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(11);
     private static readonly AOEShapeCircle circle = new(5f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

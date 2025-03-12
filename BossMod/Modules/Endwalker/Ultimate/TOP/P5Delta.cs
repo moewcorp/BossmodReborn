@@ -54,7 +54,7 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if ((OID)actor.OID is OID.RocketPunch1 or OID.RocketPunch2)
+        if (actor.OID is (uint)OID.RocketPunch1 or (uint)OID.RocketPunch2)
         {
             var (closestSlot, closestPlayer) = Raid.WithSlot(true, true, true).Closest(actor.Position);
             if (closestPlayer != null)
@@ -73,16 +73,16 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        switch ((SID)status.ID)
+        switch (status.ID)
         {
-            case SID.HelloNearWorld:
+            case (uint)SID.HelloNearWorld:
                 _nearWorld = actor;
                 break;
-            case SID.HelloDistantWorld:
+            case (uint)SID.HelloDistantWorld:
                 _distantWorld = actor;
                 break;
-            case SID.OversampledWaveCannonLoadingR:
-            case SID.OversampledWaveCannonLoadingL:
+            case (uint)SID.OversampledWaveCannonLoadingR:
+            case (uint)SID.OversampledWaveCannonLoadingL:
                 _monitorTarget = actor;
                 break;
         }
@@ -90,10 +90,10 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        switch ((TetherID)tether.ID)
+        switch (tether.ID)
         {
-            case TetherID.HWPrepLocalTether:
-            case TetherID.HWPrepRemoteTether:
+            case (uint)TetherID.HWPrepLocalTether:
+            case (uint)TetherID.HWPrepRemoteTether:
                 var s1 = Raid.FindSlot(source.InstanceID);
                 var s2 = Raid.FindSlot(tether.Target);
                 if (s1 >= 0 && s2 >= 0)
@@ -105,8 +105,8 @@ class P5Delta(BossModule module) : BossComponent(module)
                     (isLocal ? _localTethers : _remoteTethers).Add((s1, s2));
                 }
                 break;
-            case TetherID.HWLocalTether:
-            case TetherID.HWRemoteTether:
+            case (uint)TetherID.HWLocalTether:
+            case (uint)TetherID.HWRemoteTether:
                 TethersActive = true;
                 break;
         }
@@ -114,7 +114,7 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
-        if ((TetherID)tether.ID is TetherID.HWLocalTether or TetherID.HWRemoteTether)
+        if (tether.ID is (uint)TetherID.HWLocalTether or (uint)TetherID.HWRemoteTether)
         {
             var s1 = Raid.FindSlot(source.InstanceID);
             var s2 = Raid.FindSlot(tether.Target);
@@ -128,19 +128,19 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch ((AID)spell.Action.ID)
+        switch (spell.Action.ID)
         {
-            case AID.DeltaExplosion:
+            case (uint)AID.DeltaExplosion:
                 ExplosionsBaited = true;
                 break;
-            case AID.DeltaOversampledWaveCannonR:
-                _monitorSafeDir = -(spell.Rotation - 90.Degrees()).ToDirection();
+            case (uint)AID.DeltaOversampledWaveCannonR:
+                _monitorSafeDir = -(spell.Rotation - 90f.Degrees()).ToDirection();
                 break;
-            case AID.DeltaOversampledWaveCannonL:
-                _monitorSafeDir = -(spell.Rotation + 90.Degrees()).ToDirection();
+            case (uint)AID.DeltaOversampledWaveCannonL:
+                _monitorSafeDir = -(spell.Rotation + 90f.Degrees()).ToDirection();
                 break;
-            case AID.SwivelCannonR:
-            case AID.SwivelCannonL:
+            case (uint)AID.SwivelCannonR:
+            case (uint)AID.SwivelCannonL:
                 _swivelCannonSafeDir = -spell.Rotation.ToDirection();
                 break;
         }
@@ -148,7 +148,7 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.BeyondDefenseAOE)
+        if (spell.Action.ID is (uint)AID.BeyondDefenseAOE)
             _beyondDefenceTarget = WorldState.Actors.Find(spell.MainTargetID);
     }
 
@@ -156,12 +156,12 @@ class P5Delta(BossModule module) : BossComponent(module)
     {
         if (id == 0x1E43)
         {
-            switch ((OID)actor.OID)
+            switch (actor.OID)
             {
-                case OID.BeetleHelper:
+                case (uint)OID.BeetleHelper:
                     _eyeDir = (actor.Position - Arena.Center).Normalized().OrthoR();
                     break;
-                case OID.FinalHelper:
+                case (uint)OID.FinalHelper:
                     _eyeDir = (actor.Position - Arena.Center).Normalized().OrthoL();
                     break;
             }
@@ -170,12 +170,12 @@ class P5Delta(BossModule module) : BossComponent(module)
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if ((OID)actor.OID is OID.LeftArmUnit or OID.RightArmUnit)
+        if (actor.OID is (uint)OID.LeftArmUnit or (uint)OID.RightArmUnit)
         {
-            var rotation = (IconID)iconID switch
+            var rotation = iconID switch
             {
-                IconID.RotateCW => -20.Degrees(),
-                IconID.RotateCCW => 20.Degrees(),
+                (uint)IconID.RotateCW => -20f.Degrees(),
+                (uint)IconID.RotateCCW => 20f.Degrees(),
                 _ => default
             };
             if (rotation != default)
@@ -183,7 +183,7 @@ class P5Delta(BossModule module) : BossComponent(module)
         }
     }
 
-    public WDir ArmOffset(int index) => 20 * (Angle.FromDirection(_eyeDir) + index * 60.Degrees()).ToDirection();
+    public WDir ArmOffset(int index) => 20f * (Angle.FromDirection(_eyeDir) + index * 60f.Degrees()).ToDirection();
     public int ArmIndex(WDir offset) => _eyeDir.Dot(offset) switch
     {
         > 19 => 0,
@@ -232,46 +232,46 @@ class P5Delta(BossModule module) : BossComponent(module)
         }
     }
 
-    private IEnumerable<WDir> SafeSpotOffsets(int slot)
+    private List<WDir> SafeSpotOffsets(int slot)
     {
         var p = Players[slot];
         if (p.PartnerSlot < 0 || _eyeDir == default)
-            yield break; // no safe spots yet
-
+            return []; // no safe spots yet
+        var safespots = new List<WDir>(4);
         if (NumPunchesSpawned < PartyState.MaxPartySize)
         {
             // no punches yet, show all 4 possible spots
             if (p.IsLocal)
             {
                 // green tethers go to final side
-                yield return TransformRelNorth(9, -11);
-                yield return TransformRelNorth(9, +11);
-                yield return TransformRelNorth(13, -11);
-                yield return TransformRelNorth(13, +11);
+                safespots.Add(TransformRelNorth(9f, -11f));
+                safespots.Add(TransformRelNorth(9f, +11f));
+                safespots.Add(TransformRelNorth(13f, -11f));
+                safespots.Add(TransformRelNorth(13f, +11f));
             }
             else
             {
                 // blue tethers go to beetle side
-                yield return TransformRelNorth(-9, -8);
-                yield return TransformRelNorth(-9, +8);
-                yield return TransformRelNorth(-13, -4);
-                yield return TransformRelNorth(-13, +4);
+                safespots.Add(TransformRelNorth(-9f, -8f));
+                safespots.Add(TransformRelNorth(-9f, +8f));
+                safespots.Add(TransformRelNorth(-13f, -4f));
+                safespots.Add(TransformRelNorth(-13f, +4f));
             }
-            yield break;
+            return safespots;
         }
 
         if (p.SideAssignment == SideAssignment.None || p.PairAssignment == PairAssignment.None)
-            yield break; // we should have correct assignments by now
+            return []; // we should have correct assignments by now
 
         var dirZ = p.SideAssignment == SideAssignment.North ? -1 : 1; // fully symmetrical
         if (!ExplosionsBaited)
         {
             // now we should have correct assignments
             if (p.IsLocal)
-                yield return TransformRelNorth(11, 11 * dirZ);
+                safespots.Add(TransformRelNorth(11f, 11f * dirZ));
             else
-                yield return TransformRelNorth(-13, (p.PairAssignment == PairAssignment.Inner && NumTethersBroken == 0 ? 8 : 4) * dirZ);
-            yield break;
+                safespots.Add(TransformRelNorth(-13f, (p.PairAssignment == PairAssignment.Inner && NumTethersBroken == 0 ? 8f : 4f) * dirZ));
+            return safespots;
         }
 
         if (_beyondDefenceTarget == null)
@@ -280,18 +280,18 @@ class P5Delta(BossModule module) : BossComponent(module)
             if (p.IsLocal)
             {
                 if (p.PairAssignment == PairAssignment.Inner)
-                    yield return BaitOffset(dirZ > 0 ? 3 : 0);
+                    safespots.Add(BaitOffset(dirZ > 0 ? 3 : 0));
                 else
-                    yield return BaitOffset(dirZ > 0 ? 4 : 5);
+                    safespots.Add(BaitOffset(dirZ > 0 ? 4 : 5));
             }
             else
             {
                 if (p.PairAssignment == PairAssignment.Inner)
-                    yield return TransformRelNorth(0, 5 * dirZ);
+                    safespots.Add(TransformRelNorth(0, 5f * dirZ));
                 else
-                    yield return BaitOffset(dirZ > 0 ? 2 : 1);
+                    safespots.Add(BaitOffset(dirZ > 0 ? 2 : 1));
             }
-            yield break;
+            return safespots;
         }
 
         if (_swivelCannonSafeDir == default)
@@ -300,22 +300,22 @@ class P5Delta(BossModule module) : BossComponent(module)
             {
                 // monitor soak spots
                 var dirX = p.PairAssignment == PairAssignment.Inner ? -1 : +1;
-                yield return TransformRelNorth(7 * dirX, 13 * dirZ);
+                safespots.Add(TransformRelNorth(7f * dirX, 13f * dirZ));
             }
             else if (Raid[slot] != _beyondDefenceTarget)
             {
                 // central stack
-                yield return (Raid[slot] == _monitorTarget ? 5 : 2.5f) * _monitorSafeDir;
+                safespots.Add((Raid[slot] == _monitorTarget ? 5f : 2.5f) * _monitorSafeDir);
             }
             else
             {
                 // beyond defense target wants to run outside stack (TODO: select direction that is convenient for monitor target)
-                var stackPos = (Raid[slot] == _monitorTarget ? 5 : 2.5f) * _monitorSafeDir;
-                var horizOffset = TransformRelNorth(15, 0);
-                yield return stackPos + horizOffset;
-                yield return stackPos - horizOffset;
+                var stackPos = (Raid[slot] == _monitorTarget ? 5f : 2.5f) * _monitorSafeDir;
+                var horizOffset = TransformRelNorth(15f, default);
+                safespots.Add(stackPos + horizOffset);
+                safespots.Add(stackPos - horizOffset);
             }
-            yield break;
+            return safespots;
         }
 
         {
@@ -323,32 +323,33 @@ class P5Delta(BossModule module) : BossComponent(module)
             var safeDirZ = relNorthSafe ? -1 : 1;
             if (p.IsLocal)
             {
-                var startingFromSafe = (p.SideAssignment == SideAssignment.North) == relNorthSafe;
+                var startingFromSafe = p.SideAssignment == SideAssignment.North == relNorthSafe;
                 if (p.PairAssignment == PairAssignment.Inner)
-                    yield return TransformRelNorth(-10, (startingFromSafe ? 12 : 6) * safeDirZ);
+                    safespots.Add(TransformRelNorth(-10f, (startingFromSafe ? 12f : 6f) * safeDirZ));
                 else if (startingFromSafe)
-                    yield return TransformRelNorth(15, 11 * safeDirZ);
+                    safespots.Add(TransformRelNorth(15f, 11f * safeDirZ));
                 else
-                    yield return TransformRelNorth(-18, 2 * safeDirZ);
+                    safespots.Add(TransformRelNorth(-18f, 2f * safeDirZ));
             }
             else if (_distantWorld == Raid[slot])
             {
-                yield return TransformRelNorth(0, 19 * safeDirZ);
+                safespots.Add(TransformRelNorth(default, 19f * safeDirZ));
             }
             else if (_nearWorld == Raid[slot])
             {
-                yield return TransformRelNorth(0, 6 * safeDirZ);
+                safespots.Add(TransformRelNorth(default, 6f * safeDirZ));
             }
             else
             {
-                yield return TransformRelNorth(9, 15 * safeDirZ);
+                safespots.Add(TransformRelNorth(9f, 15f * safeDirZ));
             }
+            return safespots;
         }
     }
 
     // x positive is east (final side), z positive is south
     private WDir TransformRelNorth(float x, float z) => x * _eyeDir.OrthoR() - z * _eyeDir;
-    private WDir BaitOffset(int index) => 19 * (Angle.FromDirection(_eyeDir) + index * 60.Degrees() - 0.15f * ArmRotations[index]).ToDirection(); // 5 degrees offset in correct direction
+    private WDir BaitOffset(int index) => 19f * (Angle.FromDirection(_eyeDir) + index * 60f.Degrees() - 0.15f * ArmRotations[index]).ToDirection(); // 5 degrees offset in correct direction
 }
 
 class P5DeltaOpticalLaser(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.OpticalLaser))
@@ -356,26 +357,27 @@ class P5DeltaOpticalLaser(BossModule module) : Components.GenericAOEs(module, Ac
     public Actor? Source;
     private DateTime _activation;
 
-    private static readonly AOEShapeRect _shape = new(100, 8);
+    private static readonly AOEShapeRect _shape = new(100f, 8f);
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (Source != null)
-            yield return new(_shape, Source.Position, Source.Rotation, _activation);
+            return new AOEInstance[1] { new(_shape, Source.Position, Source.Rotation, _activation) };
+        return [];
     }
 
     // at this point eye is in correct position
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if ((OID)actor.OID is OID.BeetleHelper or OID.FinalHelper && id == 0x1E43)
+        if (actor.OID is (uint)OID.BeetleHelper or (uint)OID.FinalHelper && id == 0x1E43)
         {
-            Source ??= Module.Enemies(OID.OpticalUnit).FirstOrDefault();
-            _activation = WorldState.FutureTime(20);
+            Source ??= Module.Enemies((uint)OID.OpticalUnit)[0];
+            _activation = WorldState.FutureTime(20d);
         }
     }
 }
 
-class P5DeltaExplosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaExplosion), 3)
+class P5DeltaExplosion(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DeltaExplosion), 3f)
 {
     private readonly P5Delta? _delta = module.FindComponent<P5Delta>();
 
@@ -386,7 +388,7 @@ class P5DeltaExplosion(BossModule module) : Components.SimpleAOEs(module, Action
         var ps = _delta.Players[pcSlot];
         var partner = Raid.WithSlot(true, true, true).WhereSlot(i => _delta.Players[i].IsLocal == ps.IsLocal && i != ps.PartnerSlot && _delta.Players[i].RocketPunch?.OID != ps.RocketPunch?.OID).FirstOrDefault().Item2;
         if (partner != null)
-            Arena.AddCircle(partner.Position, 3, Colors.Safe);
+            Arena.AddCircle(partner.Position, 3f, Colors.Safe);
     }
 }
 
@@ -395,60 +397,61 @@ class P5DeltaHyperPulse(BossModule module) : Components.GenericAOEs(module)
     private readonly P5Delta? _delta = module.FindComponent<P5Delta>();
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape = new(100, 4);
+    private static readonly AOEShapeRect _shape = new(100f, 4f);
     private const int _numRepeats = 6;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoes.Count > 0)
+        if (_aoes.Count != 0)
         {
-            foreach (var aoe in _aoes)
-            {
-                yield return aoe;
-            }
+            return CollectionsMarshal.AsSpan(_aoes);
         }
         else if (_delta != null)
         {
-            for (var i = 0; i < _delta.ArmRotations.Length; ++i)
+            var len = _delta.ArmRotations.Length;
+            var aoes = new List<AOEInstance>(len);
+            for (var i = 0; i < len; ++i)
             {
-                var pos = Module.Center + _delta.ArmOffset(i);
+                var pos = WPos.ClampToGrid(Arena.Center + _delta.ArmOffset(i));
                 if (Raid.WithoutSlot(false, true, true).Closest(pos) == actor)
                 {
                     var angle = Angle.FromDirection(actor.Position - pos);
                     for (var j = 0; j < _numRepeats; ++j)
                     {
-                        yield return new(_shape, pos, angle + j * _delta.ArmRotations[i], Risky: false);
+                        aoes.Add(new(_shape, pos, angle + j * _delta.ArmRotations[i], Risky: false));
                     }
                 }
             }
+            return CollectionsMarshal.AsSpan(aoes);
         }
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.DeltaHyperPulseFirst && _delta != null)
+        if (spell.Action.ID == (uint)AID.DeltaHyperPulseFirst && _delta != null)
         {
-            var rot = _delta.ArmRotations[_delta.ArmIndex(caster.Position - Module.Center)];
+            var rot = _delta.ArmRotations[_delta.ArmIndex(caster.Position - Arena.Center)];
             for (var i = 0; i < _numRepeats; ++i)
             {
-                _aoes.Add(new(_shape, caster.Position, (spell.Rotation + i * rot).Normalized(), Module.CastFinishAt(spell, i * 0.6f)));
+                _aoes.Add(new(_shape, spell.LocXZ, (spell.Rotation + i * rot).Normalized(), Module.CastFinishAt(spell, i * 0.6f)));
             }
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID is AID.DeltaHyperPulseFirst or AID.DeltaHyperPulseRest)
+        if (spell.Action.ID is (uint)AID.DeltaHyperPulseFirst or (uint)AID.DeltaHyperPulseRest)
         {
             ++NumCasts;
-            var count = _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1) && aoe.Rotation.AlmostEqual(caster.Rotation, 0.1f));
+            var count = _aoes.RemoveAll(aoe => aoe.Origin.AlmostEqual(caster.Position, 1f) && aoe.Rotation.AlmostEqual(caster.Rotation, 0.1f));
             if (count != 1)
                 ReportError($"Single cast removed {count} aoes");
         }
     }
 }
 
-class P5DeltaOversampledWaveCannon(BossModule module) : Components.UniformStackSpread(module, 0, 7)
+class P5DeltaOversampledWaveCannon(BossModule module) : Components.UniformStackSpread(module, default, 7f)
 {
     private readonly P5Delta? _delta = module.FindComponent<P5Delta>();
     private Actor? _boss;
@@ -487,17 +490,17 @@ class P5DeltaOversampledWaveCannon(BossModule module) : Components.UniformStackS
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         if (_boss != null)
-            _shape.Draw(Arena, _boss.Position, _boss.Rotation + _bossAngle, _bossIntendedTargets[pcSlot] ? Colors.SafeFromAOE : Colors.AOE);
+            _shape.Draw(Arena, _boss.Position, _boss.Rotation + _bossAngle, _bossIntendedTargets[pcSlot] ? Colors.SafeFromAOE : 0);
         if (_player != null)
-            _shape.Draw(Arena, _player.Position, _player.Rotation + _playerAngle, _playerIntendedTargets[pcSlot] ? Colors.SafeFromAOE : Colors.AOE);
+            _shape.Draw(Arena, _player.Position, _player.Rotation + _playerAngle, _playerIntendedTargets[pcSlot] ? Colors.SafeFromAOE : 0);
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        var angle = (SID)status.ID switch
+        var angle = status.ID switch
         {
-            SID.OversampledWaveCannonLoadingL => 90.Degrees(),
-            SID.OversampledWaveCannonLoadingR => -90.Degrees(),
+            (uint)SID.OversampledWaveCannonLoadingL => 90f.Degrees(),
+            (uint)SID.OversampledWaveCannonLoadingR => -90f.Degrees(),
             _ => default
         };
         if (angle != default && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -509,10 +512,10 @@ class P5DeltaOversampledWaveCannon(BossModule module) : Components.UniformStackS
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var angle = (AID)spell.Action.ID switch
+        var angle = spell.Action.ID switch
         {
-            AID.DeltaOversampledWaveCannonL => 90.Degrees(),
-            AID.DeltaOversampledWaveCannonR => -90.Degrees(),
+            (uint)AID.DeltaOversampledWaveCannonL => 90f.Degrees(),
+            (uint)AID.DeltaOversampledWaveCannonR => -90f.Degrees(),
             _ => default
         };
         if (angle == default)
@@ -538,7 +541,7 @@ class P5DeltaOversampledWaveCannon(BossModule module) : Components.UniformStackS
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if ((AID)spell.Action.ID == AID.OversampledWaveCannonAOE)
+        if (spell.Action.ID == (uint)AID.OversampledWaveCannonAOE)
             Spreads.Clear();
     }
 }
@@ -547,19 +550,19 @@ class P5DeltaSwivelCannon(BossModule module) : Components.GenericAOEs(module)
 {
     public AOEInstance? AOE;
 
-    private static readonly AOEShapeCone _shape = new(60, 105.Degrees());
+    private static readonly AOEShapeCone _shape = new(60f, 105f.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SwivelCannonR or AID.SwivelCannonL)
-            AOE = new(_shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell));
+        if (spell.Action.ID is (uint)AID.SwivelCannonR or (uint)AID.SwivelCannonL)
+            AOE = new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID is AID.SwivelCannonR or AID.SwivelCannonL)
+        if (spell.Action.ID is (uint)AID.SwivelCannonR or (uint)AID.SwivelCannonL)
             AOE = null;
     }
 }

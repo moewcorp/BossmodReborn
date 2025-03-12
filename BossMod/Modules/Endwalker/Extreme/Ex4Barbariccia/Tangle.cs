@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Endwalker.Extreme.Ex4Barbariccia;
 
 // initial aoe + tethers
-class Tangle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tangle), 6)
+class Tangle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Tangle), 6f)
 {
     public int NumTethers;
     private readonly Actor?[] _tethers = new Actor?[PartyState.MaxPartySize];
@@ -11,7 +11,7 @@ class Tangle(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpe
         var tether = _tethers[pcSlot];
         if (tether != null)
         {
-            Arena.AddCircle(tether.Position, 8, Colors.Object);
+            Arena.AddCircle(tether.Position, 8f, Colors.Object);
         }
     }
 
