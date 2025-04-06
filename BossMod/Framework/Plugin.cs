@@ -43,9 +43,18 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ReplayManagementWindow _wndReplay;
     private readonly UIRotationWindow _wndRotation;
     private readonly MainDebugWindow _wndDebug;
-
+    private IDalamudPluginInterface PluginInterface;
+    private bool isDev;
     public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
     {
+#if !DEBUG
+        PluginInterface = dalamud;
+        if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
+        {
+            isDev = true;
+            return;
+        }
+#endif
         if (!dalamud.ConfigDirectory.Exists)
             dalamud.ConfigDirectory.Create();
         var dalamudRoot = dalamud.GetType().Assembly.
@@ -113,6 +122,12 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+#if !DEBUG
+        if (isDev)
+        {
+            return;
+        }
+#endif
         Service.Condition.ConditionChange -= OnConditionChanged;
         _wndDebug.Dispose();
         _wndRotation.Dispose();

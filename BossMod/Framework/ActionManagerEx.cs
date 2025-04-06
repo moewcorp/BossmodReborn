@@ -89,8 +89,8 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
         Service.Log($"[AMEx] ActionManager singleton address = 0x{(ulong)_inst:X}");
         _updateHook = new(ActionManager.Addresses.Update, UpdateDetour);
-        _useActionHook = new(ActionManager.Addresses.UseAction, UseActionDetour);
-        _useActionLocationHook = new(ActionManager.Addresses.UseActionLocation, UseActionLocationDetour);
+        //_useActionHook = new(ActionManager.Addresses.UseAction, UseActionDetour);
+        //_useActionLocationHook = new(ActionManager.Addresses.UseActionLocation, UseActionLocationDetour);
         _useBozjaFromHolsterDirectorHook = new(PublicContentBozja.Addresses.UseFromHolster, UseBozjaFromHolsterDirectorDetour);
         _usePomanderHook = new(InstanceContentDeepDungeon.Addresses.UsePomander, UsePomanderDetour);
         _useStoneHook = new(InstanceContentDeepDungeon.Addresses.UseStone, UseStoneDetour);
@@ -109,8 +109,8 @@ public sealed unsafe class ActionManagerEx : IDisposable
         _useStoneHook.Dispose();
         _usePomanderHook.Dispose();
         _useBozjaFromHolsterDirectorHook.Dispose();
-        _useActionLocationHook.Dispose();
-        _useActionHook.Dispose();
+        //_useActionLocationHook.Dispose();
+        //_useActionHook.Dispose();
         _updateHook.Dispose();
         _oocActionsTweak.Dispose();
     }
@@ -159,7 +159,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
             _inst->AutoFaceTargetPosition(&position);
 
             // if rotation interpolation is in progress, we have to reset desired rotation to avoid game rotating us away next frame
-            player->Move.Interpolation.DesiredRotation = direction.Rad;
+            //player->Move.Interpolation.DesiredRotation = direction.Rad;
         }
     }
 

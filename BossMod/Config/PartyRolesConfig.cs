@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-[ConfigDisplay(Name = "Party roles assignment", Order = 2)]
+[ConfigDisplay(Name = "队伍角色分配", Order = 2)]
 public class PartyRolesConfig : ConfigNode
 {
     public enum Assignment { MT, OT, H1, H2, M1, M2, R1, R2, Unassigned }
@@ -107,12 +107,12 @@ public class PartyRolesConfig : ConfigNode
         if (AssignmentsPerSlot(ws.Party).Length == 0)
         {
             using var color = ImRaii.PushColor(ImGuiCol.Text, Colors.TextColor2);
-            ImGui.TextUnformatted("Invalid assignments: there should be exactly one raid member per role");
+            ImGui.TextUnformatted("无效分配：每个角色应该只有一名团队成员");
         }
         else
         {
             using var color = ImRaii.PushColor(ImGuiCol.Text, Colors.TextColor4);
-            ImGui.TextUnformatted("All good!");
+            ImGui.TextUnformatted("一切都好！");
         }
     }
 }
