@@ -194,7 +194,8 @@ public sealed class ClientState
         var hasNonDefaultTarget = false;
         for (var i = 0; i < 32; ++i)
         {
-            if (CurrentTargetHate.Targets[i] != default)
+            ref readonly var target = ref CurrentTargetHate.Targets[i];
+            if (target != default)
             {
                 hasNonDefaultTarget = true;
                 break;

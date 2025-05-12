@@ -20,8 +20,7 @@ public sealed class NetworkState
 
     public List<WorldState.Operation> CompareToInitial()
     {
-        if (IDScramble != 0)
-            yield return new OpIDScramble(IDScramble);
+        return IDScramble != default ? [new OpIDScramble(IDScramble)] : [];
     }
 
     public Event<OpLegacyIDScramble> LegacyIDScrambleChanged = new();

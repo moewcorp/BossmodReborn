@@ -224,7 +224,7 @@ public abstract unsafe class PacketDecoder
             ActorControlCategory.GainEffect => $"{Utils.StatusString(p1)}: extra={p2:X4}",
             ActorControlCategory.LoseEffect => $"{Utils.StatusString(p1)}: extra={p2:X4}, source={DecodeActor(p3)}, unk-update={p4 != 0}",
             ActorControlCategory.UpdateEffect => $"#{p1} {Utils.StatusString(p2)}: extra={p3:X4}",
-            ActorControlCategory.TargetIcon => $"{p1} ({p1})", //             ActorControlCategory.TargetIcon => $"{p1 - IDScramble.Delta} ({p1}-{IDScramble.Delta})",
+            ActorControlCategory.TargetIcon => $"{p1} ({p1})",
             ActorControlCategory.Tether => $"#{p1}: {p2} -> {DecodeActor(p3)} progress={p4}%",
             ActorControlCategory.TetherCancel => $"#{p1}: {p2}",
             ActorControlCategory.SetTarget => $"{DecodeActor(targetID)}",

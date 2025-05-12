@@ -141,3 +141,48 @@ class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
             return default;
     }
 }
+
+class Phase2AIHints(BossModule module) : BossComponent(module)
+{
+    private BitMask isInside;
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            switch (e.Actor.OID)
+            {
+                case (uint)OID.Atomos:
+                    if (isInside[slot])
+                        e.Priority = AIHints.Enemy.PriorityInvincible;
+                    else if (actor.Class.GetRole() == Role.Ranged)
+                        e.Priority = 5;
+                    break;
+                case (uint)OID.StygianShadow:
+                    if (isInside[slot])
+                        e.Priority = AIHints.Enemy.PriorityInvincible;
+                    break;
+                case (uint)OID.Boss:
+                    if (!isInside[slot])
+                        e.Priority = AIHints.Enemy.PriorityInvincible;
+                    break;
+
+            }
+        }
+    }
+
+    public override void OnStatusGain(Actor actor, ActorStatus status)
+    {
+        switch (status.ID)
+        {
+            case (uint)SID.InnerDarkness:
+                isInside[Raid.FindSlot(actor.InstanceID)] = true;
+                break;
+            case (uint)SID.OuterDarkness:
+                isInside[Raid.FindSlot(actor.InstanceID)] = false;
+                break;
+        }
+    }
+}
