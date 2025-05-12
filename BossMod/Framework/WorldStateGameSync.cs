@@ -194,10 +194,11 @@ sealed class WorldStateGameSync : IDisposable
         {
             _ws.Execute(new WorldState.OpZoneChange(Service.ClientState.TerritoryType, GameMain.Instance()->CurrentContentFinderConditionId));
         }
-        // if (_ws.Network.IDScramble != Network.IDScramble.Delta)
-        // {
-        //     _ws.Execute(new NetworkState.OpIDScramble(Network.IDScramble.Delta));
-        // }
+        var proxy = fwk->NetworkModuleProxy->ReceiverCallback;
+        var scramble = Network.IDScramble.Get();
+        if (_ws.Network.IDScramble != scramble)
+            _ws.Execute(new NetworkState.OpIDScramble(scramble));
+
         var count = _globalOps.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -736,6 +737,15 @@ sealed class WorldStateGameSync : IDisposable
         };
         if (!MemoryExtensions.SequenceEqual(ckArray, _ws.Client.ContentKeyValueData))
             _ws.Execute(new ClientState.OpContentKVDataChange(ckArray));
+
+        var hate = uiState->Hate;
+        var hatePrimary = hate.HateTargetId;
+        var hateTargets = new ClientState.Hate[32];
+        for (var i = 0; i < hate.HateArrayLength; ++i)
+            hateTargets[i] = new(hate.HateInfo[i].EntityId, hate.HateInfo[i].Enmity);
+
+        if (hatePrimary != _ws.Client.CurrentTargetHate.InstanceID || !MemoryExtensions.SequenceEqual(hateTargets, _ws.Client.CurrentTargetHate.Targets))
+            _ws.Execute(new ClientState.OpHateChange(hatePrimary, hateTargets));
     }
 
     private unsafe void UpdateDeepDungeon()
