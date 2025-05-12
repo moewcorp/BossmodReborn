@@ -6,6 +6,7 @@ class MagitekMissile(BossModule module) : Components.Voidzone(module, 1.3f, GetM
 }
 
 class MissileLauncher(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MissileLauncher, 4f);
+
 class InfraredHomingMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InfraredHomingMissile, 15f);
 class InfraredHomingMissileBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {

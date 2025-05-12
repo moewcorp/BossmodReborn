@@ -1,5 +1,3 @@
-using BossMod.AST;
-
 namespace BossMod.Components;
 
 public abstract class CleansableDebuff(BossModule module, uint statusID, string noun = "Doom", string adjective = "doomed") : BossComponent(module)

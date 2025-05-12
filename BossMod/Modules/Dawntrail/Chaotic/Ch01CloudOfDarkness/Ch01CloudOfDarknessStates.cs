@@ -214,6 +214,7 @@ class Ch01CloudOfDarknessStates : StateMachineBuilder
             .SetHint(StateMachine.StateHint.Raidwide);
         ComponentCondition<StygianShadow>(id + 0x10, 4.2f, comp => comp.ActiveActors.Count != 0, "Platform adds")
             .ActivateOnEnter<StygianShadow>()
+            .ActivateOnEnter<Phase2AIHints>()
             .ActivateOnEnter<Atomos>()
             .ActivateOnEnter<Phase2InnerCells>()
             .ActivateOnEnter<DarkEnergyParticleBeam>(); // overlaps with multiple mechanics
@@ -381,6 +382,7 @@ class Ch01CloudOfDarknessStates : StateMachineBuilder
         CastStart(id, (uint)AID.FloodOfDarkness2, delay, "Adds disappear")
             .DeactivateOnExit<StygianShadow>()
             .DeactivateOnExit<Atomos>()
+            .DeactivateOnExit<Phase2AIHints>()
             .DeactivateOnExit<DarkEnergyParticleBeam>();
         CastEnd(id + 1, 7f, "Raidwide + arena transition")
             .SetHint(StateMachine.StateHint.Raidwide);
