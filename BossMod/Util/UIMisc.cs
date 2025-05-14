@@ -47,7 +47,7 @@ public static class UIMisc
             ImGui.Dummy(size);
     }
 
-    public static void ImageWithText(ISharedImmediateTexture? icon, Vector2 size, bool state, string text)
+    public static void ImageToggleButton(ISharedImmediateTexture? icon, Vector2 size, bool state, string text)
     {
         var c = ImGui.GetCursorPos();
         ImGui.Selectable($"##sel{text}", false, ImGuiSelectableFlags.None, new(ImGui.GetContentRegionAvail().X, size.Y));

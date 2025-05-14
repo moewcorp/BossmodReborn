@@ -587,8 +587,6 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         {
             if (MP >= mpCutoff)
             {
-                if (Service.IsDev)
-                    Service.Log($"rejecting {aid}, too much MP ({MP})");
                 return;
             }
             base.PushGCD(aid, target, priority, delay);
