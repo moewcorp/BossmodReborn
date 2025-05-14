@@ -44,7 +44,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x03)
+        if (state == 0x00020001u && index == 0x03u)
         {
             Arena.Bounds = D071Barreltender.DefaultBounds;
             _aoe = null;
@@ -137,10 +137,7 @@ class NeedleStormSuperstorm(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Prickly(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeCone(36f, 165f.Degrees()));
-class PricklyRight(BossModule module) : Prickly(module, (uint)AID.PricklyRight);
-class PricklyLeft(BossModule module) : Prickly(module, (uint)AID.PricklyLeft);
-
+class Prickly(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PricklyRight, (uint)AID.PricklyLeft], new AOEShapeCone(36f, 165f.Degrees()));
 class SucculentStomp(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.SucculentStomp, 6f, 4, 4);
 class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BarrelBreaker, 20f)
 {
@@ -214,8 +211,7 @@ class D071BarreltenderStates : StateMachineBuilder
             .ActivateOnEnter<BarrelBreaker>()
             .ActivateOnEnter<HeavyweightNeedles>()
             .ActivateOnEnter<NeedleStormSuperstorm>()
-            .ActivateOnEnter<PricklyRight>()
-            .ActivateOnEnter<PricklyLeft>()
+            .ActivateOnEnter<Prickly>()
             .ActivateOnEnter<TenderFury>()
             .ActivateOnEnter<SucculentStomp>()
             .ActivateOnEnter<BarbedBellow>();

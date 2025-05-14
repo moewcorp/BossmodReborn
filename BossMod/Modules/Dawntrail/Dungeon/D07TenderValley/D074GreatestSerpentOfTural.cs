@@ -88,7 +88,11 @@ class GreatestFlood(BossModule module) : Components.SimpleKnockbacks(module, (ui
         if (Casters.Count != 0)
         {
             var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Position, 4f, source.Rotation, a45), Module.CastFinishAt(source.CastInfo));
+            var act = Module.CastFinishAt(source.CastInfo);
+            if (!IsImmune(slot, act))
+            {
+                hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Position, 4f, source.Rotation, a45), Module.CastFinishAt(source.CastInfo));
+            }
         }
     }
 }
@@ -125,7 +129,7 @@ class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x01)
+        if (index != 0x01u)
             return;
 
         void AddAOEs(int index)
@@ -135,19 +139,19 @@ class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(module)
         }
         switch (state)
         {
-            case 0x01000080:
+            case 0x01000080u:
                 AddAOEs(0);
                 break;
-            case 0x04000200:
+            case 0x04000200u:
                 AddAOEs(1);
                 break;
-            case 0x10000800:
+            case 0x10000800u:
                 AddAOEs(2);
                 break;
-            case 0x00020001:
+            case 0x00020001u:
                 AddAOEs(3);
                 break;
-            case 0x00100004 or 0x00200004 or 0x00400004 or 0x00080004:
+            case 0x00100004u or 0x00200004u or 0x00400004u or 0x00080004u:
                 _aoes.Clear();
                 break;
         }
@@ -171,7 +175,7 @@ class SludgeVoidzone(BossModule module, float radius, uint oid) : Components.Voi
     private static Actor[] GetVoidzones(BossModule module, uint oid)
     {
         var enemies = module.Enemies(oid);
-        if (enemies.Count != 0 && enemies[0].EventState != 7)
+        if (enemies.Count != 0 && enemies[0].EventState != 7u)
             return [enemies[0]];
         return [];
     }
