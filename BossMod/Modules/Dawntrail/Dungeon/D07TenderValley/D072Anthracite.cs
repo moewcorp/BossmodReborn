@@ -40,16 +40,9 @@ public enum AID : uint
     ChimneySmack = 38468, // Helper->player, 5.0s cast, single-target, tankbuster
 }
 
-class Anthrabomb(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 10f);
-class Anthrabomb1(BossModule module) : Anthrabomb(module, (uint)AID.Anthrabomb1);
-class Anthrabomb2(BossModule module) : Anthrabomb(module, (uint)AID.Anthrabomb2);
-
+class Anthrabomb(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Anthrabomb1, (uint)AID.Anthrabomb2], 10f);
 class AnthrabombSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AnthrabombSpread, 6f);
-
-class HotBlast(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(40f, 3f));
-class HotBlast1(BossModule module) : HotBlast(module, (uint)AID.HotBlast1);
-class HotBlast2(BossModule module) : HotBlast(module, (uint)AID.HotBlast2);
-
+class HotBlast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HotBlast1, (uint)AID.HotBlast2], new AOEShapeRect(40f, 3f));
 class CarbonaceousCombustion(BossModule module) : Components.RaidwideCast(module, (uint)AID.CarbonaceousCombustion);
 class ChimneySmack(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ChimneySmack);
 class BurningCoals(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BurningCoals, 6f, 4, 4);
@@ -59,12 +52,10 @@ class D072AnthraciteStates : StateMachineBuilder
     public D072AnthraciteStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Anthrabomb1>()
-            .ActivateOnEnter<Anthrabomb2>()
+            .ActivateOnEnter<Anthrabomb>()
             .ActivateOnEnter<AnthrabombSpread>()
             .ActivateOnEnter<ChimneySmack>()
-            .ActivateOnEnter<HotBlast1>()
-            .ActivateOnEnter<HotBlast2>()
+            .ActivateOnEnter<HotBlast>()
             .ActivateOnEnter<CarbonaceousCombustion>()
             .ActivateOnEnter<BurningCoals>();
     }
