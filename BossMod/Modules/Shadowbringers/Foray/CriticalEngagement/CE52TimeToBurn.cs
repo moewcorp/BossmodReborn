@@ -2,10 +2,10 @@
 
 public enum OID : uint
 {
-    Boss = 0x31C8, // R9.000, x4
-    Clock = 0x1EB17A, // R0.500, x9, EventObj type
-    TimeBomb1 = 0x1EB17B, // R0.500, EventObj type, spawn during fight
-    TimeBomb2 = 0x1EB1D4, // R0.500, EventObj type, spawn during fight
+    Boss = 0x31C8, // R9.0
+    Clock = 0x1EB17A, // R0.5
+    TimeBomb1 = 0x1EB17B, // R0.5
+    TimeBomb2 = 0x1EB1D4, // R0.5
     Helper = 0x233C
 }
 
