@@ -6,7 +6,6 @@ class FlamingRain(BossModule module) : Components.SimpleAOEs(module, (uint)AID.F
 class PillarOfFlame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PillarOfFlame, 8f);
 class TimeEruption(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.TimeEruption1, (uint)AID.TimeEruption2], new AOEShapeRect(20f, 10f), 2, 4);
 class ThermalGust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermalGust, new AOEShapeRect(44f, 5f));
-class ThermalWave(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermalWaveVisual3, new AOEShapeCone(60f, 45f.Degrees()));
 class SearingWind(BossModule module) : Components.Voidzone(module, 3f, GetSearingWind)
 {
     private static List<Actor> GetSearingWind(BossModule module) => module.Enemies((uint)OID.Peri);
@@ -34,7 +33,7 @@ class Backdraft(BossModule module) : Components.SimpleKnockbacks(module, (uint)A
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaDuel, GroupID = 735, NameID = 12)]
-public class Duel3Sartauvoir(WorldState ws, Actor primary) : BossModule(ws, primary, new(-15, 145), new ArenaBoundsSquare(19f))
+public class Duel3Sartauvoir(WorldState ws, Actor primary) : BossModule(ws, primary, new(-15f, 145f), new ArenaBoundsSquare(18f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 20f);
 }
