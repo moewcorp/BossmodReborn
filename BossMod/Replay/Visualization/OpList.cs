@@ -132,6 +132,7 @@ class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Info? modu
             ActorState.OpIcon op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
             ActorState.OpTether op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
             ClientState.OpActionRequest => false,
+            ClientState.OpHateChange => false,
             ClientState.OpActionReject => false,
             ClientState.OpAnimationLockChange => false,
             ClientState.OpComboChange => false,

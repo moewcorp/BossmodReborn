@@ -288,7 +288,7 @@ public sealed class ActionDefinitions : IDisposable
     public static bool DashToTargetCheck(WorldState _, Actor player, ActionQueue.Entry action, AIHints hints)
     {
         var target = action.Target;
-        if (target == null || !_config.PreventDangerousDash)
+        if (target == null || !_config.DashSafety)
             return false;
 
         // if there are pending knockbacks, god only knows where we would be sent after using a gapcloser
@@ -305,7 +305,7 @@ public sealed class ActionDefinitions : IDisposable
 
     public static bool DashToPositionCheck(WorldState _, Actor player, ActionQueue.Entry action, AIHints hints)
     {
-        if (action.TargetPos == default || !_config.PreventDangerousDash || !_config.PreventDangerousDashExtra)
+        if (action.TargetPos == default || !_config.DashSafety || !_config.DashSafetyExtra)
             return false;
 
         if (player.PendingKnockbacks.Count > 0)
@@ -317,7 +317,7 @@ public sealed class ActionDefinitions : IDisposable
     public static ActionDefinition.ConditionDelegate DashFixedDistanceCheck(float range, bool backwards = false)
         => (ws, player, act, hints) =>
         {
-            if (!_config.PreventDangerousDash || !_config.PreventDangerousDashExtra)
+            if (!_config.DashSafety || !_config.DashSafetyExtra)
                 return false;
 
             if (player.PendingKnockbacks.Count != 0)
@@ -333,7 +333,7 @@ public sealed class ActionDefinitions : IDisposable
     public static ActionDefinition.ConditionDelegate BackdashCheck(float range)
          => (ws, player, act, hints) =>
         {
-            if (act.Target == null || !_config.PreventDangerousDash || !_config.PreventDangerousDashExtra)
+            if (act.Target == null || !_config.DashSafety || !_config.DashSafetyExtra)
                 return false;
 
             if (player.PendingKnockbacks.Count > 0)
