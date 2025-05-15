@@ -11,7 +11,7 @@ class SearingWind(BossModule module) : Components.Voidzone(module, 3f, GetSearin
     private static List<Actor> GetSearingWind(BossModule module) => module.Enemies((uint)OID.Peri);
 }
 
-class Backdraft(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Backdraft, 16f)
+class Backdraft(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Backdraft, 16f, true)
 {
     private static readonly Angle a45 = 45f.Degrees(), a90 = 90f.Degrees(), a225 = 22.5f.Degrees();
 
@@ -20,14 +20,10 @@ class Backdraft(BossModule module) : Components.SimpleKnockbacks(module, (uint)A
         if (Casters.Count != 0)
         {
             var source = Casters[0];
-            var act = Module.CastFinishAt(source.CastInfo);
-            if (!IsImmune(slot, act))
-            {
-                var forbidden = new Func<WPos, float>[4];
-                for (var i = 0; i < 4; ++i)
-                    forbidden[i] = ShapeDistance.InvertedCone(source.Position, 5f, a45 + a90 * i, a225);
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
-            }
+            var forbidden = new Func<WPos, float>[4];
+            for (var i = 0; i < 4; ++i)
+                forbidden[i] = ShapeDistance.InvertedCone(source.Position, 5f, a45 + a90 * i, a225);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 }
