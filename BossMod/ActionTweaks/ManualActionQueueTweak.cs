@@ -57,11 +57,9 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
         }
     }
 
-    public bool Enabled => _config.UseManualQueue;
-
     public bool Push(ActionID action, ulong targetId, float castTime, bool allowTargetOverride, Func<(ulong, Vector3?)> getAreaTarget, Func<ulong> targetNearest)
     {
-        if (!Enabled)
+        if (!_config.UseManualQueue)
             return false; // we don't use queue at all
 
         var player = ws.Party.Player();

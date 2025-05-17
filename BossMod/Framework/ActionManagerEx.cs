@@ -494,19 +494,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
         ulong findNearestTarget()
         {
-            if (Framework.Instance()->SystemConfig.GetConfigOption((uint)ConfigOption.AutoNearestTarget)->Value.UInt == 1)
-            {
-                _autoSelectTarget(targetSystem);
-                if (targetSystem->Target != null)
-                    return targetSystem->Target->GetGameObjectId();
-            }
-
-            return InvalidEntityId;
-        }
-
-        ulong findNearestTarget()
-        {
-            if (Framework.Instance()->SystemConfig.GetConfigOption((uint)ConfigOption.AutoNearestTarget)->Value.UInt == 1)
+            if (Framework.Instance()->SystemConfig.GetConfigOption((uint)ConfigOption.AutoNearestTarget)->Value.UInt == 1u)
             {
                 _autoSelectTarget(targetSystem);
                 if (targetSystem->Target != null)

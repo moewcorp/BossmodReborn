@@ -243,7 +243,7 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUI()
     {
         var tsStart = DateTime.Now;
-        var moveImminent = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
+        var moveImminent = _movementOverride.IsMoveRequested() && (!ActionManagerEx.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
 
         _dtr.Update();
         Camera.Instance?.Update();
