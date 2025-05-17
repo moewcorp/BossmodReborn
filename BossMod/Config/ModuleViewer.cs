@@ -300,6 +300,8 @@ public sealed class ModuleViewer : IDisposable
                 return (new("Baldesion Arsenal", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.CastrumLacusLitore:
                 return (new("Castrum Lacus Litore", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+            case BossModuleInfo.GroupType.TheDaldriada:
+                return (new("The Daldriada", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.BozjaSkirmish:
                 var fateRowBozjaSkirmish = Service.LuminaRow<Fate>(module.NameID)!.Value;
                 var skirmishName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} Skirmish";

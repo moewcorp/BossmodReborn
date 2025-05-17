@@ -118,6 +118,7 @@ public enum AID : uint
 
     SlaminatorVisual = 42413, // Boss->location, 4.0+1,0s cast, single-target
     Slaminator = 42414, // Helper->self, 5.0s cast, range 8 circle
+    HeavyImpact = 42415, // Helper->self, no cast, range 60 circle, tower fail
 
     DebrisDeathmatch = 42416, // Boss->self, 3.0s cast, single-target
 
