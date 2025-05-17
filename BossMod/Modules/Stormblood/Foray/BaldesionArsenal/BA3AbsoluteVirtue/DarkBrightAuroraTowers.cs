@@ -52,19 +52,16 @@ abstract class Towers(BossModule module, uint oid, uint tid) : Components.Generi
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (actor.OID == oid)
+        if (actor.OID == oid && state == 0x00040008u)
         {
-            if (state == 0x00040008)
+            var count = Towers.Count;
+            var pos = actor.Position;
+            for (var i = 0; i < count; ++i)
             {
-                var count = Towers.Count;
-                for (var i = 0; i < count; ++i)
+                if (Towers[i].Position == pos)
                 {
-                    var tower = Towers[i];
-                    if (tower.Position == actor.Position)
-                    {
-                        Towers.Remove(tower);
-                        break;
-                    }
+                    Towers.RemoveAt(i);
+                    break;
                 }
             }
         }

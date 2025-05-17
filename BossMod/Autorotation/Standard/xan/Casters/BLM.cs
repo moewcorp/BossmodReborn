@@ -121,7 +121,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
     private readonly float[] EnemyDotTimers = new float[100];
 
-    private float CalculateDotTimer(Actor? t) => t == null ? float.MaxValue : Utils.MaxAll(
+    private float CalculateDotTimer(Actor? t) => t == null || t.PendingDead ? float.MaxValue : Utils.MaxAll(
         StatusDetails(t, SID.Thunder, Player.InstanceID, 24).Left,
         StatusDetails(t, SID.ThunderII, Player.InstanceID, 18).Left,
         StatusDetails(t, SID.ThunderIII, Player.InstanceID, 27).Left,
@@ -155,7 +155,8 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         TP = 0,
         Paradox = 5,
         Firestarter = 10,
-        Polyglot = 15
+        Polyglot = 15,
+        Despair = 20
     }
 
     private static GCDPriority ForMove(InstantCastPriority p) => GCDPriority.InstantMove + (int)p;
@@ -295,7 +296,19 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
     private void FirePhaseST(StrategyValues strategy, Enemy? primaryTarget)
     {
         if (Fire < 3)
-            PushGCD(AID.Fire3, primaryTarget, GCDPriority.High); // technically this prioritizes F3 over FS but i'm pretty sure it's impossible to use flare star without being in AF3
+        {
+            if (!Firestarter)
+            {
+                // generate firestarter via paradox, then use fs to get f3
+                // this results in us not getting another free paradox until next manafont
+                if (Paradox)
+                    PushGCD(AID.Paradox, primaryTarget, GCDPriority.High);
+                else if (!CanFitGCD(InstantCastLeft) && Unlocked(AID.Fire3))
+                    PushGCD(AID.Swiftcast, Player, GCDPriority.High);
+            }
+
+            PushGCD(AID.Fire3, primaryTarget, GCDPriority.High);
+        }
 
         if (AstralSoul == 6)
             PushGCD(AID.FlareStar, BestAOETarget, GCDPriority.Max);
@@ -537,6 +550,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (Firestarter && useFirestarter)
             PushGCD(AID.Fire3, primaryTarget, prioBase + (int)InstantCastPriority.Firestarter);
 
+        if (Fire > 0 && Unlocked(TraitID.EnhancedAstralFire))
+            PushGCD(AID.Despair, primaryTarget, prioBase + (int)InstantCastPriority.Despair, mpCutoff: FireSpellCost);
+
         if (useThunderhead)
         {
             T2(strategy, prioBase);
@@ -565,7 +581,6 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         => CanWeave(MaxChargesIn(AID.LeyLines), 0.6f, extraGCDs)
         && strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 
-    // TODO: in downtime, transpose to AF1 and stay there if we have firestarter
     private bool ShouldTranspose(StrategyValues strategy)
     {
         if (!Unlocked(AID.Fire3))
@@ -577,8 +592,11 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                 AstralSoul < 6 && Fire > 0 && MP < 800
                 // UI: transpose with at least one heart and enough MP to double flare
                 || Ice > 0 && Hearts > 0 && MP >= 2400;
-        else
-            return Firestarter && Ice > 0 && Hearts == MaxHearts;
+
+        var haveInstantFire = Firestarter && Ice > 0 // we have a firestarter
+            || Ice == 3 && Unlocked(AID.Paradox); // transpose will give us firestarter
+
+        return Hearts == MaxHearts && AlmostMaxMP && haveInstantFire;
     }
 
     private void PushGCD(AID aid, Enemy? target, GCDPriority priority, float delay = 0, int mpCutoff = int.MaxValue)
@@ -586,9 +604,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (MP >= GetManaCost(aid))
         {
             if (MP >= mpCutoff)
-            {
                 return;
-            }
             base.PushGCD(aid, target, priority, delay);
         }
     }

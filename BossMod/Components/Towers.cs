@@ -327,7 +327,7 @@ public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool 
         {
             HashSet<Actor> actors = new(module.WorldState.Actors.Actors.Values.Count);
             foreach (var a in module.WorldState.Actors.Actors.Values)
-                if (a.OID == 0)
+                if (a.OID == default)
                     actors.Add(a);
             return actors;
         }

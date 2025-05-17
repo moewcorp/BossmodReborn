@@ -107,11 +107,11 @@ class P2BrightHunger1(BossModule module) : Components.GenericTowers(module, (uin
         }
 
         Towers.Clear();
-        for (int i = 0; i < 6; ++i)
+        for (var i = 0; i < 6; ++i)
         {
-            var dir = (240 - i * 60).Degrees();
+            var dir = (240f - i * 60f).Degrees();
             var forbidden = conga.Count == 6 ? BitMask.Build(conga[i].slot) ^ new BitMask(0xFF) : _forbidden;
-            Towers.Add(new(Arena.Center + 16 * dir.ToDirection(), 4, 1, 1, forbidden, WorldState.FutureTime(10.3f)));
+            Towers.Add(new(Arena.Center + 16f * dir.ToDirection(), 4, 1, 1, forbidden, WorldState.FutureTime(10.3d)));
         }
     }
 }
@@ -377,17 +377,17 @@ class P2LightRampantAIStackResolve(BossModule module) : BossComponent(module)
                     return false; // this is not our partner, we don't need to wait for him
                 var toPartner = partner.Position - actor.Position;
                 var distSq = toPartner.LengthSq();
-                return distSq > 9 && toDest.Dot(toPartner) < 0; // partner is far enough away, and moving towards destination will not bring us closer
+                return distSq > 9f && toDest.Dot(toPartner) < 0f; // partner is far enough away, and moving towards destination will not bring us closer
             }
             if (!Raid.WithoutSlot(false, true, true).Any(needToWaitFor))
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(destPos, 1), DateTime.MaxValue);
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(destPos, 1f), DateTime.MaxValue);
             // else: we still have someone we need to wait for, just stay where we are...
         }
         else if (_stack.Stacks.FirstOrDefault(s => IsNorthCamp(s.Target) == northCamp).Target is var stackTarget && stackTarget != null)
         {
             // we just want to stay close to the stack target, slightly offset to the destination
             var dirToDest = destPos - stackTarget.Position;
-            var dest = dirToDest.LengthSq() <= 4 ? destPos : stackTarget.Position + 2 * dirToDest.Normalized();
+            var dest = dirToDest.LengthSq() <= 4f ? destPos : stackTarget.Position + 2f * dirToDest.Normalized();
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(dest, 1), DateTime.MaxValue);
         }
     }

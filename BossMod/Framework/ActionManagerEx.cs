@@ -44,9 +44,9 @@ public sealed unsafe class ActionManagerEx : IDisposable
     public Event<ClientActionRequest> ActionRequestExecuted = new();
     public Event<ulong, ActorCastEvent> ActionEffectReceived = new();
 
-    public ActionTweaksConfig Config = Service.Config.Get<ActionTweaksConfig>();
-    public ActionQueue.Entry AutoQueue { get; private set; }
-    public bool MoveMightInterruptCast { get; private set; } // if true, moving now might cause cast interruption (for current or queued cast)
+    public static readonly ActionTweaksConfig Config = Service.Config.Get<ActionTweaksConfig>();
+    public ActionQueue.Entry AutoQueue;
+    public bool MoveMightInterruptCast; // if true, moving now might cause cast interruption (for current or queued cast)
     private readonly ActionManager* _inst = ActionManager.Instance();
     private readonly WorldState _ws;
     private readonly AIHints _hints;
@@ -75,6 +75,8 @@ public sealed unsafe class ActionManagerEx : IDisposable
     private DateTime _nextAllowedExecuteCommand;
     private const uint InvalidEntityId = 0xE0000000;
 
+    private readonly unsafe delegate* unmanaged<TargetSystem*, TargetSystem*> _autoSelectTarget;
+
     public ActionManagerEx(WorldState ws, AIHints hints, MovementOverride movement)
     {
         _ws = ws;
@@ -100,6 +102,10 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var executeCommandGTAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? EB 1E 48 8B 53 08");
         Service.Log($"ExecuteCommandGT address: 0x{executeCommandGTAddress:X}");
         _executeCommandGT = Marshal.GetDelegateForFunctionPointer<ExecuteCommandGTDelegate>(executeCommandGTAddress);
+
+        var selectTargetAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? 48 3B C5");
+        Service.Log($"SelectTarget address: 0x{selectTargetAddress:X}");
+        _autoSelectTarget = (delegate* unmanaged<TargetSystem*, TargetSystem*>)selectTargetAddress;
     }
 
     public void Dispose()
@@ -465,15 +471,18 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var action = new ActionID((ActionType)actionType, actionId);
         //Service.Log($"[AMEx] UA: {action} @ {targetId:X}: {extraParam} {mode} {comboRouteId}");
         action = NormalizeActionForQueue(action);
+        var spellId = GetSpellIdForAction(action);
+
+        var targetSystem = TargetSystem.Instance();
 
         // if mouseover mode is enabled AND target is a usual primary target AND current mouseover is valid target for action, then we override target to mouseover
-        var primaryTarget = TargetSystem.Instance()->Target;
+        var primaryTarget = targetSystem->Target;
         var primaryTargetId = primaryTarget != null ? primaryTarget->GetGameObjectId() : InvalidEntityId;
         var targetOverridden = targetId != primaryTargetId;
         if (Config.PreferMouseover && !targetOverridden)
         {
             var mouseoverTarget = PronounModule.Instance()->UiMouseOverTarget;
-            if (mouseoverTarget != null && ActionManager.CanUseActionOnTarget(GetSpellIdForAction(action), mouseoverTarget))
+            if (mouseoverTarget != null && ActionManager.CanUseActionOnTarget(spellId, mouseoverTarget))
             {
                 targetId = mouseoverTarget->GetGameObjectId();
                 targetOverridden = true;
@@ -483,9 +492,21 @@ public sealed unsafe class ActionManagerEx : IDisposable
         (ulong, Vector3?) getAreaTarget() => targetOverridden ? (targetId, null) :
             (Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtTarget ? targetId : InvalidEntityId, Config.GTMode == ActionTweaksConfig.GroundTargetingMode.AtCursor ? GetWorldPosUnderCursor() : null);
 
+        ulong findNearestTarget()
+        {
+            if (Framework.Instance()->SystemConfig.GetConfigOption((uint)ConfigOption.AutoNearestTarget)->Value.UInt == 1u)
+            {
+                _autoSelectTarget(targetSystem);
+                if (targetSystem->Target != null)
+                    return targetSystem->Target->GetGameObjectId();
+            }
+
+            return InvalidEntityId;
+        }
+
         // note: only standard mode can be filtered
         // note: current implementation introduces slight input lag (on button press, next autorotation update will pick state updates, which will be executed on next action manager update)
-        if (mode == ActionManager.UseActionMode.None && action.Type is ActionType.Spell or ActionType.Item && _manualQueue.Push(action, targetId, GetAdjustedCastTime(action) * 0.001f, !targetOverridden, getAreaTarget))
+        if (mode == ActionManager.UseActionMode.None && action.Type is ActionType.Spell or ActionType.Item && _manualQueue.Push(action, targetId, GetAdjustedCastTime(action) * 0.001f, !targetOverridden, getAreaTarget, findNearestTarget))
             return false;
 
         var areaTargeted = false;

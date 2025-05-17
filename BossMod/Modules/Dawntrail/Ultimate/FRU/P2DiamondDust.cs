@@ -16,7 +16,7 @@ class P2IcicleImpact(BossModule module) : Components.GenericAOEs(module, (uint)A
         if (spell.Action.ID == WatchedAction)
         {
             // initially all aoes start as non-risky
-            AOEs.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), 0, false));
+            AOEs.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), Risky: false));
         }
     }
 
@@ -69,23 +69,39 @@ class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBaitAway(
     public override void Update()
     {
         CurrentBaits.Clear();
-        if (_source != null && ForbiddenPlayers.Any())
-        {
-            var party = Raid.WithoutSlot(false, true, true);
-            Array.Sort(party, (a, b) =>
-            {
-                var distA = (a.Position - _source.Position).LengthSq();
-                var distB = (b.Position - _source.Position).LengthSq();
-                return distA.CompareTo(distB);
-            });
 
-            var len = party.Length;
-            var max = len > 4 ? 4 : len;
-            for (var i = 0; i < max; ++i)
+        if (_source == null || ForbiddenPlayers != default)
+            return;
+
+        var party = Raid.WithoutSlot(false, true, true);
+        var len = party.Length;
+
+        Span<(Actor actor, float distSq)> distances = new (Actor, float)[len];
+        var sourcePos = _source.Position;
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var p = ref party[i];
+            var distSq = (p.Position - sourcePos).LengthSq();
+            distances[i] = (p, distSq);
+        }
+
+        var targets = Math.Min(4, len);
+        for (var i = 0; i < targets; ++i)
+        {
+            var selIdx = i;
+            for (var j = i + 1; j < len; ++j)
             {
-                ref readonly var p = ref party[i];
-                CurrentBaits.Add(new(_source, p, _shape, _activation));
+                if (distances[j].distSq < distances[selIdx].distSq)
+                    selIdx = j;
             }
+
+            if (selIdx != i)
+            {
+                (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
+            }
+
+            CurrentBaits.Add(new(_source, distances[i].actor, _shape, _activation));
         }
     }
 
@@ -216,7 +232,7 @@ class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
             var baitCone = _supportsBaitCones == support;
             var dir = 180f.Degrees() - (group & 3) * 90f.Degrees();
             dir += support ? offsetTH : offsetDD;
-            var radius = (_out.Value ? 16 : 0) + (baitCone ? 1 : 3);
+            var radius = (_out.Value ? 16f : default) + (baitCone ? 1f : 3f);
             _safeOffs[slot] = radius * dir.ToDirection();
         }
     }
