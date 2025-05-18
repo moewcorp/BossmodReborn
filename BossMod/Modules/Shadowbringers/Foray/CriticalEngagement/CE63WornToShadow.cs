@@ -2,11 +2,11 @@
 
 public enum OID : uint
 {
-    Boss = 0x31D0, // R7.500, x1
-    AlkonostsShadow = 0x31D1, // R3.750-7.500, spawn during fight
-    VorticalOrb1 = 0x3239, // R0.500, spawn during fight
-    VorticalOrb2 = 0x323A, // R0.500, spawn during fight
-    VorticalOrb3 = 0x31D2, // R0.500, spawn during fight
+    Boss = 0x31D0, // R7.5
+    AlkonostsShadow = 0x31D1, // R3.75-7.5
+    VorticalOrb1 = 0x3239, // R0.5
+    VorticalOrb2 = 0x323A, // R0.5
+    VorticalOrb3 = 0x31D2, // R0.5
     Helper = 0x233C
 }
 

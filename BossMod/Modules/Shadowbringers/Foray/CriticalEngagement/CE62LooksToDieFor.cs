@@ -159,10 +159,7 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-abstract class Lash(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeCone(40f, 90f.Degrees()));
-class Forelash(BossModule module) : Lash(module, (uint)AID.Forelash);
-class Backlash(BossModule module) : Lash(module, (uint)AID.Backlash);
-
+class Lash(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Forelash, (uint)AID.Backlash], new AOEShapeCone(40f, 90f.Degrees()));
 class Charybdis(BossModule module) : Components.CastHint(module, (uint)AID.Charybdis, "Set hp to 1");
 class Roar(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar);
 class Levinbolt(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LevinboltAOE, 6f);
@@ -179,8 +176,7 @@ class CE62LooksToDieForStates : StateMachineBuilder
             .ActivateOnEnter<CloudToGround>()
             .ActivateOnEnter<Flame>()
             .ActivateOnEnter<Burn>()
-            .ActivateOnEnter<Forelash>()
-            .ActivateOnEnter<Backlash>()
+            .ActivateOnEnter<Lash>()
             .ActivateOnEnter<Charybdis>()
             .ActivateOnEnter<Roar>()
             .ActivateOnEnter<Levinbolt>()

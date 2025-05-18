@@ -2,21 +2,40 @@ namespace BossMod.Shadowbringers.Foray.Duel.Duel3Sartauvoir;
 
 class Meltdown(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeCircle circle = new(5f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.Meltdown)
         {
-            if (_aoe == null)
-                _aoe = new(circle, caster.Position, default);
-            if (++NumCasts == 8)
+            ++NumCasts;
+            var count = _aoes.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i) // this assumes player actually moves between the 3x meltdown casts, otherwise 2 or more meltdowns might have the same origin
             {
-                _aoe = null;
-                NumCasts = 0;
+                if (_aoes[i].Origin == pos)
+                {
+                    goto skip;
+                }
+            }
+            _aoes.Add(new(circle, caster.Position));
+        skip:
+            count = _aoes.Count;
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
+            for (var i = 0; i < count; ++i)
+            {
+                ref var aoe = ref aoes[i];
+                if (aoes[i].Origin == pos)
+                {
+                    if (++aoe.ActorID == 8u)
+                    {
+                        _aoes.RemoveAt(i);
+                    }
+                    break;
+                }
             }
         }
     }
