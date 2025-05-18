@@ -46,7 +46,8 @@ public class CastInterruptHint : CastHint
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < Casters.Count; ++i)
+        var count = Casters.Count;
+        for (var i = 0; i < count; ++i)
         {
             var c = Casters[i];
             var e = hints.FindEnemy(c);

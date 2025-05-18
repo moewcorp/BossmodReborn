@@ -94,17 +94,15 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<RootsOfEvil>(id + 0xA0u, 5.4f, comp => comp.NumCasts != 0, $"Circle AOEs 7")
             .ActivateOnEnter<RootsOfEvil>()
             .ActivateOnExit<CrossingCrosswinds>()
-            .ActivateOnExit<CrossingCrosswindsHint>()
+            .ActivateOnExit<AddInterruptHint>()
             .ActivateOnExit<WindingWildwinds>()
-            .ActivateOnExit<WindingWildwindsHint>()
             .DeactivateOnExit<RootsOfEvil>();
         ComponentCondition<CrossingCrosswinds>(id + 0xB0u, 0.7f, comp => comp.Casters.Count != 0, $"Interruptible add casts appear");
         ComponentCondition<QuarrySwamp>(id + 0xC0u, 21.9f, comp => comp.NumCasts != 0, $"Line of sight AOE")
             .ActivateOnEnter<QuarrySwamp>()
-            .DeactivateOnEnter<CrossingCrosswinds>()
-            .DeactivateOnEnter<CrossingCrosswindsHint>()
-            .DeactivateOnEnter<WindingWildwinds>()
-            .DeactivateOnEnter<WindingWildwindsHint>()
+            .DeactivateOnExit<CrossingCrosswinds>()
+            .DeactivateOnExit<AddInterruptHint>()
+            .DeactivateOnExit<WindingWildwinds>()
             .DeactivateOnExit<QuarrySwamp>();
     }
 

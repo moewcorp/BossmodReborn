@@ -185,7 +185,7 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (active)
+        if (active && Arena.Bounds == D122Nixie.DefaultArena)
         {
             var aoes = ActiveAOEs(slot, actor);
             var len = aoes.Length;
