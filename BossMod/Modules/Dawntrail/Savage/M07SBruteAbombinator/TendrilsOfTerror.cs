@@ -22,7 +22,15 @@ class TendrilsOfTerrorBait(BossModule module) : Components.GenericBaitAway(modul
     {
         if (spell.Action.ID is (uint)AID.SinisterSeedsSpread or (uint)AID.StrangeSeeds or (uint)AID.KillerSeeds)
         {
-            CurrentBaits.Clear();
+            var count = CurrentBaits.Count - 1;
+            var target = spell.TargetID;
+            for (var i = count; i >= 0; --i)
+            {
+                if (CurrentBaits[i].Target.InstanceID == target)
+                {
+                    CurrentBaits.RemoveAt(i);
+                }
+            }
         }
     }
 
@@ -78,7 +86,7 @@ class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TendrilsOfTerrorCross1 or (uint)AID.TendrilsOfTerrorCross2 or (uint)AID.TendrilsOfTerrorCross3)
-            AOEs.Add(new(Cross, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            AOEs.Add(new(Cross, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Colors.Danger));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

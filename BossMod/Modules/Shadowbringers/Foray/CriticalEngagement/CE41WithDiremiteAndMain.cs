@@ -169,7 +169,10 @@ class Hailfire(BossModule module) : Components.GenericBaitAway(module)
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is >= (uint)IconID.Hailfire1 and <= (uint)IconID.Hailfire4)
-            CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(8.2d)));
+        {
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(8.2d + (iconID - (uint)IconID.Hailfire1) * 2.1d)));
+            CurrentBaits.SortBy(aoe => aoe.Activation);
+        }
     }
 }
 
