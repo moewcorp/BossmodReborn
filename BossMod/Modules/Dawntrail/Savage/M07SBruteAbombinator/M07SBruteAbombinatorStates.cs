@@ -2,6 +2,8 @@ namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
 class M07SBruteAbombinatorStates : StateMachineBuilder
 {
+    private static readonly M07SBruteAbombinatorConfig _config = Service.Config.Get<M07SBruteAbombinatorConfig>();
+
     public M07SBruteAbombinatorStates(BossModule module) : base(module)
     {
         DeathPhase(default, SinglePhase);
@@ -70,21 +72,24 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
             .ActivateOnEnter<SporeSac>()
             .ActivateOnExit<Pollen>()
             .DeactivateOnExit<SporeSac>();
-        ComponentCondition<Pollen>(id + 0x20u, 5.6f, comp => comp.NumCasts != 0, $"Circle AOEs 2")
+        var pollen = ComponentCondition<Pollen>(id + 0x20u, 5.6f, comp => comp.NumCasts != 0, $"Circle AOEs 2")
             .ActivateOnExit<SinisterSeedsAOE>()
             .ActivateOnExit<SinisterSeedsSpread>()
-            .ActivateOnExit<TendrilsOfTerrorBait>()
-            .ActivateOnExit<TendrilsOfTerrorPrediction>()
             .DeactivateOnExit<Pollen>();
+        if (_config.EnableSeedPrediction)
+            pollen.ActivateOnExit<TendrilsOfTerrorPrediction>()
+            .ActivateOnExit<TendrilsOfTerrorBait>();
         ComponentCondition<SinisterSeedsAOE>(id + 0x30u, 2.8f, comp => comp.NumCasts != 0, $"Circle AOEs 3");
         ComponentCondition<SinisterSeedsAOE>(id + 0x40u, 2f, comp => comp.NumCasts > 4, $"Circle AOEs 4");
-        ComponentCondition<SinisterSeedsSpread>(id + 0x50u, 2f, comp => comp.NumFinishedSpreads != 0, "Spreads resolve + circle AOEs 5")
+        var sinister = ComponentCondition<SinisterSeedsSpread>(id + 0x50u, 2f, comp => comp.NumFinishedSpreads != 0, "Spreads resolve + circle AOEs 5")
             .DeactivateOnExit<SinisterSeedsSpread>()
-            .DeactivateOnExit<TendrilsOfTerrorBait>()
             .ActivateOnEnter<Impact>();
-        ComponentCondition<TendrilsOfTerror>(id + 0x60u, 1.7f, comp => comp.AOEs.Count != 0, $"Tendrils appear")
-            .ActivateOnEnter<TendrilsOfTerror>()
-            .DeactivateOnExit<TendrilsOfTerrorPrediction>();
+        if (_config.EnableSeedPrediction)
+            sinister.DeactivateOnExit<TendrilsOfTerrorBait>();
+        var tendrils = ComponentCondition<TendrilsOfTerror>(id + 0x60u, 1.7f, comp => comp.AOEs.Count != 0, $"Tendrils appear")
+            .ActivateOnEnter<TendrilsOfTerror>();
+        if (_config.EnableSeedPrediction)
+            tendrils.DeactivateOnExit<TendrilsOfTerrorPrediction>();
         ComponentCondition<SinisterSeedsAOE>(id + 0x70u, 0.4f, comp => comp.NumCasts > 12, $"Circle AOEs 6")
             .DeactivateOnExit<SinisterSeedsAOE>();
         ComponentCondition<Impact>(id + 0x80u, 2.5f, comp => comp.NumCasts != 0, $"Stacks resolve")
@@ -207,9 +212,10 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<AbominableBlink>(id + 0x10u, 14.5f, comp => comp.NumCasts != 0, "Flare resolves")
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<AbominableBlink>();
-        Cast(id + 0x20u, (uint)AID.StrangeSeedsVisual1, 3.1f, 4f)
-            .ActivateOnEnter<StrangeSeeds>()
-            .ActivateOnExit<TendrilsOfTerrorPrediction>()
+        var seeds = Cast(id + 0x20u, (uint)AID.StrangeSeedsVisual1, 3.1f, 4f)
+            .ActivateOnEnter<StrangeSeeds>();
+        if (_config.EnableSeedPrediction)
+            seeds.ActivateOnExit<TendrilsOfTerrorPrediction>()
             .ActivateOnEnter<TendrilsOfTerrorBait>();
         CastStartMulti(id + 0x30u, [(uint)AID.Stoneringer2, (uint)AID.Stoneringer4], 5.2f, "Select AOE shape");
         ComponentCondition<StrangeSeeds>(id + 0x40u, 1f, comp => comp.NumFinishedSpreads != 0, "Spreads 1 resolve");
@@ -226,13 +232,15 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<TendrilsOfTerror>(id + 0xE0u, 1.7f, comp => comp.AOEs.Count != 0, $"Tendrils 4 appear")
             .DeactivateOnExit<StrangeSeeds>();
         ComponentCondition<TendrilsOfTerror>(id + 0xF0u, 3f, comp => comp.AOEs.Count == 0, $"Tendrils 4 resolve");
-        ComponentCondition<KillerSeeds>(id + 0x100u, 5.3f, comp => comp.NumFinishedStacks != 0, $"Stacks resolve")
+        var killer = ComponentCondition<KillerSeeds>(id + 0x100u, 5.3f, comp => comp.NumFinishedStacks != 0, $"Stacks resolve")
             .ActivateOnEnter<KillerSeeds>()
-            .DeactivateOnExit<TendrilsOfTerrorBait>()
             .DeactivateOnExit<KillerSeeds>();
-        ComponentCondition<TendrilsOfTerror>(id + 0x110u, 1.6f, comp => comp.AOEs.Count != 0, $"Tendrils 5 appear")
-            .DeactivateOnExit<TendrilsOfTerrorPrediction>()
+        if (_config.EnableSeedPrediction)
+            killer.DeactivateOnExit<TendrilsOfTerrorBait>();
+        var tendrils = ComponentCondition<TendrilsOfTerror>(id + 0x110u, 1.6f, comp => comp.AOEs.Count != 0, $"Tendrils 5 appear")
             .ActivateOnExit<BrutalSwing>();
+        if (_config.EnableSeedPrediction)
+            tendrils.DeactivateOnExit<TendrilsOfTerrorPrediction>();
         ComponentCondition<TendrilsOfTerror>(id + 0x120u, 3f, comp => comp.AOEs.Count == 0, $"Tendrils 5 resolve")
             .DeactivateOnExit<TendrilsOfTerror>();
         ComponentCondition<BrutalSwing>(id + 0x130u, 5.6f, comp => comp.NumCasts != 0, "Stoneringer resolves")
@@ -281,12 +289,13 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<SporeSac>(id + 0x10u, 10.3f, comp => comp.NumCasts != 0, "Circle AOEs 1")
             .ActivateOnEnter<SporeSac>()
             .DeactivateOnExit<SporeSac>();
-        ComponentCondition<Pollen>(id + 0x20u, 5.6f, comp => comp.NumCasts != 0, "Circle AOEs 2")
+        var pollen = ComponentCondition<Pollen>(id + 0x20u, 5.6f, comp => comp.NumCasts != 0, "Circle AOEs 2")
             .ActivateOnEnter<Pollen>()
-            .ActivateOnEnter<TendrilsOfTerrorBait>()
-            .ActivateOnExit<TendrilsOfTerrorPrediction>()
             .ActivateOnEnter<KillerSeeds>()
             .DeactivateOnExit<Pollen>();
+        if (_config.EnableSeedPrediction)
+            pollen.ActivateOnExit<TendrilsOfTerrorPrediction>()
+            .ActivateOnEnter<TendrilsOfTerrorBait>();
         ComponentCondition<KillerSeeds>(id + 0x30u, 3.5f, comp => comp.NumFinishedStacks != 0, $"Stacks resolve")
             .DeactivateOnExit<KillerSeeds>();
         ComponentCondition<TendrilsOfTerror>(id + 0x40u, 1.7f, comp => comp.AOEs.Count != 0, $"Tendrils 1 appear")
@@ -299,16 +308,19 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
             .ActivateOnEnter<SinisterSeedsSpread>()
             .ActivateOnEnter<SinisterSeedsAOE>();
         ComponentCondition<SinisterSeedsAOE>(id + 0x80u, 2f, comp => comp.NumCasts > 4, "Circle AOEs 4");
-        ComponentCondition<SinisterSeedsSpread>(id + 0x90u, 2f, comp => comp.NumFinishedSpreads != 0, "Spreads resolve + circle AOEs 5")
+        var seeds = ComponentCondition<SinisterSeedsSpread>(id + 0x90u, 2f, comp => comp.NumFinishedSpreads != 0, "Spreads resolve + circle AOEs 5")
             .DeactivateOnExit<TendrilsOfTerrorBait>()
             .DeactivateOnExit<SinisterSeedsSpread>();
+        if (_config.EnableSeedPrediction)
+            seeds.DeactivateOnExit<TendrilsOfTerrorBait>();
         ComponentCondition<SinisterSeedsAOE>(id + 0xA0u, 2f, comp => comp.NumCasts > 12, "Circle AOEs 5")
             .DeactivateOnExit<SinisterSeedsAOE>();
-        ComponentCondition<TendrilsOfTerror>(id + 0xB0u, 1.6f, comp => comp.AOEs.Count != 0, $"Tendrils 2 appear")
-            .DeactivateOnExit<TendrilsOfTerrorPrediction>()
+        var tendrils = ComponentCondition<TendrilsOfTerror>(id + 0xB0u, 1.6f, comp => comp.AOEs.Count != 0, $"Tendrils 2 appear")
             .DeactivateOnEnter<ThornsOfDeath>()
             .ActivateOnEnter<PulpSmash>()
             .ActivateOnEnter<RootsOfEvil>();
+        if (_config.EnableSeedPrediction)
+            tendrils.DeactivateOnExit<TendrilsOfTerrorPrediction>();
         ComponentCondition<TendrilsOfTerror>(id + 0xC0u, 3f, comp => comp.AOEs.Count == 0, $"Tendrils 2 resolve")
             .DeactivateOnExit<TendrilsOfTerror>();
         ComponentCondition<RootsOfEvil>(id + 0xD0u, 0.2f, comp => comp.NumCasts != 0, "Circle AOEs 6")
@@ -317,11 +329,12 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
 
     private void StoneRinger2Tendrils(uint id, float delay)
     {
-        CastMulti(id, [(uint)AID.Stoneringer2Stoneringers1, (uint)AID.Stoneringer2Stoneringers2], delay, 2f, "Select AOE shapes")
+        var stoneringer = CastMulti(id, [(uint)AID.Stoneringer2Stoneringers1, (uint)AID.Stoneringer2Stoneringers2], delay, 2f, "Select AOE shapes")
             .ActivateOnEnter<StrangeSeeds>()
-            .ActivateOnEnter<TendrilsOfTerrorBait>()
-            .ActivateOnExit<TendrilsOfTerrorPrediction>()
             .ActivateOnExit<BrutalSwing>();
+        if (_config.EnableSeedPrediction)
+            stoneringer.ActivateOnExit<TendrilsOfTerrorPrediction>()
+            .ActivateOnEnter<TendrilsOfTerrorBait>();
         ComponentCondition<StrangeSeeds>(id + 0x10u, 18.1f, comp => comp.NumFinishedSpreads != 0, "Spreads 1 resolve");
         ComponentCondition<TendrilsOfTerror>(id + 0x20u, 2.1f, comp => comp.AOEs.Count != 0, $"Tendrils 1 appear")
             .ActivateOnEnter<TendrilsOfTerror>();
@@ -330,11 +343,13 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<LashingLariat>(id + 0x50u, 4.9f, comp => comp.NumCasts != 0, $"Huge cleave")
             .ActivateOnEnter<LashingLariat>()
             .DeactivateOnExit<LashingLariat>();
-        ComponentCondition<StrangeSeeds>(id + 0x60u, 4.1f, comp => comp.NumFinishedSpreads > 4, "Spreads 2 resolve")
-            .DeactivateOnExit<TendrilsOfTerrorBait>()
+        var seeds = ComponentCondition<StrangeSeeds>(id + 0x60u, 4.1f, comp => comp.NumFinishedSpreads > 4, "Spreads 2 resolve")
             .DeactivateOnExit<StrangeSeeds>();
-        ComponentCondition<TendrilsOfTerror>(id + 0x70u, 2.2f, comp => comp.AOEs.Count != 0, $"Tendrils 1 appear")
-            .DeactivateOnExit<TendrilsOfTerrorPrediction>();
+        if (_config.EnableSeedPrediction)
+            seeds.DeactivateOnExit<TendrilsOfTerrorBait>();
+        var tendrils = ComponentCondition<TendrilsOfTerror>(id + 0x70u, 2.2f, comp => comp.AOEs.Count != 0, $"Tendrils 1 appear");
+        if (_config.EnableSeedPrediction)
+            tendrils.DeactivateOnExit<TendrilsOfTerrorPrediction>();
         ComponentCondition<TendrilsOfTerror>(id + 0x80u, 3f, comp => comp.AOEs.Count == 0, $"Stoneringer 2 + Tendrils 2 resolve")
             .DeactivateOnExit<BrutalSwing>()
             .DeactivateOnExit<TendrilsOfTerror>();

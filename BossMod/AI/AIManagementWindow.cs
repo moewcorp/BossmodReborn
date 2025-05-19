@@ -66,7 +66,7 @@ sealed class AIManagementWindow : UIWindow
         ImGui.Text("Follow party slot");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(250);
-        ImGui.SetNextWindowSizeConstraints(new Vector2(0, 0), new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50));
+        ImGui.SetNextWindowSizeConstraints(default, new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50f));
         if (ImRaii.Combo("##Leader", _manager.Beh == null ? "<idle>" : _manager.WorldState.Party[_manager.MasterSlot]?.Name ?? "<unknown>"))
         {
             if (ImGui.Selectable("<idle>", _manager.Beh == null))
@@ -85,7 +85,7 @@ sealed class AIManagementWindow : UIWindow
         ImGui.Separator();
         ImGui.Text("Desired positional");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(100f);
         var positionalIndex = (int)_config.DesiredPositional;
         if (ImGui.Combo("##DesiredPositional", ref positionalIndex, positionals, 4))
         {
@@ -97,7 +97,7 @@ sealed class AIManagementWindow : UIWindow
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
         var maxDistanceTargetStr = _config.MaxDistanceToTarget.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MaxDistanceToTarget", ref maxDistanceTargetStr, 64))
+        if (ImGui.InputText("##MaxDistanceToTarget", ref maxDistanceTargetStr, 64u))
         {
             maxDistanceTargetStr = maxDistanceTargetStr.Replace(',', '.');
             if (float.TryParse(maxDistanceTargetStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
@@ -109,9 +109,9 @@ sealed class AIManagementWindow : UIWindow
         ImGui.SameLine();
         ImGui.Text("- to slots");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(100f);
         var maxDistanceSlotStr = _config.MaxDistanceToSlot.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MaxDistanceToSlot", ref maxDistanceSlotStr, 64))
+        if (ImGui.InputText("##MaxDistanceToSlot", ref maxDistanceSlotStr, 64u))
         {
             maxDistanceSlotStr = maxDistanceSlotStr.Replace(',', '.');
             if (float.TryParse(maxDistanceSlotStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
@@ -123,9 +123,9 @@ sealed class AIManagementWindow : UIWindow
 
         ImGui.Text("Movement decision delay");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
+        ImGui.SetNextItemWidth(100f);
         var movementDelayStr = _config.MoveDelay.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MovementDelay", ref movementDelayStr, 64))
+        if (ImGui.InputText("##MovementDelay", ref movementDelayStr, 64u))
         {
             movementDelayStr = movementDelayStr.Replace(',', '.');
             if (float.TryParse(movementDelayStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var delay))
@@ -137,8 +137,8 @@ sealed class AIManagementWindow : UIWindow
         ImGui.SameLine();
         ImGui.Text("Autorotation AI preset");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(250);
-        ImGui.SetNextWindowSizeConstraints(default, new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50));
+        ImGui.SetNextItemWidth(250f);
+        ImGui.SetNextWindowSizeConstraints(default, new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50f));
         var aipreset = _config.AIAutorotPresetName;
         var presets = _manager.Autorot.Database.Presets.VisiblePresets;
 

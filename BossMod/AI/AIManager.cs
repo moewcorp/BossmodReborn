@@ -33,8 +33,7 @@ sealed class AIManager : IDisposable
     {
         AiPreset = p;
         _config.AIAutorotPresetName = p?.Name;
-        if (Beh != null)
-            Beh.AIPreset = p;
+        Beh?.AIPreset = p;
     }
 
     public void Dispose()

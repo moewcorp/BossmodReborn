@@ -78,6 +78,7 @@ class TendrilsOfTerrorPrediction(BossModule module) : Components.GenericAOEs(mod
 
 class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
 {
+    private static readonly M07SBruteAbombinatorConfig _config = Service.Config.Get<M07SBruteAbombinatorConfig>();
     public static readonly AOEShapeCross Cross = new(60f, 2f);
     public readonly List<AOEInstance> AOEs = new(8);
 
@@ -86,7 +87,7 @@ class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TendrilsOfTerrorCross1 or (uint)AID.TendrilsOfTerrorCross2 or (uint)AID.TendrilsOfTerrorCross3)
-            AOEs.Add(new(Cross, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Colors.Danger));
+            AOEs.Add(new(Cross, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), _config.EnableSeedPrediction ? Colors.Danger : default));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
