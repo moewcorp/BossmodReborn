@@ -1,28 +1,32 @@
 ﻿namespace BossMod.Autorotation.MiscAI;
+
 public sealed class GoToPositional(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
     public enum Tracks
     {
         Positional
     }
+    private static readonly Positional[] positionals = Enum.GetValues<Positional>();
+    private static readonly string[] positionalNames = Enum.GetNames<Positional>();
 
     public static RotationModuleDefinition Definition()
     {
         RotationModuleDefinition def = new("Misc AI: Goes to specified positional", "Module for use with other rotation plugins.", "AI", "erdelf", RotationModuleQuality.Basic, new(~0ul), 1000);
 
         var track = def.Define(Tracks.Positional).As<Positional>("Positional", "Positional");
-
-        foreach (var positional in Enum.GetValues<Positional>())
+        for (var i = 0; i < 4; ++i)
         {
-            track.AddOption(positional, positional.ToString());
+            ref readonly var positional = ref positionals[i];
+            ref readonly var positionalName = ref positionalNames[i];
+            track.AddOption(positional, positionalName);
         }
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         if (!Player.InCombat
-            || Player.FindStatus(ClassShared.AID.TrueNorth) != null
+            || Player.FindStatus((uint)ClassShared.AID.TrueNorth) != null
             || primaryTarget == null
             || primaryTarget is { Omnidirectional: true }
             || primaryTarget is { TargetID: var t, CastInfo: null, IsStrikingDummy: false } && t == Player.InstanceID)

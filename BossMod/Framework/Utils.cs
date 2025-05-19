@@ -392,6 +392,18 @@ public static partial class Utils
         p.Z = ynew + cy;
         return p;
     }
+
+    public static Func<TIn, TOut> Memoize<TIn, TOut>(this Func<TIn, TOut> func) where TIn : notnull
+    {
+        var cache = new Dictionary<TIn, TOut>();
+        return input =>
+        {
+            if (cache.TryGetValue(input, out var cached))
+                return cached;
+
+            return cache[input] = func(input);
+        };
+    }
 }
 
 public static class Bitmasks
@@ -419,17 +431,5 @@ public static class Bitmasks
     public static bool IsBitSet(short b, int pos)
     {
         return (b & (1 << pos)) != 0;
-    }
-
-    public static Func<TIn, TOut> Memoize<TIn, TOut>(this Func<TIn, TOut> func) where TIn : notnull
-    {
-        var cache = new Dictionary<TIn, TOut>();
-        return input =>
-        {
-            if (cache.TryGetValue(input, out var cached))
-                return cached;
-
-            return cache[input] = func(input);
-        };
     }
 }
