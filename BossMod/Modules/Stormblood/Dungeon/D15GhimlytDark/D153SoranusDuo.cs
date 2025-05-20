@@ -127,7 +127,7 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(11);
     private static readonly AOEShapeCircle circleRoundhouse = new(6.6f);
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(9);
     private static readonly WPos[] origins = [new(370.992f, -277.028f), new(362.514f, -273.49f), new(379.485f, -273.49f), new(358.999f, -265.034f),
     new(382.986f, -265.034f), new(379.485f, -256.52f), new(362.514f, -256.52f), new(370.992f, -253.01f)];
 
@@ -136,39 +136,42 @@ class CeruleumTanks(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-
-        var max = count == 9 ? 4 : count == 8 ? 3 : 2;
-        var result = new AOEInstance[4 + max];
-        var index = 0;
-
-        for (var i = max; i < max + 4; ++i)
-            result[index++] = _aoes[i];
-
-        for (var i = 0; i < max; ++i)
-            result[index++] = _aoes[i] with { Color = Colors.Danger };
-
-        return result;
+        var max = count == 9 ? 8 : count;
+        var aoes = CollectionsMarshal.AsSpan(_aoes)[..max];
+        if (count > 2)
+        {
+            var maxDanger = count == 9 ? 4 : count == 8 ? 3 : 2;
+            var maxDangerAdj = maxDanger - 1;
+            var color = Colors.Danger;
+            for (var i = 0; i < count; ++i)
+            {
+                if (i <= maxDangerAdj)
+                {
+                    aoes[i].Color = color;
+                }
+            }
+        }
+        return aoes;
     }
 
     public override void OnActorCreated(Actor actor)
     {
-        var count = _aoes.Count;
-        if (count == 0 && actor.OID == (uint)OID.CeruleumTank)
+        if (_aoes.Count == 0 && actor.OID == (uint)OID.CeruleumTank)
         {
+            _aoes.Add(new(circleRoundhouse, WPos.ClampToGrid(new(370.992f, -265.034f)), default, WorldState.FutureTime(3.1d)));
             for (var i = 0; i < 8; ++i)
             {
-                double activation;
-                if (count == 0)
-                    activation = 8.8d;
-                else
+                var activation = i switch
                 {
-                    var set = (count + 1) * 0.5d;
-                    activation = 8.8d + 2.4d * set;
-                }
+                    0 => 5.8d,
+                    1 or 2 => 8.3d,
+                    3 or 4 => 10.7d,
+                    5 or 6 => 13.2d,
+                    7 => 15.7d,
+                    _ => default
+                };
                 _aoes.Add(new(circle, WPos.ClampToGrid(origins[i]), default, WorldState.FutureTime(activation)));
             }
-            _aoes.Add(new(circleRoundhouse, WPos.ClampToGrid(new(370.992f, -265.034f)), default, WorldState.FutureTime(3.1d)));
-            _aoes.SortBy(x => x.Activation);
         }
     }
 
@@ -189,15 +192,10 @@ class Crosshatch(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe with { Risky = false };
-        }
+
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        if (count > 1)
+            aoes[0].Color = Colors.Danger;
         return aoes;
     }
 
