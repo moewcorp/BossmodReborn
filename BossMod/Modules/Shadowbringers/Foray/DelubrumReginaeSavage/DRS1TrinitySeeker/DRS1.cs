@@ -16,10 +16,7 @@ class BurningChains(BossModule module) : Components.Chains(module, (uint)TetherI
 class IronImpact(BossModule module) : Components.CastCounter(module, (uint)AID.IronImpact);
 class IronRose(BossModule module) : Components.SimpleAOEs(module, (uint)AID.IronRose, new AOEShapeRect(50f, 4f));
 
-class DeadIron : Components.BaitAwayTethers
-{
-    public DeadIron(BossModule module) : base(module, new AOEShapeCone(50f, 15f.Degrees()), (uint)TetherID.DeadIron, (uint)AID.DeadIronAOE) { DrawTethers = false; }
-}
+class DeadIron(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(50f, 15f.Degrees()), (uint)IconID.DeadIron, (uint)AID.DeadIronAOE, 4.6d);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9834, PlanLevel = 80)]
 public class DRS1(WorldState ws, Actor primary) : TrinitySeeker(ws, primary);
