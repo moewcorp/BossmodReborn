@@ -3,12 +3,16 @@ namespace BossMod.Components;
 public abstract class CleansableDebuff(BossModule module, uint statusID, string noun = "Doom", string adjective = "doomed") : BossComponent(module)
 {
     private readonly List<Actor> _affected = [];
+    private readonly List<Actor> _pending = [];
+    private readonly uint StatusID = statusID;
+    private readonly string Noun = noun;
+    private readonly string Adjective = adjective;
     private static readonly ActionID esuna = ActionID.MakeSpell(ClassShared.AID.Esuna);
     private static readonly ActionID wardensPaean = ActionID.MakeSpell(BRD.AID.WardensPaean);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if (status.ID == statusID)
+        if (status.ID == StatusID)
         {
             var count = _affected.Count;
             for (var i = 0; i < count; ++i) // some status effects can be applied multiple times, filter to avoid duplicate hints
@@ -24,10 +28,23 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (status.ID == statusID)
+        if (status.ID == StatusID)
         {
-            if (actor.FindStatus(statusID) == null) // verify that all instances of the status effect are gone
-                _affected.Remove(actor);
+            _pending.Add(actor); // actor status list gets updated after OnStatusLose gets called, so we need to use Update method for final check
+        }
+    }
+
+    public override void Update()
+    {
+        var count = _pending.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var pending = _pending[i];
+            if (pending.FindStatus(StatusID) == null) // verify that all instances of the status effect are gone
+            {
+                _affected.Remove(pending);
+                _pending.Remove(pending);
+            }
         }
     }
 
@@ -47,12 +64,12 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
             }
             if (contains)
                 if (!(actor.Role == Role.Healer || actor.Class == Class.BRD))
-                    hints.Add($"You were {adjective}! Get cleansed fast.");
+                    hints.Add($"You were {Adjective}! Get cleansed fast.");
                 else
-                    hints.Add($"Cleanse yourself! ({noun}).");
+                    hints.Add($"Cleanse yourself! ({Noun}).");
             else if (actor.Role == Role.Healer || actor.Class == Class.BRD)
                 for (var i = 0; i < count; ++i)
-                    hints.Add($"Cleanse {_affected[i].Name}! ({noun})");
+                    hints.Add($"Cleanse {_affected[i].Name}! ({Noun})");
         }
     }
 
