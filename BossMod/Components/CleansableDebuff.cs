@@ -36,15 +36,15 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
 
     public override void Update()
     {
-        var count = _pending.Count;
-        for (var i = 0; i < count; ++i)
+        var count = _pending.Count - 1;
+        for (var i = count; i >= 0; --i)
         {
             var pending = _pending[i];
             if (pending.FindStatus(StatusID) == null) // verify that all instances of the status effect are gone
             {
                 _affected.Remove(pending);
-                _pending.Remove(pending);
             }
+            _pending.Remove(pending); // second instance of debuff was found
         }
     }
 
