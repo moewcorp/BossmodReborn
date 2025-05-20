@@ -2,7 +2,7 @@
 
 class MercifulBreeze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MercifulBreeze, new AOEShapeRect(50f, 2.5f));
 class BalefulSwathe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BalefulSwathe, new AOEShapeCone(50f, 90f.Degrees()));
-class ActOfMercy(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ActOfMercy, new AOEShapeCross(50f, 5f));
+class ActOfMercy(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ActOfMercy, new AOEShapeCross(50f, 4f));
 class MercifulBlooms(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MercifulBlooms, 20f);
 class MercifulArc(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(12f, 45f.Degrees()), (uint)IconID.MercifulArc, (uint)AID.MercifulArc);
 
