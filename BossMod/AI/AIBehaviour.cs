@@ -176,7 +176,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
         _followMaster = interactTarget == null && (_config.FollowDuringCombat || !master.InCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100f) && (_config.FollowDuringActiveBossModule || autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null) && (_config.FollowOutOfCombat || master.InCombat);
 
-        if (_followMaster && AIPreset == null)
+        if (_followMaster)
         {
             if (forceDestination != null && forceDestination.OID != master.OID && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
             {
@@ -185,18 +185,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             var target = autorot.WorldState.Actors.Find(player.TargetID);
             if (!_config.FollowTarget || _config.FollowTarget && target == null)
                 autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(master, Positional.Any, _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot));
-            else if (_config.FollowTarget && target != null)
+            else if (_config.FollowTarget && target != null && AIPreset == null)
             {
                 var positional = _config.DesiredPositional;
-                if (positional is Positional.Rear or Positional.Flank && (target.CastInfo == null && target.NameID != 541 && target.TargetID == player.InstanceID || target.Omnidirectional)) // if player is target, rear/flank is usually impossible unless target is casting
+                if (positional is Positional.Rear or Positional.Flank && (target.CastInfo == null && target.NameID != 541u && target.TargetID == player.InstanceID || target.Omnidirectional)) // if player is target, rear/flank is usually impossible unless target is casting
                     positional = Positional.Any;
                 autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(master, positional, positional != Positional.Any ? 2.6f : _config.MaxDistanceToTarget));
             }
-            return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player)).ConfigureAwait(false);
-        }
-        if (forceDestination != null && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
-        {
-            autorot.Hints.GoalZones.Add(autorot.Hints.GoalProximity(forceDestination, 3.5f, 100f));
             return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player)).ConfigureAwait(false);
         }
 
