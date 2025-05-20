@@ -28,6 +28,6 @@ public abstract class TrinitySeeker(WorldState ws, Actor primary) : BossModule(w
         return barricades;
     }
 
-    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(ArenaCenter, 29.5f, 48)], [.. barricades, new Rectangle(new(0, 248), 20, 1.25f), new Rectangle(new(0, 308), 20, 1.43f)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 25, 48)], barricades);
+    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(ArenaCenter, 29.5f, 48)], [.. barricades, new Rectangle(new(default, 248f), 20f, 1.25f), new Rectangle(new(default, 308f), 20f, 1.43f)]);
+    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 25f, 48)], barricades);
 }

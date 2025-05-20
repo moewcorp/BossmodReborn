@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN1TrinitySeeker;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN1TrinitySeeker;
 
 class IronSplitter(BossModule module) : Components.GenericAOEs(module, (uint)AID.IronSplitter)
 {
@@ -17,16 +17,15 @@ class IronSplitter(BossModule module) : Components.GenericAOEs(module, (uint)AID
             var pos = WPos.ClampToGrid(Arena.Center);
             if (distance is < 3 or > 9 and < 11 or > 17 and < 19) // tiles
             {
-                _aoes.Add(new(_shapes[0], pos, default, activation));
-                _aoes.Add(new(_shapes[1], pos, default, activation));
-                _aoes.Add(new(_shapes[2], pos, default, activation));
+                for (var i = 0; i < 3; ++i)
+                    AddAOE(i);
             }
             else
             {
-                _aoes.Add(new(_shapes[3], pos, default, activation));
-                _aoes.Add(new(_shapes[4], pos, default, activation));
-                _aoes.Add(new(_shapes[5], pos, default, activation));
+                for (var i = 3; i < 6; ++i)
+                    AddAOE(i);
             }
+            void AddAOE(int index) => _aoes.Add(new(_shapes[index], pos, default, activation));
         }
     }
 
