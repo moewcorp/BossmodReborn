@@ -5,8 +5,30 @@ public class RaidwideCast(BossModule module, uint aid, string hint = "Raidwide")
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var c in Casters)
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(c.CastInfo)));
+        var count = Casters.Count;
+        for (var i = 0; i < count; ++i)
+            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(Casters[i].CastInfo)));
+    }
+}
+
+public class RaidwideCasts(BossModule module, uint[] aids, string hint = "Raidwide") : RaidwideCast(module, default, hint)
+{
+    private readonly uint[] AIDs = aids;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Remove(caster);
     }
 }
 
@@ -68,14 +90,37 @@ public class SingleTargetCast(BossModule module, uint aid, string hint = "Tankbu
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var c in Casters)
+        var count = Casters.Count;
+        for (var i = 0; i < count; ++i)
         {
+            var c = Casters[i];
             if (c.CastInfo != null)
             {
                 var target = c.CastInfo.TargetID != c.InstanceID ? c.CastInfo.TargetID : c.TargetID; // assume self-targeted casts actually hit main target
                 hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(target)), Module.CastFinishAt(c.CastInfo)));
             }
         }
+    }
+}
+
+public class SingleTargetCasts(BossModule module, uint[] aids, string hint = "Tankbuster") : SingleTargetCast(module, default, hint)
+{
+    private readonly uint[] AIDs = aids;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Remove(caster);
     }
 }
 

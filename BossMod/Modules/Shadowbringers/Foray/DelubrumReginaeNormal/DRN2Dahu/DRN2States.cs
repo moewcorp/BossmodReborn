@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN2Dahu;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN2Dahu;
 
 class DRN2DahuStates : StateMachineBuilder
 {
@@ -11,7 +11,7 @@ class DRN2DahuStates : StateMachineBuilder
             .ActivateOnEnter<HeadDown>()
             .ActivateOnEnter<FirebreatheRotating>()
             .ActivateOnEnter<Shockwave>()
-            .ActivateOnEnter<FeralHowl>()
-            .ActivateOnEnter<HuntersClaw>();
+            .ActivateOnEnter<HuntersClaw>()
+            .ActivateOnEnter<FeralHowl>();
     }
 }

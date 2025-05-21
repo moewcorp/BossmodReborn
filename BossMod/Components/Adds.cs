@@ -49,7 +49,6 @@ public class AddsPointless(BossModule module, uint oid) : Adds(module, oid)
 public class AddsMulti(BossModule module, uint[] oids, int priority = 0) : BossComponent(module)
 {
     public readonly uint[] OIDs = oids;
-    public readonly List<Actor> Actors = module.Enemies(oids);
     public List<Actor> ActiveActors
     {
         get
