@@ -1,15 +1,16 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN2Dahu;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN2Dahu;
 
 public enum OID : uint
 {
-    Dahu = 0x233C, // R0.500, x?, 523 type
-    Boss = 0x30A6, // R4.600, x?
-    Marchosias = 0x30A7, // R2.500, x?
+    Boss = 0x30A6, // R4.6
+    Marchosias = 0x30A7, // R2.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 6497, // Boss/CrownedMarchosias->player, no cast, single-target
+
     ReverberatingRoar = 22363, // Boss->self, no cast, single-target, visual (falling rocks)
     FallingRock = 22364, // Helper->location, 3.0s cast, range 4 circle puddle
     HotCharge = 22372, // Boss->location, 3.0s cast, width 8 rect charge

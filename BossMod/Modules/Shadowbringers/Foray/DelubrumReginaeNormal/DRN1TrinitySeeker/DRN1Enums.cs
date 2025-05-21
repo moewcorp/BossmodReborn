@@ -2,7 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x3131, // R4.000, x1
+    Boss = 0x3131, // R4.0
     AetherialOrb = 0x3132, // R2.0
     Helper = 0x233C
 }

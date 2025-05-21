@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN3QueensGuard;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN3QueensGuard;
 
 class CoatOfArms(BossModule module) : Components.DirectionalParry(module, [(uint)OID.AetherialWard])
 {

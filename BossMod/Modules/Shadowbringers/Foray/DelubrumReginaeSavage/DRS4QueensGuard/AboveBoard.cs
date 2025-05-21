@@ -11,7 +11,7 @@ class AboveBoard(BossModule module) : Components.GenericAOEs(module)
     private BitMask _invertedPlayers; // default for player is 'long', short is considered inverted (has visible status)
     private DateTime _activation = module.WorldState.FutureTime(12f);
 
-    private static readonly AOEShapeCircle _shape = new(10);
+    private static readonly AOEShapeCircle circle = new(10);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -25,7 +25,7 @@ class AboveBoard(BossModule module) : Components.GenericAOEs(module)
 
         for (var i = 0; i < count; ++i)
         {
-            aoes[i] = new(_shape, imminentBombs[i].Position, new(), _activation);
+            aoes[i] = new(circle, imminentBombs[i].Position, default, _activation);
         }
         return aoes;
     }

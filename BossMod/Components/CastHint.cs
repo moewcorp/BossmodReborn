@@ -28,6 +28,27 @@ public class CastHint(BossModule module, uint aid, string hint, bool showCastTim
     }
 }
 
+public class CastHints(BossModule module, uint[] aids, string hint, bool showCastTimeLeft = false) : CastHint(module, default, hint, showCastTimeLeft)
+{
+    private readonly uint[] AIDs = aids;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Remove(caster);
+    }
+}
+
 public class CastInterruptHint : CastHint
 {
     public readonly bool CanBeInterrupted;
