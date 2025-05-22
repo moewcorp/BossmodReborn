@@ -9,17 +9,17 @@ class Enrages(BossModule module) : Components.CastHints(module, [(uint)AID.Blood
 class PawnOff(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PawnOffReal, 20f);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 760, NameID = 9838)]
-public class DRN3QueensGuard : BossModule
+public class DRN3QueensGuard : QueensGuard
 {
-    private readonly Actor _warrior;
-    private readonly Actor _soldier;
-    private readonly Actor _gunner;
+    private readonly Actor? _warrior;
+    private readonly Actor? _soldier;
+    private readonly Actor? _gunner;
 
-    public DRN3QueensGuard(WorldState ws, Actor primary) : base(ws, primary, new(244f, -162f), new ArenaBoundsCircle(25f))
+    public DRN3QueensGuard(WorldState ws, Actor primary) : base(ws, primary)
     {
-        _warrior = Enemies((uint)OID.Warrior)[0];
-        _soldier = Enemies((uint)OID.Soldier)[0];
-        _gunner = Enemies((uint)OID.Gunner)[0];
+        _warrior = Enemies((uint)OID.Warrior) is var warrior && warrior.Count != 0 ? warrior[0] : null;
+        _soldier = Enemies((uint)OID.Soldier) is var soldier && soldier.Count != 0 ? soldier[0] : null;
+        _gunner = Enemies((uint)OID.Gunner) is var gunner && gunner.Count != 0 ? gunner[0] : null;
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

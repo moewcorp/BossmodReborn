@@ -1,10 +1,11 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS6TrinityAvowed;
 
-class DRS6States : StateMachineBuilder
+class DRS6TrinityAvowedStates : StateMachineBuilder
 {
-    public DRS6States(BossModule module) : base(module)
+    public DRS6TrinityAvowedStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
+            .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<AllegiantArsenal>();
     }
 

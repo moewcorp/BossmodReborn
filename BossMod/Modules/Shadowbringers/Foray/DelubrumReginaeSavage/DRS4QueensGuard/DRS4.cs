@@ -14,7 +14,7 @@ class PawnOff(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PawnO
 class Fracture(BossModule module) : Components.CastCounter(module, (uint)AID.Fracture); // TODO: consider showing reflect hints
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", PrimaryActorOID = (uint)OID.Knight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9838, PlanLevel = 80)]
-public class DRS4 : BossModule
+public class DRS4QueensGuard : QueensGuard
 {
     private readonly List<Actor> _warrior;
     private readonly List<Actor> _soldier;
@@ -28,7 +28,7 @@ public class DRS4 : BossModule
     public readonly List<Actor> AuraSpheres;
     public readonly List<Actor> SpiritualSpheres;
 
-    public DRS4(WorldState ws, Actor primary) : base(ws, primary, new(244f, -162f), new ArenaBoundsCircle(25f))
+    public DRS4QueensGuard(WorldState ws, Actor primary) : base(ws, primary)
     {
         _warrior = Enemies((uint)OID.Warrior);
         _soldier = Enemies((uint)OID.Soldier);

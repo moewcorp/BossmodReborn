@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN5TrinityAvowed;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
 class FreedomOfBozja : TemperatureAOE
 {

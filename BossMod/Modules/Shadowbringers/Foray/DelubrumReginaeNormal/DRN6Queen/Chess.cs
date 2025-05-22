@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN6Queen;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
 abstract class Chess(BossModule module) : Components.GenericAOEs(module)
 {

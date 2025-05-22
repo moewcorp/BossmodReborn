@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN6Queen;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
 public enum OID : uint
 {
@@ -18,9 +18,10 @@ public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
     Teleport = 23499, // Boss->location, no cast, single-target
-    EmpyreanIniquityAOE = 22984, // Boss->self, 5.0s cast, range 60 circle raidwide
+
+    EmpyreanIniquity = 22984, // Boss->self, 5.0s cast, range 60 circle raidwide
     NorthswainsGlow = 22979, // Boss->self, 3.0s cast, single-target, visual (three fire lines with aoes on intersections)
-    NorthswainsGlowAOE = 22980, // Helper->self, 10.0s cast, range 20 circle aoe
+    NorthswainsGlowAOE = 22980, // Helper->self, 10.0s cast, range 20 circle
     CleansingSlash = 22981, // Boss->player, 5.0s cast, single-target tankbuster
 
     QueensWill = 22969, // Boss->self, 5.0s cast, single-target, visual (easy chess start)
@@ -33,23 +34,23 @@ public enum AID : uint
     AboveBoardExtra = 23437, // Helper->self, 6.0s cast, range 60 circle, visual (???)
     Bombslinger = 23358, // QueensWarrior->self, 3.0s cast, single-target, visual (spawn bombs)
     DoubleGambit = 23001, // QueensSoldier->self, 3.0s cast, single-target, visual (summon 4 pawns)
-    GodsSaveTheQueenAOE = 22985, // Boss->self, 5.0s cast, range 60 circle raidwide
+    GodsSaveTheQueen = 22985, // Boss->self, 5.0s cast, range 60 circle, raidwide
 
     HeavensWrath = 22982, // Boss->self, 3.0s cast, single-target, single-target, visual (preparation for knockback)
-    HeavensWrathKnockback = 22983, // Helper->self, 7.0s cast, range 60 width 100 rect, knockback 15
+    HeavensWrathKnockback = 22983, // Helper->self, 7.0s cast, range 60 width 100 rect, knockback 20, source left/right
 
-    JudgmentBladeL = 22977, // Boss->location, 5.0s cast, single-target, visual (half arena cleave)
-    JudgmentBladeR = 22978, // Boss->location, 5.0s cast, single-target, visual (half arena cleave)
-    JudgmentBladeLAOE = 23426, // Helper->self, 5.3s cast, range 70 width 30 rect
-    JudgmentBladeRAOE = 23427, // Helper->self, 5.3s cast, range 70 width 30 rect
+    JudgmentBladeVisualL = 22977, // Boss->location, 5.0s cast, single-target, visual (half arena cleave)
+    JudgmentBladeVisualR = 22978, // Boss->location, 5.0s cast, single-target, visual (half arena cleave)
+    JudgmentBladeL = 23426, // Helper->self, 5.3s cast, range 70 width 30 rect
+    JudgmentBladeR = 23427, // Helper->self, 5.3s cast, range 70 width 30 rect
     LotsCastBigShort = 23431, // AetherialBurst->location, no cast, range 10 circle
     LotsCastSmallShort = 22995, // AetherialBolt->location, no cast, range 10 circle
     LotsCastBigLong = 22994, // AetherialBurst->location, no cast, range 10 circle visual
     LotsCastSmallLong = 23430, // AetherialBolt->location, no cast, range 10 circle visual
 
+    OptimalPlayVisual = 22990, // Helper->self, 5.0s cast, single-target
     OptimalPlaySword = 22987, // QueensKnight->self, 5.0s cast, range 10 circle
-    OptimalPlayShield = 22989, // QueensKnight->self, 6.0s cast, range ?-60 donut
-    OptimalPlayCone = 22990, // Helper->self, 5.0s cast, single-target
+    OptimalPlayShield = 22989, // QueensKnight->self, 6.0s cast, range 5-60 donut
 
     PawnOffReal = 23002, // SoldierAvatar->self, 5.0s cast, range 20 circle
     PawnOffFake = 23003, // SoldierAvatar->self, 5.0s cast, range 20 circle
@@ -93,9 +94,6 @@ public enum SID : uint
 
     Stun = 149, // none->player, extra=0x0
     ReversalOfForces = 2447, // none->player, extra=0x0
-    RightUnseen = 1707, // none->player, extra=0xE9
-    LeftUnseen = 1708, // none->player, extra=0xEA
-    BackUnseen = 1709, // none->player, extra=0xE8
     ShieldBearer = 2446, // QueensKnight->QueensKnight, extra=0x0
     AboveBoardPlayerLong = 2426, // none->player, extra=0x3E8
     AboveBoardPlayerShort = 2427, // none->player, extra=0x3E8

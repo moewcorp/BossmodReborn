@@ -30,6 +30,8 @@ public class DirectionalParry(BossModule module, uint[] actorOID) : AddsMulti(mo
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
+        if (ActorStates.Count == 0)
+            return;
         var actors = ActiveActors;
         Actor? target = null;
         var count = ActiveActors.Count;

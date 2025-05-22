@@ -17,7 +17,8 @@ public enum OID : uint
     RagingFlame = 0x30CD, // R1.000-1.500, spawn during fight (solder/gunner small fireball)
     ImmolatingFlame = 0x30CE, // R1.000-3.000, spawn during fight (soldier/gunner big fireball)
     AutomaticTurret = 0x30D0, // R4.000, spawn during fight (soldier/gunner untargetable turret)
-    GunTurret = 0x30D1, // R4.000, spawn during fight (soldier/gunner targetable turret)
+    ArenaFeatures = 0x1EA1A1, // R2.0
+    GunTurret = 0x30D1 // R4.000, spawn during fight (soldier/gunner targetable turret)
 }
 
 public enum AID : uint
@@ -117,47 +118,26 @@ public enum AID : uint
     EnrageP3WarriorRepeat = 23453, // Knight->self, no cast, range 60 circle
     EnrageP3KnightRepeat = 23454, // Knight->self, no cast, range 60 circle
     EnrageP3SoldierRepeat = 23455, // Soldier->self, no cast, range 60 circle
-    EnrageP3GunnerRepeat = 23456, // Gunner->self, no cast, range 60 circle
+    EnrageP3GunnerRepeat = 23456 // Gunner->self, no cast, range 60 circle
 }
 
 public enum SID : uint
 {
     MagicVulnerabilityDown = 812, // none->Warrior/Knight, extra=0x0
     PhysicalVulnerabilityDown = 899, // none->Warrior/Knight, extra=0x0
-    SwordBearer = 2445, // Knight->Knight, extra=0x0
-    ShieldBearer = 2446, // Knight->Knight, extra=0x0
     ReversalOfForces = 2447, // none->AetherialBurst/AetherialBolt/player, extra=0x0
     AboveBoardPlayerLong = 2426, // none->player, extra=0x3E8
     AboveBoardPlayerShort = 2427, // none->player, extra=0x3E8
     AboveBoardBombLong = 2428, // none->AetherialBurst/AetherialBolt, extra=0x3E8
     AboveBoardBombShort = 2429, // none->AetherialBolt/AetherialBurst, extra=0x3E8
-    Boosted = 2448, // Warrior->Warrior, extra=0x0
-
-    Transfiguration = 565, // none->RagingFlame/ImmolatingFlame, extra=0x199
-    //_Gen_ = 2056, // none->AutomaticTurret, extra=0xE1
     RightUnseen = 1707, // none->player, extra=0xE9
     LeftUnseen = 1708, // none->player, extra=0xEA
     BackUnseen = 1709, // none->player, extra=0xE8
-    //_Gen_DamageUp = 61, // none->GunTurret, extra=0x0
-    Pyretic = 960, // Soldier->player, extra=0x0
-    DirectionalParry = 680, // AetherialWard->AetherialWard, extra=0x3 (front+back)/0xC (left+right)
-    //_Gen_ = 2195, // AetherialWard->AetherialWard, extra=0x101/0x100
-}
-
-public enum IconID : uint
-{
-    Reversal = 255, // player
-    SpriteCheck = 23, // player
+    Pyretic = 960 // Soldier->player, extra=0x0
 }
 
 public enum TetherID : uint
 {
     PhysicalVulnerabilityDown = 136, // Warrior->Knight
-    MagicVulnerabilityDown = 137, // Warrior->Knight
-    BossesClose = 12, // Knight->Warrior
-    ReversalBomb = 16, // AetherialBurst/AetherialBolt->Warrior
-    ReversalPlayer = 135, // player->Warrior
-    //_Gen_Tether_101 = 101, // AetherialSphere->Knight
-    //_Gen_Tether_54 = 54, // GunTurret->Gunner
-    SecretsRevealed = 30, // SoldierAvatar->Soldier
+    MagicVulnerabilityDown = 137 // Warrior->Knight
 }

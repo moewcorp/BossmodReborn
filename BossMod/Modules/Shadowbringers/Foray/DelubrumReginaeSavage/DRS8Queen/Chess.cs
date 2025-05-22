@@ -9,7 +9,7 @@ abstract class Chess(BossModule module) : Components.GenericAOEs(module)
     }
 
     protected GuardState[] GuardStates = new GuardState[4];
-    protected static readonly AOEShapeCross Shape = new(60, 5);
+    protected static readonly AOEShapeCross Shape = new(60f, 5f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -135,7 +135,7 @@ class QueensEdict(BossModule module) : Chess(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index is 0x1C or 0x1D && state == 0x00020001)
+        if (index is 0x1C or 0x1D && state == 0x00020001u)
             _safespotZOffset = index == 0x1D ? 2 : -2;
     }
 
@@ -171,7 +171,7 @@ class QueensEdict(BossModule module) : Chess(module)
                 var countFS = firstSafeSpots.Count;
                 for (var j = 0; j < countFS; ++j)
                 {
-                    var s1 = firstSafeSpots[i];
+                    var s1 = firstSafeSpots[j];
                     if (s1.z == forbiddenRow1 || s1.z == forbiddenRow2)
                         continue;
 

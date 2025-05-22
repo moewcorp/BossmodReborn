@@ -74,8 +74,7 @@ class Innocence(BossModule module) : Components.SingleTargetDelayableCast(module
 class DeltaTrance(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.DeltaTrance);
 class Heirsbane(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Heirsbane, "Single target damage");
 
-class ArtificialPlasmaAnnia(BossModule module) : Components.RaidwideCast(module, (uint)AID.ArtificialPlasmaAnnia);
-class ArtificialPlasmaJulia(BossModule module) : Components.RaidwideCast(module, (uint)AID.ArtificialPlasmaJulia);
+class ArtificialPlasma(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.ArtificialPlasmaAnnia, (uint)AID.ArtificialPlasmaJulia]);
 
 class Crossbones(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.Crossbones, 2f);
 
@@ -223,9 +222,7 @@ class Crosshatch(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-abstract class ImperialAuthority(BossModule module, uint aid) : Components.CastHint(module, aid, "Enrage!", true);
-class ImperialAuthorityAnnia(BossModule module) : ImperialAuthority(module, (uint)AID.ImperialAuthorityAnnia);
-class ImperialAuthorityJulia(BossModule module) : ImperialAuthority(module, (uint)AID.ImperialAuthorityJulia);
+class ImperialAuthority(BossModule module) : Components.CastHints(module, [(uint)AID.ImperialAuthorityAnnia, (uint)AID.ImperialAuthorityJulia], "Enrage!", true);
 
 class D153SoranusDuoStates : StateMachineBuilder
 {
@@ -235,8 +232,7 @@ class D153SoranusDuoStates : StateMachineBuilder
             .ActivateOnEnter<Innocence>()
             .ActivateOnEnter<DeltaTrance>()
             .ActivateOnEnter<Heirsbane>()
-            .ActivateOnEnter<ArtificialPlasmaAnnia>()
-            .ActivateOnEnter<ArtificialPlasmaJulia>()
+            .ActivateOnEnter<ArtificialPlasma>()
             .ActivateOnEnter<Bombardment>()
             .ActivateOnEnter<Crossbones>()
             .ActivateOnEnter<CrossbonesKB>()
@@ -248,8 +244,7 @@ class D153SoranusDuoStates : StateMachineBuilder
             .ActivateOnEnter<CoveringFire>()
             .ActivateOnEnter<CeruleumTanks>()
             .ActivateOnEnter<Crosshatch>()
-            .ActivateOnEnter<ImperialAuthorityAnnia>()
-            .ActivateOnEnter<ImperialAuthorityJulia>()
+            .ActivateOnEnter<ImperialAuthority>()
             .Raw.Update = () =>
             {
                 var julia = module.Enemies((uint)OID.JuliaQuoSoranus);

@@ -10,7 +10,7 @@ class Electrocution(BossModule module) : Components.SimpleAOEs(module, (uint)AID
 
 // TODO: ManaFlame component - show reflect hints
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 761, NameID = 9759, PlanLevel = 80)]
-public class DRS7(WorldState ws, Actor primary) : BossModule(ws, primary, Border.DefaultBounds.Center, Border.DefaultBounds)
+public class DRS7StygimolochLord(WorldState ws, Actor primary) : BossModule(ws, primary, Border.DefaultBounds.Center, Border.DefaultBounds)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -3,7 +3,7 @@
 class UnluckyLotAetherialSphere(BossModule module) : Components.GenericAOEs(module, (uint)AID.UnluckyLotAetherialSphere)
 {
     private AOEInstance? _aoe;
-    private static readonly AOEShapeCircle circle = new(20);
+    private static readonly AOEShapeCircle circle = new(20f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 

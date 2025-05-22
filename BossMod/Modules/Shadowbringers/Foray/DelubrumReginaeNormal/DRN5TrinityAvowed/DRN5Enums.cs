@@ -1,18 +1,18 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN5TrinityAvowed;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
 public enum OID : uint
 {
-    Boss = 0x30E6, // R3.400, x?
-    Helper = 0x233C, // R0.500, x?, mixed types
-    SparkArrow = 0x30E7, // R2.000, x?
-    FlameArrow = 0x30E8, // R2.000, spawn during fight (gives +2 temperature)
-    FrostArrow = 0x30E9, // R2.000, x?
-    GlacierArrow = 0x30EA, // R2.000, spawn during fight (gives -2 temperature)
-    SwirlingOrb = 0x30EB, // R1.000, x?
-    TempestuousOrb = 0x30EC, // R1.000, x?
-    BlazingOrb = 0x30ED, // R2.250, x?
-    RoaringOrb = 0x30EE, // R1.500, x?
-    AvowedAvatar = 0x30EF, // R3.400, x?
+    Boss = 0x30E6, // R3.4
+    SparkArrow = 0x30E7, // R2.0
+    FlameArrow = 0x30E8, // R2.0 (gives +2 temperature)
+    FrostArrow = 0x30E9, // R2.0
+    GlacierArrow = 0x30EA, // R2.0 (gives -2 temperature)
+    SwirlingOrb = 0x30EB, // R1.0
+    TempestuousOrb = 0x30EC, // R1.0
+    BlazingOrb = 0x30ED, // R2.25
+    RoaringOrb = 0x30EE, // R1.5
+    AvowedAvatar = 0x30EF, // R3.4
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -26,13 +26,13 @@ public enum AID : uint
 
     RemoveSword = 22914, // Boss->self, no cast, single-target, visual (change model to default)
     RemoveBow = 22915, // Boss->self, no cast, single-target, visual (change model to default)
-    RemoveStaff = 22916, // Boss->self, no cast, single-target, visual (change model to default) /
+    RemoveStaff = 22916, // Boss->self, no cast, single-target, visual (change model to default)
     AllegiantArsenalSword = 22917, // Boss->self, 3.0s cast, single-target, visual (change model)
     AllegiantArsenalBow = 22918, // Boss->self, 3.0s cast, single-target, visual (change model)
     AllegiantArsenalStaff = 22919, // Boss->self, 3.0s cast, single-target, visual (change model)
-    InfernalSlash = 22897, // Boss->self, no cast, range 70 270-degree cone aoe (when changing to sword)
-    Flashvane = 22898, // Boss->self, no cast, range 70 270-degree cone aoe (when changing to bow)
-    FuryOfBozja = 22899, // Boss->self, no cast, range 10 circle aoe (when changing to staff)
+    InfernalSlash = 22897, // Boss->self, 3.0s cast, range 70 270-degree cone aoe (when changing to sword)
+    Flashvane = 22898, // Boss->self, 3.0s cast, range 70 270-degree cone aoe (when changing to bow)
+    FuryOfBozja = 22899, // Boss->self, 3.0s cast, range 10 circle aoe (when changing to staff)
 
     FlamesOfBozja = 22910, // Boss->self, 3.0s cast, single-target, visual (prepare for big flame)
     FlamesOfBozjaExtra = 23353, // Helper->self, 7.0s cast, range 45 width 50 rect, visual?

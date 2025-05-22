@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN2Dahu;
 
-class FirebreatheRotating(BossModule module) : Components.GenericRotatingAOE(module)
+class FirebreatheRotation(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
     private Angle _rotation;
@@ -10,7 +10,7 @@ class FirebreatheRotating(BossModule module) : Components.GenericRotatingAOE(mod
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FirebreatheRotating)
+        if (spell.Action.ID == (uint)AID.FirebreatheRotationVisual)
         {
             _rotation = spell.Rotation;
             _activation = Module.CastFinishAt(spell, 0.7f);
@@ -20,7 +20,7 @@ class FirebreatheRotating(BossModule module) : Components.GenericRotatingAOE(mod
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FirebreatheRotatingAOE)
+        if (spell.Action.ID == (uint)AID.FirebreatheRotation)
             AdvanceSequence(0, WorldState.CurrentTime);
     }
 
@@ -28,8 +28,8 @@ class FirebreatheRotating(BossModule module) : Components.GenericRotatingAOE(mod
     {
         _increment = iconID switch
         {
-            (uint)IconID.FirebreatheCW => -90f.Degrees(),
-            (uint)IconID.FirebreatheCCW => 90f.Degrees(),
+            (uint)IconID.RotateCW => -90f.Degrees(),
+            (uint)IconID.RotateCCW => 90f.Degrees(),
             _ => default
         };
         InitIfReady(actor);

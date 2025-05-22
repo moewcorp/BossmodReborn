@@ -7,7 +7,7 @@ class HeadDown(BossModule module) : Components.ChargeAOEs(module, (uint)AID.Head
 class HuntersClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HuntersClaw, 8f);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 760, NameID = 9751)]
-public class DRN2Dahu(WorldState ws, Actor primary) : BossModule(ws, primary, new(82f, 138f), new ArenaBoundsCircle(30f))
+public class DRN2Dahu(WorldState ws, Actor primary) : Dahu(ws, primary)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN5TrinityAvowed;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
 // aoe starts at cast and ends with envcontrol; it's not considered 'risky' when paired with quick march
 class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(module, (uint)AID.FlamesOfBozjaAOE)
@@ -17,7 +17,7 @@ class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(modu
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index is 0x12 or 0x13 && state == 0x00080004) // 12/13 for east/west
+        if (index is 0x12 or 0x13 && state == 0x00080004u) // 12/13 for east/west
             AOE = null;
     }
 }
