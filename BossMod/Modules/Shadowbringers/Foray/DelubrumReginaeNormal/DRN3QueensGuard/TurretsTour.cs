@@ -63,4 +63,12 @@ class TurretsTour(BossModule module) : Components.GenericAOEs(module)
             }
         }
     }
+
+    public override void OnActorUntargetable(Actor actor)
+    {
+        if (actor.OID == (uint)OID.QueensGunner)
+        {
+            _aoes.Clear();
+        }
+    }
 }

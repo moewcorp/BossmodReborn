@@ -30,14 +30,34 @@ public class DRS8Queen(WorldState ws, Actor primary) : Queen(ws, primary)
     public Actor? Soldier() => _soldier;
     public Actor? Gunner() => _gunner;
     public Actor? Warrior() => _warrior;
+    private bool updated;
 
     protected override void UpdateModule()
     {
         // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
         // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        _knight ??= Enemies((uint)OID.QueensKnight)[0];
-        _soldier ??= Enemies((uint)OID.QueensSoldier)[0];
-        _gunner ??= Enemies((uint)OID.QueensGunner)[0];
-        _warrior ??= Enemies((uint)OID.QueensWarrior)[0];
+        if (updated)
+            return;
+        if (_warrior == null)
+        {
+            var b = Enemies((uint)OID.QueensWarrior);
+            _warrior = b.Count != 0 ? b[0] : null;
+        }
+        if (_soldier == null)
+        {
+            var b = Enemies((uint)OID.QueensSoldier);
+            _soldier = b.Count != 0 ? b[0] : null;
+        }
+        if (_gunner == null)
+        {
+            var b = Enemies((uint)OID.QueensGunner);
+            _gunner = b.Count != 0 ? b[0] : null;
+        }
+        if (_knight == null)
+        {
+            var b = Enemies((uint)OID.QueensKnight);
+            _knight = b.Count != 0 ? b[0] : null;
+        }
+        updated = true;
     }
 }

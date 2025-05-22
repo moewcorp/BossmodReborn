@@ -37,4 +37,12 @@ class AboveBoard(BossModule module) : Components.GenericAOEs(module)
             _aoes.Clear();
         }
     }
+
+    public override void OnActorUntargetable(Actor actor)
+    {
+        if (actor.OID == (uint)OID.QueensWarrior)
+        {
+            _aoes.Clear();
+        }
+    }
 }

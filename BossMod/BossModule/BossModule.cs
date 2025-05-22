@@ -104,7 +104,7 @@ public abstract class BossModule : IDisposable
                     comp.OnCastStarted(actor, castinfo);
             }
             if (actor.IsTargetable)
-                comp.OnTargetable(actor);
+                comp.OnActorTargetable(actor);
             ref var tether = ref actor.Tether;
             if (tether.ID != 0)
                 comp.OnTethered(actor, tether);
@@ -528,13 +528,13 @@ public abstract class BossModule : IDisposable
         {
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
-                Components[i].OnTargetable(actor);
+                Components[i].OnActorTargetable(actor);
         }
         else
         {
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
-                Components[i].OnUntargetable(actor);
+                Components[i].OnActorUntargetable(actor);
         }
     }
 
