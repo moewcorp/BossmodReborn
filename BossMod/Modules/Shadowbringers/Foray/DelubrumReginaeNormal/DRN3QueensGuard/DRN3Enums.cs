@@ -11,6 +11,7 @@ public enum OID : uint
     AetherialBolt = 0x30BD, // R0.6
     AetherialWard = 0x30BB, // R3.0
     AutomaticTurret = 0x30C2, // R4.0
+    ArenaFeatures = 0x1EA1A1, // R2.0
     Helper = 0x233C
 }
 
@@ -69,37 +70,4 @@ public enum AID : uint
     BloodAndBoneKnightEnrage = 22521, // Knight->self, 60.0s cast, range 60 circle
     BloodAndBoneSoldierEnrage = 22538, // Soldier->self, 60.0s cast, range 60 circle
     QueensShotEnrage = 22546 // Gunner->self, 60.0s cast, range 60 circle
-}
-
-public enum SID : uint
-{
-    AboveBoardBombLong = 2428, // none->AetherialBolt/AetherialBurst, extra=0x3E8
-    AboveBoardBombShort = 2429, // none->AetherialBurst/AetherialBolt, extra=0x3E8
-    AboveBoardPlayerLong = 2426, // none->player, extra=0x3E8
-    DirectionalParry = 680, // AetherialWard->AetherialWard, extra=0xC/0x3
-    Doom = 2519, // AetherialBolt/Helper->player, extra=0x0
-    DutiesAsAssigned = 2415, // none->player, extra=0x0
-    ProperCare = 362, // none->player, extra=0x14
-    RayOfFortitude = 2625, // none->player, extra=0xA/0x2/0x1
-    RayOfSuccor = 2627, // none->player, extra=0x2/0xA/0x1
-    RayOfValor = 2626, // none->player, extra=0x9/0x8/0xA/0x6/0x2
-    ReducedRates = 364, // none->player, extra=0x1E
-    ReversalOfForces = 2447, // none->AetherialBolt/AetherialBurst, extra=0x0
-    ShieldBearer = 2446, // Knight->Knight, extra=0x0
-    Stun = 149, // Helper->player, extra=0x0
-    SwordBearer = 2445, // Knight->Knight, extra=0x0
-    TheEcho = 42, // none->player, extra=0x0
-    TheHeatOfBattle = 365, // none->player, extra=0xA
-    Transcendent = 418, // none->player, extra=0x0
-    TwiceComeRuin = 2485, // Knight/AetherialBolt/Helper->player, extra=0x1
-    GunTurrentStatus = 2056, // none->GunTurret, extra=0xE1
-    WardStatus = 2195, // AetherialWard->AetherialWard, extra=0x101/0x100
-    AllyStatus = 2160, // none->30B7, extra=0x2129
-    Weakness = 43, // none->player, extra=0x0
-}
-
-public enum TetherID : uint
-{
-    ReversalBomb = 16, // AetherialBolt/AetherialBurst->Warrior
-    SecretsRevealed = 30, // SoldierAvatar->Soldier
 }

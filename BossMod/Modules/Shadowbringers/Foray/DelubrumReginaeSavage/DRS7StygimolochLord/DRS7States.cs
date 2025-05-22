@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS7StygimolochLord;
 
-class DRS7States : StateMachineBuilder
+class DRS7StygimolochLordStates : StateMachineBuilder
 {
-    public DRS7States(BossModule module) : base(module)
+    public DRS7StygimolochLordStates(BossModule module) : base(module)
     {
-        SimplePhase(0, PhaseBeforeAdds, "Before adds")
+        SimplePhase(default, PhaseBeforeAdds, "Before adds")
             .ActivateOnEnter<RapidBoltsAOE>()
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !Module.PrimaryActor.IsTargetable;
         SimplePhase(1, PhaseAdds, "Adds")

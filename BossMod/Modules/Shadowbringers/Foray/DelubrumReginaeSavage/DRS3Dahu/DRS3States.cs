@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS3Dahu;
 
-class DRS3States : StateMachineBuilder
+class DRS3DahuStates : StateMachineBuilder
 {
-    public DRS3States(BossModule module) : base(module)
+    public DRS3DahuStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)

@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS2StygimolochWarrior;
 
-class DRS2States : StateMachineBuilder
+class DRS2StygimolochWarriorStates : StateMachineBuilder
 {
-    public DRS2States(BossModule module) : base(module)
+    public DRS2StygimolochWarriorStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<Devour>(); // TODO: reconsider...
     }
 

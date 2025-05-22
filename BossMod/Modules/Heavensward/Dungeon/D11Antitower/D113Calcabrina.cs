@@ -88,15 +88,6 @@ class Brace(BossModule module) : Components.DirectionalParry(module, [(uint)OID.
         if (spell.Action.ID == (uint)AID.Brace)
             PredictParrySide(caster.InstanceID, Side.Back | Side.Right | Side.Left);
     }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (ActorStates.Count != 0)
-        {
-            var primary = Module.Enemies((uint)OID.Calcabrina)[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(primary.Position, primary.HitboxRadius, 20f, primary.Rotation, 45f.Degrees()));
-        }
-    }
 }
 
 class HeatGazeBrina(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeatGazeBrina, new AOEShapeDonut(5f, 10f));

@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS4QueensGuard;
 
-class DRS4States : StateMachineBuilder
+class DRS4QueensGuardStates : StateMachineBuilder
 {
-    readonly DRS4 _module;
+    readonly DRS4QueensGuard _module;
 
-    public DRS4States(DRS4 module) : base(module)
+    public DRS4QueensGuardStates(DRS4QueensGuard module) : base(module)
     {
         _module = module;
         SimplePhase(0, Phase0, "P0: 4 guards")
@@ -21,12 +21,14 @@ class DRS4States : StateMachineBuilder
 
     private void Phase0(uint id)
     {
-        SimpleState(id, 0, "Raidwides until 80%");
+        SimpleState(id, default, "Raidwides until 80%")
+            .ActivateOnEnter<ArenaChange>();
     }
 
     private void Phase1(uint id)
     {
-        ActorTargetable(id, _module.Knight, true, 3.3f, "Warrior + Knight appear");
+        ActorTargetable(id, _module.Knight, true, 3.3f, "Warrior + Knight appear")
+            .DeactivateOnEnter<ArenaChange>();
         Phase1Repeat(id + 0x100000, 8.1f);
         Phase1Repeat(id + 0x200000, 8.1f);
         // TODO: enrage

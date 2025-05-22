@@ -1,10 +1,11 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS5Phantom;
 
-class DRS5States : StateMachineBuilder
+class DRS5PhantomStates : StateMachineBuilder
 {
-    public DRS5States(BossModule module) : base(module)
+    public DRS5PhantomStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase)
+            .ActivateOnEnter<ArenaChange>();
     }
 
     private void SinglePhase(uint id)

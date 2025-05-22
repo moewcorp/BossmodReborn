@@ -27,9 +27,6 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Tankbuster = 198, // player
-    Spreadmarker = 139, // player
-    Stackmarker = 62, // player
     RotateCCW = 168, // Boss
     RotateCW = 167 // Boss
 }
@@ -94,9 +91,9 @@ class MagitektSlashVoidzone(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID != (uint)OID.FireVoidzone)
             return;
-        if (state == 0x001)
+        if (state == 0x001u)
             _aoes.Add(new(MagitektSlashRotation.Cone, D151MarkIIIBMagitekColossus.ArenaCenter, actor.Rotation));
-        else if (state == 0x004)
+        else if (state == 0x004u)
         {
             var count = _aoes.Count;
             var rot = actor.Rotation;

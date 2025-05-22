@@ -1,13 +1,14 @@
 ﻿namespace BossMod.Stormblood.Quest.MSQ.ReturnOfTheBull;
+
 public enum OID : uint
 {
     Boss = 0x1FD2,
-    Helper = 0x233C,
-    Lakshmi = 0x18D6, // R0.500, x12, Helper type
-    DreamingKshatriya = 0x1FDD, // R1.000, x0 (spawn during fight)
-    DreamingFighter = 0x1FDB, // R0.500, x0 (spawn during fight)
-    Aether = 0x1FD3, // R1.000, x0 (spawn during fight)
+    DreamingKshatriya = 0x1FDD, // R1.0
+    DreamingFighter = 0x1FDB, // R0.5
+    Aether = 0x1FD3, // R1.0
     FordolaShield = 0x1EA080,
+    Helper2 = 0x18D6,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -15,7 +16,7 @@ public enum AID : uint
     BlissfulSpear = 9872, // Lakshmi->self, 11.0s cast, range 40 width 8 cross
     BlissfulHammer = 9874, // Lakshmi->self, no cast, range 7 circle
     ThePallOfLight = 9877, // Boss->players/1FD8, 5.0s cast, range 6 circle
-    ThePathOfLight = 9875, // Boss->self, 5.0s cast, range 40+R 120-degree cone
+    ThePathOfLight = 9875 // Boss->self, 5.0s cast, range 40+R 120-degree cone
 }
 
 class PathOfLight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThePathOfLight, new AOEShapeCone(43.5f, 60f.Degrees()));
@@ -35,7 +36,7 @@ class FordolaShield(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Shield != null)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Shield.Position, 4f), WorldState.FutureTime(5));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Shield.Position, 4f), WorldState.FutureTime(5d));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

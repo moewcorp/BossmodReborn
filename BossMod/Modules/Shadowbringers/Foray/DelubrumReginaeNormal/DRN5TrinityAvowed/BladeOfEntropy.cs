@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN5TrinityAvowed;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
 // note: instead of trying to figure out cone intersections, we use the fact that clones are always positioned on grid and just check each cell
 class BladeOfEntropy(BossModule module) : TemperatureAOE(module)

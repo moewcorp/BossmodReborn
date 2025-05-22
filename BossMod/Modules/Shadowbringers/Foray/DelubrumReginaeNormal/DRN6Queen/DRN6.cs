@@ -1,12 +1,10 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN6Queen;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
-class NorthswainsGlow(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NorthswainsGlowAOE, 20);
-class GodsSaveTheQueen(BossModule module) : Components.CastCounter(module, (uint)AID.GodsSaveTheQueenAOE);
-
-class OptimalPlaySword(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OptimalPlaySword, 10);
-class OptimalPlayShield(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OptimalPlayShield, new AOEShapeDonut(5, 60));
-class OptimalPlayCone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OptimalPlayCone, new AOEShapeCone(60, 135.Degrees()));
-class PawnOff(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PawnOffReal, 20);
+class NorthswainsGlowPawnOff(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.NorthswainsGlowAOE, (uint)AID.PawnOffReal], 20f);
+class GodsSaveTheQueen(BossModule module) : Components.RaidwideCast(module, (uint)AID.GodsSaveTheQueen);
+class JudgmentBlade(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.JudgmentBladeL, (uint)AID.JudgmentBladeR], new AOEShapeRect(70f, 15f));
+class OptimalPlaySword(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OptimalPlaySword, 10f);
+class OptimalPlayShield(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OptimalPlayShield, new AOEShapeDonut(5f, 60f));
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 760, NameID = 9863)]
-public class DRN6Queen(WorldState ws, Actor primary) : BossModule(ws, primary, new(-272, -415), new ArenaBoundsSquare(25)); // note: arena swaps between circle and square ArenaBoundsCircle(new(-272, -415), 25));
+public class DRN6Queen(WorldState ws, Actor primary) : Queen(ws, primary);

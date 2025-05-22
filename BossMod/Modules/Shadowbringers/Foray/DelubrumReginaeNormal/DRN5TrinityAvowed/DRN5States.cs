@@ -1,10 +1,11 @@
-﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.Normal.DRN5TrinityAvowed;
+﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
 class DRN5TrinityAvowedStates : StateMachineBuilder
 {
     public DRN5TrinityAvowedStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<ArenaChange>()
             //.ActivateOnEnter<TemperatureAOE>()
             .ActivateOnEnter<WrathOfBozja>()
             .ActivateOnEnter<ElementalImpact1>()

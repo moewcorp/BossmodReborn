@@ -5,6 +5,7 @@ class DRN3QueensGuardStates : StateMachineBuilder
     public DRN3QueensGuardStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<BloodAndBoneQueenShotUnseen>()
             .ActivateOnEnter<RapidSeverShotInTheDark>()
             .ActivateOnEnter<Enrages>()

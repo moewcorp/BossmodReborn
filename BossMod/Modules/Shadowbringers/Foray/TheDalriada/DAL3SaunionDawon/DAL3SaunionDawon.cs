@@ -22,7 +22,7 @@ public class DAL3SaunionDawon : BossModule
     public readonly List<Actor> Boss;
     public readonly List<Actor> Dawon;
 
-    public DAL3SaunionDawon(WorldState ws, Actor primary) : base(ws, primary, new(650, -659), new ArenaBoundsSquare(25))
+    public DAL3SaunionDawon(WorldState ws, Actor primary) : base(ws, primary, new(650f, -659f), new ArenaBoundsSquare(26.5f))
     {
         Boss = Enemies(OID.Boss);
         Dawon = Enemies(OID.Dawon);
