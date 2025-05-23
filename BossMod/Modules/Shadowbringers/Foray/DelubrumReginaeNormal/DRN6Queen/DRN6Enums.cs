@@ -49,8 +49,10 @@ public enum AID : uint
     LotsCastSmallLong = 23430, // AetherialBolt->location, no cast, range 10 circle visual
 
     OptimalPlayVisual = 22990, // Helper->self, 5.0s cast, single-target
-    OptimalPlaySword = 22987, // QueensKnight->self, 5.0s cast, range 10 circle
+    OptimalPlaySword = 22988, // QueensKnight->self, 6.0s cast, range 10 circle
     OptimalPlayShield = 22989, // QueensKnight->self, 6.0s cast, range 5-60 donut
+    ShieldOmen = 22987, // QueensKnight->self, 3.0s cast, single-target
+    SwordOmen = 22986, // QueensKnight->self, 3.0s cast, single-target
 
     PawnOffReal = 23002, // SoldierAvatar->self, 5.0s cast, range 20 circle
     PawnOffFake = 23003, // SoldierAvatar->self, 5.0s cast, range 20 circle
@@ -63,7 +65,6 @@ public enum AID : uint
     SecretsRevealed = 23434, // QueensSoldier->self, 5.0s cast, single-target
     SecretsRevealedExtra = 23436, // SoldierAvatar->self, no cast, single-target
 
-    ShieldOmen = 22987, // QueensKnight->self, 3.0s cast, single-target, apply shield-bearer status
     EndsKnight = 22970, // QueensKnight->self, 1.0s cast, range 60 width 10 cross
     EndsSoldier = 22972, // QueensSoldier->self, 1.0s cast, range 60 width 10 cross
     MeansWarrior = 22971, // QueensWarrior->self, 1.0s cast, range 60 width 10 cross
@@ -78,6 +79,8 @@ public enum AID : uint
 
 public enum SID : uint
 {
+    Doom = 910, // Boss->player, extra=0x0
+
     MovementIndicator = 2056, // Boss->QueensKnight/QueensWarrior/Boss/AutomaticTurret, extra=0xE1/0xE2/0xE4/0xE3/0x111
     MovementHeavy = 1141, // none->QueensKnight, extra=0x32
     MovementSprint = 481, // none->QueensWarrior, extra=0x32

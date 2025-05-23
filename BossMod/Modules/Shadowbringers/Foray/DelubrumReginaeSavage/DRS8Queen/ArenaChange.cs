@@ -23,7 +23,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
             }
             else if (state == 0x00200010u)
             {
-                Arena.Bounds = Queen.CircleArena;
+                Arena.Bounds = Queen.SquareArena;
                 _aoe = null;
             }
         }

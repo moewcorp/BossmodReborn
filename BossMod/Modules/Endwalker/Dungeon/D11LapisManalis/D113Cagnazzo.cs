@@ -136,15 +136,9 @@ class HydraulicRam(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe;
-        }
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        if (count > 1)
+            aoes[0].Color = Colors.Danger;
         return aoes;
     }
 
@@ -168,20 +162,16 @@ class Hydrobomb(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(12);
     private static readonly AOEShapeCircle circle = new(4f);
+
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (i < 2)
-                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe;
-        }
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        var max = count > 2 ? 2 : 0;
+        for (var i = 0; i < max; ++i)
+            aoes[i].Color = Colors.Danger;
         return aoes;
     }
 

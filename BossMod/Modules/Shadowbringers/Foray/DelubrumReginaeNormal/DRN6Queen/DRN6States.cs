@@ -6,6 +6,7 @@ class DRN6QueenStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<Doom>()
             .ActivateOnEnter<NorthswainsGlowPawnOff>()
             .ActivateOnEnter<GodsSaveTheQueen>()
             .ActivateOnEnter<OptimalPlaySword>()

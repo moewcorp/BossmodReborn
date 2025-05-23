@@ -58,7 +58,7 @@ class OldMagicArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x0A)
+        if (state == 0x00020001u && index == 0x0Au)
         {
             Arena.Bounds = D133Durante.DefaultBounds;
             _aoe = null;
@@ -80,13 +80,15 @@ class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        var max = count > 16 ? 16 : count;
         var color = Colors.Danger;
-        for (var i = 0; i < count; ++i)
+        for (var i = 0; i < max; ++i)
         {
-            var aoe = _aoes[i];
-            var isRisky = i < 16;
-            aoes[i] = aoe with { Color = isRisky ? color : 0, Risky = isRisky };
+            ref var aoe = ref aoes[i];
+            if (count > 16 && i < 16)
+                aoe.Color = color;
+            aoe.Risky = true;
         }
         return aoes;
     }
@@ -94,7 +96,7 @@ class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.DuplicitousBatteryTelegraph)
-            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(6.5f)));
+            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(6.5d), Risky: false));
 
     }
 

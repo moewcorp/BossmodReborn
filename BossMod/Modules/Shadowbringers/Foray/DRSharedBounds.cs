@@ -53,19 +53,23 @@ public abstract class Phantom(WorldState ws, Actor primary) : BossModule(ws, pri
     public static readonly AOEShapeCustom ArenaChange = new([new Rectangle(startArenaCenter, 24f, 30f)], [new Rectangle(DefaultCenter, 24f, 24f)]);
 }
 
-public abstract class TrinityAvowed(WorldState ws, Actor primary) : BossModule(ws, primary, center, StartingArena)
+public abstract class TrinityAvowed(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
-    private static readonly WPos center = new(-272f, -82f);
+    public static readonly WPos ArenaCenter = new(-272f, -82f);
     public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
     public static readonly ArenaBoundsSquare DefaultArena = new(25f);
-    public static readonly AOEShapeCustom ArenaChange = new([new Square(center, 30f)], [new Square(center, 25f)]);
+    public static readonly AOEShapeCustom ArenaChange1 = new([new Square(ArenaCenter, 30f)], [new Square(ArenaCenter, 25f)]);
+    public static readonly AOEShapeRect ArenaChange2 = new(45f, 25f);
+    public static readonly WPos WestRemovedCenter = new(-252f, -82f);
+    public static readonly WPos EastRemovedCenter = new(-292f, -82f);
+    public static readonly ArenaBoundsRect ShimmeringShotArena = new(5f, 25f);
 }
 
 public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, primary, center, StartingArena)
 {
     private static readonly WPos center = new(-272f, -415f);
     public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
-    public static readonly ArenaBoundsSquare DefaultArena = new(25f);
-    public static readonly ArenaBoundsComplex CircleArena = new([new Polygon(center, 25f, 48)]);
-    public static readonly AOEShapeCustom ArenaChange = new([new Square(center, 30f)], [new Square(center, 25f)]);
+    public static readonly ArenaBoundsSquare SquareArena = new(25f);
+    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(center, 25f, 48)]);
+    public static readonly AOEShapeDonut ArenaChange = new(25f, 43f);
 }

@@ -1,25 +1,5 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class FlamesOfBozja(BossModule module) : Components.GenericAOEs(module)
-{
-    private AOEInstance? _aoe;
-    private static readonly AOEShapeRect rect = new(45f, 25f);
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.FlamesOfBozjaAOE)
-            _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
-    }
-
-    public override void OnEventEnvControl(byte index, uint state)
-    {
-        if (index is 0x12 or 0x13 && state == 0x00080004u) // 12/13 for east/west
-            _aoe = null;
-    }
-}
-
 class ShimmeringShot(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Pattern { Unknown, EWNormal, EWInverted, WENormal, WEInverted }
@@ -62,7 +42,7 @@ class ShimmeringShot(BossModule module) : Components.GenericAOEs(module)
             var zOffset = 10f * (destRow - 2);
             var temps = _temps.Temperatures;
             var act = WorldState.FutureTime(10.8d);
-            var pos = Arena.Center + new WDir(xOffset, zOffset);
+            var pos = TrinityAvowed.ArenaCenter + new WDir(xOffset, zOffset);
             for (var i = 0; i < 24; ++i)
             {
                 var playertemp = temps[i];
@@ -72,7 +52,7 @@ class ShimmeringShot(BossModule module) : Components.GenericAOEs(module)
                 }
             }
         }
-        int RowIndex() => (actor.Position.Z - Arena.Center.Z) switch
+        int RowIndex() => (actor.Position.Z - TrinityAvowed.ArenaCenter.Z) switch
         {
             < -15 => 0,
             < -5 => 1,

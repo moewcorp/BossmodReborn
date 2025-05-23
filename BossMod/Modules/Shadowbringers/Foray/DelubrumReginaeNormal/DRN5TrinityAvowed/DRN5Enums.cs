@@ -58,14 +58,14 @@ public enum AID : uint
     SearingBlast = 22887, // RoaringOrb->self, 8.0s cast, range 22 circle, gives +2 temperature
 
     HotAndColdSword = 23471, // Boss->self, 3.0s cast, single-target, visual (applies temperature debuffs)
-    BladeOfEntropyBH11 = 22893, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyAC11 = 22894, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyBH12 = 22895, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyAC12 = 22896, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyAH11 = 23397, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyBC11 = 23398, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyAH12 = 23399, // Boss->self, 5.0s cast, range 40 180-degree cone
-    BladeOfEntropyBC12 = 23400, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyHot12 = 22893, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyCold11 = 22894, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyHot11 = 22895, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyCold12 = 22896, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyHot21 = 23397, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyCold22 = 23398, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyHot22 = 23399, // Boss->self, 5.0s cast, range 40 180-degree cone
+    BladeOfEntropyCold21 = 23400, // Boss->self, 5.0s cast, range 40 180-degree cone
 
     UnseenEyeBow = 23476, // Boss->self, 3.0s cast, single-target, visual (show clones for crisscross aoe)
     UnseenEyeStaff = 22912, // Boss->self, 3.0s cast, single-target, visual (show clones for crisscross aoe)
