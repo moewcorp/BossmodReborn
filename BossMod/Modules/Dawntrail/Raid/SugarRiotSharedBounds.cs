@@ -119,9 +119,11 @@ public static class SugarRiotSharedBounds
         for (var i = 0; i < 6; ++i)
         {
             ref readonly var edge = ref JumpEdges[i];
-            var direction = (edge.Item2 - edge.Item1).Normalized();
-            var length = (edge.Item2 - edge.Item1).Length();
-            segments[i] = (edge.Item1, direction, length);
+            ref readonly var edge1 = ref edge.Item1;
+            var edge2M1 = edge.Item2 - edge1;
+            var direction = edge2M1.Normalized();
+            var length = edge2M1.Length();
+            segments[i] = (edge1, direction, length);
         }
         return segments;
     }

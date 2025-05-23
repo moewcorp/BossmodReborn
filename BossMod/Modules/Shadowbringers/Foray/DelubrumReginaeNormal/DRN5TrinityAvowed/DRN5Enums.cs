@@ -21,7 +21,7 @@ public enum AID : uint
     AutoAttackBow = 22905, // Boss->player, no cast, single-target
     AutoAttackStaff = 22906, // Boss->player, no cast, single-target
 
-    WrathOfBozja = 22901, // Boss->self/player, 5.0s cast, range 60 ?-degree cone
+    WrathOfBozja = 22901, // Boss->self/player, 5.0s cast, range 60 90-degree cone
     GloryOfBozja = 22902, // Boss->self, 5.0s cast, range 85 circle
 
     RemoveSword = 22914, // Boss->self, no cast, single-target, visual (change model to default)
@@ -43,17 +43,15 @@ public enum AID : uint
     FreezingArrow = 22890, // FlameArrow->self, no cast, range 10 width 10 rect, gives +2 temperature (despite name)
     HeatedArrow = 22891, // FrostArrow->self, no cast, range 10 width 10 rect, gives -1 temperature (despite name)
     SearingArrow = 22892, // GlacierArrow->self, no cast, range 10 width 10 rect, gives -2 temperature (despite name)
-    ElementalBrandBow = 23474, // Boss->self, 3.0s cast, single-target, visual (applies brand debuffs)
 
     HotAndColdStaff = 22907, // Boss->self, 3.0s cast, single-target, visual (applies temperature debuffs)
-    QuickMarchStaff = 22913, // Boss->self, 3.0s cast, single-target, visual (applies march debuffs)
     FreedomOfBozja = 22908, // Boss->self, 3.0s cast, single-target, visual (spawn orbs)
-    ElementalImpact1 = 22880, // TempestuousOrb/SwirlingOrb->self, 5.0s cast, range 60 circle, visual (proximity)
-    ElementalImpact2 = 22882, // BlazingOrb/RoaringOrb->self, 5.0s cast, range 60 circle, visual (proximity)
-    ElementalImpactAOE1 = 20377, // Helper->self, no cast, range 60 circle with 20 falloff
-    ElementalImpactAOE2 = 20378, // Helper->self, no cast, range 60 circle with 20 falloff
-    ElementalImpactAOE3 = 20309, // Helper->self, no cast, range 60 circle with 20 falloff
-    ElementalImpactAOE4 = 20310, // Helper->self, no cast, range 60 circle with 20 falloff
+    ElementalImpactVisual1 = 22880, // TempestuousOrb/SwirlingOrb->self, 5.0s cast, range 60 circle, visual (proximity)
+    ElementalImpactVisual2 = 22882, // BlazingOrb/RoaringOrb->self, 5.0s cast, range 60 circle, visual (proximity)
+    ElementalImpact1 = 20377, // Helper->self, no cast, range 60 circle with 20 falloff
+    ElementalImpact2 = 20378, // Helper->self, no cast, range 60 circle with 20 falloff
+    ElementalImpact3 = 20309, // Helper->self, no cast, range 60 circle with 20 falloff
+    ElementalImpact4 = 20310, // Helper->self, no cast, range 60 circle with 20 falloff
     ChillBlast = 22884, // SwirlingOrb->self, 8.0s cast, range 22 circle, gives -1 temperature
     FreezingBlast = 22885, // TempestuousOrb->self, 8.0s cast, range 22 circle, gives -2 temperature
     HeatedBlast = 22886, // BlazingOrb->self, 8.0s cast, range 22 circle, gives +1 temperature
@@ -72,36 +70,13 @@ public enum AID : uint
     UnseenEyeBow = 23476, // Boss->self, 3.0s cast, single-target, visual (show clones for crisscross aoe)
     UnseenEyeStaff = 22912, // Boss->self, 3.0s cast, single-target, visual (show clones for crisscross aoe)
     GleamingArrow = 22900, // AvowedAvatar->self, 6.0s cast, range 60 width 10 rect aoe
-    ClearTemperatures = 23332, // Helper->self, no cast, range 60 circle, visual (clear temperatures?)
+    ClearTemperatures = 23332 // Helper->self, no cast, range 60 circle, visual (clear temperatures?)
 }
 
 public enum SID : uint
 {
-    UnknownStatus = 2056, // none->BlazingOrb/SwirlingOrb/SparkArrow/FrostArrow/TempestuousOrb/RoaringOrb/30EA/30E8, extra=0xF1/0xF3/0xF4/0xF2
-    BrinkOfDeath = 44, // none->player, extra=0x0
-    ColdBlade1 = 2299, // none->Boss, extra=0x0
-    ColdBlade2 = 2300, // none->Boss, extra=0x0
-    Doom = 2519, // AvowedAvatar->player, extra=0x0
-    HotBlade1 = 2297, // none->Boss, extra=0x0
-    HotBlade2 = 2298, // none->Boss, extra=0x0
-    Intemperate = 2275, // Boss->player, extra=0x0
-    MagicVulnerabilityUp = 1138, // SwirlingOrb/BlazingOrb/SparkArrow/FrostArrow/TempestuousOrb/RoaringOrb/30E8/30EA->player, extra=0x0
-    Normal = 2204, // SwirlingOrb/BlazingOrb/SparkArrow/FrostArrow/Boss/TempestuousOrb/RoaringOrb/30EA/30E8->player, extra=0x0
     RunningCold1 = 2268, // Boss->player, extra=0x0
     RunningCold2 = 2274, // Boss->player, extra=0x0
     RunningHot1 = 2205, // Boss->player, extra=0x0
     RunningHot2 = 2212, // BlazingOrb/SparkArrow/Boss->player, extra=0x0
-    Transcendent = 418, // none->player, extra=0x0
-    TwiceComeRuin = 2485, // Boss/AvowedAvatar->player, extra=0x1
-    Weakness = 43, // none->player, extra=0x0
-
-    HotBrand1 = 2277, // none->player, extra=0x0
-    HotBrand2 = 2291, // none->player, extra=0x0
-    ColdBrand1 = 2292, // none->player, extra=0x0
-    ColdBrand2 = 2296, // none->player, extra=0x0
-}
-
-public enum IconID : uint
-{
-    Tankbuster = 218, // player
 }
