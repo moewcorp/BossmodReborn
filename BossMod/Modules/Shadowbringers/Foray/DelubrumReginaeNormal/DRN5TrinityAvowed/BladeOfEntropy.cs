@@ -1,74 +1,75 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-// note: instead of trying to figure out cone intersections, we use the fact that clones are always positioned on grid and just check each cell
-class BladeOfEntropy(BossModule module) : TemperatureAOE(module)
+class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<(Actor caster, WDir dir, int temperature)> _casters = [];
-
-    private static readonly AOEShapeRect _shapeCell = new(5f, 5f, 5f);
+    private AOEInstance? _aoe;
+    private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
+    private readonly PlayerTemperatures _temps = module.FindComponent<PlayerTemperatures>()!;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var playerTemp = Math.Clamp(Temperature(actor), -2, +2);
-        var aoes = new List<AOEInstance>();
-        for (var x = -2; x <= +2; ++x)
+        if (slot is < 0 or > 23)
+            return [];
+        if (_aoe is AOEInstance aoe)
         {
-            for (var z = -2; z <= +2; ++z)
+            var id = aoe.ActorID;
+            if (id != default && id == _temps.Temperatures[slot])
             {
-                var cellCenter = Arena.Center + 10f * new WDir(x, z);
-                var temperature = 0;
-                var numClips = 0;
-                DateTime activation = default;
-                var count = _casters.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var c = _casters[i];
-                    activation = Module.CastFinishAt(c.caster.CastInfo);
-                    if (c.dir.Dot(cellCenter - c.caster.Position) > 0)
-                    {
-                        temperature = c.temperature;
-                        if (++numClips > 1)
-                            break;
-                    }
-                }
-
-                if (numClips > 1)
-                    aoes.Add(new(_shapeCell, cellCenter, new(), activation));
-                else if (activation != default && temperature == -playerTemp)
-                    aoes.Add(new(_shapeCell, cellCenter, new(), activation, Colors.SafeFromAOE, false));
+                aoe.Color = Colors.SafeFromAOE;
+                aoe.Shape = cone with { InvertForbiddenZone = true };
             }
+            return new Span<AOEInstance>([aoe]);
         }
-        return CollectionsMarshal.AsSpan(aoes);
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var temp = spell.Action.ID switch
+        {
+            (uint)AID.BladeOfEntropyAC11 or (uint)AID.BladeOfEntropyBC11 => 1u,
+            (uint)AID.BladeOfEntropyAH11 or (uint)AID.BladeOfEntropyBH11 => 3u,
+            (uint)AID.BladeOfEntropyAC12 or (uint)AID.BladeOfEntropyBC12 => 2u,
+            (uint)AID.BladeOfEntropyAH12 or (uint)AID.BladeOfEntropyBH12 => 4u,
+            _ => default
+        };
+        if (temp != default)
+            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: temp);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         switch (spell.Action.ID)
         {
             case (uint)AID.BladeOfEntropyAC11:
             case (uint)AID.BladeOfEntropyBC11:
-                _casters.Add((caster, spell.Rotation.ToDirection(), -1));
-                break;
             case (uint)AID.BladeOfEntropyAH11:
             case (uint)AID.BladeOfEntropyBH11:
-                _casters.Add((caster, spell.Rotation.ToDirection(), +1));
+            case (uint)AID.BladeOfEntropyAC12:
+            case (uint)AID.BladeOfEntropyBC12:
+            case (uint)AID.BladeOfEntropyAH12:
+            case (uint)AID.BladeOfEntropyBH12:
+                _aoe = null;
                 break;
         }
     }
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (spell.Action.ID is (uint)AID.BladeOfEntropyAC11 or (uint)AID.BladeOfEntropyBC11 or (uint)AID.BladeOfEntropyAH11 or (uint)AID.BladeOfEntropyBH11)
+        var aoes = ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        if (len == 0)
+            return;
+        ref readonly var aoe = ref aoes[0];
+        var isInside = aoe.Check(actor.Position);
+        if (aoe.Color != Colors.SafeFromAOE)
         {
-            var count = _casters.Count;
-            for (var i = 0; i < count; ++i)
-            {
-                if (_casters[i].caster == caster)
-                {
-                    _casters.RemoveAt(i);
-                    return;
-                }
-            }
+            if (isInside)
+                hints.Add(WarningText);
+        }
+        else
+        {
+            hints.Add("Get hit by AOE!", !isInside);
         }
     }
 }

@@ -6,21 +6,15 @@ class DRN5TrinityAvowedStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            //.ActivateOnEnter<TemperatureAOE>()
+            .ActivateOnEnter<PlayerTemperatures>()
+            .ActivateOnEnter<GloryOfBozja>()
             .ActivateOnEnter<WrathOfBozja>()
-            .ActivateOnEnter<ElementalImpact1>()
-            .ActivateOnEnter<ElementalImpact2>()
-            //.ActivateOnEnter<ShimmeringShot>()
-            //.ActivateOnEnter<ShimmeringShot1>()
-            //.ActivateOnEnter<ShimmeringShot2>()
+            .ActivateOnEnter<ElementalImpact>()
+            .ActivateOnEnter<ElementalImpactTemperature>()
+            .ActivateOnEnter<ShimmeringShot>()
             .ActivateOnEnter<AllegiantArsenal>()
             .ActivateOnEnter<BladeOfEntropy>()
-            //.ActivateOnEnter<FlamesOfBozja>()
-            //.ActivateOnEnter<FlamesOfBozja1>()
-            //.ActivateOnEnter<FlamesOfBozja2>()
-            //.ActivateOnEnter<FreedomOfBozja>()
-            //.ActivateOnEnter<FreedomOfBozja1>()
-            //.ActivateOnEnter<FreedomOfBozja2>()
+            .ActivateOnEnter<FlamesOfBozja>()
             .ActivateOnEnter<GleamingArrow>();
     }
 }

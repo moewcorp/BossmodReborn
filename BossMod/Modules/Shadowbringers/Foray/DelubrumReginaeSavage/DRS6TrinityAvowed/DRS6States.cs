@@ -148,15 +148,12 @@ class DRS6TrinityAvowedStates : StateMachineBuilder
 
         // +1.3s: orb spawn
         // +2.2s: impact visual cast start
-        ComponentCondition<ElementalImpact1>(id + 0x10030, 7.2f, comp => comp.NumCasts > 0, "Proximity")
-            .ActivateOnEnter<ElementalImpact1>()
-            .ActivateOnEnter<ElementalImpact2>()
-            .DeactivateOnExit<ElementalImpact1>()
-            .DeactivateOnExit<ElementalImpact2>();
-        // +0.3s: actual aoes (who cares)
+        ComponentCondition<ElementalImpact>(id + 0x10030, 7.5f, comp => comp.NumCasts > 0, "Proximity")
+            .ActivateOnEnter<ElementalImpact>()
+            .DeactivateOnExit<ElementalImpact>();
         // +2.0s: blast cast starts
 
-        ComponentCondition<QuickMarch>(id + 0x20000, 6.8f, comp => comp.NumActiveForcedMarches > 0, "Forced march start")
+        ComponentCondition<QuickMarch>(id + 0x20000, 6.5f, comp => comp.NumActiveForcedMarches > 0, "Forced march start")
             .ActivateOnEnter<FreedomOfBozja1>()
             .ActivateOnEnter<QuickMarchStaff1>();
         ComponentCondition<FreedomOfBozja>(id + 0x20010, 3.3f, comp => comp.NumCasts > 0, "Orbs hit")
@@ -217,12 +214,10 @@ class DRS6TrinityAvowedStates : StateMachineBuilder
         Cast(id + 0x10000, (uint)AID.HotAndColdStaff, 3.1f, 3);
         Cast(id + 0x10010, (uint)AID.ElementalBrandStaff, 4.1f, 3);
         Cast(id + 0x10020, (uint)AID.FreedomOfBozja, 3.2f, 3)
-            .ActivateOnEnter<ElementalImpact1>()
-            .ActivateOnEnter<ElementalImpact2>();
+            .ActivateOnEnter<ElementalImpact>();
         Cast(id + 0x10030, (uint)AID.UnseenEyeStaff, 3.1f, 3);
-        ComponentCondition<ElementalImpact1>(id + 0x10040, 1.0f, comp => comp.NumCasts > 0, "Proximity", 10)
-            .DeactivateOnExit<ElementalImpact1>()
-            .DeactivateOnExit<ElementalImpact2>();
+        ComponentCondition<ElementalImpact>(id + 0x10040, 1.0f, comp => comp.NumCasts > 0, "Proximity", 10)
+            .DeactivateOnExit<ElementalImpact>();
 
         ComponentCondition<FreedomOfBozja>(id + 0x20000, 10, comp => comp.NumCasts > 0, "Orbs + criss-cross", 10)
             .ActivateOnEnter<FreedomOfBozja2>()

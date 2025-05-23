@@ -107,9 +107,10 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         if (!active)
             return;
-        if (actor.PrevPosition != actor.Position)
+        var pos = actor.Position;
+        if (actor.PrevPosition != pos)
         {
-            hints.WantJump = IntersectJumpEdge(actor.Position, (actor.Position - actor.PrevPosition).Normalized(), 1f);
+            hints.WantJump = IntersectJumpEdge(pos, (pos - actor.PrevPosition).Normalized(), 1f);
         }
     }
 }
