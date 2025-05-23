@@ -24,31 +24,12 @@ class ElementalImpact(BossModule module) : Components.GenericAOEs(module)
 
 class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(4);
+    private readonly List<AOEInstance>[] _aoes = new List<AOEInstance>[PartyState.MaxAllianceSize];
     private static readonly AOEShapeCircle circle = new(22f);
     private readonly PlayerTemperatures _temps = module.FindComponent<PlayerTemperatures>()!;
+    private readonly List<AOEInstance>?[] aoePerTemp = new List<AOEInstance>?[5];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (slot is < 0 or > 23)
-            return [];
-        var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var len = aoes.Length;
-        for (var i = 0; i < len; ++i)
-        {
-            ref var aoe = ref aoes[i];
-            var id = aoe.ActorID;
-            if (id != default && id == _temps.Temperatures[slot])
-            {
-                aoe.Color = Colors.SafeFromAOE;
-            }
-            else
-            {
-                aoe.Color = default;
-            }
-        }
-        return aoes;
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => slot is < 0 or > 23 ? [] : CollectionsMarshal.AsSpan(_aoes[slot]);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -61,7 +42,72 @@ class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(mod
             _ => default
         };
         if (temp != default)
-            _aoes.Add(new(circle, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: temp));
+        {
+            var safecolor = Colors.SafeFromAOE;
+            var temps = _temps.Temperatures;
+            var center = Arena.Center;
+            for (var i = 0; i < 24; ++i)
+            {
+                var playertemp = temps[i];
+                if (aoePerTemp[playertemp] != null)
+                {
+                    _aoes[i] = aoePerTemp[playertemp]!;
+                    continue;
+                }
+                uint color = default;
+                var shape = circle;
+                if (playertemp != default && playertemp == temp)
+                {
+                    color = safecolor;
+                    shape = circle with { InvertForbiddenZone = true };
+                }
+                if (_aoes[i] == null)
+                    _aoes[i] = new(4);
+                _aoes[i].Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), color));
+                if (_aoes[i].Count != 4)
+                    continue;
+                if (playertemp == default)
+                    aoePerTemp[playertemp] = _aoes[i];
+                if (playertemp != default)
+                {
+                    if (aoePerTemp[playertemp] == null)
+                    {
+                        var aoes = CollectionsMarshal.AsSpan(_aoes[i]);
+
+                        var safeShapes = new List<Polygon>(2);
+                        var dangerShapes = new List<Polygon>(3);
+
+                        for (var j = 0; j < 4; ++j)
+                        {
+                            ref readonly var aoe = ref aoes[j];
+                            var circle = new Polygon(aoe.Origin, 22f, 64);
+                            if (aoe.Color == safecolor)
+                            {
+                                safeShapes.Add(circle);
+                            }
+                            else
+                            {
+                                dangerShapes.Add(circle);
+                            }
+                        }
+                        if (safeShapes.Count == 2)
+                        {
+                            AOEShapeCustom xor = new([safeShapes[0]], Shapes2: [safeShapes[1]], Operand: OperandType.Xor);
+                            AOEShapeCustom difference = new(dangerShapes);
+                            var clipper = new PolygonClipper();
+                            var combinedShapes = clipper.Difference(new PolygonClipper.Operand(xor.GetCombinedPolygon(center)),
+                            new PolygonClipper.Operand(difference.GetCombinedPolygon(center)));
+                            aoePerTemp[playertemp] = [new(difference with { Polygon = combinedShapes, InvertForbiddenZone = true }, center, default, Module.CastFinishAt(spell), safecolor)];
+                        }
+                        else
+                        {
+                            aoePerTemp[playertemp] = [new(new AOEShapeCustom(safeShapes, dangerShapes, InvertForbiddenZone: true), center, default, Module.CastFinishAt(spell), safecolor)];
+                        }
+                    }
+                    _aoes[i] = aoePerTemp[playertemp]!;
+                }
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -72,7 +118,8 @@ class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(mod
             case (uint)AID.HeatedBlast:
             case (uint)AID.FreezingBlast:
             case (uint)AID.SearingBlast:
-                _aoes.Clear();
+                Array.Clear(_aoes);
+                Array.Clear(aoePerTemp);
                 break;
         }
     }
@@ -104,28 +151,5 @@ class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(mod
         if (isInsideDanger)
             hints.Add(WarningText);
         hints.Add("Get hit by correct AOE!", !isinsideCorrect);
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        var aoes = ActiveAOEs(slot, actor);
-        var len = aoes.Length;
-        if (len == 0)
-            return;
-        var forbiddenInverted = new List<Func<WPos, float>>(2);
-        var act = aoes[0].Activation;
-        for (var i = 0; i < len; ++i)
-        {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Color != Colors.SafeFromAOE)
-            {
-                hints.AddForbiddenZone(ShapeDistance.Circle(aoe.Origin, 22f), act);
-            }
-            else
-            {
-                forbiddenInverted.Add(ShapeDistance.InvertedCircle(aoe.Origin, 22f));
-            }
-        }
-        hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), act);
     }
 }

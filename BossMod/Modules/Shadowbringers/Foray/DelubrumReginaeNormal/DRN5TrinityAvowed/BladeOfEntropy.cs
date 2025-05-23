@@ -2,54 +2,53 @@
 
 class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
     private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
+    private readonly AOEInstance?[] _aoes = new AOEInstance?[PartyState.MaxAllianceSize];
     private readonly PlayerTemperatures _temps = module.FindComponent<PlayerTemperatures>()!;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        if (slot is < 0 or > 23)
-            return [];
-        if (_aoe is AOEInstance aoe)
-        {
-            var id = aoe.ActorID;
-            if (id != default && id == _temps.Temperatures[slot])
-            {
-                aoe.Color = Colors.SafeFromAOE;
-                aoe.Shape = cone with { InvertForbiddenZone = true };
-            }
-            return new Span<AOEInstance>([aoe]);
-        }
-        return [];
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => slot is < 0 or > 23 ? [] : Utils.ZeroOrOne(ref _aoes[slot]);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var temp = spell.Action.ID switch
         {
-            (uint)AID.BladeOfEntropyAC11 or (uint)AID.BladeOfEntropyBC11 => 1u,
-            (uint)AID.BladeOfEntropyAH11 or (uint)AID.BladeOfEntropyBH11 => 3u,
-            (uint)AID.BladeOfEntropyAC12 or (uint)AID.BladeOfEntropyBC12 => 2u,
-            (uint)AID.BladeOfEntropyAH12 or (uint)AID.BladeOfEntropyBH12 => 4u,
+            (uint)AID.BladeOfEntropyCold11 or (uint)AID.BladeOfEntropyCold12 => 1u,
+            (uint)AID.BladeOfEntropyHot11 or (uint)AID.BladeOfEntropyHot12 => 3u,
+            (uint)AID.BladeOfEntropyCold21 or (uint)AID.BladeOfEntropyCold22 => 2u,
+            (uint)AID.BladeOfEntropyHot21 or (uint)AID.BladeOfEntropyHot22 => 4u,
             _ => default
         };
         if (temp != default)
-            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: temp);
+        {
+            var temps = _temps.Temperatures;
+            for (var i = 0; i < 24; ++i)
+            {
+                var playertemp = temps[i];
+                uint color = default;
+                var shape = cone;
+                if (playertemp != default && playertemp == temp)
+                {
+                    color = Colors.SafeFromAOE;
+                    shape = cone with { InvertForbiddenZone = true };
+                }
+                _aoes[i] = new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), color);
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         switch (spell.Action.ID)
         {
-            case (uint)AID.BladeOfEntropyAC11:
-            case (uint)AID.BladeOfEntropyBC11:
-            case (uint)AID.BladeOfEntropyAH11:
-            case (uint)AID.BladeOfEntropyBH11:
-            case (uint)AID.BladeOfEntropyAC12:
-            case (uint)AID.BladeOfEntropyBC12:
-            case (uint)AID.BladeOfEntropyAH12:
-            case (uint)AID.BladeOfEntropyBH12:
-                _aoe = null;
+            case (uint)AID.BladeOfEntropyCold12:
+            case (uint)AID.BladeOfEntropyCold22:
+            case (uint)AID.BladeOfEntropyHot22:
+            case (uint)AID.BladeOfEntropyHot12:
+            case (uint)AID.BladeOfEntropyCold11:
+            case (uint)AID.BladeOfEntropyCold21:
+            case (uint)AID.BladeOfEntropyHot11:
+            case (uint)AID.BladeOfEntropyHot21:
+                Array.Clear(_aoes);
                 break;
         }
     }

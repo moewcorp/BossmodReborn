@@ -4,7 +4,6 @@
 class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(module, (uint)AID.FlamesOfBozjaAOE)
 {
     public AOEInstance? AOE;
-    private static readonly AOEShapeRect rect = new(45f, 25f);
     private readonly bool _risky = risky;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
@@ -12,22 +11,16 @@ class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(modu
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            AOE = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: _risky);
+            AOE = new(TrinityAvowed.ArenaChange2, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: _risky);
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (index is 0x12 or 0x13 && state == 0x00080004) // 12/13 for east/west
+        if (spell.Action.ID == WatchedAction)
             AOE = null;
     }
 }
 
-// rows are 0 (Z=-102), 1 (Z=-92), 2 (Z=-82), 3 (Z=-72), 4 (Z=-62)
-// what we've seen so far:
-// ENVC 16.00020001; arrows spawn at X=-247 (E) aimed -90 (W); N to S we have Frost > None > Glacier > Flame > Spark, exploding N to S Spark > Glacier > Flame > Frost > None ==> 'inverted' pattern
-// ENVC 16.00200010; arrows spawn at X=-247 (E) aimed -90 (W); N to S we have Spark > None > Frost > Glacier > Flame; exploding N to S Glacier > Flame > None > Frost > Spark ==> 'normal' pattern
-// ENVC 17.00200010; arrows spawn at X=-297 (W) aimed +90 (E); N to S we have Glacier > Frost > Spark > Flame > None; exploding N to S None > Spark > Flame > Glacier > Frost ==> 'normal' pattern
-// so, assumption: 16 is W->E, 17 is E->W; 00020001 is inverted, 00200010 is normal
 class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAOE(module)
 {
     public enum Pattern { Unknown, EWNormal, EWInverted, WENormal, WEInverted }
@@ -52,7 +45,7 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
 
         var xOffset = _pattern is Pattern.EWNormal or Pattern.EWInverted ? -20f : +20f;
         var zOffset = 10f * (cell - 2);
-        return new AOEInstance[1] { new(_shapeCell, Arena.Center + new WDir(xOffset, zOffset), new(), _activation, Colors.SafeFromAOE, false) };
+        return new AOEInstance[1] { new(_shapeCell, TrinityAvowed.ArenaCenter + new WDir(xOffset, zOffset), new(), _activation, Colors.SafeFromAOE, false) };
     }
 
     public override void Update()
@@ -74,10 +67,10 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
     {
         var pattern = (index, state) switch
         {
-            (0x16, 0x00200010) => Pattern.EWNormal,
-            (0x16, 0x00020001) => Pattern.EWInverted,
-            (0x17, 0x00200010) => Pattern.WENormal,
-            (0x17, 0x00020001) => Pattern.WEInverted,
+            (0x16, 0x00200010u) => Pattern.EWNormal,
+            (0x16, 0x00020001u) => Pattern.EWInverted,
+            (0x17, 0x00200010u) => Pattern.WENormal,
+            (0x17, 0x00020001u) => Pattern.WEInverted,
             _ => Pattern.Unknown
         };
         if (pattern != Pattern.Unknown)
@@ -102,7 +95,7 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
         return _slotTempAdjustments[row] != -Temperature(actor);
     }
 
-    protected int RowIndex(WPos pos) => (pos.Z - Arena.Center.Z) switch
+    protected int RowIndex(WPos pos) => (pos.Z - TrinityAvowed.ArenaCenter.Z) switch
     {
         < -15 => 0,
         < -5 => 1,

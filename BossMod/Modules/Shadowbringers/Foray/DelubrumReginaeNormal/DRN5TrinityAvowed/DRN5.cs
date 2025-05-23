@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class WrathOfBozja(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.WrathOfBozja, new AOEShapeCone(60f, 45f.Degrees()));
+class WrathOfBozja(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WrathOfBozja, new AOEShapeCone(60f, 45f.Degrees()), tankbuster: true);
 class GleamingArrow(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GleamingArrow, new AOEShapeRect(60f, 5f));
 class GloryOfBozja(BossModule module) : Components.RaidwideCast(module, (uint)AID.GloryOfBozja);
 

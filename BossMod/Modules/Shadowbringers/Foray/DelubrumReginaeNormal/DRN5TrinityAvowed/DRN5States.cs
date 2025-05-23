@@ -5,7 +5,7 @@ class DRN5TrinityAvowedStates : StateMachineBuilder
     public DRN5TrinityAvowedStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<PlayerTemperatures>()
             .ActivateOnEnter<GloryOfBozja>()
             .ActivateOnEnter<WrathOfBozja>()
@@ -14,7 +14,6 @@ class DRN5TrinityAvowedStates : StateMachineBuilder
             .ActivateOnEnter<ShimmeringShot>()
             .ActivateOnEnter<AllegiantArsenal>()
             .ActivateOnEnter<BladeOfEntropy>()
-            .ActivateOnEnter<FlamesOfBozja>()
             .ActivateOnEnter<GleamingArrow>();
     }
 }

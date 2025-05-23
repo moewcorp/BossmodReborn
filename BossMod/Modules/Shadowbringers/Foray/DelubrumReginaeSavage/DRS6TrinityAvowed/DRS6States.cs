@@ -5,7 +5,7 @@ class DRS6TrinityAvowedStates : StateMachineBuilder
     public DRS6TrinityAvowedStates(BossModule module) : base(module)
     {
         DeathPhase(default, SinglePhase)
-            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<AllegiantArsenal>();
     }
 
