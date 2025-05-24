@@ -31,7 +31,7 @@ class TurretsTour(BossModule module) : Components.GenericAOEs(module)
                         continue; // Exclude the current turret itself
                     var potentialTarget = turrets[j];
 
-                    if (potentialTarget.Position.InRect(t.Position, t.Rotation, 50f, default, 1f)) // full half width of 3 gives false positives
+                    if (potentialTarget.Position.InRect(t.Position, t.Rotation, 50f, default, 0.1f)) // full half width of 3 gives false positives
                     {
                         var distance = (potentialTarget.Position - t.Position).LengthSq();
                         if (distance < minDistance)

@@ -93,7 +93,7 @@ class TwinscorchedHaloVeil(BossModule module) : Components.GenericAOEs(module)
                     aoe.Color = Colors.Danger;
                 aoe.Risky = true;
             }
-            else if (aoe.Shape != cone)
+            else if (aoe.Shape == aoes[0].Shape)
                 aoe.Risky = false;
         }
         return aoes[..max];
@@ -119,10 +119,12 @@ class TwinscorchedHaloVeil(BossModule module) : Components.GenericAOEs(module)
         void AddAOEs(AOEShape? secondaryShape)
         {
             var position = spell.LocXZ;
-            _aoes.Add(new(cone, position, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(cone, position, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 2.3f)));
+            var rotation = spell.Rotation;
+            AddAOE(cone);
+            AddAOE(cone, 180f.Degrees(), 2.3f);
             if (secondaryShape != null)
-                _aoes.Add(new(secondaryShape, position, default, Module.CastFinishAt(spell, 4.5f)));
+                AddAOE(secondaryShape, default, 4.5f);
+            void AddAOE(AOEShape shape, Angle offset = default, float delay = default) => _aoes.Add(new(shape, position, rotation + offset, Module.CastFinishAt(spell, delay)));
         }
     }
 
