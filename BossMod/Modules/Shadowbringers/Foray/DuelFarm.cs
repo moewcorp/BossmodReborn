@@ -4,7 +4,7 @@ using System.Reflection;
 namespace BossMod.Shadowbringers.Foray;
 
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class DuelAttribute(uint nameID, uint prepNameID, uint fateID = 0) : Attribute
+public sealed class DuelAttribute(uint nameID, uint prepNameID, uint fateID = default) : Attribute
 {
     public uint NameID => nameID;
     public uint PrepNameID => prepNameID;

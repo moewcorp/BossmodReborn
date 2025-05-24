@@ -83,9 +83,9 @@ public enum AID : uint
     OptimalPlayShield = 23040, // QueensKnight->self, 5.0s cast, range 5-60 donut
     OptimalPlayCone = 23041, // Helper->self, 5.0s cast, range 60 270-degree cone
     TurretsTour = 23079, // QueensGunner->self, 5.0s cast, single-target, visual (turret aoes)
-    TurretsTourAOE1 = 23080, // Helper->location, 5.0s cast, width 6 rect charge aoe
-    TurretsTourAOE2 = 23082, // AutomaticTurret->self, no cast, range 50 width 6 rect
-    TurretsTourAOE3 = 23081, // AutomaticTurret->location, no cast, width 6 rect charge
+    TurretsTourFirst = 23080, // Helper->location, 5.0s cast, width 6 rect charge aoe
+    TurretsTourRest1 = 23081, // AutomaticTurret->location, no cast, width 6 rect charge
+    TurretsTourRest2 = 23082, // AutomaticTurret->self, no cast, range 50 width 6 rect
 
     Bombslinger = 23359, // QueensWarrior->self, 3.0s cast, single-target, visual (spawn bombs)
     HeavensWrath = 23030, // Boss->self, 3.0s cast, single-target, visual (preparation for knockback)

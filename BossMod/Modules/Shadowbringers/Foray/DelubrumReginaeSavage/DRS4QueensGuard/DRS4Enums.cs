@@ -92,9 +92,9 @@ public enum AID : uint
     PawnOffFake = 22586, // SoldierAvatar->self, 7.0s cast, range 20 circle fake aoe
     AutomaticTurretNormal = 22597, // Gunner->self, 3.0s cast, single-target, visual (create turrets in the arena that need to be dodged)
     TurretsTourNormal = 22598, // Gunner->self, 5.0s cast, single-target, visual (tower lines)
-    TurretsTourNormalAOE1 = 22599, // Helper->location, 5.0s cast, width 6 rect charge
-    TurretsTourNormalAOE2 = 22601, // AutomaticTurret->self, no cast, range 55 width 6 rect
-    TurretsTourNormalAOE3 = 22600, // AutomaticTurret->location, no cast, width 6 rect charge
+    TurretsTourNormalFirst = 22599, // Helper->location, 5.0s cast, width 6 rect charge
+    TurretsTourNormalRest1 = 22600, // AutomaticTurret->location, no cast, width 6 rect charge
+    TurretsTourNormalRest2 = 22601, // AutomaticTurret->self, no cast, range 55 width 6 rect
 
     SpitefulSpirit = 22574, // Warrior->self, 5.0s cast, single-target, visual (summon spheres?)
     StrongpointDefense = 22558, // Knight->self, 5.0s cast, single-target, visual (summon wards?)
