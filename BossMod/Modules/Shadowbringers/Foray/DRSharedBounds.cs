@@ -65,11 +65,11 @@ public abstract class TrinityAvowed(WorldState ws, Actor primary) : BossModule(w
     public static readonly ArenaBoundsRect ShimmeringShotArena = new(5f, 25f);
 }
 
-public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, primary, center, StartingArena)
+public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
-    private static readonly WPos center = new(-272f, -415f);
+    public static readonly WPos ArenaCenter = new(-272f, -415f);
     public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
     public static readonly ArenaBoundsSquare SquareArena = new(25f);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(center, 25f, 48)]);
+    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 25f, 48)]);
     public static readonly AOEShapeDonut ArenaChange = new(25f, 43f);
 }

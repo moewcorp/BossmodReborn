@@ -12,12 +12,12 @@ class DRN6QueenStates : StateMachineBuilder
             .ActivateOnEnter<OptimalPlaySword>()
             .ActivateOnEnter<OptimalPlayShield>()
             .ActivateOnEnter<JudgmentBlade>()
+            .ActivateOnEnter<HeavensWrathAOE>()
             .ActivateOnEnter<HeavensWrathKnockback>()
-            //.ActivateOnEnter<Chess>()
-            //.ActivateOnEnter<QueensWill>()
-            //.ActivateOnEnter<QueensEdict>()
+            .ActivateOnEnter<Chess>()
+            .ActivateOnEnter<MeansEnds>()
             .ActivateOnEnter<TurretsTour>()
             .ActivateOnEnter<AboveBoard>()
-            ;
+            .ActivateOnEnter<CleansingSlash>();
     }
 }
