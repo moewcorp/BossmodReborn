@@ -69,5 +69,9 @@ public enum AID : uint
     BloodAndBoneWarriorEnrage = 22530, // QueensWarrior->self, 60.0s cast, range 60 circle
     BloodAndBoneKnightEnrage = 22521, // QueensKnight->self, 60.0s cast, range 60 circle
     BloodAndBoneSoldierEnrage = 22538, // QueensSoldier->self, 60.0s cast, range 60 circle
-    QueensShotEnrage = 22546 // QueensGunner->self, 60.0s cast, range 60 circle
+    QueensShotEnrage = 22546, // QueensGunner->self, 60.0s cast, range 60 circle
+    QueensShotEnrageRepeat = 23456, // QueensGunner->self, no cast, range 60 circle
+    BloodAndBoneSoldierEnrageRepeat = 23455, // QueensSoldier->self, no cast, range 60 circle
+    BloodAndBoneWarriorEnrageRepeat = 23454, // QueensWarrior->self, no cast, range 60 circle
+    BloodAndBoneKnightEnrageRepeat = 23453 // QueensKnight->self, no cast, range 60 circle
 }

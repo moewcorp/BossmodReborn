@@ -111,21 +111,13 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
     }
 }
 
-class Aethermodynamics1(BossModule module) : Components.RaidwideCast(module, (uint)AID.Aethermodynamics1);
-class Aethermodynamics2(BossModule module) : Components.RaidwideCast(module, (uint)AID.Aethermodynamics2);
-class Aethermodynamics3(BossModule module) : Components.RaidwideCast(module, (uint)AID.Aethermodynamics3);
-class Aethermodynamics4(BossModule module) : Components.RaidwideCast(module, (uint)AID.Aethermodynamics4);
+class Aethermodynamics(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Aethermodynamics1, (uint)AID.Aethermodynamics2,
+(uint)AID.Aethermodynamics3, (uint)AID.Aethermodynamics4]);
 
 class Obliterate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Obliterate, 6f, 8);
 class Meltdown(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Meltdown, new AOEShapeRect(40f, 5f));
-
-class Blizzard(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(6f, 40f));
-class BlizzardIV1(BossModule module) : Blizzard(module, (uint)AID.BlizzardIV1);
-class BlizzardIV5(BossModule module) : Blizzard(module, (uint)AID.BlizzardIV5);
-
-class Fire(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 15f);
-class FireIV1(BossModule module) : Fire(module, (uint)AID.FireIV1);
-class FireIV5(BossModule module) : Fire(module, (uint)AID.FireIV5);
+class BlizzardIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BlizzardIV1, (uint)AID.BlizzardIV5], new AOEShapeDonut(6f, 40f));
+class FireIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FireIV1, (uint)AID.FireIV5], 15f);
 
 class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOEs(module)
 {
@@ -196,15 +188,10 @@ class ArchAethereaterStates : StateMachineBuilder
             .ActivateOnEnter<Heatstroke>()
             .ActivateOnEnter<ColdSweats>()
             .ActivateOnEnter<Meltdown>()
-            .ActivateOnEnter<Aethermodynamics1>()
-            .ActivateOnEnter<Aethermodynamics2>()
-            .ActivateOnEnter<Aethermodynamics3>()
-            .ActivateOnEnter<Aethermodynamics4>()
+            .ActivateOnEnter<Aethermodynamics>()
             .ActivateOnEnter<Obliterate>()
-            .ActivateOnEnter<BlizzardIV1>()
-            .ActivateOnEnter<FireIV1>()
-            .ActivateOnEnter<BlizzardIV5>()
-            .ActivateOnEnter<FireIV5>()
+            .ActivateOnEnter<BlizzardIV>()
+            .ActivateOnEnter<FireIV>()
             .ActivateOnEnter<SoullessStreamFireBlizzardCombo>();
     }
 }
