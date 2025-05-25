@@ -2,11 +2,11 @@ using static BossMod.Dawntrail.Raid.BruteAmbombinatorSharedBounds.BruteAmbombina
 
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class BrutalImpact(BossModule module) : Components.CastCounter(module, (uint)AID.BrutalImpact);
-class RevengeOfTheVines2(BossModule module) : Components.CastCounter(module, (uint)AID.RevengeOfTheVines2);
-class Slaminator(BossModule module) : Components.CastTowers(module, (uint)AID.Slaminator, 8f, 8, 8);
+sealed class BrutalImpact(BossModule module) : Components.CastCounter(module, (uint)AID.BrutalImpact);
+sealed class RevengeOfTheVines2(BossModule module) : Components.CastCounter(module, (uint)AID.RevengeOfTheVines2);
+sealed class Slaminator(BossModule module) : Components.CastTowers(module, (uint)AID.Slaminator, 8f, 8, 8);
 
-class Explosion : Components.SimpleAOEs
+sealed class Explosion : Components.SimpleAOEs
 {
     public Explosion(BossModule module) : base(module, (uint)AID.Explosion, 25f, 2)
     {
@@ -14,7 +14,7 @@ class Explosion : Components.SimpleAOEs
     }
 }
 
-class Sporesplosion : Components.SimpleAOEs
+sealed class Sporesplosion : Components.SimpleAOEs
 {
     public Sporesplosion(BossModule module) : base(module, (uint)AID.Sporesplosion, 8f, 12)
     {
@@ -22,7 +22,7 @@ class Sporesplosion : Components.SimpleAOEs
     }
 }
 
-class NeoBombarianSpecialKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.NeoBombarianSpecial, 58f, true)
+sealed class NeoBombarianSpecialKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.NeoBombarianSpecial, 58f, true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -34,7 +34,7 @@ class NeoBombarianSpecialKB(BossModule module) : Components.SimpleKnockbacks(mod
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1024, NameID = 13756, PlanLevel = 100)]
-public class M07SBruteAbombinator(WorldState ws, Actor primary) : BossModule(ws, primary, FirstCenter, DefaultArena)
+public sealed class M07SBruteAbombinator(WorldState ws, Actor primary) : BossModule(ws, primary, FirstCenter, DefaultArena)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

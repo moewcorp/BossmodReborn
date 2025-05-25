@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class TyrannysGraspAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TyrannysGraspAOE, new AOEShapeRect(20f, 20f));
+sealed class TyrannysGraspAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TyrannysGraspAOE, new AOEShapeRect(20f, 20f));
 
-class TyrannysGraspTowers(BossModule module) : Components.GenericTowers(module)
+sealed class TyrannysGraspTowers(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

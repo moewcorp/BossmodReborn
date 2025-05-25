@@ -1,8 +1,8 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class WickedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WickedFireAOE, 10f);
+sealed class WickedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WickedFireAOE, 10f);
 
-class TwilightSabbath(BossModule module) : Components.GenericAOEs(module)
+sealed class TwilightSabbath(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = [];
 

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Unreal.UnSuzaku;
 
-class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module)
+sealed class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(5);
     private static readonly AOEShapeCircle circle = new(9f);

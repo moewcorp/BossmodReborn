@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
 
-class Spotlight(BossModule module) : Components.GenericAOEs(module)
+sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCircle circle = new(2.5f);

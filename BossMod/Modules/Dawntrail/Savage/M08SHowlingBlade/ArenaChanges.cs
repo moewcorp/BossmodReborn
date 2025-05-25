@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly M08SHowlingBladeConfig _config = Service.Config.Get<M08SHowlingBladeConfig>();
     private readonly List<Polygon> polygons = new(5);

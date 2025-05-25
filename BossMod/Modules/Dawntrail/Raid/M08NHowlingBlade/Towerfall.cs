@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M08NHowlingBlade;
 
-class Towerfall(BossModule module) : Components.GenericAOEs(module)
+sealed class Towerfall(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(30f, 3f);
     private readonly List<AOEInstance> _aoes = new(6);

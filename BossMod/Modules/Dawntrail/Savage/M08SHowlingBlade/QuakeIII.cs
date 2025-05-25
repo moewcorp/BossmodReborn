@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class QuakeIII(BossModule module) : Components.GenericBaitStack(module, (uint)AID.QuakeIII)
+sealed class QuakeIII(BossModule module) : Components.GenericBaitStack(module, (uint)AID.QuakeIII)
 {
     private static readonly AOEShapeCircle circle = new(8f);
 

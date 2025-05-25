@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class Adds(BossModule module) : BossComponent(module)
+sealed class Adds(BossModule module) : BossComponent(module)
 {
     private BitMask windtether;
     private BitMask stonetether;
@@ -92,7 +92,7 @@ class Adds(BossModule module) : BossComponent(module)
     }
 }
 
-class EarthWindborneEnd(BossModule module) : BossComponent(module)
+sealed class EarthWindborneEnd(BossModule module) : BossComponent(module)
 {
     private readonly (int Order, Actor Actor, DateTime Expiration, bool wind)[] expirationBySlot = new (int, Actor, DateTime, bool)[8];
     private BitMask vulnerability;
@@ -152,7 +152,7 @@ class EarthWindborneEnd(BossModule module) : BossComponent(module)
     }
 }
 
-class StalkingStoneWind(BossModule module) : Components.GenericBaitStack(module)
+sealed class StalkingStoneWind(BossModule module) : Components.GenericBaitStack(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 3f);
     private BitMask tanks;
@@ -195,7 +195,7 @@ class StalkingStoneWind(BossModule module) : Components.GenericBaitStack(module)
     }
 }
 
-class AlphaWindStone(BossModule module) : Components.GenericBaitAway(module)
+sealed class AlphaWindStone(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 45f.Degrees());
 

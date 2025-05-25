@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class BrutalSwing(BossModule module) : Components.GenericAOEs(module)
+sealed class BrutalSwing(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(25f, 90f.Degrees());
     private static readonly AOEShapeCircle circle = new(12f);

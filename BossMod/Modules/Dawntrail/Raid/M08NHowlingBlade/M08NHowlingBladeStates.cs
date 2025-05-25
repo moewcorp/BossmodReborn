@@ -1,13 +1,12 @@
 namespace BossMod.Dawntrail.Raid.M08NHowlingBlade;
 
-class M08NHowlingBladeStates : StateMachineBuilder
+sealed class M08NHowlingBladeStates : StateMachineBuilder
 {
     public M08NHowlingBladeStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChanges>()
-            .ActivateOnEnter<ExtraplanarPursuit>()
-            .ActivateOnEnter<TitanicPursuit>()
+            .ActivateOnEnter<ExtraplanarTitanicPursuit>()
             .ActivateOnEnter<GreatDivide>()
             .ActivateOnEnter<Heavensearth1>()
             .ActivateOnEnter<Heavensearth2>()

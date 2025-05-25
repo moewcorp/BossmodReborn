@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M04NWickedThunder;
 
-class WitchHunt(BossModule module) : Components.GenericAOEs(module)
+sealed class WitchHunt(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(25);
     private static readonly AOEShapeCircle circle = new(6f);

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class ProwlingGaleLast(BossModule module) : Components.GenericTowers(module, (uint)AID.ProwlingGaleLast1)
+sealed class ProwlingGaleLast(BossModule module) : Components.GenericTowers(module, (uint)AID.ProwlingGaleLast1)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -48,7 +48,7 @@ class ProwlingGaleLast(BossModule module) : Components.GenericTowers(module, (ui
     }
 }
 
-class LamentOfTheCloseDistant(BossModule module) : BossComponent(module)
+sealed class LamentOfTheCloseDistant(BossModule module) : BossComponent(module)
 {
     private readonly (Actor, bool close)[] _partner = new (Actor, bool)[PartyState.MaxPartySize];
     public bool TethersAssigned;

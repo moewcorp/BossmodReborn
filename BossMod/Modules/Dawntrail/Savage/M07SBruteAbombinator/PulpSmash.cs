@@ -1,9 +1,9 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class PulpSmash(BossModule module) : Components.StackWithIcon(module, (uint)IconID.PulpSmash, (uint)AID.PulpSmash, 6f, 5.1f, 8, 8);
-class ItCameFromTheDirt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ItCameFromTheDirt, 6f);
+sealed class PulpSmash(BossModule module) : Components.StackWithIcon(module, (uint)IconID.PulpSmash, (uint)AID.PulpSmash, 6f, 5.1f, 8, 8);
+sealed class ItCameFromTheDirt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ItCameFromTheDirt, 6f);
 
-class TheUnpotted(BossModule module) : Components.GenericBaitAway(module, (uint)AID.TheUnpotted)
+sealed class TheUnpotted(BossModule module) : Components.GenericBaitAway(module, (uint)AID.TheUnpotted)
 {
     private static readonly AOEShapeCone cone = new(60f, 15f.Degrees());
 

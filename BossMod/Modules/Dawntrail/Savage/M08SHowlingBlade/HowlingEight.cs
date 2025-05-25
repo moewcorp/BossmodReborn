@@ -1,8 +1,8 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class Mooncleaver2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mooncleaver2, 8f);
+sealed class Mooncleaver2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mooncleaver2, 8f);
 
-class HowlingEight(BossModule module) : Components.GenericTowers(module)
+sealed class HowlingEight(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

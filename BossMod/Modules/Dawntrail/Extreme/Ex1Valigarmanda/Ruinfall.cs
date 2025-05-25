@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class RuinfallTower(BossModule module) : Components.GenericTowers(module, (uint)AID.RuinfallTower)
+sealed class RuinfallTower(BossModule module) : Components.GenericTowers(module, (uint)AID.RuinfallTower)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -28,5 +28,5 @@ class RuinfallTower(BossModule module) : Components.GenericTowers(module, (uint)
     }
 }
 
-class RuinfallKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuinfallKnockback, 25f, kind: Kind.DirForward);
-class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RuinfallAOE, 6f);
+sealed class RuinfallKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuinfallKnockback, 25f, kind: Kind.DirForward);
+sealed class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RuinfallAOE, 6f);

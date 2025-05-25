@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Moussacre(BossModule module) : Components.GenericBaitAway(module)
+sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module)
 {
     private DateTime _activation;
 
@@ -12,20 +12,35 @@ class Moussacre(BossModule module) : Components.GenericBaitAway(module)
         if (_activation != default)
         {
             var party = Raid.WithoutSlot(false, true, true);
-            var source = Module.PrimaryActor.Position;
-            Array.Sort(party, (a, b) =>
-                {
-                    var distA = (a.Position - source).LengthSq();
-                    var distB = (b.Position - source).LengthSq();
-                    return distA.CompareTo(distB);
-                });
             var len = party.Length;
-            var max = len > 4 ? 4 : len;
 
-            for (var i = 0; i < max; ++i)
+            Span<(Actor actor, float distSq)> distances = new (Actor, float)[len];
+            var source = Module.PrimaryActor;
+            var sourcePos = source.Position;
+
+            for (var i = 0; i < len; ++i)
             {
                 ref readonly var p = ref party[i];
-                CurrentBaits.Add(new(Module.PrimaryActor, p, cone, _activation));
+                var distSq = (p.Position - sourcePos).LengthSq();
+                distances[i] = (p, distSq);
+            }
+
+            var targets = Math.Min(4, len);
+            for (var i = 0; i < targets; ++i)
+            {
+                var selIdx = i;
+                for (var j = i + 1; j < len; ++j)
+                {
+                    if (distances[j].distSq < distances[selIdx].distSq)
+                        selIdx = j;
+                }
+
+                if (selIdx != i)
+                {
+                    (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
+                }
+
+                CurrentBaits.Add(new(source, distances[i].actor, cone, _activation));
             }
         }
     }

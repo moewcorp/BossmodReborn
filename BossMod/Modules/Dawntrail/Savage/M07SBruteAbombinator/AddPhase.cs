@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class QuarrySwamp(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.QuarrySwamp, 60f)
+sealed class QuarrySwamp(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.QuarrySwamp, 60f)
 {
     public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.BloomingAbomination));
 
@@ -15,13 +15,13 @@ class QuarrySwamp(BossModule module) : Components.CastLineOfSightAOE(module, (ui
     }
 }
 
-class SporeSac(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SporeSac, 8f);
-class Pollen(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pollen, 8f);
-class RootsOfEvil(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RootsOfEvil, 12f);
-class CrossingCrosswinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrossingCrosswinds, new AOEShapeCross(50f, 5f));
-class WindingWildwinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindingWildwinds, new AOEShapeDonut(5f, 60f));
+sealed class SporeSac(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SporeSac, 8f);
+sealed class Pollen(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pollen, 8f);
+sealed class RootsOfEvil(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RootsOfEvil, 12f);
+sealed class CrossingCrosswinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrossingCrosswinds, new AOEShapeCross(50f, 5f));
+sealed class WindingWildwinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindingWildwinds, new AOEShapeDonut(5f, 60f));
 
-class AddInterruptHint(BossModule module) : BossComponent(module)
+sealed class AddInterruptHint(BossModule module) : BossComponent(module)
 {
     private readonly List<Actor> castersDonut = new(2);
     private readonly List<Actor> castersCross = new(2);

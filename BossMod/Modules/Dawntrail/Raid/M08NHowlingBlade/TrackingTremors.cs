@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M08NHowlingBlade;
 
-class TrackingTremors(BossModule module) : Components.UniformStackSpread(module, 6f, default, 8, 8)
+sealed class TrackingTremors(BossModule module) : Components.UniformStackSpread(module, 6f, default, 8, 8)
 {
     private int numCasts;
 

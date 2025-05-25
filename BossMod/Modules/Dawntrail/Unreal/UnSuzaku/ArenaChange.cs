@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Unreal.UnSuzaku;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(3.5f);
     private AOEInstance? _aoe;

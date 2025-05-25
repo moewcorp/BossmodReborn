@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class M06SSugarRiotStates : StateMachineBuilder
+sealed class M06SSugarRiotStates : StateMachineBuilder
 {
     public M06SSugarRiotStates(BossModule module) : base(module)
     {
@@ -95,8 +95,7 @@ class M06SSugarRiotStates : StateMachineBuilder
             .ActivateOnEnter<SprayPain2>()
             .ActivateOnEnter<QuicksandDoubleStyleHeavenBomb>()
             .ActivateOnEnter<QuicksandDoubleStylePaintBomb>()
-            .ActivateOnEnter<PaintBomb>()
-            .ActivateOnEnter<HeavenBomb>()
+            .ActivateOnEnter<PaintBombHeavenBomb>()
             .ActivateOnEnter<Quicksand>();
         ComponentCondition<HeatingBurningUp>(id + 0xE0u, 7.9f, comp => comp.NumCasts == 5, "Defamation 2 resolves")
             .DeactivateOnExit<HeatingBurningUp>();
@@ -111,8 +110,7 @@ class M06SSugarRiotStates : StateMachineBuilder
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<QuicksandDoubleStyleHeavenBomb>()
             .DeactivateOnExit<QuicksandDoubleStylePaintBomb>()
-            .DeactivateOnExit<PaintBomb>()
-            .DeactivateOnExit<HeavenBomb>()
+            .DeactivateOnExit<PaintBombHeavenBomb>()
             .DeactivateOnExit<Quicksand>();
         ComponentCondition<Sweltering>(id + 0x140u, 0.7f, comp => comp.SwelteringStatus == default, "Bleed ends")
             .DeactivateOnExit<Sweltering>();

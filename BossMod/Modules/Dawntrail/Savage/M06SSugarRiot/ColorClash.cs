@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class ColorClash(BossModule module) : Components.GenericStackSpread(module, raidwideOnResolve: false)
+sealed class ColorClash(BossModule module) : Components.GenericStackSpread(module, raidwideOnResolve: false)
 {
     private bool? partnerStack;
     private DateTime activation;

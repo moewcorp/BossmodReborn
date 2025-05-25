@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex2ZoraalJa;
 
-class Ex2ZoraalJaStates : StateMachineBuilder
+sealed class Ex2ZoraalJaStates : StateMachineBuilder
 {
     public Ex2ZoraalJaStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)

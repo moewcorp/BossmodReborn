@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
-class M05SDancingGreenStates : StateMachineBuilder
+sealed class M05SDancingGreenStates : StateMachineBuilder
 {
     public M05SDancingGreenStates(BossModule module) : base(module)
     {
@@ -169,7 +169,7 @@ class M05SDancingGreenStates : StateMachineBuilder
 
     private void Frogtourage1(uint id, float delay)
     {
-        ComponentCondition<Moonburn>(id, delay, comp => comp.AOEs.Count != 0, "Line AOEs appear")
+        ComponentCondition<Moonburn>(id, delay, comp => comp.Casters.Count != 0, "Line AOEs appear")
             .ActivateOnEnter<Moonburn>()
             .ActivateOnExit<QuarterBeats>()
             .ActivateOnExit<EighthBeats>();
@@ -177,7 +177,7 @@ class M05SDancingGreenStates : StateMachineBuilder
         Condition(id + 0x20u, 5f, () => Module.FindComponent<QuarterBeats>()?.Stacks.Count == 0 && Module.FindComponent<EighthBeats>()?.Spreads.Count == 0, "Spreads/stacks resolve")
             .DeactivateOnExit<QuarterBeats>()
             .DeactivateOnExit<EighthBeats>();
-        ComponentCondition<Moonburn>(id + 0x30u, 0.6f, comp => comp.AOEs.Count == 0, "Line AOEs resolve")
+        ComponentCondition<Moonburn>(id + 0x30u, 0.6f, comp => comp.Casters.Count == 0, "Line AOEs resolve")
             .DeactivateOnExit<Moonburn>();
     }
 
@@ -246,13 +246,13 @@ class M05SDancingGreenStates : StateMachineBuilder
         ComponentCondition<DoTheHustle>(id + 0x10u, 4f, comp => comp.NumCasts == 4, "Cleaves 2");
         ComponentCondition<DoTheHustle>(id + 0x20u, 4.2f, comp => comp.NumCasts == 5, "Halfroom cleave")
             .DeactivateOnExit<DoTheHustle>();
-        ComponentCondition<Moonburn>(id + 0x30u, 6.3f, comp => comp.AOEs.Count != 0, "Line AOEs 1 appear")
+        ComponentCondition<Moonburn>(id + 0x30u, 6.3f, comp => comp.Casters.Count != 0, "Line AOEs 1 appear")
             .ActivateOnExit<BackUpDance>()
             .ActivateOnEnter<Moonburn>();
-        ComponentCondition<Moonburn>(id + 0x40u, 10.5f, comp => comp.AOEs.Count == 0, "Line AOEs 1 resolve");
+        ComponentCondition<Moonburn>(id + 0x40u, 10.5f, comp => comp.Casters.Count == 0, "Line AOEs 1 resolve");
         ComponentCondition<BackUpDance>(id + 0x50u, 0.1f, comp => comp.NumCasts != 0, "Baits 1 resolve");
-        ComponentCondition<Moonburn>(id + 0x60u, 5.5f, comp => comp.AOEs.Count != 0, "Line AOEs 2 appear");
-        ComponentCondition<Moonburn>(id + 0x70u, 10.5f, comp => comp.AOEs.Count == 0, "Line AOEs 2 resolve")
+        ComponentCondition<Moonburn>(id + 0x60u, 5.5f, comp => comp.Casters.Count != 0, "Line AOEs 2 appear");
+        ComponentCondition<Moonburn>(id + 0x70u, 10.5f, comp => comp.Casters.Count == 0, "Line AOEs 2 resolve")
             .DeactivateOnExit<Moonburn>();
         ComponentCondition<BackUpDance>(id + 0x80u, 0.1f, comp => comp.NumCasts > 4, "Baits 2 resolve")
             .ActivateOnExit<DoTheHustle>()

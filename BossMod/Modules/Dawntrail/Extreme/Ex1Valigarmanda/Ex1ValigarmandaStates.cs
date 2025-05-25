@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class Ex1ValigarmandaStates : StateMachineBuilder
+sealed class Ex1ValigarmandaStates : StateMachineBuilder
 {
     public Ex1ValigarmandaStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)

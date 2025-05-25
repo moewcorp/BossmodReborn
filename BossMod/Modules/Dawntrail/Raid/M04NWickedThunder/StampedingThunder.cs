@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M04NWickedThunder;
 
-class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
+sealed class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 15f);
     private AOEInstance? _aoe;
@@ -23,7 +23,7 @@ class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ArenaChanges(BossModule module) : BossComponent(module)
+sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public static readonly ArenaBoundsSquare DefaultBounds = new(20f);
     public static readonly WPos DefaultCenter = new(100f, 100f);

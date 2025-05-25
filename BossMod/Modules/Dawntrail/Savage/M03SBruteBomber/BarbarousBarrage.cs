@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M03SBruteBomber;
 
-class BarbarousBarrageTowers(BossModule module) : Components.GenericTowers(module)
+sealed class BarbarousBarrageTowers(BossModule module) : Components.GenericTowers(module)
 {
     public enum State { None, NextNS, NextEW, NextCorners, NextCenter, Done }
 
@@ -61,18 +61,18 @@ class BarbarousBarrageTowers(BossModule module) : Components.GenericTowers(modul
         switch (state)
         {
             case State.NextNS:
-                towers.Add(pos + new WDir(0, -11));
-                towers.Add(pos + new WDir(0, +11));
+                towers.Add(pos + new WDir(default, -11f));
+                towers.Add(pos + new WDir(default, +11f));
                 break;
             case State.NextEW:
-                towers.Add(pos + new WDir(-11, 0));
-                towers.Add(pos + new WDir(+11, 0));
+                towers.Add(pos + new WDir(-11f, default));
+                towers.Add(pos + new WDir(+11f, default));
                 break;
             case State.NextCorners:
-                towers.Add(pos + new WDir(-11, -11));
-                towers.Add(pos + new WDir(-11, +11));
-                towers.Add(pos + new WDir(+11, -11));
-                towers.Add(pos + new WDir(+11, +11));
+                towers.Add(pos + new WDir(-11f, -11f));
+                towers.Add(pos + new WDir(-11f, +11f));
+                towers.Add(pos + new WDir(+11f, -11f));
+                towers.Add(pos + new WDir(+11f, +11f));
                 break;
             case State.NextCenter:
                 towers.Add(pos);
@@ -82,7 +82,7 @@ class BarbarousBarrageTowers(BossModule module) : Components.GenericTowers(modul
     }
 }
 
-class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback(module)
+sealed class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private readonly BarbarousBarrageTowers? _towers = module.FindComponent<BarbarousBarrageTowers>();
     private static readonly AOEShapeCircle _shape = new(4f);
@@ -93,7 +93,7 @@ class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback
         {
             var towers = _towers.Towers;
             var count = towers.Count;
-            var sources = new Knockback[count];
+            Span<Knockback> sources = new Knockback[count];
             for (var i = 0; i < count; ++i)
             {
                 var t = towers[i];
@@ -112,9 +112,9 @@ class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback
     }
 }
 
-class BarbarousBarrageMurderousMist(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BarbarousBarrageMurderousMist, new AOEShapeCone(40f, 135f.Degrees()));
+sealed class BarbarousBarrageMurderousMist(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BarbarousBarrageMurderousMist, new AOEShapeCone(40f, 135f.Degrees()));
 
-class BarbarousBarrageLariatCombo(BossModule module) : Components.GenericAOEs(module)
+sealed class BarbarousBarrageLariatCombo(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
     public static readonly Angle a90 = 90.Degrees();

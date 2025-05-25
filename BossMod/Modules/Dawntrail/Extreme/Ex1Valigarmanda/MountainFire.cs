@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class MountainFire(BossModule module) : Components.GenericTowers(module, (uint)AID.MountainFireTower)
+sealed class MountainFire(BossModule module) : Components.GenericTowers(module, (uint)AID.MountainFireTower)
 {
     private BitMask _nonTanks = GetNonTanks(module);
     private BitMask _lastSoakers;
@@ -46,7 +46,7 @@ class MountainFire(BossModule module) : Components.GenericTowers(module, (uint)A
     }
 }
 
-class MountainFireCone(BossModule module) : Components.GenericAOEs(module)
+sealed class MountainFireCone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly MountainFire? _tower = module.FindComponent<MountainFire>();
     private AOEInstance? _aoe;

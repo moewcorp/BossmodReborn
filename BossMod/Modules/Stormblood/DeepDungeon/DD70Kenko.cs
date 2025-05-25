@@ -23,11 +23,11 @@ public enum IconID : uint
     HoundOutOfHell = 1 // player->self
 }
 
-class PredatorClaws(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PredatorClaws, new AOEShapeCone(15f, 60f.Degrees()));
-class Slabber(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Slabber, 8f);
+sealed class PredatorClaws(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PredatorClaws, new AOEShapeCone(15f, 60f.Degrees()));
+sealed class Slabber(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Slabber, 8f);
 
-class InnerspaceSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Innerspace, 3f);
-class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(module)
+sealed class InnerspaceSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Innerspace, 3f);
+sealed class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
     private AOEInstance? _aoeTarget;
@@ -110,7 +110,7 @@ class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Devour(BossModule module) : Components.GenericBaitAway(module)
+sealed class Devour(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(10f, 45f.Degrees()); // TODO: verify angle
 
@@ -129,10 +129,10 @@ class Devour(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class Ululation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Ululation);
-class HoundOutOfHell(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.HoundOutOfHell, 7f);
+sealed class Ululation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Ululation);
+sealed class HoundOutOfHell(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.HoundOutOfHell, 7f);
 
-class DD70KenkoStates : StateMachineBuilder
+sealed class DD70KenkoStates : StateMachineBuilder
 {
     public DD70KenkoStates(BossModule module) : base(module)
     {
@@ -148,4 +148,4 @@ class DD70KenkoStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 546, NameID = 7489)]
-public class DD70Kenko(WorldState ws, Actor primary) : HoHArena2(ws, primary);
+public sealed class DD70Kenko(WorldState ws, Actor primary) : HoHArena2(ws, primary);

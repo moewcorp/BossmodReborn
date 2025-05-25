@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
 
-class LetsDance(BossModule module) : Components.GenericAOEs(module)
+sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeRect rect = new(25f, 45f);

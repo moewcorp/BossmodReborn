@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class StickyMousse(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
+sealed class StickyMousse(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
 {
     public int NumCasts;
 

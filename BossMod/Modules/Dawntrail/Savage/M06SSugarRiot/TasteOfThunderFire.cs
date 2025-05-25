@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class TasteOfThunderFire(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
+sealed class TasteOfThunderFire(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
 {
     public int NumCasts;
 
@@ -40,4 +40,4 @@ class TasteOfThunderFire(BossModule module) : Components.GenericStackSpread(modu
     }
 }
 
-class TasteOfThunderAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfThunderAOE, 3f);
+sealed class TasteOfThunderAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfThunderAOE, 3f);

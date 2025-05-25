@@ -2,7 +2,7 @@ using static BossMod.Dawntrail.Raid.BruteAmbombinatorSharedBounds.BruteAmbombina
 
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class ArenaChanges(BossModule module) : BossComponent(module)
+sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {

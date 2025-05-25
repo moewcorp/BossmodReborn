@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Extreme.Ex7Suzaku;
 
-class Ex7SuzakuStates : StateMachineBuilder
+sealed class Ex7SuzakuStates : StateMachineBuilder
 {
     public Ex7SuzakuStates(BossModule module) : base(module)
     {

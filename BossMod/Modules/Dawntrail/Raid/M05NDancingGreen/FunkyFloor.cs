@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
 
-class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
+sealed class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect square = new(2.5f, 2.5f, 2.5f);
     public readonly List<AOEInstance> AOEs = new(64);
@@ -34,7 +34,7 @@ class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x03 || _activeSet != null)
+        if (index != 0x03u || _activeSet != null)
             return;
 
         var act = WorldState.FutureTime(3.2d);
@@ -43,8 +43,8 @@ class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
 
         _activeSet = state switch
         {
-            0x00020001 => true,
-            0x00200010 => false,
+            0x00020001u => true,
+            0x00200010u => false,
             _ => _activeSet
         };
         void AddAOESet(WPos[] positions, DateTime activation)

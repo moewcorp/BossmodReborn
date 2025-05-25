@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class FreezingDust(BossModule module) : Components.StayMove(module)
+sealed class FreezingDust(BossModule module) : Components.StayMove(module)
 {
     public int NumActiveFreezes;
 

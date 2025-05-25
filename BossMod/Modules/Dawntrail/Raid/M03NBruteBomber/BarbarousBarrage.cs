@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M03NBruteBomber;
 
-class BarbarousBarrageTower(BossModule module) : Components.GenericTowers(module)
+sealed class BarbarousBarrageTower(BossModule module) : Components.GenericTowers(module)
 {
     private static readonly WPos[] positions = [new(106f, 94f), new(94f, 106f), new(106f, 106f), new(94f, 94f)];
 
@@ -18,7 +18,7 @@ class BarbarousBarrageTower(BossModule module) : Components.GenericTowers(module
     }
 }
 
-class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback(module)
+sealed class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private static readonly AOEShapeCircle circle = new(4f);
     private readonly BarbarousBarrageTower _tower = module.FindComponent<BarbarousBarrageTower>()!;
@@ -29,7 +29,7 @@ class BarbarousBarrageKnockback(BossModule module) : Components.GenericKnockback
         var count = towers.Count;
         if (count == 0)
             return [];
-        var sources = new Knockback[count];
+        Span<Knockback> sources = new Knockback[count];
         for (var i = 0; i < count; ++i)
         {
             var t = towers[i];

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Unreal.UnSuzaku;
 
-class UnSuzakuStates : StateMachineBuilder
+sealed class UnSuzakuStates : StateMachineBuilder
 {
     public UnSuzakuStates(BossModule module) : base(module)
     {

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M08NHowlingBlade;
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
     private static readonly AOEShapeDonut donut = new(12f, 17f);

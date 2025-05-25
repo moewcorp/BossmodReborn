@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Savage.M02SHoneyBLovely;
 
-class HoneyBLiveBeat1(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat1AOE);
-class HoneyBLiveBeat2(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat2AOE);
-class HoneyBLiveBeat3(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat3AOE);
+sealed class HoneyBLiveBeat1(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat1AOE);
+sealed class HoneyBLiveBeat2(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat2AOE);
+sealed class HoneyBLiveBeat3(BossModule module) : Components.CastCounter(module, (uint)AID.HoneyBLiveBeat3AOE);
 
-class HoneyBLiveHearts(BossModule module) : BossComponent(module)
+sealed class HoneyBLiveHearts(BossModule module) : BossComponent(module)
 {
     public int[] Hearts = new int[PartyState.MaxPartySize];
 
@@ -45,7 +45,7 @@ abstract class Fracture(BossModule module) : Components.CastTowers(module, (uint
     }
 }
 
-class Fracture1(BossModule module) : Fracture(module)
+sealed class Fracture1(BossModule module) : Fracture(module)
 {
     private readonly HoneyBLiveHearts? _hearts = module.FindComponent<HoneyBLiveHearts>();
 
@@ -60,7 +60,7 @@ class Fracture1(BossModule module) : Fracture(module)
     }
 }
 
-class Fracture2(BossModule module) : Fracture(module)
+sealed class Fracture2(BossModule module) : Fracture(module)
 {
     private BitMask _spreads;
     private readonly HoneyBLiveHearts? _hearts = module.FindComponent<HoneyBLiveHearts>();
@@ -83,7 +83,7 @@ class Fracture2(BossModule module) : Fracture(module)
     }
 }
 
-class Fracture3 : Fracture
+sealed class Fracture3 : Fracture
 {
     private BitMask _defamations;
 
@@ -100,10 +100,10 @@ class Fracture3 : Fracture
     protected override BitMask UpdateForbidden() => _defamations;
 }
 
-class Loveseeker(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LoveseekerAOE, 10);
-class HeartStruck(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeartStruck, 6);
-class Heartsore(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Heartsore, (uint)AID.Heartsore, 6, 7.1f);
-class SweetheartsS(BossModule module) : Raid.M02NHoneyBLovely.Sweethearts(module, (uint)OID.Sweetheart, (uint)AID.SweetheartTouch);
+sealed class Loveseeker(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LoveseekerAOE, 10);
+sealed class HeartStruck(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeartStruck, 6);
+sealed class Heartsore(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Heartsore, (uint)AID.Heartsore, 6, 7.1f);
+sealed class SweetheartsS(BossModule module) : Raid.M02NHoneyBLovely.Sweethearts(module, (uint)OID.Sweetheart, (uint)AID.SweetheartTouch);
 
 abstract class Heartsick(BossModule module, bool roles) : Components.StackWithIcon(module, (uint)IconID.Heartsick, (uint)AID.Heartsick, 6, 7, roles ? 2 : 4, roles ? 2 : 4)
 {
@@ -125,10 +125,10 @@ abstract class Heartsick(BossModule module, bool roles) : Components.StackWithIc
         }
     }
 }
-class Heartsick1(BossModule module) : Heartsick(module, false);
-class Heartsick2(BossModule module) : Heartsick(module, true);
+sealed class Heartsick1(BossModule module) : Heartsick(module, false);
+sealed class Heartsick2(BossModule module) : Heartsick(module, true);
 
-class HoneyBLiveBeat3BigBurst(BossModule module) : Components.UniformStackSpread(module, 0, 14, alwaysShowSpreads: true)
+sealed class HoneyBLiveBeat3BigBurst(BossModule module) : Components.UniformStackSpread(module, default, 14f, alwaysShowSpreads: true)
 {
     public int NumCasts;
     public int[] Order = new int[PartyState.MaxPartySize];

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (uint)AID.UltraviolentRay, onlyShowOutlines: true)
+sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (uint)AID.UltraviolentRay, onlyShowOutlines: true)
 {
     private static readonly AOEShapeRect rect = new(40f, 8.5f);
 
@@ -70,4 +70,4 @@ class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (u
     }
 }
 
-class GleamingBeam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GleamingBeam, new AOEShapeRect(31f, 4f));
+sealed class GleamingBeam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GleamingBeam, new AOEShapeRect(31f, 4f));

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class SingleDoubleStyle1(BossModule module) : Components.GenericAOEs(module)
+sealed class SingleDoubleStyle1(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(12);
     private static readonly AOEShapeCircle circle = new(15f), circleBig = new(30f);

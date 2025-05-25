@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 
-class M01SBlackCatStates : StateMachineBuilder
+sealed class M01SBlackCatStates : StateMachineBuilder
 {
     public M01SBlackCatStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChanges>();
     }
 

@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Extreme.Ex7Suzaku;
 
-class MesmerizingMelody(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.MesmerizingMelody, 11f, kind: Kind.TowardsOrigin, stopAfterWall: true)
+sealed class MesmerizingMelody(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.MesmerizingMelody, 11f, kind: Kind.TowardsOrigin, stopAfterWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -14,7 +14,7 @@ class MesmerizingMelody(BossModule module) : Components.SimpleKnockbacks(module,
     }
 }
 
-class RuthlessRefrain(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuthlessRefrain, 11f, stopAfterWall: true)
+sealed class RuthlessRefrain(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuthlessRefrain, 11f, stopAfterWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -86,5 +86,5 @@ abstract class PayThePiper : Components.GenericForcedMarch
     }
 }
 
-class PayThePiperRegular(BossModule module) : PayThePiper(module, 25f);
-class PayThePiperHotspotCombo(BossModule module) : PayThePiper(module, 30f);
+sealed class PayThePiperRegular(BossModule module) : PayThePiper(module, 25f);
+sealed class PayThePiperHotspotCombo(BossModule module) : PayThePiper(module, 30f);

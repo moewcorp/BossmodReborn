@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class ArenaChanges(BossModule module) : BossComponent(module)
+sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public override bool KeepOnPhaseChange => true;
     private bool firstEarthArena = true;

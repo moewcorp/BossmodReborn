@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class BreathOfDecay : Components.SimpleAOEs
+sealed class BreathOfDecay : Components.SimpleAOEs
 {
     public BreathOfDecay(BossModule module) : base(module, (uint)AID.BreathOfDecay, new AOEShapeRect(40f, 4f), 2)
     {
@@ -8,7 +8,7 @@ class BreathOfDecay : Components.SimpleAOEs
     }
 }
 
-class AeroIII(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AeroIII, 8f)
+sealed class AeroIII(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AeroIII, 8f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -22,7 +22,7 @@ class AeroIII(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID
     }
 }
 
-class ProwlingGale(BossModule module) : Components.CastTowers(module, (uint)AID.ProwlingGale, 2f)
+sealed class ProwlingGale(BossModule module) : Components.CastTowers(module, (uint)AID.ProwlingGale, 2f)
 {
     private BitMask forbidden;
 
@@ -44,8 +44,8 @@ class ProwlingGale(BossModule module) : Components.CastTowers(module, (uint)AID.
     }
 }
 
-class Gust(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Gust, (uint)AID.Gust, 5f, 5.1f);
-class WindsOfDecayTether(BossModule module) : Components.StretchTetherDuo(module, 16f, 5.7f)
+sealed class Gust(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Gust, (uint)AID.Gust, 5f, 5.1f);
+sealed class WindsOfDecayTether(BossModule module) : Components.StretchTetherDuo(module, 16f, 5.7f)
 {
     private readonly AeroIII _kb = module.FindComponent<AeroIII>()!;
 
@@ -80,7 +80,7 @@ class WindsOfDecayTether(BossModule module) : Components.StretchTetherDuo(module
     }
 }
 
-class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 15f.Degrees());
     private readonly AeroIII _kb = module.FindComponent<AeroIII>()!;
@@ -151,4 +151,4 @@ class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class TrackingTremors(BossModule module) : Components.StackWithIcon(module, (uint)IconID.TrackingTremors, (uint)AID.TrackingTremors, 6f, 6f, 8, 8, 8);
+sealed class TrackingTremors(BossModule module) : Components.StackWithIcon(module, (uint)IconID.TrackingTremors, (uint)AID.TrackingTremors, 6f, 6f, 8, 8, 8);

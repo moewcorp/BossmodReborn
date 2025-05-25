@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class BrutalSmash(BossModule module) : Components.GenericSharedTankbuster(module, default, 6f)
+sealed class BrutalSmash(BossModule module) : Components.GenericSharedTankbuster(module, default, 6f)
 {
     private bool close;
 

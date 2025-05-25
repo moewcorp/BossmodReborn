@@ -1,7 +1,7 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1f);
-class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1f, 4, 4)
+sealed class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1f);
+sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1f, 4, 4)
 {
     private BitMask forbidden;
 
@@ -28,7 +28,7 @@ class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)I
     }
 }
 
-class FangedCharge(BossModule module) : Components.GenericAOEs(module)
+sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 3f);
     private readonly List<AOEInstance> _aoes = new(8);
@@ -86,7 +86,7 @@ class FangedCharge(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Shadowchase(BossModule module) : Components.GenericAOEs(module)
+sealed class Shadowchase(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 4f);
     private readonly List<AOEInstance> _aoes = new(5);

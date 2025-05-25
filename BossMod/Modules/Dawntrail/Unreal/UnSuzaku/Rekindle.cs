@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Unreal.UnSuzaku;
 
 abstract class Rekindle(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.Rekindle, 6f, 5.1f);
 
-class RekindleP1(BossModule module) : Rekindle(module)
+sealed class RekindleP1(BossModule module) : Rekindle(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -53,4 +53,4 @@ class RekindleP1(BossModule module) : Rekindle(module)
     }
 }
 
-class RekindleP2(BossModule module) : Rekindle(module);
+sealed class RekindleP2(BossModule module) : Rekindle(module);

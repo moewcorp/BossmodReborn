@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class M08SHowlingBladeStates : StateMachineBuilder
+sealed class M08SHowlingBladeStates : StateMachineBuilder
 {
     private readonly M08SHowlingBlade _module;
 
@@ -8,7 +8,7 @@ class M08SHowlingBladeStates : StateMachineBuilder
     {
         _module = module;
         SimplePhase(default, Phase1, "P1")
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP == 1;
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1u;
         SimplePhase(1u, Phase2, "P2")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.BossP2()?.IsDeadOrDestroyed ?? true);

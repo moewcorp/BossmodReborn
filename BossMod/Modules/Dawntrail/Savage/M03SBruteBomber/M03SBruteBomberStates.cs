@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Savage.M03SBruteBomber;
 
-class M03SBruteBomberStates : StateMachineBuilder
+sealed class M03SBruteBomberStates : StateMachineBuilder
 {
     public M03SBruteBomberStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)

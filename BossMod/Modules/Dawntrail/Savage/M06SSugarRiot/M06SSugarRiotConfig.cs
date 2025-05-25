@@ -4,7 +4,7 @@ using System.Reflection;
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
 [ConfigDisplay(Order = 0x110, Parent = typeof(DawntrailConfig))]
-public class M06SSugarRiotConfig() : ConfigNode
+public sealed class M06SSugarRiotConfig() : ConfigNode
 {
     [PropertyDisplay("Add phase priorities for autorotation (from highest to lowest)")]
     [PropertyStringOrder(["Sugar Riot", "Mu P1", "Yan P1", "Gimme Cat P1", "Mu P2", "Feather Ray NW", "Feather Ray NE", "Yan P3", "Gimme Cat P3", "Jabberwock P3",

@@ -33,7 +33,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             field = value;
             _nodesUpToDate = false;
         }
-    } = true;
+    } = false;
 
     public void Draw(UITree tree, DateTime reference)
     {

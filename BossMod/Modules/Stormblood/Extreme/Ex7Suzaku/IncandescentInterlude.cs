@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Extreme.Ex7Suzaku;
 
-class IncandescentInterlude(BossModule module) : Components.GenericTowers(module)
+sealed class IncandescentInterlude(BossModule module) : Components.GenericTowers(module)
 {
     private BitMask _forbidden;
     public readonly List<Tower> TowerCache = new(4);

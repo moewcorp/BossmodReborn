@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class M07SBruteAbombinatorStates : StateMachineBuilder
+sealed class M07SBruteAbombinatorStates : StateMachineBuilder
 {
     private static readonly M07SBruteAbombinatorConfig _config = Service.Config.Get<M07SBruteAbombinatorConfig>();
 
@@ -263,6 +263,7 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
     {
         CastMulti(id, [(uint)AID.Stoneringer2Stoneringers1, (uint)AID.Stoneringer2Stoneringers2], delay, 2f, "Select AOE shapes")
             .DeactivateOnEnter<ArenaChanges>()
+            .ActivateOnExit<LashingLariat>()
             .ActivateOnExit<BrutalSwing>();
         ComponentCondition<BrutalSwing>(id + 0x10u, 12.6f, comp => comp.NumCasts != 0, "Stoneringer 1 resolves")
             .ActivateOnExit<RevengeOfTheVines2>();
@@ -270,7 +271,6 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
             .DeactivateOnExit<RevengeOfTheVines2>()
             .SetHint(StateMachine.StateHint.Raidwide);
         ComponentCondition<LashingLariat>(id + 0x30u, 6.1f, comp => comp.NumCasts != 0, "Huge cleave resolves")
-            .ActivateOnEnter<LashingLariat>()
             .ActivateOnExit<GlowerPower>()
             .ActivateOnExit<ElectrogeneticForce>()
             .DeactivateOnExit<LashingLariat>();
@@ -309,7 +309,6 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
             .ActivateOnEnter<SinisterSeedsAOE>();
         ComponentCondition<SinisterSeedsAOE>(id + 0x80u, 2f, comp => comp.NumCasts > 4, "Circle AOEs 4");
         var seeds = ComponentCondition<SinisterSeedsSpread>(id + 0x90u, 2f, comp => comp.NumFinishedSpreads != 0, "Spreads resolve + circle AOEs 5")
-            .DeactivateOnExit<TendrilsOfTerrorBait>()
             .DeactivateOnExit<SinisterSeedsSpread>();
         if (_config.EnableSeedPrediction)
             seeds.DeactivateOnExit<TendrilsOfTerrorBait>();
@@ -331,6 +330,7 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
     {
         var stoneringer = CastMulti(id, [(uint)AID.Stoneringer2Stoneringers1, (uint)AID.Stoneringer2Stoneringers2], delay, 2f, "Select AOE shapes")
             .ActivateOnEnter<StrangeSeeds>()
+            .ActivateOnExit<LashingLariat>()
             .ActivateOnExit<BrutalSwing>();
         if (_config.EnableSeedPrediction)
             stoneringer.ActivateOnExit<TendrilsOfTerrorPrediction>()
@@ -341,7 +341,6 @@ class M07SBruteAbombinatorStates : StateMachineBuilder
         ComponentCondition<BrutalSwing>(id + 0x30u, 2.8f, comp => comp.NumCasts != 0, "Stoneringer 1 resolves");
         ComponentCondition<TendrilsOfTerror>(id + 0x40u, 0.2f, comp => comp.AOEs.Count == 0, $"Tendrils 1 resolve");
         ComponentCondition<LashingLariat>(id + 0x50u, 4.9f, comp => comp.NumCasts != 0, $"Huge cleave")
-            .ActivateOnEnter<LashingLariat>()
             .DeactivateOnExit<LashingLariat>();
         var seeds = ComponentCondition<StrangeSeeds>(id + 0x60u, 4.1f, comp => comp.NumFinishedSpreads > 4, "Spreads 2 resolve")
             .DeactivateOnExit<StrangeSeeds>();
