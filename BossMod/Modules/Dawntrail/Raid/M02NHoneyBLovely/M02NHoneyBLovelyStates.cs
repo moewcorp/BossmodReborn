@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Raid.M02NHoneyBLovely;
 
-class M02NHoneyBLovelyStates : StateMachineBuilder
+sealed class M02NHoneyBLovelyStates : StateMachineBuilder
 {
     public M02NHoneyBLovelyStates(BossModule module) : base(module)
     {

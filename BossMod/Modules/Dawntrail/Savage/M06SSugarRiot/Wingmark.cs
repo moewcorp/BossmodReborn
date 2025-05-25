@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Wingmark(BossModule module) : Components.GenericKnockback(module)
+sealed class Wingmark(BossModule module) : Components.GenericKnockback(module)
 {
     private DateTime activation;
     private BitMask wingmark;

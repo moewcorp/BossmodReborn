@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class GlowerPower(BossModule module) : Components.GenericAOEs(module)
+sealed class GlowerPower(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(65f, 7f);
     public AOEInstance? AOE;
@@ -40,7 +40,7 @@ class GlowerPower(BossModule module) : Components.GenericAOEs(module)
     private void AddAOE(ActorCastInfo spell, float delay = default) => AOE = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, delay));
 }
 
-class ElectrogeneticForce(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
+sealed class ElectrogeneticForce(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
 {
     public int NumCasts;
 

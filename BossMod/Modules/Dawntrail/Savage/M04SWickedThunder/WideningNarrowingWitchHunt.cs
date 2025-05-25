@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class WideningNarrowingWitchHunt(BossModule module) : Components.GenericAOEs(module)
+sealed class WideningNarrowingWitchHunt(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(4);
 
@@ -38,7 +38,7 @@ class WideningNarrowingWitchHunt(BossModule module) : Components.GenericAOEs(mod
     }
 }
 
-class WideningNarrowingWitchHuntBait(BossModule module) : Components.GenericBaitAway(module, (uint)AID.WitchHuntAOE, centerAtTarget: true)
+sealed class WideningNarrowingWitchHuntBait(BossModule module) : Components.GenericBaitAway(module, (uint)AID.WitchHuntAOE, centerAtTarget: true)
 {
     public enum Mechanic { None, Near, Far }
 

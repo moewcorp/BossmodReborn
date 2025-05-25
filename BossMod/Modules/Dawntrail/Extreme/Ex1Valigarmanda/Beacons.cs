@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class Beacons(BossModule module) : BossComponent(module)
+sealed class Beacons(BossModule module) : BossComponent(module)
 {
     public readonly List<Actor> Actors = [];
     public IEnumerable<Actor> ActiveActors => Actors.Where(a => a.IsTargetable && !a.IsDead);
@@ -17,7 +17,7 @@ class Beacons(BossModule module) : BossComponent(module)
     }
 }
 
-class CalamitousCry : Components.GenericWildCharge
+sealed class CalamitousCry : Components.GenericWildCharge
 {
     public CalamitousCry(BossModule module) : base(module, 3, (uint)AID.CalamitousCryAOE, 80)
     {
@@ -50,4 +50,4 @@ class CalamitousCry : Components.GenericWildCharge
     }
 }
 
-class CalamitousEcho(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CalamitousEcho, new AOEShapeCone(40, 10.Degrees()));
+sealed class CalamitousEcho(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CalamitousEcho, new AOEShapeCone(40, 10.Degrees()));

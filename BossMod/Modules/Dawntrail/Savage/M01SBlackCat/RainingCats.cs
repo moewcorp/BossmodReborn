@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 
-class RainingCatsTether(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(100f, 35f.Degrees()), (uint)TetherID.RainingCats, (uint)AID.RainingCatsTether) // TODO: verify angle
+sealed class RainingCatsTether(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(100f, 35f.Degrees()), (uint)TetherID.RainingCats, (uint)AID.RainingCatsTether) // TODO: verify angle
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -13,7 +13,7 @@ class RainingCatsTether(BossModule module) : Components.BaitAwayTethers(module, 
     }
 }
 
-class RainingCatsStack(BossModule module) : Components.UniformStackSpread(module, 4f, default, 3)
+sealed class RainingCatsStack(BossModule module) : Components.UniformStackSpread(module, 4f, default, 3)
 {
     private readonly RainingCatsTether? _tether = module.FindComponent<RainingCatsTether>();
     private DateTime _activation;

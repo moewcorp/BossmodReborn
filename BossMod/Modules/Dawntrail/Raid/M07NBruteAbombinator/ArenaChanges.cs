@@ -2,18 +2,18 @@ using static BossMod.Dawntrail.Raid.BruteAmbombinatorSharedBounds.BruteAmbombina
 
 namespace BossMod.Dawntrail.Raid.M07NBruteAbombinator;
 
-class ArenaChanges(BossModule module) : BossComponent(module)
+sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001u)
         {
-            if (index == 0x00)
+            if (index == 0x00u)
             {
                 Arena.Bounds = RectArena;
                 Arena.Center = FinalCenter;
             }
-            else if (index == 0x01)
+            else if (index == 0x01u)
             {
                 Arena.Bounds = DefaultArena;
             }

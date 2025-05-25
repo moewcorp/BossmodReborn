@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(module, (uint)AID.HuntersHarvest)
+sealed class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(module, (uint)AID.HuntersHarvest)
 {
     public static readonly AOEShapeCone Cone = new(40f, 105f.Degrees());
     public BitMask Bind;
@@ -47,9 +47,9 @@ class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(module,
     }
 }
 
-class HuntersHarvest(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HuntersHarvest, HuntersHarvestBait.Cone);
+sealed class HuntersHarvest(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HuntersHarvest, HuntersHarvestBait.Cone);
 
-class GeotemporalBlast(BossModule module) : Components.GenericBaitAway(module, (uint)AID.GeotemporalBlast, tankbuster: true)
+sealed class GeotemporalBlast(BossModule module) : Components.GenericBaitAway(module, (uint)AID.GeotemporalBlast, tankbuster: true)
 {
     private static readonly AOEShapeCircle circle = new(16);
 
@@ -62,7 +62,7 @@ class GeotemporalBlast(BossModule module) : Components.GenericBaitAway(module, (
     }
 }
 
-class AerotemporalBlast(BossModule module) : Components.GenericBaitStack(module, (uint)AID.AerotemporalBlast)
+sealed class AerotemporalBlast(BossModule module) : Components.GenericBaitStack(module, (uint)AID.AerotemporalBlast)
 {
     private static readonly AOEShapeCircle circle = new(6);
 

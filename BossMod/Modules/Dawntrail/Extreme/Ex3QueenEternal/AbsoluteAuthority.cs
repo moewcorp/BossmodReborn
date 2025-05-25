@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class AbsoluteAuthorityPuddles(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AbsoluteAuthorityPuddlesAOE, 8f);
+sealed class AbsoluteAuthorityPuddles(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AbsoluteAuthorityPuddlesAOE, 8f);
 
-class AbsoluteAuthorityExpansionBoot(BossModule module) : Components.UniformStackSpread(module, 6f, 15f, 4, alwaysShowSpreads: true) // TODO: verify falloff
+sealed class AbsoluteAuthorityExpansionBoot(BossModule module) : Components.UniformStackSpread(module, 6f, 15f, 4, alwaysShowSpreads: true) // TODO: verify falloff
 {
     public int NumCasts;
     private readonly Ex3QueenEternalConfig _config = Service.Config.Get<Ex3QueenEternalConfig>();
@@ -32,7 +32,7 @@ class AbsoluteAuthorityExpansionBoot(BossModule module) : Components.UniformStac
     }
 }
 
-class AbsoluteAuthorityHeel(BossModule module) : Components.GenericStackSpread(module)
+sealed class AbsoluteAuthorityHeel(BossModule module) : Components.GenericStackSpread(module)
 {
     public int NumCasts;
 
@@ -62,4 +62,4 @@ class AbsoluteAuthorityHeel(BossModule module) : Components.GenericStackSpread(m
     }
 }
 
-class AbsoluteAuthorityKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AbsoluteAuthorityKnockback, 30f, kind: Kind.DirForward);
+sealed class AbsoluteAuthorityKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AbsoluteAuthorityKnockback, 30f, kind: Kind.DirForward);

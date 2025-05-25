@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M02SHoneyBLovely;
 
-class DropSplashOfVenom(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 2, 2, alwaysShowSpreads: true)
+sealed class DropSplashOfVenom(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 2, 2, alwaysShowSpreads: true)
 {
     public enum Mechanic { None, Pairs, Spread }
 
@@ -61,14 +61,14 @@ class DropSplashOfVenom(BossModule module) : Components.UniformStackSpread(modul
     }
 }
 
-class Twist(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(7f, 30f));
-class TemptingTwist(BossModule module) : Twist(module, (uint)AID.TemptingTwistAOE);
-class TemptingTwistBeat(BossModule module) : Twist(module, (uint)AID.TemptingTwistBeatAOE);
+abstract class Twist(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(7f, 30f));
+sealed class TemptingTwist(BossModule module) : Twist(module, (uint)AID.TemptingTwistAOE);
+sealed class TemptingTwistBeat(BossModule module) : Twist(module, (uint)AID.TemptingTwistBeatAOE);
 
-class Beeline(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(60f, 7f));
-class HoneyBeeline(BossModule module) : Beeline(module, (uint)AID.HoneyBeelineAOE);
-class HoneyBeelineBeat(BossModule module) : Beeline(module, (uint)AID.HoneyBeelineBeatAOE);
+abstract class Beeline(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(60f, 7f));
+sealed class HoneyBeeline(BossModule module) : Beeline(module, (uint)AID.HoneyBeelineAOE);
+sealed class HoneyBeelineBeat(BossModule module) : Beeline(module, (uint)AID.HoneyBeelineBeatAOE);
 
-class Splinter(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 8f);
-class PoisonCloudSplinter(BossModule module) : Splinter(module, (uint)AID.PoisonCloudSplinter);
-class SweetheartSplinter(BossModule module) : Splinter(module, (uint)AID.SweetheartSplinter);
+abstract class Splinter(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 8f);
+sealed class PoisonCloudSplinter(BossModule module) : Splinter(module, (uint)AID.PoisonCloudSplinter);
+sealed class SweetheartSplinter(BossModule module) : Splinter(module, (uint)AID.SweetheartSplinter);

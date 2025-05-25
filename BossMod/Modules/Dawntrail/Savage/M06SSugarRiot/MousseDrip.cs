@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class MousseDripStack(BossModule module) : Components.UniformStackSpread(module, 5f, default, 4, 4)
+sealed class MousseDripStack(BossModule module) : Components.UniformStackSpread(module, 5f, default, 4, 4)
 {
     public int NumCasts;
 
@@ -32,7 +32,7 @@ class MousseDripStack(BossModule module) : Components.UniformStackSpread(module,
     }
 }
 
-class MousseDripVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.MousseDrip, GetVoidzones, 1.4f)
+sealed class MousseDripVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.MousseDrip, GetVoidzones, 1.4f)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -53,7 +53,7 @@ class MousseDripVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(mo
     }
 }
 
-class MousseDripTowers(BossModule module) : Components.GenericTowers(module)
+sealed class MousseDripTowers(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M03SBruteBomber;
 
-class KnuckleSandwich(BossModule module) : Components.GenericSharedTankbuster(module, default, 6)
+sealed class KnuckleSandwich(BossModule module) : Components.GenericSharedTankbuster(module, default, 6f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

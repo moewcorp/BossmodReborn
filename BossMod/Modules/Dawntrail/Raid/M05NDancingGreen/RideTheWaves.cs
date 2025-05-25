@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
 
-class RideTheWaves(BossModule module) : Components.GenericAOEs(module)
+sealed class RideTheWaves(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(15f, 2.5f);
     private readonly List<AOEInstance> _aoes = new(14);
@@ -12,7 +12,7 @@ class RideTheWaves(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x04)
+        if (index == 0x04u)
         {
             int[] indices = [];
             switch (state)

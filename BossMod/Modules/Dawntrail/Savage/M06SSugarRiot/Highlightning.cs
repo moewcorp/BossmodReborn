@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Highlightning(BossModule module) : Components.GenericAOEs(module)
+sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(21f);
     public AOEInstance? AOE;

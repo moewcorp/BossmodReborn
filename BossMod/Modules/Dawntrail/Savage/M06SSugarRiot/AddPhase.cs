@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Adds(BossModule module) : Components.AddsMulti(module, [(uint)OID.Mu, (uint)OID.Yan, (uint)OID.FeatherRay, (uint)OID.GimmeCat, (uint)OID.Jabberwock])
+sealed class Adds(BossModule module) : Components.AddsMulti(module, [(uint)OID.Mu, (uint)OID.Yan, (uint)OID.FeatherRay, (uint)OID.GimmeCat, (uint)OID.Jabberwock])
 {
     public int CountMu;
     public int CountYan;

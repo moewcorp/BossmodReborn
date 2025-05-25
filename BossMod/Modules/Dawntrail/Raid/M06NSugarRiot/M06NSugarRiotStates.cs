@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M06NSugarRiot;
 
-class M06NSugarRiotStates : StateMachineBuilder
+sealed class M06NSugarRiotStates : StateMachineBuilder
 {
     public M06NSugarRiotStates(BossModule module) : base(module)
     {

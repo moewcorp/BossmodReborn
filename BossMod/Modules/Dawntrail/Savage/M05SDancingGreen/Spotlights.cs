@@ -222,7 +222,7 @@ class Spotlights1(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-class Spotlights2(BossModule module) : Spotlights1(module)
+sealed class Spotlights2(BossModule module) : Spotlights1(module)
 {
     private static readonly WPos[] spotlightSet1 = [new(84.977f, 84.977f), new(114.977f, 84.977f), new(84.977f, 114.977f), new(114.977f, 114.977f)];
     private static readonly WPos[] spotlightSet2 = [new(84.977f, 99.992f), new(99.992f, 84.977f), new(99.992f, 114.977f), new(114.977f, 99.992f)];

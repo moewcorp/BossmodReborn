@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M07NBruteAbombinator;
 
-class BrutalSmashTB(BossModule module) : Components.GenericSharedTankbuster(module, default, 6f)
+sealed class BrutalSmashTB(BossModule module) : Components.GenericSharedTankbuster(module, default, 6f)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex1Valigarmanda;
 
-class ThunderousBreath : Components.CastCounter
+sealed class ThunderousBreath : Components.CastCounter
 {
     public ThunderousBreath(BossModule module) : base(module, (uint)AID.ThunderousBreathAOE)
     {
@@ -18,7 +18,7 @@ class ThunderousBreath : Components.CastCounter
     }
 }
 
-class ArcaneLighning(BossModule module) : Components.GenericAOEs(module, (uint)AID.ArcaneLightning)
+sealed class ArcaneLighning(BossModule module) : Components.GenericAOEs(module, (uint)AID.ArcaneLightning)
 {
     public readonly List<AOEInstance> AOEs = [];
 

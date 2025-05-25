@@ -1,9 +1,9 @@
 namespace BossMod.Dawntrail.Raid.M08NHowlingBlade;
 
-class WolvesReignRect1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WolvesReignRect1, new AOEShapeRect(36f, 5f));
-class WolvesReignRect2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WolvesReignRect2, new AOEShapeRect(28f, 5f));
+sealed class WolvesReignRect1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WolvesReignRect1, new AOEShapeRect(36f, 5f));
+sealed class WolvesReignRect2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WolvesReignRect2, new AOEShapeRect(28f, 5f));
 
-class WolvesReignCone(BossModule module) : Components.GenericAOEs(module)
+sealed class WolvesReignCone(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
     private AOEInstance? _aoe;
@@ -26,5 +26,5 @@ class WolvesReignCone(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class WolvesReignCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignCircle1, (uint)AID.WolvesReignCircle2,
+sealed class WolvesReignCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignCircle1, (uint)AID.WolvesReignCircle2,
 (uint)AID.WolvesReignCircle3, (uint)AID.WolvesReignCircle4, (uint)AID.WolvesReignCircle5, (uint)AID.WolvesReignCircle6, (uint)AID.WolvesReignCircle7, (uint)AID.WolvesReignCircle8], 6f);

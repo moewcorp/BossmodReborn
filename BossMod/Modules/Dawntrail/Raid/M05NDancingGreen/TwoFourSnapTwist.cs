@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
 
-class TwoFourSnapTwist(BossModule module) : Components.GenericAOEs(module)
+sealed class TwoFourSnapTwist(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeRect rect = new(20f, 20f);
@@ -13,7 +13,7 @@ class TwoFourSnapTwist(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var max = _checkerboard.AOEs.Count != 0 || _aoe.AOEs.Count != 0 ? 1 : count;
+        var max = _checkerboard.AOEs.Count != 0 || _aoe.Casters.Count != 0 ? 1 : count;
         for (var i = 0; i < max; ++i)
         {
             ref var aoe = ref aoes[i];

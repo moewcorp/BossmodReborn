@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Quicksand(BossModule module) : Components.GenericAOEs(module)
+sealed class Quicksand(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(23f);
     private static readonly AOEShapeCircle circleInvert = new(23f, true);
@@ -50,7 +50,7 @@ class Quicksand(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class QuicksandDoubleStylePaintBomb(BossModule module) : BossComponent(module)
+sealed class QuicksandDoubleStylePaintBomb(BossModule module) : BossComponent(module)
 {
     public BitMask Targets;
 
@@ -77,7 +77,7 @@ class QuicksandDoubleStylePaintBomb(BossModule module) : BossComponent(module)
     }
 }
 
-class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.GenericKnockback(module, default, true, stopAfterWall: true)
+sealed class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.GenericKnockback(module, default, true, stopAfterWall: true)
 {
     public BitMask Targets;
 
@@ -130,6 +130,5 @@ class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.GenericKnoc
     }
 }
 
-class PaintBomb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burst1, 10f);
-class HeavenBomb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burst2, 10f);
-class PuddingGraf(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.PuddingGraf, 6f);
+sealed class PaintBombHeavenBomb(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Burst1, (uint)AID.Burst2], 10f);
+sealed class PuddingGraf(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.PuddingGraf, 6f);

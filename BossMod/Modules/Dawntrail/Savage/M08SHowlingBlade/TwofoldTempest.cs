@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class TwofoldTempestVoidzone(BossModule module) : Components.GenericAOEs(module)
+sealed class TwofoldTempestVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(3);
     private readonly AOEShapeCircle circle = new(9f);
@@ -20,7 +20,7 @@ class TwofoldTempestVoidzone(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class TwofoldTempestTetherAOE(BossModule module) : Components.InterceptTetherAOE(module, (uint)AID.TwofoldTempestCircle, (uint)TetherID.TwofoldTempest, 6f)
+sealed class TwofoldTempestTetherAOE(BossModule module) : Components.InterceptTetherAOE(module, (uint)AID.TwofoldTempestCircle, (uint)TetherID.TwofoldTempest, 6f)
 {
     private WPos boss = module.Enemies((uint)OID.BossP2)[0].Position;
     private BitMask vulnerability;
@@ -76,7 +76,7 @@ class TwofoldTempestTetherAOE(BossModule module) : Components.InterceptTetherAOE
     }
 }
 
-class TwofoldTempestTetherVoidzone(BossModule module) : Components.InterceptTetherAOE(module, (uint)AID.TwofoldTempestCircle, (uint)TetherID.TwofoldTempest, 9f)
+sealed class TwofoldTempestTetherVoidzone(BossModule module) : Components.InterceptTetherAOE(module, (uint)AID.TwofoldTempestCircle, (uint)TetherID.TwofoldTempest, 9f)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints) { }
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
@@ -92,7 +92,7 @@ class TwofoldTempestTetherVoidzone(BossModule module) : Components.InterceptTeth
     }
 }
 
-class TwofoldTempestRect(BossModule module) : Components.GenericBaitStack(module, (uint)AID.TwofoldTempestRect, onlyShowOutlines: true)
+sealed class TwofoldTempestRect(BossModule module) : Components.GenericBaitStack(module, (uint)AID.TwofoldTempestRect, onlyShowOutlines: true)
 {
     private static readonly AOEShapeRect rect = new(40f, 8f);
     private DateTime _activation;

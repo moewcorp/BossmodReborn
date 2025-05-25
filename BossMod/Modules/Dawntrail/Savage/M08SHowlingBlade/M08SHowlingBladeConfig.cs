@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
 [ConfigDisplay(Order = 0x130, Parent = typeof(DawntrailConfig))]
-public class M08SHowlingBladeConfig() : ConfigNode()
+public sealed class M08SHowlingBladeConfig() : ConfigNode()
 {
     [PropertyDisplay("Show platform numbers")]
     public bool ShowPlatformNumbers = true;

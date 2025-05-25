@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class Towerfall(BossModule module) : Components.GenericAOEs(module)
+sealed class Towerfall(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(30f, 5f);
     private readonly List<AOEInstance> _aoes = new(4);
@@ -33,7 +33,7 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class FangedCrossing(BossModule module) : Components.GenericAOEs(module)
+sealed class FangedCrossing(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCross cross = new(21f, 3.5f);
     private readonly List<AOEInstance> _aoes = new(2);
@@ -55,4 +55,4 @@ class FangedCrossing(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class TerrestrialTitans(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TerrestrialTitans, 5f);
+sealed class TerrestrialTitans(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TerrestrialTitans, 5f);

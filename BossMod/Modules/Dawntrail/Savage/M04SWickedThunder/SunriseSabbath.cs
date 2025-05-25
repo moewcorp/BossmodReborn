@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class SunriseSabbath(BossModule module) : BossComponent(module)
+sealed class SunriseSabbath(BossModule module) : BossComponent(module)
 {
     public BitMask Positron;
     public int[] BaitOrder = new int[PartyState.MaxPartySize];
@@ -21,7 +21,7 @@ class SunriseSabbath(BossModule module) : BossComponent(module)
     }
 }
 
-class SunriseSabbathSoaringSoulpress(BossModule module) : Components.GenericTowers(module)
+sealed class SunriseSabbathSoaringSoulpress(BossModule module) : Components.GenericTowers(module)
 {
     private readonly SunriseSabbath? _sabbath = module.FindComponent<SunriseSabbath>();
     private readonly List<Actor> _birds = [];
@@ -61,7 +61,7 @@ class SunriseSabbathSoaringSoulpress(BossModule module) : Components.GenericTowe
     }
 }
 
-class SunriseSabbathElectronStream(BossModule module) : Components.GenericBaitAway(module)
+sealed class SunriseSabbathElectronStream(BossModule module) : Components.GenericBaitAway(module)
 {
     public readonly List<(Actor cannon, bool positron)> Cannons = [];
     private readonly SunriseSabbath? _sabbath = module.FindComponent<SunriseSabbath>();

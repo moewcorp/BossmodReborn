@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Extreme.Ex7Suzaku;
 
-class Hotspot(BossModule module) : Components.GenericAOEs(module)
+sealed class Hotspot(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(21f, 45f.Degrees());
     public readonly List<AOEInstance> AOEs = new(16);

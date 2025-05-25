@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Raid.M03NBruteBomber;
 
-class M03NBruteBomberStates : StateMachineBuilder
+sealed class M03NBruteBomberStates : StateMachineBuilder
 {
     public M03NBruteBomberStates(BossModule module) : base(module)
     {

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class WindfangStonefang(BossModule module) : Components.GenericAOEs(module)
+sealed class WindfangStonefang(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCross cross = new(15f, 3f);
     private static readonly AOEShapeCircle circle = new(9f);
@@ -35,7 +35,7 @@ class WindfangStonefang(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class StonefangBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class StonefangBait(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 15f.Degrees());
 
@@ -57,7 +57,7 @@ class StonefangBait(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class WindfangBait(BossModule module) : Components.GenericBaitStack(module)
+sealed class WindfangBait(BossModule module) : Components.GenericBaitStack(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 15f.Degrees());
 

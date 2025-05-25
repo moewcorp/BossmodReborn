@@ -1,11 +1,11 @@
 namespace BossMod.Dawntrail.Savage.M07SBruteAbombinator;
 
-class SinisterSeedsAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SinisterSeeds, 7f);
-class SinisterSeedsSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SinisterSeedsSpread, 6f);
-class StrangeSeeds(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.StrangeSeeds, 6f);
-class KillerSeeds(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.KillerSeeds, 6f, 2, 2);
+sealed class SinisterSeedsAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SinisterSeeds, 7f);
+sealed class SinisterSeedsSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SinisterSeedsSpread, 6f);
+sealed class StrangeSeeds(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.StrangeSeeds, 6f);
+sealed class KillerSeeds(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.KillerSeeds, 6f, 2, 2);
 
-class TendrilsOfTerrorBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class TendrilsOfTerrorBait(BossModule module) : Components.GenericBaitAway(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -38,7 +38,7 @@ class TendrilsOfTerrorBait(BossModule module) : Components.GenericBaitAway(modul
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
 }
 
-class TendrilsOfTerrorPrediction(BossModule module) : Components.GenericAOEs(module)
+sealed class TendrilsOfTerrorPrediction(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
 
@@ -76,7 +76,7 @@ class TendrilsOfTerrorPrediction(BossModule module) : Components.GenericAOEs(mod
     }
 }
 
-class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
+sealed class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly M07SBruteAbombinatorConfig _config = Service.Config.Get<M07SBruteAbombinatorConfig>();
     public static readonly AOEShapeCross Cross = new(60f, 2f);
@@ -104,7 +104,7 @@ class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Impact(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
+sealed class Impact(BossModule module) : Components.GenericStackSpread(module, true, raidwideOnResolve: false)
 {
     public int NumCasts;
 

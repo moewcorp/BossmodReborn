@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class VirtualShiftEarth(BossModule module) : BossComponent(module)
+sealed class VirtualShiftEarth(BossModule module) : BossComponent(module)
 {
     public BitMask Flying;
 
@@ -75,7 +75,7 @@ abstract class LawsOfEarthBurst(BossModule module) : Components.GenericTowers(mo
     }
 }
 
-class LawsOfEarthBurst1 : LawsOfEarthBurst
+sealed class LawsOfEarthBurst1 : LawsOfEarthBurst
 {
     public LawsOfEarthBurst1(BossModule module) : base(module)
     {
@@ -83,7 +83,7 @@ class LawsOfEarthBurst1 : LawsOfEarthBurst
     }
 }
 
-class LawsOfEarthBurst2 : LawsOfEarthBurst
+sealed class LawsOfEarthBurst2 : LawsOfEarthBurst
 {
     public LawsOfEarthBurst2(BossModule module) : base(module)
     {
@@ -117,10 +117,10 @@ class LawsOfEarthBurst2 : LawsOfEarthBurst
     }
 }
 
-class GravityPillar(BossModule module) : Components.BaitAwayCast(module, (uint)AID.GravityPillar, 10f);
+sealed class GravityPillar(BossModule module) : Components.BaitAwayCast(module, (uint)AID.GravityPillar, 10f);
 
 // note: the tethers appear before target is created; the target is at the same location as the boss
-class GravityRay(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(50f, 30f.Degrees()), (uint)TetherID.GravityRay, (uint)AID.GravityRay) // TODO: verify angle
+sealed class GravityRay(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(50f, 30f.Degrees()), (uint)TetherID.GravityRay, (uint)AID.GravityRay) // TODO: verify angle
 {
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
@@ -150,7 +150,7 @@ class GravityRay(BossModule module) : Components.BaitAwayTethers(module, new AOE
 // - if someone is dead, can someone else place 2 meteors?
 // - what if meteors are split 3-5 between platforms?
 // - how meteor overlap works?
-class MeteorImpact(BossModule module) : Components.CastCounter(module, default)
+sealed class MeteorImpact(BossModule module) : Components.CastCounter(module, default)
 {
     private BitMask _activeMeteors;
     private BitMask _meteorsAbovePlatforms;
@@ -258,7 +258,7 @@ class MeteorImpact(BossModule module) : Components.CastCounter(module, default)
 }
 
 // TODO: how targeting / safe zones really work? what if <8 meteors are placed?
-class WeightyBlow(BossModule module) : Components.CastCounter(module, (uint)AID.WeightyBlowAOE)
+sealed class WeightyBlow(BossModule module) : Components.CastCounter(module, (uint)AID.WeightyBlowAOE)
 {
     private readonly VirtualShiftEarth? _virtualShift = module.FindComponent<VirtualShiftEarth>();
     private readonly List<Actor> _boulders = [];

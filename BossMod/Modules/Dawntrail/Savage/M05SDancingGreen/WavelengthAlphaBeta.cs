@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
-class WavelengthAlphaBeta(BossModule module) : BossComponent(module)
+sealed class WavelengthAlphaBeta(BossModule module) : BossComponent(module)
 {
     private readonly (int Order, Actor Actor, DateTime Expiration)[] expirationBySlot = new (int, Actor, DateTime)[8];
     private int numCasts;

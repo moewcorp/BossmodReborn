@@ -54,6 +54,8 @@ public enum AID : uint
     SmashThere = 42336, // Boss->self, 3.0+1,0s cast, single-target, furthest target
     BrutalSmash1 = 42342, // Boss->players, no cast, range 6 circle
     BrutalSmash2 = 42341, // Boss->players, no cast, range 6 circle
+    BrutalSmash3 = 42343, // Boss->location, no cast, range 6 circle, seems to be cast if all players are dead when tb is supposed to happen
+    BrutalSmash4 = 42344, // Boss->location, no cast, range 6 circle, seems to be cast if all players are dead when tb is supposed to happen
 
     SporeSacVisual = 42345, // Boss->self, 3.0s cast, single-target
     SporeSac = 42346, // Helper->location, 4.0s cast, range 8 circle
@@ -137,5 +139,11 @@ public enum TetherID : uint
 {
     ThornsOfDeathTank = 338, // Boss->player
     ThornsOfDeathNonTank = 325, // Boss/Wall->player
-    ThornsOfDeathTakeable = 84 // Wall->player
+    ThornsOfDeathTakeable = 84, // Wall->player
+    Wall = 339 // Wall->Boss
+}
+
+public enum SID : uint
+{
+    Stoneringer = 2056 // none->Boss, extra=0x388/0x38A/0x38B/0x377/0x389/0x378
 }

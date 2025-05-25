@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
-class BackUpDance(BossModule module) : Components.GenericBaitAway(module)
+sealed class BackUpDance(BossModule module) : Components.GenericBaitAway(module)
 {
     private DateTime _activation;
     private readonly List<Actor> sources = new(4);

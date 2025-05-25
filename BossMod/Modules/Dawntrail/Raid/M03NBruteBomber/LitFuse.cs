@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M03NBruteBomber;
 
-public class LitFuse(BossModule module) : Components.GenericAOEs(module)
+sealed class LitFuse(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private readonly BarbarousBarrageTower _tower = module.FindComponent<BarbarousBarrageTower>()!;

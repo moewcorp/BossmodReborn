@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M06NSugarRiot;
 
-class Quicksand(BossModule module) : Components.GenericAOEs(module)
+sealed class Quicksand(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(23f);
     private AOEInstance? _aoe;

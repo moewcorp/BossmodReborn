@@ -64,7 +64,7 @@ class LetsDance(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class LetsDanceRemix(BossModule module) : LetsDance(module)
+sealed class LetsDanceRemix(BossModule module) : LetsDance(module)
 {
     private static readonly Angle a180 = 180f.Degrees();
 

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex2ZoraalJa;
 
-class ForwardBackwardHalf(BossModule module) : Components.GenericAOEs(module, (uint)AID.HalfFullShortAOE)
+sealed class ForwardBackwardHalf(BossModule module) : Components.GenericAOEs(module, (uint)AID.HalfFullShortAOE)
 {
     private readonly List<AOEInstance> _aoes = [];
 
@@ -22,7 +22,7 @@ class ForwardBackwardHalf(BossModule module) : Components.GenericAOEs(module, (u
         if (!relevant)
             return;
 
-        var cleaveDir = spell.Rotation + (front ? 180 : 0).Degrees();
+        var cleaveDir = spell.Rotation + (front ? 180f : default).Degrees();
         var pos = WPos.ClampToGrid(caster.Position);
         var act = Module.CastFinishAt(spell);
         _aoes.Add(new(_shapeEdge, pos, cleaveDir, act));
@@ -30,7 +30,7 @@ class ForwardBackwardHalf(BossModule module) : Components.GenericAOEs(module, (u
     }
 }
 
-class HalfFull(BossModule module) : Components.GenericAOEs(module, (uint)AID.HalfFullLongAOE)
+sealed class HalfFull(BossModule module) : Components.GenericAOEs(module, (uint)AID.HalfFullLongAOE)
 {
     private readonly List<AOEInstance> _aoes = [];
 

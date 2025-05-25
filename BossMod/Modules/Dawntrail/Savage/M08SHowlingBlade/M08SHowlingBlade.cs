@@ -1,15 +1,15 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class ExtraplanarPursuit(BossModule module) : Components.CastCounter(module, (uint)AID.ExtraplanarPursuit);
-class TitanicPursuit(BossModule module) : Components.CastCounter(module, (uint)AID.TitanicPursuit);
-class HowlingHavoc(BossModule module) : Components.CastCounter(module, (uint)AID.HowlingHavoc);
-class GreatDivide(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.GreatDivide, new AOEShapeRect(60f, 3f));
-class RavenousSaber(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.RavenousSaber1,
+sealed class ExtraplanarPursuit(BossModule module) : Components.CastCounter(module, (uint)AID.ExtraplanarPursuit);
+sealed class TitanicPursuit(BossModule module) : Components.CastCounter(module, (uint)AID.TitanicPursuit);
+sealed class HowlingHavoc(BossModule module) : Components.CastCounter(module, (uint)AID.HowlingHavoc);
+sealed class GreatDivide(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.GreatDivide, new AOEShapeRect(60f, 3f));
+sealed class RavenousSaber(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.RavenousSaber1,
 (uint)AID.RavenousSaber2, (uint)AID.RavenousSaber3, (uint)AID.RavenousSaber4,
 (uint)AID.RavenousSaber5]);
-class Mooncleaver1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mooncleaver1, 8f);
-class ProwlingGaleP2(BossModule module) : Components.CastTowers(module, (uint)AID.ProwlingGaleP2, 2f, 2, 2);
-class MoonbeamsBite : Components.SimpleAOEGroups
+sealed class Mooncleaver1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mooncleaver1, 8f);
+sealed class ProwlingGaleP2(BossModule module) : Components.CastTowers(module, (uint)AID.ProwlingGaleP2, 2f, 2, 2);
+sealed class MoonbeamsBite : Components.SimpleAOEGroups
 {
     public MoonbeamsBite(BossModule module) : base(module, [(uint)AID.MoonbeamsBite1, (uint)AID.MoonbeamsBite2], new AOEShapeRect(40f, 10f), 2, 6)
     {
@@ -18,7 +18,7 @@ class MoonbeamsBite : Components.SimpleAOEGroups
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1026, NameID = 13843, PlanLevel = 100)]
-public class M08SHowlingBlade(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
+public sealed class M08SHowlingBlade(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
     private Actor? _bossP2;
 

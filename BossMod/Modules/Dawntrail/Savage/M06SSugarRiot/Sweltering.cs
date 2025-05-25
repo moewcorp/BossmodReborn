@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class Sweltering(BossModule module) : BossComponent(module)
+sealed class Sweltering(BossModule module) : BossComponent(module)
 {
     public BitMask SwelteringStatus;
     public override void OnStatusGain(Actor actor, ActorStatus status)

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
-class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
+sealed class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect square = new(2.5f, 2.5f, 2.5f);
     private readonly List<AOEInstance> _aoes = new(64);

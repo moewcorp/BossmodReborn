@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 
-class OneTwoPawBoss(BossModule module) : Components.GenericAOEs(module)
+sealed class OneTwoPawBoss(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly PredaceousPounce? _pounce = module.FindComponent<PredaceousPounce>();
     private readonly List<AOEInstance> _aoes = new(2);
@@ -15,15 +15,20 @@ class OneTwoPawBoss(BossModule module) : Components.GenericAOEs(module)
 
         var pounce = _pounce != null && _pounce.AOEs.Count != 0;
         var max = count > 2 ? 2 : count;
-        var adj = pounce ? max - 1 : max;
-        var aoes = new AOEInstance[adj];
+        var adj = pounce ? 1 : max;
+
+        var aoes = CollectionsMarshal.AsSpan(_aoes)[..adj];
         for (var i = 0; i < adj; ++i)
         {
-            var aoe = _aoes[i];
+            ref var aoe = ref aoes[i];
             if (i == 0)
-                aoes[i] = count > 1 && !pounce ? aoe with { Color = Colors.Danger } : aoe;
+            {
+                if (count == 2)
+                    aoe.Color = Colors.Danger;
+                aoe.Risky = true;
+            }
             else
-                aoes[i] = aoe with { Risky = false };
+                aoe.Risky = false;
         }
         return aoes;
     }
@@ -59,7 +64,7 @@ class OneTwoPawBoss(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class OneTwoPawShade(BossModule module) : Components.GenericAOEs(module)
+sealed class OneTwoPawShade(BossModule module) : Components.GenericAOEs(module)
 {
     private Angle _firstDirection;
     private readonly List<AOEInstance> _aoes = new(4);
@@ -114,7 +119,7 @@ class OneTwoPawShade(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class LeapingOneTwoPaw(BossModule module) : Components.GenericAOEs(module)
+sealed class LeapingOneTwoPaw(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(2);
     private Angle _leapDirection;
@@ -129,14 +134,19 @@ class LeapingOneTwoPaw(BossModule module) : Components.GenericAOEs(module)
         var count = AOEs.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
+
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
         for (var i = 0; i < count; ++i)
         {
-            var aoe = AOEs[i];
+            ref var aoe = ref aoes[i];
             if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
+            {
+                if (count == 2)
+                    aoe.Color = Colors.Danger;
+                aoe.Risky = true;
+            }
             else
-                aoes[i] = aoe with { Risky = false };
+                aoe.Risky = false;
         }
         return aoes;
     }

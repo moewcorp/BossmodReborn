@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class RadicalShift(BossModule module) : Components.GenericAOEs(module)
+sealed class RadicalShift(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Rotation { None, Left, Right }
 
@@ -8,7 +8,7 @@ class RadicalShift(BossModule module) : Components.GenericAOEs(module)
     private ArenaBoundsComplex? _right;
     private Rotation _nextRotation;
     private AOEInstance? _aoe;
-    private static readonly Square[] defaultSquare = [new(Ex3QueenEternal.ArenaCenter, 20)];
+    private static readonly Square[] defaultSquare = [new(Ex3QueenEternal.ArenaCenter, 20f)];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
@@ -82,4 +82,4 @@ class RadicalShift(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class RadicalShiftAOE(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.RadicalShiftAOE, 5f);
+sealed class RadicalShiftAOE(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.RadicalShiftAOE, 5f);

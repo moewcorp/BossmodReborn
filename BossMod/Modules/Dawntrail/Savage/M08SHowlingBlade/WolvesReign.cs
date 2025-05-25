@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-class WolvesReignConeCircle(BossModule module) : Components.GenericAOEs(module)
+sealed class WolvesReignConeCircle(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
     private static readonly AOEShapeCircle circle = new(14f);
@@ -35,11 +35,11 @@ class WolvesReignConeCircle(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class WolvesReignRect(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignRect1, (uint)AID.WolvesReignRect2], new AOEShapeRect(28f, 5f));
-class WolvesReignCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignCircle1, (uint)AID.WolvesReignCircle2,
+sealed class WolvesReignRect(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignRect1, (uint)AID.WolvesReignRect2], new AOEShapeRect(28f, 5f));
+sealed class WolvesReignCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignCircle1, (uint)AID.WolvesReignCircle2,
 (uint)AID.WolvesReignCircle3, (uint)AID.EminentReign, (uint)AID.RevolutionaryReign], 6f);
 
-class SovereignScar(BossModule module) : Components.GenericBaitStack(module)
+sealed class SovereignScar(BossModule module) : Components.GenericBaitStack(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 15f.Degrees());
 
@@ -69,7 +69,7 @@ class SovereignScar(BossModule module) : Components.GenericBaitStack(module)
     }
 }
 
-class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
+sealed class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 30f.Degrees());
 
@@ -92,7 +92,7 @@ class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class RoaringWind(BossModule module) : Components.GenericAOEs(module)
+sealed class RoaringWind(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 4f);
     private readonly List<AOEInstance> _aoes = new(4);
@@ -115,7 +115,7 @@ class RoaringWind(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class WealOfStone(BossModule module) : Components.GenericAOEs(module)
+sealed class WealOfStone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect rect = new(40f, 3f);

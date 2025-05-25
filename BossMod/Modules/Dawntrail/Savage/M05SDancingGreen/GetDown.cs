@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
-class GetDownCone : Components.SimpleAOEs
+sealed class GetDownCone : Components.SimpleAOEs
 {
     public GetDownCone(BossModule module) : base(module, (uint)AID.GetDownCone, GetDownBait.Cone)
     {
@@ -8,7 +8,7 @@ class GetDownCone : Components.SimpleAOEs
     }
 }
 
-class GetDownOutIn(BossModule module) : Components.GenericAOEs(module)
+sealed class GetDownOutIn(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeCircle circle = new(7f);
@@ -42,7 +42,7 @@ class GetDownOutIn(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class GetDownBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module)
 {
     public static readonly AOEShapeCone Cone = new(40f, 22.5f.Degrees());
     public bool First = true;

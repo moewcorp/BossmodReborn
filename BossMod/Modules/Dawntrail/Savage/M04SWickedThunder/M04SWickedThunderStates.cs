@@ -1,13 +1,13 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
-class M04SWickedThunderStates : StateMachineBuilder
+sealed class M04SWickedThunderStates : StateMachineBuilder
 {
     private readonly M04SWickedThunder _module;
 
     public M04SWickedThunderStates(M04SWickedThunder module) : base(module)
     {
         _module = module;
-        SimplePhase(0, SinglePhase, "Single phase")
+        SimplePhase(default, SinglePhase, "Single phase")
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.BossP2()?.IsDeadOrDestroyed ?? true);
     }
 

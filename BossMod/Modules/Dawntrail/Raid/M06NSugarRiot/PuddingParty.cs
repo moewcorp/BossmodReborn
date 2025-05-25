@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M06NSugarRiot;
 
-class PuddingParty(BossModule module) : Components.UniformStackSpread(module, 6f, default, 8, 8)
+sealed class PuddingParty(BossModule module) : Components.UniformStackSpread(module, 6f, default, 8, 8)
 {
     private int numCasts;
     private bool first = true;

@@ -2,7 +2,7 @@ using static BossMod.Dawntrail.Raid.SugarRiotSharedBounds.SugarRiotSharedBounds;
 
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _risky = true;
     private AOEInstance? _aoe;

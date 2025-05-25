@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
 // TODO: can second target be different than first? does it even matter?
-class RoyalBanishment(BossModule module) : Components.GenericWildCharge(module, 5f, default, 60f)
+sealed class RoyalBanishment(BossModule module) : Components.GenericWildCharge(module, 5f, default, 60f)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {

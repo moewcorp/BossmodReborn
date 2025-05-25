@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M02SHoneyBLovely;
 
-class M02SHoneyBLovelyStates : StateMachineBuilder
+sealed class M02SHoneyBLovelyStates : StateMachineBuilder
 {
     public M02SHoneyBLovelyStates(BossModule module) : base(module)
     {

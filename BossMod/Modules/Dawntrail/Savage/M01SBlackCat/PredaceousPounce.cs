@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 
-class PredaceousPounce(BossModule module) : Components.GenericAOEs(module)
+sealed class PredaceousPounce(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(12);
     private static readonly AOEShapeCircle circle = new(11);
@@ -10,14 +10,14 @@ class PredaceousPounce(BossModule module) : Components.GenericAOEs(module)
         var count = AOEs.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
+
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
+        if (count >= 3)
         {
-            var aoe = AOEs[i];
-            if (i < 2)
-                aoes[i] = count > 2 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe;
+            for (var i = 0; i < 2; ++i)
+            {
+                aoes[i].Color = Colors.Danger;
+            }
         }
         return aoes;
     }

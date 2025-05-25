@@ -1,16 +1,16 @@
 ﻿namespace BossMod.Dawntrail.Extreme.Ex3QueenEternal;
 
-class Ex3QueenEternalStates : StateMachineBuilder
+sealed class Ex3QueenEternalStates : StateMachineBuilder
 {
     private readonly Ex3QueenEternal _module;
 
     public Ex3QueenEternalStates(Ex3QueenEternal module) : base(module)
     {
         _module = module;
-        SimplePhase(0, Phase1, "P1")
+        SimplePhase(default, Phase1, "P1")
             .ActivateOnEnter<ArenaChanges>()
-            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || Module.PrimaryActor.HPMP.CurHP == 1 && (Module.PrimaryActor.CastInfo?.IsSpell(AID.AuthorityEternal) ?? false);
-        SimplePhase(1, Phase2, "P2")
+            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || Module.PrimaryActor.HPMP.CurHP == 1u && (Module.PrimaryActor.CastInfo?.IsSpell(AID.AuthorityEternal) ?? false);
+        SimplePhase(1u, Phase2, "P2")
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.BossP2()?.IsDeadOrDestroyed ?? true);
     }
 
