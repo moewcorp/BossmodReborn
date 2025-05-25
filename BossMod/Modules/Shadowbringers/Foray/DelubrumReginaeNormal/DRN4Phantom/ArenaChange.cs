@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN4Phantom;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 

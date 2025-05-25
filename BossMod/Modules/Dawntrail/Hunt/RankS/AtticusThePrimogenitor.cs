@@ -59,11 +59,11 @@ public enum NPCYell : ushort
     LeftHead10 = 16899
 }
 
-class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PyricBlast, 6f, 8);
-class Intimidation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Intimidation);
-class Brutality(BossModule module) : Components.CastHint(module, (uint)AID.Brutality, "Applies Haste");
+sealed class PyricBlast(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PyricBlast, 6f, 8);
+sealed class Intimidation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Intimidation);
+sealed class Brutality(BossModule module) : Components.CastHint(module, (uint)AID.Brutality, "Applies Haste");
 
-class BreathSequence(BossModule module) : Components.GenericAOEs(module)
+sealed class BreathSequence(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(6);
     private static readonly Angle angle = 120f.Degrees();
@@ -159,7 +159,7 @@ class BreathSequence(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class AtticusThePrimogenitorStates : StateMachineBuilder
+sealed class AtticusThePrimogenitorStates : StateMachineBuilder
 {
     public AtticusThePrimogenitorStates(BossModule module) : base(module)
     {
@@ -172,4 +172,4 @@ class AtticusThePrimogenitorStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 13156)]
-public class AtticusThePrimogenitor(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class AtticusThePrimogenitor(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

@@ -35,7 +35,7 @@ public enum AID : uint
     SoulDouse = 40651, // Helper->players, 5.0s cast, range 6 circle
 }
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donutSmall = new(5f, 15f), donutBig = new(15f, 20f);
     private AOEInstance? _aoe;
@@ -83,7 +83,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Soulweave(BossModule module) : Components.GenericAOEs(module)
+sealed class Soulweave(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(28f, 32f);
     private readonly List<AOEInstance> _aoes = new(10);
@@ -125,12 +125,13 @@ class Soulweave(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class FreeSpirits(BossModule module) : Components.RaidwideCast(module, (uint)AID.FreeSpirits);
-class Bloodburst(BossModule module) : Components.RaidwideCast(module, (uint)AID.Bloodburst);
-class DarkSouls(BossModule module) : Components.SingleTargetCast(module, (uint)AID.DarkSouls);
-class TelltaleTears(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.TelltaleTears, 5f);
-class SoulDouse(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.SoulDouse, 6f, 4, 4);
-class LostHope(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.LostHope)
+sealed class FreeSpirits(BossModule module) : Components.RaidwideCast(module, (uint)AID.FreeSpirits);
+sealed class Bloodburst(BossModule module) : Components.RaidwideCast(module, (uint)AID.Bloodburst);
+sealed class DarkSouls(BossModule module) : Components.SingleTargetCast(module, (uint)AID.DarkSouls);
+sealed class TelltaleTears(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.TelltaleTears, 5f);
+sealed class SoulDouse(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.SoulDouse, 6f, 4, 4);
+
+sealed class LostHope(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.LostHope)
 {
     private bool prepare;
 
@@ -159,10 +160,10 @@ class LostHope(BossModule module) : Components.TemporaryMisdirection(module, (ui
     }
 }
 
-class Necrohazard(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Necrohazard, 18f);
-class DarkII(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DarkII1, (uint)AID.DarkII2], new AOEShapeCone(35f, 15f.Degrees()), 6, 12);
+sealed class Necrohazard(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Necrohazard, 18f);
+sealed class DarkII(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DarkII1, (uint)AID.DarkII2], new AOEShapeCone(35f, 15f.Degrees()), 6, 12);
 
-class D092OverseerKanilokkaStates : StateMachineBuilder
+sealed class D092OverseerKanilokkaStates : StateMachineBuilder
 {
     public D092OverseerKanilokkaStates(BossModule module) : base(module)
     {
@@ -181,7 +182,7 @@ class D092OverseerKanilokkaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13634, SortOrder = 6)]
-public class D092OverseerKanilokka(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
+public sealed class D092OverseerKanilokka(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
     private const int Edges = 64;
     public static readonly WPos ArenaCenter = new(116f, -66f);

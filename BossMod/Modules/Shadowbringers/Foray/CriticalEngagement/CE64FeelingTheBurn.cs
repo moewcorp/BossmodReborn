@@ -143,7 +143,7 @@ class ChainCannonEscort(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count; ++i)
             {
                 ref var aoe = ref aoes[i];
-                if (aoes[i].Origin.AlmostEqual(pos, 0.1f))
+                if (aoe.Origin.AlmostEqual(pos, 0.1f))
                 {
                     if (++aoe.ActorID == 6u)
                     {

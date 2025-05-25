@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-public class BossModuleMainWindow : UIWindow
+public sealed class BossModuleMainWindow : UIWindow
 {
     private readonly BossModuleManager _mgr;
     private readonly ZoneModuleManager _zmm;

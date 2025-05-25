@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C01ASS.C013Shadowcaster;
 
-class CastShadow(BossModule module) : Components.GenericAOEs(module)
+sealed class CastShadow(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(65f, 15f.Degrees());
     public readonly List<AOEInstance> AOEs = new(8);

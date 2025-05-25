@@ -47,15 +47,13 @@ public enum AID : uint
 public enum IconID : uint
 {
     Tankbuster = 341, // player
-    LabyrinthFail = 504, // player
-    LabyrinthSuccess = 503, // player
     Stackmarker1 = 62, // player
     Stackmarker2 = 542, // player
     Stackmarker3 = 543, // player
     Spreadmarker = 139 // player
 }
 
-class DubiousTulidisasterArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class DubiousTulidisasterArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D074GreatestSerpentOfTural.ArenaCenter, 15f)], [new Square(D074GreatestSerpentOfTural.ArenaCenter, 12f)]);
     private AOEInstance? _aoe;
@@ -77,9 +75,9 @@ class DubiousTulidisasterArenaChange(BossModule module) : Components.GenericAOEs
     }
 }
 
-class ScreesOfFury(BossModule module) : Components.BaitAwayIcon(module, 3f, (uint)IconID.Tankbuster, (uint)AID.ScreesOfFury, 5.3f, tankbuster: true);
+sealed class ScreesOfFury(BossModule module) : Components.BaitAwayIcon(module, 3f, (uint)IconID.Tankbuster, (uint)AID.ScreesOfFury, 5.3f, tankbuster: true);
 
-class GreatestFlood(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.GreatestFlood, 15f)
+sealed class GreatestFlood(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.GreatestFlood, 15f)
 {
     private static readonly Angle a45 = 45f.Degrees();
 
@@ -97,7 +95,7 @@ class GreatestFlood(BossModule module) : Components.SimpleKnockbacks(module, (ui
     }
 }
 
-class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(module)
+sealed class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly Square middle = new(D074GreatestSerpentOfTural.ArenaCenter, 4f);
@@ -165,12 +163,12 @@ class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MightyBlorp(BossModule module, uint iconID, uint aid, float radius) : Components.StackWithIcon(module, iconID, aid, radius, 4.6f, 4, 4);
-class MightyBlorp1(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker1, (uint)AID.MightyBlorp1, 6f);
-class MightyBlorp2(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker2, (uint)AID.MightyBlorp2, 5f);
-class MightyBlorp3(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker3, (uint)AID.MightyBlorp3, 4f);
+abstract class MightyBlorp(BossModule module, uint iconID, uint aid, float radius) : Components.StackWithIcon(module, iconID, aid, radius, 4.6f, 4, 4);
+sealed class MightyBlorp1(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker1, (uint)AID.MightyBlorp1, 6f);
+sealed class MightyBlorp2(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker2, (uint)AID.MightyBlorp2, 5f);
+sealed class MightyBlorp3(BossModule module) : MightyBlorp(module, (uint)IconID.Stackmarker3, (uint)AID.MightyBlorp3, 4f);
 
-class SludgeVoidzone(BossModule module, float radius, uint oid) : Components.Voidzone(module, radius, m => GetVoidzones(m, oid))
+abstract class SludgeVoidzone(BossModule module, float radius, uint oid) : Components.Voidzone(module, radius, m => GetVoidzones(m, oid))
 {
     private static Actor[] GetVoidzones(BossModule module, uint oid)
     {
@@ -181,25 +179,23 @@ class SludgeVoidzone(BossModule module, float radius, uint oid) : Components.Voi
     }
 }
 
-class SludgeVoidzone1(BossModule module) : SludgeVoidzone(module, 6f, (uint)OID.SludgeVoidzone1);
-class SludgeVoidzone2(BossModule module) : SludgeVoidzone(module, 5f, (uint)OID.SludgeVoidzone2);
-class SludgeVoidzone3(BossModule module) : SludgeVoidzone(module, 4f, (uint)OID.SludgeVoidzone3);
+sealed class SludgeVoidzone1(BossModule module) : SludgeVoidzone(module, 6f, (uint)OID.SludgeVoidzone1);
+sealed class SludgeVoidzone2(BossModule module) : SludgeVoidzone(module, 5f, (uint)OID.SludgeVoidzone2);
+sealed class SludgeVoidzone3(BossModule module) : SludgeVoidzone(module, 4f, (uint)OID.SludgeVoidzone3);
 
-class DubiousTulidisaster(BossModule module) : Components.RaidwideCast(module, (uint)AID.DubiousTulidisaster);
-class GreatestLabyrinthRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.GreatestLabyrinth);
-class GreatestFloodRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.GreatestFlood);
-class ExaltedWobble(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExaltedWobble, 9f);
-class MisplacedMystery(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MisplacedMystery, new AOEShapeRect(52f, 2.5f));
-class GreatTorrent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GreatTorrentAOE, 6f, 10);
-class GreatTorrentSpread(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.GreatTorrentSpread, 6f, 5.1f);
+sealed class DubiousTulidisasterGreatestLabyrinthFlood(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.DubiousTulidisaster, (uint)AID.GreatestLabyrinth, (uint)AID.GreatestFlood]);
+sealed class ExaltedWobble(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExaltedWobble, 9f);
+sealed class MisplacedMystery(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MisplacedMystery, new AOEShapeRect(52f, 2.5f));
+sealed class GreatTorrent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GreatTorrentAOE, 6f, 10);
+sealed class GreatTorrentSpread(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.GreatTorrentSpread, 6f, 5.1f);
 
-class D074GreatestSerpentOfTuralStates : StateMachineBuilder
+sealed class D074GreatestSerpentOfTuralStates : StateMachineBuilder
 {
     public D074GreatestSerpentOfTuralStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<DubiousTulidisasterArenaChange>()
-            .ActivateOnEnter<DubiousTulidisaster>()
+            .ActivateOnEnter<DubiousTulidisasterGreatestLabyrinthFlood>()
             .ActivateOnEnter<ScreesOfFury>()
             .ActivateOnEnter<MightyBlorp1>()
             .ActivateOnEnter<MightyBlorp2>()
@@ -208,9 +204,7 @@ class D074GreatestSerpentOfTuralStates : StateMachineBuilder
             .ActivateOnEnter<SludgeVoidzone2>()
             .ActivateOnEnter<SludgeVoidzone3>()
             .ActivateOnEnter<GreatestFlood>()
-            .ActivateOnEnter<GreatestFloodRaidwide>()
             .ActivateOnEnter<GreatestLabyrinth>()
-            .ActivateOnEnter<GreatestLabyrinthRaidwide>()
             .ActivateOnEnter<ExaltedWobble>()
             .ActivateOnEnter<MisplacedMystery>()
             .ActivateOnEnter<GreatTorrent>()
@@ -219,7 +213,7 @@ class D074GreatestSerpentOfTuralStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12709)]
-public class D074GreatestSerpentOfTural(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
+public sealed class D074GreatestSerpentOfTural(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
     public static readonly WPos ArenaCenter = new(-130f, -554f);
     public static readonly ArenaBoundsSquare StartingBounds = new(14.5f);

@@ -5,7 +5,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-class DebugParty
+sealed class DebugParty
 {
     public unsafe void Draw(bool secondary)
     {

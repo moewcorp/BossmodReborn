@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
 
-class EvilSeedBait(BossModule module) : BossComponent(module)
+sealed class EvilSeedBait(BossModule module) : BossComponent(module)
 {
     public BitMask Baiters;
 
@@ -17,11 +17,11 @@ class EvilSeedBait(BossModule module) : BossComponent(module)
     }
 }
 
-class EvilSeedAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EvilSeedAOE, 5f);
+sealed class EvilSeedAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EvilSeedAOE, 5f);
 
-class EvilSeedVoidzone(BossModule module) : Components.Voidzone(module, 5, module => module.Enemies((uint)OID.EvilSeed).Where(z => z.EventState != 7));
+sealed class EvilSeedVoidzone(BossModule module) : Components.Voidzone(module, 5f, module => module.Enemies((uint)OID.EvilSeed).Where(z => z.EventState != 7));
 
-class ThornyVine(BossModule module) : Components.Chains(module, (uint)TetherID.ThornyVine, default, 25f)
+sealed class ThornyVine(BossModule module) : Components.Chains(module, (uint)TetherID.ThornyVine, default, 25f)
 {
     public BitMask Targets;
 

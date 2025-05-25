@@ -44,7 +44,7 @@
 // 47-56 = 1-man tower falling orb
 // 57-66 = 2-man tower falling orb
 // 67-6E = 3-man tower falling orb
-class ParticleConcentration(BossModule module) : Components.GenericTowers(module)
+sealed class ParticleConcentration(BossModule module) : Components.GenericTowers(module)
 {
     private BitMask _innerPlayers;
     private BitMask _outerPlayers;

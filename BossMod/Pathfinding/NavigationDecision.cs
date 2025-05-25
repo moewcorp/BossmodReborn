@@ -11,7 +11,7 @@ namespace BossMod.Pathfinding;
 public struct NavigationDecision
 {
     // context that allows reusing large memory allocations
-    public class Context
+    public sealed class Context
     {
         public float[] Scratch = [];
         public Map Map = new();
@@ -25,7 +25,7 @@ public struct NavigationDecision
 
     public const float ActivationTimeCushion = 1f; // reduce time between now and activation by this value in seconds; increase for more conservativeness
 
-    public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, float playerSpeed = 6)
+    public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, float playerSpeed = 6f)
     {
         // build a pathfinding map: rasterize all forbidden zones and goals
         hints.InitPathfindMap(ctx.Map);

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C01ASS.C011Silkie;
 
-class C011SilkieStates : StateMachineBuilder
+abstract class C011SilkieStates : StateMachineBuilder
 {
     private readonly bool _savage;
 
@@ -180,5 +180,5 @@ class C011SilkieStates : StateMachineBuilder
     }
 }
 
-class C011NSilkieStates(BossModule module) : C011SilkieStates(module, false);
-class C011SSilkieStates(BossModule module) : C011SilkieStates(module, true);
+sealed class C011NSilkieStates(BossModule module) : C011SilkieStates(module, false);
+sealed class C011SSilkieStates(BossModule module) : C011SilkieStates(module, true);

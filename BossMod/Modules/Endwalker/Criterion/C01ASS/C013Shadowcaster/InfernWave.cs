@@ -89,15 +89,14 @@ abstract class InfernWave(BossModule module, bool savage, bool showHints, int ma
         if (spell.Action.ID == WatchedAction)
         {
             var beacon = _beacons.Find(b => b.Source.Position.AlmostEqual(caster.Position, 1f));
-            if (beacon != null)
-                beacon.Activation = new();
+            beacon?.Activation = new();
         }
     }
 
     private IEnumerable<Beacon> ActiveBeacons() => _beacons.Where(b => b.Activation != default).Take(_maxActive);
 }
 
-class NInfernWave1(BossModule module) : InfernWave(module, false, false, 2);
-class SInfernWave1(BossModule module) : InfernWave(module, true, false, 2);
-class NInfernWave2(BossModule module) : InfernWave(module, false, true, 1);
-class SInfernWave2(BossModule module) : InfernWave(module, true, true, 1);
+sealed class NInfernWave1(BossModule module) : InfernWave(module, false, false, 2);
+sealed class SInfernWave1(BossModule module) : InfernWave(module, true, false, 2);
+sealed class NInfernWave2(BossModule module) : InfernWave(module, false, true, 1);
+sealed class SInfernWave2(BossModule module) : InfernWave(module, true, true, 1);

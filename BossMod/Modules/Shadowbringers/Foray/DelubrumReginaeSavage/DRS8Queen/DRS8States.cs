@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS8Queen;
 
-class DRS8QueenStates : StateMachineBuilder
+sealed class DRS8QueenStates : StateMachineBuilder
 {
     private readonly DRS8Queen _module;
 
@@ -9,37 +9,37 @@ class DRS8QueenStates : StateMachineBuilder
         _module = module;
         SimplePhase(default, Phase1, "P1")
             .ActivateOnEnter<ArenaChange>()
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1 || (Module.PrimaryActor.CastInfo?.IsSpell(AID.GodsSaveTheQueen) ?? false);
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1u || (Module.PrimaryActor.CastInfo?.IsSpell(AID.GodsSaveTheQueen) ?? false);
         DeathPhase(1u, Phase2);
     }
 
     private void Phase1(uint id)
     {
         EmpyreanIniquity(id, 10.2f);
-        QueensWill(id + 0x10000, 13.7f);
-        CleansingSlash(id + 0x20000, 10.9f);
-        EmpyreanIniquity(id + 0x30000, 4.2f);
-        QueensEdict(id + 0x40000, 11.5f);
-        SimpleState(id + 0x50000, 12.5f, "Second phase");
+        QueensWill(id + 0x10000u, 13.7f);
+        CleansingSlash(id + 0x20000u, 10.9f);
+        EmpyreanIniquity(id + 0x30000u, 4.2f);
+        QueensEdict(id + 0x40000u, 11.5f);
+        SimpleState(id + 0x50000u, 12.5f, "Second phase");
     }
 
     private void Phase2(uint id)
     {
-        GodsSaveTheQueen(id, 0);
-        MaelstromsBolt(id + 0x10000, 31.7f);
-        RelentlessPlay1(id + 0x20000, 7.3f);
-        CleansingSlash(id + 0x30000, 4.4f);
-        RelentlessPlay2(id + 0x40000, 8.2f);
-        EmpyreanIniquity(id + 0x50000, 5.1f);
-        QueensEdict(id + 0x60000, 11.5f);
-        CleansingSlash(id + 0x70000, 2.1f);
-        RelentlessPlay3(id + 0x80000, 10.2f);
-        MaelstromsBolt(id + 0x90000, 16.3f);
-        EmpyreanIniquity(id + 0xA0000, 6.2f);
-        RelentlessPlay4(id + 0xB0000, 8.2f);
-        RelentlessPlay5(id + 0xC0000, 0.1f);
+        GodsSaveTheQueen(id, default);
+        MaelstromsBolt(id + 0x10000u, 31.7f);
+        RelentlessPlay1(id + 0x20000u, 7.3f);
+        CleansingSlash(id + 0x30000u, 4.4f);
+        RelentlessPlay2(id + 0x40000u, 8.2f);
+        EmpyreanIniquity(id + 0x50000u, 5.1f);
+        QueensEdict(id + 0x60000u, 11.5f);
+        CleansingSlash(id + 0x70000u, 2.1f);
+        RelentlessPlay3(id + 0x80000u, 10.2f);
+        MaelstromsBolt(id + 0x90000u, 16.3f);
+        EmpyreanIniquity(id + 0xA0000u, 6.2f);
+        RelentlessPlay4(id + 0xB0000u, 8.2f);
+        RelentlessPlay5(id + 0xC0000u, 0.1f);
         // TODO: boss gains damage up at +6.6, then presumably would start some enrage cast...
-        SimpleState(id + 0xD0000, 15, "Enrage");
+        SimpleState(id + 0xD0000, 20.8f, "Enrage");
     }
 
     private void EmpyreanIniquity(uint id, float delay)
@@ -229,7 +229,7 @@ class DRS8QueenStates : StateMachineBuilder
             .DeactivateOnExit<FieryIcyPortent>();
         ActorCastEnd(id + 0x36, _module.Soldier, 3.3f);
 
-        ComponentCondition<AboveBoard>(id + 0x40, 1.0f, comp => comp.CurState == AboveBoard.State.ThrowUpDone, "Throw up");
+        ComponentCondition<AboveBoard>(id + 0x40, 4.2f, comp => comp.CurState == AboveBoard.State.ThrowUpDone, "Throw up");
         ComponentCondition<AboveBoard>(id + 0x41, 2.0f, comp => comp.CurState == AboveBoard.State.ShortExplosionsDone, "Bombs 1");
         ComponentCondition<AboveBoard>(id + 0x42, 4.2f, comp => comp.CurState == AboveBoard.State.LongExplosionsDone, "Bombs 2")
             .DeactivateOnExit<AboveBoard>();

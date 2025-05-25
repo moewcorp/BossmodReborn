@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
 
-class RazingVolleyParticleBeam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RazingVolleyParticleBeam, new AOEShapeRect(45f, 4f))
+sealed class RazingVolleyParticleBeam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RazingVolleyParticleBeam, new AOEShapeRect(45f, 4f))
 {
     private DateTime _nextBundle;
 

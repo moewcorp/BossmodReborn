@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Alliance.A14ShadowLord;
 
-class A14ShadowLordStates : StateMachineBuilder
+sealed class A14ShadowLordStates : StateMachineBuilder
 {
     public A14ShadowLordStates(BossModule module) : base(module)
     {

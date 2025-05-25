@@ -2,7 +2,7 @@
 
 namespace BossMod;
 
-public class StateMachineWindow : UIWindow
+public sealed class StateMachineWindow : UIWindow
 {
     private readonly Timeline _timeline = new();
     private readonly ColumnStateMachineTree _col;

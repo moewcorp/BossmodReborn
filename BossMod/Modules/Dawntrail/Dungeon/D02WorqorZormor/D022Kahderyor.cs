@@ -45,7 +45,7 @@ public enum IconID : uint
     WindShot = 511 // player
 }
 
-class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
+sealed class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
 {
     private const string Hint = "Be inside a crystal line!";
     private static readonly AOEShapeDonut donut = new(8f, 50f);
@@ -122,7 +122,7 @@ class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
         InvertForbiddenZone: inverted);
 }
 
-class WindShotStack(BossModule module) : Components.DonutStack(module, (uint)AID.WindShot, (uint)IconID.WindShot, 5f, 10f, 6f, 4, 4)
+sealed class WindShotStack(BossModule module) : Components.DonutStack(module, (uint)AID.WindShot, (uint)IconID.WindShot, 5f, 10f, 6f, 4, 4)
 {
     private readonly WindEarthShot _aoe = module.FindComponent<WindEarthShot>()!;
 
@@ -153,16 +153,16 @@ class WindShotStack(BossModule module) : Components.DonutStack(module, (uint)AID
     }
 }
 
-class WindUnbound(BossModule module) : Components.RaidwideCast(module, (uint)AID.WindUnbound);
-class CrystallineCrush(BossModule module) : Components.CastTowers(module, (uint)AID.CrystallineCrush, 6f, 4, 4);
-class EarthenShot(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.EarthenShot, 6f);
-class StalagmiteCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StalagmiteCircle, 15f);
-class CrystallineStorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrystallineStorm, new AOEShapeRect(50f, 1f));
-class CyclonicRing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CyclonicRing, new AOEShapeDonut(8f, 40f));
-class EyeOfTheFierce(BossModule module) : Components.CastGaze(module, (uint)AID.EyeOfTheFierce);
-class SeedCrystals(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SeedCrystals, 6f);
+sealed class WindUnbound(BossModule module) : Components.RaidwideCast(module, (uint)AID.WindUnbound);
+sealed class CrystallineCrush(BossModule module) : Components.CastTowers(module, (uint)AID.CrystallineCrush, 6f, 4, 4);
+sealed class EarthenShot(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.EarthenShot, 6f);
+sealed class StalagmiteCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StalagmiteCircle, 15f);
+sealed class CrystallineStorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrystallineStorm, new AOEShapeRect(50f, 1f));
+sealed class CyclonicRing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CyclonicRing, new AOEShapeDonut(8f, 40f));
+sealed class EyeOfTheFierce(BossModule module) : Components.CastGaze(module, (uint)AID.EyeOfTheFierce);
+sealed class SeedCrystals(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SeedCrystals, 6f);
 
-class D022KahderyorStates : StateMachineBuilder
+sealed class D022KahderyorStates : StateMachineBuilder
 {
     public D022KahderyorStates(BossModule module) : base(module)
     {
@@ -181,7 +181,7 @@ class D022KahderyorStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 824, NameID = 12703)]
-public class D022Kahderyor(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
+public sealed class D022Kahderyor(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
     public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(new(-53f, -57f), 19.5f, 40)], [new Rectangle(new(-72.5f, -57f), 0.75f, 20), new Rectangle(new(-53f, -37f), 20f, 1.5f)]);
 

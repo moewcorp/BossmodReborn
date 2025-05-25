@@ -8,7 +8,7 @@ namespace BossMod;
 
 sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterface dalamud)
 {
-    class Editor(DebugObstacles owner, Bitmap bm, ObstacleMapDatabase.Entry e) : UIBitmapEditor(bm)
+    sealed class Editor(DebugObstacles owner, Bitmap bm, ObstacleMapDatabase.Entry e) : UIBitmapEditor(bm)
     {
         private int _deltaCells;
 

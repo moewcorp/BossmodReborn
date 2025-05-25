@@ -1,8 +1,9 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS8Queen;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
+    public override bool KeepOnPhaseChange => true;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 

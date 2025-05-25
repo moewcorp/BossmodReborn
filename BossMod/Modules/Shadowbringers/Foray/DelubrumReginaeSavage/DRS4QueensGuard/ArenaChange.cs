@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS4QueensGuard;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(25f, 30f);
     private AOEInstance? _aoe;

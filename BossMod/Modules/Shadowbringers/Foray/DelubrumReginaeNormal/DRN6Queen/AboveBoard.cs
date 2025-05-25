@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
-class AboveBoard(BossModule module) : Components.GenericAOEs(module)
+sealed class AboveBoard(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(6);
     private static readonly AOEShapeCircle circle = new(10f);

@@ -1,11 +1,10 @@
 ﻿using ImGuiNET;
 using Lumina.Excel.Sheets;
 using System.Globalization;
-using System.Text;
 
 namespace BossMod.ReplayAnalysis;
 
-class ParticipantInfo : CommonEnumInfo
+sealed class ParticipantInfo : CommonEnumInfo
 {
     class ParticipantData
     {

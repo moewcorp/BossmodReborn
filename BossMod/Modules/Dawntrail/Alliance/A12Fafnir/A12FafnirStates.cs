@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Alliance.A12Fafnir;
 
-class A12FafnirStates : StateMachineBuilder
+sealed class A12FafnirStates : StateMachineBuilder
 {
     public A12FafnirStates(BossModule module) : base(module)
     {
-        SimplePhase(0, Phase1, "P1: Until 85%")
+        SimplePhase(default, Phase1, "P1: Until 85%")
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<BalefulBreath>()
             .ActivateOnEnter<SpikeFlail>()
@@ -27,9 +27,9 @@ class A12FafnirStates : StateMachineBuilder
             .ActivateOnEnter<WingedTerror>()
             .ActivateOnEnter<ShudderingEarth>()
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || Module.FindComponent<ShudderingEarth>()?.NumCasts > 0;
-        SimplePhase(1, Phase2, "P2: Until 15%")
+        SimplePhase(1u, Phase2, "P2: Until 15%")
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || (Module.PrimaryActor.CastInfo?.IsSpell(AID.DarkMatterBlast) ?? false);
-        DeathPhase(2, Phase3);
+        DeathPhase(2u, Phase3);
     }
 
     private void Phase1(uint id)

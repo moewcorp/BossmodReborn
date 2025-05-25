@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A11Prishe;
 
-class AsuranFists(BossModule module) : Components.GenericTowers(module)
+sealed class AsuranFists(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

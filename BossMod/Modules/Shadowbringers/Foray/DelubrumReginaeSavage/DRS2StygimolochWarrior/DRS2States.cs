@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS2StygimolochWarrior;
 
-class DRS2StygimolochWarriorStates : StateMachineBuilder
+sealed class DRS2StygimolochWarriorStates : StateMachineBuilder
 {
     public DRS2StygimolochWarriorStates(BossModule module) : base(module)
     {

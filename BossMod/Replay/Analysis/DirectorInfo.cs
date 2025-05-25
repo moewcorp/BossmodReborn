@@ -1,6 +1,6 @@
 ﻿namespace BossMod.ReplayAnalysis;
 
-class DirectorInfo
+sealed class DirectorInfo
 {
     private readonly Dictionary<uint, List<(Replay r, Replay.Encounter enc, uint[] prms, DateTime ts)>> _data = [];
 

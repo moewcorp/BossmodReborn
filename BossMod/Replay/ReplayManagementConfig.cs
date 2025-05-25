@@ -3,7 +3,7 @@
 public record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
 
 [ConfigDisplay(Name = "Replays", Order = 0)]
-public class ReplayManagementConfig : ConfigNode
+public sealed class ReplayManagementConfig : ConfigNode
 {
     [PropertyDisplay("Show replay management UI")]
     public bool ShowUI = false;

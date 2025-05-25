@@ -4,7 +4,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-class DebugGraphics
+sealed class DebugGraphics
 {
     private class WatchedRenderObject
     {

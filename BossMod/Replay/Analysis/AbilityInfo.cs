@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace BossMod.ReplayAnalysis;
 
-class AbilityInfo : CommonEnumInfo
+sealed class AbilityInfo : CommonEnumInfo
 {
     public readonly record struct Instance(Replay Replay, Replay.Encounter? Enc, Replay.Action Action)
     {
@@ -47,7 +47,7 @@ class AbilityInfo : CommonEnumInfo
         }
     }
 
-    class ConeAnalysis
+    sealed class ConeAnalysis
     {
         public enum Targeting { SourcePosRot, TargetPosSourceRot, SourcePosDirToTarget }
 
@@ -95,7 +95,7 @@ class AbilityInfo : CommonEnumInfo
         }
     }
 
-    class RectAnalysis
+    sealed class RectAnalysis
     {
         private readonly UIPlot _plot = new();
         private readonly List<(Instance Inst, Replay.Participant Target, float Normal, float Length, bool Hit)> _points = [];
@@ -131,7 +131,7 @@ class AbilityInfo : CommonEnumInfo
         }
     }
 
-    class DamageFalloffAnalysis
+    sealed class DamageFalloffAnalysis
     {
         private readonly UIPlot _plot = new();
         private readonly List<(Instance Inst, Replay.Participant Target, float Range, int Damage)> _points = [];
@@ -162,7 +162,7 @@ class AbilityInfo : CommonEnumInfo
         }
     }
 
-    class GazeAnalysis
+    sealed class GazeAnalysis
     {
         private readonly UIPlot _plot = new();
         private readonly List<(Instance Inst, Replay.Participant Target, Angle Angle, bool Hit)> _points = [];
@@ -199,7 +199,7 @@ class AbilityInfo : CommonEnumInfo
         }
     }
 
-    class KnockbackAnalysis
+    sealed class KnockbackAnalysis
     {
         private record struct Point(Instance Inst, Replay.ActionTarget Target);
 
@@ -307,7 +307,7 @@ class AbilityInfo : CommonEnumInfo
         private static bool IsTranscendent(Replay replay, Replay.Participant participant, DateTime timestamp) => replay.Statuses.Any(status => status.Target == participant && status.Time.Contains(timestamp) && IsTranscendent(status.ID));
     }
 
-    class CasterLinkAnalysis
+    sealed class CasterLinkAnalysis
     {
         private readonly List<(Instance Inst, float MinDistance)> _points = [];
 
@@ -332,7 +332,7 @@ class AbilityInfo : CommonEnumInfo
         public void Draw(UITree tree) => tree.LeafNodes(_points, p => $"{p.MinDistance:f3}: {p.Inst.TimestampString()}");
     }
 
-    class ActionData
+    sealed class ActionData
     {
         public List<Instance> Instances = [];
         public List<(Replay, Replay.Participant, Replay.Cast)> Casts = [];

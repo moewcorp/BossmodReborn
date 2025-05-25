@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Alliance.A11Prishe;
 
-class A11PrisheStates : StateMachineBuilder
+sealed class A11PrisheStates : StateMachineBuilder
 {
     public A11PrisheStates(BossModule module) : base(module)
     {

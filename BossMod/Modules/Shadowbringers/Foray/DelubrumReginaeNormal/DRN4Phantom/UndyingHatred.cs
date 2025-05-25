@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN4Phantom;
 
-class UndyingHatred(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.UndyingHatred, 30f, true, kind: Kind.DirForward)
+sealed class UndyingHatred(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.UndyingHatred, 30f, true, kind: Kind.DirForward)
 {
     private readonly SwirlingMiasma _aoe = module.FindComponent<SwirlingMiasma>()!;
 

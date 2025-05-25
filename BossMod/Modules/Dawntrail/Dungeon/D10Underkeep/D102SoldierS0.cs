@@ -46,13 +46,13 @@ public enum IconID : uint
     StaticForce = 591 // Boss->players
 }
 
-class FieldOfScorn(BossModule module) : Components.RaidwideCast(module, (uint)AID.FieldOfScorn);
-class ThunderousSlash(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ThunderousSlash);
-class OrderedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OrderedFire, new AOEShapeRect(55f, 4f));
-class ElectricExcess(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.ElectricExcess, 6f);
-class StaticForce(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60f, 15f.Degrees()), (uint)IconID.StaticForce, (uint)AID.StaticForce, 5.1f);
+sealed class FieldOfScorn(BossModule module) : Components.RaidwideCast(module, (uint)AID.FieldOfScorn);
+sealed class ThunderousSlash(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ThunderousSlash);
+sealed class OrderedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OrderedFire, new AOEShapeRect(55f, 4f));
+sealed class ElectricExcess(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.ElectricExcess, 6f);
+sealed class StaticForce(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60f, 15f.Degrees()), (uint)IconID.StaticForce, (uint)AID.StaticForce, 5.1f);
 
-class SectorBisector(BossModule module) : Components.GenericAOEs(module)
+sealed class SectorBisector(BossModule module) : Components.GenericAOEs(module)
 {
     // this solution looks a bit complex and confusing, but that is because the pretty and easy solution of just using the tether order only works with good ping + fps
     // at higher latencies the time stamps merge together and tethers start to appear in random order in the logs...
@@ -144,7 +144,7 @@ class SectorBisector(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class D102SoldierS0States : StateMachineBuilder
+sealed class D102SoldierS0States : StateMachineBuilder
 {
     public D102SoldierS0States(BossModule module) : base(module)
     {
@@ -159,4 +159,4 @@ class D102SoldierS0States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1027, NameID = 13757)]
-public class D102SoldierS0(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -182f), new ArenaBoundsSquare(15.5f));
+public sealed class D102SoldierS0(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -182f), new ArenaBoundsSquare(15.5f));

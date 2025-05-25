@@ -38,5 +38,5 @@ abstract class FeralHowlHystericAssault(BossModule module, uint aidCast, uint ai
     }
 }
 
-class FeralHowl(BossModule module) : FeralHowlHystericAssault(module, (uint)AID.FeralHowl, (uint)AID.FeralHowlAOE, 2.1f);
-class HystericAssault(BossModule module) : FeralHowlHystericAssault(module, (uint)AID.HystericAssault, (uint)AID.HystericAssaultAOE, 0.9f);
+sealed class FeralHowl(BossModule module) : FeralHowlHystericAssault(module, (uint)AID.FeralHowl, (uint)AID.FeralHowlAOE, 2.1f);
+sealed class HystericAssault(BossModule module) : FeralHowlHystericAssault(module, (uint)AID.HystericAssault, (uint)AID.HystericAssaultAOE, 0.9f);

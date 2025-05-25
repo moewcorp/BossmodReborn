@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class Towers1(BossModule module) : Components.GenericTowers(module)
+sealed class Towers1(BossModule module) : Components.GenericTowers(module)
 {
     private BitMask forbidden;
 
@@ -25,7 +25,7 @@ class Towers1(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-class ShockSpread(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+sealed class ShockSpread(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     public static readonly AOEShapeCircle Circle = new(4f);
     public static readonly AOEShapeDonut Donut = new(1f, 6f);
@@ -49,7 +49,7 @@ class ShockSpread(BossModule module) : Components.GenericBaitAway(module, center
     }
 }
 
-class ShockAOE(BossModule module) : Components.GenericAOEs(module)
+sealed class ShockAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private int donuts;

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS3Dahu;
 
-class DRS3DahuStates : StateMachineBuilder
+sealed class DRS3DahuStates : StateMachineBuilder
 {
     public DRS3DahuStates(BossModule module) : base(module)
     {

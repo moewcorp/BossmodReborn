@@ -1,6 +1,5 @@
 ﻿using Dalamud.Memory;
 using ImGuiNET;
-using System.Runtime.InteropServices;
 
 namespace BossMod;
 
@@ -56,7 +55,7 @@ public unsafe struct HaterInfo
     [FieldOffset(0x44)] public int Enmity;
 }
 
-class DebugHate(WorldState ws)
+sealed class DebugHate(WorldState ws)
 {
     public unsafe void Draw()
     {

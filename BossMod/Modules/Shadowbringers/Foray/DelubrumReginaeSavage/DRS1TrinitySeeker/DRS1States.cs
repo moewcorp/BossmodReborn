@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS1TrinitySeeker;
 
-class DRS1TrinitySeekerStates : StateMachineBuilder
+sealed class DRS1TrinitySeekerStates : StateMachineBuilder
 {
     public DRS1TrinitySeekerStates(BossModule module) : base(module)
     {

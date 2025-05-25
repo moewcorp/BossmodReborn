@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class AlexandrianThunderII(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class AlexandrianThunderII(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
     private DateTime _activation;

@@ -70,7 +70,7 @@ public enum AID : uint
     Explosion = 39239 // Helper->self, 8.5s cast, range 50 width 8 rect
 }
 
-class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D063Eliminator.ArenaCenter, 16f)], [new Square(D063Eliminator.ArenaCenter, 15f)]);
     private AOEInstance? _aoe;
@@ -92,13 +92,13 @@ class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Disruption(BossModule module) : Components.RaidwideCast(module, (uint)AID.Disruption);
+sealed class Disruption(BossModule module) : Components.RaidwideCast(module, (uint)AID.Disruption);
 
-class Partition(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Partition1, (uint)AID.Partition2, (uint)AID.Partition3], new AOEShapeCone(40f, 90f.Degrees()));
-class Terminate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Terminate, new AOEShapeRect(40f, 5f));
-class HaloOfDestruction(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HaloOfDestruction, new AOEShapeDonut(6f, 40f));
+sealed class Partition(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Partition1, (uint)AID.Partition2, (uint)AID.Partition3], new AOEShapeCone(40f, 90f.Degrees()));
+sealed class Terminate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Terminate, new AOEShapeRect(40f, 5f));
+sealed class HaloOfDestruction(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HaloOfDestruction, new AOEShapeDonut(6f, 40f));
 
-class Electray(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Electray, 6f)
+sealed class Electray(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Electray, 6f)
 {
     private readonly HaloOfDestruction _aoe1 = module.FindComponent<HaloOfDestruction>()!;
     private readonly Partition _aoe2 = module.FindComponent<Partition>()!;
@@ -116,7 +116,7 @@ class Electray(BossModule module) : Components.SpreadFromCastTargets(module, (ui
     }
 }
 
-class Explosion : Components.SimpleAOEs
+sealed class Explosion : Components.SimpleAOEs
 {
     public Explosion(BossModule module) : base(module, (uint)AID.Explosion, new AOEShapeRect(50f, 4f))
     {
@@ -125,7 +125,7 @@ class Explosion : Components.SimpleAOEs
     }
 }
 
-class Impact(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Impact, 15f)
+sealed class Impact(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Impact, 15f)
 {
     private static readonly Angle halfAngle = 45f.Degrees();
 
@@ -139,10 +139,10 @@ class Impact(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.
     }
 }
 
-class Compression(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compression, 6f);
+sealed class Compression(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compression, 6f);
 
-class Overexposure(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.OverexposureMarker, (uint)AID.Overexposure, 5f, 40f, 3f);
-class LightOfDevotion(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.LightOfDevotionMarker, (uint)AID.LightOfDevotion, 5.5f, 40f, 3f)
+sealed class Overexposure(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.OverexposureMarker, (uint)AID.Overexposure, 5f, 40f, 3f);
+sealed class LightOfDevotion(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.LightOfDevotionMarker, (uint)AID.LightOfDevotion, 5.5f, 40f, 3f)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -151,7 +151,7 @@ class LightOfDevotion(BossModule module) : Components.LineStack(module, aidMarke
     }
 }
 
-class LightOfSalvation(BossModule module) : Components.GenericBaitAway(module)
+sealed class LightOfSalvation(BossModule module) : Components.GenericBaitAway(module)
 {
     private readonly Impact _kb = module.FindComponent<Impact>()!;
     private static readonly AOEShapeRect rect = new(40f, 3f);
@@ -183,7 +183,7 @@ class LightOfSalvation(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class D063EliminatorStates : StateMachineBuilder
+sealed class D063EliminatorStates : StateMachineBuilder
 {
     public D063EliminatorStates(BossModule module) : base(module)
     {
@@ -204,7 +204,7 @@ class D063EliminatorStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS), erdelf", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 827, NameID = 12729)]
-public class D063Eliminator(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
+public sealed class D063Eliminator(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
     public static readonly WPos ArenaCenter = new(-759f, -648f);
     public static readonly ArenaBoundsSquare StartingBounds = new(15.5f);

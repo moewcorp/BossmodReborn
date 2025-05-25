@@ -109,6 +109,9 @@ public enum AID : uint
     SoftEnrageGAOE = 23414, // Helper->self, 5.0s cast, range 60 circle, raidwide
     SoftEnrageS = 23075, // QueensSoldier->self, 5.0s cast, range 60 circle, visual (raidwide)
     SoftEnrageSAOE = 23413, // Helper->self, 5.0s cast, range 60 circle, raidwide
+    GodsSaveTheQueenEnrageVisual1 = 23386, // Boss->self, 10.0s cast, single-target
+    GodsSaveTheQueenEnrageVisual2 = 23388, // Boss->self, 2.0s cast, single-target
+    GodsSaveTheQueenEnrage = 23387 // Helper->self, 2.0s cast, range 60 circle
 }
 
 public enum SID : uint

@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-class DebugAutorotation(RotationModuleManager autorot)
+sealed class DebugAutorotation(RotationModuleManager autorot)
 {
     private readonly UITree _tree = new();
 

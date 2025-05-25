@@ -1,11 +1,10 @@
 ﻿using ImGuiNET;
-using System.Text.Json.Nodes;
 
 namespace BossMod.ReplayAnalysis;
 
-class StateTransitionTimings
+sealed class StateTransitionTimings
 {
-    class TransitionMetric(double duration, Replay replay, Replay.Encounter encounter, DateTime time)
+    sealed class TransitionMetric(double duration, Replay replay, Replay.Encounter encounter, DateTime time)
     {
         public double Duration = duration;
         public Replay Replay = replay;
@@ -13,7 +12,7 @@ class StateTransitionTimings
         public DateTime Time = time;
     }
 
-    class TransitionMetrics
+    sealed class TransitionMetrics
     {
         public bool Expected;
         public double MinTime = double.MaxValue;
@@ -23,7 +22,7 @@ class StateTransitionTimings
         public List<TransitionMetric> Instances = [];
     }
 
-    class StateMetrics(string name, double expectedTime)
+    sealed class StateMetrics(string name, double expectedTime)
     {
         public string Name = name;
         public double ExpectedTime = expectedTime;

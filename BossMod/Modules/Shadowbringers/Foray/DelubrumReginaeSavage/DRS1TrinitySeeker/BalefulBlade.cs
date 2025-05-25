@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS1TrinitySeeker;
 
-class BalefulBlade(BossModule module) : Components.GenericAOEs(module)
+sealed class BalefulBlade(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _phantomEdge;
     private AOEInstance? _aoe;

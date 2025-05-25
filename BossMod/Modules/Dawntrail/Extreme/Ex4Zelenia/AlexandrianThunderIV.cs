@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class AlexandrianThunderIV(BossModule module) : Components.GenericAOEs(module)
+sealed class AlexandrianThunderIV(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(8f);
     private static readonly AOEShapeDonut donut = new(8f, 24f);

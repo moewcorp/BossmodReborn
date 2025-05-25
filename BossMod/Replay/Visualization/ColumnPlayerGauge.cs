@@ -59,7 +59,7 @@ public abstract class ColumnPlayerGauge : Timeline.ColumnGroup, IToggleableColum
 #endregion
 
 #region WAR
-public class ColumnPlayerGaugeWAR : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeWAR : ColumnPlayerGauge
 {
     private readonly ColumnGenericHistory _gauge;
 
@@ -105,7 +105,7 @@ public class ColumnPlayerGaugeWAR : ColumnPlayerGauge
 #endregion
 
 #region GNB
-public class ColumnPlayerGaugeGNB : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeGNB : ColumnPlayerGauge
 {
     private readonly ColumnGenericHistory _gauge;
     private readonly ColorConfig _colors = Service.Config.Get<ColorConfig>();
@@ -164,7 +164,7 @@ public class ColumnPlayerGaugeGNB : ColumnPlayerGauge
 #endregion
 
 #region MNK
-public class ColumnPlayerGaugeMNK : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeMNK : ColumnPlayerGauge
 {
     private readonly ColorConfig _colors = Service.Config.Get<ColorConfig>();
     private readonly ColumnGenericHistory _chakras;
@@ -298,7 +298,7 @@ public class ColumnPlayerGaugeMNK : ColumnPlayerGauge
 #endregion
 
 #region SAM
-public class ColumnPlayerGaugeSAM : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeSAM : ColumnPlayerGauge
 {
     private readonly ColumnGenericHistory _kenki;
     private readonly ColumnGenericHistory _sen;
@@ -410,7 +410,7 @@ public class ColumnPlayerGaugeSAM : ColumnPlayerGauge
 #endregion
 
 #region BRD
-public class ColumnPlayerGaugeBRD : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeBRD : ColumnPlayerGauge
 {
     private readonly ColorConfig _colors = Service.Config.Get<ColorConfig>();
     private readonly ColumnGenericHistory _songs;
@@ -486,7 +486,7 @@ public class ColumnPlayerGaugeBRD : ColumnPlayerGauge
 #endregion
 
 #region MCH
-public class ColumnPlayerGaugeMCH : ColumnPlayerGauge
+public sealed class ColumnPlayerGaugeMCH : ColumnPlayerGauge
 {
     private readonly ColorConfig _colors = Service.Config.Get<ColorConfig>();
     private readonly ColumnGenericHistory _heat;

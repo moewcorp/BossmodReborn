@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
-class Chess(BossModule module) : Components.GenericAOEs(module)
+sealed class Chess(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance>[] AOEs = new List<AOEInstance>[PartyState.MaxAllianceSize];
     private readonly int[] distancesPending = new int[PartyState.MaxAllianceSize];

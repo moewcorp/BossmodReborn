@@ -1,13 +1,13 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C01ASS.C013Shadowcaster;
 
-class C013ShadowcasterStates : StateMachineBuilder
+abstract class C013ShadowcasterStates : StateMachineBuilder
 {
     private readonly bool _savage;
 
     public C013ShadowcasterStates(BossModule module, bool savage) : base(module)
     {
         _savage = savage;
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChange>();
     }
 
@@ -164,5 +164,5 @@ class C013ShadowcasterStates : StateMachineBuilder
             .DeactivateOnExit<CrypticFlames>();
     }
 }
-class C013NShadowcasterStates(BossModule module) : C013ShadowcasterStates(module, false);
-class C013SShadowcasterStates(BossModule module) : C013ShadowcasterStates(module, true);
+sealed class C013NShadowcasterStates(BossModule module) : C013ShadowcasterStates(module, false);
+sealed class C013SShadowcasterStates(BossModule module) : C013ShadowcasterStates(module, true);

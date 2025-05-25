@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A14ShadowLord;
 
-class CthonicFury(BossModule module) : Components.GenericAOEs(module)
+sealed class CthonicFury(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
     public bool Active => _aoe != null || Arena.Bounds != A14ShadowLord.DefaultBounds;

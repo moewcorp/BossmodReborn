@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Alliance.A13ArkAngels;
 
-class A13ArkAngelsStates : StateMachineBuilder
+sealed class A13ArkAngelsStates : StateMachineBuilder
 {
     private readonly A13ArkAngels _module;
 

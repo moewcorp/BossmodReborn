@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN1TrinitySeeker;
 
-class MercyFourfold(BossModule module) : Components.GenericAOEs(module)
+sealed class MercyFourfold(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCone cone = new(50f, 90f.Degrees());

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class AlexandrianBanishIII(BossModule module) : Components.GenericBaitStack(module, (uint)AID.AlexandrianBanishIII)
+sealed class AlexandrianBanishIII(BossModule module) : Components.GenericBaitStack(module, (uint)AID.AlexandrianBanishIII)
 {
     private readonly FloorTiles _tiles = module.FindComponent<FloorTiles>()!;
     private static readonly AOEShapeCircle circle = new(4f);
@@ -86,7 +86,7 @@ class AlexandrianBanishIII(BossModule module) : Components.GenericBaitStack(modu
                 while (stackPtr > 0)
                 {
                     var (r, j) = stack[--stackPtr];
-                    int id = r == 0 ? j : j + 8;
+                    var id = r == 0 ? j : j + 8;
                     if (visited[id] || !activeTiles[id])
                         continue;
 
@@ -117,7 +117,7 @@ class AlexandrianBanishIII(BossModule module) : Components.GenericBaitStack(modu
     }
 }
 
-class AlexandrianBanishIIITargetHint(BossModule module) : Components.GenericAOEs(module)
+sealed class AlexandrianBanishIIITargetHint(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
     private readonly FloorTiles _tiles = module.FindComponent<FloorTiles>()!;
