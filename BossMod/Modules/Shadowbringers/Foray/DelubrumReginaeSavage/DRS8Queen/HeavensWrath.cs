@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS8Queen;
 
-sealed class HeavensWrathAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeavensWrathKnockback, new AOEShapeRect(60f, 5f));
+// limiting to one aoe since there are 2 casters to circumvent aoe target limit
+sealed class HeavensWrathAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeavensWrathKnockback, new AOEShapeRect(60f, 5f), 1);
 
 // TODO: generalize
 sealed class HeavensWrathKnockback(BossModule module) : Components.GenericKnockback(module)
@@ -12,7 +13,7 @@ sealed class HeavensWrathKnockback(BossModule module) : Components.GenericKnockb
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.HeavensWrathKnockback)
+        if (_sources.Count == 0 && spell.Action.ID == (uint)AID.HeavensWrathKnockback)
         {
             var act = Module.CastFinishAt(spell);
             _sources.Add(new(caster.Position, 15f, act, _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));

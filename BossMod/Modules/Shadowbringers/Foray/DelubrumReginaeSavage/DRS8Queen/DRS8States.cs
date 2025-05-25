@@ -9,7 +9,7 @@ sealed class DRS8QueenStates : StateMachineBuilder
         _module = module;
         SimplePhase(default, Phase1, "P1")
             .ActivateOnEnter<ArenaChange>()
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1 || (Module.PrimaryActor.CastInfo?.IsSpell(AID.GodsSaveTheQueen) ?? false);
+            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || Module.PrimaryActor.HPMP.CurHP <= 1u || (Module.PrimaryActor.CastInfo?.IsSpell(AID.GodsSaveTheQueen) ?? false);
         DeathPhase(1u, Phase2);
     }
 

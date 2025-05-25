@@ -48,7 +48,7 @@ abstract class PortalsBurn(BossModule module, uint aid, uint oid) : PortalsAOE(m
 sealed class NPortalsBurn(BossModule module) : PortalsBurn(module, (uint)AID.NBurn, (uint)OID.NBallOfFire);
 sealed class SPortalsBurn(BossModule module) : PortalsBurn(module, (uint)AID.SBurn, (uint)OID.SBallOfFire);
 
-abstract class PortalsMirror(BossModule module, uint aid, uint oid) : PortalsAOE(module, aid, oid, 11.7d, new AOEShapeRect(100f, 5f));
+abstract class PortalsMirror(BossModule module, uint aid, uint oid) : PortalsAOE(module, aid, oid, 11.7d, new AOEShapeRect(60f, 5f, 60f));
 sealed class NPortalsMirror(BossModule module) : PortalsMirror(module, (uint)AID.NBlazingBenifice, (uint)OID.NArcaneFont);
 sealed class SPortalsMirror(BossModule module) : PortalsMirror(module, (uint)AID.SBlazingBenifice, (uint)OID.SArcaneFont);
 
