@@ -14,7 +14,7 @@ namespace BossMod;
 public sealed class ModuleViewer : IDisposable
 {
     private record struct ModuleInfo(BossModuleRegistry.Info Info, string Name, int SortOrder);
-    private record struct ModuleGroupInfo(string Name, uint Id, uint SortOrder, uint Icon = 0);
+    private record struct ModuleGroupInfo(string Name, uint Id, uint SortOrder, uint Icon = default);
     private record struct ModuleGroup(ModuleGroupInfo Info, List<ModuleInfo> Modules);
 
     private readonly PlanDatabase? _planDB;

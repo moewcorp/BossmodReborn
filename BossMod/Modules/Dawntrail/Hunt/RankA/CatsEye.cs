@@ -17,10 +17,10 @@ public enum AID : uint
     BloodshotGazeInverted = 39668, // Boss->players, 5.0s cast, range 8 circle, inverted.
 }
 
-class CatsEyeGaze(BossModule module) : Components.CastGaze(module, (uint)AID.CatsEye1);
-class CatsEyeInvertedGaze(BossModule module) : Components.CastGaze(module, (uint)AID.CatsEye2, true);
-class GravitationalWave(BossModule module) : Components.RaidwideCast(module, (uint)AID.GravitationalWave);
-class BloodshotGaze(BossModule module) : Components.GenericGaze(module)
+sealed class CatsEyeGaze(BossModule module) : Components.CastGaze(module, (uint)AID.CatsEye1);
+sealed class CatsEyeInvertedGaze(BossModule module) : Components.CastGaze(module, (uint)AID.CatsEye2, true);
+sealed class GravitationalWave(BossModule module) : Components.RaidwideCast(module, (uint)AID.GravitationalWave);
+sealed class BloodshotGaze(BossModule module) : Components.GenericGaze(module)
 {
     private readonly BloodshotStack _stack = module.FindComponent<BloodshotStack>()!;
     private readonly BloodshotStackInverted _stackInv = module.FindComponent<BloodshotStackInverted>()!;
@@ -42,10 +42,10 @@ class BloodshotGaze(BossModule module) : Components.GenericGaze(module)
     }
 }
 
-class BloodshotStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BloodshotGaze, 8f, 8);
-class BloodshotStackInverted(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BloodshotGazeInverted, 8f, 8);
+sealed class BloodshotStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BloodshotGaze, 8f, 8);
+sealed class BloodshotStackInverted(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BloodshotGazeInverted, 8f, 8);
 
-class CatsEyeStates : StateMachineBuilder
+sealed class CatsEyeStates : StateMachineBuilder
 {
     public CatsEyeStates(BossModule module) : base(module)
     {
@@ -60,4 +60,4 @@ class CatsEyeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin, Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13436)]
-public class CatsEye(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class CatsEye(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

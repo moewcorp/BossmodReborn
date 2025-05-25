@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN1TrinitySeeker;
 
-class IronSplitter(BossModule module) : Components.GenericAOEs(module, (uint)AID.IronSplitter)
+sealed class IronSplitter(BossModule module) : Components.GenericAOEs(module, (uint)AID.IronSplitter)
 {
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(4f), new AOEShapeDonut(8f, 12f), new AOEShapeDonut(16f, 20f),

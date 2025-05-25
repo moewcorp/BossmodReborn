@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
-class DRN6QueenStates : StateMachineBuilder
+sealed class DRN6QueenStates : StateMachineBuilder
 {
     public DRN6QueenStates(BossModule module) : base(module)
     {

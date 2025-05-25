@@ -5,7 +5,7 @@ using System.IO;
 
 namespace BossMod.ReplayVisualization;
 
-class ReplayDetailsWindow : UIWindow
+sealed class ReplayDetailsWindow : UIWindow
 {
     private readonly ReplayPlayer _player;
     private readonly RotationDatabase _rotationDB;

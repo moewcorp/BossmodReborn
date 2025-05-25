@@ -2,7 +2,7 @@
 
 namespace BossMod.ReplayAnalysis;
 
-class ClassDefinitions
+sealed class ClassDefinitions
 {
     private const string GroupRoleActions = "Multi-role actions";
     private const string GroupLimitBreaks = "Shared limit breaks";
@@ -39,7 +39,7 @@ class ClassDefinitions
         public bool Error => Definition == null || Row == null || SeenDifferentInstantAnimLocks || SeenDifferentCastAnimLocks || PotentiallyRemoved || ReplayOnly;
     }
 
-    private class StatusData
+    private sealed class StatusData
     {
         public HashSet<ActionID> Actions = [];
         public bool OnSource;
@@ -49,7 +49,7 @@ class ClassDefinitions
         public string AppliedToString() => OnSource ? (OnTarget ? "self/target" : "self") : "target";
     }
 
-    private record class ClassData(Class ID, Class Base)
+    private sealed record class ClassData(Class ID, Class Base)
     {
         public readonly List<ActionData> Actions = [];
         public readonly SortedDictionary<int, List<ActionData>> ByCDGroup = [];
@@ -462,7 +462,7 @@ class ClassDefinitions
         }
     }
 
-    private record class AIDWriter(string Namespace) : EnumWriter("AID")
+    private sealed record class AIDWriter(string Namespace) : EnumWriter("AID")
     {
         public void Add(ActionData a, bool allowClasses, bool shared = false)
         {
@@ -566,7 +566,7 @@ class ClassDefinitions
         }
     }
 
-    private record class DefinitionWriter(string Namespace)
+    private sealed record class DefinitionWriter(string Namespace)
     {
         private readonly StringBuilder _sb = new("public Definitions(ActionDefinitions d)\n{\n");
 
@@ -618,7 +618,7 @@ class ClassDefinitions
         };
     }
 
-    private record class UnlockWriter(string EnumName)
+    private sealed record class UnlockWriter(string EnumName)
     {
         private readonly StringBuilder _sb = new($"public static bool Unlocked({EnumName} id, int level, int questProgress) => id switch\n{{\n");
 

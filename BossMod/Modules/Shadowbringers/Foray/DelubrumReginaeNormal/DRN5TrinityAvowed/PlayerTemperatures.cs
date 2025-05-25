@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class PlayerTemperatures(BossModule module) : BossComponent(module)
+sealed class PlayerTemperatures(BossModule module) : BossComponent(module)
 {
     public readonly uint[] Temperatures = new uint[PartyState.MaxAllianceSize];
 

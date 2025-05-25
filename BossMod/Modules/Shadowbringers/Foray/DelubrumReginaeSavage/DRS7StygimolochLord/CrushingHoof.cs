@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS7StygimolochLord;
 
-class CrushingHoof(BossModule module) : Components.GenericAOEs(module, (uint)AID.CrushingHoofAOE)
+sealed class CrushingHoof(BossModule module) : Components.GenericAOEs(module, (uint)AID.CrushingHoofAOE)
 {
     private AOEInstance? _aoe;
     private static readonly AOEShapeCircle circle = new(25);

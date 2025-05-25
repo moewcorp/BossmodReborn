@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A13ArkAngels;
 
-class ConcertedDissolution(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ConcertedDissolution, new AOEShapeCone(40f, 20f.Degrees()))
+sealed class ConcertedDissolution(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ConcertedDissolution, new AOEShapeCone(40f, 20f.Degrees()))
 {
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {

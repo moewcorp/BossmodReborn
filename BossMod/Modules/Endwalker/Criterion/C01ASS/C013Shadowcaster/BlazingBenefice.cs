@@ -38,5 +38,5 @@ abstract class BlazingBenifice(BossModule module, uint aid, uint oid) : Componen
     }
 }
 
-class NBlazingBenifice(BossModule module) : BlazingBenifice(module, (uint)AID.NBlazingBenifice, (uint)OID.NArcaneFont);
-class SBlazingBenifice(BossModule module) : BlazingBenifice(module, (uint)AID.SBlazingBenifice, (uint)OID.SArcaneFont);
+sealed class NBlazingBenifice(BossModule module) : BlazingBenifice(module, (uint)AID.NBlazingBenifice, (uint)OID.NArcaneFont);
+sealed class SBlazingBenifice(BossModule module) : BlazingBenifice(module, (uint)AID.SBlazingBenifice, (uint)OID.SArcaneFont);

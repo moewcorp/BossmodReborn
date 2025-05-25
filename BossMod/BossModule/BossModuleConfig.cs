@@ -1,7 +1,7 @@
 ﻿namespace BossMod;
 
 [ConfigDisplay(Name = "Boss modules and radar", Order = 1)]
-public class BossModuleConfig : ConfigNode
+public sealed class BossModuleConfig : ConfigNode
 {
     // boss module settings
     [PropertyDisplay("Minimal maturity for the module to be loaded", tooltip: "Some modules will have the \"WIP\" status and will not automatically load unless you change this")]

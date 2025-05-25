@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS4QueensGuard;
 
-class TurretsTour(BossModule module) : Components.GenericAOEs(module)
+sealed class TurretsTour(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(6);
     private static readonly AOEShapeRect rect = new(55f, 3f);

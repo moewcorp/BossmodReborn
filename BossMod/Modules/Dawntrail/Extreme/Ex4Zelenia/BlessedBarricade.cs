@@ -1,8 +1,8 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class RosebloodDrop(BossModule module) : Components.Adds(module, (uint)OID.RosebloodDrop2);
+sealed class RosebloodDrop(BossModule module) : Components.Adds(module, (uint)OID.RosebloodDrop2);
 
-class Towers2(BossModule module) : Components.GenericTowers(module)
+sealed class Towers2(BossModule module) : Components.GenericTowers(module)
 {
     private BitMask forbidden;
 
@@ -35,7 +35,7 @@ class Towers2(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-class SpearpointPushAOE(BossModule module) : Components.GenericAOEs(module)
+sealed class SpearpointPushAOE(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(2);
     private static readonly AOEShapeRect rect = new(33f, 37f);
@@ -59,7 +59,7 @@ class SpearpointPushAOE(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SpearpointPushBait(BossModule module) : Components.GenericBaitAway(module, onlyShowOutlines: true)
+sealed class SpearpointPushBait(BossModule module) : Components.GenericBaitAway(module, onlyShowOutlines: true)
 {
     private static readonly AOEShapeRect rect = new(32f, 37f, 1f);
     private Angle offset;

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS6TrinityAvowed;
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 

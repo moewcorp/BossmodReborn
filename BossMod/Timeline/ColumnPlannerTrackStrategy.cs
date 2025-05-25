@@ -4,10 +4,10 @@ using ImGuiNET;
 
 namespace BossMod;
 
-public class ColumnPlannerTrackStrategy(Timeline timeline, StateMachineTree tree, List<int> phaseBranches, StrategyConfig config, int level, BossModuleRegistry.Info? moduleInfo, StrategyValue defaultOverride)
+public sealed class ColumnPlannerTrackStrategy(Timeline timeline, StateMachineTree tree, List<int> phaseBranches, StrategyConfig config, int level, BossModuleRegistry.Info? moduleInfo, StrategyValue defaultOverride)
     : ColumnPlannerTrack(timeline, tree, phaseBranches, config.UIName)
 {
-    public StrategyValue DefaultOverride { get; private set; } = defaultOverride;
+    public StrategyValue DefaultOverride = defaultOverride;
 
     protected override StrategyValue GetDefaultValue()
     {

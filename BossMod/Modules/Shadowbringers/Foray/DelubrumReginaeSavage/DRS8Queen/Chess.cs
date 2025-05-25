@@ -70,10 +70,10 @@ abstract class Chess(BossModule module) : Components.GenericAOEs(module)
     };
 }
 
-class QueensWill(BossModule module) : Chess(module) { }
+sealed class QueensWill(BossModule module) : Chess(module) { }
 
 // TODO: enumerate all possible safespots instead? after first pair of casts, select still suitable second safespots
-class QueensEdict(BossModule module) : Chess(module)
+sealed class QueensEdict(BossModule module) : Chess(module)
 {
     public class PlayerState
     {

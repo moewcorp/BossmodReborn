@@ -8,7 +8,7 @@ using System.IO;
 
 namespace BossMod;
 
-public class ReplayManagementWindow : UIWindow
+public sealed class ReplayManagementWindow : UIWindow
 {
     private readonly WorldState _ws;
     private DirectoryInfo _logDir;

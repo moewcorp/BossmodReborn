@@ -1,9 +1,9 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class ValorousAscension(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.ValorousAscension1,
+sealed class ValorousAscension(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.ValorousAscension1,
 (uint)AID.ValorousAscension2, (uint)AID.ValorousAscension3]);
 
-class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(module)
+sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 4f);
     private readonly List<AOEInstance> _aoes = new(4);

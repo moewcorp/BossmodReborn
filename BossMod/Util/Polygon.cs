@@ -16,7 +16,7 @@ public readonly struct RelTriangle(WDir a, WDir b, WDir c)
 
 // a complex polygon that is a single simple-polygon exterior minus 0 or more simple-polygon holes; all edges are assumed to be non intersecting
 // hole-starts list contains starting index of each hole
-public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
+public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
 {
     // constructor for simple polygon
     public RelPolygonWithHoles(List<WDir> simpleVertices) : this(simpleVertices, []) { }
@@ -233,8 +233,10 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
 }
 
 // generic 'simplified' complex polygon that consists of 0 or more non-intersecting polygons with holes (note however that some polygons could be fully inside other polygon's hole)
-public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
+public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
 {
+    public readonly List<RelPolygonWithHoles> Parts = parts;
+
     public RelSimplifiedComplexPolygon() : this(new List<RelPolygonWithHoles>()) { }
 
     // constructors for simple polygon
@@ -255,7 +257,8 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        for (var i = 0; i < Parts.Count; ++i)
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
             if (Parts[i].Contains(p))
                 return true;
         return false;
@@ -263,10 +266,10 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
-public class PolygonClipper
+public sealed class PolygonClipper
 {
-    public const float Scale = 1024 * 1024; // note: we need at least 10 bits for integer part (-1024 to 1024 range); using 11 bits leaves 20 bits for fractional part; power-of-two scale should reduce rounding issues
-    public const float InvScale = 1 / Scale;
+    public const float Scale = 1024f * 1024f; // note: we need at least 10 bits for integer part (-1024 to 1024 range); using 11 bits leaves 20 bits for fractional part; power-of-two scale should reduce rounding issues
+    public const float InvScale = 1f / Scale;
 
     // reusable representation of the complex polygon ready for boolean operations
     public record class Operand
@@ -404,7 +407,7 @@ public readonly struct Edge(float ax, float ay, float dx, float dy)
     public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1f / (dx * dx + dy * dy + Epsilon);
 }
 
-public class SpatialIndex
+public sealed class SpatialIndex
 {
     private int[][] _grid = [];
     private readonly Edge[] _edges;

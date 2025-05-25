@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN3QueensGuard;
 
-class DRN3QueensGuardStates : StateMachineBuilder
+sealed class DRN3QueensGuardStates : StateMachineBuilder
 {
     public DRN3QueensGuardStates(BossModule module) : base(module)
     {

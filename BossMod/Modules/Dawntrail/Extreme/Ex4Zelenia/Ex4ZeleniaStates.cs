@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class Ex4ZeleniaStates : StateMachineBuilder
+sealed class Ex4ZeleniaStates : StateMachineBuilder
 {
     public Ex4ZeleniaStates(BossModule module) : base(module)
     {

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
 
-class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOEs(module)
+sealed class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Mechanic { None, Left, Right, Stack, Spread }
 
@@ -119,7 +119,7 @@ class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOEs(modul
     }
 }
 
-class ThirdArtOfDarknessHyperFocusedParticleBeam(BossModule module) : Components.GenericBaitAway(module)
+sealed class ThirdArtOfDarknessHyperFocusedParticleBeam(BossModule module) : Components.GenericBaitAway(module)
 {
     private readonly ThirdArtOfDarknessCleave? _main = module.FindComponent<ThirdArtOfDarknessCleave>();
 
@@ -136,7 +136,7 @@ class ThirdArtOfDarknessHyperFocusedParticleBeam(BossModule module) : Components
     }
 }
 
-class ThirdArtOfDarknessMultiProngedParticleBeam(BossModule module) : Components.UniformStackSpread(module, 3f, 0, 2)
+sealed class ThirdArtOfDarknessMultiProngedParticleBeam(BossModule module) : Components.UniformStackSpread(module, 3f, default, 2)
 {
     private readonly ThirdArtOfDarknessCleave? _main = module.FindComponent<ThirdArtOfDarknessCleave>();
 

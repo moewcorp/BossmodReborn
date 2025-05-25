@@ -5,7 +5,7 @@
 // - 00200010 - phase 1
 // - 00020001 - phase 2
 // - 00040004 - remove telegraph (note that actual bounds are controlled by something else!)
-class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
+sealed class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Ch01CloudOfDarknessConfig _config = Service.Config.Get<Ch01CloudOfDarknessConfig>();
     private readonly DateTime[] _breakTime = new DateTime[28];
@@ -142,7 +142,7 @@ class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Phase2AIHints(BossModule module) : BossComponent(module)
+sealed class Phase2AIHints(BossModule module) : BossComponent(module)
 {
     private BitMask isInside;
 

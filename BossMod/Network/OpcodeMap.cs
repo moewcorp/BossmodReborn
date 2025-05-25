@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Network;
 
 // map betweek network message opcodes (which are randomized every build) to more-or-less stable indices
-public class OpcodeMap
+public sealed class OpcodeMap
 {
     public readonly List<int> OpcodeToID = [];
     public readonly List<int> IDToOpcode = [];

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class StockBreak(BossModule module) : Components.GenericStackSpread(module)
+sealed class StockBreak(BossModule module) : Components.GenericStackSpread(module)
 {
     public int NumCasts;
 

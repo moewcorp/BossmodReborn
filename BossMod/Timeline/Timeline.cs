@@ -4,7 +4,7 @@ using ImGuiNET;
 namespace BossMod;
 
 // utility for drawing time-related data
-public class Timeline
+public sealed class Timeline
 {
     // definition of a timeline column
     public class Column(Timeline timeline)
@@ -94,9 +94,9 @@ public class Timeline
     public float MinTime;
     public float MaxTime;
     public float? CurrentTime;
-    public float PixelsPerSecond = 10 * ImGuiHelpers.GlobalScale;
-    public float TopMargin = 20 * ImGuiHelpers.GlobalScale;
-    public float BottomMargin = 5 * ImGuiHelpers.GlobalScale;
+    public float PixelsPerSecond = 10f * ImGuiHelpers.GlobalScale;
+    public float TopMargin = 20f * ImGuiHelpers.GlobalScale;
+    public float BottomMargin = 5f * ImGuiHelpers.GlobalScale;
     public ColumnGroup Columns;
 
     private float _tickFrequency = 5;
@@ -107,10 +107,10 @@ public class Timeline
     private Vector2 _screenClientTL;
     private readonly List<List<string>> _tooltip = [];
     private readonly List<(float t, uint color)> _highlightTime = [];
-    public float MinVisibleTime { get; private set; }
+    public float MinVisibleTime;
     public float MaxVisibleTime => MinVisibleTime + Height / PixelsPerSecond;
 
-    public float Height { get; private set; }
+    public float Height;
     public Vector2 ScreenClientTL => _screenClientTL;
 
     public Timeline()

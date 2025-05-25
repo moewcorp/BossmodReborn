@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class DonutSectorTowers(BossModule module) : Components.GenericTowers(module, (uint)AID.ExplosionDonutSectorTower)
+sealed class DonutSectorTowers(BossModule module) : Components.GenericTowers(module, (uint)AID.ExplosionDonutSectorTower)
 {
     private readonly FloorTiles _tiles = module.FindComponent<FloorTiles>()!;
     private BitMask forbidden;

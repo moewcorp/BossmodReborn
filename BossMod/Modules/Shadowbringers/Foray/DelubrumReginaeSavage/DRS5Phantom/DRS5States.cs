@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS5Phantom;
 
-class DRS5PhantomStates : StateMachineBuilder
+sealed class DRS5PhantomStates : StateMachineBuilder
 {
     public DRS5PhantomStates(BossModule module) : base(module)
     {
@@ -30,7 +30,10 @@ class DRS5PhantomStates : StateMachineBuilder
     private void ManipulateInvertMiasma(uint id, float delay)
     {
         Cast(id, (uint)AID.WeaveMiasma, delay, 3)
-            .ActivateOnEnter<Miasma>();
+            .ActivateOnEnter<CreepingMiasma>()
+            .ActivateOnEnter<LingeringMiasma>()
+            .ActivateOnEnter<SwirlingMiasma>()
+            .ActivateOnEnter<MiasmaCounter>();
         // note: marker eobjs spawn ~0.2s after cast start, appear (eobjanim 00010002) ~1.0s after cast end, low row activates (eobjanim 00080010) right before next cast start
         // low row deactivates (eobjanim 00040020) and high row activates right when first set of aoes finish - ~1.0s after manipulate cast end
         CastMulti(id + 0x10, [(uint)AID.ManipulateMiasma, (uint)AID.InvertMiasma], 7.1f, 9, "Miasma start");
@@ -47,8 +50,11 @@ class DRS5PhantomStates : StateMachineBuilder
         // +11.6-12.6: rest(2,1) cast
         // ...
         // +21.2-22.2s: rest(1,7)
-        ComponentCondition<Miasma>(id + 0x20, 22.2f, comp => comp.NumLanesFinished >= 8, "Miasma resolve")
-            .DeactivateOnExit<Miasma>();
+        ComponentCondition<MiasmaCounter>(id + 0x20, 22.2f, comp => comp.NumLinesFinished >= 8, "Miasma resolve")
+            .DeactivateOnExit<CreepingMiasma>()
+            .DeactivateOnExit<LingeringMiasma>()
+            .DeactivateOnExit<SwirlingMiasma>()
+            .DeactivateOnExit<MiasmaCounter>();
     }
 
     private void SummonMaledictionOfRuin(uint id, float delay)

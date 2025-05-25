@@ -3,7 +3,7 @@ using Lumina.Excel.Sheets;
 
 namespace BossMod.ReplayAnalysis;
 
-class IconInfo : CommonEnumInfo
+sealed class IconInfo : CommonEnumInfo
 {
     private class IconData
     {

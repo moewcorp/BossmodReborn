@@ -4,7 +4,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-public class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance)
+public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance)
 {
     private readonly MapVisualizer?[] _zoneVisualizers = new MapVisualizer?[hints.ForbiddenZones.Count];
     private MapVisualizer? _pathfindVisualizer;

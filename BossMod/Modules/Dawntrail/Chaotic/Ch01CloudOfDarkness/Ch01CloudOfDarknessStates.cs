@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
 
-class Ch01CloudOfDarknessStates : StateMachineBuilder
+sealed class Ch01CloudOfDarknessStates : StateMachineBuilder
 {
     public Ch01CloudOfDarknessStates(BossModule module) : base(module)
     {

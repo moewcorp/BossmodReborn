@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
+sealed class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
     private readonly AOEInstance?[] _aoes = new AOEInstance?[PartyState.MaxAllianceSize];

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class ElementalImpact(BossModule module) : Components.GenericAOEs(module)
+sealed class ElementalImpact(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCircle circle = new(20f);
@@ -22,7 +22,7 @@ class ElementalImpact(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(module)
+sealed class ElementalImpactTemperature(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance>[] _aoes = new List<AOEInstance>[PartyState.MaxAllianceSize];
     private static readonly AOEShapeCircle circle = new(22f);

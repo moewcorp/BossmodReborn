@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
 
-class Break(BossModule module) : Components.GenericGaze(module)
+sealed class Break(BossModule module) : Components.GenericGaze(module)
 {
     public readonly List<Eye> Eyes = new(3);
 

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(2f);
     private AOEInstance? _aoe;

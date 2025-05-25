@@ -5,7 +5,7 @@ using ImGuiNET;
 
 namespace BossMod;
 
-class Camera
+sealed class Camera
 {
     public static Camera? Instance;
 

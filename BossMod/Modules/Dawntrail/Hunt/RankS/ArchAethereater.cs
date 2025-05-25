@@ -41,7 +41,7 @@ public enum SID : uint
     DeepFreeze = 3519 // none->player, extra=0x0
 }
 
-class Heatstroke(BossModule module) : Components.StayMove(module, 3f)
+sealed class Heatstroke(BossModule module) : Components.StayMove(module, 3f)
 {
     private BitMask _heatstroke;
 
@@ -76,7 +76,7 @@ class Heatstroke(BossModule module) : Components.StayMove(module, 3f)
     }
 }
 
-class ColdSweats(BossModule module) : Components.StayMove(module, 3)
+sealed class ColdSweats(BossModule module) : Components.StayMove(module, 3)
 {
     private BitMask _coldsweats;
 
@@ -111,15 +111,15 @@ class ColdSweats(BossModule module) : Components.StayMove(module, 3)
     }
 }
 
-class Aethermodynamics(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Aethermodynamics1, (uint)AID.Aethermodynamics2,
+sealed class Aethermodynamics(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Aethermodynamics1, (uint)AID.Aethermodynamics2,
 (uint)AID.Aethermodynamics3, (uint)AID.Aethermodynamics4]);
 
-class Obliterate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Obliterate, 6f, 8);
-class Meltdown(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Meltdown, new AOEShapeRect(40f, 5f));
-class BlizzardIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BlizzardIV1, (uint)AID.BlizzardIV5], new AOEShapeDonut(6f, 40f));
-class FireIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FireIV1, (uint)AID.FireIV5], 15f);
+sealed class Obliterate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Obliterate, 6f, 8);
+sealed class Meltdown(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Meltdown, new AOEShapeRect(40f, 5f));
+sealed class BlizzardIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BlizzardIV1, (uint)AID.BlizzardIV5], new AOEShapeDonut(6f, 40f));
+sealed class FireIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FireIV1, (uint)AID.FireIV5], 15f);
 
-class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOEs(module)
+sealed class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
     private static readonly AOEShapeDonut donut = new(6f, 40f);
@@ -180,7 +180,7 @@ class SoullessStreamFireBlizzardCombo(BossModule module) : Components.GenericAOE
     }
 }
 
-class ArchAethereaterStates : StateMachineBuilder
+sealed class ArchAethereaterStates : StateMachineBuilder
 {
     public ArchAethereaterStates(BossModule module) : base(module)
     {
@@ -197,4 +197,4 @@ class ArchAethereaterStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.SS, NameID = 13406)]
-public class ArchAethereater(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class ArchAethereater(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

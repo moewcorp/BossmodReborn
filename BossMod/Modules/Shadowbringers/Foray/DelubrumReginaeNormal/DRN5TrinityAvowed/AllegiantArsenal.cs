@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
+sealed class AllegiantArsenal(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 

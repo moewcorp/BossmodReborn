@@ -40,14 +40,14 @@ public enum AID : uint
     ChimneySmack = 38468, // Helper->player, 5.0s cast, single-target, tankbuster
 }
 
-class Anthrabomb(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Anthrabomb1, (uint)AID.Anthrabomb2], 10f);
-class AnthrabombSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AnthrabombSpread, 6f);
-class HotBlast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HotBlast1, (uint)AID.HotBlast2], new AOEShapeRect(40f, 3f));
-class CarbonaceousCombustion(BossModule module) : Components.RaidwideCast(module, (uint)AID.CarbonaceousCombustion);
-class ChimneySmack(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ChimneySmack);
-class BurningCoals(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BurningCoals, 6f, 4, 4);
+sealed class Anthrabomb(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Anthrabomb1, (uint)AID.Anthrabomb2], 10f);
+sealed class AnthrabombSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AnthrabombSpread, 6f);
+sealed class HotBlast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HotBlast1, (uint)AID.HotBlast2], new AOEShapeRect(40f, 3f));
+sealed class CarbonaceousCombustion(BossModule module) : Components.RaidwideCast(module, (uint)AID.CarbonaceousCombustion);
+sealed class ChimneySmack(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ChimneySmack);
+sealed class BurningCoals(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BurningCoals, 6f, 4, 4);
 
-class D072AnthraciteStates : StateMachineBuilder
+sealed class D072AnthraciteStates : StateMachineBuilder
 {
     public D072AnthraciteStates(BossModule module) : base(module)
     {
@@ -62,7 +62,7 @@ class D072AnthraciteStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12853)]
-public class D072Anthracite(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D072Anthracite(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private const float Radius = 3.8f;
     private static readonly Square square1 = new(new(-118.001f, -56.999f), Radius);

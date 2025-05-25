@@ -36,7 +36,7 @@ public enum TetherID : uint
     Freeze = 272 // RorrlohTeh/QorrlohTeh1->Boss
 }
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 23f);
     private AOEInstance? _aoe;
@@ -58,7 +58,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(module)
+sealed class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(20f, 10f);
     private static readonly AOEShapeCircle circle = new(15f);
@@ -136,11 +136,11 @@ class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class FrostingFracas(BossModule module) : Components.RaidwideCast(module, (uint)AID.FrostingFracas);
-class SnowBoulder(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SnowBoulder, new AOEShapeRect(50f, 3f), 6);
-class SparklingSprinkling(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SparklingSprinkling, 5f);
+sealed class FrostingFracas(BossModule module) : Components.RaidwideCast(module, (uint)AID.FrostingFracas);
+sealed class SnowBoulder(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SnowBoulder, new AOEShapeRect(50f, 3f), 6);
+sealed class SparklingSprinkling(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SparklingSprinkling, 5f);
 
-class D021RyoqorTertehStates : StateMachineBuilder
+sealed class D021RyoqorTertehStates : StateMachineBuilder
 {
     public D021RyoqorTertehStates(BossModule module) : base(module)
     {
@@ -154,7 +154,7 @@ class D021RyoqorTertehStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 824, NameID = 12699)]
-public class D021RyoqorTerteh(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
+public sealed class D021RyoqorTerteh(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
     private static readonly WPos arenaCenter = new(-108f, 119f);
     public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(arenaCenter, 22.5f, 52)], [new Rectangle(new(-108f, 141.95f), 20f, 1.25f),

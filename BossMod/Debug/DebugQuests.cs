@@ -8,7 +8,7 @@ using Lumina.Excel.Sheets;
 
 namespace BossMod;
 
-unsafe class DebugQuests
+sealed unsafe class DebugQuests
 {
     private class NpcData
     {

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C01ASS.C012Gladiator;
 
-class CurseOfTheFallen(BossModule module) : Components.UniformStackSpread(module, 5f, 6f, 3, 3, true)
+sealed class CurseOfTheFallen(BossModule module) : Components.UniformStackSpread(module, 5f, 6f, 3, 3, true)
 {
     private readonly List<Actor> _fallen = [];
     private Actor? _thunderous;
@@ -75,25 +75,25 @@ class CurseOfTheFallen(BossModule module) : Components.UniformStackSpread(module
 }
 
 abstract class RingOfMight1Out(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 8f);
-class NRingOfMight1Out(BossModule module) : RingOfMight1Out(module, (uint)AID.NRingOfMight1Out);
-class SRingOfMight1Out(BossModule module) : RingOfMight1Out(module, (uint)AID.SRingOfMight1Out);
+sealed class NRingOfMight1Out(BossModule module) : RingOfMight1Out(module, (uint)AID.NRingOfMight1Out);
+sealed class SRingOfMight1Out(BossModule module) : RingOfMight1Out(module, (uint)AID.SRingOfMight1Out);
 
 abstract class RingOfMight2Out(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 13f);
-class NRingOfMight2Out(BossModule module) : RingOfMight2Out(module, (uint)AID.NRingOfMight2Out);
-class SRingOfMight2Out(BossModule module) : RingOfMight2Out(module, (uint)AID.SRingOfMight2Out);
+sealed class NRingOfMight2Out(BossModule module) : RingOfMight2Out(module, (uint)AID.NRingOfMight2Out);
+sealed class SRingOfMight2Out(BossModule module) : RingOfMight2Out(module, (uint)AID.SRingOfMight2Out);
 
 abstract class RingOfMight3Out(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 18f);
-class NRingOfMight3Out(BossModule module) : RingOfMight3Out(module, (uint)AID.NRingOfMight3Out);
-class SRingOfMight3Out(BossModule module) : RingOfMight3Out(module, (uint)AID.SRingOfMight3Out);
+sealed class NRingOfMight3Out(BossModule module) : RingOfMight3Out(module, (uint)AID.NRingOfMight3Out);
+sealed class SRingOfMight3Out(BossModule module) : RingOfMight3Out(module, (uint)AID.SRingOfMight3Out);
 
 abstract class RingOfMight1In(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(8f, 30f));
-class NRingOfMight1In(BossModule module) : RingOfMight1In(module, (uint)AID.NRingOfMight1In);
-class SRingOfMight1In(BossModule module) : RingOfMight1In(module, (uint)AID.SRingOfMight1In);
+sealed class NRingOfMight1In(BossModule module) : RingOfMight1In(module, (uint)AID.NRingOfMight1In);
+sealed class SRingOfMight1In(BossModule module) : RingOfMight1In(module, (uint)AID.SRingOfMight1In);
 
 abstract class RingOfMight2In(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(13f, 30f));
-class NRingOfMight2In(BossModule module) : RingOfMight2In(module, (uint)AID.NRingOfMight2In);
-class SRingOfMight2In(BossModule module) : RingOfMight2In(module, (uint)AID.SRingOfMight2In);
+sealed class NRingOfMight2In(BossModule module) : RingOfMight2In(module, (uint)AID.NRingOfMight2In);
+sealed class SRingOfMight2In(BossModule module) : RingOfMight2In(module, (uint)AID.SRingOfMight2In);
 
 abstract class RingOfMight3In(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeDonut(18f, 30f));
-class NRingOfMight3In(BossModule module) : RingOfMight3In(module, (uint)AID.NRingOfMight3In);
-class SRingOfMight3In(BossModule module) : RingOfMight3In(module, (uint)AID.SRingOfMight3In);
+sealed class NRingOfMight3In(BossModule module) : RingOfMight3In(module, (uint)AID.NRingOfMight3In);
+sealed class SRingOfMight3In(BossModule module) : RingOfMight3In(module, (uint)AID.SRingOfMight3In);

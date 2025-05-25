@@ -8,7 +8,7 @@
 // - goal: destination with X priority (X > 0); 'default' is considered a goal with priority 0
 // - goal and danger are mutually exclusive, 'danger' overriding 'goal' state
 // typically we try to find a path to goal with highest priority; if that fails, try lower priorities; if no paths can be found (e.g. we're currently inside an imminent aoe) we find direct path to closest safe pixel
-public class Map
+public sealed class Map
 {
     public float Resolution; // pixel size, in world units
     public int Width; // always even

@@ -13,5 +13,5 @@ abstract class SculptorsPassion(BossModule module, uint aid) : Components.Generi
         }
     }
 }
-class NSculptorsPassion(BossModule module) : SculptorsPassion(module, (uint)AID.NSculptorsPassion);
-class SSculptorsPassion(BossModule module) : SculptorsPassion(module, (uint)AID.SSculptorsPassion);
+sealed class NSculptorsPassion(BossModule module) : SculptorsPassion(module, (uint)AID.NSculptorsPassion);
+sealed class SSculptorsPassion(BossModule module) : SculptorsPassion(module, (uint)AID.SSculptorsPassion);

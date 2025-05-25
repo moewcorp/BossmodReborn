@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS4QueensGuard;
 
-class DRS4QueensGuardStates : StateMachineBuilder
+sealed class DRS4QueensGuardStates : StateMachineBuilder
 {
     readonly DRS4QueensGuard _module;
 

@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A14ShadowLord;
 
-class DamningStrikes(BossModule module) : Components.GenericTowers(module)
+sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

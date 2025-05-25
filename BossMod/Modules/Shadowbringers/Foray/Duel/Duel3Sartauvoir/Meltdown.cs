@@ -28,7 +28,7 @@ class Meltdown(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count; ++i)
             {
                 ref var aoe = ref aoes[i];
-                if (aoes[i].Origin == pos)
+                if (aoe.Origin == pos)
                 {
                     if (++aoe.ActorID == 8u)
                     {

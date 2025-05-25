@@ -35,17 +35,17 @@ public enum AID : uint
     OdiousUproar = 39481 // Boss->self, 5.0s cast, range 40 circle
 }
 
-class Flourish(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FightersFlourish1, (uint)AID.FightersFlourish2, (uint)AID.FightersFlourish3,
+sealed class Flourish(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FightersFlourish1, (uint)AID.FightersFlourish2, (uint)AID.FightersFlourish3,
 (uint)AID.DiscordantFlourish1, (uint)AID.DiscordantFlourish2, (uint)AID.DiscordantFlourish3], new AOEShapeCone(40f, 135f.Degrees()));
-class Fullmoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FullmoonFuryCircle1, (uint)AID.FullmoonFuryCircle2, (uint)AID.DiscordantMoonCircle], 20f);
-class DiscordantMoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FullmoonFuryDonut, (uint)AID.DiscordantMoonDonut1,
+sealed class Fullmoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FullmoonFuryCircle1, (uint)AID.FullmoonFuryCircle2, (uint)AID.DiscordantMoonCircle], 20f);
+sealed class DiscordantMoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FullmoonFuryDonut, (uint)AID.DiscordantMoonDonut1,
 (uint)AID.DiscordantMoonDonut2], new AOEShapeDonut(10f, 40f));
 
-class FlyingFist(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FlyingFist, new AOEShapeRect(40f, 4f));
-class OdiousUproar(BossModule module) : Components.RaidwideCast(module, (uint)AID.OdiousUproar);
-class EnervatingGloom(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.EnervatingGloom, 6f, 8);
+sealed class FlyingFist(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FlyingFist, new AOEShapeRect(40f, 4f));
+sealed class OdiousUproar(BossModule module) : Components.RaidwideCast(module, (uint)AID.OdiousUproar);
+sealed class EnervatingGloom(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.EnervatingGloom, 6f, 8);
 
-class KirlirgerTheAbhorrentStates : StateMachineBuilder
+sealed class KirlirgerTheAbhorrentStates : StateMachineBuilder
 {
     public KirlirgerTheAbhorrentStates(BossModule module) : base(module)
     {
@@ -60,4 +60,4 @@ class KirlirgerTheAbhorrentStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 13360)]
-public class KirlirgerTheAbhorrent(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class KirlirgerTheAbhorrent(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

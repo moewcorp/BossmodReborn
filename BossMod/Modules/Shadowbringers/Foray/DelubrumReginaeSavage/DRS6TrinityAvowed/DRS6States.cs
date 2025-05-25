@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRS6TrinityAvowed;
 
-class DRS6TrinityAvowedStates : StateMachineBuilder
+sealed class DRS6TrinityAvowedStates : StateMachineBuilder
 {
     public DRS6TrinityAvowedStates(BossModule module) : base(module)
     {

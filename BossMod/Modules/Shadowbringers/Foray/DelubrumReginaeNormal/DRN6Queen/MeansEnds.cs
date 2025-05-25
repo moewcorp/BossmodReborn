@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN6Queen;
 
-class MeansEnds(BossModule module) : Components.GenericAOEs(module)
+sealed class MeansEnds(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeCross cross = new(60f, 5f);

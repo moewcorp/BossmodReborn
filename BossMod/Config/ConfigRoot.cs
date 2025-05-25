@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace BossMod;
 
-public class ConfigRoot
+public sealed class ConfigRoot
 {
     public Event Modified = new();
     public readonly Dictionary<Type, ConfigNode> _nodes = [];

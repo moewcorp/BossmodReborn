@@ -97,16 +97,14 @@ abstract class LineVoltage(BossModule module, uint narrow, double delay, uint? w
     }
 }
 
-class LineVoltage1(BossModule module) : LineVoltage(module, (uint)AID.LineVoltageNarrow1, 1.5d);
-class LineVoltage2(BossModule module) : LineVoltage(module, (uint)AID.LineVoltageNarrow2, 2d, (uint)AID.LineVoltageWide1, (uint)AID.LineVoltageWide2);
+sealed class LineVoltage1(BossModule module) : LineVoltage(module, (uint)AID.LineVoltageNarrow1, 1.5d);
+sealed class LineVoltage2(BossModule module) : LineVoltage(module, (uint)AID.LineVoltageNarrow2, 2d, (uint)AID.LineVoltageWide1, (uint)AID.LineVoltageWide2);
 
-class LightningBolt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightningBolt, 6f);
-class LightningStorm(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LightningStorm, 5f);
-class ElectricalOverload(BossModule module) : Components.RaidwideCast(module, (uint)AID.ElectricalOverload);
-class SparkingFissure(BossModule module) : Components.RaidwideCast(module, (uint)AID.SparkingFissure);
-class SparkingFissureFirst(BossModule module) : Components.RaidwideCast(module, (uint)AID.SparkingFissureFirst);
+sealed class LightningBolt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightningBolt, 6f);
+sealed class LightningStorm(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LightningStorm, 5f);
+sealed class ElectricalOverloadSparkingFissure(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.ElectricalOverload, (uint)AID.SparkingFissureFirst, (uint)AID.SparkingFissure]);
 
-class CellShock(BossModule module) : Components.GenericAOEs(module)
+sealed class CellShock(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(26f);
     private AOEInstance? _aoe;
@@ -147,7 +145,7 @@ class CellShock(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class D091LindblumZaghnalStates : StateMachineBuilder
+sealed class D091LindblumZaghnalStates : StateMachineBuilder
 {
     public D091LindblumZaghnalStates(BossModule module) : base(module)
     {
@@ -156,15 +154,13 @@ class D091LindblumZaghnalStates : StateMachineBuilder
             .ActivateOnEnter<LineVoltage2>()
             .ActivateOnEnter<LightningBolt>()
             .ActivateOnEnter<LightningStorm>()
-            .ActivateOnEnter<ElectricalOverload>()
-            .ActivateOnEnter<SparkingFissure>()
-            .ActivateOnEnter<SparkingFissureFirst>()
+            .ActivateOnEnter<ElectricalOverloadSparkingFissure>()
             .ActivateOnEnter<CellShock>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13623, SortOrder = 3)]
-public class D091LindblumZaghnal(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D091LindblumZaghnal(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(73f, 277f), 19.5f, 64)], [new Rectangle(new(72f, 297f), 20f, 1.1f),
     new Rectangle(new(72f, 257f), 20f, 1.05f)]);
@@ -177,7 +173,8 @@ public class D091LindblumZaghnal(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch

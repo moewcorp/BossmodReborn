@@ -6,11 +6,10 @@ using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.Interop;
 using ImGuiNET;
-using System.Text;
 
 namespace BossMod;
 
-public class DebugObjects
+public sealed class DebugObjects
 {
     private readonly UITree _tree = new();
     private bool _showCrap;

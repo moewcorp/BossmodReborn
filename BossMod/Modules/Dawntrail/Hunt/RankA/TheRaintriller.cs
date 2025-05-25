@@ -34,7 +34,7 @@ public enum NPCYell : ushort
     RibbitRibbitChirp = 17793 // donut, donut, circle
 }
 
-class DoReMisery(BossModule module) : Components.GenericAOEs(module)
+sealed class DoReMisery(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(3);
     private AOEShape[] shapes = [];
@@ -126,9 +126,9 @@ class DoReMisery(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class DropOfVenom(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.DropOfVenom, 6f);
+sealed class DropOfVenom(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.DropOfVenom, 6f);
 
-class TheRaintrillerStates : StateMachineBuilder
+sealed class TheRaintrillerStates : StateMachineBuilder
 {
     public TheRaintrillerStates(BossModule module) : base(module)
     {
@@ -139,4 +139,4 @@ class TheRaintrillerStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Shinryin, Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 13442)]
-public class TheRaintriller(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class TheRaintriller(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

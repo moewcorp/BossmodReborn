@@ -1,10 +1,9 @@
 ﻿using BossMod.Autorotation;
 using ImGuiNET;
-using System.Runtime.InteropServices;
 
 namespace BossMod.ReplayVisualization;
 
-class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB, ReplayDetailsWindow timelineSync)
+sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB, ReplayDetailsWindow timelineSync)
 {
     record struct Lists(OpList? Ops, IPCList? IPCs);
 

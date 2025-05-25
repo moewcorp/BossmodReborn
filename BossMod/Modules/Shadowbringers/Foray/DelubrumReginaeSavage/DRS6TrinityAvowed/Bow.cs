@@ -123,16 +123,16 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
     }
 }
 
-class FlamesOfBozja1(BossModule module) : FlamesOfBozja(module, false);
+sealed class FlamesOfBozja1(BossModule module) : FlamesOfBozja(module, false);
 
-class QuickMarchBow1(BossModule module) : QuickMarch(module)
+sealed class QuickMarchBow1(BossModule module) : QuickMarch(module)
 {
     private readonly FlamesOfBozja1? _flames = module.FindComponent<FlamesOfBozja1>();
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos) || (_flames?.AOE?.Shape.Check(pos, _flames.AOE.Value.Origin, _flames.AOE.Value.Rotation) ?? false);
 }
 
-class ShimmeringShot1(BossModule module) : ShimmeringShot(module, 12.8f)
+sealed class ShimmeringShot1(BossModule module) : ShimmeringShot(module, 12.8f)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -141,14 +141,14 @@ class ShimmeringShot1(BossModule module) : ShimmeringShot(module, 12.8f)
     }
 }
 
-class FlamesOfBozja2(BossModule module) : FlamesOfBozja(module, true);
+sealed class FlamesOfBozja2(BossModule module) : FlamesOfBozja(module, true);
 
-class ShimmeringShot2(BossModule module) : ShimmeringShot(module, 14.0f)
+sealed class ShimmeringShot2(BossModule module) : ShimmeringShot(module, 14.0f)
 {
     public override void AddHints(int slot, Actor actor, TextHints hints) { } // no need for hints, quick march handles that
 }
 
-class QuickMarchBow2(BossModule module) : QuickMarch(module)
+sealed class QuickMarchBow2(BossModule module) : QuickMarch(module)
 {
     private readonly ShimmeringShot2? _shimmering = module.FindComponent<ShimmeringShot2>();
 

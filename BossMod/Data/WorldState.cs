@@ -78,7 +78,7 @@ public sealed class WorldState
     }
     // implementation of operations
     public Event<OpFrameStart> FrameStarted = new();
-    public sealed record class OpFrameStart(FrameState Frame, TimeSpan PrevUpdateTime, ClientState.Gauge GaugePayload, Angle CameraAzimuth) : Operation
+    public sealed record class OpFrameStart(in FrameState Frame, TimeSpan PrevUpdateTime, ClientState.Gauge GaugePayload, Angle CameraAzimuth) : Operation
     {
         protected override void Exec(WorldState ws)
         {

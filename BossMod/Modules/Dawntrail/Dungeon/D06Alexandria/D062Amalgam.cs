@@ -38,7 +38,7 @@ public enum AID : uint
     TernaryCharge3 = 39256, // Helper->location, 8.0s cast, range 20-30 donut
 }
 
-class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D062Amalgam.ArenaCenter, 23f)], [new Square(D062Amalgam.ArenaCenter, 20f)]);
     private AOEInstance? _aoe;
@@ -60,19 +60,18 @@ class ElectrowaveArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Electrowave(BossModule module) : Components.RaidwideCast(module, (uint)AID.Electrowave);
-class Disassembly(BossModule module) : Components.RaidwideCast(module, (uint)AID.Disassembly);
-class CentralizedCurrent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CentralizedCurrent, new AOEShapeRect(90f, 7.5f));
+sealed class ElectrowaveDisassembly(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Electrowave, (uint)AID.Disassembly]);
+sealed class CentralizedCurrent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CentralizedCurrent, new AOEShapeRect(90f, 7.5f));
 
-class SplitCurrent(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SplitCurrent1, (uint)AID.SplitCurrent2], new AOEShapeRect(90f, 12.5f));
-class SupercellMatrix1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SupercellMatrix1, new AOEShapeTriCone(40f, 45.Degrees()));
-class SupercellMatrix2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SupercellMatrix2, new AOEShapeRect(55f, 4f));
-class StaticSpark(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.StaticSpark, 6f);
-class Amalgamight(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Amalgamight);
-class Voltburst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voltburst, 6f);
-class Superbolt(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Superbolt, 6f, 4, 4);
+sealed class SplitCurrent(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SplitCurrent1, (uint)AID.SplitCurrent2], new AOEShapeRect(90f, 12.5f));
+sealed class SupercellMatrix1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SupercellMatrix1, new AOEShapeTriCone(40f, 45.Degrees()));
+sealed class SupercellMatrix2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SupercellMatrix2, new AOEShapeRect(55f, 4f));
+sealed class StaticSpark(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.StaticSpark, 6f);
+sealed class Amalgamight(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Amalgamight);
+sealed class Voltburst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voltburst, 6f);
+sealed class Superbolt(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Superbolt, 6f, 4, 4);
 
-class TernaryCharge(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class TernaryCharge(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
@@ -98,14 +97,13 @@ class TernaryCharge(BossModule module) : Components.ConcentricAOEs(module, _shap
     }
 }
 
-class D062AmalgamStates : StateMachineBuilder
+sealed class D062AmalgamStates : StateMachineBuilder
 {
     public D062AmalgamStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ElectrowaveArenaChange>()
-            .ActivateOnEnter<Electrowave>()
-            .ActivateOnEnter<Disassembly>()
+            .ActivateOnEnter<ElectrowaveDisassembly>()
             .ActivateOnEnter<CentralizedCurrent>()
             .ActivateOnEnter<SplitCurrent>()
             .ActivateOnEnter<SupercellMatrix1>()
@@ -119,7 +117,7 @@ class D062AmalgamStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS), erdelf", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 827, NameID = 12864)]
-public class D062Amalgam(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
+public sealed class D062Amalgam(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
     public static readonly WPos ArenaCenter = new(-533f, -373f);
     public static readonly ArenaBoundsSquare StartingBounds = new(23f);

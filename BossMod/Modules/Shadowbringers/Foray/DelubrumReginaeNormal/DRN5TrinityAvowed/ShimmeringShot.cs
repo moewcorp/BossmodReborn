@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN5TrinityAvowed;
 
-class ShimmeringShot(BossModule module) : Components.GenericAOEs(module)
+sealed class ShimmeringShot(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Pattern { Unknown, EWNormal, EWInverted, WENormal, WEInverted }
     private readonly PlayerTemperatures _temps = module.FindComponent<PlayerTemperatures>()!;

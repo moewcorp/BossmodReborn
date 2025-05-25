@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex4Zelenia;
 
-class Emblazon(BossModule module) : Components.GenericTowers(module, (uint)AID.Emblazon)
+sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uint)AID.Emblazon)
 {
     private readonly FloorTiles _tiles = module.FindComponent<FloorTiles>()!;
     public BitMask Allowed;

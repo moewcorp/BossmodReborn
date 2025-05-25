@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Pathfinding;
 
-public class ThetaStar
+public sealed class ThetaStar
 {
     public enum Score
     {

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.DelubrumReginae.DRN2Dahu;
 
-class FeralHowl(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.FeralHowl, 30f, true, stopAtWall: true)
+sealed class FeralHowl(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.FeralHowl, 30f, true, stopAtWall: true)
 {
     private readonly HuntersClaw _aoe = module.FindComponent<HuntersClaw>()!;
 

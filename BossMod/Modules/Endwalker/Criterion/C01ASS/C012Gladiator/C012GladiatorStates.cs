@@ -1,13 +1,13 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C01ASS.C012Gladiator;
 
-class C012GladiatorStates : StateMachineBuilder
+abstract class C012GladiatorStates : StateMachineBuilder
 {
     private readonly bool _savage;
 
     public C012GladiatorStates(BossModule module, bool savage) : base(module)
     {
         _savage = savage;
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)
@@ -171,5 +171,5 @@ class C012GladiatorStates : StateMachineBuilder
     }
 }
 
-class C012NGladiatorStates(BossModule module) : C012GladiatorStates(module, false);
-class C012SGladiatorStates(BossModule module) : C012GladiatorStates(module, true);
+sealed class C012NGladiatorStates(BossModule module) : C012GladiatorStates(module, false);
+sealed class C012SGladiatorStates(BossModule module) : C012GladiatorStates(module, true);
