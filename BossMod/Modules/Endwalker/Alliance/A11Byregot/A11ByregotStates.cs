@@ -4,11 +4,10 @@ class A11ByregotStates : StateMachineBuilder
 {
     public A11ByregotStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<ByregotWard>()
             .ActivateOnEnter<ByregotStrikeJump>()
-            .ActivateOnEnter<ByregotStrikeJumpCone>()
             .ActivateOnEnter<ByregotStrikeKnockback>()
             .ActivateOnEnter<ByregotStrikeCone>()
             .ActivateOnEnter<DestroySideTiles>()
