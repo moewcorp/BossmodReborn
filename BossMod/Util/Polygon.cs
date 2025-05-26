@@ -263,6 +263,52 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
                 return true;
         return false;
     }
+
+    // positive offsets inflate, negative shrink polygon
+    public RelSimplifiedComplexPolygon Offset(float offset)
+    {
+        var clipperOffset = new ClipperOffset();
+        var allPaths = new Paths64();
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var part = Parts[i];
+            allPaths.Add(ToPath64(part.Exterior));
+            var len = part.Holes.Length;
+            for (var j = 0; j < len; ++j)
+                allPaths.Add(ToPath64(part.Interior(part.Holes[j])));
+        }
+
+        var solution = new Paths64();
+        clipperOffset.AddPaths(allPaths, JoinType.Miter, EndType.Polygon);
+        clipperOffset.Execute(offset * PolygonClipper.Scale, solution);
+
+        var result = new RelSimplifiedComplexPolygon();
+        BuildResultFromPaths(result, solution);
+        return result;
+    }
+
+    private void BuildResultFromPaths(RelSimplifiedComplexPolygon result, Paths64 paths)
+    {
+        var c = new Clipper64();
+        c.AddPaths(paths, PathType.Subject);
+        var tree = new PolyTree64();
+        c.Execute(ClipType.Union, FillRule.NonZero, tree);
+
+        PolygonClipper.BuildResult(result, tree);
+    }
+
+    private static Path64 ToPath64(ReadOnlySpan<WDir> vertices)
+    {
+        var count = vertices.Length;
+        var path = new Path64(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var vertex = vertices[i];
+            path.Add(new(vertex.X * PolygonClipper.Scale, vertex.Z * PolygonClipper.Scale));
+        }
+        return path;
+    }
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
