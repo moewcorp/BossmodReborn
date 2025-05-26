@@ -2,22 +2,22 @@
 
 class HandOfTheDestroyer(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private AOEInstance? _aoe;
     private static readonly AOEShapeRect _shape = new(90f, 20f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.HandOfTheDestroyerWrathAOE or (uint)AID.HandOfTheDestroyerJudgmentAOE)
-            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoe = new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.HandOfTheDestroyerWrathAOE or (uint)AID.HandOfTheDestroyerJudgmentAOE)
         {
-            _aoes.Clear();
+            _aoe = null;
             ++NumCasts;
         }
     }

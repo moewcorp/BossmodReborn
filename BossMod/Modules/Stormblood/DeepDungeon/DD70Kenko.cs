@@ -45,8 +45,14 @@ sealed class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.Innerspace)
-            _aoe = new(circle, WPos.ClampToGrid(WorldState.Actors.Find(spell.MainTargetID)!.Position), default, WorldState.FutureTime(1.6d));
+        var id = spell.Action.ID;
+        if (id == (uint)AID.Innerspace)
+            _aoe = new(circle, WPos.ClampToGrid(WorldState.Actors.Find(spell.MainTargetID)!.Position), default, WorldState.FutureTime(7.2d));
+        else if (id == (uint)AID.Devour)
+        {
+            target = -1;
+            _aoeTarget = null;
+        }
     }
 
     public override void OnActorCreated(Actor actor)
@@ -75,12 +81,7 @@ sealed class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(modu
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.HoundOutOfHell)
-        {
-            target = -1;
-            _aoeTarget = null;
-        }
-        else if (spell.Action.ID == (uint)AID.Ululation)
+        if (spell.Action.ID == (uint)AID.Ululation)
         {
             ululation = false;
         }
@@ -130,7 +131,15 @@ sealed class Devour(BossModule module) : Components.GenericBaitAway(module)
 }
 
 sealed class Ululation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Ululation);
-sealed class HoundOutOfHell(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.HoundOutOfHell, 7f);
+sealed class HoundOutOfHell(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.HoundOutOfHell, 7f)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (ActiveBaitsOn(actor).Count == 0)
+            return;
+        base.AddAIHints(slot, actor, assignment, hints);
+    }
+}
 
 sealed class DD70KenkoStates : StateMachineBuilder
 {

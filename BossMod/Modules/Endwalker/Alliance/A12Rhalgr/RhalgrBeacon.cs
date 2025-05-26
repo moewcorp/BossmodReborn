@@ -4,15 +4,42 @@ class RhalgrBeaconAOE(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
 class RhalgrBeaconShock(BossModule module) : Components.GenericAOEs(module, (uint)AID.Shock)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(7);
     private static readonly AOEShapeCircle _shape = new(8);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorCreated(Actor actor)
     {
+        if (NumCasts != 7 && actor.OID == (uint)OID.LightningOrb)
+        {
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.7d), ActorID: actor.InstanceID));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == WatchedAction)
+        {
+            var count = _aoes.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].ActorID == id)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
         if (actor.OID == (uint)OID.LightningOrb)
-            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(13d)));
+        {
+            NumCasts = 0;
+        }
     }
 }
 

@@ -4,7 +4,7 @@ class A10RhalgrEmissaryStates : StateMachineBuilder
 {
     public A10RhalgrEmissaryStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<LightningBolt>()
             .ActivateOnEnter<Boltloop>()
             .ActivateOnEnter<BoltsFromTheBlue>()
@@ -62,8 +62,7 @@ class A10RhalgrEmissaryStates : StateMachineBuilder
 
     private void Boltloop(uint id, float delay)
     {
-        Cast(id, (uint)AID.Boltloop, delay, 2f)
-            .ActivateOnEnter<Boltloop>();
+        Cast(id, (uint)AID.Boltloop, delay, 2f);
         ComponentCondition<Boltloop>(id + 0x10u, 1.1f, comp => comp.NumCasts >= 2, "Concentric AOE 1");
         ComponentCondition<Boltloop>(id + 0x20u, 2f, comp => comp.NumCasts >= 4, "Concentric AOE 2");
         ComponentCondition<Boltloop>(id + 0x30u, 2f, comp => comp.NumCasts >= 6, "Concentric AOE 3")

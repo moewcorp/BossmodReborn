@@ -112,8 +112,7 @@ class A12RhalgrStates : StateMachineBuilder
             .ResetComp<RhalgrBeaconKnockback>();
         ComponentCondition<RhalgrBeaconAOE>(id + 0x21, 0.3f, comp => comp.NumCasts != 0, "AOE")
             .ResetComp<RhalgrBeaconAOE>();
-        ComponentCondition<RhalgrBeaconShock>(id + 0x30, 2.7f, comp => comp.NumCasts != 0, "Lightning orbs")
-            .ResetComp<RhalgrBeaconShock>();
+        ComponentCondition<RhalgrBeaconShock>(id + 0x30, 2.7f, comp => comp.NumCasts != 0, "Lightning orbs");
     }
 
     private void BronzeWork(uint id, float delay)

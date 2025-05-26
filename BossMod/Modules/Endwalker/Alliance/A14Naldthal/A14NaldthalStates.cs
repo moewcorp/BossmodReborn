@@ -4,7 +4,7 @@ public class A14NaldthalStates : StateMachineBuilder
 {
     public A14NaldthalStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<HeavensTrialCone>()
             .ActivateOnEnter<HeavensTrialStack>()
             .ActivateOnEnter<GoldenTenet>()
@@ -13,8 +13,7 @@ public class A14NaldthalStates : StateMachineBuilder
             .ActivateOnEnter<FarFlungFire>()
             .ActivateOnEnter<DeepestPit>()
             .ActivateOnEnter<OnceAboveEverBelow>()
-            .ActivateOnEnter<HellOfFireFront>()
-            .ActivateOnEnter<HellOfFireBack>()
+            .ActivateOnEnter<HellOfFire>()
             .ActivateOnEnter<WaywardSoul>()
             .ActivateOnEnter<FortuneFluxOrder>()
             .ActivateOnEnter<FortuneFluxAOE>()
@@ -89,7 +88,7 @@ public class A14NaldthalStates : StateMachineBuilder
     private void StygianTenet(uint id, float delay)
     {
         Cast(id, (uint)AID.StygianTenet, delay, 5f);
-        ComponentCondition<StygianTenet>(id + 0x10u, 0.5f, comp => comp.NumFinishedSpreads > 0, "Tankbusters")
+        ComponentCondition<StygianTenet>(id + 0x10u, 0.5f, comp => comp.NumCasts > 0, "Tankbusters")
             .ResetComp<StygianTenet>()
             .SetHint(StateMachine.StateHint.Tankbuster);
     }
@@ -135,7 +134,7 @@ public class A14NaldthalStates : StateMachineBuilder
         CastEnd(id + 0x30u, 4.6f)
             .ResetComp<OnceAboveEverBelow>();
         Condition(id + 0x40u, 0.5f, () => Module.FindComponent<HeavensTrialStack>()!.NumFinishedStacks != 0 ||
-        Module.FindComponent<HeavensTrialCone>()!.NumCasts != 0 && Module.FindComponent<StygianTenet>()!.NumFinishedSpreads != 0, "Tankbusters -or- Stack & baited cones")
+        Module.FindComponent<HeavensTrialCone>()!.NumCasts != 0 && Module.FindComponent<StygianTenet>()!.NumCasts != 0, "Tankbusters -or- Stack & baited cones")
             .ResetComp<StygianTenet>()
             .ResetComp<HeavensTrialStack>()
             .ResetComp<HeavensTrialCone>();
@@ -160,9 +159,8 @@ public class A14NaldthalStates : StateMachineBuilder
     {
         CastMulti(id, [(uint)AID.HellOfFireFront, (uint)AID.HellOfFireBack], delay, 8f)
             .ResetComp<OnceAboveEverBelow>();
-        return Condition(id + 2u, 1f, () => Module.FindComponent<HellOfFireFront>()!.NumCasts + Module.FindComponent<HellOfFireBack>()!.NumCasts != 0, "Half-arena cleave")
-            .ResetComp<HellOfFireFront>()
-            .ResetComp<HellOfFireBack>();
+        return Condition(id + 2u, 1f, () => Module.FindComponent<HellOfFire>()!.NumCasts != 0, "Half-arena cleave")
+            .ResetComp<HellOfFire>();
     }
 
     private void WaywardSoulStart(uint id, float delay)

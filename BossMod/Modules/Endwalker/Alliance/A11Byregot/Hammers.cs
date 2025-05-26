@@ -43,15 +43,19 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, (uint)AID
     {
         if (index is >= 0x07 and <= 0x0B)
         {
-            var i = index - 0x07;
-            (LineOffset[i], LineMovement[i]) = state switch
+            (var offset, var movement) = state switch
             {
                 0x00020001u => (0, +1),
                 0x08000400u => (-1, +1),
                 0x00800040u => (0, -1),
                 0x80004000u => (+1, -1),
-                _ => (LineOffset[i], 0),
+                _ => default
             };
+            if (movement == default)
+                return;
+            var i = index - 0x07u;
+            LineOffset[i] = offset;
+            LineMovement[i] = movement;
             MovementPending = true;
             activation = WorldState.FutureTime(16d);
         }
@@ -146,7 +150,7 @@ class HammersSpire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_safespot is WPos pos)
-            Arena.AddRect(pos, new(default, 1), 5f, 5f, 5f, Colors.Safe, 2);
+            Arena.AddRect(pos, new(default, 1), 5f, 5f, 5f, Colors.Safe, 2f);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

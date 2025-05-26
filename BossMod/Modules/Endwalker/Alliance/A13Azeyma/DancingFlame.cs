@@ -22,14 +22,19 @@ class DancingFlame(BossModule module) : Components.GenericAOEs(module, (uint)AID
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 27 && state == 0x00080004)
-            AOEs.Clear();
-        else if (index == 0x1B && state == 0x00020001)
+        if (index == 0x1Bu)
         {
-            for (var i = 0; i < 4; ++i)
+            if (state == 0x00080004u)
             {
-                var s = startingRects[i];
-                AOEs.Add(new(startingRect, WPos.ClampToGrid(s.Item1), s.Item2, WorldState.FutureTime(2d)));
+                AOEs.Clear();
+            }
+            else if (state == 0x00020001u)
+            {
+                for (var i = 0; i < 4; ++i)
+                {
+                    var s = startingRects[i];
+                    AOEs.Add(new(startingRect, WPos.ClampToGrid(s.Item1), s.Item2, WorldState.FutureTime(2d)));
+                }
             }
         }
     }
