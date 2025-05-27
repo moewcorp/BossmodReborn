@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL3Adrammelech;
 
-class FireIV(BossModule module) : Components.StayMove(module, 3f)
+sealed class FireIV(BossModule module) : Components.StayMove(module, 3f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -17,7 +17,7 @@ class FireIV(BossModule module) : Components.StayMove(module, 3f)
     }
 }
 
-class BlizzardIV(BossModule module) : Components.StayMove(module, 4f)
+sealed class BlizzardIV(BossModule module) : Components.StayMove(module, 4f)
 {
     private DateTime _activation;
 

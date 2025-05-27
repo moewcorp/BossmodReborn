@@ -1,7 +1,7 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL3Adrammelech;
 
-class HolyIV(BossModule module) : Components.RaidwideCast(module, (uint)AID.HolyIV);
-class Flare(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Flare);
+sealed class HolyIV(BossModule module) : Components.RaidwideCast(module, (uint)AID.HolyIV);
+sealed class Flare(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Flare);
 
 abstract class WaterIV(BossModule module, uint aid) : Components.SimpleKnockbacks(module, aid, 12f)
 {
@@ -14,23 +14,23 @@ abstract class WaterIV(BossModule module, uint aid) : Components.SimpleKnockback
         }
     }
 }
+sealed class WaterIV1(BossModule module) : WaterIV(module, (uint)AID.WaterIV1); // same time as WaterIV2
+sealed class WaterIV3(BossModule module) : WaterIV(module, (uint)AID.WaterIV3); // same time as WaterIV4
 
-class WaterIV1(BossModule module) : WaterIV(module, (uint)AID.WaterIV1); // same time as WaterIV2
-class WaterIV3(BossModule module) : WaterIV(module, (uint)AID.WaterIV3); // same time as WaterIV4
-class BurstIITornado(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BurstII, (uint)AID.Tornado], 6f);
-class Shock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shock, 35f);
-class AeroIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AeroIV1, (uint)AID.AeroIV2], new AOEShapeDonut(15f, 30f));
-class ThunderIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ThunderIV1, (uint)AID.ThunderIV2], 18f);
-class WarpedLight(BossModule module) : Components.SimpleChargeAOEGroups(module, [(uint)AID.WarpedLight1, (uint)AID.WarpedLight2,(uint)AID.WarpedLight3,
+sealed class BurstIITornado(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BurstII, (uint)AID.Tornado], 6f);
+sealed class Shock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shock, 35f);
+sealed class AeroIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AeroIV1, (uint)AID.AeroIV2], new AOEShapeDonut(15f, 30f));
+sealed class ThunderIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ThunderIV1, (uint)AID.ThunderIV2], 18f);
+sealed class WarpedLight(BossModule module) : Components.SimpleChargeAOEGroups(module, [(uint)AID.WarpedLight1, (uint)AID.WarpedLight2,(uint)AID.WarpedLight3,
 (uint)AID.WarpedLight4, (uint)AID.WarpedLight5, (uint)AID.WarpedLight6], 1.5f, riskyWithSecondsLeft: 1f);
 
-class Twister(BossModule module) : Components.Voidzone(module, 6.5f, GetTwister, 5f)
+sealed class Twister(BossModule module) : Components.Voidzone(module, 6.5f, GetTwister, 5f)
 {
     private static List<Actor> GetTwister(BossModule module) => module.Enemies((uint)OID.Twister);
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735, NameID = 9442)]
-public class CLL3Adrammelech(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
+public sealed class CLL3Adrammelech(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly WPos arenaCenter = new(80f, -606f);
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(arenaCenter, 29.5f, 48)], [new Rectangle(new(80f, -575.788f), 20f, 1.25f),

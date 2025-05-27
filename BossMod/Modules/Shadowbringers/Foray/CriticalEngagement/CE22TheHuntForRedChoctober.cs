@@ -50,7 +50,7 @@ public enum IconID : uint
     ChocoMeteorImpact = 161 // player->self
 }
 
-class ChocoMeteorStrike(BossModule module) : Components.Exaflare(module, 8f)
+sealed class ChocoMeteorStrike(BossModule module) : Components.Exaflare(module, 8f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -79,15 +79,15 @@ class ChocoMeteorStrike(BossModule module) : Components.Exaflare(module, 8f)
     }
 }
 
-class ChocoBeak1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoBeak1, new AOEShapeRect(40f, 10f));
-class ChocoBeak2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoBeak2, new AOEShapeRect(40f, 8f));
-class ChocoSlash(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ChocoSlash);
-class ChocoMeteoruption(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMeteoruption, 6f);
-class ChocoComet(BossModule module) : Components.CastTowersOpenWorld(module, (uint)AID.ChocoComet, 5f);
-class ChocoMeteorain(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMeteorain, 21f, 2);
-class ChocoMeteorImpact(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ChocoMeteorImpact, (uint)AID.ChocoMeteorImpact, 5f, 5.1f, 8);
+sealed class ChocoBeak1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoBeak1, new AOEShapeRect(40f, 10f));
+sealed class ChocoBeak2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoBeak2, new AOEShapeRect(40f, 8f));
+sealed class ChocoSlash(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ChocoSlash);
+sealed class ChocoMeteoruption(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMeteoruption, 6f);
+sealed class ChocoComet(BossModule module) : Components.CastTowersOpenWorld(module, (uint)AID.ChocoComet, 5f);
+sealed class ChocoMeteorain(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMeteorain, 21f, 2);
+sealed class ChocoMeteorImpact(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ChocoMeteorImpact, (uint)AID.ChocoMeteorImpact, 5f, 5.1f, 8);
 
-class ChocoMeteorStream(BossModule module) : Components.GenericAOEs(module)
+sealed class ChocoMeteorStream(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(28);
     private static readonly AOEShapeCircle circle = new(8f);
@@ -199,7 +199,7 @@ class ChocoMeteorStream(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class CE22TheHuntForRedChoctoberStates : StateMachineBuilder
+sealed class CE22TheHuntForRedChoctoberStates : StateMachineBuilder
 {
     public CE22TheHuntForRedChoctoberStates(BossModule module) : base(module)
     {
@@ -217,7 +217,7 @@ class CE22TheHuntForRedChoctoberStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 7)]
-public class CE22TheHuntForRedChoctober(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE22TheHuntForRedChoctober(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(393f, 268f), 19.5f, 32)]);
 

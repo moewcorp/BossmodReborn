@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL3Adrammelech;
 
-class StoneIV(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class StoneIV(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 

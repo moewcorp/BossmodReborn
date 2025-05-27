@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.Duel.Duel4Dabog;
 
-class Duel4DabogStates : StateMachineBuilder
+sealed class Duel4DabogStates : StateMachineBuilder
 {
     public Duel4DabogStates(BossModule module) : base(module)
     {

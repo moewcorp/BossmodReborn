@@ -23,12 +23,12 @@ public enum AID : uint
     ZombieJuiceRepeat = 20199 // Helper->location, no cast, range 6 circle
 }
 
-class BlazingMeteor(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.BlazingMeteor, 30f)
+sealed class BlazingMeteor(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.BlazingMeteor, 30f)
 {
     public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.BestialCorpse));
 }
 
-class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.ZombieJuiceFirst, GetVoidzones, 0.9f)
+sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.ZombieJuiceFirst, GetVoidzones, 0.9f)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -49,9 +49,10 @@ class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(module, 6
     }
 }
 
-class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9f);
-class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
-class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
+sealed class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9f);
+sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
+
+sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(45f, 45f.Degrees());
     private readonly List<AOEInstance> _aoes = new(3);
@@ -60,50 +61,52 @@ class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.ZombieJuiceFirst)
+        switch (spell.Action.ID)
         {
-            var corpses = Module.Enemies((uint)OID.BestialCorpse);
-            var count = corpses.Count;
-            var loc = spell.LocXZ;
-            for (var i = 0; i < count; ++i)
-            {
-                var corpse = corpses[i];
-                var pos = corpse.Position;
-                if (pos.InCircle(loc, 6f))
+            case (uint)AID.ZombieJuiceFirst:
+            case (uint)AID.ZombieBreath:
+                var corpses = Module.Enemies((uint)OID.BestialCorpse);
+                var count = corpses.Count;
+                var loc = spell.LocXZ;
+                if (spell.Action.ID == (uint)AID.ZombieJuiceFirst)
                 {
-                    AddAOE(pos, corpse.Rotation);
-                    return; // never more than one corpse per circle
+                    for (var i = 0; i < count; ++i)
+                    {
+                        var corpse = corpses[i];
+                        var pos = corpse.Position;
+                        if (pos.InCircle(loc, 6f))
+                        {
+                            AddAOE(pos, corpse.Rotation);
+                            return; // never more than one corpse per circle
+                        }
+                    }
                 }
-            }
-        }
-        else if (spell.Action.ID == (uint)AID.ZombieBreath)
-        {
-            var corpses = Module.Enemies((uint)OID.BestialCorpse);
-            var count = corpses.Count;
-            var loc = spell.LocXZ;
-            var rot = spell.Rotation.ToDirection();
-            for (var i = 0; i < count; ++i)
-            {
-                var corpse = corpses[i];
-                var pos = corpse.Position;
-                if (pos.InRect(loc, rot, 60f, default, 7.35f)) // 3 half width + 4.35 hitbox radius
+                else
                 {
-                    AddAOE(pos, corpse.Rotation);
-                    // no early exit, if unlucky boss tanking, rect can hit multiple corpses
+                    var rot = spell.Rotation.ToDirection();
+                    for (var i = 0; i < count; ++i)
+                    {
+                        var corpse = corpses[i];
+                        var pos = corpse.Position;
+                        if (pos.InRect(loc, rot, 60f, default, 7.35f)) // 3 half width + 4.35 hitbox radius
+                        {
+                            AddAOE(pos, corpse.Rotation);
+                            // no early exit, if unlucky boss tanking, rect can hit multiple corpses
+                        }
+                    }
                 }
-            }
-        }
-        else if (spell.Action.ID == (uint)AID.Thunderbolt)
-        {
-            _aoes.Clear();
+                break;
+            case (uint)AID.Thunderbolt:
+                _aoes.Clear();
+                break;
         }
         void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(cone, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(12.8d)));
     }
 }
 
-class ZombieBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ZombieBreath, new AOEShapeRect(60f, 3f));
+sealed class ZombieBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ZombieBreath, new AOEShapeRect(60f, 3f));
 
-class CE33WhereStrodeTheBehemothStates : StateMachineBuilder
+sealed class CE33WhereStrodeTheBehemothStates : StateMachineBuilder
 {
     public CE33WhereStrodeTheBehemothStates(BossModule module) : base(module)
     {
@@ -118,7 +121,7 @@ class CE33WhereStrodeTheBehemothStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 15)]
-public class CE33WhereStrodeTheBehemoth(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE33WhereStrodeTheBehemoth(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(231f, 95f), 29.5f, 32)]);
 

@@ -37,6 +37,7 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
 {
     private const float MaxError = 5f;
     private static readonly AOEShapeRect _square = new(2f, 2f, 2f);
+    private Apokalypsis? _aoe = module.FindComponent<Apokalypsis>();
 
     public readonly List<AOEInstance> BreakingPlatforms = new(2);
 
@@ -74,11 +75,12 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
         var count = BreakingPlatforms.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
+        _aoe ??= Module.FindComponent<Apokalypsis>();
+        var aoes = CollectionsMarshal.AsSpan(BreakingPlatforms);
         for (var i = 0; i < count; ++i)
         {
-            var p = BreakingPlatforms[i];
-            aoes[i] = p with { Risky = Module.FindComponent<Apokalypsis>()?.NumCasts == 0 };
+            ref var p = ref aoes[i];
+            aoes[i].Risky = _aoe!.NumCasts == 0;
         }
         return aoes;
     }

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
+sealed class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 

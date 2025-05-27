@@ -1,8 +1,8 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel2Lyon;
 
-class Enaero(BossModule module) : Components.Dispel(module, (uint)SID.Enaero, (uint)AID.RagingWinds1);
+sealed class Enaero(BossModule module) : Components.Dispel(module, (uint)SID.Enaero, (uint)AID.RagingWinds1);
 
-class HeartOfNature(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class HeartOfNature(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
@@ -28,10 +28,10 @@ class HeartOfNature(BossModule module) : Components.ConcentricAOEs(module, _shap
     }
 }
 
-class TasteOfBlood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfBlood, new AOEShapeCone(40f, 90f.Degrees()));
-class TasteOfBloodHint(BossModule module) : Components.CastHint(module, (uint)AID.TasteOfBlood, "Go behind Lyon!");
+sealed class TasteOfBlood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfBlood, new AOEShapeCone(40f, 90f.Degrees()));
+sealed class TasteOfBloodHint(BossModule module) : Components.CastHint(module, (uint)AID.TasteOfBlood, "Go behind Lyon!");
 
-class RavenousGale(BossModule module) : Components.GenericAOEs(module)
+sealed class RavenousGale(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(1.5f);
     private readonly List<AOEInstance> _aoes = [];
@@ -87,10 +87,10 @@ class RavenousGale(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class TwinAgonies(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TwinAgonies, "Use Manawall or tank mitigations");
-class WindsPeak(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindsPeak1, 5f);
+sealed class TwinAgonies(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TwinAgonies, "Use Manawall or tank mitigations");
+sealed class WindsPeak(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindsPeak1, 5f);
 
-class WindsPeakKB(BossModule module) : Components.GenericKnockback(module)
+sealed class WindsPeakKB(BossModule module) : Components.GenericKnockback(module)
 {
     private DateTime Time;
     private bool watched;
@@ -115,10 +115,10 @@ class WindsPeakKB(BossModule module) : Components.GenericKnockback(module)
     }
 }
 
-class TheKingsNotice(BossModule module) : Components.CastGaze(module, (uint)AID.TheKingsNotice);
-class SplittingRage(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.SplittingRage);
+sealed class TheKingsNotice(BossModule module) : Components.CastGaze(module, (uint)AID.TheKingsNotice);
+sealed class SplittingRage(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.SplittingRage);
 
-class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
+sealed class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -149,7 +149,7 @@ class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
     }
 }
 
-class SpitefulFlameCircleVoidzone(BossModule module) : Components.GenericAOEs(module)
+sealed class SpitefulFlameCircleVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(10f);
     private readonly List<AOEInstance> _aoes = [];
@@ -175,9 +175,9 @@ class SpitefulFlameCircleVoidzone(BossModule module) : Components.GenericAOEs(mo
     }
 }
 
-class SpitefulFlameRect(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpitefulFlame2, new AOEShapeRect(80f, 2f));
+sealed class SpitefulFlameRect(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpitefulFlame2, new AOEShapeRect(80f, 2f));
 
-class DynasticFlame(BossModule module) : Components.BaitAwayTethers(module, 10f, (uint)TetherID.fireorbs)
+sealed class DynasticFlame(BossModule module) : Components.BaitAwayTethers(module, 10f, (uint)TetherID.fireorbs)
 {
     private int orbcount;
 
@@ -206,4 +206,4 @@ class DynasticFlame(BossModule module) : Components.BaitAwayTethers(module, 10f,
     }
 }
 
-class SkyrendingStrike(BossModule module) : Components.CastHint(module, (uint)AID.SkyrendingStrike, "Enrage!", true);
+sealed class SkyrendingStrike(BossModule module) : Components.CastHint(module, (uint)AID.SkyrendingStrike, "Enrage!", true);

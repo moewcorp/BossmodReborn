@@ -2,7 +2,7 @@ using static BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegio
 
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegionHelldiver;
 
-class InfraredBlast(BossModule module) : Components.InterceptTether(module, (uint)AID.InfraredBlast, (uint)TetherID.InfraredBlast)
+sealed class InfraredBlast(BossModule module) : Components.InterceptTether(module, (uint)AID.InfraredBlast, (uint)TetherID.InfraredBlast)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
     private DateTime _activation;

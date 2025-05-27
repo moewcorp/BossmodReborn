@@ -33,7 +33,7 @@ public enum AID : uint
     AccursedLight = 20967 // Boss->players, 5.0s cast, range 8 circle, stack
 }
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 25f);
     private AOEInstance? _aoe;
@@ -57,11 +57,11 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BullHorn(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.BullHorn);
-class BalefulGlint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BalefulGlint, 8f);
-class ArrestingGaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArrestingGaze, new AOEShapeCone(40f, 45f.Degrees()));
+sealed class BullHorn(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.BullHorn);
+sealed class BalefulGlint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BalefulGlint, 8f);
+sealed class ArrestingGaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArrestingGaze, new AOEShapeCone(40f, 45f.Degrees()));
 
-class GlimmerInTheDark(BossModule module) : Components.GenericAOEs(module)
+sealed class GlimmerInTheDark(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeCircle circle = new(6f);
@@ -99,18 +99,20 @@ class GlimmerInTheDark(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class DemonEye(BossModule module) : Components.GenericGaze(module)
+sealed class DemonEye(BossModule module) : Components.GenericGaze(module)
 {
     private readonly List<Eye> _eyes = new(3);
+    private bool inverted;
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => CollectionsMarshal.AsSpan(_eyes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FalseDemonEye)
-            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell)));
+            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), Inverted: inverted));
         else if (spell.Action.ID == (uint)AID.DemonEye)
         {
+            inverted = true; // depending on timing eyes can spawn after cast start
             var count = _eyes.Count;
             var eyes = CollectionsMarshal.AsSpan(_eyes);
             for (var i = 0; i < count; ++i)
@@ -123,13 +125,16 @@ class DemonEye(BossModule module) : Components.GenericGaze(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FalseDemonEye)
+        {
             _eyes.Clear();
+            inverted = false;
+        }
     }
 }
 
-class AccursedLight(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.AccursedLight, 8f, 8);
+sealed class AccursedLight(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.AccursedLight, 8f, 8);
 
-class CE34TrampledUnderHoofStates : StateMachineBuilder
+sealed class CE34TrampledUnderHoofStates : StateMachineBuilder
 {
     public CE34TrampledUnderHoofStates(BossModule module) : base(module)
     {
@@ -145,7 +150,7 @@ class CE34TrampledUnderHoofStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 11)]
-public class CE34TrampledUnderHoof(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
+public sealed class CE34TrampledUnderHoof(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(-450f, 262f), 24.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(20f); // default arena got no extra collision, just a donut aoe

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL1Sartauvoir;
 
-class DAL1SartauvoirStates : StateMachineBuilder
+sealed class DAL1SartauvoirStates : StateMachineBuilder
 {
     public DAL1SartauvoirStates(BossModule module) : base(module)
     {

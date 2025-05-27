@@ -2,16 +2,16 @@
 
 public enum OID : uint
 {
-    Boss = 0x2E35, // R8.250, x1
-    Deathwall = 0x2EE8, // R0.500, x1
-    ShockSphere = 0x3232, // R1.000, spawn during fight
-    WarWraith = 0x3233, // R1.800, spawn during fight
-    HernaisTheTenacious = 0x3234, // R0.500, spawn during fight
-    DyunbuTheAccursed = 0x3235, // R0.500, spawn during fight
-    LlofiiTheForthright = 0x3236, // R0.500, x1
-    Monoceros = 0x3237, // R1.800, x1
-    PurifyingLight = 0x1EB173, // R0.500, EventObj type, spawn during fight
-    LivingCorpseSpawn = 0x1EB07A, // R0.500, EventObj type, spawn during fight
+    Boss = 0x2E35, // R8.25
+    Deathwall = 0x1EB173, // R0.5
+    DeathwallHelper = 0x2EE8, // R0.50
+    ShockSphere = 0x3232, // R1.0
+    WarWraith = 0x3233, // R1.8
+    HernaisTheTenacious = 0x3234, // R0.5
+    DyunbuTheAccursed = 0x3235, // R0.5
+    LlofiiTheForthright = 0x3236, // R0.5
+    Monoceros = 0x3237, // R1.8
+    LivingCorpseSpawn = 0x1EB07A, // R0.5
     Helper = 0x233C
 }
 
@@ -43,7 +43,7 @@ public enum AID : uint
     DarkFlare = 24112, // WarWraith->location, 5.0s cast, range 8 circle
     SoulSacrifice = 24113, // WarWraith->Boss, 6.0s cast, interruptible, WarWraith sacrifices to give Dmg Up to Boss
 
-    DeadlyToxin = 24699, // Deathwall->self, no cast, range 25-30 donut, deathwall
+    DeadlyToxin = 24699, // DeathwallHelper->self, no cast, range 25-30 donut, deathwall
     Shock = 24114, // ShockSphere->self, no cast, range 7 circle aoe around sphere
 
     AutoAttackMonoceros = 871, // Monoceros->Boss, no cast, single-target
@@ -59,8 +59,31 @@ public enum SID : uint
     ForwardMarch = 2161, // Boss->player, extra=0x0
     AboutFace = 2162, // Boss->player, extra=0x0
     LeftFace = 2163, // Boss->player, extra=0x0
-    RightFace = 2164, // Boss->player, extra=0x0
-    ForcedMarch = 1257 // Boss->player, extra=0x2/0x1/0x8/0x4
+    RightFace = 2164 // Boss->player, extra=0x0
+}
+
+class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+{
+    private static readonly AOEShapeDonut donut = new(25f, 30f);
+    private AOEInstance? _aoe;
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.GallowsMarch && Arena.Bounds != CE42FromBeyondTheGrave.DefaultArena)
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8f));
+    }
+
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Deathwall)
+        {
+            Arena.Bounds = CE42FromBeyondTheGrave.DefaultArena;
+            Arena.Center = WPos.ClampToGrid(Arena.Center);
+            _aoe = null;
+        }
+    }
 }
 
 class DevourSoul(BossModule module) : Components.SingleTargetCast(module, (uint)AID.DevourSoul);
@@ -182,6 +205,7 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
     public CE42FromBeyondTheGraveStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<DevourSoul>()
             .ActivateOnEnter<Blight>()
             .ActivateOnEnter<PurifyingLight>()
@@ -200,8 +224,11 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)] // bnpcname=9931
-public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, new(-60f, 800f), new ArenaBoundsCircle(30f))
+public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
+    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(-60f, 800f), 29.5f, 32)]);
+    public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         base.DrawEnemies(pcSlot, pc);

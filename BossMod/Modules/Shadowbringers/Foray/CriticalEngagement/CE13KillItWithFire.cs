@@ -37,12 +37,12 @@ public enum SID : uint
     JealousAnaphylaxis = 2302 // Helper->player, extra=0x0
 }
 
-class Pheromones(BossModule module) : Components.Voidzone(module, 4f, GetVoidzones, 3f)
+sealed class Pheromones(BossModule module) : Components.Voidzone(module, 4f, GetVoidzones, 3f)
 {
     private static List<Actor> GetVoidzones(BossModule module) => module.Enemies((uint)OID.Pheromones);
 }
 
-class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "Go to different color!")
+sealed class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "Go to different color!")
 {
     private BitMask _tenderStatuses;
     private BitMask _jealousStatuses;
@@ -103,13 +103,13 @@ class DeadLeaves(BossModule module) : Components.GenericAOEs(module, default, "G
     }
 }
 
-class AnaphylacticShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AnaphylacticShock, new AOEShapeRect(30f, 1f));
-class SplashBomb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SplashBombAOE, 6f);
-class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.SplashGrenadeAOE, 6f, 8);
-class PlayfulBreeze(BossModule module) : Components.RaidwideCast(module, (uint)AID.PlayfulBreeze);
-class Budbutt(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Budbutt);
+sealed class AnaphylacticShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AnaphylacticShock, new AOEShapeRect(30f, 1f));
+sealed class SplashBomb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SplashBombAOE, 6f);
+sealed class SplashGrenade(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.SplashGrenadeAOE, 6f, 8);
+sealed class PlayfulBreeze(BossModule module) : Components.RaidwideCast(module, (uint)AID.PlayfulBreeze);
+sealed class Budbutt(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Budbutt);
 
-class CE13KillItWithFireStates : StateMachineBuilder
+sealed class CE13KillItWithFireStates : StateMachineBuilder
 {
     public CE13KillItWithFireStates(BossModule module) : base(module)
     {
@@ -125,7 +125,7 @@ class CE13KillItWithFireStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
-public class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE13KillItWithFire(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-90f, 700f), 29.5f, 32)]);
 

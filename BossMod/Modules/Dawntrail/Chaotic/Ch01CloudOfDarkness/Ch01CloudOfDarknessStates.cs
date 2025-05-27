@@ -4,7 +4,7 @@ sealed class Ch01CloudOfDarknessStates : StateMachineBuilder
 {
     public Ch01CloudOfDarknessStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChanges>();
     }
 
@@ -12,7 +12,7 @@ sealed class Ch01CloudOfDarknessStates : StateMachineBuilder
     {
         BladeOfDarkness(id, 6.2f);
         BladeOfDarkness(id + 0x10000, 4.4f);
-        DelugeOfDarkness1(id + 0x20000, 4.5f);
+        DelugeOfDarkness1(id + 0x20000, 4.5f, true);
 
         // note: flare starts casting ~1.9s before first criss-cross, aero/death ~3.2s after
         ComponentCondition<RazingVolleyParticleBeam>(id + 0x30000, 4f, comp => comp.Casters.Count > 0);
@@ -99,11 +99,12 @@ sealed class Ch01CloudOfDarknessStates : StateMachineBuilder
             .DeactivateOnExit<BladeOfDarkness>();
     }
 
-    private void DelugeOfDarkness1(uint id, float delay)
+    private void DelugeOfDarkness1(uint id, float delay, bool first = false)
     {
-        Cast(id, (uint)AID.DelugeOfDarkness1, delay, 8f, "Raidwide + arena transition")
-            .DeactivateOnEnter<Phase2InnerCells>()
+        var cond = Cast(id, (uint)AID.DelugeOfDarkness1, delay, 8f, "Raidwide + arena transition")
             .SetHint(StateMachine.StateHint.Raidwide);
+        if (!first)
+            cond.DeactivateOnEnter<Phase2InnerCells>();
         CastMulti(id + 0x100, [(uint)AID.GrimEmbraceForward, (uint)AID.GrimEmbraceBackward], 9.2f, 5f, "Debuffs 1")
             .ActivateOnEnter<GrimEmbraceBait>()
             .ActivateOnEnter<GrimEmbraceAOE>();

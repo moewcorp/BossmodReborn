@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL3Adrammelech;
 
-class CLL3AdrammelechStates : StateMachineBuilder
+sealed class CLL3AdrammelechStates : StateMachineBuilder
 {
     public CLL3AdrammelechStates(BossModule module) : base(module)
     {

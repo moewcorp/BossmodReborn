@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel1Gabriel;
 
-class MagitekCannonVoidzone(BossModule module) : Components.VoidzoneAtCastTargetGroup(module, 3f, [(uint)AID.MagitekCannonFirst, (uint)AID.MagitekCannonRest], GetVoidzones, 0.9f)
+sealed class MagitekCannonVoidzone(BossModule module) : Components.VoidzoneAtCastTargetGroup(module, 3f, [(uint)AID.MagitekCannonFirst, (uint)AID.MagitekCannonRest], GetVoidzones, 0.9f)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -21,7 +21,7 @@ class MagitekCannonVoidzone(BossModule module) : Components.VoidzoneAtCastTarget
     }
 }
 
-class MagitekCannonChase(BossModule module) : Components.StandardChasingAOEs(module, 3f, (uint)AID.MagitekCannonFirst, (uint)AID.MagitekCannonRest, 30f, 3.2f, 5, true, (uint)IconID.MagitekCannon)
+sealed class MagitekCannonChase(BossModule module) : Components.StandardChasingAOEs(module, 3f, (uint)AID.MagitekCannonFirst, (uint)AID.MagitekCannonRest, 30f, 3.2f, 5, true, (uint)IconID.MagitekCannon)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) { }
 

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegionHelldiver;
 
-class CLL1Brionac4thLegionHelldiverStates : StateMachineBuilder
+sealed class CLL1Brionac4thLegionHelldiverStates : StateMachineBuilder
 {
     public CLL1Brionac4thLegionHelldiverStates(CLL1Brionac4thLegionHelldiver module) : base(module)
     {

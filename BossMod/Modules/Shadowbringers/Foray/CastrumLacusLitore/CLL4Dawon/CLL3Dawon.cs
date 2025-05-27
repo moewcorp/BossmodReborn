@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class WindsPeak(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindsPeak, 5f)
+sealed class WindsPeak(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindsPeak, 5f)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -13,7 +13,7 @@ class WindsPeak(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Win
     }
 }
 
-class WindsPeakKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.WindsPeak, 10f)
+sealed class WindsPeakKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.WindsPeak, 10f)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -35,7 +35,7 @@ class WindsPeakKB(BossModule module) : Components.SimpleKnockbacks(module, (uint
     }
 }
 
-class HeartOfNature(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeartOfNature)
+sealed class HeartOfNature(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeartOfNature)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -52,7 +52,7 @@ class HeartOfNature(BossModule module) : Components.RaidwideCast(module, (uint)A
     }
 }
 
-class TheKingsNotice(BossModule module) : Components.CastGaze(module, (uint)AID.TheKingsNotice)
+sealed class TheKingsNotice(BossModule module) : Components.CastGaze(module, (uint)AID.TheKingsNotice)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -65,7 +65,7 @@ class TheKingsNotice(BossModule module) : Components.CastGaze(module, (uint)AID.
     }
 }
 
-class TasteOfBlood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfBlood, new AOEShapeCone(40f, 90f.Degrees()))
+sealed class TasteOfBlood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TasteOfBlood, new AOEShapeCone(40f, 90f.Degrees()))
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -78,7 +78,7 @@ class TasteOfBlood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     }
 }
 
-class Pentagust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pentagust, new AOEShapeCone(50f, 10f.Degrees()))
+sealed class Pentagust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pentagust, new AOEShapeCone(50f, 10f.Degrees()))
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -91,7 +91,7 @@ class Pentagust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pen
     }
 }
 
-class FervidPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FervidPulse, Obey.Cross)
+sealed class FervidPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FervidPulse, Obey.Cross)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -104,9 +104,9 @@ class FervidPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.F
     }
 }
 
-class FrigidPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FrigidPulse, Obey.Donut);
+sealed class FrigidPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FrigidPulse, Obey.Donut);
 
-class SwoopingFrenzy(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SwoopingFrenzy, 12f)
+sealed class SwoopingFrenzy(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SwoopingFrenzy, 12f)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -119,9 +119,9 @@ class SwoopingFrenzy(BossModule module) : Components.SimpleAOEs(module, (uint)AI
     }
 }
 
-class MoltingPlumage(BossModule module) : Components.RaidwideCast(module, (uint)AID.MoltingPlumage);
+sealed class MoltingPlumage(BossModule module) : Components.RaidwideCast(module, (uint)AID.MoltingPlumage);
 
-class Scratch(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Scratch)
+sealed class Scratch(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Scratch)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -140,7 +140,7 @@ class Scratch(BossModule module) : Components.SingleTargetCast(module, (uint)AID
     }
 }
 
-class TwinAgonies(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TwinAgonies)
+sealed class TwinAgonies(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TwinAgonies)
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -160,7 +160,7 @@ class TwinAgonies(BossModule module) : Components.SingleTargetCast(module, (uint
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735, NameID = 9452)]
-public class CLL4Dawon(WorldState ws, Actor primary) : BossModule(ws, primary, DawonStartingArena.Center, DawonStartingArena)
+public sealed class CLL4Dawon(WorldState ws, Actor primary) : BossModule(ws, primary, DawonStartingArena.Center, DawonStartingArena)
 {
     public static readonly WPos LyonCenter = new(80f, -874f);
     public static readonly ArenaBoundsComplex LyonStartingArena = new([new Polygon(LyonCenter, 24.5f, 48)]);

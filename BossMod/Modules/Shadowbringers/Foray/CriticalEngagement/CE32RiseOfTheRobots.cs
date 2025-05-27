@@ -51,7 +51,7 @@ public enum SID : uint
     ForcedMarch = 1257 // none->player, extra=0x1/0x4/0x2/0x8
 }
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(25f, 30f);
     private AOEInstance? _aoe;
@@ -75,7 +75,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Train(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class Train(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
     private DateTime _activation;
@@ -151,7 +151,7 @@ class Train(BossModule module) : Components.GenericRotatingAOE(module)
     }
 }
 
-class OrderTowers(BossModule module) : Components.GenericAOEs(module)
+sealed class OrderTowers(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly AOEInstance[][] AOEs = new AOEInstance[8][];
     public static readonly WPos[] TowerPositions = GetTowerPositions();
@@ -249,15 +249,11 @@ class OrderTowers(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class OrderForcedMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
+sealed class OrderForcedMarch(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
 {
     private readonly OrderTowers _math = module.FindComponent<OrderTowers>()!;
-
-#pragma warning disable CA5394 // Do not use insecure randomness
     private static readonly Random random = new();
     private readonly float randomOdd = random.Next(1, 51) * 2 - 1; // used as pseudo randomisation for default case
-#pragma warning restore CA5394
-
     private static readonly Angle a175 = 175f.Degrees(), a45 = 45f.Degrees(), am90 = -90f.Degrees(), a225 = 22.5f.Degrees(), a180 = 180f.Degrees();
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
@@ -289,17 +285,15 @@ class OrderForcedMarch(BossModule module) : Components.StatusDrivenForcedMarch(m
     }
 }
 
-class Incinerate1(BossModule module) : Components.RaidwideCast(module, (uint)AID.Incinerate1);
-class Incinerate2(BossModule module) : Components.RaidwideCast(module, (uint)AID.Incinerate2);
+sealed class Incinerate(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Incinerate1, (uint)AID.Incinerate2]);
 
-class CE32RiseOfTheRobotsStates : StateMachineBuilder
+sealed class CE32RiseOfTheRobotsStates : StateMachineBuilder
 {
     public CE32RiseOfTheRobotsStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            .ActivateOnEnter<Incinerate1>()
-            .ActivateOnEnter<Incinerate2>()
+            .ActivateOnEnter<Incinerate>()
             .ActivateOnEnter<OrderTowers>()
             .ActivateOnEnter<OrderForcedMarch>()
             .ActivateOnEnter<Train>();
@@ -307,7 +301,7 @@ class CE32RiseOfTheRobotsStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 14)]
-public class CE32RiseOfTheRobots(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, startingArena)
+public sealed class CE32RiseOfTheRobots(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, startingArena)
 {
     public static readonly WPos ArenaCenter = new(104f, 237f);
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(ArenaCenter, 29.5f, 32)]);

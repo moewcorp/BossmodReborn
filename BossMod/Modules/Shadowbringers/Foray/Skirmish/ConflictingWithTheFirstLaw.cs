@@ -40,17 +40,17 @@ public enum AID : uint
     EmbalmingEarth = 21166 // BozjanMatamata->self, 4.0s cast, range 10 circle
 }
 
-class Compress(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress, new AOEShapeCross(50f, 3.5f));
-class Accelerate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Accelerate, 6f, 8);
-class Pulverize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pulverize, 15f);
+sealed class Compress(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress, new AOEShapeCross(50f, 3.5f));
+sealed class Accelerate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Accelerate, 6f, 8);
+sealed class Pulverize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pulverize, 15f);
 
-class CannonShot(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CannonShot, 12f);
-class EmbalmingEarth(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EmbalmingEarth, 10f);
-class AccursedPox(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AccursedPox, 8f);
-class Darkness(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Darkness, 5f);
-class TheHand(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TheHand, new AOEShapeCone(8f, 60f.Degrees()));
+sealed class CannonShot(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CannonShot, 12f);
+sealed class EmbalmingEarth(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EmbalmingEarth, 10f);
+sealed class AccursedPox(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AccursedPox, 8f);
+sealed class Darkness(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Darkness, 5f);
+sealed class TheHand(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TheHand, new AOEShapeCone(8f, 60f.Degrees()));
 
-class ConflictingWithTheFirstLawStates : StateMachineBuilder
+sealed class ConflictingWithTheFirstLawStates : StateMachineBuilder
 {
     public ConflictingWithTheFirstLawStates(BossModule module) : base(module)
     {
@@ -67,7 +67,7 @@ class ConflictingWithTheFirstLawStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaSkirmish, GroupID = 735, NameID = 1605)]
-public class ConflictingWithTheFirstLaw(WorldState ws, Actor primary) : SimpleBossModule(ws, primary)
+public sealed class ConflictingWithTheFirstLaw(WorldState ws, Actor primary) : SimpleBossModule(ws, primary)
 {
     private static readonly uint[] adds = [(uint)OID.FourthLegionRoader, (uint)OID.FourthLegionNimrod, (uint)OID.FourthLegionSlasher, (uint)OID.FourthLegionDeathClaw,
     (uint)OID.InkClaw, (uint)OID.BozjanMatamata, (uint)OID.LightningSprite, (uint)OID.NimrodEscort, (uint)OID.WaterSprite, (uint)OID.BozjanGeshunpest, (uint)OID.BozjanWraith];

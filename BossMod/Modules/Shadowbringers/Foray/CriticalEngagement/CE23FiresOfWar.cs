@@ -45,9 +45,9 @@ public enum SID : uint
     CantTouchThis = 2056 // none->PyrobolusSoror, extra=0xB9
 }
 
-class ScaldingScolding(BossModule module) : Components.Cleave(module, (uint)AID.ScaldingScolding, new AOEShapeCone(8f, 60f.Degrees()));
+sealed class ScaldingScolding(BossModule module) : Components.Cleave(module, (uint)AID.ScaldingScolding, new AOEShapeCone(8f, 60f.Degrees()));
 
-class CantTouchThis(BossModule module) : Components.GenericStackSpread(module)
+sealed class CantTouchThis(BossModule module) : Components.GenericStackSpread(module)
 {
     private readonly List<Actor> participants = [];
 
@@ -133,10 +133,10 @@ class CantTouchThis(BossModule module) : Components.GenericStackSpread(module)
     }
 }
 
-class Pyroplexy(BossModule module) : Components.CastTowersOpenWorld(module, (uint)AID.Pyroplexy, 4f);
-class CatchingFire(BossModule module) : Components.RaidwideCast(module, (uint)AID.CatchingFire);
+sealed class Pyroplexy(BossModule module) : Components.CastTowersOpenWorld(module, (uint)AID.Pyroplexy, 4f);
+sealed class CatchingFire(BossModule module) : Components.RaidwideCast(module, (uint)AID.CatchingFire);
 
-class TooHotToHandle(BossModule module) : Components.GenericAOEs(module)
+sealed class TooHotToHandle(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(10f);
     private readonly List<AOEInstance> _aoes = new(9);
@@ -243,7 +243,7 @@ class TooHotToHandle(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ExplosiveCountdown(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class ExplosiveCountdown(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeDonut(11f, 18f), new AOEShapeDonut(5f, 12f), new AOEShapeCircle(6f)];
 
@@ -277,10 +277,10 @@ class ExplosiveCountdown(BossModule module) : Components.ConcentricAOEs(module, 
     }
 }
 
-class HotTemper(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HotTemper, 24f);
-class SlowDeflagration(BossModule module) : Components.CastHint(module, (uint)AID.SlowDeflagration, "Enrage!", true);
+sealed class HotTemper(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HotTemper, 24f);
+sealed class SlowDeflagration(BossModule module) : Components.CastHint(module, (uint)AID.SlowDeflagration, "Enrage!", true);
 
-class CE23FiresOfWarStates : StateMachineBuilder
+sealed class CE23FiresOfWarStates : StateMachineBuilder
 {
     public CE23FiresOfWarStates(CE23FiresOfWar module) : base(module)
     {
@@ -312,7 +312,7 @@ class CE23FiresOfWarStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 9)]
-public class CE23FiresOfWar(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE23FiresOfWar(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(83f, 563f), 19.5f, 32)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ImperialPyromancer1, (uint)OID.ImperialPyromancer2, (uint)OID.PyrobolusFrater];

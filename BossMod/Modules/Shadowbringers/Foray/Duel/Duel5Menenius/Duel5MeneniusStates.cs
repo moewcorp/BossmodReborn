@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.Duel.Duel5Menenius;
 
-class Duel5MeneniusStates : StateMachineBuilder
+sealed class Duel5MeneniusStates : StateMachineBuilder
 {
     public Duel5MeneniusStates(BossModule module) : base(module)
     {
