@@ -49,16 +49,16 @@ public enum AID : uint
     PiercingBarrageCrow = 20191 // TamedCarrionCrow->self, 3.0s cast, range 40 width 8 rect
 }
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 30f);
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.BestialLoyaltyAOE)
+        if (spell.Action.ID == (uint)AID.BlindsideBarrageAOE)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8f));
     }
 
@@ -73,18 +73,18 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BestialLoyalty(BossModule module) : Components.CastHint(module, (uint)AID.BestialLoyalty, "Summon crows");
-class RunWild(BossModule module) : Components.CastInterruptHint(module, (uint)AID.RunWild, showNameInHint: true);
-class HardBeak(BossModule module) : Components.SingleTargetCast(module, (uint)AID.HardBeak);
-class Helldive(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Helldive, 6f, 8);
-class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BroadsideBarrage, new AOEShapeRect(40f, 20f));
-class BlindsideBarrage(BossModule module) : Components.RaidwideCast(module, (uint)AID.BlindsideBarrage, "Raidwide + deathwall appears");
-class RollingBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RollingBarrageAOE, 8f);
-class Whirlwind(BossModule module) : Components.Voidzone(module, 4f, GetWhirlwind, 3f)
+sealed class BestialLoyalty(BossModule module) : Components.CastHint(module, (uint)AID.BestialLoyalty, "Summon crows");
+sealed class RunWild(BossModule module) : Components.CastInterruptHint(module, (uint)AID.RunWild, showNameInHint: true);
+sealed class HardBeak(BossModule module) : Components.SingleTargetCast(module, (uint)AID.HardBeak);
+sealed class Helldive(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Helldive, 6f, 8);
+sealed class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BroadsideBarrage, new AOEShapeRect(40f, 20f));
+sealed class BlindsideBarrage(BossModule module) : Components.RaidwideCast(module, (uint)AID.BlindsideBarrage, "Raidwide + deathwall appears");
+sealed class RollingBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RollingBarrageAOE, 8f);
+sealed class Whirlwind(BossModule module) : Components.Voidzone(module, 4f, GetWhirlwind, 3f)
 {
     private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.Whirlwind);
 }
-class Wind(BossModule module) : Components.GenericKnockback(module)
+sealed class Wind(BossModule module) : Components.GenericKnockback(module)
 {
     private Knockback? _kb;
 
@@ -123,9 +123,9 @@ class Wind(BossModule module) : Components.GenericKnockback(module)
     }
 }
 
-class PiercingBarrage(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PiercingBarrageBoss, (uint)AID.PiercingBarrageCrow], new AOEShapeRect(40f, 4f));
+sealed class PiercingBarrage(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PiercingBarrageBoss, (uint)AID.PiercingBarrageCrow], new AOEShapeRect(40f, 4f));
 
-class CE11ShadowOfDeathHandStates : StateMachineBuilder
+sealed class CE11ShadowOfDeathHandStates : StateMachineBuilder
 {
     public CE11ShadowOfDeathHandStates(BossModule module) : base(module)
     {
@@ -145,7 +145,7 @@ class CE11ShadowOfDeathHandStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 5)] // bnpcname=9400
-public class CE11ShadowOfDeathHand(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
+public sealed class CE11ShadowOfDeathHand(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(825f, 640f), 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(20f); // default arena got no extra collision, just a donut aoe

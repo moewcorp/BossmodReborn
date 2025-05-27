@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegionHelldiver;
 
-class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
+sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
     private readonly List<(Actor Orb, AOEShape Shape)> orbs = new(4);
@@ -93,7 +93,7 @@ class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private readonly Knockback?[] _sources = new Knockback?[8];
     private readonly byte[] playerPoles = new byte[8];

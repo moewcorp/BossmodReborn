@@ -40,7 +40,7 @@ public enum TetherID : uint
     Unfreezable = 17 // GraspingRancor->player (appears if hand wasn't hit by aoe)
 }
 
-class GraspingRancor : Components.SimpleAOEs
+sealed class GraspingRancor : Components.SimpleAOEs
 {
     private readonly List<Actor> _hands;
 
@@ -78,9 +78,10 @@ class GraspingRancor : Components.SimpleAOEs
     }
 }
 
-class HatefulMiasma(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.HatefulMiasma, 6f);
-class PoisonedWords(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PoisonedWords, 6f);
-class CoffinNails : Components.SimpleAOEs
+sealed class HatefulMiasma(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.HatefulMiasma, 6f);
+sealed class PoisonedWordsStepsOfDestruction(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PoisonedWords, (uint)AID.StepsOfDestructionAOE], 6f);
+
+sealed class CoffinNails : Components.SimpleAOEs
 {
     public CoffinNails(BossModule module) : base(module, (uint)AID.CoffinNails, new AOEShapeCone(60f, 45f.Degrees()))
     {
@@ -103,27 +104,25 @@ class CoffinNails : Components.SimpleAOEs
     }
 }
 
-class Stab(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Stab);
-class GripOfPoison(BossModule module) : Components.RaidwideCast(module, (uint)AID.GripOfPoison);
-class StepsOfDestruction(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StepsOfDestructionAOE, 6f);
+sealed class Stab(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Stab);
+sealed class GripOfPoison(BossModule module) : Components.RaidwideCast(module, (uint)AID.GripOfPoison);
 
-class CE21FinalFurlongStates : StateMachineBuilder
+sealed class CE21FinalFurlongStates : StateMachineBuilder
 {
     public CE21FinalFurlongStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<GraspingRancor>()
             .ActivateOnEnter<HatefulMiasma>()
-            .ActivateOnEnter<PoisonedWords>()
+            .ActivateOnEnter<PoisonedWordsStepsOfDestruction>()
             .ActivateOnEnter<CoffinNails>()
             .ActivateOnEnter<Stab>()
-            .ActivateOnEnter<GripOfPoison>()
-            .ActivateOnEnter<StepsOfDestruction>();
+            .ActivateOnEnter<GripOfPoison>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 6)] // bnpcname=9405
-public class CE21FinalFurlong(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE21FinalFurlong(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(644f, 228f), 29.5f, 32)]);
 

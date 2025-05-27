@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel3Sartauvoir;
 
-class Duel3SartauvoirStates : StateMachineBuilder
+sealed class Duel3SartauvoirStates : StateMachineBuilder
 {
     public Duel3SartauvoirStates(BossModule module) : base(module)
     {

@@ -2,7 +2,7 @@ using static BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon.CLL4Dawon
 
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donutDawon = new(30f, 35f);
     private static readonly AOEShapeDonut donutLyon = new(20f, 25f);

@@ -12,12 +12,12 @@ sealed class Break(BossModule module) : Components.GenericGaze(module)
             Eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell, 0.9f)));
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.BreakBossAOE or (uint)AID.BreakEyeAOE)
         {
             var count = Eyes.Count;
-            var pos = caster.Position;
+            var pos = spell.LocXZ;
             for (var i = 0; i < count; ++i)
             {
                 if (Eyes[i].Position == pos)

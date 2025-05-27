@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class CrackleHiss(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrackleHiss, new AOEShapeCone(25f, 60f.Degrees()))
+sealed class CrackleHiss(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrackleHiss, new AOEShapeCone(25f, 60f.Degrees()))
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -13,7 +13,7 @@ class CrackleHiss(BossModule module) : Components.SimpleAOEs(module, (uint)AID.C
     }
 }
 
-class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RipperClaw, new AOEShapeCone(9f, 45f.Degrees()))
+sealed class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RipperClaw, new AOEShapeCone(9f, 45f.Degrees()))
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -26,7 +26,7 @@ class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ri
     }
 }
 
-class SpikeFlail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpikeFlail, new AOEShapeCone(25f, 30f.Degrees()))
+sealed class SpikeFlail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpikeFlail, new AOEShapeCone(25f, 30f.Degrees()))
 {
     private readonly ArenaChange _arena = module.FindComponent<ArenaChange>()!;
 
@@ -39,7 +39,7 @@ class SpikeFlail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Sp
     }
 }
 
-class LeftRightHammer(BossModule module) : Components.GenericAOEs(module)
+sealed class LeftRightHammer(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
     private readonly List<AOEInstance> _aoes = new(4);

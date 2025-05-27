@@ -1,14 +1,14 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel1Gabriel;
 
-class MagitekMissile(BossModule module) : Components.Voidzone(module, 1.3f, GetMissiles, 5f)
+sealed class MagitekMissile(BossModule module) : Components.Voidzone(module, 1.3f, GetMissiles, 5f)
 {
     private static List<Actor> GetMissiles(BossModule module) => module.Enemies((uint)OID.MagitekMissile);
 }
 
-class MissileLauncher(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MissileLauncher, 4f);
+sealed class MissileLauncher(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MissileLauncher, 4f);
 
-class InfraredHomingMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InfraredHomingMissile, 15f);
-class InfraredHomingMissileBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+sealed class InfraredHomingMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InfraredHomingMissile, 15f);
+sealed class InfraredHomingMissileBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(15f);
 
@@ -37,7 +37,7 @@ class InfraredHomingMissileBait(BossModule module) : Components.GenericBaitAway(
     }
 }
 
-class DynamicSensoryJammer(BossModule module) : Components.StayMove(module, 3f)
+sealed class DynamicSensoryJammer(BossModule module) : Components.StayMove(module, 3f)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -53,7 +53,7 @@ class DynamicSensoryJammer(BossModule module) : Components.StayMove(module, 3f)
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaDuel, GroupID = 735, NameID = 4, PlanLevel = 80)]
-public class Gabriel(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(631f, 687f)), new ArenaBoundsCircle(15f))
+public sealed class Gabriel(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(631f, 687f)), new ArenaBoundsCircle(15f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 15f);
 }

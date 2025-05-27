@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class Obey(BossModule module) : Components.GenericAOEs(module)
+sealed class Obey(BossModule module) : Components.GenericAOEs(module)
 {
     public static readonly AOEShapeCross Cross = new(50f, 7f);
     public static readonly AOEShapeDonut Donut = new(12f, 60f);

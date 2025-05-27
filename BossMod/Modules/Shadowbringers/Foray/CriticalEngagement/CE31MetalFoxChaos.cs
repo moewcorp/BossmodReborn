@@ -1,4 +1,6 @@
-﻿namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
+﻿using BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
+
+namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
 
 public enum OID : uint
 {
@@ -20,7 +22,7 @@ public enum AID : uint
     SatelliteLaser = 20137 // Boss->self, 10.0s cast, range 100 circle
 }
 
-class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module)
+sealed class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime[] _times = [];
     private Angle startrotation;
@@ -36,7 +38,7 @@ class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module)
 
         var bits = Module.Enemies((uint)OID.MagitekBit);
         var count = bits.Count;
-        var aoes = new AOEInstance[count];
+        Span<AOEInstance> aoes = new AOEInstance[count];
         var index = 0;
         for (var i = 0; i < count; ++i)
         {
@@ -66,28 +68,29 @@ class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module)
                 }
             }
         }
-        return aoes.AsSpan()[..index];
+        return aoes[..index];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var _time = WorldState.CurrentTime;
-        if (spell.Action.ID == (uint)AID.SatelliteLaser)
+        switch (spell.Action.ID)
         {
-            Type = Types.SatelliteLaser;
-            _times = [_time.AddSeconds(2.5d), _time.AddSeconds(12.3d)];
-        }
-        else if (spell.Action.ID == (uint)AID.DiffractiveLaser)
-        {
-            startrotation = spell.Rotation + 180f.Degrees();
-            Type = Types.DiffractiveLaser;
-            _times = [_time.AddSeconds(2d), _time.AddSeconds(8.8d), _time.AddSeconds(10.6d), _time.AddSeconds(12.4d)];
-        }
-        else if (spell.Action.ID == (uint)AID.LaserShower)
-        {
-            startrotation = caster.Rotation;
-            Type = Types.LaserShower;
-            _times = [_time, _time.AddSeconds(6.5d), _time.AddSeconds(8.3d), _time.AddSeconds(10.1d)];
+            case (uint)AID.SatelliteLaser:
+                Type = Types.SatelliteLaser;
+                _times = [_time.AddSeconds(2.5d), _time.AddSeconds(12.3d)];
+                break;
+            case (uint)AID.DiffractiveLaser:
+                startrotation = spell.Rotation + 180f.Degrees();
+                Type = Types.DiffractiveLaser;
+                _times = [_time.AddSeconds(2d), _time.AddSeconds(8.8d), _time.AddSeconds(10.6d), _time.AddSeconds(12.4d)];
+                break;
+            case (uint)AID.LaserShower:
+                if (spell.Action.ID == (uint)AID.SatelliteLaser)
+                    startrotation = caster.Rotation;
+                Type = Types.LaserShower;
+                _times = [_time, _time.AddSeconds(6.5d), _time.AddSeconds(8.3d), _time.AddSeconds(10.1d)];
+                break;
         }
     }
 
@@ -104,12 +107,12 @@ class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Rush(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.Rush, 7f);
-class LaserShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LaserShower, 10f);
-class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiffractiveLaser, new AOEShapeCone(60f, 75f.Degrees()));
-class SatelliteLaser(BossModule module) : Components.RaidwideCast(module, (uint)AID.SatelliteLaser, "Raidwide + all lasers fire at the same time");
+sealed class Rush(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.Rush, 7f);
+sealed class LaserShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LaserShower, 10f);
+sealed class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiffractiveLaser, new AOEShapeCone(60f, 75f.Degrees()));
+sealed class SatelliteLaser(BossModule module) : Components.RaidwideCast(module, (uint)AID.SatelliteLaser, "Raidwide + all lasers fire at the same time");
 
-class CE31MetalFoxChaosStates : StateMachineBuilder
+sealed class CE31MetalFoxChaosStates : StateMachineBuilder
 {
     public CE31MetalFoxChaosStates(BossModule module) : base(module)
     {
@@ -123,7 +126,7 @@ class CE31MetalFoxChaosStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 13)] // bnpcname=9424
-public class CE31MetalFoxChaos(WorldState ws, Actor primary) : BossModule(ws, primary, new(-234f, 262f), new ArenaBoundsSquare(29.5f))
+public sealed class CE31MetalFoxChaos(WorldState ws, Actor primary) : BossModule(ws, primary, new(-234f, 262f), new ArenaBoundsSquare(29.5f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 30f);
 }

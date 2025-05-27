@@ -18,5 +18,5 @@ class RightArmComet(BossModule module, uint aid, float distance) : Components.Si
             Arena.AddCircle(c.Position, _radius, pc.Position.InCircle(c.Position, _radius) ? Colors.Safe : Colors.Danger, 2);
     }
 }
-class RightArmCometShort(BossModule module) : RightArmComet(module, (uint)AID.RightArmCometKnockbackShort, 12);
-class RightArmCometLong(BossModule module) : RightArmComet(module, (uint)AID.RightArmCometKnockbackLong, 25);
+sealed class RightArmCometShort(BossModule module) : RightArmComet(module, (uint)AID.RightArmCometKnockbackShort, 12);
+sealed class RightArmCometLong(BossModule module) : RightArmComet(module, (uint)AID.RightArmCometKnockbackLong, 25);

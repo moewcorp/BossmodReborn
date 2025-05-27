@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel1Gabriel;
 
-class GabrielStates : StateMachineBuilder
+sealed class GabrielStates : StateMachineBuilder
 {
     public GabrielStates(BossModule module) : base(module)
     {

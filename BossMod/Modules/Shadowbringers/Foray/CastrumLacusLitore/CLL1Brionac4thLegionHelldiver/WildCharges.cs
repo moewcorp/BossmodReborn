@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegionHelldiver;
 
-class WildCharges(BossModule module) : Components.GenericAOEs(module)
+sealed class WildCharges(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(6);
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;

@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel2Lyon;
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 30f);
     private AOEInstance? _aoe;

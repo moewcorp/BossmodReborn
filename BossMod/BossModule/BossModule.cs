@@ -106,13 +106,13 @@ public abstract class BossModule : IDisposable
             if (actor.IsTargetable)
                 comp.OnActorTargetable(actor);
             ref var tether = ref actor.Tether;
-            if (tether.ID != 0)
+            if (tether.ID != default)
                 comp.OnTethered(actor, tether);
             var len = actor.Statuses.Length;
             for (var i = 0; i < len; ++i)
             {
                 ref var status = ref actor.Statuses[i];
-                if (status.ID != 0)
+                if (status.ID != default)
                     comp.OnStatusGain(actor, status);
             }
         }
@@ -554,16 +554,22 @@ public abstract class BossModule : IDisposable
 
     private void OnActorStatusGain(Actor actor, int index)
     {
-        var count = Components.Count;
-        for (var i = 0; i < count; ++i)
-            Components[i].OnStatusGain(actor, actor.Statuses[index]);
+        if (actor.Type != ActorType.Pet)
+        {
+            var count = Components.Count;
+            for (var i = 0; i < count; ++i)
+                Components[i].OnStatusGain(actor, actor.Statuses[index]);
+        }
     }
 
     private void OnActorStatusLose(Actor actor, int index)
     {
-        var count = Components.Count;
-        for (var i = 0; i < count; ++i)
-            Components[i].OnStatusLose(actor, actor.Statuses[index]);
+        if (actor.Type != ActorType.Pet)
+        {
+            var count = Components.Count;
+            for (var i = 0; i < count; ++i)
+                Components[i].OnStatusLose(actor, actor.Statuses[index]);
+        }
     }
 
     private void OnActorIcon(Actor actor, uint iconID, ulong targetID)

@@ -35,13 +35,13 @@ public enum TetherID : uint
     Laser2 = 115 // MagitekBartizan->Boss
 }
 
-class PlasmaGun(BossModule module) : Components.SingleTargetCast(module, (uint)AID.PlasmaGun);
-class Neutralization(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Neutralization, new AOEShapeCone(30f, 60f.Degrees()));
-class OrderedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OrderedFire, 10f);
-class SearingConduction(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SearingConduction, 15f);
-class ElectrifyingConduction(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ElectrifyingConduction);
+sealed class PlasmaGun(BossModule module) : Components.SingleTargetCast(module, (uint)AID.PlasmaGun);
+sealed class Neutralization(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Neutralization, new AOEShapeCone(30f, 60f.Degrees()));
+sealed class OrderedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OrderedFire, 10f);
+sealed class SearingConduction(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SearingConduction, 15f);
+sealed class ElectrifyingConduction(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ElectrifyingConduction);
 
-class LightningRod(BossModule module) : Components.GenericTowers(module)
+sealed class LightningRod(BossModule module) : Components.GenericTowers(module)
 {
     public override ReadOnlySpan<Tower> ActiveTowers(int slot, Actor actor)
     {
@@ -102,7 +102,7 @@ class LightningRod(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-class ElectrochemicalReaction(BossModule module) : Components.GenericAOEs(module)
+sealed class ElectrochemicalReaction(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeRect rect = new(50f, 12.5f);
@@ -171,7 +171,7 @@ class ElectrochemicalReaction(BossModule module) : Components.GenericAOEs(module
     }
 }
 
-class CE24PatriotGamesStates : StateMachineBuilder
+sealed class CE24PatriotGamesStates : StateMachineBuilder
 {
     public CE24PatriotGamesStates(BossModule module) : base(module)
     {
@@ -187,7 +187,7 @@ class CE24PatriotGamesStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 10)]
-public class CE24PatriotGames(WorldState ws, Actor primary) : BossModule(ws, primary, new(-239.999f, 413.999f), new ArenaBoundsSquare(24.5f))
+public sealed class CE24PatriotGames(WorldState ws, Actor primary) : BossModule(ws, primary, new(-239.999f, 413.999f), new ArenaBoundsSquare(24.5f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 25f);
 }

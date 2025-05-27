@@ -14,7 +14,7 @@ sealed class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOE
         var count = Mechanics.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
+        Span<AOEInstance> aoes = new AOEInstance[count];
         var index = 0;
         foreach (var (caster, m) in Mechanics)
         {
@@ -27,7 +27,7 @@ sealed class ThirdArtOfDarknessCleave(BossModule module) : Components.GenericAOE
             if (dir != default)
                 aoes[index++] = new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation + dir, m[0].activation);
         }
-        return aoes.AsSpan(..index);
+        return aoes[..index];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

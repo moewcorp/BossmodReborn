@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.Duel.Duel3Sartauvoir;
 
-class BioIV(BossModule module) : BossComponent(module)
+sealed class BioIV(BossModule module) : BossComponent(module)
 {
     private bool poisoned;
     private static readonly ActionID esuna = ActionID.MakeSpell(ClassShared.AID.Esuna);

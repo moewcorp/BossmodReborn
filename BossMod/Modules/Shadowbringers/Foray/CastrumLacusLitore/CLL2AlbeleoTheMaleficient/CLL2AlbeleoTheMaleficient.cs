@@ -32,14 +32,14 @@ public enum AID : uint
     AbyssalCry = 21510 // AlbeleosHrodvitnir->self, 6.0s cast, range 30 circle
 }
 
-class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiffractiveLaser, 5f);
-class MagitekCannon(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekCannon, 6f);
-class MagitekRay(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekRay, new AOEShapeRect(40f, 3f));
-class GrandSword(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrandSword, new AOEShapeCone(27f, 60f.Degrees()));
-class BalefulGaze(BossModule module) : Components.CastGaze(module, (uint)AID.BalefulGaze, range: 35f);
-class AbyssalCry(BossModule module) : Components.CastInterruptHint(module, (uint)AID.AbyssalCry);
+sealed class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiffractiveLaser, 5f);
+sealed class MagitekCannon(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekCannon, 6f);
+sealed class MagitekRay(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekRay, new AOEShapeRect(40f, 3f));
+sealed class GrandSword(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrandSword, new AOEShapeCone(27f, 60f.Degrees()));
+sealed class BalefulGaze(BossModule module) : Components.CastGaze(module, (uint)AID.BalefulGaze, range: 35f);
+sealed class AbyssalCry(BossModule module) : Components.CastInterruptHint(module, (uint)AID.AbyssalCry);
 
-class CLL2AlbeleoTheMaleficentStates : StateMachineBuilder
+sealed class CLL2AlbeleoTheMaleficentStates : StateMachineBuilder
 {
     public CLL2AlbeleoTheMaleficentStates(BossModule module) : base(module)
     {
@@ -55,7 +55,7 @@ class CLL2AlbeleoTheMaleficentStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735, NameID = 9433)]
-public class CLL2AlbeleoTheMaleficent(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CLL2AlbeleoTheMaleficent(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(87.45f, -409.99f), new(87.45f, -408.35f), new(87.75f, -407.95f),
     new(91.13f, -407.93f), new(91.59f, -408.28f), new(91.59f, -409.59f), new(98.15f, -409.59f), new(98.33f, -409.11f),

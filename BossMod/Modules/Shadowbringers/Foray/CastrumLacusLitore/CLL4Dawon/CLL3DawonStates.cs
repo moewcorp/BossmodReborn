@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL4Dawon;
 
-class CLL4DawonStates : StateMachineBuilder
+sealed class CLL4DawonStates : StateMachineBuilder
 {
     public CLL4DawonStates(BossModule module) : base(module)
     {

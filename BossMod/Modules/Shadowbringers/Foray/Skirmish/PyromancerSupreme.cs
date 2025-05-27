@@ -36,15 +36,15 @@ public enum AID : uint
     SnowsOfBozja = 21274, // Smok->location, 2.5s cast, range 5 circle
 }
 
-class PyreticEruptionPyroscatter(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PyreticEruption, (uint)AID.Pyroscatter], 8f);
-class TridirectionalFlame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TridirectionalFlame, new AOEShapeRect(60f, 4f));
-class Pyroburst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pyroburst, 10f);
-class GrandCrossflame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrandCrossflame, new AOEShapeCross(40f, 9f));
-class Firestarter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Firestarter, new AOEShapeDonut(6f, 40f));
-class GarleanFireSnowsOfBozja(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GarleanFire, (uint)AID.SnowsOfBozja], 5f);
-class ThermalShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermalShock, 20f);
+sealed class PyreticEruptionPyroscatter(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PyreticEruption, (uint)AID.Pyroscatter], 8f);
+sealed class TridirectionalFlame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TridirectionalFlame, new AOEShapeRect(60f, 4f));
+sealed class Pyroburst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pyroburst, 10f);
+sealed class GrandCrossflame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrandCrossflame, new AOEShapeCross(40f, 9f));
+sealed class Firestarter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Firestarter, new AOEShapeDonut(6f, 40f));
+sealed class GarleanFireSnowsOfBozja(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GarleanFire, (uint)AID.SnowsOfBozja], 5f);
+sealed class ThermalShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermalShock, 20f);
 
-class PyromancerSupremeStates : StateMachineBuilder
+sealed class PyromancerSupremeStates : StateMachineBuilder
 {
     public PyromancerSupremeStates(BossModule module) : base(module)
     {
@@ -61,7 +61,7 @@ class PyromancerSupremeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaSkirmish, GroupID = 735, NameID = 1616)]
-public class PyromancerSupreme : SimpleBossModule
+public sealed class PyromancerSupreme : SimpleBossModule
 {
     public PyromancerSupreme(WorldState ws, Actor primary) : base(ws, primary)
     {

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.Duel.Duel4Dabog;
 
-class LeftArmMetalCutterAOE(BossModule module) : Components.GenericAOEs(module)
+sealed class LeftArmMetalCutterAOE(BossModule module) : Components.GenericAOEs(module)
 {
     public enum State { FirstAOEs, SecondAOEs, Done }
 
@@ -54,5 +54,5 @@ class LeftArmMetalCutterKnockback(BossModule module, uint aid, float distance) :
             _instance = new(caster.Position, _distance, Module.CastFinishAt(spell, 0.6f));
     }
 }
-class LeftArmMetalCutterKnockbackShort(BossModule module) : LeftArmMetalCutterKnockback(module, (uint)AID.LeftArmMetalCutterKnockbackShort, 5f);
-class LeftArmMetalCutterKnockbackLong(BossModule module) : LeftArmMetalCutterKnockback(module, (uint)AID.LeftArmMetalCutterKnockbackLong, 15f);
+sealed class LeftArmMetalCutterKnockbackShort(BossModule module) : LeftArmMetalCutterKnockback(module, (uint)AID.LeftArmMetalCutterKnockbackShort, 5f);
+sealed class LeftArmMetalCutterKnockbackLong(BossModule module) : LeftArmMetalCutterKnockback(module, (uint)AID.LeftArmMetalCutterKnockbackLong, 15f);

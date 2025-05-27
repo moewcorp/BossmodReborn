@@ -46,7 +46,85 @@ class TectonicEruption(BossModule module) : Components.SimpleAOEs(module, (uint)
 class RockCutter(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.RockCutter);
 class AncientQuake(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.AncientQuake, (uint)AID.AncientQuakeAOE, 0.8f);
 class Roxxor(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Roxxor, 6f);
-class ControlTowerAppear(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ControlTowerAppear, 6f);
+
+class ControlTowerAppear(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly AOEShapeCircle circle = new(6f);
+    private readonly List<Polygon> activeTowers = new(3);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.ControlTowerAppear)
+        {
+            var count = _aoes.Count;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < count; ++i) // prevent duplicates, each tower got 2 casters
+            {
+                if (_aoes[i].Origin == pos)
+                {
+                    return;
+                }
+            }
+            _aoes.Add(new(circle, pos, default, Module.CastFinishAt(spell)));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        var id = spell.Action.ID;
+        if (id == (uint)AID.ControlTowerAppear)
+        {
+
+            var pos = spell.LocXZ;
+            var countA = _aoes.Count;
+
+            for (var i = 0; i < countA; ++i)
+            {
+                if (_aoes[i].Origin == pos)
+                {
+                    _aoes.RemoveAt(i);
+                    break;
+                }
+            }
+            var countT = activeTowers.Count;
+            for (var i = 0; i < countT; ++i) // prevent duplicates, each tower got 2 casters to circumvent target limit
+            {
+                if (activeTowers[i].Center.AlmostEqual(pos, 0.1f))
+                {
+                    return;
+                }
+            }
+
+            activeTowers.Add(new Polygon(caster.Position, 5.5f, 20)); // tower + player hitbox radius is slightly smaller than AOE
+            Arena.Bounds = new ArenaBoundsComplex(CE44FamiliarFace.ArenaPolygon, [.. activeTowers]);
+        }
+        else if (id == (uint)AID.Towerfall)
+        {
+            _aoes.Clear();
+            var count = activeTowers.Count;
+            var pos = caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                if (activeTowers[i].Center == pos)
+                {
+                    activeTowers.RemoveAt(i); // depending on timings new towers can appear before old ones disappear, so we cant just clear them
+                    if (--count != 0)
+                    {
+                        Arena.Bounds = new ArenaBoundsComplex(CE44FamiliarFace.ArenaPolygon, [.. activeTowers]);
+                    }
+                    else
+                    {
+                        Arena.Bounds = CE44FamiliarFace.DefaultArena;
+                    }
+                    return;
+                }
+            }
+        }
+    }
+}
 
 // note: we could predict aoes way in advance, when FallingTower actors are created - they immediately have correct rotation
 // if previous cast was TowerRound, delay is ~24.4s; otherwise if previous cast was ControlTower, delay is ~9.6s; otherwise it is ~13s
@@ -97,20 +175,29 @@ class Hammerfall(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
         var max = count > 2 ? 2 : count;
-        return CollectionsMarshal.AsSpan(_aoes)[..max];
+        if (count > 1)
+        {
+            aoes[0].Color = Colors.Danger;
+        }
+        return aoes[..max];
     }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Hammer)
+        {
             _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.6d)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Hammerfall)
+        {
             _aoes.RemoveAt(0);
+        }
     }
 }
 
@@ -132,9 +219,10 @@ class CE44FamiliarFaceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 29)] // bnpcname=9693
-public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public class CE44FamiliarFace(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultArena.Center, DefaultArena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(330f, 390f), 29.5f, 32)]);
+    public static readonly Polygon[] ArenaPolygon = [new Polygon(new(330f, 390f), 29.5f, 32)];
+    public static readonly ArenaBoundsComplex DefaultArena = new(ArenaPolygon);
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }

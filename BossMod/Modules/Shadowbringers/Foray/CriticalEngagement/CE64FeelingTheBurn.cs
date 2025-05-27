@@ -43,9 +43,9 @@ public enum IconID : uint
     BallisticImpact = 261 // Helper
 }
 
-class DiveFormation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiveFormation, new AOEShapeRect(60f, 3f));
+sealed class DiveFormation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiveFormation, new AOEShapeRect(60f, 3f));
 
-class AntiPersonnelMissile(BossModule module) : Components.GenericAOEs(module, (uint)AID.BallisticImpact)
+sealed class AntiPersonnelMissile(BossModule module) : Components.GenericAOEs(module, (uint)AID.BallisticImpact)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeRect _shape = new(12f, 12f, 12f);
@@ -73,7 +73,7 @@ class AntiPersonnelMissile(BossModule module) : Components.GenericAOEs(module, (
     }
 }
 
-class ChainCannonEscort(BossModule module) : Components.GenericAOEs(module)
+sealed class ChainCannonEscort(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Actor> _casters = new(6);
     public static readonly AOEShapeRect Rect = new(60f, 2.5f);
@@ -187,7 +187,7 @@ class ChainCannonEscort(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ChainCannonBoss(BossModule module) : Components.GenericAOEs(module)
+sealed class ChainCannonBoss(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
@@ -216,12 +216,12 @@ class ChainCannonBoss(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurfaceMissileAOE, 6f);
-class SuppressiveMagitekRays(BossModule module) : Components.RaidwideCast(module, (uint)AID.SuppressiveMagitekRays);
-class Analysis(BossModule module) : Components.CastHint(module, (uint)AID.Analysis, "Face open weakpoint to charging adds");
-class PreciseStrike(BossModule module) : Components.CastWeakpoint(module, (uint)AID.PreciseStrike, new AOEShapeRect(60f, 3f), (uint)SID.FrontUnseen, (uint)SID.BackUnseen, default, default);
+sealed class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurfaceMissileAOE, 6f);
+sealed class SuppressiveMagitekRays(BossModule module) : Components.RaidwideCast(module, (uint)AID.SuppressiveMagitekRays);
+sealed class Analysis(BossModule module) : Components.CastHint(module, (uint)AID.Analysis, "Face open weakpoint to charging adds");
+sealed class PreciseStrike(BossModule module) : Components.CastWeakpoint(module, (uint)AID.PreciseStrike, new AOEShapeRect(60f, 3f), (uint)SID.FrontUnseen, (uint)SID.BackUnseen, default, default);
 
-class CE64FeelingTheBurnStates : StateMachineBuilder
+sealed class CE64FeelingTheBurnStates : StateMachineBuilder
 {
     public CE64FeelingTheBurnStates(BossModule module) : base(module)
     {
@@ -238,7 +238,7 @@ class CE64FeelingTheBurnStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 18)] // bnpcname=9945
-public class CE64FeelingTheBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240f, -230f), new ArenaBoundsSquare(24f))
+public sealed class CE64FeelingTheBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240f, -230f), new ArenaBoundsSquare(24f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

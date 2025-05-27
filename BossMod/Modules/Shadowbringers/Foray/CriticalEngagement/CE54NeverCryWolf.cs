@@ -45,11 +45,11 @@ public enum AID : uint
     ActivateImaginifer = 23623 // Imaginifer->self, no cast, single-target, visual
 }
 
-class IcePillar(BossModule module) : Components.SimpleAOEs(module, (uint)AID.IcePillarAOE, 4f);
-class PillarPierce(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PillarPierce, new AOEShapeRect(80f, 2f));
-class Shatter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shatter, 8f);
+sealed class IcePillar(BossModule module) : Components.SimpleAOEs(module, (uint)AID.IcePillarAOE, 4f);
+sealed class PillarPierce(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PillarPierce, new AOEShapeRect(80f, 2f));
+sealed class Shatter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shatter, 8f);
 
-class BracingWind(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BracingWind, 40f, false, 1, new AOEShapeRect(60f, 6f), Kind.DirForward)
+sealed class BracingWind(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BracingWind, 40f, false, 1, new AOEShapeRect(60f, 6f), Kind.DirForward)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -63,7 +63,7 @@ class BracingWind(BossModule module) : Components.SimpleKnockbacks(module, (uint
     }
 }
 
-class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.LunarCry, 80f)
+sealed class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.LunarCry, 80f)
 {
     private readonly List<Actor> _safePillars = [];
     private readonly BracingWind? _knockback = module.FindComponent<BracingWind>();
@@ -92,7 +92,7 @@ class LunarCry(BossModule module) : Components.CastLineOfSightAOE(module, (uint)
 }
 
 // this AOE only got 2s cast time, but the actors already spawn 4.5s earlier, so we can use that to our advantage
-class ThermalGust(BossModule module) : Components.GenericAOEs(module)
+sealed class ThermalGust(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
 
@@ -114,7 +114,7 @@ class ThermalGust(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class AgeOfEndlessFrost(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class AgeOfEndlessFrost(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _increment;
     private DateTime _activation;
@@ -162,12 +162,12 @@ class AgeOfEndlessFrost(BossModule module) : Components.GenericRotatingAOE(modul
     }
 }
 
-class StormWithout(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormWithout, new AOEShapeDonut(10f, 40f));
-class StormWithin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormWithin, 10f);
-class AncientGlacier(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientGlacierAOE, 6f);
-class Glaciation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Glaciation);
+sealed class StormWithout(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormWithout, new AOEShapeDonut(10f, 40f));
+sealed class StormWithin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormWithin, 10f);
+sealed class AncientGlacier(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientGlacierAOE, 6f);
+sealed class Glaciation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Glaciation);
 
-class CE54NeverCryWolfStates : StateMachineBuilder
+sealed class CE54NeverCryWolfStates : StateMachineBuilder
 {
     public CE54NeverCryWolfStates(BossModule module) : base(module)
     {
@@ -187,7 +187,7 @@ class CE54NeverCryWolfStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
-public class CE54NeverCryWolf(WorldState ws, Actor primary) : BossModule(ws, primary, new(-830f, 190f), new ArenaBoundsSquare(24f))
+public sealed class CE54NeverCryWolf(WorldState ws, Actor primary) : BossModule(ws, primary, new(-830f, 190f), new ArenaBoundsSquare(24f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

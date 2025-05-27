@@ -2,7 +2,7 @@ using static BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegio
 
 namespace BossMod.Shadowbringers.Foray.CastrumLacusLitore.CLL1Brionac4thLegionHelldiver;
 
-class ElectricAnvil(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ElectricAnvil)
+sealed class ElectricAnvil(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ElectricAnvil)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -19,7 +19,7 @@ class ElectricAnvil(BossModule module) : Components.SingleTargetCast(module, (ui
     }
 }
 
-class MagitekMissiles(BossModule module) : Components.SingleTargetCast(module, (uint)AID.MagitekMissiles)
+sealed class MagitekMissiles(BossModule module) : Components.SingleTargetCast(module, (uint)AID.MagitekMissiles)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -38,7 +38,7 @@ class MagitekMissiles(BossModule module) : Components.SingleTargetCast(module, (
     }
 }
 
-class MRVMissile(BossModule module) : Components.RaidwideCast(module, (uint)AID.MRVMissile)
+sealed class MRVMissile(BossModule module) : Components.RaidwideCast(module, (uint)AID.MRVMissile)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -55,7 +55,7 @@ class MRVMissile(BossModule module) : Components.RaidwideCast(module, (uint)AID.
     }
 }
 
-class LightningShower(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightningShower)
+sealed class LightningShower(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightningShower)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -72,7 +72,7 @@ class LightningShower(BossModule module) : Components.RaidwideCast(module, (uint
     }
 }
 
-class FalseThunder(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.FalseThunder1, (uint)AID.FalseThunder2], new AOEShapeCone(47f, 65f.Degrees()))
+sealed class FalseThunder(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.FalseThunder1, (uint)AID.FalseThunder2], new AOEShapeCone(47f, 65f.Degrees()))
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -85,7 +85,7 @@ class FalseThunder(BossModule module) : Components.SimpleAOEGroupsByTimewindow(m
     }
 }
 
-class Voltstream(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voltstream, new AOEShapeRect(40f, 5f), 3)
+sealed class Voltstream(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voltstream, new AOEShapeRect(40f, 5f), 3)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -98,7 +98,7 @@ class Voltstream(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Vo
     }
 }
 
-class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurfaceMissile, 6f)
+sealed class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurfaceMissile, 6f)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -111,7 +111,7 @@ class SurfaceMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AI
     }
 }
 
-class CommandSuppressiveFormation(BossModule module) : Components.ChargeAOEs(module, (uint)AID.CommandSuppressiveFormation, 3f)
+sealed class CommandSuppressiveFormation(BossModule module) : Components.ChargeAOEs(module, (uint)AID.CommandSuppressiveFormation, 3f)
 {
     private readonly DetermineArena _arena = module.FindComponent<DetermineArena>()!;
 
@@ -124,7 +124,7 @@ class CommandSuppressiveFormation(BossModule module) : Components.ChargeAOEs(mod
     }
 }
 
-class DetermineArena(BossModule module) : BossComponent(module)
+sealed class DetermineArena(BossModule module) : BossComponent(module)
 {
     public bool IsBrionacArena;
 
@@ -145,7 +145,7 @@ class DetermineArena(BossModule module) : BossComponent(module)
     }
 }
 
-class BossHealths(BossModule module) : BossComponent(module)
+sealed class BossHealths(BossModule module) : BossComponent(module)
 {
     private readonly Actor? _bossHellDiver = module.Enemies((uint)OID.FourthLegionHelldiver1)[0];
 
@@ -156,7 +156,7 @@ class BossHealths(BossModule module) : BossComponent(module)
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735, NameID = 9436)]
-public class CLL1Brionac4thLegionHelldiver : BossModule
+public sealed class CLL1Brionac4thLegionHelldiver : BossModule
 {
     public CLL1Brionac4thLegionHelldiver(WorldState ws, Actor primary) : base(ws, primary, ArenaCenterBottom, ArenaBottom)
     {

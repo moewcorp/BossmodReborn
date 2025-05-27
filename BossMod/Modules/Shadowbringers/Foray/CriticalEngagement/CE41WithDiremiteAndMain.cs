@@ -195,9 +195,11 @@ class CE41WithDiremiteAndMainStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
-public class CE41WithDiremiteAndMain(WorldState ws, Actor primary) : BossModule(ws, primary, new(-220f, 530f), new ArenaBoundsCircle(30f))
+public class CE41WithDiremiteAndMain(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly uint[] Crystals = [(uint)OID.DimCrystal, (uint)OID.CorruptedCrystal];
+    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-220f, 530f), 29.5f, 32)]);
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         base.DrawEnemies(pcSlot, pc);

@@ -31,17 +31,17 @@ public enum AID : uint
     GarleanFire = 21246 // ForthLegionGunship->location, 3.0s cast, range 5 circle
 }
 
-class MagitekLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekLaser, new AOEShapeRect(75f, 2f));
-class Pulverize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pulverize, 15f);
-class Ventilate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ventilate, 8f);
-class Compress(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress, new AOEShapeCross(50f, 3.5f));
-class Accelerate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Accelerate, 6f, 8);
-class Dispose(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Dispose, new AOEShapeCone(40f, 30f.Degrees()));
+sealed class MagitekLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekLaser, new AOEShapeRect(75f, 2f));
+sealed class Pulverize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pulverize, 15f);
+sealed class Ventilate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ventilate, 8f);
+sealed class Compress(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress, new AOEShapeCross(50f, 3.5f));
+sealed class Accelerate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Accelerate, 6f, 8);
+sealed class Dispose(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Dispose, new AOEShapeCone(40f, 30f.Degrees()));
 
-class Shatter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shatter, 6f);
-class GarleanFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GarleanFire, 5f);
+sealed class Shatter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shatter, 6f);
+sealed class GarleanFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GarleanFire, 5f);
 
-class HeavyBootsOfLeadStates : StateMachineBuilder
+sealed class HeavyBootsOfLeadStates : StateMachineBuilder
 {
     public HeavyBootsOfLeadStates(BossModule module) : base(module)
     {
@@ -58,7 +58,7 @@ class HeavyBootsOfLeadStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaSkirmish, GroupID = 735, NameID = 1612)]
-public class HeavyBootsOfLead(WorldState ws, Actor primary) : SimpleBossModule(ws, primary)
+public sealed class HeavyBootsOfLead(WorldState ws, Actor primary) : SimpleBossModule(ws, primary)
 {
     private static readonly uint[] adds = [(uint)OID.BozjanDoblyn, (uint)OID.BozjanSabotender, (uint)OID.FourthLegionVanguard, (uint)OID.ForthLegionGunship,
     (uint)OID.Viy];
