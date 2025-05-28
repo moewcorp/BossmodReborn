@@ -16,7 +16,7 @@ class FrigidPulseAOE(BossModule module) : Donut(module, (uint)AID.FrigidPulseAOE
 
 class AntiPersonnelMissile(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AntiPersonnelMissile, 6);
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 32, SortOrder = 4)] //BossNameID = 10192 & 10006
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 32, SortOrder = 4)] //BossNameID = 10192 & 10006
 public class DAL3SaunionDawon : BossModule
 {
     public readonly List<Actor> Boss;

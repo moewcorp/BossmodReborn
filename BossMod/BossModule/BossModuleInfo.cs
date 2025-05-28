@@ -66,7 +66,7 @@ public static class BossModuleInfo
         Quest, // group id is Quest row
         Fate, // group id is Fate row
         Hunt, // group id is HuntRank
-        BozjaCE, // group id is ContentFinderCondition row, name id is DynamicEvent row
+        CriticalEngagement, // group id is ContentFinderCondition row, name id is DynamicEvent row
         BozjaDuel, // group id is ContentFinderCondition row, name id is DynamicEvent row
         EurekaNM, // group id is ContentFinderCondition row, name id is Fate row
         GoldSaucer, // group id is GoldSaucerTextData row

@@ -186,7 +186,7 @@ sealed class CE54NeverCryWolfStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 25)] // bnpcname=9941
 public sealed class CE54NeverCryWolf(WorldState ws, Actor primary) : BossModule(ws, primary, new(-830f, 190f), new ArenaBoundsSquare(24f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

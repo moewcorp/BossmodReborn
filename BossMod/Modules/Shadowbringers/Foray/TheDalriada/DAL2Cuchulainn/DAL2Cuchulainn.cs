@@ -9,7 +9,7 @@ class AmbientPulsationAOE(BossModule module) : Components.SimpleAOEs(module, (ui
 
 class FellFlow1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FellFlow1, new AOEShapeCone(50, 60.Degrees()));
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 32, SortOrder = 3)] //BossNameID = 10004
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 32, SortOrder = 3)] //BossNameID = 10004
 public class DAL2Cuchulainn(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly ArenaBoundsComplex arena = new([new Polygon(new(650f, -187.4f), 25.199f, 48)], [new Rectangle(new(650f, -162f), 20f, 1.25f), new Rectangle(new(650f, -213f), 20f, 1.25f)]);

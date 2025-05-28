@@ -300,7 +300,7 @@ sealed class CE32RiseOfTheRobotsStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 14)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 735, NameID = 14)]
 public sealed class CE32RiseOfTheRobots(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, startingArena)
 {
     public static readonly WPos ArenaCenter = new(104f, 237f);

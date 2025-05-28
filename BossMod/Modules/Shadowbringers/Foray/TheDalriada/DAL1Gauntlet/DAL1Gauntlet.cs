@@ -6,7 +6,7 @@ sealed class FrigidPulse(BossModule module) : Components.SimpleAOEGroups(module,
 sealed class PainfulGust(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PainfulGust, (uint)AID.PainfulGustShadow], 20f);
 sealed class BroadsideBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BroadsideBarrage, new AOEShapeRect(40f, 20f));
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 32, SortOrder = 1)] // NameID 9834
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 32, SortOrder = 1)] // NameID 9834
 public sealed class DAL1Gauntlet(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
     public static readonly WPos ArenaCenter = new(222f, -689f);
