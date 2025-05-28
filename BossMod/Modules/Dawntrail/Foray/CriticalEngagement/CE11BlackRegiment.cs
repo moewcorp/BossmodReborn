@@ -2,21 +2,14 @@ namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE11BlackRegiment;
 
 public enum OID : uint
 {
-    Boss = 0x46A7, // R1.000-4.200, x?
-    BlackStar = 0x46A5, // R1.980, x?
-    BlackChocobo1 = 0x46A8, // R1.320-4.200, x?
-    BlackChocobo2 = 0x46A6, // R0.450-4.200, x?
-    BlackChocobo3 = 0x45D0, // R1.320-1.800, x?
-    BlackChocobo4 = 0x46A9, // R1.320-1.700, x?
-    Deathwall = 0x4861, // R0.500, x?
-    _Gen_Actor1ebcfb = 0x1EBCFB, // R0.500, x?, EventObj type
-    _Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x?, EventObj type
-    _Gen_AutomatonQueen = 0x45E3, // R0.440-4.200, x?
-    _Gen_CrescentHeadstone = 0x45FB, // R0.450-4.200, x?
-    _Gen_AutomatonQueen1 = 0x45C5, // R0.440-4.200, x?
-
-    _Gen_CrescentDirtyEye = 0x45FD, // R1.700-1.800, x?
-    Helper = 0x233C, // R0.500, x?, Helper type
+    Boss = 0x46A7, // R1.0-4.2
+    BlackStar = 0x46A5, // R1.98
+    BlackChocobo1 = 0x46A8, // R1.32-4.2
+    BlackChocobo2 = 0x46A6, // R0.45-4.2
+    BlackChocobo3 = 0x45D0, // R1.32-1.8
+    BlackChocobo4 = 0x46A9, // R1.32-1.7
+    Deathwall = 0x4861, // R0.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
