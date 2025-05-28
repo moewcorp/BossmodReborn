@@ -199,7 +199,7 @@ sealed class ParticipantInfo : CommonEnumInfo
         sb.AppendLine($"    Helper = 0x233C,");
         sb.AppendLine("}");
         sb.AppendLine();
-        sb.AppendLine($"class {name}States : StateMachineBuilder");
+        sb.AppendLine($"sealed class {name}States : StateMachineBuilder");
         sb.AppendLine("{");
         sb.AppendLine($"    public {name}States(BossModule module) : base(module)");
         sb.AppendLine("    {");
@@ -213,7 +213,7 @@ sealed class ParticipantInfo : CommonEnumInfo
             sb.AppendLine();
             sb.AppendLine("    private void SinglePhase(uint id)");
             sb.AppendLine("    {");
-            sb.AppendLine("        SimpleState(id + 0xFF0000, 10000, \"???\");");
+            sb.AppendLine("        SimpleState(id + 0xFF0000u, 10000, \"???\");");
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    //private void XXX(uint id, float delay)");
@@ -221,7 +221,7 @@ sealed class ParticipantInfo : CommonEnumInfo
         sb.AppendLine("}");
         sb.AppendLine();
         sb.AppendLine($"[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = {data.Zones.FirstOrDefault().cfcId}, NameID = {data.Names.FirstOrDefault().id})]");
-        sb.AppendLine($"public class {name}(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));");
+        sb.AppendLine($"public sealed class {name}(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));");
         return sb;
     }
 }

@@ -125,7 +125,7 @@ sealed class CE31MetalFoxChaosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 13)] // bnpcname=9424
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 735, NameID = 13)] // bnpcname=9424
 public sealed class CE31MetalFoxChaos(WorldState ws, Actor primary) : BossModule(ws, primary, new(-234f, 262f), new ArenaBoundsSquare(29.5f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 30f);

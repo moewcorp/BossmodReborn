@@ -40,7 +40,7 @@ class PillarOfShamash3(BossModule module) : Components.SimpleAOEs(module, (uint)
 
 class UltimatePseudoterror(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UltimatePseudoterror, new AOEShapeDonut(15, 70));
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 32, SortOrder = 5)] //BossNameID = 10007
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 32, SortOrder = 5)] //BossNameID = 10007
 public class DAL4DiabloArmament(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
 {
     public static readonly WPos ArenaCenter = new(-720f, -760f);

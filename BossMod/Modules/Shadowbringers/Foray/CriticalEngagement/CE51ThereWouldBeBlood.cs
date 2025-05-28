@@ -61,7 +61,7 @@ sealed class CE51ThereWouldBeBloodStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 24)] // bnpcname=10064
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 24)] // bnpcname=10064
 public sealed class CE51ThereWouldBeBlood(WorldState ws, Actor primary) : BossModule(ws, primary, new(-390f, 230f), new ArenaBoundsCircle(25f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 25f);

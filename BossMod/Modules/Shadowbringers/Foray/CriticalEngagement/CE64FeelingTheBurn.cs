@@ -237,7 +237,7 @@ sealed class CE64FeelingTheBurnStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 18)] // bnpcname=9945
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 18)] // bnpcname=9945
 public sealed class CE64FeelingTheBurn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-240f, -230f), new ArenaBoundsSquare(24f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

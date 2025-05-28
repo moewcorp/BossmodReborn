@@ -317,7 +317,7 @@ public sealed class ModuleViewer : IDisposable
             case BossModuleInfo.GroupType.Hunt:
                 groupId |= module.GroupID;
                 return (new($"{module.Expansion.ShortName()} Hunt {(BossModuleInfo.HuntRank)module.GroupID}", groupId, groupId, _iconHunt), new(module, BNpcName(module.NameID), module.SortOrder));
-            case BossModuleInfo.GroupType.BozjaCE:
+            case BossModuleInfo.GroupType.CriticalEngagement:
                 groupId |= module.GroupID;
                 var ceName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} CE";
                 return (new(ceName, groupId, groupId), new(module, Service.LuminaRow<DynamicEvent>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
