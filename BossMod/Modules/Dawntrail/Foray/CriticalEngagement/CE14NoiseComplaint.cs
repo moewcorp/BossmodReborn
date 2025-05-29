@@ -195,6 +195,11 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         }
     }
 
+    public override void Update()
+    {
+        Service.Log($"aoes: {_aoes.Count}, birds: {activebirds.Count}, nc {NumCasts}, {showBait}");
+    }
+
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         var id = spell.Action.ID;
@@ -206,6 +211,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
             if (_aoes.Count != 0)
             {
                 _aoes.RemoveAt(0);
+            }
+            if (activebirds.Count != 0)
+            {
                 activebirds.RemoveAt(0);
             }
         }
