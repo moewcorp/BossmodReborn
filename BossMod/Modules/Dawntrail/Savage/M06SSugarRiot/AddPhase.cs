@@ -145,7 +145,7 @@ class ManxomeWindersnatch(BossModule module) : Components.SingleTargetInstant(mo
         if (iconID == (uint)IconID.ManxomeWindersnatch)
         {
             _target = actor;
-            Targets.Add((Raid.FindSlot(actor.InstanceID), WorldState.FutureTime(5d)));
+            Targets.Add((Raid.FindSlot(targetID), WorldState.FutureTime(5d), targetID));
         }
     }
 

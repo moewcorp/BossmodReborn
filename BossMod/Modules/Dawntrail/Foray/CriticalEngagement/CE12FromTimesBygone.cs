@@ -90,7 +90,7 @@ sealed class ArcaneLight(BossModule module) : Components.RaidwideCastDelay(modul
 sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LotsCastSpread, 6f);
 sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.LotsCastTB, 6f, true, tankbuster: true);
 
-class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
+sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(48);
     private static readonly AOEShapeCircle circle = new(6f);

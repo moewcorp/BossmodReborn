@@ -38,7 +38,38 @@ public enum AID : uint
 }
 
 sealed class ChocoSlaughter(BossModule module) : Components.SimpleExaflare(module, 5f, (uint)AID.ChocoSlaughterFirst, (uint)AID.ChocoSlaughterRest, 5f, 1.1f, 5, 3, true);
-sealed class ChocoBeak(BossModule module) : Components.ChargeAOEs(module, (uint)AID.ChocoBeak, 2f);
+
+sealed class ChocoBeak(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = new(12);
+    private static readonly AOEShapeRect rect = new(50f, 2f);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
+    {
+        if (id == 0x11D1u && actor.OID == (uint)OID.BlackChocobo1)
+            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(9.1d), ActorID: actor.InstanceID));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.ChocoBeak)
+        {
+            var count = _aoes.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].ActorID == id)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+    }
+}
+
 sealed class ChocoAeroII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoAeroII, 4f);
 sealed class ChocoMaelfeather(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMaelfeather, 8f);
 sealed class ChocoWindstorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoWindstorm, 16f);

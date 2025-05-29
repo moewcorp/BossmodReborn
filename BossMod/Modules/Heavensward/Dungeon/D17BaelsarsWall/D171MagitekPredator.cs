@@ -31,7 +31,10 @@ class MagitekMissile(BossModule module) : Components.SingleTargetInstant(module,
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.Prey)
-            Targets.Add((Raid.FindSlot(actor.InstanceID), WorldState.FutureTime(5d)));
+        {
+            var id = actor.InstanceID;
+            Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(5d), id));
+        }
     }
 }
 

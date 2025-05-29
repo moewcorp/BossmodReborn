@@ -257,7 +257,8 @@ class RearHoof(BossModule module) : Components.SingleTargetInstant(module, (uint
 
     private void AddTankbuster(double delay)
     {
-        Targets.Add((Raid.FindSlot(Module.PrimaryActor.TargetID), WorldState.FutureTime(delay)));
+        var id = Module.PrimaryActor.TargetID;
+        Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id));
     }
 }
 

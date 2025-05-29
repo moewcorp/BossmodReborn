@@ -45,7 +45,7 @@ sealed class RockSlideStoneSwell(BossModule module) : Components.GenericAOEs(mod
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var deadline1 = aoes[0].Activation.AddSeconds(5d);
+        var deadline1 = aoes[0].Activation.AddSeconds(4.9d);
 
         var index = 0;
         while (index < count && aoes[index].Activation < deadline1)

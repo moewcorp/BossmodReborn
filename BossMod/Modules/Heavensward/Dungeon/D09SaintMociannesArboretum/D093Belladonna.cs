@@ -68,7 +68,8 @@ class Deracinator(BossModule module) : Components.SingleTargetInstant(module, (u
 
     private void AddTankbuster(double delay)
     {
-        Targets.Add((Raid.FindSlot(Module.PrimaryActor.TargetID), WorldState.FutureTime(delay)));
+        var id = Module.PrimaryActor.TargetID;
+        Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id));
     }
 }
 

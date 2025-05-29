@@ -129,7 +129,7 @@ public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, 
 {
     public readonly float Delay = delay; // delay from visual cast end to cast event
     public readonly string Hint = hint;
-    public readonly List<(int slot, DateTime activation)> Targets = [];
+    public readonly List<(int slot, DateTime activation, ulong instanceID)> Targets = [];
 
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -148,7 +148,7 @@ public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, 
         if (spell.Action.ID == WatchedAction)
         {
             ++NumCasts;
-            Targets.RemoveAll(t => Raid[t.slot]?.InstanceID == spell.MainTargetID);
+            Targets.RemoveAll(t => t.instanceID == spell.MainTargetID);
         }
     }
 }
@@ -163,7 +163,7 @@ public class SingleTargetCastDelay(BossModule module, uint actionVisual, uint ac
         if (spell.Action.ID == ActionVisual)
         {
             var target = spell.TargetID != caster.InstanceID ? spell.TargetID : caster.TargetID; // assume self-targeted casts actually hit main target
-            Targets.Add((Raid.FindSlot(target), Module.CastFinishAt(spell, Delay)));
+            Targets.Add((Raid.FindSlot(target), Module.CastFinishAt(spell, Delay), target));
         }
     }
 }
@@ -179,7 +179,7 @@ public class SingleTargetEventDelay(BossModule module, uint actionVisual, uint a
         if (spell.Action.ID == ActionVisual)
         {
             var target = spell.MainTargetID != caster.InstanceID ? spell.MainTargetID : caster.TargetID; // assume self-targeted casts actually hit main target
-            Targets.Add((Raid.FindSlot(target), WorldState.FutureTime(Delay)));
+            Targets.Add((Raid.FindSlot(target), WorldState.FutureTime(Delay), target));
         }
     }
 }
