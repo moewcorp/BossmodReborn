@@ -206,6 +206,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
             if (_aoes.Count != 0)
             {
                 _aoes.RemoveAt(0);
+            }
+            if (activebirds.Count != 0)
+            {
                 activebirds.RemoveAt(0);
             }
         }
