@@ -12,8 +12,7 @@ public class Dispel(BossModule module, uint statusID, uint action = default) : C
         for (var i = 0; i < count; ++i)
         {
             var enemy = hints.FindEnemy(Targets[i]);
-            if (enemy != null)
-                enemy.ShouldBeDispelled = true;
+            enemy?.ShouldBeDispelled = true;
         }
     }
 
