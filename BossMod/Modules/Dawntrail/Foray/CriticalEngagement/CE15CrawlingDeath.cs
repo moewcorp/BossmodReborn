@@ -43,7 +43,7 @@ sealed class DirtyNails(BossModule module) : Components.SingleTargetCast(module,
 
 sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(16);
+    public readonly List<AOEInstance> AOEs = new(16);
     private static readonly AOEShapeRect rect = new(60f, 3.5f);
     public enum MechanicType
     {
@@ -52,13 +52,15 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
         ManifoldMarks = 2
     }
     private MechanicType mechanic;
+    private uint lastOID;
+    private int currentWave;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var count = _aoes.Count;
+        var count = AOEs.Count;
         if (count == 0)
             return [];
-        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
         var deadline = aoes[0].Activation.AddSeconds(1d);
 
         var index = 0;
@@ -70,20 +72,36 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        var activation = (actor.OID, mechanic) switch
+        var id = actor.OID;
+        if (id is (uint)OID.Clawmarks1 or (uint)OID.Clawmarks2 or (uint)OID.Clawmarks3)
         {
-            ((uint)OID.Clawmarks1, MechanicType.Clawmarks) => 9.0d,
-            ((uint)OID.Clawmarks2, MechanicType.Clawmarks) => 6.9d,
-            ((uint)OID.Clawmarks3, MechanicType.ThreefoldMarks) => 6.9d,
-            ((uint)OID.Clawmarks2, MechanicType.ThreefoldMarks) => 8.7d,
-            ((uint)OID.Clawmarks1, MechanicType.ThreefoldMarks) => 10.8d,
-            ((uint)OID.Clawmarks1, MechanicType.ManifoldMarks) => 6.7d,
-            ((uint)OID.Clawmarks2, MechanicType.ManifoldMarks) => 8.8d,
-            _ => default
-        };
-        if (activation != default)
-        {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation), ActorID: actor.InstanceID));
+            if (lastOID != id)
+            {
+                if (lastOID == default)
+                {
+                    lastOID = id;
+                }
+                else if (lastOID != id)
+                {
+                    lastOID = id;
+                    ++currentWave;
+                }
+            }
+            var activation = (currentWave, mechanic) switch
+            {
+                (0, MechanicType.Clawmarks) => 6.7d,
+                (1, MechanicType.Clawmarks) => 8.7d,
+                (0, MechanicType.ThreefoldMarks) => 6.7d,
+                (1, MechanicType.ThreefoldMarks) => 8.7d,
+                (2, MechanicType.ThreefoldMarks) => 10.8d,
+                (0, MechanicType.ManifoldMarks) => 6.7d,
+                (1, MechanicType.ManifoldMarks) => 8.7d,
+                _ => default
+            };
+            if (activation != default)
+            {
+                AOEs.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation), ActorID: actor.InstanceID));
+            }
         }
     }
 
@@ -96,19 +114,21 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
             (uint)AID.ManifoldMarks => MechanicType.ManifoldMarks,
             _ => mechanic
         };
+        lastOID = default;
+        currentWave = default;
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.LethalNails1 or (uint)AID.LethalNails2 or (uint)AID.LethalNails3)
         {
-            var count = _aoes.Count;
+            var count = AOEs.Count;
             var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
-                if (_aoes[i].ActorID == id)
+                if (AOEs[i].ActorID == id)
                 {
-                    _aoes.RemoveAt(i);
+                    AOEs.RemoveAt(i);
                     return;
                 }
             }
@@ -120,28 +140,14 @@ sealed class ClawingShadow(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     public static readonly AOEShapeCone Cone = new(50f, 45f.Degrees());
-    private readonly List<Actor> claws = new(4);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count > 1 ? CollectionsMarshal.AsSpan(_aoes)[..2] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count > 1 ? CollectionsMarshal.AsSpan(_aoes)[..2] : CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00010002u && actor.OID == (uint)OID.ClawsOnFloor)
+        if (state == 0x00100020u && actor.OID == (uint)OID.ClawsOnFloor)
         {
-            claws.Add(actor);
-        }
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID is (uint)AID.SkulkingOrders1 or (uint)AID.SkulkingOrders2)
-        {
-            var count = claws.Count;
-            for (var i = 0; i < count; ++i)
-            {
-                var claw = claws[i];
-                _aoes.Add(new(Cone, WPos.ClampToGrid(claw.Position), claw.Rotation, WorldState.FutureTime(i < 2 ? 10.1d : 15.6d)));
-            }
+            _aoes.Add(new(Cone, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(_aoes.Count < 3 ? 8.1d : 10.6d)));
         }
     }
 
@@ -157,12 +163,14 @@ sealed class ClawingShadow(BossModule module) : Components.GenericAOEs(module)
 sealed class Crosshatch(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
+    private readonly Clawmarks _aoe = module.FindComponent<Clawmarks>()!;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
-        if (count == 0)
+        if (count == 0 || _aoe.AOEs.Count != 0)
             return [];
+
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         if (!aoes[0].Risky)
         {
@@ -228,4 +236,7 @@ sealed class CE15CrawlingDeathStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 36)]
-public sealed class CE15CrawlingDeath(WorldState ws, Actor primary) : BossModule(ws, primary, new(681, 534f), new ArenaBoundsSquare(21f));
+public sealed class CE15CrawlingDeath(WorldState ws, Actor primary) : BossModule(ws, primary, new(681, 534f), new ArenaBoundsSquare(21f))
+{
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 21f);
+}

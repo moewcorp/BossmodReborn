@@ -119,7 +119,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ActorState.OpCombat => false,
             ActorState.OpAggroPlayer => false,
             ActorState.OpEventState op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
-            ActorState.OpTarget op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
+            ActorState.OpTarget => false,
             ActorState.OpCastInfo op => FilterInterestingActor(op.InstanceID, op.Timestamp, false) && !_filteredActions.Contains(FindCast(replay.FindParticipant(op.InstanceID, op.Timestamp), op.Timestamp, op.Value != null)?.ID ?? new()),
             ActorState.OpCastEvent op => FilterInterestingActor(op.InstanceID, op.Timestamp, false) && !_filteredActions.Contains(op.Value.Action),
             ActorState.OpEffectResult => false,

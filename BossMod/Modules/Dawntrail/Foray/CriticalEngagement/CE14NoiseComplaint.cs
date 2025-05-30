@@ -39,11 +39,6 @@ public enum IconID : uint
     Chatterbird = 578 // Chatterbird->self
 }
 
-public enum TetherID : uint
-{
-    Rush = 17 // Boss->Chatterbird
-}
-
 public enum SID : uint
 {
     LightningCrossing = 2193 // none->Boss, extra=0x350/0x351 => 350 is card, 351 is intercard
