@@ -57,7 +57,7 @@ sealed class HeavyBootsOfLeadStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BozjaSkirmish, GroupID = 735, NameID = 1612)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.ForayFATE, GroupID = 735, NameID = 1612)]
 public sealed class HeavyBootsOfLead(WorldState ws, Actor primary) : SimpleBossModule(ws, primary)
 {
     private static readonly uint[] adds = [(uint)OID.BozjanDoblyn, (uint)OID.BozjanSabotender, (uint)OID.FourthLegionVanguard, (uint)OID.ForthLegionGunship,
