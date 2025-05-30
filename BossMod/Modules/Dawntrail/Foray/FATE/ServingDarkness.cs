@@ -63,7 +63,7 @@ sealed class MenaceCharge(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.MenacingCharge)
         {
-            _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
+            _aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 5.2f));
         }
     }
 

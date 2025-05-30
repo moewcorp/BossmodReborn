@@ -74,7 +74,7 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
                 {
                     lastOID = id;
                 }
-                else if (lastOID != id)
+                else
                 {
                     lastOID = id;
                     ++currentWave;

@@ -42,7 +42,7 @@ sealed class FlamingEpigraph : Components.SimpleAOEs
         MaxDangerColor = 2;
     }
 }
-sealed class FlaringEpigraph(BossModule module) : Components.SingleTargetCast(module, (uint)AID.FlaringEpigraph);
+sealed class FlaringEpigraph(BossModule module) : Components.RaidwideCast(module, (uint)AID.FlaringEpigraph);
 sealed class EpigraphicFireII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EpigraphicFireII, 5f);
 sealed class Epigraph(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Epigraph, new AOEShapeRect(45f, 2.5f));
 
