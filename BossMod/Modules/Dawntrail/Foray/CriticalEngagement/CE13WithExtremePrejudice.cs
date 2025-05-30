@@ -21,7 +21,9 @@ public enum AID : uint
     Rockslide2 = 39471, // VassalVessel->self, 1.0s cast, range 40 width 10 cross
     AethericBurstVisual = 41424, // Boss->self, 5.0s cast, single-target, raidwide
     AethericBurst = 41425, // Helper->self, 5.0s cast, ???
-    Destruct = 41422 // Boss->self, 3.0s cast, single-target
+    Destruct = 41422, // Boss->self, 3.0s cast, single-target
+    SelfDestructVisual = 41423, // VassalVessel->self, no cast, single-target
+    SelfDestruct = 39094 // Helper->self, no cast, ???
 }
 
 public enum TetherID : uint

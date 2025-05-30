@@ -11,18 +11,7 @@ class DireStraits(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        for (var i = 0; i < count; ++i)
-        {
-            ref var aoe = ref aoes[i];
-            if (i == 0)
-            {
-                if (count > 1)
-                    aoe.Color = Colors.Danger;
-                aoe.Risky = true;
-            }
-            else
-                aoe.Risky = false;
-        }
+        aoes[0].Risky = true;
         return aoes;
     }
 
@@ -30,7 +19,8 @@ class DireStraits(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.DireStraitsVisualFirst or (uint)AID.DireStraitsVisualSecond)
         {
-            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8f)));
+            var check = _aoes.Count == 0;
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8f), check ? Colors.Danger : default, check));
         }
     }
 
