@@ -248,7 +248,7 @@ sealed class CE14NoiseComplaintStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1018, NameID = 13638)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 44)]
 public sealed class CE14NoiseComplaint(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(ArenaCenter), new ArenaBoundsCircle(23f))
 {
     public static readonly WPos ArenaCenter = new(461f, -363f);
