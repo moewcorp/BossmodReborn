@@ -45,13 +45,6 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(16);
     private static readonly AOEShapeRect rect = new(60f, 3.5f);
-    public enum MechanicType
-    {
-        Clawmarks = 0,
-        ThreefoldMarks = 1,
-        ManifoldMarks = 2
-    }
-    private MechanicType mechanic;
     private uint lastOID;
     private int currentWave;
 
@@ -87,15 +80,11 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
                     ++currentWave;
                 }
             }
-            var activation = (currentWave, mechanic) switch
+            var activation = currentWave switch
             {
-                (0, MechanicType.Clawmarks) => 6.7d,
-                (1, MechanicType.Clawmarks) => 8.7d,
-                (0, MechanicType.ThreefoldMarks) => 6.7d,
-                (1, MechanicType.ThreefoldMarks) => 8.7d,
-                (2, MechanicType.ThreefoldMarks) => 10.8d,
-                (0, MechanicType.ManifoldMarks) => 6.7d,
-                (1, MechanicType.ManifoldMarks) => 8.7d,
+                0 => 6.7d,
+                1 => 8.7d,
+                2 => 10.8d,
                 _ => default
             };
             if (activation != default)
@@ -107,15 +96,11 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        mechanic = spell.Action.ID switch
+        if (spell.Action.ID is (uint)AID.Clawmarks or (uint)AID.ThreefoldMarks or (uint)AID.ManifoldMarks)
         {
-            (uint)AID.Clawmarks => MechanicType.Clawmarks,
-            (uint)AID.ThreefoldMarks => MechanicType.ThreefoldMarks,
-            (uint)AID.ManifoldMarks => MechanicType.ManifoldMarks,
-            _ => mechanic
-        };
-        lastOID = default;
-        currentWave = default;
+            lastOID = default;
+            currentWave = default;
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

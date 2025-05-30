@@ -302,9 +302,9 @@ public sealed class ModuleViewer : IDisposable
                 return (new("Castrum Lacus Litore", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheDaldriada:
                 return (new("The Daldriada", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
-            case BossModuleInfo.GroupType.BozjaSkirmish:
+            case BossModuleInfo.GroupType.ForayFATE:
                 var fateRowBozjaSkirmish = Service.LuminaRow<Fate>(module.NameID)!.Value;
-                var skirmishName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} Skirmish";
+                var skirmishName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} FATE";
                 return (new(skirmishName, groupId, groupId), new(module, $"{fateRowBozjaSkirmish.Name}", module.SortOrder));
             case BossModuleInfo.GroupType.Quest:
                 var questRow = Service.LuminaRow<Quest>(module.GroupID)!.Value;

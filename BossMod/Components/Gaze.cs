@@ -3,22 +3,22 @@
 namespace BossMod.Components;
 
 // generic gaze/weakpoint component, allows customized 'eye' position
-public abstract class GenericGaze(BossModule module, uint aid = new()) : CastCounter(module, aid)
+public abstract class GenericGaze(BossModule module, uint aid = default) : CastCounter(module, aid)
 {
     public record struct Eye(
         WPos Position,
         DateTime Activation = new(),
-        Angle Forward = new(), // if non-zero, treat specified side as 'forward' for hit calculations
-        float Range = 10000,
+        Angle Forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
+        float Range = 10000f,
         bool Inverted = false,
-        ulong? ActorID = null);
+        ulong ActorID = default);
 
-    private const float _eyeOuterH = 10, _eyeOuterV = 6, _eyeInnerR = 4;
-    private const float _eyeOuterR = (_eyeOuterH * _eyeOuterH + _eyeOuterV * _eyeOuterV) / (2 * _eyeOuterV);
+    private const float _eyeOuterH = 10f, _eyeOuterV = 6f, _eyeInnerR = 4f;
+    private const float _eyeOuterR = (_eyeOuterH * _eyeOuterH + _eyeOuterV * _eyeOuterV) / (2f * _eyeOuterV);
     private const float _eyeOffsetV = _eyeOuterR - _eyeOuterV;
 
     private static readonly float _eyeHalfAngle = (float)Math.Asin(_eyeOuterH / _eyeOuterR);
-    private static readonly Vector2 offset = new(0, _eyeOffsetV);
+    private static readonly Vector2 offset = new(default, _eyeOffsetV);
     private static readonly float halfPIHalfAngleP = Angle.HalfPi + _eyeHalfAngle;
     private static readonly float halfPIHalfAngleM = Angle.HalfPi - _eyeHalfAngle;
 
