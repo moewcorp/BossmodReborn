@@ -2,7 +2,6 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL1Gauntlet;
 
 sealed class Pyroclysm(BossModule module) : Components.GenericTowersOpenWorld(module)
 {
-
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.Pyroclysm or (uint)AID.Pyroplexy)
@@ -14,7 +13,7 @@ sealed class Pyroclysm(BossModule module) : Components.GenericTowersOpenWorld(mo
                 if (Towers[i].Position.AlmostEqual(pos, 1f))
                 {
                     Towers.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }

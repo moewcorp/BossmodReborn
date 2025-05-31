@@ -37,7 +37,7 @@ public enum AID : uint
 
 sealed class FlamingEpigraph : Components.SimpleAOEs
 {
-    public FlamingEpigraph(BossModule module) : base(module, (uint)AID.FlamingEpigraph, new AOEShapeCone(64f, 30f.Degrees()), 4)
+    public FlamingEpigraph(BossModule module) : base(module, (uint)AID.FlamingEpigraph, new AOEShapeCone(60f, 30f.Degrees()), 4)
     {
         MaxDangerColor = 2;
     }
