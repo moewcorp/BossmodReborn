@@ -78,13 +78,17 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        if (_aoe.Casters.Count != 0)
-            return CollectionsMarshal.AsSpan(_aoes)[..1];
+
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         ref var aoe = ref aoes[0];
+        aoe.Risky = true;
+
+        if (_aoe.Casters.Count != 0)
+            return aoes[..1];
+
         if (count != 1)
             aoe.Color = Colors.Danger;
-        aoe.Risky = true;
+
         return aoes;
     }
 
@@ -94,7 +98,7 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.HoppingMad1)
         {
             AddAOE(circleSmall);
-            AddAOE(donutSmall, 2.1f, false);
+            AddAOE(donutSmall, 2.1f);
             return;
         }
         var shape = id switch
@@ -108,11 +112,11 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
         {
             AddAOE(shape);
             if (shape == circleBig)
-                AddAOE(donutBig, 2.1f, false);
+                AddAOE(donutBig, 2.1f);
             if (_aoes.Count == 4)
                 _aoes.SortBy(aoe => aoe.Activation);
         }
-        void AddAOE(AOEShape shape, float delay = default, bool risky = true) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay), Risky: risky));
+        void AddAOE(AOEShape shape, float delay = default) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay), Risky: false));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -174,6 +178,7 @@ sealed class CE17UnbridledStates : StateMachineBuilder
             .ActivateOnEnter<BoilOverChanneledHeightenedRage>()
             .ActivateOnEnter<WhiteHotRage>()
             .ActivateOnEnter<HeatedOutburst>()
+            .ActivateOnEnter<ScathingSweep>()
             .ActivateOnEnter<HoppingMad>();
     }
 }
@@ -183,4 +188,6 @@ public sealed class CE17Unbridled(WorldState ws, Actor primary) : BossModule(ws,
 {
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(620f, 800f), 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
+
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }
