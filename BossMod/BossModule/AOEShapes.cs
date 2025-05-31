@@ -373,6 +373,7 @@ public sealed record class AOEShapeCustom(IReadOnlyList<Shape> Shapes1, IReadOnl
         ref readonly var distance = ref shapeDistance;
         return InvertForbiddenZone ? distance.InvertedDistance : distance.Distance;
     }
+
     public override Func<WPos, float> InvertedDistance(WPos origin, Angle rotation)
     {
         if (!isShapeDistanceInitialized)

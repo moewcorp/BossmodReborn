@@ -2,12 +2,12 @@ namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE11BlackRegiment;
 
 public enum OID : uint
 {
-    Boss = 0x46A7, // R1.0-4.2
+    Boss = 0x46A7, // R1.32
     BlackStar = 0x46A5, // R1.98
-    BlackChocobo1 = 0x46A8, // R1.32-4.2
-    BlackChocobo2 = 0x46A6, // R0.45-4.2
-    BlackChocobo3 = 0x45D0, // R1.32-1.8
-    BlackChocobo4 = 0x46A9, // R1.32-1.7
+    BlackChocobo1 = 0x46A8, // R1.32
+    BlackChocobo2 = 0x46A6, // R1.32
+    BlackChocobo3 = 0x45D0, // R1.32
+    BlackChocobo4 = 0x46A9, // R1.32
     Deathwall = 0x4861, // R0.5
     Helper = 0x233C
 }

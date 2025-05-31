@@ -1,6 +1,4 @@
-﻿using BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
-
-namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
+﻿namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
 
 public enum OID : uint
 {

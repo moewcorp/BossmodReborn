@@ -45,13 +45,23 @@ class Tideline(BossModule module) : Components.GenericAOEs(module)
             return [];
         var max = count == 9 ? 3 : count > 3 ? 4 : count;
         var aoes = CollectionsMarshal.AsSpan(_aoes)[..max];
+        var isFourAOEs = max == 4;
+        var isThreeAOEs = max == 3;
+
         for (var i = 0; i < max; ++i)
         {
             ref var aoe = ref aoes[i];
-            aoe.Risky = true;
-            if (i < 2 && max == 4 || max == 3 && i == 0)
+
+            var shouldBeDanger = isFourAOEs && i < 2 || isThreeAOEs && i == 0;
+            var shouldBeRisky = shouldBeDanger || max == 2 && i < 2;
+
+            if (shouldBeDanger)
                 aoe.Color = Colors.Danger;
+
+            if (shouldBeRisky)
+                aoe.Risky = true;
         }
+
         return aoes;
     }
 
@@ -64,10 +74,12 @@ class Tideline(BossModule module) : Components.GenericAOEs(module)
             var initialpos1 = new WPos(169.5f, 701f);
             var initialpos2 = new WPos(154.5f, 651f);
             var dir = new WDir(5f, default);
+            var a180 = 180f.Degrees();
             for (var i = 0; i < 4; ++i)
             {
-                AddAOE(rect2, initialpos1 + i * dir, 2f, 180f.Degrees());
-                AddAOE(rect2, initialpos2 + -i * dir, 2f, rot);
+                var act = 2f + 2 * i;
+                AddAOE(rect2, initialpos1 + i * dir, act, a180);
+                AddAOE(rect2, initialpos2 + -i * dir, act, rot);
             }
         }
         void AddAOE(AOEShapeRect shape, WPos position = default, float delay = default, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, Module.CastFinishAt(spell, delay), Risky: false));
