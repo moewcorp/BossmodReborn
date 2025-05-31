@@ -70,7 +70,7 @@ class Tideline(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(rect2, initialpos2 + -i * dir, 2f, rot);
             }
         }
-        void AddAOE(AOEShapeRect shape, WPos position = default, float delay = default, Angle rotation = default) => _aoes.Add(new(shape, position, rotation, Module.CastFinishAt(spell, delay), Risky: false));
+        void AddAOE(AOEShapeRect shape, WPos position = default, float delay = default, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, Module.CastFinishAt(spell, delay), Risky: false));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -189,8 +189,7 @@ sealed class RoughWatersStates : StateMachineBuilder
             .ActivateOnEnter<RecedingTwinTides>()
             .ActivateOnEnter<VoidWaterIII>()
             .ActivateOnEnter<VoidWaterIV>()
-            .ActivateOnEnter<Tideline>()
-            ;
+            .ActivateOnEnter<Tideline>();
     }
 }
 
