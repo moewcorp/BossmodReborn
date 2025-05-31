@@ -44,6 +44,7 @@ sealed class TidalBreath(BossModule module) : Components.SimpleAOEs(module, (uin
 sealed class KarmicDrain(BossModule module) : Components.SimpleAOEs(module, (uint)AID.KarmicDrain, new AOEShapeCone(60f, 30f.Degrees()), 3);
 sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Explosion, 22f);
 sealed class Flare(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Flare, 10f);
+sealed class SealAsunder(BossModule module) : Components.CastHints(module, [(uint)AID.SealAsunder1, (uint)AID.SealAsunder2, (uint)AID.SealAsunder3], "Enrage!", true);
 sealed class Seals(BossModule module) : Components.GenericTowersOpenWorld(module)
 {
     public override void OnActorEAnim(Actor actor, uint state)
@@ -82,6 +83,7 @@ sealed class CE18CalamityBoundStates : StateMachineBuilder
             .ActivateOnEnter<KarmicDrain>()
             .ActivateOnEnter<Explosion>()
             .ActivateOnEnter<Flare>()
+            .ActivateOnEnter<SealAsunder>()
             .ActivateOnEnter<Seals>();
     }
 }

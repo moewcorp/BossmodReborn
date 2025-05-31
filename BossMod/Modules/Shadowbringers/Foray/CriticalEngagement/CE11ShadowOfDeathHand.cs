@@ -84,6 +84,7 @@ sealed class Whirlwind(BossModule module) : Components.Voidzone(module, 4f, GetW
 {
     private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.Whirlwind);
 }
+
 sealed class Wind(BossModule module) : Components.GenericKnockback(module)
 {
     private Knockback? _kb;

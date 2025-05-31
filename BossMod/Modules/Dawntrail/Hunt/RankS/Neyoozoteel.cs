@@ -45,10 +45,10 @@ sealed class RavagingRoots(BossModule module) : Components.GenericRotatingAOE(mo
         switch (spell.Action.ID)
         {
             case (uint)AID.RavagingRootsCW:
-                AddSequence(45f.Degrees());
+                AddSequence(-45f.Degrees());
                 break;
             case (uint)AID.RavagingRootsCCW:
-                AddSequence(-45f.Degrees());
+                AddSequence(45f.Degrees());
                 break;
         }
         void AddSequence(Angle increment) => Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 2.4f, 8));

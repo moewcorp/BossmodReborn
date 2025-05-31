@@ -63,7 +63,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
 sealed class BoilOverChanneledHeightenedRage(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.BoilOver, (uint)AID.ChanneledRage, (uint)AID.HeightenedRage]);
 sealed class WhiteHotRage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WhiteHotRage, 6f);
-sealed class HeatedOutburst(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.HeatedOutburst], 13f);
+sealed class HeatedOutburst(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.HeatedOutburst], 13f, riskyWithSecondsLeft: 4);
 sealed class ScathingSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ScathingSweep, new AOEShapeRect(60f, 30f));
 
 sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
@@ -161,11 +161,13 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (_aoes.Count == 0)
+        if (_aoes.Count < 2)
             return;
         var aoe = _aoes[0];
         if (aoe.Shape is AOEShapeCircle circle)
-            hints.GoalZones.Add(hints.GoalSingleTarget(aoe.Origin, circle.Radius + 3, 5f)); // stay close to next circle to get into donut
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe.Origin, circle.Radius + 2), aoe.Activation); // stay close to border of circle to move into donut fast
+        else if (aoe.Shape is AOEShapeDonut donut)
+            hints.AddForbiddenZone(ShapeDistance.Circle(aoe.Origin, donut.InnerRadius - 2), aoe.Activation); // stay close to border of donut to move to next circle fast
     }
 }
 

@@ -138,6 +138,14 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
             }
         }
     }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        base.AddAIHints(slot, actor, assignment, hints);
+        if (_aoes.Count == 0)
+            return;
+        hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 6.6f), WorldState.FutureTime(8d));
+    }
 }
 
 sealed class CE12FromTimesBygoneStates : StateMachineBuilder
