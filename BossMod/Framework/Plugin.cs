@@ -3,6 +3,7 @@ using Dalamud.Common;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
+using Dalamud.Interface;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
@@ -16,6 +17,8 @@ public sealed class Plugin : IDalamudPlugin
     public string Name => "BossMod Reborn";
 
     private readonly ICommandManager CommandManager;
+    private readonly IUiBuilder      UIBuilder;
+    private readonly IFramework      Framework;
 
     private readonly RotationDatabase _rotationDB;
     private readonly WorldState _ws;
@@ -45,7 +48,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly MainDebugWindow _wndDebug;
     private IDalamudPluginInterface PluginInterface;
     private bool isDev;
-    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
+    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager, IFramework framework)
     {
 #if !DEBUG
         PluginInterface = dalamud;
@@ -81,6 +84,9 @@ public sealed class Plugin : IDalamudPlugin
         Service.Config.LoadFromFile(dalamud.ConfigFile);
         Service.Config.Modified.Subscribe(() => Service.Config.SaveToFile(dalamud.ConfigFile));
 
+        UIBuilder = dalamud.UiBuilder;
+        Framework = framework;
+
         CommandManager = commandManager;
         CommandManager.AddHandler("/bmr", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod settings UI" });
         CommandManager.AddHandler("/vbm", new CommandInfo(OnCommand) { ShowInHelp = false });
@@ -114,10 +120,11 @@ public sealed class Plugin : IDalamudPlugin
         _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotation presets"));
         _wndDebug = new(_ws, _rotation, _zonemod, _amex, _movementOverride, _hintsBuilder, dalamud);
 
-        dalamud.UiBuilder.DisableAutomaticUiHide = true;
-        dalamud.UiBuilder.Draw += DrawUI;
-        dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
-        dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
+        UIBuilder.DisableAutomaticUiHide =  true;
+        UIBuilder.Draw                   += DrawUI;
+        Framework.Update                 += OnUpdate;
+        UIBuilder.OpenMainUi             += () => OpenConfigUI();
+        UIBuilder.OpenConfigUi           += () => OpenConfigUI();
     }
 
     public void Dispose()
@@ -128,6 +135,9 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 #endif
+        UIBuilder.Draw   -= DrawUI;
+        Framework.Update -= OnUpdate;
+
         Service.Condition.ConditionChange -= OnConditionChanged;
         _wndDebug.Dispose();
         _wndRotation.Dispose();
@@ -284,6 +294,28 @@ public sealed class Plugin : IDalamudPlugin
         ExecuteHints();
 
         Camera.Instance?.DrawWorldPrimitives();
+        _prevUpdateTime = DateTime.Now - tsStart;
+    }
+
+    private void OnUpdate(IFramework _)
+    {
+        var tsStart      = DateTime.Now;
+        var moveImminent = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
+
+        _dtr.Update();
+        Camera.Instance?.Update();
+        _wsSync.Update(ref _prevUpdateTime);
+        _bossmod.Update();
+        _zonemod.ActiveModule?.Update();
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, moveImminent);
+        _amex.QueueManualActions();
+        _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
+        _ai.Update();
+        _broadcast.Update();
+        _amex.FinishActionGather();
+
+        ExecuteHints();
+
         _prevUpdateTime = DateTime.Now - tsStart;
     }
 
