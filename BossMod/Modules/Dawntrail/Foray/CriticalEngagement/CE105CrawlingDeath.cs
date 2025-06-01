@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE15CrawlingDeath;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE105CrawlingDeath;
 
 public enum OID : uint
 {
@@ -207,9 +207,9 @@ sealed class Crosshatch(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class CE15CrawlingDeathStates : StateMachineBuilder
+sealed class CE105CrawlingDeathStates : StateMachineBuilder
 {
-    public CE15CrawlingDeathStates(BossModule module) : base(module)
+    public CE105CrawlingDeathStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<Clawmarks>()
@@ -221,7 +221,7 @@ sealed class CE15CrawlingDeathStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 36)]
-public sealed class CE15CrawlingDeath(WorldState ws, Actor primary) : BossModule(ws, primary, new(681, 534f), new ArenaBoundsSquare(21f))
+public sealed class CE105CrawlingDeath(WorldState ws, Actor primary) : BossModule(ws, primary, new(681, 534f), new ArenaBoundsSquare(21f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InSquare(Arena.Center, 21f);
 }

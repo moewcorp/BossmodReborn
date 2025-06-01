@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE14NoiseComplaint;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE104NoiseComplaint;
 
 public enum OID : uint
 {
@@ -167,7 +167,7 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         {
             var primaryPos = Module.PrimaryActor.Position;
             var birdPos = activebirds[0].Position;
-            var destination = WPos.ClampToGrid(birdPos - 6f * (birdPos - CE14NoiseComplaint.ArenaCenter).Normalized());
+            var destination = WPos.ClampToGrid(birdPos - 6f * (birdPos - CE104NoiseComplaint.ArenaCenter).Normalized());
             var dir = destination - primaryPos;
             var angle = Angle.FromDirection(dir);
             _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), WPos.ClampToGrid(primaryPos), angle, WorldState.FutureTime(6.3d)));
@@ -230,9 +230,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
     }
 }
 
-sealed class CE14NoiseComplaintStates : StateMachineBuilder
+sealed class CE104NoiseComplaintStates : StateMachineBuilder
 {
-    public CE14NoiseComplaintStates(BossModule module) : base(module)
+    public CE104NoiseComplaintStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<LightningCrossingMammothBoltEpicenterShock>()
@@ -244,7 +244,7 @@ sealed class CE14NoiseComplaintStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 44)]
-public sealed class CE14NoiseComplaint(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(ArenaCenter), new ArenaBoundsCircle(23f))
+public sealed class CE104NoiseComplaint(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(ArenaCenter), new ArenaBoundsCircle(23f))
 {
     public static readonly WPos ArenaCenter = new(461f, -363f);
 
