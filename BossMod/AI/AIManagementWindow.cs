@@ -66,21 +66,25 @@ sealed class AIManagementWindow : UIWindow
         ImGui.SameLine();
         ImGui.SetNextItemWidth(250);
         ImGui.SetNextWindowSizeConstraints(new Vector2(0, 0), new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50));
-        if (ImRaii.Combo("##Leader", _manager.Beh == null ? "<idle>" : _manager.WorldState.Party[_manager.MasterSlot]?.Name ?? "<unknown>"))
+        using (var combo = ImRaii.Combo("##Leader", _manager.Beh == null ? "<idle>" : _manager.WorldState.Party[_manager.MasterSlot]?.Name ?? "<unknown>"))
         {
-            if (ImGui.Selectable("<idle>", _manager.Beh == null))
-                _manager.SwitchToIdle();
-            foreach (var (i, p) in _manager.WorldState.Party.WithSlot(true))
+            if (combo)
             {
-                if (ImGui.Selectable(p.Name, _manager.MasterSlot == i))
+                if (ImGui.Selectable("<idle>", _manager.Beh == null))
+                    _manager.SwitchToIdle();
+
+                foreach (var (i, p) in _manager.WorldState.Party.WithSlot(true))
                 {
-                    _manager.SwitchToFollow(i);
-                    _config.FollowSlot = i;
-                    configModified = true;
+                    if (ImGui.Selectable(p.Name, _manager.MasterSlot == i))
+                    {
+                        _manager.SwitchToFollow(i);
+                        _config.FollowSlot = i;
+                        configModified     = true;
+                    }
                 }
             }
-            ImGui.EndCombo();
         }
+
         ImGui.Separator();
         ImGui.Text("Desired positional");
         ImGui.SameLine();

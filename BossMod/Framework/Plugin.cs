@@ -302,7 +302,6 @@ public sealed class Plugin : IDalamudPlugin
         var tsStart      = DateTime.Now;
         var moveImminent = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
 
-        _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(ref _prevUpdateTime);
         _bossmod.Update();
