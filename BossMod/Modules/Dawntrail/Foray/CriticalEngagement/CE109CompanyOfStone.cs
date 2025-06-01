@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE19CompanyOfStone;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE109CompanyOfStone;
 
 public enum OID : uint
 {
@@ -13,7 +13,6 @@ public enum OID : uint
 
 public enum AID : uint
 {
-
     AutoAttack = 42560, // Boss->player, no cast, single-target
     Deathwall = 41901, // DeathwallHelper->self, no cast, range 20-30 donut
 
@@ -29,9 +28,11 @@ public enum AID : uint
     BlastKnuckles = 41891, // Helper->self, no cast, knockback 15, away from source
     CageOfFire = 41825, // Boss->self, 7.0s cast, range 60 width 8 rect
     Moatmaker = 41827, // Boss->location, 3.0s cast, range 9 circle
+
     DualfistFlurryFirst = 41828, // Boss->location, 10.0s cast, range 6 circle
-    DualfistFlurry1 = 43152, // Helper->self, no cast, range 6 circle
-    DualfistFlurry2 = 41829, // Boss->location, no cast, single-target
+    DualfistFlurryRepeat = 43152, // Helper->self, no cast, range 6 circle
+    DualfistFlurryRest = 41829, // Boss->location, no cast, single-target
+
     SpiritSling = 41834, // OccultKnight1->self, 3.5s cast, range 60 width 8 rect
     BarefistedDeath = 41830 // Megaloknight->self, 90.0s cast, range 60 circle
 }
@@ -206,8 +207,7 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
     {
         if (_kb is Knockback kb)
         {
-            var act = kb.Activation;
-            if (!IsImmune(slot, act))
+            if (!IsImmune(slot, activation))
             {
                 if (!polyInit)
                 {
@@ -226,59 +226,36 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
                     poly = combine.Polygon!;
                     polyInit = true;
                 }
-                if (!polyInit)
-                    return;
                 var center = Arena.Center;
                 hints.AddForbiddenZone(p =>
                 {
-                    ref readonly var polygon = ref poly;
-                    var delta = p - center;
-                    var dist = delta.Length();
-                    var direction = delta.Normalized();
-
-                    var projected = p + 15f * direction;
-
+                    var projected = p + 15f * (p - center).Normalized();
                     if (projected.InCircle(center, 20f) && !poly.Contains(projected - center))
                         return 1f;
                     return -1f;
-                }, act);
+                }, activation);
             }
         }
     }
-}
 
-sealed class DualfistFlurry(BossModule module) : Components.Exaflare(module, 6f)
-{
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        if (spell.Action.ID == (uint)AID.DualfistFlurryFirst)
-            Lines.Add(new() { Next = spell.LocXZ, Advance = 7f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 6, MaxShownExplosions = 4 });
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID is (uint)AID.DualfistFlurryFirst or (uint)AID.DualfistFlurry2)
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            var count = Lines.Count;
-            var pos = spell.TargetXZ;
-            for (var i = 0; i < count; ++i)
-            {
-                var line = Lines[i];
-                if (line.Next.AlmostEqual(pos, 1f))
-                {
-                    AdvanceLine(line, pos);
-                    if (line.ExplosionsLeft == 0)
-                        Lines.RemoveAt(i);
-                    break;
-                }
-            }
+            if (aoes[i].Check(pos))
+                return true;
         }
+        return !Module.InBounds(pos);
     }
 }
 
-sealed class CE19CompanyOfStoneStates : StateMachineBuilder
+sealed class DualfistFlurry(BossModule module) : Components.SimpleExaflare(module, 6f, (uint)AID.DualfistFlurryFirst, (uint)AID.DualfistFlurryRest, 7f, 1f, 6, 3, true, true);
+
+sealed class CE109CompanyOfStoneStates : StateMachineBuilder
 {
-    public CE19CompanyOfStoneStates(CE19CompanyOfStone module) : base(module)
+    public CE109CompanyOfStoneStates(CE109CompanyOfStone module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<LineOfFireSpiritSlingCageOfFire>()
@@ -304,7 +281,7 @@ sealed class CE19CompanyOfStoneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 40)]
-public sealed class CE19CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(680f, -280f)), new ArenaBoundsCircle(20f))
+public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(680f, -280f)), new ArenaBoundsCircle(20f))
 {
     private Actor? _bossMegaloknight;
     public Actor? BossMegaloknight() => _bossMegaloknight;

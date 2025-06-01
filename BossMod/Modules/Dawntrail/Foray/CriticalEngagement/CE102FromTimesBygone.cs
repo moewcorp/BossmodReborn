@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE12FromTimesBygone;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE102FromTimesBygone;
 
 public enum OID : uint
 {
@@ -104,26 +104,13 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
         var max = count > 32 ? 32 : count;
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var maxC = Math.Min(max, count - NumCasts);
-        var maxI = NumCasts + maxC;
-        var half = maxC / 2;
-        var color = Colors.Danger;
-        for (var i = NumCasts; i < maxI; ++i)
-        {
-            if (i - NumCasts < half)
-            {
-                ref var aoe = ref aoes[i];
-                aoe.Color = color;
-                aoe.Risky = true;
-            }
-        }
-
         return aoes.Slice(NumCasts, maxC);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ArcaneOrbTelegraph)
-            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(8.2d), Risky: false));
+            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(8.2d)));
 
     }
 
@@ -148,9 +135,9 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class CE12FromTimesBygoneStates : StateMachineBuilder
+sealed class CE102FromTimesBygoneStates : StateMachineBuilder
 {
-    public CE12FromTimesBygoneStates(BossModule module) : base(module)
+    public CE102FromTimesBygoneStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<MysticHeat>()
@@ -164,7 +151,7 @@ sealed class CE12FromTimesBygoneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 39)]
-public sealed class CE12FromTimesBygone(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE102FromTimesBygone(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-800f, 245f), 24.5f, 32)]);
 

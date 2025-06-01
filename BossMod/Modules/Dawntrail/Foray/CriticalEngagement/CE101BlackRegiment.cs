@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE11BlackRegiment;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE101BlackRegiment;
 
 public enum OID : uint
 {
@@ -76,9 +76,9 @@ sealed class ChocoWindstorm(BossModule module) : Components.SimpleAOEs(module, (
 sealed class ChocoCyclone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoCyclone, new AOEShapeDonut(8f, 30f));
 sealed class ChocoDoublades(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ChocoBlades1, (uint)AID.ChocoBlades2], new AOEShapeCone(40f, 22.5f.Degrees()), 4, 8);
 
-sealed class CE11BlackRegimentStates : StateMachineBuilder
+sealed class CE101BlackRegimentStates : StateMachineBuilder
 {
-    public CE11BlackRegimentStates(CE11BlackRegiment module) : base(module)
+    public CE101BlackRegimentStates(CE101BlackRegiment module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ChocoSlaughter>()
@@ -104,7 +104,7 @@ sealed class CE11BlackRegimentStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 34)]
-public sealed class CE11BlackRegiment(WorldState ws, Actor primary) : BossModule(ws, primary, new(450f, 357f), new ArenaBoundsSquare(20f))
+public sealed class CE101BlackRegiment(WorldState ws, Actor primary) : BossModule(ws, primary, new(450f, 357f), new ArenaBoundsSquare(20f))
 {
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.BlackChocobo2, (uint)OID.BlackChocobo4];
     private Actor? _bossBlackStar;

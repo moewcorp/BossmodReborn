@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE17Unbridled;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE107Unbridled;
 
 public enum OID : uint
 {
@@ -46,7 +46,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.BoilOverVisual && Arena.Bounds != CE17Unbridled.DefaultArena)
+        if (spell.Action.ID == (uint)AID.BoilOverVisual && Arena.Bounds != CE107Unbridled.DefaultArena)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 1f));
     }
 
@@ -54,7 +54,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Deathwall)
         {
-            Arena.Bounds = CE17Unbridled.DefaultArena;
+            Arena.Bounds = CE107Unbridled.DefaultArena;
             Arena.Center = WPos.ClampToGrid(Arena.Center);
             _aoe = null;
         }
@@ -171,9 +171,9 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class CE17UnbridledStates : StateMachineBuilder
+sealed class CE107UnbridledStates : StateMachineBuilder
 {
-    public CE17UnbridledStates(BossModule module) : base(module)
+    public CE107UnbridledStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
@@ -186,7 +186,7 @@ sealed class CE17UnbridledStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 35)]
-public sealed class CE17Unbridled(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
+public sealed class CE107Unbridled(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(620f, 800f), 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe

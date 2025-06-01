@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE18CalamityBound;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE108CalamityBound;
 
 public enum OID : uint
 {
@@ -67,13 +67,13 @@ sealed class Seals(BossModule module) : Components.GenericTowersOpenWorld(module
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Tower)
-            Towers.Add(new(actor.Position, 2f, 4, 8, activation: WorldState.FutureTime(10d)));
+            Towers.Add(new(actor.Position, 3f, 4, 8, activation: DateTime.MaxValue));
     }
 }
 
-sealed class CE18CalamityBoundStates : StateMachineBuilder
+sealed class CE108CalamityBoundStates : StateMachineBuilder
 {
-    public CE18CalamityBoundStates(BossModule module) : base(module)
+    public CE108CalamityBoundStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<VoidThunderIII>()
@@ -89,7 +89,7 @@ sealed class CE18CalamityBoundStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 37)]
-public sealed class CE18CalamityBound(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE108CalamityBound(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-340f, 800f), 29.5f, 32)]);
 

@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE13WithExtremePrejudice;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE103WithExtremePrejudice;
 
 public enum OID : uint
 {
@@ -102,9 +102,9 @@ sealed class RockSlideStoneSwell(BossModule module) : Components.GenericAOEs(mod
     }
 }
 
-sealed class CE13WithExtremePrejudiceStates : StateMachineBuilder
+sealed class CE103WithExtremePrejudiceStates : StateMachineBuilder
 {
-    public CE13WithExtremePrejudiceStates(BossModule module) : base(module)
+    public CE103WithExtremePrejudiceStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<AethericBurst>()
@@ -113,7 +113,7 @@ sealed class CE13WithExtremePrejudiceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 43)]
-public sealed class CE13WithExtremePrejudice(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE103WithExtremePrejudice(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-352f, -608f), 19.5f, 32)]);
 

@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE16TrialByClaw;
+namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE106TrialByClaw;
 
 public enum OID : uint
 {
@@ -53,9 +53,9 @@ sealed class CrystallizedChaosDonut1(BossModule module) : Components.SimpleAOEGr
 sealed class CrystallizedChaosDonut2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos2, (uint)AID.CrystallizedChaos5, (uint)AID.CrystallizedChaos8], new AOEShapeDonut(13f, 19f));
 sealed class CrystallizedChaosDonut3(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos3, (uint)AID.CrystallizedChaos6, (uint)AID.CrystallizedChaos9], new AOEShapeDonut(19f, 25f));
 
-sealed class CE16TrialByClawStates : StateMachineBuilder
+sealed class CE106TrialByClawStates : StateMachineBuilder
 {
-    public CE16TrialByClawStates(BossModule module) : base(module)
+    public CE106TrialByClawStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<PrimalRoar>()
@@ -69,7 +69,7 @@ sealed class CE16TrialByClawStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 38)]
-public sealed class CE16TrialByClaw(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class CE106TrialByClaw(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-413.9f, 75f), 24.5f, 32)]);
 
