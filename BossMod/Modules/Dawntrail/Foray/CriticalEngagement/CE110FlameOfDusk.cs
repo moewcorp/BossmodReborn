@@ -46,14 +46,14 @@ sealed class Lamplight(BossModule module) : Components.RaidwideCastDelay(module,
 
 sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(2);
-    private readonly List<(AOEShape?, bool knockback, DateTime activation)> pendingMechanics = new(4);
+    public readonly List<AOEInstance> AOEs = new(2);
+    private readonly List<(WPos position, AOEShape? shape, bool knockback, DateTime activation)> pendingMechanics = new(4);
     private static readonly AOEShapeDonut donut = new(7f, 50f);
     private static readonly AOEShapeCross cross = new(50f, 7.5f);
     private bool first = true;
     private readonly MoltKB _kb = module.FindComponent<MoltKB>()!;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 ? CollectionsMarshal.AsSpan(_aoes)[..1] : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count != 0 ? CollectionsMarshal.AsSpan(AOEs)[..1] : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -82,7 +82,7 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
                     (3, false) => 22.5f,
                     _ => default
                 };
-                pendingMechanics.Add((shape.Item1, shape.Item2.Value, Module.CastFinishAt(spell, delay)));
+                pendingMechanics.Add((caster.Position, shape.Item1, shape.Item2.Value, Module.CastFinishAt(spell, delay)));
                 if (pendingMechanics.Count == 4)
                 {
                     first = false;
@@ -90,7 +90,7 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
             }
             else
             {
-                _aoes.Add(new(shape.Item1!, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+                AOEs.Add(new(shape.Item1!, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             }
         }
     }
@@ -99,26 +99,47 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.ActivateHusk && pendingMechanics.Count != 0)
         {
-            var mech = pendingMechanics[0];
             var pos = WorldState.Actors.Find(spell.MainTargetID)?.Position;
             if (pos is WPos position)
             {
+                var count = pendingMechanics.Count;
+                var mechs = CollectionsMarshal.AsSpan(pendingMechanics);
+                var cpos = caster.Position;
+                for (var i = 0; i < count; ++i) // update moved actor positions
+                {
+                    ref var mch = ref mechs[i];
+                    if (mch.position.AlmostEqual(cpos, 1f))
+                    {
+                        mch.position = position;
+                        continue;
+                    }
+                }
+                (WPos position, AOEShape? shape, bool knockback, DateTime activation) mech = default;
+                for (var i = 0; i < count; ++i) // get first mech for matching actor position
+                {
+                    ref var mch = ref mechs[i];
+                    if (mch.position.AlmostEqual(position, 1f))
+                    {
+                        mech = mch;
+                        break;
+                    }
+                }
                 if (!mech.knockback)
                 {
                     var husks = Module.Enemies((uint)OID.AvianHusk);
-                    var count = husks.Count;
+                    var countH = husks.Count;
 
-                    for (var i = 0; i < count; ++i)
+                    for (var i = 0; i < countH; ++i)
                     {
                         var husk = husks[i];
                         if (husk.Position.AlmostEqual(position, 1f))
                         {
-                            _aoes.Add(new(mech.Item1!, WPos.ClampToGrid(position), husk.Rotation, mech.activation));
-                            if (_aoes.Count == 2)
+                            AOEs.Add(new(mech.shape!, WPos.ClampToGrid(position), husk.Rotation, mech.activation));
+                            if (AOEs.Count == 2)
                             {
-                                _aoes.SortBy(aoe => aoe.Activation);
+                                AOEs.SortBy(aoe => aoe.Activation);
                             }
-                            pendingMechanics.RemoveAt(0);
+                            RemovePendingMechanic(position);
                             return;
                         }
                     }
@@ -126,7 +147,19 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
                 else
                 {
                     _kb.AddKnockback(WPos.ClampToGrid(position), mech.activation);
-                    pendingMechanics.RemoveAt(0);
+                    RemovePendingMechanic(position);
+                }
+                void RemovePendingMechanic(WPos position)
+                {
+                    var count = pendingMechanics.Count;
+                    for (var i = 0; i < count; ++i)
+                    {
+                        if (pendingMechanics[i].position.AlmostEqual(position, 1f))
+                        {
+                            pendingMechanics.RemoveAt(i);
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -134,9 +167,9 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.ShadesCrossingHusk or (uint)AID.ShadesNestHusk or (uint)AID.ShadesCrossingBoss or (uint)AID.ShadesNestBoss)
+        if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.ShadesCrossingHusk or (uint)AID.ShadesNestHusk or (uint)AID.ShadesCrossingBoss or (uint)AID.ShadesNestBoss)
         {
-            _aoes.RemoveAt(0);
+            AOEs.RemoveAt(0);
         }
     }
 }
@@ -144,6 +177,7 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
 sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
 {
     private Knockback? _kb;
+    private MoltAOEs? _aoe;
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
 
@@ -173,6 +207,20 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
                     return -1f;
                 }, act);
             }
+        }
+    }
+
+    public override void AddGlobalHints(GlobalHints hints)
+    {
+        if (_kb is Knockback kb)
+        {
+            _aoe ??= Module.FindComponent<MoltAOEs>();
+            if (_aoe!.AOEs.Count == 0)
+                return;
+            if (_aoe.AOEs[0].Activation > kb.Activation)
+                hints.Add("Order: Knockback -> AOE");
+            else
+                hints.Add("Order: AOE -> Knockback");
         }
     }
 }
