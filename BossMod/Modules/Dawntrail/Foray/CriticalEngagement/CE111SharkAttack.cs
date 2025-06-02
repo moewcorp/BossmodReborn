@@ -17,7 +17,7 @@ public enum AID : uint
     Teleport2 = 41683, // PetalodusProgeny1->location, no cast, single-target
     Teleport3 = 41682, // JumpMarkerRed->location, no cast, single-target
 
-    MarineMayhemVisual = 41689, // Boss->self, 5.0s cast, single-target
+    MarineMayhemVisual = 41689, // Boss->self, 5.0s cast, single-target, raidwide
     MarineMayhem = 41691, // Helper->self, no cast, ???
     PelagicCleaverVisual = 41685, // PetalodusProgeny2->location, 8.3s cast, single-target
     PelagicCleaver = 41970, // Helper->self, 9.0s cast, range 50 60-degree cone

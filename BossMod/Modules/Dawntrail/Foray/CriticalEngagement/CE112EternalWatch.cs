@@ -54,7 +54,7 @@ sealed class AncientStoneAncientAeroIIISlow : Components.SimpleAOEGroups
     }
 }
 sealed class AncientStoneAncientAeroIIIFast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AncientAeroIII1, (uint)AID.AncientStoneIII1], WindStoneSurge.Cone);
-sealed class AncientHoly(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientHoly1, 25f);
+sealed class AncientHoly(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientHoly1, 26f);
 sealed class RadiantWave(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.RadiantWaveVisual, (uint)AID.RadiantWave, 1.2f);
 sealed class Scratch(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.Scratch);
 sealed class HolyBlaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HolyBlaze, new AOEShapeRect(60f, 2.5f));
