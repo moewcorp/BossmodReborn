@@ -39,6 +39,7 @@ public enum AID : uint
 
 sealed class LineOfFireSpiritSlingCageOfFire(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.LineOfFire1, (uint)AID.LineOfFire2,
 (uint)AID.CageOfFire, (uint)AID.SpiritSling], new AOEShapeRect(60f, 4f));
+
 sealed class KnuckleCrusher : Components.SimpleAOEs
 {
     private WPos midpoint;
