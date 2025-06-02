@@ -303,4 +303,6 @@ public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModu
         Arena.Actors(Enemies((uint)OID.OccultKnight2));
         Arena.Actor(_bossMegaloknight);
     }
+
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 25f);
 }

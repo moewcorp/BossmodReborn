@@ -102,6 +102,7 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
             var pos = WorldState.Actors.Find(spell.MainTargetID)?.Position;
             if (pos is WPos position)
             {
+                (WPos position, AOEShape? shape, bool knockback, DateTime activation) mech = default;
                 var count = pendingMechanics.Count;
                 var mechs = CollectionsMarshal.AsSpan(pendingMechanics);
                 var cpos = caster.Position;
@@ -111,17 +112,10 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
                     if (mch.position.AlmostEqual(cpos, 1f))
                     {
                         mch.position = position;
-                        continue;
-                    }
-                }
-                (WPos position, AOEShape? shape, bool knockback, DateTime activation) mech = default;
-                for (var i = 0; i < count; ++i) // get first mech for matching actor position
-                {
-                    ref var mch = ref mechs[i];
-                    if (mch.position.AlmostEqual(position, 1f))
-                    {
-                        mech = mch;
-                        break;
+                        if (mech == default) // get first mech for matching actor position
+                        {
+                            mech = mch;
+                        }
                     }
                 }
                 if (!mech.knockback)
@@ -202,7 +196,7 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
                 var origin = kb.Origin;
                 hints.AddForbiddenZone(p =>
                 {
-                    if ((p + 20f * (p - origin).Normalized()).InCircle(center, 20f))
+                    if ((p + 20f * (p - origin).Normalized()).InCircle(center, 18f))
                         return 1f;
                     return -1f;
                 }, act);
@@ -238,4 +232,7 @@ sealed class CE110FlameOfDuskStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 47)]
-public sealed class CE110FlameOfDusk(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(-570f, -160f)), new ArenaBoundsCircle(20f));
+public sealed class CE110FlameOfDusk(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(-570f, -160f)), new ArenaBoundsCircle(20f))
+{
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 25f);
+}
