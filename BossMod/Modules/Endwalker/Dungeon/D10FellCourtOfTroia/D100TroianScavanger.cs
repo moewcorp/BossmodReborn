@@ -17,11 +17,11 @@ public enum AID : uint
     DarkArrivisme = 30213 // Boss->location, 3.0s cast, range 5 circle
 }
 
-class Condemnation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Condemnation, new AOEShapeCone(6f, 45f.Degrees()));
-class EvilPhlegm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EvilPhlegm, 5f);
-class DarkArrivisme(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkArrivisme, 5f);
+sealed class Condemnation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Condemnation, new AOEShapeCone(6f, 45f.Degrees()));
+sealed class EvilPhlegm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EvilPhlegm, 5f);
+sealed class DarkArrivisme(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkArrivisme, 5f);
 
-class D100TroianScavangerStates : StateMachineBuilder
+sealed class D100TroianScavangerStates : StateMachineBuilder
 {
     public D100TroianScavangerStates(BossModule module) : base(module)
     {
@@ -47,7 +47,7 @@ class D100TroianScavangerStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11358, SortOrder = 1)]
-public class D100TroianScavanger(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
+public sealed class D100TroianScavanger(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
     private static bool IsArena1(Actor primary) => primary.Position.Z > 170f;
     private static readonly WPos[] vertices1 = [new(58.65f, 113.75f), new(59.33f, 113.92f), new(60.07f, 115.82f), new(60.42f, 116.25f), new(60.46f, 116.87f),

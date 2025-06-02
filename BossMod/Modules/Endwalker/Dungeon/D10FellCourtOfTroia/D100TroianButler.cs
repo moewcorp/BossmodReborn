@@ -20,13 +20,13 @@ public enum AID : uint
     Dark = 30222 // Boss->self, 3.0s cast, range 6 120-degree cone
 }
 
-class Karma(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Karma, new AOEShapeCone(30f, 45f.Degrees()));
-class Dark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Dark, new AOEShapeCone(6f, 60f.Degrees()));
-class ArachneWeb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArachneWeb, 6f);
-class Swoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Swoop, 6f);
-class UnholyDarkness(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UnholyDarkness, 8f);
+sealed class Karma(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Karma, new AOEShapeCone(30f, 45f.Degrees()));
+sealed class Dark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Dark, new AOEShapeCone(6f, 60f.Degrees()));
+sealed class ArachneWeb(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArachneWeb, 6f);
+sealed class Swoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Swoop, 6f);
+sealed class UnholyDarkness(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UnholyDarkness, 8f);
 
-class D100TroianButlerStates : StateMachineBuilder
+sealed class D100TroianButlerStates : StateMachineBuilder
 {
     public D100TroianButlerStates(BossModule module) : base(module)
     {
@@ -54,7 +54,7 @@ class D100TroianButlerStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11367, SortOrder = 6)]
-public class D100TroianButler(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
+public sealed class D100TroianButler(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
     private static bool IsArena1(Actor primary) => primary.Position.Z > -138f;
     private static readonly WPos[] vertices1 = [new(2.32f, -133.04f), new(2.68f, -132.67f), new(3.2f, -132.4f), new(3.84f, -132.15f), new(10.5f, -128.57f),

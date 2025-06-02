@@ -15,10 +15,10 @@ public enum AID : uint
     JestersReap = 30217 // Boss->self, 4.0s cast, range 12 120-degree cone
 }
 
-class JestersReap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.JestersReap, new AOEShapeCone(12f, 60f.Degrees()));
-class HallOfSorrow(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HallOfSorrow, 8f);
+sealed class JestersReap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.JestersReap, new AOEShapeCone(12f, 60f.Degrees()));
+sealed class HallOfSorrow(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HallOfSorrow, 8f);
 
-class D100TroianBishopStates : StateMachineBuilder
+sealed class D100TroianBishopStates : StateMachineBuilder
 {
     public D100TroianBishopStates(BossModule module) : base(module)
     {
@@ -43,7 +43,7 @@ class D100TroianBishopStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11364, SortOrder = 4)]
-public class D100TroianBishop(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D100TroianBishop(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(6.22f, -91.79f), new(6.05f, -91.29f), new(6.02f, -89.05f), new(6.22f, -88.57f), new(8.33f, -88.52f),
     new(8.54f, -87.92f), new(8.54f, -87.33f), new(8.63f, -86.75f), new(10.74f, -86.49f), new(11.33f, -86.38f),

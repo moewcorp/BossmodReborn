@@ -40,6 +40,7 @@ public enum AID : uint
 
     Inhale = 38280, // UolonOfFortune->self, 0.5s cast, range 27 120-degree cone
     Spin = 38279, // UolonOfFortune->self, 3.0s cast, range 11 circle
+    Scoop = 38278, // UolonOfFortune->self, 4.0s cast, range 15 120-degree cone
     RottenSpores = 38277, // UolonOfFortune->location, 3.0s cast, range 6 circle
     TearyTwirl = 32301, // TuraliOnion->self, 3.5s cast, range 7 circle
     HeirloomScream = 32304, // TuraliTomato->self, 3.5s cast, range 7 circle
@@ -49,23 +50,23 @@ public enum AID : uint
     Telega = 9630 // BonusAdds->self, no cast, single-target, bonus adds disappear
 }
 
-class Blade(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Blade);
-class Pyreburst(BossModule module) : Components.RaidwideCast(module, (uint)AID.Pyreburst);
+sealed class Blade(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Blade);
+sealed class Pyreburst(BossModule module) : Components.RaidwideCast(module, (uint)AID.Pyreburst);
 
-class FlameBlade1and2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FlameBlade1, (uint)AID.FlameBlade2], new AOEShapeRect(40f, 5f));
-class CrossfireBlade3FlameBlade3(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrossfireBlade3, (uint)AID.FlameBlade3], new AOEShapeRect(40f, 2.5f));
-class CrossfireBlade1and2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrossfireBlade1, (uint)AID.CrossfireBlade2], new AOEShapeCross(20f, 5f));
+sealed class FlameBlade1and2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FlameBlade1, (uint)AID.FlameBlade2], new AOEShapeRect(40f, 5f));
+sealed class CrossfireBlade3FlameBlade3(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrossfireBlade3, (uint)AID.FlameBlade3], new AOEShapeRect(40f, 2.5f));
+sealed class CrossfireBlade1and2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrossfireBlade1, (uint)AID.CrossfireBlade2], new AOEShapeCross(20f, 5f));
 
-class BlazingBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingBreath, new AOEShapeRect(44f, 5f));
-class BlazingBlast(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingBlast, 6f);
+sealed class BlazingBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingBreath, new AOEShapeRect(44f, 5f));
+sealed class BlazingBlast(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingBlast, 6f);
 
-class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
-class RottenSpores(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RottenSpores, 6f);
-
-class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
+sealed class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
+sealed class RottenSpores(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RottenSpores, 6f);
+sealed class Scoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Scoop, new AOEShapeCone(15f, 60f.Degrees()));
+sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
 
-class BullApollyonStates : StateMachineBuilder
+sealed class BullApollyonStates : StateMachineBuilder
 {
     public BullApollyonStates(BossModule module) : base(module)
     {
@@ -78,6 +79,7 @@ class BullApollyonStates : StateMachineBuilder
             .ActivateOnEnter<BlazingBreath>()
             .ActivateOnEnter<BlazingBlast>()
             .ActivateOnEnter<Spin>()
+            .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<RottenSpores>()
             .ActivateOnEnter<MandragoraAOEs>()
             .Raw.Update = () =>
@@ -95,7 +97,7 @@ class BullApollyonStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Kismet, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 993, NameID = 13247)]
-public class BullApollyon(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
+public sealed class BullApollyon(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
 {
     private static readonly uint[] bonusAdds = [(uint)OID.TuraliEggplant, (uint)OID.TuraliTomato, (uint)OID.TuligoraQueen, (uint)OID.TuraliGarlic,
     (uint)OID.TuraliOnion, (uint)OID.UolonOfFortune, (uint)OID.AlpacaOfFortune];

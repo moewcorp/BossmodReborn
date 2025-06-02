@@ -19,12 +19,12 @@ public enum AID : uint
     Geirrothr = 30215 // TroianRider->self, 3.0s cast, range 6 120-degree cone
 }
 
-class Geirrothr(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Geirrothr, new AOEShapeCone(6f, 60f.Degrees()));
-class GrimFate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrimFate, new AOEShapeCone(12f, 60f.Degrees()));
-class GrimHalo(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrimHalo, 12f);
-class VoidTrap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidTrap, 6f);
+sealed class Geirrothr(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Geirrothr, new AOEShapeCone(6f, 60f.Degrees()));
+sealed class GrimFate(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrimFate, new AOEShapeCone(12f, 60f.Degrees()));
+sealed class GrimHalo(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrimHalo, 12f);
+sealed class VoidTrap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidTrap, 6f);
 
-class D100TroianFootmanStates : StateMachineBuilder
+sealed class D100TroianFootmanStates : StateMachineBuilder
 {
     public D100TroianFootmanStates(BossModule module) : base(module)
     {
@@ -51,7 +51,7 @@ class D100TroianFootmanStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11447, SortOrder = 3)]
-public class D100TroianFootman(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D100TroianFootman(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(-163.01f, 2.62f), new(-162.53f, 3.15f), new(-162.08f, 3.49f), new(-160.91f, 3.72f), new(-161.11f, 4.28f),
     new(-160.95f, 4.75f), new(-158.03f, 5.95f), new(-157.5f, 5.57f), new(-157.26f, 4.97f), new(-156.85f, 4.38f),

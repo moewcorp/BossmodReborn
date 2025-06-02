@@ -42,6 +42,7 @@ public enum AID : uint
 
     Inhale = 38280, // UolonOfFortune->self, 0.5s cast, range 27 120-degree cone
     Spin = 38279, // UolonOfFortune->self, 3.0s cast, range 11 circle
+    Scoop = 38278, // UolonOfFortune->self, 4.0s cast, range 15 120-degree cone
     RottenSpores = 38277, // UolonOfFortune->location, 3.0s cast, range 6 circle
     TearyTwirl = 32301, // TuraliOnion->self, 3.5s cast, range 7 circle
     HeirloomScream = 32304, // TuraliTomato->self, 3.5s cast, range 7 circle
@@ -51,22 +52,22 @@ public enum AID : uint
     Telega = 9630 // BonusAdds->self, no cast, single-target, bonus adds disappear
 }
 
-class SwiftwindSerenade(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SwiftwindSerenade, new AOEShapeRect(40f, 4f));
-class Ovation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ovation, new AOEShapeRect(14f, 2f));
-class GravelShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GravelShower, new AOEShapeRect(10f, 2f));
-class Flatten(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Flatten, new AOEShapeCone(8f, 45f.Degrees()));
+sealed class SwiftwindSerenade(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SwiftwindSerenade, new AOEShapeRect(40f, 4f));
+sealed class Ovation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ovation, new AOEShapeRect(14f, 2f));
+sealed class GravelShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GravelShower, new AOEShapeRect(10f, 2f));
+sealed class Flatten(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Flatten, new AOEShapeCone(8f, 45f.Degrees()));
 
-class WaterIIIPollenCorona(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WaterIII, (uint)AID.PollenCorona], 8f);
-class DisseverNepenthicPlunge(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Dissever, (uint)AID.NepenthicPlunge], new AOEShapeCone(10f, 45f.Degrees()));
-class DoubleSmashCriticalBite(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DoubleSmash, (uint)AID.CriticalBite], new AOEShapeCone(10f, 60f.Degrees()));
-class TornadoTornadicSerenadeRottenSpores(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Tornado, (uint)AID.TornadicSerenade, (uint)AID.RottenSpores], 6f);
+sealed class WaterIIIPollenCorona(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WaterIII, (uint)AID.PollenCorona], 8f);
+sealed class DisseverNepenthicPlunge(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Dissever, (uint)AID.NepenthicPlunge], new AOEShapeCone(10f, 45f.Degrees()));
+sealed class DoubleSmashCriticalBite(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DoubleSmash, (uint)AID.CriticalBite], new AOEShapeCone(10f, 60f.Degrees()));
+sealed class TornadoTornadicSerenadeRottenSpores(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Tornado, (uint)AID.TornadicSerenade, (uint)AID.RottenSpores], 6f);
 
-class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
-
-class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
+sealed class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
+sealed class Scoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Scoop, new AOEShapeCone(15f, 60f.Degrees()));
+sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
 
-class Room2States : StateMachineBuilder
+sealed class Room2States : StateMachineBuilder
 {
     public Room2States(BossModule module) : base(module)
     {
@@ -80,13 +81,14 @@ class Room2States : StateMachineBuilder
             .ActivateOnEnter<DoubleSmashCriticalBite>()
             .ActivateOnEnter<TornadoTornadicSerenadeRottenSpores>()
             .ActivateOnEnter<Spin>()
+            .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<MandragoraAOEs>()
             .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.EventState == 7u;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 993, NameID = 5057)]
-public class Room2(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaBounds.Center, ArenaBounds)
+public sealed class Room2(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaBounds.Center, ArenaBounds)
 {
     private static readonly WPos arenaCenter = new(default, 192f);
     private static readonly Angle a135 = 135.Degrees();
