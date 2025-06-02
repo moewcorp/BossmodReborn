@@ -24,10 +24,10 @@ public enum AID : uint
     EndlessNightmareRepeat = 29728 // Boss->self, no cast, range 20 circle
 }
 
-class UniteMare1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UniteMare1, 6f, riskyWithSecondsLeft: 2.5d); // delay to improve melee greeding during enrage
-class UniteMare2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UniteMare2, 18f, riskyWithSecondsLeft: 5d);
+sealed class UniteMare1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UniteMare1, 6f, riskyWithSecondsLeft: 2.5d); // delay to improve melee greeding during enrage
+sealed class UniteMare2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UniteMare2, 18f, riskyWithSecondsLeft: 5d);
 
-class UniteMare3(BossModule module) : Components.GenericAOEs(module)
+sealed class UniteMare3(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(12f);
     private readonly List<AOEInstance> _aoes = new(7);
@@ -69,12 +69,12 @@ class UniteMare3(BossModule module) : Components.GenericAOEs(module)
         }
     }
 }
-class DarkVision1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkVision1, new AOEShapeRect(40f, 2.5f));
-class DarkVision2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkVision2, new AOEShapeRect(41f, 2.5f));
-class VoidGravity(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.VoidGravity, 6f);
-class EndlessNightmare(BossModule module) : Components.CastHint(module, (uint)AID.EndlessNightmare, "Enrage!", true);
+sealed class DarkVision1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkVision1, new AOEShapeRect(40f, 2.5f));
+sealed class DarkVision2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DarkVision2, new AOEShapeRect(41f, 2.5f));
+sealed class VoidGravity(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.VoidGravity, 6f);
+sealed class EndlessNightmare(BossModule module) : Components.CastHint(module, (uint)AID.EndlessNightmare, "Enrage!", true);
 
-class D101EvilDreamersStates : StateMachineBuilder
+sealed class D101EvilDreamersStates : StateMachineBuilder
 {
     public D101EvilDreamersStates(BossModule module) : base(module)
     {
@@ -90,7 +90,7 @@ class D101EvilDreamersStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11382, SortOrder = 2)]
-public class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(168, 89.999f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(168f, 110.25f), 20f, 1.25f),
     new Rectangle(new(188.34f, 90.007f), 1.25f, 20f)]);

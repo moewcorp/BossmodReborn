@@ -41,20 +41,20 @@ public enum AID : uint
     VacuumWave = 30236, // Helper->self, 5.4s cast, range 40 circle, knockback 30, away from source
 
     VoidVortexVisual = 30253, // Boss->self, no cast, single-target
-    VoidVortexSpread = 30243, // Helper->players, 5.0s cast, range 6 circle, spread
-    VoidVortexStack = 30254, // Helper->players, 5.0s cast, range 6 circle, stack
+    VoidVortex1 = 30243, // Helper->players, 5.0s cast, range 6 circle, stack
+    VoidVortex2 = 30254, // Helper->players, 5.0s cast, range 6 circle, stack
+    VoidGravity = 30242, // Helper->player, 5.0s cast, range 6 circle, spread
 
     FiredampVisual = 30262, // Boss->self, 5.0s cast, single-target
-    Firedamp = 30263, // Helper->player, 5.4s cast, range 5 circle, tankbuster
-    VoidGravity = 30242, // Helper->player, 5.0s cast, range 6 circle
+    Firedamp = 30263 // Helper->player, 5.4s cast, range 5 circle, tankbuster
 }
 
-class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly VacuumWave _kb = module.FindComponent<VacuumWave>()!;
     public readonly List<Rectangle> SafeWalls = [.. D103Scarmiglione.SafeWalls];
     public readonly List<Rectangle> PendingSafeWalls = new(4);
-    private static readonly AOEShapeDonut donut = new(20, 25);
+    private static readonly AOEShapeDonut donut = new(20f, 25f);
     private static readonly Polygon[] defaultCircle = [new Polygon(D103Scarmiglione.ArenaCenter, 20f, 64)];
     private AOEInstance? _aoe;
     private bool outOfBounds;
@@ -70,7 +70,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00200010)
+        if (state == 0x00200010u)
         {
             void RemoveSafeWall(int index)
             {
@@ -121,7 +121,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                     break;
             }
         }
-        else if (state == 0x00020001)
+        else if (state == 0x00020001u)
         {
             void AddPendingSafeWall(int index, float pos)
             {
@@ -203,7 +203,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class VacuumWave(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class VacuumWave(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private Knockback? _source;
     public readonly List<SafeWall> safeWalls =
@@ -237,7 +237,7 @@ class VacuumWave(BossModule module) : Components.GenericKnockback(module, ignore
     }
 }
 
-class VacuumWaveHint(BossModule module) : Components.GenericAOEs(module)
+sealed class VacuumWaveHint(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
     private AOEInstance? _aoe;
@@ -283,13 +283,13 @@ class VacuumWaveHint(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class VoidVortexSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.VoidVortexSpread, 6f);
-class VoidVortexStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.VoidVortexStack, 6f, 4, 4);
-class BlightedBedevilment(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBedevilment, 9f);
-class BlightedBladework(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBladework, 25f, riskyWithSecondsLeft: 8d);
-class Nox(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Nox, 10f);
-class RottenRampageAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RottenRampage, 6f);
-class RottenRampageSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.RottenRampageSpread, 6f)
+sealed class VoidVortex1(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.VoidVortex1, 6f, 4, 4);
+sealed class VoidVortex2(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.VoidVortex2, 6f, 4, 4);
+sealed class BlightedBedevilment(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBedevilment, 9f);
+sealed class BlightedBladework(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBladework, 25f, riskyWithSecondsLeft: 8d);
+sealed class Nox(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Nox, 10f);
+sealed class RottenRampageAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RottenRampage, 6f);
+sealed class RottenRampageSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.RottenRampageSpread, 6f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -318,7 +318,7 @@ class RottenRampageSpread(BossModule module) : Components.SpreadFromCastTargets(
         for (var i = 0; i < count; ++i)
         {
             var a = walls[i];
-            Arena.AddCircle(a.Position, a.HitboxRadius, Colors.Danger);
+            Arena.AddCircle(a.Position, a.HitboxRadius);
         }
     }
 
@@ -329,12 +329,12 @@ class RottenRampageSpread(BossModule module) : Components.SpreadFromCastTargets(
     }
 }
 
-class BlightedSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedSweep, new AOEShapeCone(40f, 90f.Degrees()));
-class CursedEcho(BossModule module) : Components.RaidwideCast(module, (uint)AID.CursedEcho);
-class VoidGravity(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.VoidGravity, 6f, 4, 4);
-class Firedamp(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Firedamp, 5f, tankbuster: true);
+sealed class BlightedSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedSweep, new AOEShapeCone(40f, 90f.Degrees()));
+sealed class CursedEcho(BossModule module) : Components.RaidwideCast(module, (uint)AID.CursedEcho);
+sealed class VoidGravity(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.VoidGravity, 6f, 4, 4);
+sealed class Firedamp(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Firedamp, 5f, tankbuster: true);
 
-class CorruptorsPitch(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.CorruptorsPitchVisual, (uint)AID.CorruptorsPitch3, 8.1f)
+sealed class CorruptorsPitch(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.CorruptorsPitchVisual, (uint)AID.CorruptorsPitch3, 8.1f)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -344,7 +344,7 @@ class CorruptorsPitch(BossModule module) : Components.RaidwideCastDelay(module, 
     }
 }
 
-class D103ScarmiglioneStates : StateMachineBuilder
+sealed class D103ScarmiglioneStates : StateMachineBuilder
 {
     public D103ScarmiglioneStates(BossModule module) : base(module)
     {
@@ -352,8 +352,8 @@ class D103ScarmiglioneStates : StateMachineBuilder
             .ActivateOnEnter<VacuumWave>()
             .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<VacuumWaveHint>()
-            .ActivateOnEnter<VoidVortexSpread>()
-            .ActivateOnEnter<VoidVortexStack>()
+            .ActivateOnEnter<VoidVortex1>()
+            .ActivateOnEnter<VoidVortex2>()
             .ActivateOnEnter<BlightedBedevilment>()
             .ActivateOnEnter<BlightedBladework>()
             .ActivateOnEnter<Nox>()
@@ -368,7 +368,7 @@ class D103ScarmiglioneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11372, SortOrder = 7)]
-public class D103Scarmiglione(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
+public sealed class D103Scarmiglione(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
 {
     public static readonly WPos ArenaCenter = new(-35f, -298f);
     private const float HalfWidth = 5f;

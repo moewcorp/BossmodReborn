@@ -3,9 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x396D, // R=4.95
-    Actor1e8fb8 = 0x1E8FB8, // R2.000, x2 (spawn during fight), EventObj type
-    Actor1e8f2f = 0x1E8F2F, // R0.500, x1 (spawn during fight), EventObj type
-    Helper = 0x233C, // R0.500, x26, 523 type
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -42,21 +40,21 @@ public enum SID : uint
     Doom = 3364 // Helper->player, extra=0x0
 }
 
-class BeatificScorn5(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BeatificScornAOE, 9f, 8);
+sealed class BeatificScorn5(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BeatificScornAOE, 9f, 8);
 
-class DeathForeseen1(BossModule module) : Components.CastGaze(module, (uint)AID.DeathForeseen1);
-class DeathForeseen2(BossModule module) : Components.CastGaze(module, (uint)AID.DeathForeseen2, maxCasts: 2);
+sealed class DeathForeseen1(BossModule module) : Components.CastGaze(module, (uint)AID.DeathForeseen1);
+sealed class DeathForeseen2(BossModule module) : Components.CastGaze(module, (uint)AID.DeathForeseen2, maxCasts: 2);
 
-class Voidshaker(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voidshaker, new AOEShapeCone(20f, 60f.Degrees()));
+sealed class Voidshaker(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voidshaker, new AOEShapeCone(20f, 60f.Degrees()));
 
-class VoidNail(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.VoidNail, 6f);
-class Hush(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Hush);
-class EyeOfTroia(BossModule module) : Components.RaidwideCast(module, (uint)AID.EyeOfTroia);
-class ToricVoid(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ToricVoid, new AOEShapeDonut(10f, 20f));
-class Antipressure(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Antipressure, 6f, 4, 4);
-class Doom(BossModule module) : Components.CleansableDebuff(module, (uint)SID.Doom);
+sealed class VoidNail(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.VoidNail, 6f);
+sealed class Hush(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Hush);
+sealed class EyeOfTroia(BossModule module) : Components.RaidwideCast(module, (uint)AID.EyeOfTroia);
+sealed class ToricVoid(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ToricVoid, new AOEShapeDonut(10f, 20f));
+sealed class Antipressure(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Antipressure, 6f, 4, 4);
+sealed class Doom(BossModule module) : Components.CleansableDebuff(module, (uint)SID.Doom);
 
-class D102BeatriceStates : StateMachineBuilder
+sealed class D102BeatriceStates : StateMachineBuilder
 {
     public D102BeatriceStates(BossModule module) : base(module)
     {
@@ -75,7 +73,7 @@ class D102BeatriceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11384, SortOrder = 5)]
-public class D102Beatrice(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D102Beatrice(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(default, -148f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(default, -127.63f), 20f, 1.25f),
     new Rectangle(new(default, -168.32f), 20f, 1.25f)]);
