@@ -40,10 +40,7 @@ public enum SID : uint
 {
     PlayingWithIce = 4212, // none->player, extra=0x0
     PlayingWithFire = 4211, // none->player, extra=0x0
-    ImpElement = 2193, // none->JestingJackanapes, extra=0x344/0x345, 344 fire, 345 ice
-    Seduced = 991, // JestingJackanapes->player, extra=0x3C
-    Cryomania = 4214, // none->player, extra=0x0
-    Pyromania = 4213, // none->player, extra=0x0
+    ImpElement = 2193 // none->JestingJackanapes, extra=0x344/0x345, 344 fire, 345 ice
 }
 
 sealed class WallopNarrow(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Wallop2, (uint)AID.Wallop3], new AOEShapeRect(60f, 5f));

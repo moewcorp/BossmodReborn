@@ -247,6 +247,12 @@ sealed class WorldStateGameSync : IDisposable
                 Service.LogVerbose($"[WorldState] Skipping bad object #{i} with id {obj->EntityId:X}");
                 obj = null;
             }
+            if (actor != null && (obj == null || actor.InstanceID != obj->EntityId))
+            {
+                _actorsByIndex[i] = null;
+                RemoveActor(actor);
+                actor = null;
+            }
             if (obj != null)
             {
                 if (actor != _ws.Actors.Find(obj->EntityId))
@@ -254,12 +260,6 @@ sealed class WorldStateGameSync : IDisposable
                     Service.Log($"[WorldState] Actor position mismatch for #{i} {actor}");
                 }
                 UpdateActor(obj, i, actor);
-            }
-            if (actor != null && (obj == null || actor.InstanceID != obj->EntityId))
-            {
-                _actorsByIndex[i] = null;
-                RemoveActor(actor);
-                actor = null;
             }
         }
 
