@@ -95,6 +95,11 @@ public class GenericWildCharge(BossModule module, float halfWidth, uint aid = de
                     forbiddenInverted.Add(ShapeDistance.Rect(aoe.origin, aoe.dir, aoe.length, 0, HalfWidth));
                 break;
         }
+
+        foreach (var aoe in EnumerateAOEs())
+            // TODO add separate "tankbuster" hint for PlayerRole.Share if there are any ShareNotFirsts in the party
+            hints.AddPredictedDamage(Raid.WithSlot().Where(p => InAOE(aoe, p.Item2)).Mask(), Activation);
+
         if (forbiddenInverted.Count != 0)
         {
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), Activation);

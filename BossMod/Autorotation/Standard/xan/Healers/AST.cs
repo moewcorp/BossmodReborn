@@ -65,6 +65,8 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
             return;
         }
 
+        GoalZoneSingle(25);
+
         if (NumAOETargets > 2)
             PushGCD(AID.Gravity, BestAOETarget);
 
@@ -107,19 +109,7 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
             PushOGCD(AID.LucidDreaming, Player);
     }
 
-    private bool ShouldLightspeed(StrategyValues strategy)
-    {
-        if (CanWeave(MaxChargesIn(AID.Lightspeed), 0.6f))
-            return true;
-
-        if (LightspeedLeft > 0)
-            return false;
-
-        if (DivinationLeft > 10)
-            return true;
-
-        return strategy.BuffsOk() && CanWeave(AID.Divination, 2);
-    }
+    private bool ShouldLightspeed(StrategyValues strategy) => LightspeedLeft == 0 && (strategy.BuffsOk() && CanWeave(AID.Divination, 2) || DivinationLeft > 10);
 
     private float CombustLeft(Actor? actor) => actor == null ? float.MaxValue : Utils.MaxAll(
         StatusDetails(actor, SID.Combust, Player.InstanceID).Left,

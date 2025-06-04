@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class DeepDungeonAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class DeepDungeonAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { Potion, Kite }
 

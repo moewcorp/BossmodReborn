@@ -41,7 +41,7 @@ class P2LuminousHammer(BossModule module) : Components.BaitAwayIcon(module, 6f, 
         foreach (var b in CurrentBaits)
             predictedDamage[Raid.FindSlot(b.Target.InstanceID)] = true;
         if (predictedDamage.Any())
-            hints.PredictedDamage.Add((predictedDamage, CurrentBaits[0].Activation));
+            hints.AddPredictedDamage(predictedDamage, CurrentBaits[0].Activation, AIHints.PredictedDamageType.Raidwide);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

@@ -51,6 +51,8 @@ public class TEA : BossModule
         _trueHeart = Enemies((uint)OID.TrueHeart);
     }
 
+    public override bool ShouldPrioritizeAllEnemies => true;
+
     protected override void UpdateModule()
     {
         // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...

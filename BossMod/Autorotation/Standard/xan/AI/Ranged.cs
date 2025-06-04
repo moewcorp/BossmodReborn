@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { Interrupt, SecondWind, LimitBreak }
     public static RotationModuleDefinition Definition()

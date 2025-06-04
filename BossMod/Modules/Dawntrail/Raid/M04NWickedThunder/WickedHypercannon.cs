@@ -36,7 +36,7 @@ sealed class WickedHypercannon(BossModule module) : Components.GenericAOEs(modul
         if (_aoe != null)
         {
             var activation = _aoe?.Activation!;
-            hints.PredictedDamage.Add((Raid.WithSlot(false, true, true).Mask(), (DateTime)activation));
+            hints.AddPredictedDamage(Raid.WithSlot(false, true, true).Mask(), (DateTime)activation);
         }
     }
 }

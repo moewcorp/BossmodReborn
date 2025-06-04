@@ -4,7 +4,7 @@ namespace BossMod;
 // when there is no active bossmodule (eg in outdoor or on trash), we try to guess things based on world state (eg actor casts)
 public sealed class AIHintsBuilder : IDisposable
 {
-    private const float RaidwideSize = 30;
+    private const float RaidwideSize = 30f;
     private const float HalfWidth = 0.5f;
     public readonly Pathfinding.ObstacleMapManager Obstacles;
     private readonly WorldState _ws;
@@ -62,7 +62,8 @@ public sealed class AIHintsBuilder : IDisposable
         {
             var playerAssignment = _config[_ws.Party.Members[playerSlot].ContentId];
             var activeModule = _bmm.ActiveModule?.StateMachine.ActivePhase != null ? _bmm.ActiveModule : null;
-            FillEnemies(hints, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot(false, false, true).Any(p => p != player && p.Role == Role.Tank));
+            var outOfCombatPriority = activeModule?.ShouldPrioritizeAllEnemies == true ? 0 : AIHints.Enemy.PriorityUndesirable;
+            FillEnemies(hints, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot(false, false, true).Any(p => p != player && p.Role == Role.Tank), outOfCombatPriority);
             if (activeModule != null)
             {
                 activeModule.CalculateAIHints(playerSlot, ref player, ref playerAssignment, ref hints);
@@ -77,7 +78,7 @@ public sealed class AIHintsBuilder : IDisposable
     }
 
     // Fill list of potential targets from world state
-    private void FillEnemies(AIHints hints, bool playerIsDefaultTank)
+    private void FillEnemies(AIHints hints, bool playerIsDefaultTank, int priorityPassive = AIHints.Enemy.PriorityUndesirable)
     {
         var allowedFateID = Utils.IsPlayerSyncedToFate(_ws) ? _ws.Client.ActiveFate.ID : 0;
 
@@ -93,7 +94,7 @@ public sealed class AIHintsBuilder : IDisposable
             if (actor.FateID != 0)
             {
                 if (actor.FateID != allowedFateID)
-                    priority = AIHints.Enemy.PriorityInvincible; // Fate mob in an irrelevant fate
+                    priority = AIHints.Enemy.PriorityInvincible;  // fate mob in fate we are NOT a part of can't be damaged at all
                 else
                     priority = 0; // Relevant fate mob
             }
@@ -104,7 +105,7 @@ public sealed class AIHintsBuilder : IDisposable
             else if (actor.InCombat && _ws.Party.FindSlot(actor.TargetID) >= 0)
                 priority = 0; // Assisting party members
             else
-                priority = AIHints.Enemy.PriorityUndesirable; // Default undesirable
+                priority = priorityPassive; // Default undesirable
 
             var enemy = hints.Enemies[index] = new(actor, priority, playerIsDefaultTank);
             hints.PotentialTargets.Add(enemy);

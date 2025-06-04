@@ -67,7 +67,7 @@ class ChestThump(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        hints.PredictedDamage.Add((Raid.WithSlot(false, false, true).Mask(), _activation));
+        hints.AddPredictedDamage(Raid.WithSlot(false, false, true).Mask(), _activation);
     }
 }
 

@@ -22,13 +22,13 @@ public sealed class RotationModuleManager : IDisposable
         }
     }
 
-    public readonly AutorotationConfig Config = Service.Config.Get<AutorotationConfig>();
+    public static readonly AutorotationConfig Config = Service.Config.Get<AutorotationConfig>();
     public readonly RotationDatabase Database;
     public readonly BossModuleManager Bossmods;
     public readonly int PlayerSlot; // TODO: reconsider, we rely on too many things in clientstate...
     public readonly AIHints Hints;
-    public PlanExecution? Planner { get; private set; }
-    private readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
+    public PlanExecution? Planner;
+    private static readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
     private readonly EventSubscriptions _subscriptions;
     private List<ActiveModule>? ActiveModules;
 
@@ -39,8 +39,8 @@ public sealed class RotationModuleManager : IDisposable
     public Actor? Player => WorldState.Party[PlayerSlot];
 
     // historic data for recent events that could be interesting for modules
-    public DateTime CombatStart { get; private set; } // default value when player is not in combat, otherwise timestamp when player entered combat
-    public (DateTime Time, ActorCastEvent? Data) LastCast { get; private set; }
+    public DateTime CombatStart; // default value when player is not in combat, otherwise timestamp when player entered combat
+    public (DateTime Time, ActorCastEvent? Data) LastCast;
 
     // list of status effects that disable the player's default action set, but do not disable *all* actions
     // in these cases, we want to prevent active rotation modules from queueing any actions, because they might affect positioning or rotation, or interfere with player's attempt to manually use an action
@@ -49,11 +49,18 @@ public sealed class RotationModuleManager : IDisposable
         (uint)Roleplay.SID.RolePlaying, // used for almost all solo duties
         (uint)Roleplay.SID.BorrowedFlesh, // used specifically for In from the Cold (Endwalker)
         (uint)Roleplay.SID.FreshPerspective, // sapphire weapon quest
+
+        // hacking interlude gimmick in Paradigm's Breach boss 3
+        // (uint)Shadowbringers.Alliance.A34RedGirl.SID.Program000000,
+        // (uint)Shadowbringers.Alliance.A34RedGirl.SID.ProgramFFFFFFF,
+
         565, // "Transfiguration" from certain pomanders in Palace of the Dead
         439, // "Toad", palace of the dead
         1546, // "Odder", heaven-on-high
         3502, // "Owlet", EO
         404, // "Transporting", not a transformation but prevents actions
+        4235, // "Rage" status from Phantom Berserker, prevents all actions and movement
+        4376, // "Transporting", variant in Occult Crescent
     ];
 
     public static bool IsTransformStatus(ActorStatus st) => TransformationStatuses.Contains(st.ID);
@@ -146,7 +153,7 @@ public sealed class RotationModuleManager : IDisposable
             allowedMask.Clear(PlayerSlot);
         if (filter.HasFlag(StrategyPartyFiltering.ExcludeNoPredictedDamage))
         {
-            var predictedDamage = Hints.PredictedDamage.Aggregate(default(BitMask), (s, p) => s | p.players);
+            var predictedDamage = Hints.PredictedDamage.Aggregate(default(BitMask), (s, p) => s | p.Players);
             allowedMask &= predictedDamage;
         }
 

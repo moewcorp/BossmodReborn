@@ -1,15 +1,16 @@
-﻿using BossMod.Autorotation.xan.AI;
+﻿using BossMod.Autorotation.xan;
 using BossMod.Pathfinding;
 using ImGuiNET;
 
 namespace BossMod;
 
-public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance)
+public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance, float cushionSize)
 {
     private readonly MapVisualizer?[] _zoneVisualizers = new MapVisualizer?[hints.ForbiddenZones.Count];
     private MapVisualizer? _pathfindVisualizer;
     private readonly NavigationDecision.Context _naviCtx = new();
     private NavigationDecision _navi;
+    private float _naviTime;
     private readonly TrackPartyHealth _partyHealth = new(ws);
 
     public void Draw(UITree tree)
@@ -40,7 +41,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
         }
         foreach (var _1 in tree.Node("Predicted damage", hints.PredictedDamage.Count == 0))
         {
-            tree.LeafNodes(hints.PredictedDamage, d => $"[{string.Join(", ", ws.Party.WithSlot().IncludedInMask(d.players).Select(ia => ia.Item2.Name))}], at {Math.Max(0, (d.activation - ws.CurrentTime).TotalSeconds):f3}");
+            tree.LeafNodes(hints.PredictedDamage, d => $"[{string.Join(", ", ws.Party.WithSlot().IncludedInMask(d.Players).Select(ia => ia.Item2.Name))}] ({d.Type}), at {Math.Max(0, (d.Activation - ws.CurrentTime).TotalSeconds):f3}");
         }
         foreach (var _1 in tree.Node("Party health"))
         {
@@ -61,6 +62,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
             ImGui.TextUnformatted($"Obstacles={hints.PathfindMapObstacles}");
             _pathfindVisualizer ??= BuildPathfindingVisualizer();
             _pathfindVisualizer!.Draw();
+            ImGui.TextUnformatted($"Rasterize Time={_naviTime:f3}");
             ImGui.TextUnformatted($"Leeway={_navi.LeewaySeconds:f3}, ttg={_navi.TimeToGoal:f3}, dist={(_navi.Destination != null ? $"{(_navi.Destination.Value - player.Position).Length():f3}" : "---")}");
         }
     }
@@ -78,7 +80,11 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
         // TODO: remove once the similar thing in AIBehaviour.BuildNavigationDecision is removed
         if (hints.GoalZones.Count == 0 && ws.Actors.Find(player.TargetID) is var target && target != null)
             hints.GoalZones.Add(hints.GoalSingleTarget(target, preferredDistance));
-        _navi = NavigationDecision.Build(_naviCtx, ws, hints, player);
+
+        var now = DateTime.Now;
+        _navi = NavigationDecision.Build(_naviCtx, ws, hints, player, forbiddenZoneCushion: cushionSize);
+        _naviTime = (float)(DateTime.Now - now).TotalSeconds;
+
         return new MapVisualizer(_naviCtx.Map, player.Position);
     }
 }

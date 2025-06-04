@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class EurekaAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class EurekaAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { Platebearer, Potion, Dispel, Feint, Bloodbath }
 
