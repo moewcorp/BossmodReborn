@@ -75,15 +75,15 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x0B)
+        if (index != 0x0Bu)
             return;
 
         tiles = state switch
         {
-            0x00020001 => GenerateTiles(defaultGreenTiles),
-            0x00200010 => GenerateRotatedTiles(180f),
-            0x01000080 => GenerateRotatedTiles(-90f),
-            0x08000400 => GenerateRotatedTiles(90f),
+            0x00020001u => GenerateTiles(defaultGreenTiles),
+            0x00200010u => GenerateRotatedTiles(180f),
+            0x01000080u => GenerateRotatedTiles(-90f),
+            0x08000400u => GenerateRotatedTiles(90f),
             _ => [],
         };
     }
