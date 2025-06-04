@@ -2,7 +2,7 @@
 
 namespace BossMod.Autorotation.xan;
 
-public class PhantomAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class PhantomAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track
     {
@@ -44,7 +44,7 @@ public class PhantomAI(RotationModuleManager manager, Actor player) : AIBase(man
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         var isMidCombo = CheckMidCombo();
 

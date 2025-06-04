@@ -2,7 +2,7 @@
 
 namespace BossMod.Autorotation.xan;
 
-public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class TankAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { Stance, Ranged, Interject, Stun, ArmsLength, Mit, Invuln, Protect }
 

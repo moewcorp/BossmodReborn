@@ -356,7 +356,8 @@ public sealed class ClientState
         protected override void Exec(WorldState ws)
         {
             Array.Fill(ws.Client.DutyActions, default);
-            for (var i = 0; i < Slots.Length; i++)
+            var len = Slots.Length;
+            for (var i = 0; i < len; i++)
                 ws.Client.DutyActions[i] = Slots[i];
             ws.Client.DutyActionsChanged.Fire(this);
         }

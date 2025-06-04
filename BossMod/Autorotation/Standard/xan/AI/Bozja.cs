@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class BozjaAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class BozjaAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { Dispel }
 

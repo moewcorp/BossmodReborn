@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class TrackPartyHealth(WorldState World)
+public sealed class TrackPartyHealth(WorldState World)
 {
     public record struct PartyMemberState
     {

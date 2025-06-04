@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation.xan;
 
-public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     public enum Track { SecondWind, Bloodbath, Stun, LimitBreak }
     public static RotationModuleDefinition Definition()

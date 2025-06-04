@@ -13,7 +13,7 @@ public static class RaiseUtil
     {
         var candidates = targets switch
         {
-            Targets.Everyone => world.Actors.Where(x => x.Type is ActorType.Player or ActorType.DutySupport && x.IsAlly),
+            Targets.Everyone => world.Actors.Where(x => x.Type is ActorType.Player or ActorType.Buddy && x.IsAlly),
             Targets.Alliance => world.Party.WithoutSlot(includeDead: true, excludeAlliance: false, excludeNPCs: true),
             _ => world.Party.WithoutSlot(includeDead: true, excludeAlliance: true, excludeNPCs: true)
         };

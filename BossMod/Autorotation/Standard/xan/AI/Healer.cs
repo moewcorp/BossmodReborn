@@ -3,7 +3,7 @@ using static BossMod.Autorotation.xan.TrackPartyHealth;
 
 namespace BossMod.Autorotation.xan;
 
-public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+public sealed class HealerAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     private readonly TrackPartyHealth Health = new(manager.WorldState);
 

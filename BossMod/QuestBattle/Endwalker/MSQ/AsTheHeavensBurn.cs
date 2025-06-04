@@ -5,7 +5,7 @@ namespace BossMod.QuestBattle.Endwalker.MSQ;
 
 // single target shield is status 2844
 
-class AlphinaudAI(WorldState ws) : UnmanagedRotation(ws, 25)
+sealed class AlphinaudAI(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     private readonly TrackPartyHealth PartyHealth = new(ws);
 
@@ -47,7 +47,7 @@ class AlphinaudAI(WorldState ws) : UnmanagedRotation(ws, 25)
     }
 }
 
-class AlisaieAI(WorldState ws) : UnmanagedRotation(ws, 25)
+sealed class AlisaieAI(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     protected override void Exec(Actor? primaryTarget)
     {
@@ -111,7 +111,7 @@ class AlisaieAI(WorldState ws) : UnmanagedRotation(ws, 25)
 }
 
 [ZoneModuleInfo(BossModuleInfo.Maturity.Contributed, 804)]
-internal class AsTheHeavensBurn(WorldState ws) : QuestBattle(ws)
+internal sealed class AsTheHeavensBurn(WorldState ws) : QuestBattle(ws)
 {
     private readonly AlphinaudAI _alphi = new(ws);
     private readonly AlisaieAI _alisaie = new(ws);
