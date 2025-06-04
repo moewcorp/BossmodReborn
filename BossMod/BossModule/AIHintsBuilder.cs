@@ -62,7 +62,7 @@ public sealed class AIHintsBuilder : IDisposable
         {
             var playerAssignment = _config[_ws.Party.Members[playerSlot].ContentId];
             var activeModule = _bmm.ActiveModule?.StateMachine.ActivePhase != null ? _bmm.ActiveModule : null;
-            var outOfCombatPriority = activeModule?.PrioritizeAllEnemies == true ? 0 : AIHints.Enemy.PriorityUndesirable;
+            var outOfCombatPriority = activeModule?.ShouldPrioritizeAllEnemies == true ? 0 : AIHints.Enemy.PriorityUndesirable;
             FillEnemies(hints, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot(false, false, true).Any(p => p != player && p.Role == Role.Tank), outOfCombatPriority);
             if (activeModule != null)
             {

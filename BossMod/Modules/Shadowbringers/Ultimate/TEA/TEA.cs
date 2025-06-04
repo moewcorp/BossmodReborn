@@ -51,7 +51,7 @@ public class TEA : BossModule
         _trueHeart = Enemies((uint)OID.TrueHeart);
     }
 
-    public override bool PrioritizeAllEnemies => true;
+    public override bool ShouldPrioritizeAllEnemies => true;
 
     protected override void UpdateModule()
     {

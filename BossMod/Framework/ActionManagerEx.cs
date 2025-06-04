@@ -185,20 +185,35 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     public void GetCooldowns(Span<Cooldown> cooldowns)
     {
-        // TODO: 7.1: there are now 87 cdgroups
-        // [0,80) are stored in actionmanager, [80,81) are stored in director
+        // [0, 80) are in ActionManager
         var rg = _inst->GetRecastGroupDetail(0);
-        for (var i = 0; i < 80; ++i)
-            GetCooldown(ref cooldowns[i], rg++);
+        var i = 0;
+        for (; i < 80; ++i)
+            GetCooldown(ref cooldowns[i], ++rg);
+
+        // 80, 81 are in DutyActionManager
         rg = _inst->GetRecastGroupDetail(80);
         if (rg != null)
         {
-            for (var i = 80; i < 82; ++i)
-                GetCooldown(ref cooldowns[i], rg++);
+            for (; i < 82; ++i)
+                GetCooldown(ref cooldowns[i], ++rg);
         }
         else
         {
-            for (var i = 80; i < 82; ++i)
+            for (; i < 82; ++i)
+                cooldowns[i] = default;
+        }
+
+        // [82,87) are in MassivePcContentDirector
+        rg = _inst->GetRecastGroupDetail(82);
+        if (rg != null)
+        {
+            for (; i < 87; ++i)
+                GetCooldown(ref cooldowns[i], ++rg);
+        }
+        else
+        {
+            for (; i < 87; ++i)
                 cooldowns[i] = default;
         }
     }
@@ -213,11 +228,16 @@ public sealed unsafe class ActionManagerEx : IDisposable
     {
         // TODO: 7.1: there are now 5 actions, but only 2 charges...
         var dm = DutyActionManager.GetInstanceIfReady();
-        return dm == null || !dm->ActionActive[0] || slot >= dm->NumValidSlots
-            ? default
-            : new(new(ActionType.Spell, dm->ActionId[slot]), dm->CurCharges[slot], dm->MaxCharges[slot]);
+
+        (byte cur, byte max) charges(ushort slot) => slot < 2 ? (dm->CurCharges[slot], dm->MaxCharges[slot]) : default;
+
+        if (dm == null || !dm->ActionActive[0] || slot >= dm->NumValidSlots)
+            return default;
+
+        var (cur, max) = charges(slot);
+        return new(new(ActionType.Spell, dm->ActionId[slot]), cur, max);
     }
-    public (ClientState.DutyAction, ClientState.DutyAction) GetDutyActions() => (GetDutyAction(0), GetDutyAction(1));
+    public ClientState.DutyAction[] GetDutyActions() => [GetDutyAction(0), GetDutyAction(1), GetDutyAction(2), GetDutyAction(3), GetDutyAction(4)];
 
     public uint GetAdjustedActionID(uint actionID) => _inst->GetAdjustedActionId(actionID);
 
