@@ -137,7 +137,6 @@ public sealed class AIHints
         InteractWithTarget = null;
         ForbiddenZones.Clear();
         GoalZones.Clear();
-        TemporaryObstacles.Clear();
         RecommendedPositional = default;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;

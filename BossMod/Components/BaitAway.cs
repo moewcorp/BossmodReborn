@@ -107,7 +107,8 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
     {
         if (!EnableHints)
             return;
-        var count = ActiveBaits.Count;
+        var baits = ActiveBaits;
+        var count = baits.Count;
         if (count == 0)
             return;
         if (ForbiddenPlayers[slot])
@@ -118,10 +119,12 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         }
         else
         {
-            var activeBaits = ActiveBaitsOn(actor);
-            for (var i = 0; i < activeBaits.Count; ++i)
+            for (var i = 0; i < count; ++i)
             {
-                var clippedPlayers = PlayersClippedBy(activeBaits[i]);
+                var bait = baits[i];
+                if (bait.Target != actor)
+                    continue;
+                var clippedPlayers = PlayersClippedBy(bait);
                 if (clippedPlayers.Count != 0)
                 {
                     hints.Add(BaitAwayHint);
@@ -132,10 +135,12 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
 
         if (!IgnoreOtherBaits)
         {
-            var otherActiveBaits = ActiveBaitsNotOn(actor);
-            for (var i = 0; i < otherActiveBaits.Count; ++i)
+            for (var i = 0; i < count; ++i)
             {
-                if (IsClippedBy(actor, otherActiveBaits[i]))
+                var bait = baits[i];
+                if (bait.Target == actor)
+                    continue;
+                if (IsClippedBy(actor, bait))
                 {
                     hints.Add("GTFO from baited aoe!");
                     break;
@@ -146,23 +151,26 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveBaits.Count == 0)
+        var baits = ActiveBaits;
+        var count = baits.Count;
+        if (count == 0)
             return;
-        var activeBaitsNotOnActor = ActiveBaitsNotOn(actor);
-        var activeBaitsOnActor = ActiveBaitsOn(actor);
-        var countActiveBaitsNotOnActor = activeBaitsNotOnActor.Count;
-        var countActiveBaitsOnActor = activeBaitsOnActor.Count;
-
-        for (var i = 0; i < countActiveBaitsNotOnActor; ++i)
+        var predictedDamage = new BitMask();
+        for (var i = 0; i < count; ++i)
         {
-            var bait = activeBaitsNotOnActor[i];
-            hints.AddForbiddenZone(bait.Shape, BaitOrigin(bait), bait.Rotation, bait.Activation);
+            var bait = baits[i];
+            if (bait.Target != actor)
+            {
+                hints.AddForbiddenZone(bait.Shape, BaitOrigin(bait), bait.Rotation, bait.Activation);
+            }
+            else
+            {
+                predictedDamage[Raid.FindSlot(bait.Target.InstanceID)] = true;
+                AddTargetSpecificHints(ref actor, ref bait, ref hints);
+            }
         }
-        for (var i = 0; i < countActiveBaitsOnActor; ++i)
-        {
-            var bait = activeBaitsOnActor[i];
-            AddTargetSpecificHints(ref actor, ref bait, ref hints);
-        }
+        if (predictedDamage != default)
+            hints.AddPredictedDamage(predictedDamage, baits[0].Activation, DamageType);
     }
 
     private void AddTargetSpecificHints(ref Actor actor, ref Bait bait, ref AIHints hints)
@@ -308,9 +316,9 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
 }
 
 // component for mechanics requiring icon targets to bait their aoe away from raid
-public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint aid = default, double activationDelay = 5.1d, bool centerAtTarget = false, Actor? source = null, bool tankbuster = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType)
+public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint aid = default, double activationDelay = 5.1d, bool centerAtTarget = false, Actor? source = null, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType)
 {
-    public BaitAwayIcon(BossModule module, float radius, uint iconID, uint aid = default, double activationDelay = 5.1d, bool centerAtTarget = true, Actor? source = null, bool tankbuster = false) : this(module, new AOEShapeCircle(radius), iconID, aid, activationDelay, centerAtTarget, source, tankbuster) { }
+    public BaitAwayIcon(BossModule module, float radius, uint iconID, uint aid = default, double activationDelay = 5.1d, bool centerAtTarget = true, Actor? source = null, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : this(module, new AOEShapeCircle(radius), iconID, aid, activationDelay, centerAtTarget, source, tankbuster, damageType) { }
 
     public AOEShape Shape = shape;
     public uint IID = iconID;

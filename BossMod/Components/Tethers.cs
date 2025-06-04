@@ -416,7 +416,7 @@ public class InterceptTether(BossModule module, uint aid, uint tetherIDBad = 84u
 
 // generic component for tethers that need to be stretched and switch between a "good" and "bad" tether
 // at the end of the mechanic various things are possible, eg. single target dmg, knockback/pull, AOE etc.
-public class StretchTetherDuo(BossModule module, float minimumDistance, float activationDelay, uint tetherIDBad = 57, uint tetherIDGood = 1, AOEShape? shape = null, uint aid = default, uint enemyOID = default, bool knockbackImmunity = false) : GenericBaitAway(module, aid)
+public class StretchTetherDuo(BossModule module, float minimumDistance, float activationDelay, uint tetherIDBad = 57u, uint tetherIDGood = 1u, AOEShape? shape = null, uint aid = default, uint enemyOID = default, bool knockbackImmunity = false) : GenericBaitAway(module, aid, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public readonly AOEShape? Shape = shape;
     public readonly uint TIDGood = tetherIDGood;

@@ -1,6 +1,6 @@
 namespace BossMod.Components;
 
-public class GenericTowers(BossModule module, uint aid = default, bool prioritizeInsufficient = false) : CastCounter(module, aid)
+public class GenericTowers(BossModule module, uint aid = default, bool prioritizeInsufficient = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : CastCounter(module, aid)
 {
     public struct Tower(WPos position, AOEShape shape, int minSoakers = 1, int maxSoakers = 1, BitMask forbiddenSoakers = default, DateTime activation = default, Angle rotation = default, ulong actorID = default)
     {
@@ -274,12 +274,12 @@ public class GenericTowers(BossModule module, uint aid = default, bool prioritiz
                     mask[indexActor.Item1] = true;
                 }
             }
-            hints.PredictedDamage.Add((mask, t.Activation));
+            hints.AddPredictedDamage(mask, t.Activation, damageType);
         }
     }
 }
 
-public class CastTowers(BossModule module, uint aid, float radius, int minSoakers = 1, int maxSoakers = 1) : GenericTowers(module, aid)
+public class CastTowers(BossModule module, uint aid, float radius, int minSoakers = 1, int maxSoakers = 1, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : GenericTowers(module, aid, damageType: damageType)
 {
     public readonly float Radius = radius;
     public readonly int MinSoakers = minSoakers;

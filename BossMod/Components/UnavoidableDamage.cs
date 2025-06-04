@@ -7,7 +7,7 @@ public class RaidwideCast(BossModule module, uint aid, string hint = "Raidwide")
     {
         var count = Casters.Count;
         for (var i = 0; i < count; ++i)
-            hints.AddPredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(Casters[i].CastInfo)));
+            hints.AddPredictedDamage(Raid.WithSlot().Mask(), Module.CastFinishAt(Casters[i].CastInfo));
     }
 }
 
@@ -100,27 +100,6 @@ public class SingleTargetCast(BossModule module, uint aid, string hint = "Tankbu
                 hints.AddPredictedDamage(new BitMask().WithBit(Raid.FindSlot(target)), Module.CastFinishAt(c.CastInfo), damageType);
             }
         }
-    }
-}
-
-public class SingleTargetCasts(BossModule module, uint[] aids, string hint = "Tankbuster") : SingleTargetCast(module, default, hint)
-{
-    private readonly uint[] AIDs = aids;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        var len = AIDs.Length;
-        for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
-                Casters.Add(caster);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        var len = AIDs.Length;
-        for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
-                Casters.Remove(caster);
     }
 }
 
