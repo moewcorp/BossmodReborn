@@ -299,7 +299,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             //Service.Log($"[ExecHints] Jumping...");
             FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->UseAction(FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction, 2);
-            _throttleJump = _ws.CurrentTime.AddMilliseconds(100);
+            _throttleJump = _ws.CurrentTime.AddMilliseconds(100d);
         }
 
         if (CheckInteractRange(_ws.Party.Player(), _hints.InteractWithTarget))
@@ -310,7 +310,7 @@ public sealed class Plugin : IDalamudPlugin
             if (_amex.EffectiveAnimationLock == 0 && _ws.CurrentTime >= _throttleInteract)
             {
                 FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->InteractWithObject(GetActorObject(_hints.InteractWithTarget), false);
-                _throttleInteract = _ws.FutureTime(0.1f);
+                _throttleInteract = _ws.FutureTime(1.1d);
             }
         }
     }

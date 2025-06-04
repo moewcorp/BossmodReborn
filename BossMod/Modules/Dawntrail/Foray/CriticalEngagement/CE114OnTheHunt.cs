@@ -48,12 +48,12 @@ public enum SID : uint
     RoundelTimer = 2193 // none->RadiantRoundel, extra=0x36A
 }
 
-sealed class Shockwave(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.Shockwave, (uint)AID.Shockwave, 0.8f, "Raidwide x3");
+sealed class Shockwave(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.ShockwaveVisual1, (uint)AID.Shockwave, 0.8f, "Raidwide x3");
 sealed class FearsomeGlint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FearsomeGlint, new AOEShapeCone(60f, 45f.Degrees()));
 sealed class FallingRock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FallingRock, 10f);
 sealed class Decompress(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Decompress, 12f);
 
-class AetherialRay(BossModule module) : Components.GenericAOEs(module)
+sealed class AetherialRay(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect rect = new(28f, 6f); // extra safety margin because the predictions are not even close to pixel perfect
@@ -82,7 +82,7 @@ class AetherialRay(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BrightPulse(BossModule module) : Components.GenericAOEs(module)
+sealed class BrightPulse(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeCircle circle = new(13f); // extra safety margin because the predictions are not even close to pixel perfect
