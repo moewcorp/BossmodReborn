@@ -7,7 +7,7 @@ public class RaidwideCast(BossModule module, uint aid, string hint = "Raidwide")
     {
         var count = Casters.Count;
         for (var i = 0; i < count; ++i)
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(Casters[i].CastInfo)));
+            hints.AddPredictedDamage.Add((Raid.WithSlot().Mask(), Module.CastFinishAt(Casters[i].CastInfo)));
     }
 }
 
@@ -48,7 +48,7 @@ public class RaidwideInstant(BossModule module, uint aid, float delay = 0f, stri
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Activation != default)
-            hints.PredictedDamage.Add((Raid.WithSlot().Mask(), Activation));
+            hints.AddPredictedDamage(Raid.WithSlot().Mask(), Activation);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -86,7 +86,7 @@ public class RaidwideAfterNPCYell(BossModule module, uint aid, uint npcYellID, f
 }
 
 // generic unavoidable single-target damage, started and finished by a single cast (typically tankbuster, but not necessary)
-public class SingleTargetCast(BossModule module, uint aid, string hint = "Tankbuster") : CastHint(module, aid, hint)
+public class SingleTargetCast(BossModule module, uint aid, string hint = "Tankbuster", AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Tankbuster) : CastHint(module, aid, hint)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -97,7 +97,7 @@ public class SingleTargetCast(BossModule module, uint aid, string hint = "Tankbu
             if (c.CastInfo != null)
             {
                 var target = c.CastInfo.TargetID != c.InstanceID ? c.CastInfo.TargetID : c.TargetID; // assume self-targeted casts actually hit main target
-                hints.PredictedDamage.Add((new BitMask().WithBit(Raid.FindSlot(target)), Module.CastFinishAt(c.CastInfo)));
+                hints.AddPredictedDamage(new BitMask().WithBit(Raid.FindSlot(target)), Module.CastFinishAt(c.CastInfo), damageType);
             }
         }
     }
@@ -124,8 +124,29 @@ public class SingleTargetCasts(BossModule module, uint[] aids, string hint = "Ta
     }
 }
 
+public class SingleTargetCasts(BossModule module, uint[] aids, string hint = "Tankbuster") : SingleTargetCast(module, default, hint)
+{
+    private readonly uint[] AIDs = aids;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+            if (spell.Action.ID == AIDs[i])
+                Casters.Remove(caster);
+    }
+}
+
 // generic unavoidable single-target damage, initiated by a custom condition and applied by an instant cast after a delay
-public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, string hint = "Tankbuster") : CastCounter(module, aid)
+public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, string hint = "Tankbuster", AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Tankbuster) : CastCounter(module, aid)
 {
     public readonly float Delay = delay; // delay from visual cast end to cast event
     public readonly string Hint = hint;
@@ -140,7 +161,7 @@ public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var t in Targets)
-            hints.PredictedDamage.Add((new BitMask().WithBit(t.slot), t.activation));
+            hints.AddPredictedDamage(new BitMask().WithBit(t.slot), t.activation, damageType);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -154,7 +175,7 @@ public class SingleTargetInstant(BossModule module, uint aid, float delay = 0f, 
 }
 
 // generic unavoidable instant single-target damage initiated by a cast (usually visual-only)
-public class SingleTargetCastDelay(BossModule module, uint actionVisual, uint actionAOE, float delay, string hint = "Tankbuster") : SingleTargetInstant(module, actionAOE, delay, hint)
+public class SingleTargetCastDelay(BossModule module, uint actionVisual, uint actionAOE, float delay, string hint = "Tankbuster", AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Tankbuster) : SingleTargetInstant(module, actionAOE, delay, hint, damageType)
 {
     public uint ActionVisual = actionVisual;
 
@@ -185,4 +206,4 @@ public class SingleTargetEventDelay(BossModule module, uint actionVisual, uint a
 }
 
 // generic unavoidable single-target damage, started and finished by a single cast, that can be delayed by moving out of range (typically tankbuster, but not necessary)
-public class SingleTargetDelayableCast(BossModule module, uint aid, string hint = "Tankbuster") : SingleTargetCastDelay(module, aid, aid, 0, hint);
+public class SingleTargetDelayableCast(BossModule module, uint aid, string hint = "Tankbuster", AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Tankbuster) : SingleTargetCastDelay(module, aid, aid, default, hint, damageType);

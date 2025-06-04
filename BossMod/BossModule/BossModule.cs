@@ -353,6 +353,9 @@ public abstract class BossModule : IDisposable
     // default implementation never resets, but it's useful for outdoor bosses that can be leashed
     public virtual bool CheckReset() => false;
 
+    // return true if out-of-combat enemies should be set to priority 0 - useful for multi-phase encounters when player wants to use automatic targeting via cdplan
+    public virtual bool PrioritizeAllEnemies => false;
+
     protected virtual void UpdateModule() { }
     protected virtual void DrawArenaBackground(int pcSlot, Actor pc) { } // before modules background
     protected virtual void DrawArenaForeground(int pcSlot, Actor pc) { } // after border, before modules foreground

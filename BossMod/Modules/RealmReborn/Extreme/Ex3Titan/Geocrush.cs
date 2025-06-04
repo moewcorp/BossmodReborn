@@ -17,7 +17,7 @@ class Geocrush(BossModule module, float radius) : Components.CastCounter(module,
     {
         var ring = ShapeDistance.Donut(Arena.Center, _radius - _ringWidth, _radius);
         hints.AddForbiddenZone(p => -ring(p));
-        hints.PredictedDamage.Add((Raid.WithSlot(false, true, true).Mask(), new()));
+        hints.AddPredictedDamage(Raid.WithSlot(false, true, true).Mask(), default);
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
