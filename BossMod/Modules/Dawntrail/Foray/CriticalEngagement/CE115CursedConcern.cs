@@ -130,7 +130,9 @@ sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKno
         if (affectedPlayers[slot])
         {
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 20f), activation);
-            hints.ForbiddenDirections.Add((Angle.FromDirection(actor.Position - Arena.Center), 165f.Degrees(), activation));
+            var dir = actor.Position - Arena.Center;
+            var len = dir.Length();
+            hints.ForbiddenDirections.Add((Angle.FromDirection(dir), Angle.Acos(Math.Clamp(-((len * len + 600f) / (len * 70f)), -1f, 1f)), activation));
         }
     }
 }
@@ -167,9 +169,9 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => playerData[slot] != default ? CollectionsMarshal.AsSpan(_aoesPerPlayer[slot]) : [];
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.RecommendedForYou)
+        if (spell.Action.ID is (uint)AID.WhatreYouBuyingVisual1 or (uint)AID.WhatreYouBuyingVisual2)
         {
             List<AOEInstance> aoes = new(3);
             uint[] towerOIDs = [(uint)OID.GemBlue, (uint)OID.GemRed, (uint)OID.Shell];
@@ -247,15 +249,6 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
                     }
                 }
             }
-        }
-    }
-
-    public override void OnStatusLose(Actor actor, ActorStatus status)
-    {
-        // this could happen if player cancels transporting status
-        if (status.ID == (uint)SID.Transporting && Raid.FindSlot(actor.InstanceID) is var slot && slot is >= 0 and <= 7 && playerData[slot] != default)
-        {
-            playerData[slot].current = default;
         }
     }
 

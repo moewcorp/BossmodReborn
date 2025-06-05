@@ -48,21 +48,33 @@ public struct NavigationDecision
         return new() { Destination = waypoints.first, NextWaypoint = waypoints.second, LeewaySeconds = bestNode.PathLeeway, TimeToGoal = bestNode.GScore };
     }
 
-    public static void AvoidForbiddenZone(Map map, float forbiddenZoneCushion)
+    private static void AvoidForbiddenZone(Map map, float forbiddenZoneCushion)
     {
-        int d = (int)(forbiddenZoneCushion / map.Resolution);
+        var d = (int)(forbiddenZoneCushion / map.Resolution);
         map.MaxPriority = -1;
         foreach (var (x, y, _) in map.EnumeratePixels())
         {
             var cellIndex = map.GridToIndex(x, y);
             if (map.PixelMaxG[cellIndex] == float.MaxValue)
             {
-                var neighbourhood = new[]
+                var hasDangerousNeighbour = false;
+                for (var ox = -1; ox <= 1 && !hasDangerousNeighbour; ++ox)
                 {
-                    (x + d, y), (x - d, y), (x, y + d), (x, y - d),
-                    (x + d, y + d), (x - d, y + d), (x + d, y - d), (x - d, y - d)
-                };
-                if (neighbourhood.Any(p => map.PixelMaxG[map.GridToIndex(map.ClampToGrid(p))] != float.MaxValue))
+                    for (var oy = -1; oy <= 1; ++oy)
+                    {
+                        if (ox == 0 && oy == 0)
+                            continue;
+
+                        var (nx, ny) = map.ClampToGrid((x + ox * d, y + oy * d));
+                        if (map.PixelMaxG[map.GridToIndex(nx, ny)] != float.MaxValue)
+                        {
+                            hasDangerousNeighbour = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasDangerousNeighbour)
                 {
                     map.PixelPriority[cellIndex] -= 0.125f;
                 }

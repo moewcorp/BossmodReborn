@@ -109,7 +109,7 @@ public static class Visibility
         public readonly WPos Point => Segment.A;
     }
 
-    public static List<WPos> VisibilityPolygon(WPos point, IEnumerable<LineSegment> obstacles)
+    public static List<WPos> VisibilityPolygon(WPos point, LineSegment[] obstacles)
     {
         var cmpDist = new LineSegmentDistCompare(point);
         var state = new SortedSet<LineSegment>(cmpDist);
@@ -136,7 +136,7 @@ public static class Visibility
                 (a, b) = (b, a);
 
             var abp = ComputeOrientation(a, b, point);
-            if (abp == Orientation.RightTurn && (ApproxEqual(b.X, point.X) || (a.X < point.X && point.X < b.X)))
+            if (abp == Orientation.RightTurn && (ApproxEqual(b.X, point.X) || a.X < point.X && point.X < b.X))
                 state.Add(segment);
         }
 

@@ -228,7 +228,10 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         {
             ref readonly var b = ref baits[i];
             if (!b.Source.IsDead && (OnlyShowOutlines || !OnlyShowOutlines && b.Target == pc))
+            {
+                Service.Log($"{CenterAtTarget}, {b.Source}, {b.Target}, {BaitOrigin(b)}");
                 b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation);
+            }
         }
     }
 
@@ -258,7 +261,7 @@ public class BaitAwayEveryone : GenericBaitAway
 }
 
 // component for mechanics requiring tether targets to bait their aoe away from raid
-public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, uint aid = default, uint enemyOID = default, double activationDelay = default, bool centerAtTarget = false) : GenericBaitAway(module, aid, centerAtTarget, damageType: AIHints.PredictedDamageType.Tankbuster)
+public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, uint aid = default, uint enemyOID = default, double activationDelay = default, bool centerAtTarget = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public BaitAwayTethers(BossModule module, float radius, uint tetherID, uint aid = default, uint enemyOID = default, double activationDelay = default, bool centerAtTarget = true) : this(module, new AOEShapeCircle(radius), tetherID, aid, enemyOID, activationDelay, centerAtTarget) { }
 
