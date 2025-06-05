@@ -189,14 +189,14 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var rg = _inst->GetRecastGroupDetail(0);
         var i = 0;
         for (; i < 80; ++i)
-            GetCooldown(ref cooldowns[i], ++rg);
+            GetCooldown(ref cooldowns[i], rg++);
 
         // 80, 81 are in DutyActionManager
         rg = _inst->GetRecastGroupDetail(80);
         if (rg != null)
         {
             for (; i < 82; ++i)
-                GetCooldown(ref cooldowns[i], ++rg);
+                GetCooldown(ref cooldowns[i], rg++);
         }
         else
         {
@@ -209,7 +209,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         if (rg != null)
         {
             for (; i < 87; ++i)
-                GetCooldown(ref cooldowns[i], ++rg);
+                GetCooldown(ref cooldowns[i], rg++);
         }
         else
         {

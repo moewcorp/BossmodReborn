@@ -23,15 +23,20 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
+    private readonly CancellationTokenSource _cancel = new();
 
-    public void Dispose() { }
+    public void Dispose() { _cancel.Cancel(); }
 
     public async Task Execute(Actor player, Actor master)
     {
+        if (_cancel.IsCancellationRequested)
+            return;
         if (await _semaphore.WaitAsync(0).ConfigureAwait(false))
         {
             try
             {
+                if (_cancel.IsCancellationRequested)
+                    return;
                 ForceMovementIn = float.MaxValue;
                 if (player.IsDead)
                     return;
@@ -87,7 +92,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 if (_config.MoveDelay != 0d && !hadNavi && _naviDecision.Destination != null)
                     _navStartTime = WorldState.FutureTime(_config.MoveDelay);
 
-                if (!forbidTargeting)
+                if (!forbidTargeting && !_cancel.IsCancellationRequested)
                 {
                     autorot.Preset = target.Target != null ? AIPreset : null;
                 }
