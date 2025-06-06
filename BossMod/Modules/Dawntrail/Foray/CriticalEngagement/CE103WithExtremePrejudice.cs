@@ -3,9 +3,9 @@ namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE103WithExtremePrejudice;
 public enum OID : uint
 {
     Boss = 0x46E1, // R4.92
-    VassalVessel = 0x46E2, // R1.0-2.75
+    VassalVessel = 0x46E2, // R2.75
     CommandUrn = 0x4739, // R1.0
-    Helper = 0x233C, // R0.5-2.75
+    Helper = 0x233C
 }
 
 public enum AID : uint
