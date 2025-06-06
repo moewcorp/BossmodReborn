@@ -3,8 +3,8 @@ namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE104NoiseComplaint;
 public enum OID : uint
 {
     Boss = 0x469E, // R5.0
-    Chatterbird = 0x469F, // R0.9-2.55
-    Deathwall = 0x4864,
+    Chatterbird = 0x469F, // R0.9
+    Deathwall = 0x4864, // R0.5
     Helper = 0x233C
 }
 

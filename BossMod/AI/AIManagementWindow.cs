@@ -13,7 +13,7 @@ sealed class AIManagementWindow : UIWindow
     private const string _windowID = "###AI debug window";
     private static readonly string[] positionals = Enum.GetNames<Positional>();
 
-    public AIManagementWindow(AIManager manager) : base(_windowID, false, new(100, 100))
+    public AIManagementWindow(AIManager manager) : base(_windowID, false, new(100f, 100f))
     {
         WindowName = _title;
         _manager = manager;

@@ -129,7 +129,7 @@ sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKno
     {
         if (affectedPlayers[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 20f), activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 15f), activation);
             var dir = actor.Position - Arena.Center;
             var len = dir.Length();
             hints.ForbiddenDirections.Add((Angle.FromDirection(dir), Angle.Acos(Math.Clamp(-((len * len + 600f) / (len * 70f)), -1f, 1f)), activation));
@@ -267,6 +267,7 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
         {
             // mechanic finished
             Array.Clear(playerData);
+            Array.Clear(_aoesPerPlayer);
         }
     }
 

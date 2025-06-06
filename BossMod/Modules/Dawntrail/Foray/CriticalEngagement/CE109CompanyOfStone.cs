@@ -31,7 +31,7 @@ public enum AID : uint
 
     DualfistFlurryFirst = 41828, // Boss->location, 10.0s cast, range 6 circle
     DualfistFlurryRepeat = 43152, // Helper->self, no cast, range 6 circle
-    DualfistFlurryRest = 41829, // Boss->location, no cast, single-target
+    DualfistFlurryAdvance = 41829, // Boss->location, no cast, single-target
 
     SpiritSling = 41834, // OccultKnight1->self, 3.5s cast, range 60 width 8 rect
     BarefistedDeath = 41830 // Megaloknight->self, 90.0s cast, range 60 circle
@@ -64,7 +64,7 @@ sealed class KnuckleCrusher : Components.SimpleAOEs
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (Casters.Count != 0)
+        if (Casters.Count != 0 && midpoint != default)
         {
             Arena.AddCircle(midpoint, 4f, Colors.Safe, 2f);
         }
@@ -82,7 +82,7 @@ sealed class KnuckleCrusher : Components.SimpleAOEs
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (Casters.Count != 0)
+        if (Casters.Count != 0 && midpoint != default)
         {
             hints.Add("Stay near dodge spot!", !actor.Position.InCircle(midpoint, 5f));
         }
@@ -252,7 +252,40 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
     }
 }
 
-sealed class DualfistFlurry(BossModule module) : Components.SimpleExaflare(module, 6f, (uint)AID.DualfistFlurryFirst, (uint)AID.DualfistFlurryRest, 7f, 1f, 6, 3, true, true);
+sealed class DualfistFlurry(BossModule module) : Components.Exaflare(module, 6f)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.DualfistFlurryFirst)
+        {
+            var pos = spell.LocXZ;
+            Lines.Add(new() { Next = new(MathF.Round(pos.X * 2f) / 2f, MathF.Round(pos.Z * 2f) / 2f), Advance = 7f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 6, MaxShownExplosions = 3 });
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        var id = spell.Action.ID;
+        if (id is (uint)AID.DualfistFlurryFirst or (uint)AID.DualfistFlurryRepeat)
+        {
+            var count = Lines.Count;
+            var pos = id == (uint)AID.DualfistFlurryFirst ? spell.TargetXZ : caster.Position;
+            for (var i = 0; i < count; ++i)
+            {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f))
+                {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0)
+                    {
+                        Lines.RemoveAt(i);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+}
 
 sealed class CE109CompanyOfStoneStates : StateMachineBuilder
 {

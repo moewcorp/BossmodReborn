@@ -46,12 +46,12 @@ public enum AID : uint
 }
 
 sealed class PrimalRoar(BossModule module) : Components.RaidwideCast(module, (uint)AID.PrimalRoar);
-sealed class PrismaticWingMadeMagicCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PrismaticWingCircle, (uint)AID.MadeMagicCircle], 22f);
-sealed class PrismaticWingMadeMagicDonut(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PrismaticWingDonut, (uint)AID.MadeMagicDonut], new AOEShapeDonut(5f, 31f));
-sealed class CrystallizedEnergy(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedEnergy1, (uint)AID.CrystallizedEnergy2, (uint)AID.CrystallizedEnergy3], 7f);
-sealed class CrystallizedChaosDonut1(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos1, (uint)AID.CrystallizedChaos4, (uint)AID.CrystallizedChaos7], new AOEShapeDonut(7f, 13f));
-sealed class CrystallizedChaosDonut2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos2, (uint)AID.CrystallizedChaos5, (uint)AID.CrystallizedChaos8], new AOEShapeDonut(13f, 19f));
-sealed class CrystallizedChaosDonut3(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos3, (uint)AID.CrystallizedChaos6, (uint)AID.CrystallizedChaos9], new AOEShapeDonut(19f, 25f));
+sealed class PrismaticWingMadeMagicCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PrismaticWingCircle, (uint)AID.MadeMagicCircle], 22f, riskyWithSecondsLeft: 4d);
+sealed class PrismaticWingMadeMagicDonut(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PrismaticWingDonut, (uint)AID.MadeMagicDonut], new AOEShapeDonut(5f, 31f), riskyWithSecondsLeft: 5d);
+sealed class CrystallizedEnergy(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedEnergy1, (uint)AID.CrystallizedEnergy2, (uint)AID.CrystallizedEnergy3], 7f, riskyWithSecondsLeft: 5d);
+sealed class CrystallizedChaosDonut1(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos1, (uint)AID.CrystallizedChaos4, (uint)AID.CrystallizedChaos7], new AOEShapeDonut(7f, 13f), riskyWithSecondsLeft: 5d);
+sealed class CrystallizedChaosDonut2(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos2, (uint)AID.CrystallizedChaos5, (uint)AID.CrystallizedChaos8], new AOEShapeDonut(13f, 19f), riskyWithSecondsLeft: 5d);
+sealed class CrystallizedChaosDonut3(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.CrystallizedChaos3, (uint)AID.CrystallizedChaos6, (uint)AID.CrystallizedChaos9], new AOEShapeDonut(19f, 25f), riskyWithSecondsLeft: 5d);
 
 sealed class CE106TrialByClawStates : StateMachineBuilder
 {
