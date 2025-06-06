@@ -34,7 +34,7 @@ public struct NavigationDecision
         Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
         if (hints.ForbiddenZones.Count != 0)
             RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
-        if (hints.GoalZones.Count != 0 && player.CastInfo == null)
+        if (hints.GoalZones.Count != 0)
             RasterizeGoalZones(ctx.Map, localGoalZones);
 
         if (forbiddenZoneCushion > 0)

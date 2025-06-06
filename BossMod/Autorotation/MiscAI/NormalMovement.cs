@@ -182,8 +182,10 @@ public sealed class NormalMovement(RotationModuleManager manager, Actor player) 
         }
         else
         {
-            // fine to move if we won't interrupt cast (or are explicitly allowed to)
-            var allowMovement = Player.CastInfo == null || Player.CastInfo.EventHappened || castStrategy is CastStrategy.DropMove or CastStrategy.DropInstants;
+            // Always allow movement if not at destination (i.e., out of range), even if casting
+            var outOfRange = distSq > 0.01f;
+            var allowMovement = outOfRange || Player.CastInfo == null || Player.CastInfo.EventHappened || castStrategy is CastStrategy.DropMove or CastStrategy.DropInstants;
+            Hints.ForceCancelCast = true;
             Hints.ForcedMovement = allowMovement ? dir.ToVec3(Player.PosRot.Y) : default;
         }
 
