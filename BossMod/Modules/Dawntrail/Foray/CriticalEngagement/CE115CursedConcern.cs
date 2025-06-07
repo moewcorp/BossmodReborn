@@ -173,7 +173,7 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.WhatreYouBuyingVisual1 or (uint)AID.WhatreYouBuyingVisual2)
         {
-            List<AOEInstance> aoes = new(3);
+            var aoes = new AOEInstance[3];
             uint[] towerOIDs = [(uint)OID.GemBlue, (uint)OID.GemRed, (uint)OID.Shell];
             var act = WorldState.FutureTime(10d);
             for (var i = 0; i < 3; ++i)
@@ -181,10 +181,13 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
                 var tower = Module.Enemies(towerOIDs[i]);
                 if (tower.Count != 0)
                 {
-                    aoes.Add(new(circle, tower[0].Position, default, act));
+                    aoes[i] = new(circle, tower[0].Position, default, act);
                 }
             }
-            Array.Fill(_aoesPerPlayer, aoes);
+            for (var i = 0; i < 8; ++i)
+            {
+                _aoesPerPlayer[i] = [.. aoes]; // deep copy for each player, otherwise its only copies reference causing issues when playing in a party
+            }
         }
     }
 

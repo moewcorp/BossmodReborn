@@ -312,7 +312,7 @@ public class CastTowers(BossModule module, uint aid, float radius, int minSoaker
 // for tower mechanics in open world since likely not everyone is in your party
 public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool prioritizeInsufficient = false, bool prioritizeEmpty = false) : CastCounter(module, aid)
 {
-    public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, HashSet<Actor>? allowedSoakers = null, DateTime activation = default)
+    public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, HashSet<Actor>? allowedSoakers = null, DateTime activation = default, ulong actorID = default)
     {
         public WPos Position = position;
         public float Radius = radius;
@@ -320,6 +320,7 @@ public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool 
         public int MaxSoakers = maxSoakers;
         public HashSet<Actor>? AllowedSoakers = allowedSoakers;
         public DateTime Activation = activation;
+        public ulong ActorID = actorID;
 
         public readonly bool IsInside(WPos pos) => pos.InCircle(Position, Radius);
         public readonly bool IsInside(Actor actor) => IsInside(actor.Position);
@@ -351,12 +352,15 @@ public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool 
 
     public readonly List<Tower> Towers = [];
     public readonly bool PrioritizeInsufficient = prioritizeInsufficient; // give priority to towers with more than 0 but less than min soakers
+
+    public virtual ReadOnlySpan<Tower> ActiveTowers(int slot, Actor actor) => CollectionsMarshal.AsSpan(Towers);
+
     public readonly bool PrioritizeEmpty = prioritizeEmpty; // give priority to towers with 0 soakers
 
     // default tower styling
     public static void DrawTower(MiniArena arena, WPos pos, float radius, bool safe)
     {
-        arena.AddCircle(pos, radius, safe ? Colors.Safe : 0, 2);
+        arena.AddCircle(pos, radius, safe ? Colors.Safe : default, 2f);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -565,17 +569,19 @@ public class CastTowersOpenWorld(BossModule module, uint aid, float radius, int 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell)));
+            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell), actorID: caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
         {
-            for (var i = 0; i < Towers.Count; ++i)
+            var id = caster.InstanceID;
+            var count = Towers.Count;
+            for (var i = 0; i < count; ++i)
             {
                 var tower = Towers[i];
-                if (tower.Position == spell.LocXZ)
+                if (tower.ActorID == id)
                 {
                     Towers.Remove(tower);
                     break;
