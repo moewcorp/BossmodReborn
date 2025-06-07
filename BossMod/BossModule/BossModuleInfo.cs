@@ -62,6 +62,7 @@ public static class BossModuleInfo
         BaldesionArsenal, // group id is ContentFinderCondition row
         CastrumLacusLitore, // group id is ContentFinderCondition row
         TheDaldriada, // group id is ContentFinderCondition row
+        TheForkedTowerBlood, // group id is ContentFinderCondition row
         ForayFATE, // group id is Fate row
         Quest, // group id is Quest row
         Fate, // group id is Fate row
