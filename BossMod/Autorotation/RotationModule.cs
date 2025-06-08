@@ -92,13 +92,17 @@ public sealed record class RotationModuleDefinition(string DisplayName, string D
 
 // base class for rotation modules
 // each rotation module should contain a `public static RotationModuleDefinition Definition()` function
-public abstract class RotationModule(RotationModuleManager manager, Actor player)
+public abstract class RotationModule(RotationModuleManager manager, Actor player) : IDisposable
 {
     public readonly RotationModuleManager Manager = manager;
     public readonly Actor Player = player;
     public BossModuleManager Bossmods => Manager.Bossmods;
     public WorldState World => Manager.Bossmods.WorldState;
     public AIHints Hints => Manager.Hints;
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 
     // the main entry point of the module - given a set of strategy values, fill the queue with a set of actions to execute
     public abstract void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving);

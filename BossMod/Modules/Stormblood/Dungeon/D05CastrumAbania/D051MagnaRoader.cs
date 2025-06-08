@@ -40,7 +40,7 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh != null && _aoe.AOEs.Count != 0)
+        if (_aoe.AOEs.Count != 0)
         {
             var turrets = Module.Enemies((uint)OID.MarkXLIIIMiniCannon);
             Actor? closest = null;

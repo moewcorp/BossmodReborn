@@ -161,10 +161,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
         if (autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Freezing && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(2.1d))
         {
-#pragma warning disable CA5394 // Do not use insecure randomness
             var randomO1 = random.NextSingle() * 2f - 1f;
             var randomO2 = random.NextSingle() * 2f - 1f;
-#pragma warning restore CA5394
             autorot.Hints.ForcedMovement = new WPos(player.Position.X * randomO1, player.Position.Z * randomO2).ToVec3();
             return new() { LeewaySeconds = float.MaxValue };
         }
