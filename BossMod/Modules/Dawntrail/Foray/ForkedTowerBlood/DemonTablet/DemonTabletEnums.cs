@@ -4,14 +4,11 @@ public enum OID : uint
 {
     Boss = 0x470A, // R11.0
     TetherHelper = 0x470D, // R1.2
-    _Gen_Actor1e8fb8 = 0x1E8FB8, // R2.000, x1, EventObj type
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
     PortentousCometeor = 0x1EBD76, // R0.5
     AddPortal = 0x1EBD77, // R0.5
     SummonedDemon = 0x470B, // R1.5
     SummonedArchDemon = 0x470C, // R2.0
     GargoyleStatue = 0x1EBD75, // R0.5
-    _Gen_1 = 0x1EBD60, // R0.500-2.000, x0 (spawn during fight), EventObj type
     Helper = 0x233C
 }
 
@@ -20,6 +17,7 @@ public enum AID : uint
     AutoAttackVisual = 41737, // Boss->self, no cast, single-target
     AutoAttack = 41738, // Helper->player, no cast, single-target, hits 3 highest emnity players
     AutoAttackAdd = 41811, // SummonedArchDemon->player, no cast, single-target
+    AbyssalTransfixion = 41743, // SummonedArchDemon/SummonedDemon->player, no cast, single-target
 
     DemonicDarkIIVisual = 41734, // Boss->self, 5.0s cast, single-target, raidwide
     DemonicDarkII = 41903, // Helper->self, no cast, ???
@@ -66,11 +64,18 @@ public enum AID : uint
     Explosion1 = 41720, // Helper->self, 15.0s cast, range 4 circle, ground, tower
     Explosion2 = 41713, // Helper->self, 21.0s cast, range 4 circle, flying, tower
     Explosion3 = 41711, // Helper->self, 21.0s cast, range 4 circle, ground, tower
-    UnmitigatedExplosionVisual = 41714, // Helper->self, no cast, single-target, tower fail
-    UnmitigatedExplosion = 43034, // Helper->self, no cast, ???
+    UnmitigatedExplosionVisual1 = 41721, // Helper->self, no cast, single-target, tower fail
+    UnmitigatedExplosion1 = 43035, // Helper->self, no cast, ???
+    UnmitigatedExplosionVisual2 = 41714, // Helper->self, no cast, single-target, tower fail
+    UnmitigatedExplosion2 = 43034, // Helper->self, no cast, ???
+    UnmitigatedExplosionVisual3 = 41712, // Helper->self, no cast, single-target
+    UnmitigatedExplosion3 = 43033, // Helper->self, no cast, ???
+
+    EndOfHistory = 41739, // Boss->self, 10.0s cast, ???, enrage
 }
 
 public enum SID : uint
 {
-    CraterLater = 4354 // none->player, extra=0x0
+    CraterLater = 4354, // none->player, extra=0x0
+    DarkDefenses = 4355 // none->SummonedArchDemon, extra=0x0
 }
