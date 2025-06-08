@@ -300,7 +300,7 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
 
-        if (playerData[slot] is var data && data != default && AI.AIManager.Instance?.Beh != null)
+        if (playerData[slot] is var data && data != default)
         {
             var delta = data.required - data.current;
             if (delta <= 0)
@@ -378,4 +378,7 @@ sealed class CE115CursedConcernStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 45)]
-public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(72f, -545f)), new ArenaBoundsCircle(25f));
+public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(72f, -545f)), new ArenaBoundsCircle(25f))
+{
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
+}

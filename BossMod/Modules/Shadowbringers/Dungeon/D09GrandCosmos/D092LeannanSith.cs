@@ -140,7 +140,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe == null || AI.AIManager.Instance?.Beh == null)
+        if (_aoe == null)
             return;
         base.AddAIHints(slot, actor, assignment, hints);
 

@@ -2,7 +2,7 @@
 
 namespace BossMod.Autorotation.MiscAI;
 
-public sealed class NormalMovement(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+public sealed class NormalMovement : RotationModule
 {
     public enum Track { Destination, Range, Cast, SpecialModes, ForbiddenZoneCushion }
     public enum DestinationStrategy { None, Pathfind, Explicit }
@@ -10,6 +10,19 @@ public sealed class NormalMovement(RotationModuleManager manager, Actor player) 
     public enum CastStrategy { Leeway, Explicit, Greedy, FinishMove, DropMove, FinishInstants, DropInstants }
     public enum ForbiddenZoneCushionStrategy { None, Small, Medium, Large }
     public enum SpecialModesStrategy { Automatic, Ignore }
+    public static NormalMovement? Instance;
+
+    public NormalMovement(RotationModuleManager manager, Actor player) : base(manager, player)
+    {
+        Instance = this;
+    }
+
+    public override void Dispose()
+    {
+        if (Instance == this)
+            Instance = null;
+        base.Dispose();
+    }
 
     public static RotationModuleDefinition Definition()
     {

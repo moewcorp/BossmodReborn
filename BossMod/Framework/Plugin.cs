@@ -302,7 +302,7 @@ public sealed class Plugin : IDalamudPlugin
             _throttleJump = _ws.CurrentTime.AddMilliseconds(100d);
         }
 
-        if (CheckInteractRange(_ws.Party.Player(), _hints.InteractWithTarget))
+        if ((AI.AIManager.Instance?.Beh != null || Autorotation.MiscAI.NormalMovement.Instance != null) && CheckInteractRange(_ws.Party.Player(), _hints.InteractWithTarget))
         {
             // many eventobj interactions "immediately" start some cast animation (delayed by server roundtrip), and if we keep trying to move toward the target after sending the interact request, it will be canceled and force us to start over
             _movementOverride.DesiredDirection = default;

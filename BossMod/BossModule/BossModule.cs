@@ -331,7 +331,7 @@ public abstract class BossModule : IDisposable
         for (var i = 0; i < count; ++i)
             Components[i].AddAIHints(slot, actor, assignment, hints);
         CalculateModuleAIHints(slot, actor, assignment, hints);
-        if (!WindowConfig.AllowAutomaticActions && AI.AIManager.Instance?.Beh == null)
+        if (!WindowConfig.AllowAutomaticActions && AI.AIManager.Instance?.Beh == null && Autorotation.MiscAI.NormalMovement.Instance == null)
             hints.ActionsToExecute.Clear();
     }
 
@@ -343,7 +343,7 @@ public abstract class BossModule : IDisposable
 
     // utility to calculate expected time when cast finishes (plus an optional delay); returns fallback value if argument is null
     // for whatever reason, npc spells have reported remaining cast time consistently 0.3s smaller than reality - this delta is added automatically, in addition to optional delay
-    public DateTime CastFinishAt(ActorCastInfo? cast, float extraDelay = 0f, DateTime fallback = default) => cast != null ? WorldState.FutureTime(cast.NPCRemainingTime + extraDelay) : fallback;
+    public DateTime CastFinishAt(ActorCastInfo? cast, float extraDelay = default, DateTime fallback = default) => cast != null ? WorldState.FutureTime(cast.NPCRemainingTime + extraDelay) : fallback;
 
     // called during update if module is not yet active, should return true if it is to be activated
     // default implementation activates if primary target is both targetable and in combat

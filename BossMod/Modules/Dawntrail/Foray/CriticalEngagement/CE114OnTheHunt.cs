@@ -128,4 +128,6 @@ sealed class CE114OnTheHuntStates : StateMachineBuilder
 public sealed class CE114OnTheHunt(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(ArenaCenter), new ArenaBoundsCircle(26f))
 {
     public static readonly WPos ArenaCenter = new(636f, -54f);
+
+    protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }

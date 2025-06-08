@@ -43,7 +43,7 @@ class D080CrimsonControlUnitStates : StateMachineBuilder
             .ActivateOnEnter<SpawnReservoir>()
             .ActivateOnEnter<PassiveInfraredGuidanceSystem>()
             .ActivateOnEnter<D080EmeraldControlUnit.ClockworkReservoir>()
-            .Raw.Update = () => module.PrimaryActor.EventState == 7;
+            .Raw.Update = () => module.PrimaryActor.EventState == 7u;
     }
 }
 
@@ -83,17 +83,7 @@ public class D080CrimsonControlUnit(WorldState ws, Actor primary) : BossModule(w
     private static readonly uint[] trash = [(uint)OID.ImmortalizedDeathClaw, (uint)OID.RetooledEnforcementDroid, (uint)OID.ClockworkPredator, (uint)OID.ClockworkReservoir,
     (uint)OID.ImmortalizedInterceptorDrone];
 
-    public override bool CheckReset()
-    {
-        var enemies = Enemies(trash);
-        var count = enemies.Count;
-        for (var i = 0; i < count; ++i)
-        {
-            if (enemies[i].IsTargetable)
-                return false;
-        }
-        return true;
-    }
+    public override bool CheckReset() => !Raid.Player()!.Position.InSquare(Arena.Center, 70f);
 
     protected override bool CheckPull()
     {

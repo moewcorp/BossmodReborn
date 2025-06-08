@@ -52,7 +52,7 @@ class OneOneOneOneTonzeSwing(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null || !casting)
+        if (!casting)
             return;
 
         var incubators = Module.Enemies(_incubators);

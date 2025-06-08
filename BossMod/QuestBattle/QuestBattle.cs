@@ -344,7 +344,7 @@ public abstract class QuestBattle : ZoneModule
 
     public override void CalculateAIHints(int playerSlot, Actor player, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null || !_config.EnableQuestBattles)
+        if (AI.AIManager.Instance?.Beh == null && Autorotation.MiscAI.NormalMovement.Instance == null || !_config.EnableQuestBattles)
             return;
         var restartPathfind = false;
 
