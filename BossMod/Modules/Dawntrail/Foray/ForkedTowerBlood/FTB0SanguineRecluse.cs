@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.SanguineRecluse;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB0SanguineRecluse;
 
 public enum OID : uint
 {
@@ -49,9 +49,9 @@ sealed class Cryptcall(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class SanguineRecluseStates : StateMachineBuilder
+sealed class FTB0SanguineRecluseStates : StateMachineBuilder
 {
-    public SanguineRecluseStates(BossModule module) : base(module)
+    public FTB0SanguineRecluseStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<TartareanFlame>()
@@ -62,4 +62,4 @@ sealed class SanguineRecluseStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13868, SortOrder = 1)]
-public sealed class SanguineRecluse(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);
+public sealed class FTB0SanguineRecluse(WorldState ws, Actor primary) : SimpleBossModule(ws, primary);

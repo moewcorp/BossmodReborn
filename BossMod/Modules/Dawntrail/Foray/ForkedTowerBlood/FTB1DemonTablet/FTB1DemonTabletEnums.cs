@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 public enum OID : uint
 {

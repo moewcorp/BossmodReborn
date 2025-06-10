@@ -21,6 +21,12 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         {
             CustomRotation = customRotation;
         }
+
+        public Bait(WPos source, Actor target, AOEShape shape, DateTime activation, Angle? customRotation = null, BitMask forbidden = default)
+            : this(new(default, default, default, default!, default, default, default, default, source.ToVec4()), target, shape, activation, forbidden)
+        {
+            CustomRotation = customRotation;
+        }
     }
 
     public readonly bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player

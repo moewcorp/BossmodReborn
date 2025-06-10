@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 sealed class DemonographTowers(BossModule module) : Components.CastTowersOpenWorld(module, (uint)AID.Explosion1, 4f, 4, 8, true);
 

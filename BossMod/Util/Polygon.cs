@@ -143,7 +143,7 @@ public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
         var len = edges.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref var edge = ref edges[i];
+            ref readonly var edge = ref edges[i];
             if ((edge.y0 > y) != (edge.y1 > y) && x < edge.x0 + edge.slopeX * (y - edge.y0))
             {
                 inside = !inside;
@@ -274,9 +274,10 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         {
             var part = Parts[i];
             allPaths.Add(ToPath64(part.Exterior));
-            var len = part.Holes.Length;
+            var holes = part.Holes;
+            var len = holes.Length;
             for (var j = 0; j < len; ++j)
-                allPaths.Add(ToPath64(part.Interior(part.Holes[j])));
+                allPaths.Add(ToPath64(part.Interior(holes[j])));
         }
 
         var solution = new Paths64();
@@ -344,9 +345,10 @@ public sealed class PolygonClipper
         public void AddPolygon(RelPolygonWithHoles polygon)
         {
             AddContour(polygon.Exterior);
-            var len = polygon.Holes.Length;
+            var holes = polygon.Holes;
+            var len = holes.Length;
             for (var i = 0; i < len; ++i)
-                AddContour(polygon.Interior(polygon.Holes[i]));
+                AddContour(polygon.Interior(holes[i]));
         }
 
         public void AddPolygon(RelSimplifiedComplexPolygon polygon) => polygon.Parts.ForEach(AddPolygon);
@@ -404,15 +406,16 @@ public sealed class PolygonClipper
 
             var poly = new RelPolygonWithHoles(polygonPoints);
             result.Parts.Add(poly);
-
-            for (var j = 0; j < exterior.Count; ++j)
+            var countExt2 = exterior.Count;
+            for (var j = 0; j < countExt2; ++j)
             {
                 var interior = exterior[j];
                 if (interior.Polygon == null || interior.Polygon.Count == 0)
                     continue;
                 var holePoints = new List<WDir>(interior.Polygon.Count);
                 var intPolygon = interior.Polygon;
-                for (var k = 0; k < intPolygon.Count; k++)
+                var countInt = intPolygon.Count;
+                for (var k = 0; k < countInt; k++)
                     holePoints.Add(ConvertPoint(intPolygon[k]));
 
                 poly.AddHole(holePoints);

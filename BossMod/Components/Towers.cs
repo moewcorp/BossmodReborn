@@ -352,6 +352,15 @@ public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool 
         return actors;
     }
 
+    protected static HashSet<Actor> TankSoakers(BossModule module)
+    {
+        HashSet<Actor> actors = new(module.WorldState.Actors.Actors.Values.Count);
+        foreach (var a in module.WorldState.Actors.Actors.Values)
+            if (a.OID == default && a.Role == Role.Tank)
+                actors.Add(a);
+        return actors;
+    }
+
     public readonly List<Tower> Towers = [];
     public readonly bool PrioritizeInsufficient = prioritizeInsufficient; // give priority to towers with more than 0 but less than min soakers
 

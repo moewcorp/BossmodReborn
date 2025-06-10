@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
@@ -8,16 +8,16 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
         {
             if (state == 0x00020001u)
             {
-                Arena.Bounds = DemonTablet.DefaultArena;
+                Arena.Bounds = FTB1DemonTablet.DefaultArena;
             }
             else if (state == 0x00080004u)
             {
-                Arena.Bounds = DemonTablet.CompleteArena;
+                Arena.Bounds = FTB1DemonTablet.CompleteArena;
             }
         }
         else if (index == 0x01u && state == 0x00020001u)
         {
-            Arena.Bounds = DemonTablet.RotationArena;
+            Arena.Bounds = FTB1DemonTablet.RotationArena;
         }
     }
 }

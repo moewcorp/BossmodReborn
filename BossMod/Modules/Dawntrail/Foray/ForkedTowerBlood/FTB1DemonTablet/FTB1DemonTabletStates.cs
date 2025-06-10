@@ -1,8 +1,8 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
-sealed class DemonTabletStates : StateMachineBuilder
+sealed class FTB1DemonTabletStates : StateMachineBuilder
 {
-    public DemonTabletStates(BossModule module) : base(module)
+    public FTB1DemonTabletStates(BossModule module) : base(module)
     {
         DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChanges>();
@@ -95,11 +95,13 @@ sealed class DemonTabletStates : StateMachineBuilder
         ComponentCondition<LandingSmall>(id + 0x10u, 10.5f, comp => comp.NumCasts != 0, "Rect AOEs + maybe Knockback")
             .ActivateOnEnter<PortentousComet1>()
             .ActivateOnEnter<PortentousComet2>()
+            .ActivateOnEnter<RayOfIgnorance>()
+            .ActivateOnEnter<LandingKnockback>()
             .ActivateOnEnter<PortentousCometKnockback>()
             .ActivateOnEnter<LandingMedium>()
-            .ActivateOnEnter<LandingKnockback>()
             .ActivateOnEnter<LandingSmall>()
             .DeactivateOnExit<LandingKnockback>()
+            .DeactivateOnExit<RayOfIgnorance>()
             .DeactivateOnExit<LandingMedium>()
             .DeactivateOnExit<LandingSmall>();
         ComponentCondition<PortentousCometeorBait>(id + 0x20u, 1.7f, comp => comp.CurrentBaits.Count == 0, "Baits resolve")
