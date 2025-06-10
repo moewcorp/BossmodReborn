@@ -72,7 +72,7 @@ sealed class ChocoBeak(BossModule module) : Components.GenericAOEs(module)
 
 sealed class ChocoAeroII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoAeroII, 4f);
 sealed class ChocoMaelfeather(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoMaelfeather, 8f);
-sealed class ChocoWindstorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoWindstorm, 16f);
+sealed class ChocoWindstorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoWindstorm, 16f, riskyWithSecondsLeft: 4d);
 sealed class ChocoCyclone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChocoCyclone, new AOEShapeDonut(8f, 30f));
 sealed class ChocoDoublades(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ChocoBlades1, (uint)AID.ChocoBlades2], new AOEShapeCone(40f, 22.5f.Degrees()), 4, 8);
 

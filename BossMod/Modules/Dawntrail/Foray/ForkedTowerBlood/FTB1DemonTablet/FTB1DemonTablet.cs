@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 sealed class DemonicDarkII(BossModule module) : Components.CastCounter(module, (uint)AID.DemonicDarkII);
 sealed class OccultChisel(BossModule module) : Components.BaitAwayCast(module, (uint)AID.OccultChisel, 5f, tankbuster: true);
@@ -9,7 +9,7 @@ sealed class DarkDefenses(BossModule module) : Components.Dispel(module, (uint)S
 sealed class SummonedDemons(BossModule module) : Components.AddsMulti(module, [(uint)OID.SummonedArchDemon, (uint)OID.SummonedDemon], 1);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13760, PlanLevel = 100, SortOrder = 2)]
-public sealed class DemonTablet(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
+public sealed class FTB1DemonTablet(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
 {
     public static readonly WPos ArenaCenter = new(700f, 379f);
     public static readonly ArenaBoundsComplex DefaultArena = new([new Rectangle(ArenaCenter, 15f, 33f)], [new Rectangle(ArenaCenter, 15f, 3.5f)]);

@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 sealed class PortentousCometeor(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PortentousCometeor, 43f);
 
@@ -27,14 +27,17 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
     }
 }
 
-sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true, stopAfterWall: true)
+sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private static readonly AOEShapeCircle circle = new(4f);
     private readonly List<(Actor target, Angle dir)> targets = new(4);
     private DateTime activation;
+    private readonly LandingKnockback _kb = module.FindComponent<LandingKnockback>()!;
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
+        if (_kb.Casters.Count != 0)
+            return [];
         var count = targets.Count;
         if (count == 0)
             return [];

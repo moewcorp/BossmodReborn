@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.DemonTablet;
+namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
 sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.LandingKB1, 25f, false, shape: new AOEShapeRect(30f, 15f), kind: Kind.DirForward, stopAfterWall: true)
 {
