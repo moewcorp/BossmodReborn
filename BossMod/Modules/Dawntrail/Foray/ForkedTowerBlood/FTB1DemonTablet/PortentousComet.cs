@@ -9,13 +9,17 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.CraterLater)
+        {
             CurrentBaits.Add(new(actor, actor, circle, WorldState.FutureTime(12d)));
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.PortentousCometeor)
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -30,7 +34,7 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
 sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private static readonly AOEShapeCircle circle = new(4f);
-    private readonly List<(Actor target, Angle dir)> targets = new(4);
+    private readonly List<(Actor target, Angle dir, float distance)> targets = new(4);
     private DateTime activation;
     private readonly LandingKnockback _kb = module.FindComponent<LandingKnockback>()!;
 
@@ -42,10 +46,20 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
         if (count == 0)
             return [];
         Span<Knockback> knockbacks = new Knockback[count];
+        var pos = actor.Position;
+        var center = Arena.Center;
+        var dirRect = new WDir(1f, default);
         for (var i = 0; i < count; ++i)
         {
             var kb = targets[i];
-            knockbacks[i] = new(kb.target.Position, 13f, activation, circle, kb.dir, Kind: Kind.DirForward);
+            knockbacks[i] = new(kb.target.Position, kb.distance, activation, circle, kb.dir, Kind: Kind.DirForward);
+
+            // the knockback range for knockbacks away from meteor side does not seem very consistent. Theory: if the knockback ends up inside the demon tablet, it gets extended by to land 3y behind the wall
+            var dir = kb.dir.ToDirection();
+            if ((pos + 13f * dir).InRect(center, dirRect, 15f, 3f, 3f))
+            {
+                knockbacks[i].Distance = (center + 6f * dir - pos).Length();
+            }
         }
         return knockbacks;
     }
@@ -53,19 +67,26 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var id = spell.Action.ID;
-        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2)
+        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2 && WorldState.Actors.Find(spell.TargetID) is Actor target)
         {
-            targets.Add((WorldState.Actors.Find(spell.TargetID)!, id == (uint)AID.PortentousComet2 ? default : 180f.Degrees()));
+            targets.Add((target, id == (uint)AID.PortentousComet1 ? 180f.Degrees() : default, 13f));
             activation = Module.CastFinishAt(spell);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        var id = spell.Action.ID;
-        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2)
+        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2 && WorldState.Actors.Find(spell.TargetID) is Actor target)
         {
-            targets.Remove((WorldState.Actors.Find(spell.TargetID)!, id == (uint)AID.PortentousComet2 ? default : 180f.Degrees()));
+            var count = targets.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (targets[i].target == target)
+                {
+                    targets.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

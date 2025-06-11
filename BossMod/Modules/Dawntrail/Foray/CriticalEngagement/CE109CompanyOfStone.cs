@@ -287,6 +287,8 @@ sealed class DualfistFlurry(BossModule module) : Components.Exaflare(module, 6f)
     }
 }
 
+sealed class BarefistedDeath(BossModule module) : Components.CastHint(module, (uint)AID.BarefistedDeath, "Enrage!", true);
+
 sealed class CE109CompanyOfStoneStates : StateMachineBuilder
 {
     public CE109CompanyOfStoneStates(CE109CompanyOfStone module) : base(module)
@@ -299,6 +301,7 @@ sealed class CE109CompanyOfStoneStates : StateMachineBuilder
             .ActivateOnEnter<Moatmaker>()
             .ActivateOnEnter<BlastKnuckles>()
             .ActivateOnEnter<DualfistFlurry>()
+            .ActivateOnEnter<BarefistedDeath>()
             .Raw.Update = () =>
             {
                 var enemies = module.Enemies((uint)OID.Boss);

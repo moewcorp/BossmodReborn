@@ -235,7 +235,6 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             ref readonly var b = ref baits[i];
             if (!b.Source.IsDead && (OnlyShowOutlines || !OnlyShowOutlines && b.Target == pc))
             {
-                Service.Log($"{CenterAtTarget}, {b.Source}, {b.Target}, {BaitOrigin(b)}");
                 b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation);
             }
         }

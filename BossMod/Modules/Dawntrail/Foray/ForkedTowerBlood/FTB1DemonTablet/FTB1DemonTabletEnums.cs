@@ -51,8 +51,8 @@ public enum AID : uint
     LacunateStreamFirst = 41725, // Helper->self, 1.0s cast, range 31 width 30 rect
     LacunateStreamRepeat = 41726, // Helper->self, no cast, range 34 width 30 rect
 
-    PortentousComet1 = 41703, // Helper->players, 17.0s cast, range 4 circle, knockback 13, dir south
-    PortentousComet2 = 41704, // Helper->players, 17.0s cast, range 4 circle, knockback 13, dir north
+    PortentousComet1 = 41703, // Helper->players, 17.0s cast, range 4 circle, knockback 13, dir north
+    PortentousComet2 = 41704, // Helper->players, 17.0s cast, range 4 circle, knockback 13, dir south
     PortentousCometeor = 41702, // Helper->self, 12.0s cast, range 43 circle
 
     SummonVisual = 41705, // Boss->self, 4.0s cast, single-target
@@ -71,7 +71,9 @@ public enum AID : uint
     UnmitigatedExplosionVisual3 = 41712, // Helper->self, no cast, single-target
     UnmitigatedExplosion3 = 43033, // Helper->self, no cast, ???
 
-    EndOfHistory = 41739, // Boss->self, 10.0s cast, ???, enrage
+    EndOfHistoryVisual = 41739, // Boss->self, 10.0s cast, ???, enrage
+    EndOfHistory1 = 41813, // Helper->self, no cast, ???
+    EndOfHistory2 = 41740 // Boss->self, no cast, ???
 }
 
 public enum SID : uint

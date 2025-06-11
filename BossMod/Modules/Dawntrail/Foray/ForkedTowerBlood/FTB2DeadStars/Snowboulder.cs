@@ -169,3 +169,5 @@ sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockba
         }
     }
 }
+
+sealed class AvalaunchTether(BossModule module) : Components.StretchTetherDuo(module, 58f, 8f, (uint)TetherID.AvalaunchBad);

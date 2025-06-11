@@ -87,7 +87,7 @@ public sealed class FTB2DeadStars(WorldState ws, Actor primary) : BossModule(ws,
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(ArenaCenter, 39.5f * CosPI.Pi48th, 48)], [new Rectangle(new(-800f, 400f), 7.5f, 1.25f),
     new Rectangle(new(-800f, 320f), 7.5f, 1.25f)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(30f);
-    public static readonly ArenaBoundsComplex FistFightArena = new([new Circle(WPos.ClampToGrid(ArenaCenter), 30f)], [new Circle(WPos.ClampToGrid(ArenaCenter), 12f)]);
+    public static readonly ArenaBoundsComplex FistFightArena = new([new DonutV(WPos.ClampToGrid(ArenaCenter), 12f, 30f, 64)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
