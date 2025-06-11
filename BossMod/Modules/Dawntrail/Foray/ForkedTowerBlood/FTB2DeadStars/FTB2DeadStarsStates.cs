@@ -84,7 +84,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
                 condition.DeactivateOnExit<PrimordialChaos>();
         }
 
-        ComponentCondition<NoxiousNova>(id + 0x90u, 10f, comp => comp.NumCasts != 0, "Raidwide")
+        ComponentCondition<NoxiousNova>(id + 0xA0u, 10f, comp => comp.NumCasts != 0, "Raidwide")
             .ActivateOnEnter<NoxiousNova>()
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<NoxiousNova>();
@@ -165,6 +165,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             {
                 condition
                     .ActivateOnEnter<Avalaunch>()
+                    .ActivateOnEnter<AvalaunchTether>()
                     .DeactivateOnExit<SnowBoulderKnockback>()
                     .DeactivateOnExit<Snowboulder>();
             }
@@ -175,6 +176,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             .DeactivateOnExit<ChillingCollision>();
         ComponentCondition<Avalaunch>(id + 0x50u, 1.6f, comp => comp.NumFinishedStacks != 0, "Stacks resolve")
             .SetHint(StateMachine.StateHint.Raidwide)
+            .DeactivateOnExit<AvalaunchTether>()
             .DeactivateOnExit<Avalaunch>();
         ActorCastStart(id + 0x60u, _module.BossNereid, (uint)AID.ToTheWinds1, 5.5f, true, "Snowball enrage start")
             .ActivateOnEnter<SelfDestruct>();
@@ -190,12 +192,12 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             .DeactivateOnExit<NoisomeNuisanceIceboundBuffoonBlazingBelligerent>()
             .DeactivateOnExit<DecisiveBattleStatus>();
 
-        ElementalImpact(id + 0x10, 2, 14.1f, 1);
-        FireSpread(id + 0x20, 4, 0.5f, 1);
-        ElementalImpact(id + 0x30, 4, 3.6f, 2);
-        FireSpread(id + 0x40, 8, 0.5f, 2);
-        ElementalImpact(id + 0x50, 6, 3.6f, 3);
-        FireSpread(id + 0x60, 12, 0.5f, 3);
+        ElementalImpact(id + 0x10u, 2, 14.1f, 1);
+        FireSpread(id + 0x20u, 4, 0.5f, 1);
+        ElementalImpact(id + 0x30u, 4, 3.6f, 2);
+        FireSpread(id + 0x40u, 8, 0.5f, 2);
+        ElementalImpact(id + 0x50u, 6, 3.6f, 3);
+        FireSpread(id + 0x60u, 12, 0.5f, 3);
         for (var i = 1; i <= 3; i++)
         {
             var offset = id + 0x70u + (uint)((i - 1) * 0x10);
@@ -210,12 +212,12 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             .ActivateOnEnter<FlameThrower>()
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<FlameThrower>();
-        ElementalImpact(id + 0xB0, 8, 5f, 4);
-        FireSpread(id + 0xC0, 16, 0.5f, 4);
-        ElementalImpact(id + 0xD0, 10, 3.6f, 5);
-        FireSpread(id + 0xE0, 20, 0.5f, 5);
-        ElementalImpact(id + 0xE0, 12, 3.6f, 6);
-        FireSpread(id + 0xF0, 24, 0.5f, 6);
+        ElementalImpact(id + 0xB0u, 8, 5f, 4);
+        FireSpread(id + 0xC0u, 16, 0.5f, 4);
+        ElementalImpact(id + 0xD0u, 10, 3.6f, 5);
+        FireSpread(id + 0xE0u, 20, 0.5f, 5);
+        ElementalImpact(id + 0xF0u, 12, 3.6f, 6);
+        FireSpread(id + 0x100u, 24, 0.5f, 6);
         CastStart(id + 0x110u, (uint)AID.ToTheWinds2, 4.8f, "Fireball enrage start")
             .ActivateOnEnter<SelfDestruct>();
         CastEnd(id + 0x120u, 7f, "Fireball enrage end")
@@ -257,7 +259,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             .DeactivateOnExit<SixHandedFistfightArenaChange>()
             .DeactivateOnExit<SixHandedFistfightRaidwide>();
         CollateralDamage(id + 0x10u);
-        CollateralDamage(id + 0x80u, false);
+        CollateralDamage(id + 0x90u, false);
 
         void CollateralDamage(uint id, bool first = true)
         {

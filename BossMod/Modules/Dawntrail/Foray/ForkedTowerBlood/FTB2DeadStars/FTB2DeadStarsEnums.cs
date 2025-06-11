@@ -5,22 +5,15 @@ public enum OID : uint
     Boss = 0x4786, // R4.0, Triton
     Phobos = 0x4788, // R4.0
     Nereid = 0x4787, // R4.0
-    LiquifiedTriton = 0x478B, // R4.000, x0 (spawn during fight)
-    LiquifiedNereid = 0x478C, // R4.000, x0 (spawn during fight)
-    FrozenTriton = 0x4816, // R5.000, x0 (spawn during fight)
-    FrozenPhobos = 0x4817, // R5.000, x0 (spawn during fight)
-    GaseousNereid = 0x4814, // R5.000, x0 (spawn during fight)
-    GaseousPhobos = 0x4815, // R5.000, x0 (spawn during fight)
-    DeathwallHelper = 0x4866, // R0.500, x2
+    LiquifiedTriton = 0x478B, // R4.0
+    LiquifiedNereid = 0x478C, // R4.0
+    FrozenTriton = 0x4816, // R5.0
+    FrozenPhobos = 0x4817, // R5.0
+    GaseousNereid = 0x4814, // R5.0
+    GaseousPhobos = 0x4815, // R5.0
+    DeathwallHelper = 0x4866, // R0.5
     Deathwall = 0x1EBDAC, // R0.5
-
-    _Gen_Actor1e8fb8 = 0x1E8FB8, // R2.000, x2, EventObj type
-    _Gen_AncientDoor = 0x1EBD62, // R0.500, x1, EventObj type
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
-    _Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x0 (spawn during fight), EventObj type
-
-    _Gen_Actor1ebdad = 0x1EBDAD, // R0.500, x0 (spawn during fight), EventObj type
-    DeadStars = 0x478D, // R15.000, x0 (spawn during fight)
+    DeadStars = 0x478D, // R15.0
     Helper = 0x233C
 }
 
@@ -139,24 +132,15 @@ public enum AID : uint
     SelfDestructVisual4 = 42439, // Helper->self, no cast, single-target
     SelfDestruct1 = 42456, // Helper->self, no cast, ???
     SelfDestruct2 = 42440, // Helper->self, no cast, ???
+
     FusionBurstVisual = 42484, // DeadStars->self, 10.0s cast, single-target, enrage
-    FusionBurst = 42485, // Helper->self, 10.0s cast, ???
+    FusionBurst = 42485 // Helper->self, 10.0s cast, ???
 }
 
 public enum SID : uint
 {
-    TritonicGravity = 4438, // none->player, extra=0x0
-    PhobosicGravity = 4440, // none->player, extra=0x0
-    NereidicGravity = 4439, // none->player, extra=0x0
     IceOoze = 4442, // none->player, extra=0x1/0x2/0x3
-    NovaOoze = 4441, // none->player, extra=0x2/0x1/0x3
-    _Gen_ = 4507, // none->Phobos, extra=0x37F
-    _Gen_2 = 4506, // none->Nereid, extra=0x37E
-    _Gen_3 = 4505, // none->Boss, extra=0x334
-
-    _Gen_4 = 2193, // Nereid/Boss/Phobos->Nereid/Boss/FrozenTriton/FrozenPhobos/Phobos, extra=0x375/0x373/0x374
-    IceboundBuffoonery = 4443, // none->FrozenTriton/FrozenPhobos, extra=0x4/0x3/0x2/0x1
-    PhysicalVulnerabilityUp = 2940, // FrozenPhobos/FrozenTriton->player, extra=0x0
+    NovaOoze = 4441 // none->player, extra=0x2/0x1/0x3
 }
 
 public enum IconID : uint
@@ -167,7 +151,5 @@ public enum IconID : uint
 public enum TetherID : uint
 {
     DecisiveBattle = 249, // player->Boss/Phobos/Nereid
-    _Gen_Tether_chn_d1048sp_01h = 310, // Phobos/Nereid/Boss->Boss/Phobos/Nereid
-    _Gen_Tether_chn_arrow01f = 246, // FrozenTriton/FrozenPhobos->player
-    _Gen_Tether_chn_dark001f = 1, // FrozenTriton/FrozenPhobos->player
+    AvalaunchBad = 246 // FrozenTriton/FrozenPhobos->player
 }

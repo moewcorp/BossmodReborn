@@ -25,7 +25,7 @@ sealed class FTB1DemonTabletStates : StateMachineBuilder
         RayOfDangersNearExpulsionAfar(id + 0xC0000u, 16f);
         OccultChisel(id + 0xD0000u, 14.2f);
         DemonicDarkII(id + 0xE0000u, 11.9f);
-        SimpleState(id + 0xF0000u, 21.5f, "Enrage");
+        SimpleState(id + 0xF0000u, 22.3f, "Enrage");
     }
 
     private void DemonicDarkII(uint id, float delay)
@@ -133,12 +133,14 @@ sealed class FTB1DemonTabletStates : StateMachineBuilder
         ComponentCondition<GravityTowers>(id, delay, comp => comp.Active, "Towers appear")
             .ActivateOnEnter<GravityTowers>();
         ComponentCondition<LandingSmall>(id + 0x10u, 11.7f, comp => comp.NumCasts != 0, "Rect AOEs + maybe Knockback")
+            .ActivateOnEnter<RayOfIgnorance>()
             .ActivateOnEnter<LandingKnockback>()
             .ActivateOnEnter<EraseGravity>()
             .ActivateOnEnter<LandingMedium>()
             .ActivateOnEnter<LandingSmall>()
             .DeactivateOnExit<LandingKnockback>()
             .DeactivateOnExit<LandingMedium>()
+            .DeactivateOnExit<RayOfIgnorance>()
             .DeactivateOnExit<LandingSmall>();
         ComponentCondition<EraseGravity>(id + 0x20u, 3.5f, comp => comp.NumCasts != 0, "Levitation buffs")
             .DeactivateOnExit<EraseGravity>();
