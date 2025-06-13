@@ -1,17 +1,18 @@
 namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB2DeadStars;
 
-sealed class NoxiousNova(BossModule module) : Components.CastCounter(module, (uint)AID.NoxiousNova);
-sealed class PrimordialChaosRaidwide(BossModule module) : Components.CastCounter(module, (uint)AID.PrimordialChaos);
+sealed class NoxiousNova(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.NoxiousNovaVisual, (uint)AID.NoxiousNova, 0.8f);
+sealed class PrimordialChaosRaidwide(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.PrimordialChaosVisual1, (uint)AID.PrimordialChaos, 1.2f);
 sealed class SliceNDice(BossModule module) : Components.BaitAwayCast(module, (uint)AID.SliceNDice, new AOEShapeCone(70f, 45f.Degrees()), tankbuster: true);
 sealed class NoisomeNuisanceIceboundBuffoonBlazingBelligerent(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.NoisomeNuisance,
 (uint)AID.IceboundBuffoon, (uint)AID.BlazingBelligerent], 6f);
 sealed class VengefulBioIIIBlizzardIIIFireIII(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.VengefulBioIII,
 (uint)AID.VengefulBlizzardIII, (uint)AID.VengefulFireIII], new AOEShapeCone(60f, 60f.Degrees()));
 sealed class DeltaAttack(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.DeltaAttackFirst, (uint)AID.DeltaAttackRepeat]);
+sealed class DeltaAttackRaidwide(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.DeltaAttackVisual1, (uint)AID.DeltaAttackFirst, 0.5f);
 sealed class Avalaunch(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Avalaunch, (uint)AID.Avalaunch, 8f, 7.8f, 24, 24);
 sealed class SelfDestruct(BossModule module) : Components.CastHints(module, [(uint)AID.SelfDestructVisual1, (uint)AID.SelfDestruct2], "Enrage!", true);
 sealed class GeothermalRupture(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GeothermalRupture, 8f);
-sealed class FlameThrower(BossModule module) : Components.CastCounter(module, (uint)AID.FlameThrower);
+sealed class FlameThrower(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.FlameThrowerVisual, (uint)AID.FlameThrower, 0.1f);
 
 abstract class Firestrike(BossModule module, uint aidMarker, float delay) : Components.LineStack(module, aidMarker: aidMarker, (uint)AID.Firestrike, delay, 70f, 5f, 8, 24);
 sealed class Firestrike1(BossModule module) : Firestrike(module, (uint)AID.FirestrikeMarker1, 5.1f);

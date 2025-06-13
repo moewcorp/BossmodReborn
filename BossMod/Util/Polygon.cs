@@ -64,13 +64,15 @@ public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
             pts[j + 1] = v.Z;
         }
         var tess = Earcut.Tessellate(pts[..(vertexCount * 2)], HoleStarts);
-        for (var i = 0; i < tess.Count; i += 3)
+        var count = tess.Count;
+        for (var i = 0; i < count; i += 3)
         {
             result.Add(new(Vertices[tess[i]], Vertices[tess[i + 1]], Vertices[tess[i + 2]]));
         }
 
-        return tess.Count > 0;
+        return count > 0;
     }
+
     public List<RelTriangle> Triangulate()
     {
         var result = new List<RelTriangle>(Vertices.Count);
@@ -246,13 +248,23 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     public List<RelTriangle> Triangulate()
     {
         List<RelTriangle> result = [];
-        for (var i = 0; i < Parts.Count; ++i)
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
             Parts[i].Triangulate(result);
         return result;
     }
 
     // build a new polygon by transformation
-    public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation) => new([.. Parts.Select(p => p.Transform(offset, rotation))]);
+    public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation)
+    {
+        var count = Parts.Count;
+        var transformedParts = new List<RelPolygonWithHoles>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            transformedParts.Add(Parts[i].Transform(offset, rotation));
+        }
+        return new(transformedParts);
+    }
 
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
@@ -552,13 +564,14 @@ public sealed class SpatialIndex
 public readonly struct PolygonWithHolesDistanceFunction
 {
     private readonly RelSimplifiedComplexPolygon _polygon;
-    private readonly WPos _origin;
+    private readonly float _originX, _originZ;
     private readonly Edge[] _edges;
     private readonly SpatialIndex _spatialIndex;
 
     public PolygonWithHolesDistanceFunction(WPos origin, RelSimplifiedComplexPolygon polygon)
     {
-        _origin = origin;
+        _originX = origin.X;
+        _originZ = origin.Z;
         _polygon = polygon;
         var edgeCount = 0;
         var countPolygonParts = polygon.Parts.Count;
@@ -620,8 +633,7 @@ public readonly struct PolygonWithHolesDistanceFunction
     {
         var pX = p.X;
         var pZ = p.Z;
-        var localPoint = new WDir(pX - _origin.X, pZ - _origin.Z);
-        if (_polygon.Contains(localPoint)) // NOTE: our usecase doesn't care about distance inside of the polygon, so we can short circuit here
+        if (_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance inside of the polygon, so we can short circuit here
             return default;
         var minDistanceSq = float.MaxValue;
 
@@ -634,7 +646,7 @@ public readonly struct PolygonWithHolesDistanceFunction
             var edgeAy = edge.Ay;
             var edgeDx = edge.Dx;
             var edgeDy = edge.Dy;
-            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, 0f, 1f);
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
             var distX = pX - (edgeAx + t * edgeDx);
             var distY = pZ - (edgeAy + t * edgeDy);
 
@@ -647,8 +659,7 @@ public readonly struct PolygonWithHolesDistanceFunction
     {
         var pX = p.X;
         var pZ = p.Z;
-        var localPoint = new WDir(pX - _origin.X, pZ - _origin.Z);
-        if (!_polygon.Contains(localPoint)) // NOTE: our usecase doesn't care about distance outside of the polygon, so we can short circuit here
+        if (!_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance outside of the polygon, so we can short circuit here
             return default;
         var minDistanceSq = float.MaxValue;
 
@@ -661,7 +672,7 @@ public readonly struct PolygonWithHolesDistanceFunction
             var edgeAy = edge.Ay;
             var edgeDx = edge.Dx;
             var edgeDy = edge.Dy;
-            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, 0f, 1f);
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
             var distX = pX - (edgeAx + t * edgeDx);
             var distY = pZ - (edgeAy + t * edgeDy);
 

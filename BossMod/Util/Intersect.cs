@@ -121,10 +121,11 @@ public static class Intersect
     public static float RayPolygon(WDir rayOriginOffset, WDir rayDir, RelPolygonWithHoles poly)
     {
         var dist = RaySegments(rayOriginOffset, rayDir, poly.ExteriorEdges);
-        var len = poly.Holes.Length;
+        var holes = poly.Holes;
+        var len = holes.Length;
         for (var i = 0; i < len; ++i)
         {
-            dist = Math.Min(dist, RaySegments(rayOriginOffset, rayDir, poly.InteriorEdges(poly.Holes[i])));
+            dist = Math.Min(dist, RaySegments(rayOriginOffset, rayDir, poly.InteriorEdges(holes[i])));
         }
         return dist;
     }

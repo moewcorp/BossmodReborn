@@ -107,10 +107,10 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
     private void WolvesReign(uint id, float delay)
     {
         CastStartMulti(id, [(uint)AID.RevolutionaryReignVisual1, (uint)AID.RevolutionaryReignVisual2, (uint)AID.EminentReignVisual1, (uint)AID.EminentReignVisual2], delay, "Wolvesreign")
+            .ActivateOnExit<WolvesReignConeCircle>()
             .ActivateOnEnter<WolvesReignCircle>();
         ComponentCondition<WolvesReignCircle>(id + 0x10u, 7f, comp => comp.NumCasts == 4, "Circles resolve")
             .DeactivateOnExit<WolvesReignCircle>()
-            .ActivateOnExit<WolvesReignConeCircle>()
             .ActivateOnExit<WolvesReignRect>()
             .ActivateOnExit<ReignsEnd>()
             .ActivateOnExit<SovereignScar>();
@@ -224,12 +224,12 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
     private void WolvesReign3(uint id, float delay)
     {
         CastStartMulti(id, [(uint)AID.RevolutionaryReignVisual1, (uint)AID.RevolutionaryReignVisual2, (uint)AID.EminentReignVisual1, (uint)AID.EminentReignVisual2], delay, "Wolvesreign")
+            .ActivateOnExit<WolvesReignConeCircle>()
             .ActivateOnEnter<WolvesReignCircle>();
         ComponentCondition<RoaringWind>(id + 0x10u, 0.5f, comp => comp.NumCasts != 0, "Line AOEs 1")
             .DeactivateOnExit<RoaringWind>();
         ComponentCondition<WolvesReignCircle>(id + 0x20u, 6.5f, comp => comp.NumCasts == 4, "Circles resolve")
             .DeactivateOnExit<WolvesReignCircle>()
-            .ActivateOnExit<WolvesReignConeCircle>()
             .ActivateOnExit<WolvesReignRect>()
             .ActivateOnExit<ReignsEnd>()
             .ActivateOnExit<SovereignScar>();

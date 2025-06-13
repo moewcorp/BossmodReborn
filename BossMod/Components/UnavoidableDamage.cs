@@ -33,7 +33,7 @@ public class RaidwideCasts(BossModule module, uint[] aids, string hint = "Raidwi
 }
 
 // generic unavoidable raidwide, initiated by a custom condition and applied by an instant cast after a delay
-public class RaidwideInstant(BossModule module, uint aid, float delay = 0f, string hint = "Raidwide") : CastCounter(module, aid)
+public class RaidwideInstant(BossModule module, uint aid, float delay = default, string hint = "Raidwide") : CastCounter(module, aid)
 {
     public readonly float Delay = delay;
     public readonly string Hint = hint;
