@@ -5,8 +5,7 @@ sealed class TitanicPursuit(BossModule module) : Components.CastCounter(module, 
 sealed class HowlingHavoc(BossModule module) : Components.CastCounter(module, (uint)AID.HowlingHavoc);
 sealed class GreatDivide(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.GreatDivide, new AOEShapeRect(60f, 3f));
 sealed class RavenousSaber(BossModule module) : Components.CastCounterMulti(module, [(uint)AID.RavenousSaber1,
-(uint)AID.RavenousSaber2, (uint)AID.RavenousSaber3, (uint)AID.RavenousSaber4,
-(uint)AID.RavenousSaber5]);
+(uint)AID.RavenousSaber2, (uint)AID.RavenousSaber3, (uint)AID.RavenousSaber4, (uint)AID.RavenousSaber5]);
 sealed class Mooncleaver1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mooncleaver1, 8f);
 sealed class ProwlingGaleP2(BossModule module) : Components.CastTowers(module, (uint)AID.ProwlingGaleP2, 2f, 2, 2);
 sealed class MoonbeamsBite : Components.SimpleAOEGroups

@@ -34,7 +34,7 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
 sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private static readonly AOEShapeCircle circle = new(4f);
-    private readonly List<(Actor target, Angle dir, float distance)> targets = new(4);
+    private readonly List<(Actor target, Angle dir)> targets = new(4);
     private DateTime activation;
     private readonly LandingKnockback _kb = module.FindComponent<LandingKnockback>()!;
 
@@ -45,23 +45,35 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
         var count = targets.Count;
         if (count == 0)
             return [];
-        Span<Knockback> knockbacks = new Knockback[count];
         var pos = actor.Position;
         var center = Arena.Center;
-        var dirRect = new WDir(1f, default);
+        var dirRect = new WDir(default, 1f);
+        var isTarget = false;
+        for (var i = 0; i < count; ++i)
+        {
+            if (targets[i].target == actor)
+            {
+                isTarget = true;
+                break;
+            }
+        }
         for (var i = 0; i < count; ++i)
         {
             var kb = targets[i];
-            knockbacks[i] = new(kb.target.Position, kb.distance, activation, circle, kb.dir, Kind: Kind.DirForward);
-
-            // the knockback range for knockbacks away from meteor side does not seem very consistent. Theory: if the knockback ends up inside the demon tablet, it gets extended by to land 3y behind the wall
-            var dir = kb.dir.ToDirection();
-            if ((pos + 13f * dir).InRect(center, dirRect, 15f, 3f, 3f))
+            if (isTarget && kb.target == actor || !isTarget && pos.InCircle(kb.target.Position, 4f)) // only draw one knockback since they cant be chained, give priority to actor's own knockback
             {
-                knockbacks[i].Distance = (center + 6f * dir - pos).Length();
+                Span<Knockback> knockback = new Knockback[1];
+                // the knockback range for knockbacks away from meteor side does not seem very consistent. Theory: if the knockback ends up inside the demon tablet, it gets extended to land 3y behind the wall
+                knockback[0] = new Knockback(kb.target.Position, 13f, activation, circle, kb.dir, Kind: Kind.DirForward);
+                var dir = kb.dir.ToDirection();
+                if ((pos + 13f * dir).InRect(center, dirRect, 3f, 3f, 15f))
+                {
+                    knockback[0].Distance = (center + 6f * dir - pos).Length();
+                }
+                return knockback;
             }
         }
-        return knockbacks;
+        return [];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -69,7 +81,7 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
         var id = spell.Action.ID;
         if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2 && WorldState.Actors.Find(spell.TargetID) is Actor target)
         {
-            targets.Add((target, id == (uint)AID.PortentousComet1 ? 180f.Degrees() : default, 13f));
+            targets.Add((target, id == (uint)AID.PortentousComet1 ? 180f.Degrees() : default));
             activation = Module.CastFinishAt(spell);
         }
     }

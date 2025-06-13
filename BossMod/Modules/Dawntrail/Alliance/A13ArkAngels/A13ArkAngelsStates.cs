@@ -7,7 +7,7 @@ sealed class A13ArkAngelsStates : StateMachineBuilder
     public A13ArkAngelsStates(A13ArkAngels module) : base(module)
     {
         _module = module;
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<DecisiveBattle>()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<Cloudsplitter>()

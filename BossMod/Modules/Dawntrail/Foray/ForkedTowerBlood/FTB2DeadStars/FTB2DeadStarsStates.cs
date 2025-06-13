@@ -113,11 +113,15 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
                 .SetHint(StateMachine.StateHint.Raidwide);
             if (i == 1)
             {
-                condition.ActivateOnEnter<DeltaAttack>();
+                condition
+                    .ActivateOnEnter<DeltaAttackRaidwide>()
+                    .ActivateOnEnter<DeltaAttack>();
             }
             else if (i == 3)
             {
-                condition.DeactivateOnExit<DeltaAttack>();
+                condition
+                    .DeactivateOnExit<DeltaAttackRaidwide>()
+                    .DeactivateOnExit<DeltaAttack>();
             }
         }
     }
