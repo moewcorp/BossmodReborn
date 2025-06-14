@@ -18,6 +18,10 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
         DreadDeluge(id + 0x30000u, 13.1f);
         ImitationRain2(id + 0x40000u, 5.8f);
         DreadDeluge(id + 0x50000u, 8.6f);
+        IceGolems(id + 0x60000u, 16.5f);
+        ImitationRain3(id + 0x70000u, 0.6f);
+        ImitationRain3(id + 0x80000u, 4.6f, false);
+        LifelessLegacy(id + 0x90000u, 6.9f);
         SimpleState(id + 0xFF0000u, 10000, "???");
     }
 
@@ -103,10 +107,58 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
                 _ => 7
             };
             var condition = ComponentCondition<ImitationBlizzard>(offset, i == 1 ? 3.7f : 4f, comp => comp.NumCasts >= casts, $"Ice puddle AOEs {i}");
-            if (i == 4)
+            if (i == 3)
             {
                 condition.DeactivateOnExit<ImitationBlizzard>();
             }
         }
+    }
+
+    private void IceGolems(uint id, float delay)
+    {
+        ComponentCondition<IceGolems>(id, delay, comp => comp.ActiveActors.Count != 0, "Adds targetable (Ice Golems)")
+            .ActivateOnEnter<VulnerabilityDown>()
+            .ActivateOnEnter<WitheringEternity>()
+            .ActivateOnEnter<IceGolems>();
+    }
+
+    private void ImitationRain3(uint id, float delay, bool first = true)
+    {
+        if (!first)
+        {
+            ComponentCondition<ImitationRain>(id, delay, comp => comp.NumCasts != 0, "Raidwide")
+                .ActivateOnEnter<ImitationRain>()
+                .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(delay))
+                .SetHint(StateMachine.StateHint.Raidwide)
+                .DeactivateOnExit<ImitationRain>();
+        }
+        else
+        {
+            ComponentCondition<WitheringEternity>(id, delay, comp => comp.NumCasts != 0, "Raidwide")
+                .SetHint(StateMachine.StateHint.Raidwide)
+                .DeactivateOnExit<WitheringEternity>();
+        }
+        ComponentCondition<FrigidDive>(id + 0x10u, first ? 12.2f : 11.4f, comp => comp.NumCasts != 0, "Rect AOE")
+            .ActivateOnEnter<FrigidDive>()
+            .ActivateOnEnter<ImitationBlizzard>()
+            .ActivateOnEnter<ImitationBlizzardTowers>()
+            .DeactivateOnExit<FrigidDive>();
+        ComponentCondition<ImitationBlizzardTowers>(id + 0x20u, 4.1f, comp => comp.NumCasts != 0, "Towers 1 + cross AOE");
+        ComponentCondition<ImitationBlizzardTowers>(id + 0x30u, 4f, comp => comp.NumCasts == 6, "Towers 2")
+            .DeactivateOnExit<ImitationBlizzard>()
+            .DeactivateOnExit<ImitationBlizzardTowers>();
+    }
+
+    private void LifelessLegacy(uint id, float delay)
+    {
+        ComponentCondition<IceSprite>(id, delay, comp => comp.ActiveActors.Count != 0, "Adds targetable (Ice Sprites)")
+            .ActivateOnEnter<LifelessLegacy>()
+            .ActivateOnEnter<IceSprite>();
+        ComponentCondition<LifelessLegacy>(id + 0x10u, 36.8f, comp => comp.NumCasts != 0, "Raidwide or enrage")
+            .SetHint(StateMachine.StateHint.Raidwide)
+            .DeactivateOnExit<LifelessLegacy>()
+            .DeactivateOnExit<IceSprite>()
+            .DeactivateOnExit<IceGolems>()
+            .DeactivateOnExit<VulnerabilityDown>();
     }
 }

@@ -64,6 +64,8 @@ public enum AID : uint
 
 public enum SID : uint
 {
+    Invincibility = 4410, // none->Boss, extra=0x0
+    VulnerabilityDown = 2198, // none->IceGolem, extra=0x0
     WickedWater = 4334, // none->player, extra=0x19
     Throttle = 938, // none->player, extra=0x0
     GelidGaol = 4335, // Helper->player, extra=0x0

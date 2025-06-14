@@ -34,7 +34,8 @@ public enum AID : uint
     DualfistFlurryAdvance = 41829, // Boss->location, no cast, single-target
 
     SpiritSling = 41834, // OccultKnight1->self, 3.5s cast, range 60 width 8 rect
-    BarefistedDeath = 41830 // Megaloknight->self, 90.0s cast, range 60 circle
+    BarefistedDeath = 41830, // Megaloknight->self, 90.0s cast, range 60 circle
+    BarefistedDeathRepeat = 4183, // Megaloknight->self, no cast, range 60 circle
 }
 
 sealed class LineOfFireSpiritSlingCageOfFire(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.LineOfFire1, (uint)AID.LineOfFire2,
@@ -52,39 +53,48 @@ sealed class KnuckleCrusher : Components.SimpleAOEs
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         base.OnCastStarted(caster, spell);
-        if (spell.Action.ID == WatchedAction && Casters.Count == 5)
+        if (spell.Action.ID == WatchedAction && Casters.Count == 3)
         {
             // first aoe is always seems to be in center and irrelevant for the dodge spot
-            var aoe2 = Casters[1].Origin;
-            var aoe5 = Casters[4].Origin;
-            midpoint = new((aoe2.X + aoe5.X) / 2, (aoe2.Z + aoe5.Z) / 2);
-            midpoint += 11f * (midpoint - Arena.Center).Normalized();
+            var center = Arena.Center;
+            var dir = Casters[1].Origin - center;
+            var isCW = dir.OrthoR().Dot(Casters[2].Origin - center) > 0f;
+            midpoint = dir.Rotate((isCW ? 1f : -1f) * 55f.Degrees()) + center;
+            midpoint += 6f * (midpoint - center).Normalized();
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (Casters.Count != 0 && midpoint != default)
+        if (midpoint != default && NumCasts < 2)
         {
-            Arena.AddCircle(midpoint, 4f, Colors.Safe, 2f);
+            Arena.AddCircle(midpoint, 2f, Colors.Safe, 2f);
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Casters.Count != 0)
+        if (Casters.Count != 0 && NumCasts < 2)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 5f), Casters[^1].Activation); // stay in dodge spot
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 3f), Casters[^1].Activation); // stay in dodge spot
         }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (Casters.Count != 0 && midpoint != default)
+        if (midpoint != default && NumCasts < 2)
         {
-            hints.Add("Stay near dodge spot!", !actor.Position.InCircle(midpoint, 5f));
+            hints.Add("Stay near dodge spot!", !actor.Position.InCircle(midpoint, 3f));
+        }
+    }
+
+    public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
+    {
+        if (midpoint != default && NumCasts < 2)
+        {
+            movementHints.Add(actor.Position, midpoint, Colors.Safe);
         }
     }
 }

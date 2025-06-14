@@ -41,6 +41,15 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         {
             show = true; // don't draw this stuff before baited cones appear so people don't panic and bait it to an unfortunate direction
         }
+        else if (id == (uint)AID.FrigidDive)
+        {
+            var crossPuddle = Module.Enemies((uint)OID.WaterPuddleCross);
+            if (crossPuddle.Count != 0)
+            {
+                var crossP = crossPuddle[0];
+                _aoes.Add(new(cross, WPos.ClampToGrid(crossP.Position), crossP.Rotation, Module.CastFinishAt(spell, 4.1f)));
+            }
+        }
         else if (id == (uint)AID.ImitationIcicle)
         {
             var pos = caster.Position;
@@ -218,6 +227,63 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             if (_aoes.Count != 0)
             {
                 _aoes.RemoveAt(0);
+            }
+        }
+    }
+}
+
+sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowersOpenWorld(module)
+{
+    public override ReadOnlySpan<Tower> ActiveTowers(int slot, Actor actor)
+    {
+        var count = Towers.Count;
+        if (count == 0)
+            return [];
+        var towers = CollectionsMarshal.AsSpan(Towers);
+        var deadline = towers[0].Activation.AddSeconds(1d);
+
+        var index = 0;
+        while (index < count && towers[index].Activation < deadline)
+            ++index;
+
+        return towers[..index];
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.FrigidDive)
+        {
+            var towerPuddles = Module.Enemies((uint)OID.WaterPuddleTower);
+            var count = towerPuddles.Count - 1;
+            var origin = spell.LocXZ;
+            var dir = spell.Rotation;
+            var act0 = Module.CastFinishAt(spell, 4.1f);
+            var act1 = act0.AddSeconds(4d);
+
+            for (var i = count; i >= 0; --i)
+            {
+                var t = towerPuddles[i].Position;
+                var posClamp = WPos.ClampToGrid(t);
+                if (t.InRect(origin, dir, 60f, default, 10f))
+                {
+                    Towers.Insert(0, new(posClamp, 4f, 4, 8, null, act0));
+                }
+                else
+                {
+                    Towers.Add(new(posClamp, 4f, 4, 8, null, act1));
+                }
+            }
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.ImitationBlizzardTower)
+        {
+            ++NumCasts;
+            if (Towers.Count != 0)
+            {
+                Towers.RemoveAt(0);
             }
         }
     }

@@ -5,6 +5,15 @@ sealed class PortentousCometeor(BossModule module) : Components.SimpleAOEs(modul
 sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitAway(module, onlyShowOutlines: true)
 {
     private static readonly AOEShapeCircle circle = new(43f);
+    private Actor? meteor;
+
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.PortentousCometeor)
+        {
+            meteor = actor;
+        }
+    }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -24,9 +33,34 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        if (ActiveBaitsOn(actor).Count != 0 && meteor != null)
+        {
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(meteor.Position, 1f), CurrentBaits[0].Activation);
+        }
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
         if (ActiveBaitsOn(actor).Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center, new WDir(default, 1f), 32f, 32f, 15f), CurrentBaits[0].Activation);
+            hints.Add("Take bait to side with meteor!");
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        base.DrawArenaForeground(pcSlot, pc);
+        if (ActiveBaitsOn(pc).Count != 0 && meteor != null)
+        {
+            Arena.AddCircle(meteor.Position, 2f, Colors.Vulnerable, 2f);
+        }
+    }
+
+    public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
+    {
+        if (ActiveBaitsOn(actor).Count != 0 && meteor != null)
+        {
+            movementHints.Add(actor.Position, meteor.Position, Colors.Safe);
         }
     }
 }
