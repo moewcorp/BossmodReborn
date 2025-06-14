@@ -490,14 +490,15 @@ public sealed class SpatialIndex
         for (var i = 0; i < len; ++i)
         {
             ref readonly var edge = ref _edges[i];
-            var edgeAx = edge.Ax * InvGridSize;
-            var edgeAy = edge.Ay * InvGridSize;
-            var edgeAxDx = (edgeAx + edge.Dx) * InvGridSize;
-            var edgeAydy = (edgeAy + edge.Dy) * InvGridSize;
-            var ex0 = (int)MathF.Floor(Math.Min(edgeAx, edgeAxDx));
-            var ex1 = (int)MathF.Floor(Math.Max(edgeAx, edgeAxDx));
-            var ey0 = (int)MathF.Floor(Math.Min(edgeAy, edgeAydy));
-            var ey1 = (int)MathF.Floor(Math.Max(edgeAy, edgeAydy));
+            var ax = edge.Ax;
+            var ay = edge.Ay;
+            var bx = ax + edge.Dx;
+            var by = ay + edge.Dy;
+
+            var ex0 = (int)MathF.Floor(Math.Min(ax, bx) * InvGridSize);
+            var ex1 = (int)MathF.Floor(Math.Max(ax, bx) * InvGridSize);
+            var ey0 = (int)MathF.Floor(Math.Min(ay, by) * InvGridSize);
+            var ey1 = (int)MathF.Floor(Math.Max(ay, by) * InvGridSize);
 
             minX = Math.Min(minX, ex0);
             minY = Math.Min(minY, ey0);
@@ -618,7 +619,7 @@ public readonly struct PolygonWithHolesDistanceFunction
 
             for (var i = 0; i < count; ++i)
             {
-                var curr = vertices[i];
+                ref readonly var curr = ref vertices[i];
                 var prevX = prev.X;
                 var prevZ = prev.Z;
                 edges[i] = new(originX + prevX, originZ + prevZ, curr.X - prevX, curr.Z - prevZ);
