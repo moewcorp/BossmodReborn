@@ -7,7 +7,8 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
     public FTB3MarbleDragonStates(FTB3MarbleDragon module) : base(module)
     {
         _module = module;
-        DeathPhase(default, SinglePhase);
+        DeathPhase(default, SinglePhase)
+            .ActivateOnEnter<ArenaChange>();
     }
 
     private void SinglePhase(uint id)
@@ -17,26 +18,36 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
         ImitationRain1(id + 0x20000u, 5f);
         DreadDeluge(id + 0x30000u, 13.1f);
         ImitationRain2(id + 0x40000u, 5.8f);
-        DreadDeluge(id + 0x50000u, 8.6f);
+        DreadDeluge(id + 0x50000u, 8.6f, true);
         IceGolems(id + 0x60000u, 16.5f);
         ImitationRain3(id + 0x70000u, 0.6f);
         ImitationRain3(id + 0x80000u, 4.6f, false);
         LifelessLegacy(id + 0x90000u, 6.9f);
-        SimpleState(id + 0xFF0000u, 10000, "???");
+        ImitationRain4(id + 0xA0000u, 13.4f);
+        ImitationStar(id + 0xB0000u, 17.9f);
+        ImitationRain5(id + 0xC0000u, 12f);
+        ImitationRain5(id + 0xD0000u, 2.1f, false);
+        ImitationStar(id + 0xE0000u, 14.6f, true);
+        DreadDeluge(id + 0xF0000u, 11.3f);
+        SimpleState(id + 0x100000u, 34f, "Enrage");
     }
 
-    private void ImitationStar(uint id, float delay)
+    private void ImitationStar(uint id, float delay, bool unloadIceWind = false)
     {
-        ComponentCondition<ImitationStar>(id, delay, comp => comp.NumCasts != 0, "Raidwide + bleed")
+        var cond = ComponentCondition<ImitationStar>(id, delay, comp => comp.NumCasts != 0, "Raidwide + bleed")
             .ActivateOnEnter<ImitationStar>()
-            .ActivateOnEnter<ArenaChange>()
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<ImitationStar>();
+        if (unloadIceWind)
+        {
+            cond
+                .DeactivateOnExit<FrigidTwister>();
+        }
     }
 
     private void DraconiformMotion(uint id, float delay)
     {
-        ComponentCondition<DraconiformMotion>(id, delay, comp => comp.NumCasts != 0, "Front/back cone AOEs")
+        ComponentCondition<DraconiformMotion>(id, delay, comp => comp.NumCasts == 2, "Front/back cone AOEs")
             .ActivateOnEnter<DraconiformMotion>()
             .DeactivateOnExit<ArenaChange>()
             .ActivateOnExit<ImitationRain>()
@@ -49,13 +60,13 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
             .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(4.9d))
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<ImitationRain>();
-        ComponentCondition<ImitationIcicle>(id + 0x10u, 15.6f, comp => comp.NumCasts != 0, "Circle AOEs")
+        ComponentCondition<ImitationIcicle>(id + 0x10u, 15.6f, comp => comp.NumCasts == 2, "Circle AOEs")
             .ActivateOnEnter<ImitationBlizzard>()
             .ActivateOnEnter<DraconiformMotion>()
             .ExecOnEnter<DraconiformMotion>(comp => comp.Color = Colors.Danger)
             .ActivateOnEnter<ImitationIcicle>()
             .DeactivateOnExit<ImitationIcicle>();
-        ComponentCondition<DraconiformMotion>(id + 0x20u, 0.4f, comp => comp.NumCasts != 0, "Front/back cone AOEs")
+        ComponentCondition<DraconiformMotion>(id + 0x20u, 0.4f, comp => comp.NumCasts == 2, "Front/back cone AOEs")
             .DeactivateOnExit<DraconiformMotion>();
         for (var i = 1; i <= 4; ++i)
         {
@@ -70,17 +81,23 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
             var condition = ComponentCondition<ImitationBlizzard>(offset, i == 1 ? 4.3f : 1f, comp => comp.NumCasts == casts, $"Ice puddle AOEs {i}");
             if (i == 4)
             {
-                condition.DeactivateOnExit<ImitationBlizzard>();
+                condition
+                    .DeactivateOnExit<ImitationBlizzard>();
             }
         }
     }
 
-    private void DreadDeluge(uint id, float delay)
+    private void DreadDeluge(uint id, float delay, bool unloadIceWind = false)
     {
-        ComponentCondition<DreadDeluge>(id, delay, comp => comp.NumCasts != 0, "Tankbusters")
+        var cond = ComponentCondition<DreadDeluge>(id, delay, comp => comp.NumCasts != 0, "Tankbusters")
             .ActivateOnEnter<DreadDeluge>()
             .SetHint(StateMachine.StateHint.Tankbuster)
             .DeactivateOnExit<DreadDeluge>();
+        if (unloadIceWind)
+        {
+            cond
+                .DeactivateOnExit<FrigidTwister>();
+        }
     }
 
     private void ImitationRain2(uint id, float delay)
@@ -93,7 +110,7 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
         ComponentCondition<FrigidTwister>(id + 0x10u, 7.3f, comp => comp.ActiveAOEs(0, default!).Length != 0, "Icewinds appear")
             .ActivateOnEnter<FrigidTwister>()
             .ActivateOnEnter<ImitationBlizzard>();
-        ComponentCondition<DraconiformMotion>(id + 0x20u, 7.4f, comp => comp.NumCasts != 0, "Front/back cone AOEs")
+        ComponentCondition<DraconiformMotion>(id + 0x20u, 7.4f, comp => comp.NumCasts == 2, "Front/back cone AOEs")
             .ActivateOnEnter<DraconiformMotion>()
             .ExecOnEnter<DraconiformMotion>(comp => comp.Color = Colors.Danger)
             .DeactivateOnExit<DraconiformMotion>();
@@ -109,7 +126,8 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
             var condition = ComponentCondition<ImitationBlizzard>(offset, i == 1 ? 3.7f : 4f, comp => comp.NumCasts >= casts, $"Ice puddle AOEs {i}");
             if (i == 3)
             {
-                condition.DeactivateOnExit<ImitationBlizzard>();
+                condition
+                    .DeactivateOnExit<ImitationBlizzard>();
             }
         }
     }
@@ -128,7 +146,7 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
         {
             ComponentCondition<ImitationRain>(id, delay, comp => comp.NumCasts != 0, "Raidwide")
                 .ActivateOnEnter<ImitationRain>()
-                .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(delay))
+                .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(4.6d))
                 .SetHint(StateMachine.StateHint.Raidwide)
                 .DeactivateOnExit<ImitationRain>();
         }
@@ -153,12 +171,77 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
     {
         ComponentCondition<IceSprite>(id, delay, comp => comp.ActiveActors.Count != 0, "Adds targetable (Ice Sprites)")
             .ActivateOnEnter<LifelessLegacy>()
+            .ActivateOnEnter<DamageUp>()
             .ActivateOnEnter<IceSprite>();
         ComponentCondition<LifelessLegacy>(id + 0x10u, 36.8f, comp => comp.NumCasts != 0, "Raidwide or enrage")
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<LifelessLegacy>()
             .DeactivateOnExit<IceSprite>()
+            .DeactivateOnExit<DamageUp>()
             .DeactivateOnExit<IceGolems>()
             .DeactivateOnExit<VulnerabilityDown>();
+    }
+
+    private void ImitationRain4(uint id, float delay)
+    {
+        ComponentCondition<ImitationBlizzard>(id, delay, comp => comp.WickedWaterActive, "Water debuffs appear")
+            .ActivateOnEnter<ImitationBlizzard>()
+            .ActivateOnEnter<WickedWater>();
+        ComponentCondition<WickedWater>(id + 0x10u, 1.8f, comp => comp.NumCasts != 0, "Raidwide")
+            .SetHint(StateMachine.StateHint.Raidwide)
+            .DeactivateOnExit<WickedWater>();
+        ComponentCondition<ImitationIcicle>(id + 0x20u, 15.4f, comp => comp.NumCasts == 2, "Circle AOEs")
+            .ActivateOnEnter<DraconiformMotion>()
+            .ExecOnEnter<DraconiformMotion>(comp => comp.Color = Colors.Danger)
+            .ActivateOnEnter<ImitationIcicle>()
+            .DeactivateOnExit<ImitationIcicle>();
+        ComponentCondition<DraconiformMotion>(id + 0x30u, 0.4f, comp => comp.NumCasts == 2, "Front/back cone AOEs")
+            .ActivateOnEnter<GelidGaol>()
+            .DeactivateOnExit<DraconiformMotion>();
+        for (var i = 1; i <= 4; ++i)
+        {
+            var offset = id + 0x40u + (uint)((i - 1) * 0x10u);
+            var casts = i switch
+            {
+                1 => 2,
+                2 => 5,
+                3 => 7,
+                _ => 8
+            };
+            var condition = ComponentCondition<ImitationBlizzard>(offset, i == 1 ? 4.2f : 1f, comp => comp.NumCasts == casts, $"Ice puddle AOEs {i}");
+            if (i == 4)
+            {
+                condition
+                    .DeactivateOnExit<ImitationBlizzard>();
+            }
+        }
+    }
+
+    private void ImitationRain5(uint id, float delay, bool first = true)
+    {
+        ComponentCondition<ImitationRain>(id, delay, comp => comp.NumCasts != 0, "Raidwide")
+            .ActivateOnEnter<ImitationRain>()
+            .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(first ? 12d : 2.1d))
+            .SetHint(StateMachine.StateHint.Raidwide)
+            .ActivateOnExit<ImitationBlizzard>()
+            .ExecOnExit<ImitationBlizzard>(comp => comp.IsRain4 = true)
+            .DeactivateOnExit<ImitationRain>();
+        if (first)
+        {
+            ComponentCondition<FrigidTwister>(id + 0x10u, 7.4f, comp => comp.ActiveAOEs(0, default!).Length != 0, "Icewinds appear")
+                .ActivateOnEnter<FrigidTwister>();
+        }
+        ComponentCondition<DraconiformMotion>(id + (first ? 0x20u : 0x10u), first ? 7.2f : 6.4f, comp => comp.NumCasts == 2, "Front/back cone AOEs")
+            .ActivateOnEnter<DraconiformMotion>()
+            .ActivateOnEnter<ImitationBlizzardTowers>()
+            .ExecOnEnter<DraconiformMotion>(comp => comp.Color = Colors.Danger)
+            .DeactivateOnExit<DraconiformMotion>();
+        ComponentCondition<ImitationBlizzard>(id + (first ? 0x30u : 0x20u), first ? 3.7f : 1.7f, comp => comp.NumCasts == 2, $"Ice puddle AOEs 1")
+            .ExecOnExit<ImitationBlizzard>(comp => comp.Show = false);
+        ComponentCondition<ImitationBlizzardTowers>(id + (first ? 0x40u : 0x30u), 4f, comp => comp.NumCasts == 6, $"Towers")
+            .ExecOnExit<ImitationBlizzard>(comp => comp.Show = true)
+            .DeactivateOnExit<ImitationBlizzardTowers>();
+        ComponentCondition<ImitationBlizzard>(id + (first ? 0x50u : 0x40u), 6f, comp => comp.NumCasts == 4, $"Ice puddle AOEs 2")
+            .DeactivateOnExit<ImitationBlizzard>();
     }
 }

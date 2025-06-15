@@ -35,7 +35,7 @@ public enum AID : uint
 
     SpiritSling = 41834, // OccultKnight1->self, 3.5s cast, range 60 width 8 rect
     BarefistedDeath = 41830, // Megaloknight->self, 90.0s cast, range 60 circle
-    BarefistedDeathRepeat = 4183, // Megaloknight->self, no cast, range 60 circle
+    BarefistedDeathRepeat = 41831 // Megaloknight->self, no cast, range 60 circle
 }
 
 sealed class LineOfFireSpiritSlingCageOfFire(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.LineOfFire1, (uint)AID.LineOfFire2,
