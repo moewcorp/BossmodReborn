@@ -177,13 +177,13 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
     {
         if (!aoesAdded && Show && referenceIcewind != null && referenceIcewind.LastFrameMovement != default)
         {
-            var isCW = (referenceIcewind.Position - Arena.Center).OrthoR().Dot(referenceIcewind.LastFrameMovement) < 0f;
+            var isCCW = (referenceIcewind.Position - Arena.Center).OrthoR().Dot(referenceIcewind.LastFrameMovement) < 0f;
             if (!IsRain4)
             {
                 // with only 4 possible patterns we might as well hardcode it for easy maintainability
                 (AOEShape, WPos)[] aoes = [];
                 var activationPattern241 = false;
-                switch (IsPattern1, isCW)
+                switch (IsPattern1, isCCW)
                 {
                     case (true, true):
                         aoes =
@@ -255,7 +255,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             {
                 // with only 2 possible patterns we might as well hardcode it for easy maintainability
                 (AOEShape, WPos)[] aoes = [];
-                switch (IsPattern1, isCW) // bool in tuple checks if wind is moving counterclockwise
+                switch (IsPattern1, isCCW) // bool in tuple checks if wind is moving counterclockwise
                 {
                     case (true, true):
                     case (false, false):
@@ -315,7 +315,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var aoe = ref aoes[i];
-                if (aoe.Color != Colors.Danger)
+                if (aoe.Color == Colors.SafeFromAOE)
                 {
                     forbidden.Add(aoe.Shape.InvertedDistance(aoe.Origin, aoe.Rotation));
                 }
@@ -428,6 +428,45 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
             for (var i = count; i >= 0; --i)
             {
                 Towers.Add(new(WPos.ClampToGrid(towerPuddles[i].Position), 4f, 4, 8, null, act));
+            }
+        }
+    }
+}
+
+sealed class BallOfIce(BossModule module) : Components.GenericAOEs(module)
+{
+    private static readonly AOEShapeCircle circleBig = new(8f), circleSmall = new(4f);
+    private readonly List<AOEInstance> _aoes = new(10);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void OnActorCreated(Actor actor)
+    {
+        var circle = actor.OID switch
+        {
+            (uint)OID.WaterPuddleCircle or (uint)OID.WaterPuddleCross => circleBig,
+            (uint)OID.WaterPuddleTower => circleSmall,
+            _ => null
+        };
+        if (circle != null)
+        {
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.6d))); // activation time depends on mechanic, this is only the lowest possible
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.BallOfIce or (uint)AID.BallOfIceTower)
+        {
+            var count = _aoes.Count;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_aoes[i].Origin.AlmostEqual(pos, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
             }
         }
     }

@@ -6,7 +6,7 @@ sealed class WitheringEternity(BossModule module) : Components.RaidwideCastDelay
 sealed class WickedWater(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WickedWater, (uint)AID.ImitationRain, 2.7f);
 sealed class ImitationIcicle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ImitationIcicle, 8f);
 sealed class DreadDeluge(BossModule module) : Components.SingleTargetCast(module, (uint)AID.DreadDeluge);
-sealed class DraconiformMotion(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DraconiformMotion1, (uint)AID.DraconiformMotion2], new AOEShapeCone(60f, 45f.Degrees()));
+
 sealed class FrigidTwister(BossModule module) : Components.Voidzone(module, 5.5f, GetIcewinds, 3f)
 {
     private static List<Actor> GetIcewinds(BossModule module) => module.Enemies((uint)OID.Icewind);
@@ -14,7 +14,7 @@ sealed class FrigidTwister(BossModule module) : Components.Voidzone(module, 5.5f
 sealed class FrigidDive(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FrigidDive, new AOEShapeRect(60f, 10f));
 sealed class GelidGaol(BossModule module) : Components.Adds(module, (uint)OID.GelidGaol, 1);
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13838, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13838, PlanLevel = 100, SortOrder = 4)]
 public sealed class FTB3MarbleDragon(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     public static readonly WPos ArenaCenter = new(-337f, 157f);
