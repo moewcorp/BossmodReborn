@@ -512,8 +512,6 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     public void Actors(List<Actor> actors, uint color = default, bool allowDeadAndUntargetable = false)
     {
         var count = actors.Count;
-        if (count == 0)
-            return;
         for (var i = 0; i < count; ++i)
         {
             Actor(actors[i], color == default ? Colors.Enemy : color, allowDeadAndUntargetable);

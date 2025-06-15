@@ -33,4 +33,9 @@ public class Dispel(BossModule module, uint statusID, uint action = default) : C
         if (status.ID == statusID)
             Targets.Remove(actor);
     }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        Arena.Actors(Targets, Colors.Other1);
+    }
 }

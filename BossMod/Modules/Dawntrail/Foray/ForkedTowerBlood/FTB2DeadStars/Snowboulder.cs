@@ -125,7 +125,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private readonly List<Knockback> _kbs = new(6);
     private readonly Snowboulder _charge = module.FindComponent<Snowboulder>()!;
@@ -165,7 +165,11 @@ sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockba
     {
         if (!_charge.Vulnerable[slot] && _kbs.Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 20f), _kbs[0].Activation);
+            var act = _kbs[0].Activation;
+            if (!IsImmune(slot, act))
+            {
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 20f), _kbs[0].Activation);
+            }
         }
     }
 }

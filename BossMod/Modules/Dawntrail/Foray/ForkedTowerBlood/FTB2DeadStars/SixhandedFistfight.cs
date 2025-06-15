@@ -34,6 +34,7 @@ sealed class CollateralDamage(BossModule module) : Components.GenericStackSpread
         {
             var len = allPlayers.Length;
             var act = Module.CastFinishAt(spell, 7.2f);
+            Spreads.Capacity = len;
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var p = ref allPlayers[i];

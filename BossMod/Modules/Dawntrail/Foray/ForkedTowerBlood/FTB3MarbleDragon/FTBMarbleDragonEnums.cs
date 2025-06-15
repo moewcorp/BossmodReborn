@@ -35,11 +35,12 @@ public enum AID : uint
     ImitationIcicle = 30180, // Helper->self, 7.0s cast, range 8 circle
     BallOfIce = 42773, // Helper->self, 0.5s cast, range 8 circle
     BallOfIceTower = 42774, // Helper->self, 0.5s cast, range 4 circle
-    ImitationBlizzardVisual = 30230, // Helper->self, no cast, single-target
-    ImitationBlizzardRaidwide = 30417, // Helper->self, no cast, ???
+
     ImitationBlizzardCross = 30228, // Helper->self, 1.0s cast, range 60 width 16 cross
     ImitationBlizzardCircle = 30210, // Helper->self, 1.0s cast, range 20 circle
     ImitationBlizzardTower = 30229, // Helper->self, 4.0s cast, range 4 circle
+    ImitationBlizzardTowerFailVisual = 30230, // Helper->self, no cast, single-target
+    ImitationBlizzardTowerFail = 30417, // Helper->self, no cast, ???
 
     DreadDelugeVisual = 30696, // Boss->self, 3.0+2,0s cast, single-target
     DreadDeluge = 30704, // Helper->player, 5.0s cast, single-target
@@ -52,7 +53,7 @@ public enum AID : uint
     FrigidDive = 37819, // Helper->self, 8.0s cast, range 60 width 20 rect
 
     FrozenHeart = 37823, // IceGolem->self, 3.0s cast, single-target
-    _Ability_1 = 30416, // Boss->self, no cast, single-target
+    ChangeModelState = 30416, // Boss->self, no cast, single-target
     LifelessLegacyVisual = 30616, // Boss->self, 35.0+1,6s cast, single-target, raidwide
     LifelessLegacy = 37818, // Helper->self, no cast, ???
     WickedWater = 30695, // Boss->self, 4.0s cast, single-target
@@ -67,7 +68,6 @@ public enum SID : uint
     Invincibility = 4410, // none->Boss, extra=0x0
     VulnerabilityDown = 2198, // none->IceGolem, extra=0x0
     WickedWater = 4334, // none->player, extra=0x19
-    Throttle = 938, // none->player, extra=0x0
     GelidGaol = 4335, // Helper->player, extra=0x0
-    _Gen_ = 2970, // Helper->player, extra=0x12
+    DamageUp = 2550 // IceGolem->IceGolem, extra=0x1
 }
