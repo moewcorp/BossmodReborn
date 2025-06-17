@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Quest.MSQ.Endwalker;
 
-class AetherialRay(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+sealed class AetherialRay(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private DateTime _activation;
 

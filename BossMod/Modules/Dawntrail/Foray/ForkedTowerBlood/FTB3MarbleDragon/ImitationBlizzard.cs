@@ -6,7 +6,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
     private static readonly AOEShapeCross cross = new(60f, 8f);
     private readonly List<AOEInstance> _aoes = new(8);
     private Actor? referenceIcewind;
-    private bool IsPattern1;
+    private bool isPattern1;
     public bool IsRain4;
     private bool aoesAdded;
     private BitMask wickedWater;
@@ -142,7 +142,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         }
         else if (id == (uint)OID.WaterPuddleCross && actor.Position is var pos && (pos == new WPos(-321f, 141f) || pos == new WPos(-359f, 157f)))
         {
-            IsPattern1 = true;
+            isPattern1 = true;
         }
     }
 
@@ -175,7 +175,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
 
     public override void Update()
     {
-        if (!aoesAdded && Show && referenceIcewind != null && referenceIcewind.LastFrameMovement != default)
+        if (!aoesAdded && Show && referenceIcewind != null && referenceIcewind.LastFrameMovement.LengthSq() > 1e-5f) // it is possible for the wind to move such a tiny amount that floating point errors result in incorrect direction detection
         {
             var isCCW = (referenceIcewind.Position - Arena.Center).OrthoR().Dot(referenceIcewind.LastFrameMovement) < 0f;
             if (!IsRain4)
@@ -183,7 +183,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                 // with only 4 possible patterns we might as well hardcode it for easy maintainability
                 (AOEShape, WPos)[] aoes = [];
                 var activationPattern241 = false;
-                switch (IsPattern1, isCCW)
+                switch (isPattern1, isCCW)
                 {
                     case (true, true):
                         aoes =
@@ -255,7 +255,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             {
                 // with only 2 possible patterns we might as well hardcode it for easy maintainability
                 (AOEShape, WPos)[] aoes = [];
-                switch (IsPattern1, isCCW) // bool in tuple checks if wind is moving counterclockwise
+                switch (isPattern1, isCCW) // bool in tuple checks if wind is moving counterclockwise
                 {
                     case (true, true):
                     case (false, false):

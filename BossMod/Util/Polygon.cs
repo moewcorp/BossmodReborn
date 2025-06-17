@@ -39,7 +39,7 @@ public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     public ReadOnlySpan<(WDir, WDir)> InteriorEdges(int index) => PolygonUtil.EnumerateEdges(Interior(index));
 
     private EdgeBuckets? _edgeBuckets;
-    private const int BucketCount = 20;
+    private const int BucketCount = 25;
     private const float Epsilon = 1e-8f;
 
     private int ExteriorEnd => HoleStarts.Count > 0 ? HoleStarts[0] : Vertices.Count;
