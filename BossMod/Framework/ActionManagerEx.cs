@@ -158,7 +158,6 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     public void FaceDirection(Angle direction)
     {
-        Service.Log($"face direction requested: {direction}");
         var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
         if (player != null)
         {

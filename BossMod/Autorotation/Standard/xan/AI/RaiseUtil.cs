@@ -22,7 +22,7 @@ public static class RaiseUtil
         if (filterByRange)
             t1 = t1.Where(t => world.Party.Player()?.DistanceToHitbox(t) <= 30);
         if (sortByClass)
-            t1 = t1.OrderByDescending(t => t.Class.GetRole() switch
+            t1 = t1.OrderByDescending(t => t.Role switch
             {
                 Role.Healer => 5,
                 Role.Tank => 4,
@@ -32,7 +32,7 @@ public static class RaiseUtil
         return t1;
     }
 
-    public static readonly uint[] RaiseStatus = [148, 1140, 2648];
+    public static readonly uint[] RaiseStatus = [148u, 1140u, 2648u];
 
     public static bool BeingRaised(Actor actor) => actor.Statuses.Any(s => RaiseStatus.Contains(s.ID)) || actor.PendingStatuses.Any(s => RaiseStatus.Contains(s.StatusId));
 }
