@@ -208,7 +208,7 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
     {
         var cond = ComponentCondition<ImitationRain>(id, delay, comp => comp.NumCasts != 0, "Raidwide")
             .ActivateOnEnter<ImitationRain>()
-            .ActivateOnEnter<BallOfIce>()
+            .ActivateOnExit<BallOfIce>()
             .ExecOnEnter<ImitationRain>(comp => comp.Activation = _module.WorldState.FutureTime(first ? 12d : 2.1d))
             .SetHint(StateMachine.StateHint.Raidwide)
             .ActivateOnExit<ImitationBlizzard>()
@@ -232,6 +232,7 @@ sealed class FTB3MarbleDragonStates : StateMachineBuilder
             .ActivateOnEnter<DraconiformMotion>()
             .ActivateOnEnter<ImitationBlizzardTowers>()
             .ExecOnEnter<DraconiformMotion>(comp => comp.Color = Colors.Danger)
+            .DeactivateOnExit<DraconiformMotionBait>()
             .DeactivateOnExit<DraconiformMotion>();
         ComponentCondition<ImitationBlizzard>(id + (first ? 0x30u : 0x20u), first ? 3.7f : 1.7f, comp => comp.NumCasts == 2, $"Ice puddle AOEs 1")
             .ExecOnExit<ImitationBlizzard>(comp => comp.Show = false);

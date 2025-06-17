@@ -71,7 +71,9 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             var condition = ComponentCondition<PrimordialChaos>(offset, i == 1 ? 4f : 2.5f, comp => comp.NumTelegraphCasts == casts, $"Color AOE telegraphs {i}");
             if (i == 1)
             {
-                condition.DeactivateOnExit<ArenaChange>().ActivateOnEnter<PrimordialChaos>();
+                condition
+                    .DeactivateOnExit<ArenaChange>()
+                    .ActivateOnEnter<PrimordialChaos>();
             }
         }
 
@@ -81,7 +83,9 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             var casts = i * 4;
             var condition = ComponentCondition<PrimordialChaos>(offset, i == 1 ? 4f : 5.6f, comp => comp.NumCasts == casts, $"Color AOEs {i}");
             if (i == 4)
+            {
                 condition.DeactivateOnExit<PrimordialChaos>();
+            }
         }
 
         ComponentCondition<NoxiousNova>(id + 0xA0u, 10f, comp => comp.NumCasts != 0, "Raidwide")

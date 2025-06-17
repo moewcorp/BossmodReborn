@@ -12,9 +12,9 @@ sealed class DraconiformMotionBait(BossModule module) : Components.GenericAOEs(m
         if (Activation != default)
         {
             var pos = Module.PrimaryActor.Position;
-            var dir = new WDir(default, 1f) * Module.PrimaryActor.HitboxRadius;
-            return new AOEInstance[2] { new(rect, pos + dir, default, Activation, Colors.SafeFromAOE),
-            new(rect, pos - dir, 180f.Degrees(), Activation, Colors.SafeFromAOE)};
+            var dir = new WDir(default, 7.6f);
+            var color = Colors.SafeFromAOE;
+            return new AOEInstance[2] { new(rect, pos + dir, default, Activation, color), new(rect, pos - dir, 180f.Degrees(), Activation, color) };
         }
         return [];
     }

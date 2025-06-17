@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Quest.MSQ.Endwalker;
 
-class AkhMorn(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+sealed class AkhMorn(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private DateTime _activation;
     private static readonly AOEShapeCircle circle = new(4f);
