@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA3AbsoluteVirtue;
 
-class BA3AbsoluteVirtueStates : StateMachineBuilder
+sealed class BA3AbsoluteVirtueStates : StateMachineBuilder
 {
     public BA3AbsoluteVirtueStates(BossModule module) : base(module)
     {

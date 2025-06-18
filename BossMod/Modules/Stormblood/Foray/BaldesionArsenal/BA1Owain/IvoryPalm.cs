@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA1Owain;
 
-class IvoryPalm(BossModule module) : Components.GenericGaze(module)
+sealed class IvoryPalm(BossModule module) : Components.GenericGaze(module)
 {
     public readonly List<(Actor target, Actor source)> Tethers = new(2);
 
@@ -48,9 +48,9 @@ class IvoryPalm(BossModule module) : Components.GenericGaze(module)
     }
 }
 
-class IvoryPalmExplosion(BossModule module) : Components.CastHint(module, (uint)AID.Explosion, "Ivory Palm is enraging!", true);
+sealed class IvoryPalmExplosion(BossModule module) : Components.CastHint(module, (uint)AID.Explosion, "Ivory Palm is enraging!", true);
 
-class EurekanAero(BossModule module) : Components.Cleave(module, (uint)AID.EurekanAero, new AOEShapeCone(6f, 60f.Degrees()), [(uint)OID.IvoryPalm])
+sealed class EurekanAero(BossModule module) : Components.Cleave(module, (uint)AID.EurekanAero, new AOEShapeCone(6f, 60f.Degrees()), [(uint)OID.IvoryPalm])
 {
     public override List<(Actor origin, Actor target, Angle angle)> OriginsAndTargets()
     {

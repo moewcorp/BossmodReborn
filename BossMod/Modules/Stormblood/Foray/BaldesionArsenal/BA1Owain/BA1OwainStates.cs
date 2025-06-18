@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA1Owain;
 
-class BA1OwainStates : StateMachineBuilder
+sealed class BA1OwainStates : StateMachineBuilder
 {
     public BA1OwainStates(BossModule module) : base(module)
     {
