@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA4ProtoOzma;
 
-class TransitionAttacks(BossModule module) : Components.GenericAOEs(module)
+sealed class TransitionAttacks(BossModule module) : Components.GenericAOEs(module)
 {
     public static readonly AOEShapeCircle Circle = new(27f);
     public static readonly AOEShapeDonut Donut = new(17.5f, 38.5f);
@@ -61,10 +61,10 @@ class TransitionAttacks(BossModule module) : Components.GenericAOEs(module)
                             AddAOE(rect, 59.995f.Degrees());
                             break;
                         case -17:
-                            AddAOE(rect, 180.Degrees());
+                            AddAOE(rect, 180f.Degrees());
                             break;
                         case 24:
-                            AddAOE(rect, -60.Degrees());
+                            AddAOE(rect, -60f.Degrees());
                             break;
                     }
                 break;

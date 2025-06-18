@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA2Raiden;
 
-class BA2RaidenStates : StateMachineBuilder
+sealed class BA2RaidenStates : StateMachineBuilder
 {
     public BA2RaidenStates(BossModule module) : base(module)
     {
@@ -13,8 +13,7 @@ class BA2RaidenStates : StateMachineBuilder
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || !Module.PrimaryActor.IsTargetable;
         DeathPhase(1u, Phase2) // starts at around 70% or after becoming untargetable
             .ActivateOnEnter<Shock>()
-            .ActivateOnEnter<LateralZantetsuken1>()
-            .ActivateOnEnter<LateralZantetsuken2>()
+            .ActivateOnEnter<LateralZantetsuken>()
             .ActivateOnEnter<LancingBlowSpread>()
             .ActivateOnEnter<LancingBlowAOE>()
             .ActivateOnEnter<CloudToGround>()

@@ -22,7 +22,7 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
         if (isClose is not bool close)
             return;
         targets.Clear();
-        List<List<Actor>> squareActors = [new(16), new(16), new(16)];
+        List<Actor>[] squareActors = [new(16), new(16), new(16)];
 
         var primaryPos = Module.PrimaryActor.Position;
         var count = players.Count;
@@ -59,25 +59,34 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
         void SelectTargetsFromSquare(List<Actor> actors)
         {
             var count = actors.Count;
-            if (actors.Count < 2)
-                return;
+            Span<(Actor actor, float distSq)> distances = new (Actor, float)[count];
 
-            actors.Sort((a, b) =>
+            for (var i = 0; i < count; ++i)
             {
-                var distA = (a.Position - primaryPos).LengthSq();
-                var distB = (b.Position - primaryPos).LengthSq();
-                return distA.CompareTo(distB);
-            });
-
-            if (close)
-            {
-                targets.Add(actors[0]);
-                targets.Add(actors[1]);
+                var p = actors[i];
+                var distSq = (p.Position - primaryPos).LengthSq();
+                distances[i] = (p, distSq);
             }
-            else
+
+            var counttargets = Math.Min(2, count);
+            for (var i = 0; i < counttargets; ++i)
             {
-                targets.Add(actors[^1]);
-                targets.Add(actors[^2]);
+                var selIdx = i;
+                for (var j = i + 1; j < count; ++j)
+                {
+                    var distJSq = distances[j].distSq;
+                    var distSelIdx = distances[selIdx].distSq;
+                    var isBetter = close ? distJSq < distSelIdx : distJSq > distSelIdx;
+                    if (isBetter)
+                        selIdx = j;
+                }
+
+                if (selIdx != i)
+                {
+                    (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
+                }
+
+                targets.Add(distances[i].actor);
             }
         }
     }
@@ -155,42 +164,53 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 
             var targetsOnSquare = new List<Actor>(2);
 
-            squareActors.Sort((a, b) =>
-            {
-                var distA = (a.Position - primaryPos).LengthSq();
-                var distB = (b.Position - primaryPos).LengthSq();
-                return distA.CompareTo(distB);
-            });
+            var countS = squareActors.Count;
+            Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
 
-            if (close)
+            for (var i = 0; i < countS; ++i)
             {
-                targetsOnSquare.Add(squareActors[0]);
-                targetsOnSquare.Add(squareActors[1]);
+                var p = squareActors[i];
+                var distSq = (p.Position - primaryPos).LengthSq();
+                distances[i] = (p, distSq);
             }
-            else
+
+            var counttargets = Math.Min(2, countS);
+            for (var i = 0; i < counttargets; ++i)
             {
-                targetsOnSquare.Add(squareActors[^1]);
-                targetsOnSquare.Add(squareActors[^2]);
+                var selIdx = i;
+                for (var j = i + 1; j < countS; ++j)
+                {
+                    var distJSq = distances[j].distSq;
+                    var distSelIdx = distances[selIdx].distSq;
+                    var isBetter = close ? distJSq < distSelIdx : distJSq > distSelIdx;
+                    if (isBetter)
+                        selIdx = j;
+                }
+
+                if (selIdx != i)
+                {
+                    (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
+                }
+
+                targetsOnSquare.Add(distances[i].actor);
             }
 
             var countT = targetsOnSquare.Count;
             var isTarget = false;
-            for (var i = 0; i < countT; ++i)
-            {
-                if (targetsOnSquare[i] == actor)
-                {
-                    isTarget = true;
-                    break;
-                }
-            }
             var anyNonTank = false;
             for (var i = 0; i < countT; ++i)
             {
-                if (targetsOnSquare[i].Role != Role.Tank)
+                var t = targetsOnSquare[i];
+                if (t == actor)
+                {
+                    isTarget = true;
+                }
+                else if (t.Role != Role.Tank)
                 {
                     anyNonTank = true;
                 }
             }
+
             hints.Add(close ? "Bait close!" : "Bait far!", !isTarget && anyNonTank);
         }
         else

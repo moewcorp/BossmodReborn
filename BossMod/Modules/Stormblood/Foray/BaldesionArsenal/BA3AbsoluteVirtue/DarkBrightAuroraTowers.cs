@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA3AbsoluteVirtue;
 
-class BrightDarkAuroraExplosion(BossModule module) : Components.GenericAOEs(module)
+sealed class BrightDarkAuroraExplosion(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(8f);
     private readonly List<(Actor source, ulong target)> tetherByActor = new(8);
@@ -164,5 +164,5 @@ abstract class Towers(BossModule module, uint oid, uint tid) : Components.Generi
     }
 }
 
-class BrightAuroraTether(BossModule module) : Towers(module, (uint)OID.DarkAuroraHelper, (uint)TetherID.BrightAurora);
-class DarkAuroraTether(BossModule module) : Towers(module, (uint)OID.BrightAuroraHelper, (uint)TetherID.DarkAurora);
+sealed class BrightAuroraTether(BossModule module) : Towers(module, (uint)OID.DarkAuroraHelper, (uint)TetherID.BrightAurora);
+sealed class DarkAuroraTether(BossModule module) : Towers(module, (uint)OID.BrightAuroraHelper, (uint)TetherID.DarkAurora);

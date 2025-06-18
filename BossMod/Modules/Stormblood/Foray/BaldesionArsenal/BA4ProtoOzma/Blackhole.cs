@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Foray.BaldesionArsenal.BA4ProtoOzma;
 
-class BlackHole(BossModule module) : Components.GenericTowersOpenWorld(module, prioritizeEmpty: true)
+sealed class BlackHole(BossModule module) : Components.GenericTowersOpenWorld(module, prioritizeEmpty: true)
 {
     private const string Hint1 = "Stand inside a black hole buffer!";
     private const string Hint2 = "There are uncovered black hole buffers!";

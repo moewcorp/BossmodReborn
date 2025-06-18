@@ -79,7 +79,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                         aoes =
                         [
                             (circle, new(-331f, 173f)),
-                            (circle, new(-335f, 141f)),
+                            (circle, new(-355f, 141f)),
                             (circle, new(-319f, 173f)),
                             (circle, new(-343f, 141f)),
                             (cross, new(-343f, 173f)),
