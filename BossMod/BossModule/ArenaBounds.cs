@@ -36,7 +36,7 @@ public abstract record class ArenaBounds(float Radius, float MapResolution, floa
     public abstract WDir ClampToBounds(WDir offset);
 
     // functions for clipping various shapes to bounds; all shapes are expected to be defined relative to bounds center
-    public List<RelTriangle> ClipAndTriangulate(WDir[] poly) => Clipper.Intersect(new PolygonClipper.Operand((ReadOnlySpan<WDir>)poly), _clipOperand).Triangulate();
+    public List<RelTriangle> ClipAndTriangulate(ReadOnlySpan<WDir> poly) => Clipper.Intersect(new PolygonClipper.Operand(poly), _clipOperand).Triangulate();
     public List<RelTriangle> ClipAndTriangulate(RelSimplifiedComplexPolygon poly) => Clipper.Intersect(new(poly), _clipOperand).Triangulate();
 
     public List<RelTriangle> ClipAndTriangulateCone(WDir centerOffset, float innerRadius, float outerRadius, Angle centerDirection, Angle halfAngle)
@@ -146,7 +146,7 @@ public sealed record class ArenaBoundsCircle(float Radius, float MapResolution =
 {
     private Pathfinding.Map? _cachedMap;
 
-    protected override PolygonClipper.Operand BuildClipPoly() => new((ReadOnlySpan<WDir>)CurveApprox.Circle(Radius, MaxApproxError));
+    protected override PolygonClipper.Operand BuildClipPoly() => new(CurveApprox.Circle(Radius, MaxApproxError));
     public override void PathfindMap(Pathfinding.Map map, WPos center) => map.Init(_cachedMap ??= BuildMap(), center);
     public override bool Contains(WDir offset)
     {

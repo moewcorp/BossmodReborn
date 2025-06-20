@@ -51,7 +51,7 @@ public class GenericForcedMarch(BossModule module, float activationLimit = float
     {
         var moves = State.GetOrAdd(player.InstanceID).PendingMoves;
         moves.Add((direction, duration, activation));
-        moves.SortBy(x => x.activation);
+        moves.Sort((a, b) => a.activation.CompareTo(b.activation));
     }
 
     public bool HasForcedMovements(Actor player) => State.GetValueOrDefault(player.InstanceID)?.Active(Module) ?? false;

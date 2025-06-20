@@ -13,7 +13,7 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
         {
             AOEs.Add(new(circle, WPos.ClampToGrid(source.Position + 48f * source.Rotation.ToDirection()), default, WorldState.FutureTime(source.OID == (uint)OID.VorticalOrb ? 20.9d : 13.7d), ActorID: source.InstanceID));
             if (AOEs.Count == 2)
-                AOEs.SortBy(x => x.Activation);
+                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

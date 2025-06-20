@@ -79,7 +79,7 @@ public sealed class AutoFarm(RotationModuleManager manager, Actor player) : Rota
         // if we've updated any priorities, we need to re-sort target array
         if (switchTarget != null)
         {
-            Hints.PotentialTargets.SortByReverse(x => x.Priority);
+            Hints.PotentialTargets.Sort((b, a) => a.Priority.CompareTo(b.Priority));
             Hints.HighestPotentialTargetPriority = Math.Max(0, Hints.PotentialTargets[0].Priority);
         }
 

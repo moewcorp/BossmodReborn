@@ -131,7 +131,7 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
                             AOEs.Add(new(mech.shape!, WPos.ClampToGrid(position), husk.Rotation, mech.activation));
                             if (AOEs.Count == 2)
                             {
-                                AOEs.SortBy(aoe => aoe.Activation);
+                                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                             }
                             RemovePendingMechanic(position);
                             return;

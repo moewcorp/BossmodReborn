@@ -4,14 +4,16 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
 {
     public FTB4MagitaurStates(BossModule module) : base(module)
     {
-        DeathPhase(default, SinglePhase)
-            .ActivateOnEnter<Unseal>();
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)
     {
         UnsealedAura(id, 15.2f);
         Unseal(id + 0x10000u, 23.3f);
+        AssassinsDagger(id + 0x20000u, 6.6f);
+        ForkedFury(id + 0x30000u, 10.1f);
+        AuraBurstHoly(id + 0x40000u, 1.5f);
         SimpleState(id + 0xFF0000u, 10000, "???");
     }
 
@@ -29,12 +31,93 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
         {
             var offset = id + (uint)((i - 1) * 0x10u);
             var casts = i * 6;
-            var condition = ComponentCondition<Unseal>(offset, i == 1 ? delay : 3.2f, comp => comp.NumCasts == casts, $"Baited tankbusters {i}")
+            var condition = ComponentCondition<Unseal>(offset, i == 1 ? delay : 3.2f, comp => comp.NumCasts >= casts, $"Baited tankbusters {i}")
+                .SetHint(StateMachine.StateHint.Tankbuster);
+            if (i == 1)
+            {
+                condition
+                    .ActivateOnEnter<Unseal>();
+            }
+            else if (i == 3)
+            {
+                condition
+                    .DeactivateOnExit<Unseal>();
+            }
+        }
+    }
+
+    private void AssassinsDagger(uint id, float delay)
+    {
+        for (var i = 1; i <= 7; ++i)
+        {
+            var offset = id + (uint)((i - 1) * 0x10u);
+            var casts = i * 3;
+            var condition = ComponentCondition<AssassinsDagger>(offset, i == 1 ? delay : 2f, comp => comp.NumCasts == casts, $"Line AOEs {i}");
+            if (i == 1)
+            {
+                condition
+                    .ActivateOnEnter<AssassinsDagger>();
+            }
+            else if (i == 4)
+            {
+                condition
+                    .ActivateOnExit<CriticalAxeLanceBlow>();
+            }
+        }
+        ComponentCondition<CriticalAxeLanceBlow>(id + 0x70u, 1.9f, comp => comp.NumCasts > 1, "In OR Out AOEs + Line AOEs 8") // these AOEs can either be a couple 100ms apart or in the same frame...
+            .DeactivateOnExit<CriticalAxeLanceBlow>();
+        for (var i = 9; i <= 12; ++i)
+        {
+            var offset = id + (uint)((i - 1) * 0x10u);
+            var casts = i * 3;
+            var condition = ComponentCondition<AssassinsDagger>(offset, 2f, comp => comp.NumCasts == casts, $"Line AOEs {i}");
+            if (i == 9)
+            {
+                condition
+                    .ActivateOnExit<CriticalAxeLanceBlow>();
+            }
+            else if (i == 12)
+            {
+                condition
+                    .DeactivateOnExit<AssassinsDagger>();
+            }
+        }
+        ComponentCondition<CriticalAxeLanceBlow>(id + 0xD0u, 2.4f, comp => comp.NumCasts > 1, "In OR Out AOEs")
+            .DeactivateOnExit<CriticalAxeLanceBlow>();
+    }
+
+    private void ForkedFury(uint id, float delay)
+    {
+        ComponentCondition<ForkedFury>(id, delay, comp => comp.NumCasts > 1, "Baited tankbusters 1")
+            .ActivateOnEnter<ForkedFury>()
+            .ActivateOnEnter<Unseal>()
+            .SetHint(StateMachine.StateHint.Tankbuster)
+            .DeactivateOnExit<ForkedFury>();
+        for (var i = 2; i <= 3; ++i)
+        {
+            var offset = id + (uint)((i - 1) * 0x10u);
+            var casts = i * 6 - 6;
+            var condition = ComponentCondition<Unseal>(offset, i == 2 ? 6.2f : 3.2f, comp => comp.NumCasts >= casts, $"Baited tankbusters {i}")
                 .SetHint(StateMachine.StateHint.Tankbuster);
             if (i == 3)
             {
-                condition.DeactivateOnExit<Unseal>();
+                condition
+                    .DeactivateOnExit<Unseal>();
             }
         }
+    }
+
+    private void AuraBurstHoly(uint id, float delay)
+    {
+        ComponentCondition<AuraBurstHolyRaidwide>(id, delay, comp => comp.Casters.Count != 0, "Conduit phase start")
+            .ActivateOnEnter<AuraBurstHoly>()
+            .ActivateOnEnter<AuraBurstHolyRaidwide>()
+            .ActivateOnEnter<ArcaneRecoil>()
+            .ActivateOnEnter<ArcaneReaction>();
+        ComponentCondition<AuraBurstHolyRaidwide>(id + 0x10u, 20f, comp => comp.NumCasts != 0, "Conduit phase end")
+            .DeactivateOnExit<AuraBurstHoly>()
+            .DeactivateOnExit<AuraBurstHolyRaidwide>()
+            .DeactivateOnExit<ArcaneRecoil>()
+            .DeactivateOnExit<ArcaneReaction>();
     }
 }

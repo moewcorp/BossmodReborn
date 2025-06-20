@@ -112,7 +112,7 @@ class P1Explosion(BossModule module) : Components.GenericTowers(module)
             ReportError($"Unexpected tower state");
             return;
         }
-        Towers.SortBy(t => t.Position.Z);
+        Towers.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
         TowerDir.X = Towers.Sum(t => t.Position.X - Arena.Center.X) > 0 ? 1 : -1;
 
         Span<int> slotByGroup = [-1, -1, -1, -1, -1, -1, -1, -1];

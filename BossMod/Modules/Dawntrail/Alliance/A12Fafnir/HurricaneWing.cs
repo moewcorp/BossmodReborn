@@ -21,7 +21,8 @@ sealed class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module
         {
             NumCasts = 0;
             AOEs.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
-            AOEs.SortBy(aoe => aoe.Activation);
+            if (AOEs.Count >= 4)
+                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

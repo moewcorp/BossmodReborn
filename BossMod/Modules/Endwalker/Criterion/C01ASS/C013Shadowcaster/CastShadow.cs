@@ -20,7 +20,7 @@ sealed class CastShadow(BossModule module) : Components.GenericAOEs(module)
         {
             AOEs.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (AOEs.Count == 12)
-                AOEs.SortBy(x => x.Activation);
+                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

@@ -18,17 +18,40 @@ public class RaidwideCasts(BossModule module, uint[] aids, string hint = "Raidwi
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var len = AIDs.Length;
+        var id = spell.Action.ID;
         for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
+        {
+            if (id == AIDs[i])
+            {
                 Casters.Add(caster);
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         var len = AIDs.Length;
+        var id = spell.Action.ID;
         for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
+        {
+            if (id == AIDs[i])
+            {
                 Casters.Remove(caster);
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        var len = AIDs.Length;
+        var id = spell.Action.ID;
+        for (var i = 0; i < len; ++i)
+        {
+            if (id == AIDs[i])
+            {
+                ++NumCasts;
+            }
+        }
     }
 }
 
@@ -110,17 +133,40 @@ public class SingleTargetCasts(BossModule module, uint[] aids, string hint = "Ta
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var len = AIDs.Length;
+        var id = spell.Action.ID;
         for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
+        {
+            if (id == AIDs[i])
+            {
                 Casters.Add(caster);
+            }
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         var len = AIDs.Length;
+        var id = spell.Action.ID;
         for (var i = 0; i < len; ++i)
-            if (spell.Action.ID == AIDs[i])
+        {
+            if (id == AIDs[i])
+            {
                 Casters.Remove(caster);
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        var len = AIDs.Length;
+        var id = spell.Action.ID;
+        for (var i = 0; i < len; ++i)
+        {
+            if (id == AIDs[i])
+            {
+                ++NumCasts;
+            }
+        }
     }
 }
 

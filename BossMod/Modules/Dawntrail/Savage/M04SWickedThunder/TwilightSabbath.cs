@@ -23,16 +23,16 @@ sealed class TwilightSabbath(BossModule module) : Components.GenericAOEs(module)
             return;
         var (offset, delay) = id switch
         {
-            0x11D6 => (-90f.Degrees(), 7.1d),
-            0x11D7 => (-90f.Degrees(), 15.2d),
-            0x11D8 => (90f.Degrees(), 7.1d),
-            0x11D9 => (90f.Degrees(), 15.2d),
+            0x11D6 => (-1, 7.1d),
+            0x11D7 => (-1, 15.2d),
+            0x11D8 => (1, 7.1d),
+            0x11D9 => (1, 15.2d),
             _ => default
         };
         if (offset != default)
         {
-            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation + offset, WorldState.FutureTime(delay)));
-            AOEs.SortBy(aoe => aoe.Activation);
+            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation + offset * 90f.Degrees(), WorldState.FutureTime(delay)));
+            AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

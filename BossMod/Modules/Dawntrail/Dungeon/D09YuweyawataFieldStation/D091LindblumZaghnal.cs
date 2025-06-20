@@ -75,7 +75,7 @@ abstract class LineVoltage(BossModule module, uint narrow, double delay, uint? w
         {
             AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
             if (AOEs.Count > 1)
-                AOEs.SortBy(x => x.Activation);
+                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

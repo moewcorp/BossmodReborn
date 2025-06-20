@@ -101,14 +101,14 @@ public sealed class ModuleViewer : IDisposable
 
         foreach (var groups in _groups)
         {
-            groups.SortBy(g => g.Info.SortOrder);
+            groups.Sort((a, b) => a.Info.SortOrder.CompareTo(b.Info.SortOrder));
             foreach (var (g1, g2) in groups.Pairwise())
                 if (g1.Info.SortOrder == g2.Info.SortOrder)
                     Service.Log($"[ModuleViewer] Same sort order between groups {g1.Info} and {g2.Info}");
 
             foreach (var g in groups)
             {
-                g.Modules.SortBy(m => m.SortOrder);
+                g.Modules.Sort((a, b) => a.SortOrder.CompareTo(b.SortOrder));
                 foreach (var (m1, m2) in g.Modules.Pairwise())
                     if (m1.SortOrder == m2.SortOrder)
                         Service.Log($"[ModuleViewer] Same sort order between modules {m1.Info.ModuleType.FullName} and {m2.Info.ModuleType.FullName}");

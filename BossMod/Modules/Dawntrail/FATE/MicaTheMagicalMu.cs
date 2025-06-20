@@ -187,7 +187,7 @@ class FlourishingBow(BossModule module) : Components.GenericAOEs(module)
         if (shape != null)
         {
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.SortBy(aoe => aoe.Activation);
+            _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

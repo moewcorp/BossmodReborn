@@ -94,17 +94,17 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
         if (shapeIndex == -1)
             return;
 
-        var activation = iconID switch
+        var delay = iconID switch
         {
-            (uint)IconID.Icon1 => WorldState.FutureTime(7d),
-            (uint)IconID.Icon2 => WorldState.FutureTime(10.5d),
-            (uint)IconID.Icon3 => WorldState.FutureTime(14d),
+            (uint)IconID.Icon1 => 7d,
+            (uint)IconID.Icon2 => 10.5d,
+            (uint)IconID.Icon3 => 14d,
             _ => default
         };
 
-        AOEs.Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, activation));
+        AOEs.Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, WorldState.FutureTime(delay)));
         if (AOEs.Count == 6)
-            AOEs.SortBy(x => x.Activation);
+            AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

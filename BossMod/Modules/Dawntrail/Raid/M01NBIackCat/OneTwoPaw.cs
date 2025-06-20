@@ -49,7 +49,7 @@ sealed class OneTwoPaw(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.OneTwoPaw4:
                 _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
                 if (_aoes.Count == 2)
-                    _aoes.SortBy(x => x.Activation);
+                    _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 break;
             case (uint)AID.LeapingOneTwoPawVisual1:
             case (uint)AID.LeapingOneTwoPawVisual3:

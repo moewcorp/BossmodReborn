@@ -202,13 +202,7 @@ public static partial class Utils
         return first;
     }
 
-    // sort elements of a list by key
-    public static void SortBy<TValue, TKey>(this List<TValue> list, Func<TValue, TKey> proj) where TKey : notnull, IComparable => list.Sort((l, r) => proj(l).CompareTo(proj(r)));
-    public static void SortBy<TValue, TKey>(this TValue[] arr, Func<TValue, TKey> proj) where TKey : notnull, IComparable => Array.Sort(arr, (l, r) => proj(l).CompareTo(proj(r)));
-    public static void SortByReverse<TValue, TKey>(this List<TValue> list, Func<TValue, TKey> proj) where TKey : notnull, IComparable => list.Sort((l, r) => proj(r).CompareTo(proj(l)));
-    public static void SortByReverse<TValue, TKey>(this TValue[] arr, Func<TValue, TKey> proj) where TKey : notnull, IComparable => Array.Sort(arr, (l, r) => proj(r).CompareTo(proj(l)));
-
-    // get enumerable of zero or one elements, depending on whether argument is null
+    // get read only span of zero or one elements, depending on whether argument is null
     public static ReadOnlySpan<T> ZeroOrOne<T>(ref readonly T? value) where T : struct
     {
         return value != null ? new T[1] { value.Value } : [];

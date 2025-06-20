@@ -245,7 +245,7 @@ class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(mod
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
             AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(13.2d)));
-            AOEs.SortBy(aoe => aoe.Activation);
+            AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 
@@ -267,7 +267,7 @@ class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(mod
                 if (aoe.Origin.AlmostEqual(pos, 1f))
                 {
                     AOEs.Ref(i).Activation = WorldState.FutureTime(delay);
-                    AOEs.SortBy(aoe => aoe.Activation);
+                    AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                     return;
                 }
             }
@@ -681,9 +681,9 @@ class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnockback(m
         if (!RewindDone && _ct != null && _exalines != null && _ct.Cleansed[slot])
         {
             var players = Raid.WithoutSlot(false, true, true);
-            players.SortBy(p => p.Position.X);
+            players.Sort((a, b) => a.Position.X.CompareTo(b.Position.X));
             var xOrder = Array.IndexOf(players, actor);
-            players.SortBy(p => p.Position.Z);
+            players.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
             var zOrder = Array.IndexOf(players, actor);
             if (xOrder >= 0 && zOrder >= 0)
             {

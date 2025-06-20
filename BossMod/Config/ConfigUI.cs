@@ -192,7 +192,7 @@ public sealed class ConfigUI : IDisposable
 
     private static void SortByOrder(List<UINode> nodes)
     {
-        nodes.SortBy(e => e.Order);
+        nodes.Sort((a, b) => a.Order.CompareTo(b.Order));
         foreach (var n in nodes)
             SortByOrder(n.Children);
     }
