@@ -40,7 +40,7 @@ sealed class TimeEruptionBombReproduce(BossModule module) : Components.GenericAO
     private DateTime _eruptionStart; // timestamp of StartTime cast start
     private readonly List<Actor> _bombs = module.Enemies((uint)OID.TimeBomb1); // either 1 or 2 works, dunno what's the difference
     private readonly List<AOEInstance> _cycloneAOEs = [];
-    private readonly List<(WPos pos, TimeSpan delay)> _clocks = [];
+    private readonly List<(WPos pos, double delay)> _clocks = [];
     private readonly List<WPos> _eruptionSafeSpots = [];
 
     private static readonly AOEShapeCone _shapeBomb = new(60f, 45f.Degrees());
@@ -72,7 +72,7 @@ sealed class TimeEruptionBombReproduce(BossModule module) : Components.GenericAO
             for (var i = 0; i < max; ++i)
             {
                 var e = _clocks[i];
-                aoesC[i] = new(_shapeEruption, e.pos, new(), _eruptionStart + e.delay);
+                aoesC[i] = new(_shapeEruption, e.pos, default, _eruptionStart.AddSeconds(e.delay));
             }
             return aoesC;
         }
@@ -138,17 +138,17 @@ sealed class TimeEruptionBombReproduce(BossModule module) : Components.GenericAO
 
         var delay = state switch
         {
-            0x00010002u => TimeSpan.FromSeconds(9.7),
-            0x00010020u => TimeSpan.FromSeconds(11.7),
-            _ => TimeSpan.Zero
+            0x00010002u => 9.7d,
+            0x00010020u => 11.7d,
+            _ => default
         };
-        if (delay == TimeSpan.Zero)
+        if (delay == default)
             return;
 
         _clocks.Add((actor.Position, delay));
         if (_clocks.Count == 9)
         {
-            _clocks.SortBy(x => x.delay);
+            _clocks.Sort((a, b) => a.delay.CompareTo(b.delay));
             var count = _clocks.Count;
             if (count >= 2)
             {

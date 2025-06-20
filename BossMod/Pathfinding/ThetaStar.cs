@@ -491,13 +491,13 @@ public sealed class ThetaStar
 
     private void PercolateUp(int heapIndex)
     {
-        var openSpan = _openList.AsSpan();
-        int nodeIndex = openSpan[heapIndex];
+        var openSpan = CollectionsMarshal.AsSpan(_openList);
+        var nodeIndex = openSpan[heapIndex];
         ref var node = ref _nodes[nodeIndex];
         while (heapIndex > 0)
         {
-            int parentHeapIndex = (heapIndex - 1) >> 1;
-            ref int parentNodeIndex = ref openSpan[parentHeapIndex];
+            var parentHeapIndex = (heapIndex - 1) >> 1;
+            ref var parentNodeIndex = ref openSpan[parentHeapIndex];
             ref var parent = ref _nodes[parentNodeIndex];
             if (CompareNodeScores(ref node, ref parent) >= 0)
                 break; // parent is 'less' (same/better), stop
@@ -512,24 +512,24 @@ public sealed class ThetaStar
 
     private void PercolateDown(int heapIndex)
     {
-        var openSpan = _openList.AsSpan();
-        int nodeIndex = openSpan[heapIndex];
+        var openSpan = CollectionsMarshal.AsSpan(_openList);
+        var nodeIndex = openSpan[heapIndex];
         ref var node = ref _nodes[nodeIndex];
 
-        int maxSize = openSpan.Length;
+        var maxSize = openSpan.Length;
         while (true)
         {
             // find 'better' child
-            int childHeapIndex = (heapIndex << 1) + 1;
+            var childHeapIndex = (heapIndex << 1) + 1;
             if (childHeapIndex >= maxSize)
                 break; // node is already a leaf
 
-            int childNodeIndex = openSpan[childHeapIndex];
+            var childNodeIndex = openSpan[childHeapIndex];
             ref var child = ref _nodes[childNodeIndex];
-            int altChildHeapIndex = childHeapIndex + 1;
+            var altChildHeapIndex = childHeapIndex + 1;
             if (altChildHeapIndex < maxSize)
             {
-                int altChildNodeIndex = openSpan[altChildHeapIndex];
+                var altChildNodeIndex = openSpan[altChildHeapIndex];
                 ref var altChild = ref _nodes[altChildNodeIndex];
                 if (CompareNodeScores(ref altChild, ref child) < 0)
                 {

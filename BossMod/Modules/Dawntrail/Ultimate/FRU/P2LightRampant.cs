@@ -78,7 +78,7 @@ class P2BrightHunger1(BossModule module) : Components.GenericTowers(module, (uin
         foreach (var (slot, group) in _config.P2LightRampantAssignment.Resolve(Raid))
             if (!_forbidden[slot])
                 conga.Add((slot, group));
-        conga.SortBy(kv => kv.prio);
+        conga.Sort((a, b) => a.prio.CompareTo(b.prio));
         if (conga.Count == 6)
         {
             var firstSouth = conga.FindIndex(kv => kv.prio >= 4);

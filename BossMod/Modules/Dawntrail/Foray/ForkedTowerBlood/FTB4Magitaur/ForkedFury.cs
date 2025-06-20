@@ -1,10 +1,10 @@
 namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB4Magitaur;
 
-sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
+sealed class ForkedFury(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Actor> players = new(48);
     private readonly List<Actor> targets = new(6);
-    private bool? isClose;
+    private bool active;
     private DateTime activation;
     private AOEInstance? _aoe;
 
@@ -12,10 +12,8 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 
     public override void Update()
     {
-        if (isClose is not bool close)
-        {
+        if (!active)
             return;
-        }
         targets.Clear();
         List<Actor>[] squareActors = [new(16), new(16), new(16)];
 
@@ -51,63 +49,46 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
         {
             var square = squareActors[i];
             var countS = square.Count;
-            Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
+            if (countS == 0)
+                continue;
 
+            Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
             for (var j = 0; j < countS; ++j)
             {
-                var p = square[j];
-                var distSq = (p.Position - primaryPos).LengthSq();
-                distances[j] = (p, distSq);
+                var actor = square[j];
+                var distSq = (actor.Position - primaryPos).LengthSq();
+                distances[j] = (actor, distSq);
             }
 
-            var counttargets = Math.Min(2, countS);
-            for (var j = 0; j < counttargets; ++j)
+            int minIdx = 0, maxIdx = 0;
+            for (var j = 1; j < countS; ++j)
             {
-                var selIdx = j;
-                for (var k = j + 1; k < countS; ++k)
-                {
-                    var distJSq = distances[k].distSq;
-                    var distSelIdx = distances[selIdx].distSq;
-                    var isBetter = close ? distJSq < distSelIdx : distJSq > distSelIdx;
-                    if (isBetter)
-                        selIdx = k;
-                }
-
-                if (selIdx != j)
-                {
-                    (distances[selIdx], distances[j]) = (distances[j], distances[selIdx]);
-                }
-
-                targets.Add(distances[j].actor);
+                ref readonly var dist = ref distances[j].distSq;
+                if (dist < distances[minIdx].distSq)
+                    minIdx = j;
+                if (dist > distances[maxIdx].distSq)
+                    maxIdx = j;
             }
+
+            targets.Add(distances[minIdx].actor);
+            if (maxIdx != minIdx)
+                targets.Add(distances[maxIdx].actor);
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is var id && id is (uint)AID.Unseal1 or (uint)AID.Unseal2)
+        if (spell.Action.ID == (uint)AID.ForkedFuryVisual)
         {
-            isClose = id == (uint)AID.Unseal2;
-            activation = Module.CastFinishAt(spell, 8d);
-            SetAOE();
+            activation = Module.CastFinishAt(spell, 0.6d);
+            _aoe = new(FTB4Magitaur.CircleMinusSquares, Arena.Center, default, activation);
+            active = true;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (isClose == null && spell.Action.ID == (uint)AID.ForkedFury)
-        {
-            isClose = Module.PrimaryActor.FindStatus((uint)SID.Unsealed) is ActorStatus status && status.Extra == 0x353u;
-            activation = Module.CastFinishAt(spell, 6.2d);
-            SetAOE();
-        }
-    }
-
-    private void SetAOE() => _aoe = new(FTB4Magitaur.CircleMinusSquares, Arena.Center, default, activation);
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID is (uint)AID.Attack1 or (uint)AID.Attack2)
+        if (spell.Action.ID == (uint)AID.ForkedFury)
         {
             ++NumCasts;
         }
@@ -115,10 +96,9 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (isClose is bool close)
+        if (active)
         {
-            var target = close ? "closest" : "farthest";
-            hints.Add($"Targets two {target} players per square!");
+            hints.Add($"Targets closest and farthest player per square!");
         }
     }
 
@@ -129,10 +109,8 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (isClose is not bool close || actor.IsDead)
-        {
+        if (!active || actor.IsDead)
             return;
-        }
         if (actor.Role == Role.Tank)
         {
             var inSquare = -1;
@@ -160,12 +138,9 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
                     squareActors.Add(a);
                 }
             }
-
             var countS = squareActors.Count;
             if (countS < 2)
                 return;
-
-            var targetsOnSquare = new List<Actor>(2);
 
             Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
 
@@ -176,61 +151,43 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
                 distances[i] = (p, distSq);
             }
 
-            var counttargets = Math.Min(2, countS);
-            for (var i = 0; i < counttargets; ++i)
+            int minIdx = 0, maxIdx = 0;
+            for (var j = 1; j < countS; ++j)
             {
-                var selIdx = i;
-                for (var j = i + 1; j < countS; ++j)
-                {
-                    var distJSq = distances[j].distSq;
-                    var distSelIdx = distances[selIdx].distSq;
-                    var isBetter = close ? distJSq < distSelIdx : distJSq > distSelIdx;
-                    if (isBetter)
-                        selIdx = j;
-                }
-
-                if (selIdx != i)
-                {
-                    (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
-                }
-
-                targetsOnSquare.Add(distances[i].actor);
+                ref readonly var dist = ref distances[j].distSq;
+                if (dist < distances[minIdx].distSq)
+                    minIdx = j;
+                if (dist > distances[maxIdx].distSq)
+                    maxIdx = j;
             }
 
-            var countT = targetsOnSquare.Count;
-            var isTarget = false;
-            var anyNonTank = false;
-            for (var i = 0; i < countT; ++i)
-            {
-                var t = targetsOnSquare[i];
-                if (t == actor)
-                {
-                    isTarget = true;
-                }
-                else if (t.Role != Role.Tank)
-                {
-                    anyNonTank = true;
-                }
-            }
+            var targetClose = distances[minIdx].actor;
+            var targetFar = distances[maxIdx].actor;
 
-            hints.Add(close ? "Bait close!" : "Bait far!", !isTarget && anyNonTank);
+            var isTarget = targetClose == actor || targetFar == actor;
+            var isNonTankClose = targetClose.Role != Role.Tank;
+            var isNonTankFar = targetFar.Role != Role.Tank;
+
+            hints.Add(isNonTankClose ? "Bait close!" : isNonTankFar ? "Bait far!" : "Bait tankbusters!", !isTarget && (isNonTankClose || isNonTankFar));
         }
         else
         {
             var count = targets.Count;
+            var isTarget = false;
             for (var i = 0; i < count; ++i)
             {
                 if (targets[i] == actor)
                 {
-                    hints.Add(close ? "Stay away!" : "Go close!");
+                    isTarget = true;
                 }
             }
+            hints.Add("Stay between tanks!", isTarget);
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (isClose != null)
+        if (active)
         {
             base.AddAIHints(slot, actor, assignment, hints);
             var count = targets.Count;

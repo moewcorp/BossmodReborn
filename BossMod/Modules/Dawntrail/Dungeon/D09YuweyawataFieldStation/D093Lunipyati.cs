@@ -187,7 +187,7 @@ sealed class LeapingEarth(BossModule module) : Components.GenericAOEs(module)
                 GenerateAOEsForMixedPattern(-45f, -135f);
             else
                 GenerateAOEsForMixedPattern(45f, -45f);
-            _aoes.SortBy(x => x.Activation);
+            _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
             angles.Clear();
             maxCasts = 16;
         }

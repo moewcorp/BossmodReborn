@@ -43,7 +43,7 @@ sealed class OneTwoPawBoss(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.OneTwoPawBossAOERSecond:
                 _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
                 if (_aoes.Count == 2)
-                    _aoes.SortBy(x => x.Activation);
+                    _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 break;
         }
     }
@@ -99,7 +99,7 @@ sealed class OneTwoPawShade(BossModule module) : Components.GenericAOEs(module)
             var pos = WPos.ClampToGrid(source.Position);
             _aoes.Add(new(_shape, pos, source.Rotation + _firstDirection, WorldState.FutureTime(20.3d)));
             _aoes.Add(new(_shape, pos, source.Rotation - _firstDirection, WorldState.FutureTime(23.3d)));
-            _aoes.SortBy(aoe => aoe.Activation);
+            _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

@@ -79,8 +79,7 @@ sealed class StateTransitionTimings
                 RecalculateMetrics(trans);
             }
         }
-
-        _encounters.SortByReverse(e => e.Item2.Time.Duration);
+        _encounters.Sort((b, a) => a.Item2.Time.Duration.CompareTo(b.Item2.Time.Duration));
     }
 
     public void Draw(UITree tree)
@@ -132,7 +131,7 @@ sealed class StateTransitionTimings
     {
         if (trans.Instances.Count > 0)
         {
-            trans.Instances.SortBy(e => e.Duration);
+            trans.Instances.Sort((a, b) => a.Duration.CompareTo(b.Duration));
             trans.MinTime = trans.Instances[0].Duration;
             trans.MaxTime = trans.Instances[^1].Duration;
             double sum = 0, sumSq = 0;

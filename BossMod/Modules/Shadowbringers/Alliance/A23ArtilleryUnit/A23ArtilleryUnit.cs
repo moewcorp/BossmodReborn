@@ -50,7 +50,7 @@ class UpperLaser(BossModule module) : Components.GenericAOEs(module)
         {
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (_aoes.Count == 9)
-                _aoes.SortBy(x => x.Activation);
+                _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 

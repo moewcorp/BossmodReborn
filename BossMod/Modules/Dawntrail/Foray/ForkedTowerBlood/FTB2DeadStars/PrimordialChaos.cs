@@ -78,7 +78,7 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         var id = spell.Action.ID;
-        if (spell.Action.ID is (uint)AID.FrozenFalloutBlue or (uint)AID.FrozenFalloutRed)
+        if (id is (uint)AID.FrozenFalloutBlue or (uint)AID.FrozenFalloutRed)
         {
             var targets = spell.Targets;
             var count = targets.Count;

@@ -17,10 +17,14 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!Show)
+        {
             return [];
+        }
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var act0 = aoes[0].Activation;
         var deadline1 = act0.AddSeconds(5d);
@@ -51,7 +55,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             if (crossPuddle.Count != 0)
             {
                 var crossP = crossPuddle[0];
-                _aoes.Add(new(cross, WPos.ClampToGrid(crossP.Position), crossP.Rotation, Module.CastFinishAt(spell, 4.1f)));
+                _aoes.Add(new(cross, WPos.ClampToGrid(crossP.Position), crossP.Rotation, Module.CastFinishAt(spell, 4.1d)));
             }
         }
         else if (id == (uint)AID.ImitationIcicle)
@@ -116,7 +120,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                         break;
 
                 }
-                var act = Module.CastFinishAt(spell, 4.6f);
+                var act = Module.CastFinishAt(spell, 4.6d);
                 for (var i = 0; i < 8; ++i)
                 {
                     ref readonly var aoe = ref aoes[i];
@@ -236,7 +240,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                         activationPattern241 = true;
                         break;
                 }
-                var act = WorldState.FutureTime(8.5d);
+                var act = WorldState.FutureTime(5.8d);
                 for (var i = 0; i < 7; ++i)
                 {
                     ref readonly var aoe = ref aoes[i];
@@ -278,7 +282,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                         ];
                         break;
                 }
-                var act = WorldState.FutureTime(6.4d);
+                var act = WorldState.FutureTime(5.5d);
                 for (var i = 0; i < 4; ++i)
                 {
                     ref readonly var aoe = ref aoes[i];
@@ -370,7 +374,9 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
     {
         var count = Towers.Count;
         if (count == 0)
+        {
             return [];
+        }
         var towers = CollectionsMarshal.AsSpan(Towers);
         var deadline = towers[0].Activation.AddSeconds(1d);
 
@@ -389,7 +395,7 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
             var count = towerPuddles.Count - 1;
             var origin = spell.LocXZ;
             var dir = spell.Rotation;
-            var act0 = Module.CastFinishAt(spell, 4.1f);
+            var act0 = Module.CastFinishAt(spell, 4.1d);
             var act1 = act0.AddSeconds(4d);
             Towers.Capacity = 6;
             for (var i = count; i >= 0; --i)
@@ -423,7 +429,7 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
         {
             var towerPuddles = Module.Enemies((uint)OID.WaterPuddleTower);
             var count = towerPuddles.Count - 1;
-            var act = Module.CastFinishAt(spell, 5.7f);
+            var act = Module.CastFinishAt(spell, 5.7d);
             Towers.Capacity = 6;
             for (var i = count; i >= 0; --i)
             {

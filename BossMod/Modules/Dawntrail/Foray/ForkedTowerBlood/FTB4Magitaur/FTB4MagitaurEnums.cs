@@ -11,7 +11,7 @@ public enum OID : uint
     AxeEmpowermentConduit = 0x46EC, // R4.0
     LanceEmpowermentConduit = 0x46EB, // R4.0
     LuminousLance = 0x46E4, // R1.0
-    _Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x10, EventObj type
+    ArenaFeatures = 0x1EA1A1, // R2.0
     Helper = 0x233C
 }
 
@@ -82,5 +82,6 @@ public enum SID : uint
 {
     PreyGreaterAxebit = 4337, // none->player, extra=0x0
     PreyLesserAxebit = 4336, // none->player, extra=0x0
-    PreyLancepoint = 4338 // none->player, extra=0x0
+    PreyLancepoint = 4338, // none->player, extra=0x0
+    Unsealed = 4339 // Boss->Boss, extra=0x354/0x353 - 353: axe, 354: lance
 }

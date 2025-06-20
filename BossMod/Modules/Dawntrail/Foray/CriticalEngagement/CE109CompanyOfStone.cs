@@ -127,7 +127,9 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                 var center = Arena.Center;
 
                 // Sort rotations by angle from center
-                Sequences.SortBy(a => MathF.Atan2(a.Origin.Z - center.Z, a.Origin.X - center.X));
+                var centerZ = center.Z;
+                var centerX = center.X;
+                Sequences.Sort((a, b) => MathF.Atan2(a.Origin.Z - centerZ, a.Origin.X - centerX).CompareTo(MathF.Atan2(b.Origin.Z - centerZ, b.Origin.X - centerX)));
 
                 // Find adjacent pair where left is CCW and right is CW
                 for (var i = 0; i < 4; i++)
@@ -140,7 +142,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                     {
                         var aOrigin = a.Origin;
                         var bOrigin = b.Origin;
-                        midpoint = new WPos((aOrigin.X + bOrigin.X) / 2, (aOrigin.Z + bOrigin.Z) / 2);
+                        midpoint = new((aOrigin.X + bOrigin.X) / 2, (aOrigin.Z + bOrigin.Z) / 2);
                         return;
                     }
                 }

@@ -140,9 +140,9 @@ public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCas
 }
 
 // For simple AOEs where multiple AOEs use the same AOEShape
-public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = 0d) : SimpleAOEs(module, default, shape, maxCasts, riskyWithSecondsLeft)
+public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : SimpleAOEs(module, default, shape, maxCasts, riskyWithSecondsLeft)
 {
-    public SimpleAOEGroups(BossModule module, uint[] aids, float radius, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = 0d) : this(module, aids, new AOEShapeCircle(radius), maxCasts, expectedNumCasters, riskyWithSecondsLeft) { }
+    public SimpleAOEGroups(BossModule module, uint[] aids, float radius, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : this(module, aids, new AOEShapeCircle(radius), maxCasts, expectedNumCasters, riskyWithSecondsLeft) { }
 
     protected readonly uint[] AIDs = aids;
     protected readonly int ExpectedNumCasters = expectedNumCasters;
@@ -156,7 +156,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
             {
                 Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
-                    Casters.SortBy(aoe => aoe.Activation);
+                    Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 return;
             }
         }
@@ -238,7 +238,7 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
                 var dir = spell.LocXZ - caster.Position;
                 Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), ActorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
-                    Casters.SortBy(aoe => aoe.Activation);
+                    Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 return;
             }
         }

@@ -160,15 +160,8 @@ class NeedleGunOilShower(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe with { Risky = false };
-        }
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        aoes[0].Risky = true;
         return aoes;
     }
 
@@ -176,9 +169,9 @@ class NeedleGunOilShower(BossModule module) : Components.GenericAOEs(module)
     {
         void AddAOE(AOEShape shape)
         {
-            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), _aoes.Count == 0 ? Colors.Danger : default, false));
             if (_aoes.Count == 2)
-                _aoes.SortBy(x => x.Activation);
+                _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
         switch (spell.Action.ID)
         {

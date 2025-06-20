@@ -93,21 +93,14 @@ class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(modul
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe with { Risky = false };
-        }
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        aoes[0].Risky = true;
         return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), _aoes.Count == 0 ? Colors.Danger : default, false));
         switch (spell.Action.ID)
         {
             case (uint)AID.DualPyres1:
@@ -116,7 +109,7 @@ class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(modul
             case (uint)AID.DualPyres4:
                 AddAOE(cone);
                 if (_aoes.Count == 2)
-                    _aoes.SortBy(x => x.Activation);
+                    _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 break;
             case (uint)AID.SteelfoldStrike:
                 AddAOE(cross);

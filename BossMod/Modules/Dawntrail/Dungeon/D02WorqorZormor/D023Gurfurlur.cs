@@ -199,7 +199,7 @@ sealed class Allfire(BossModule module) : Components.GenericAOEs(module)
         {
             AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (AOEs.Count == 16)
-                AOEs.SortBy(x => x.Activation);
+                AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
         else if (!first && spell.Action.ID == (uint)AID.GreatFlood)
         {

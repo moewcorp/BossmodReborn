@@ -65,6 +65,8 @@ public enum PhantomSID : uint
 {
     None = 0,
 
+    PhantomBerserker = 4359, // player is a Phantom Berserker
+
     PhantomGuard = 4231, // applied by Phantom Guard to self, 90% damage reduction at max level
     Pray = 4232, // applied by Pray to self, regen (base 5000 hp/s, affected by OC gear)
     EnduringFortitude = 4233, // applied by Pray to allies via knowledge crystal, 10% damage reduction

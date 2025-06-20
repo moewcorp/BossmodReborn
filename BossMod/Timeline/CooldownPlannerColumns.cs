@@ -268,7 +268,8 @@ public sealed class CooldownPlannerColumns : Timeline.ColumnGroup
         _colsStrategy.Insert(index, cols);
         var m = Plan.Modules[index];
         List<int> uiOrder = [.. Enumerable.Range(0, m.Tracks.Count)];
-        uiOrder.SortByReverse(i => m.Definition.Configs[i].UIPriority);
+        uiOrder.Sort((b, a) => m.Definition.Configs[a].UIPriority.CompareTo(m.Definition.Configs[b].UIPriority));
+
         foreach (var i in uiOrder)
         {
             var config = m.Definition.Configs[i];

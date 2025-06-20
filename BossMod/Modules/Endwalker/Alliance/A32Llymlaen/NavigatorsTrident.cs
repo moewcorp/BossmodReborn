@@ -19,8 +19,7 @@ class DireStraits(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.DireStraitsVisualFirst or (uint)AID.DireStraitsVisualSecond)
         {
-            var check = _aoes.Count == 0;
-            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8f), check ? Colors.Danger : default, check));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8f), _aoes.Count == 0 ? Colors.Danger : default, false));
         }
     }
 
@@ -64,7 +63,6 @@ class NavigatorsTridentKnockback(BossModule module) : Components.GenericKnockbac
     {
         if (spell.Action.ID == (uint)AID.NavigatorsTridentAOE)
         {
-            _sources.Clear();
             _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
             _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
         }
