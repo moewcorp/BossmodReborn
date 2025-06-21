@@ -213,7 +213,7 @@ public sealed record class AOEShapeCustom(IReadOnlyList<Shape> Shapes1, IReadOnl
     private bool isShapeDistanceInitialized;
     private readonly int hashkey = CreateCacheKey(Shapes1, Shapes2 ?? [], DifferenceShapes ?? [], Operand, Origin);
     private static readonly Dictionary<int, RelSimplifiedComplexPolygon> cache = [];
-    private static readonly LinkedList<int> cacheOrder = new();
+    private static readonly LinkedList<int> cacheOrder = [];
 
     public void AddToCache(RelSimplifiedComplexPolygon value)
     {

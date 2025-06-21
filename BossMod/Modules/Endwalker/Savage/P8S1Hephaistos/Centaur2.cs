@@ -28,7 +28,7 @@ class QuadrupedalCrush(BossModule module) : Components.GenericAOEs(module, (uint
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_source != null)
-            return new AOEInstance[1] { new(_shape, _source.Value, new(), _activation) };
+            return new AOEInstance[1] { new(_shape, _source.Value, default, _activation) };
         return [];
     }
 

@@ -35,7 +35,7 @@ class NestOfFlamevipersBaited(BossModule module) : NestOfFlamevipersCommon(modul
 
     public override void Update()
     {
-        BaitingPlayers = Active ? Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(4).Mask() : new();
+        BaitingPlayers = Active ? Raid.WithSlot(false, true, true).SortedByRange(Module.PrimaryActor.Position).Take(4).Mask() : default;
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

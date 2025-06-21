@@ -33,9 +33,9 @@ sealed class BladeOfEntropy(BossModule module) : TemperatureAOE(module)
                 }
 
                 if (numClips > 1)
-                    aoes.Add(new(_shapeCell, cellCenter, new(), activation));
+                    aoes.Add(new(_shapeCell, cellCenter, default, activation));
                 else if (activation != default && temperature == -playerTemp)
-                    aoes.Add(new(_shapeCell, cellCenter, new(), activation, Colors.SafeFromAOE, false));
+                    aoes.Add(new(_shapeCell, cellCenter, default, activation, Colors.SafeFromAOE, false));
             }
         }
         return CollectionsMarshal.AsSpan(aoes);

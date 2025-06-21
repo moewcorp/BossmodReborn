@@ -51,7 +51,7 @@ class QuintupleSneeze(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.QuintupleInhale1:
                 _referenceAngle = spell.Rotation;
                 _pendingOffsets.Clear();
-                _pendingOffsets.Add(new());
+                _pendingOffsets.Add(default);
                 _nextSneeze = default;
                 break;
             case (uint)AID.QuintupleInhale24:

@@ -8,7 +8,7 @@ sealed class RuinfallTower(BossModule module) : Components.GenericTowers(module,
         {
             var party = Module.Raid.WithSlot(true, true, true);
             var len = party.Length;
-            BitMask nontanks = new();
+            BitMask nontanks = default;
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var p = ref party[i];

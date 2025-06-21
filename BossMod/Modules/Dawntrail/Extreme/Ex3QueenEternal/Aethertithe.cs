@@ -15,7 +15,7 @@ sealed class Aethertithe(BossModule module) : Components.GenericAOEs(module)
         Angle? dir = state switch
         {
             0x04000100u => -55f.Degrees(),
-            0x08000100u => new(),
+            0x08000100u => (Angle)default,
             0x10000100u => 55f.Degrees(),
             _ => null
         };

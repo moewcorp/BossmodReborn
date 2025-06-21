@@ -76,7 +76,7 @@ class BallisticMissile(BossModule module) : Components.GenericAOEs(module)
         {
             case (uint)AID.BallisticMissileCircleWarning:
             case (uint)AID.BallisticMissileDonutWarning:
-                _activeLocation = _activeTarget?.Position ?? new();
+                _activeLocation = _activeTarget?.Position ?? default;
                 _activeTarget = null;
                 break;
             case (uint)AID.BallisticMissileCircle:

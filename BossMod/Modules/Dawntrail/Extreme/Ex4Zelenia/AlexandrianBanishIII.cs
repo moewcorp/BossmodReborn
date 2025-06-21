@@ -9,7 +9,7 @@ sealed class AlexandrianBanishIII(BossModule module) : Components.GenericBaitSta
     {
         if (iconID == (uint)IconID.AlexandrianBanishIII)
         {
-            CurrentBaits.Add(new(new Actor(default, default, default, default!, default, default, default, default, Arena.Center.ToVec4()), actor, circle, WorldState.FutureTime(4.1d)));
+            CurrentBaits.Add(new(Arena.Center, actor, circle, WorldState.FutureTime(4.1d)));
         }
     }
 

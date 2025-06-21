@@ -74,7 +74,7 @@ sealed class AerotemporalBlast(BossModule module) : Components.GenericBaitStack(
             {
                 var party = Raid.WithSlot(true, true, true);
                 var len = party.Length;
-                BitMask forbidden = new();
+                BitMask forbidden = default;
                 for (var i = 0; i < len; ++i)
                 {
                     ref readonly var p = ref party[i];

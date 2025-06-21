@@ -85,7 +85,7 @@ sealed class LightningRod(BossModule module) : Components.GenericTowers(module)
             return;
         var party = Module.Raid.WithSlot(true, true, true);
         var len = party.Length;
-        BitMask forbidden = new();
+        BitMask forbidden = default;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var p = ref party[i];

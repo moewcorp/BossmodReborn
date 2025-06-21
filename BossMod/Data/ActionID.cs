@@ -80,7 +80,7 @@ public readonly record struct ActionID(uint Raw)
     public static ActionID MakeSpell<AID>(AID id) where AID : Enum
     {
         var castID = (uint)(object)id;
-        return castID != default ? new(ActionType.Spell, castID) : new();
+        return castID != default ? new(ActionType.Spell, castID) : default;
     }
 
     public static ActionID MakeBozjaHolster(BozjaHolsterID id, int slot) => slot switch

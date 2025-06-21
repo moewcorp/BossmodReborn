@@ -152,7 +152,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     public Vector3? GetWorldPosUnderCursor()
     {
-        Vector3 res = new();
+        Vector3 res = default;
         return _inst->GetGroundPositionForCursor(&res) ? res : null;
     }
 

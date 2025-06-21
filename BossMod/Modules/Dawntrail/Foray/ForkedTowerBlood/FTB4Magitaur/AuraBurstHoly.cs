@@ -51,7 +51,6 @@ sealed class ArcaneReaction(BossModule module) : Components.GenericBaitAway(modu
 {
     private Actor? conduit;
     private static readonly AOEShapeRect rect = new(55f, 3f);
-    private readonly List<Actor> players = new(48);
 
     public override void OnActorCreated(Actor actor)
     {
@@ -67,17 +66,18 @@ sealed class ArcaneReaction(BossModule module) : Components.GenericBaitAway(modu
         {
             CurrentBaits.Clear();
 
-            var count = players.Count;
-            if (count == 0)
+            var players = new List<Actor>(48);
+            // note: this is problematic because player culling messes this up and leads to incorrect results (eg not finding the actual bait target)
+            // in any frame players can be removed or added to the object table and will likely never contain all 48 players at the same time
+            // caching removed players is also pointless since the player position no longer gets updated when this happens
+            foreach (var a in Module.WorldState.Actors.Actors.Values)
             {
-                foreach (var a in Module.WorldState.Actors.Actors.Values)
+                if (a.OID == default && !a.IsDead)
                 {
-                    if (a.OID == default)
-                    {
-                        players.Add(a);
-                    }
+                    players.Add(a);
                 }
             }
+            var count = players.Count;
             Actor? closest = null;
             var minDistSq = float.MaxValue;
             var pos = conduit.Position;
@@ -85,10 +85,6 @@ sealed class ArcaneReaction(BossModule module) : Components.GenericBaitAway(modu
             for (var i = 0; i < count; ++i)
             {
                 var actor = players[i];
-                if (actor.IsDead)
-                {
-                    continue;
-                }
                 var distSq = (actor.Position - pos).LengthSq();
                 if (distSq < minDistSq)
                 {
@@ -141,7 +137,6 @@ sealed class ArcaneReaction(BossModule module) : Components.GenericBaitAway(modu
 
 sealed class ArcaneRecoil(BossModule module) : BossComponent(module)
 {
-    private readonly List<Actor> players = new(48);
     private readonly List<Actor> targets = new(6);
     private List<Actor> conduits = new(3);
     private bool? isHoly;
@@ -158,13 +153,19 @@ sealed class ArcaneRecoil(BossModule module) : BossComponent(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        if (isHoly is bool holy && actor.OID is var id)
+        if (isHoly is bool holy && actor.OID is var id) // double checking actors since cast start and actor creation can happen in arbitrary order in the network packages
         {
-            if (conduits.Contains(actor))
-                return;
             if (holy && id != (uint)OID.LanceEmpowermentConduit || !holy && id != (uint)OID.AxeEmpowermentConduit)
             {
                 return;
+            }
+            var count = conduits.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (conduits[i] == actor)
+                {
+                    return;
+                }
             }
             conduits.Add(actor);
         }
@@ -178,37 +179,29 @@ sealed class ArcaneRecoil(BossModule module) : BossComponent(module)
         }
         targets.Clear();
 
-        var count = players.Count;
-        if (count == 0)
-        {
-            foreach (var a in Module.WorldState.Actors.Actors.Values)
-            {
-                if (a.OID == default)
-                {
-                    players.Add(a);
-                }
-            }
-        }
-
         var countConduits = conduits.Count;
-        Span<(Actor actor, float distSq)> distances = new (Actor, float)[count];
+
         for (var i = 0; i < countConduits; ++i)
         {
             var c = conduits[i];
             var pos = c.Position;
-
-            for (var j = 0; j < count; ++j)
+            List<(Actor actor, float distSq)> distances = new(48);
+            // note: this is problematic because player culling messes this up and leads to incorrect results (eg not finding the actual bait target)
+            // in any frame players can be removed or added to the object table and will likely never contain all 48 players at the same time
+            // caching removed players is also pointless since the player position no longer gets updated when this happens
+            foreach (var a in Module.WorldState.Actors.Actors.Values)
             {
-                var p = players[j];
-                var distSq = (p.Position - pos).LengthSq();
-                distances[j] = (p, distSq);
+                if (a.OID == default && !a.IsDead)
+                {
+                    distances.Add((a, (a.Position - pos).LengthSq()));
+                }
             }
-
-            var counttargets = Math.Min(2, count);
+            var countDistances = distances.Count;
+            var counttargets = Math.Min(2, countDistances);
             for (var j = 0; j < counttargets; ++j)
             {
                 var selIdx = j;
-                for (var k = j + 1; k < count; ++k)
+                for (var k = j + 1; k < countDistances; ++k)
                 {
                     if (distances[k].distSq < distances[selIdx].distSq)
                         selIdx = k;

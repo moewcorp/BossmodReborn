@@ -39,7 +39,7 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(20f, 5f, 20f);
 
-    private Queue<Stampede> stampedes = new();
+    private Queue<Stampede> stampedes = [];
     private static readonly uint[] animals = [(uint)OID.WildBeasts1, (uint)OID.WildBeasts2, (uint)OID.WildBeasts3, (uint)OID.WildBeasts4];
 
     private static readonly WPos[] stampedePositions =
@@ -69,7 +69,7 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state != 0x00020001)
+        if (state != 0x00020001u)
             return;
 
         var stampedePosition = GetStampedePosition(index);
@@ -124,8 +124,9 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
 
     public override void Update()
     {
-        var stampedeList = stampedes.ToList();
-        for (var i = 0; i < stampedeList.Count; ++i)
+        List<Stampede> stampedeList = [.. stampedes];
+        var count = stampedeList.Count;
+        for (var i = 0; i < count; ++i)
         {
             var stampede = stampedeList[i];
             UpdateStampede(ref stampede);
@@ -151,15 +152,16 @@ class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module)
     private void ResetStampede(ref Stampede stampede)
     {
         if (stampede.Reset != default && WorldState.CurrentTime > stampede.Reset)
-            stampede = new();
+            stampede = default;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.WildlifeCrossing)
         {
-            var stampedeList = stampedes.ToList();
-            for (var i = 0; i < stampedeList.Count; ++i)
+            List<Stampede> stampedeList = [.. stampedes];
+            var count = stampedeList.Count;
+            for (var i = 0; i < count; ++i)
             {
                 var stampede = stampedeList[i];
                 UpdateStampedeCount(ref stampede, caster.Position.Z);

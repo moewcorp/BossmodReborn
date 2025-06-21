@@ -65,7 +65,7 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, (uint)AID.Geo
         if (_outer != null)
             return new AOEInstance[1] { new(_outer, Arena.Center) };
         if (_inner != null)
-            return new AOEInstance[1] { new(_inner, Arena.Center, new(), _innerFinish) };
+            return new AOEInstance[1] { new(_inner, Arena.Center, default, _innerFinish) };
         return [];
     }
 
@@ -75,13 +75,13 @@ class Geocrush(BossModule module) : Components.GenericAOEs(module, (uint)AID.Geo
         {
             var outerRadius = ++_currentCast switch
             {
-                1 => 23,
-                2 => 20,
-                3 => 15,
+                1 => 23f,
+                2 => 20f,
+                3 => 15f,
                 _ => Arena.Bounds.Radius
             };
             _outer = new AOEShapeDonut(outerRadius, Arena.Bounds.Radius);
-            _inner = new AOEShapeCircle(outerRadius - 2); // TODO: check falloff...
+            _inner = new AOEShapeCircle(outerRadius - 2f); // TODO: check falloff...
             _innerFinish = Module.CastFinishAt(spell);
         }
     }

@@ -8,7 +8,7 @@ sealed class QuakeIII(BossModule module) : Components.GenericBaitStack(module, (
     {
         if (iconID == (uint)IconID.Heavensearth)
         {
-            CurrentBaits.Add(new(new Actor(default, default, default, default!, default, default, default, default, default), actor, circle, WorldState.FutureTime(5.1d)));
+            CurrentBaits.Add(new((WPos)default, actor, circle, WorldState.FutureTime(5.1d)));
         }
     }
 

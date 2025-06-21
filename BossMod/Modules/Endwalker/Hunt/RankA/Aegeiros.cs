@@ -43,7 +43,7 @@ class LeafstormRimestorm(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Rimestorm)
-            _rimestormExpected = new();
+            _rimestormExpected = default;
     }
 }
 

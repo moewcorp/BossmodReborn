@@ -32,7 +32,7 @@ class InhaleGoobbuesGrief(BossModule module) : Components.GenericAOEs(module)
         if (_showInhale)
             aoes.Add(new(_shapeInhale, Module.PrimaryActor.CastInfo!.LocXZ, Module.PrimaryActor.CastInfo.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo)));
         if (_showGrief)
-            aoes.Add(new(_shapeGrief, Module.PrimaryActor.Position, new(), _griefActivation));
+            aoes.Add(new(_shapeGrief, Module.PrimaryActor.Position, default, _griefActivation));
         return CollectionsMarshal.AsSpan(aoes);
     }
 

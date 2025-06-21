@@ -29,7 +29,7 @@ sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module
 
             var party = Raid.WithSlot(false, false, true);
             var lenP = party.Length;
-            BitMask forbidden = new();
+            BitMask forbidden = default;
             var targets = spell.Targets;
             var countT = targets.Count;
             for (var i = 0; i < countT; ++i)

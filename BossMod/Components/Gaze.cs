@@ -7,7 +7,7 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
 {
     public record struct Eye(
         WPos Position,
-        DateTime Activation = new(),
+        DateTime Activation = default,
         Angle Forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
         float Range = 10000f,
         bool Inverted = false,

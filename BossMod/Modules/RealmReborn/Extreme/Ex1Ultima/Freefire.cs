@@ -15,7 +15,7 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, (uint)AID.Fre
             return [];
         var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
-            aoes[i] = new(_shape, _casters[i].Position, new(), _resolve);
+            aoes[i] = new(_shape, _casters[i].Position, default, _resolve);
         return aoes;
     }
 
@@ -28,7 +28,7 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, (uint)AID.Fre
             {
                 Class.WAR => ActionID.MakeSpell(WAR.AID.Holmgang),
                 Class.PLD => ActionID.MakeSpell(PLD.AID.HallowedGround),
-                _ => new()
+                _ => default
             };
             if (invuln)
             {
@@ -42,10 +42,10 @@ class Freefire(BossModule module) : Components.GenericAOEs(module, (uint)AID.Fre
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.Helper && id == 0x0449)
+        if (actor.OID == (uint)OID.Helper && id == 0x0449u)
         {
             _casters.Add(actor);
-            _resolve = WorldState.FutureTime(6);
+            _resolve = WorldState.FutureTime(6d);
         }
     }
 

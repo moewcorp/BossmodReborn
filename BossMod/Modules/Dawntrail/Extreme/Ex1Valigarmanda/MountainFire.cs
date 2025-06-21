@@ -9,7 +9,7 @@ sealed class MountainFire(BossModule module) : Components.GenericTowers(module, 
     {
         var party = module.Raid.WithSlot(true, true, true);
         var len = party.Length;
-        BitMask nontanks = new();
+        BitMask nontanks = default;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var p = ref party[i];

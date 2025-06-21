@@ -59,7 +59,7 @@ sealed class GraspingRancor : Components.SimpleAOEs
             var hand = _hands.FirstOrDefault(h => h.Tether.Target == actor.InstanceID);
             if (hand != null)
             {
-                var shouldBeFrozen = Shape.Check(hand.Position, Casters[0].Origin, new());
+                var shouldBeFrozen = Shape.Check(hand.Position, Casters[0].Origin, default);
                 var isFrozen = hand.Tether.ID == (uint)TetherID.Frozen;
                 hints.Add(shouldBeFrozen ? "Face the hand!" : "Look away from hand and kite into safezone!", shouldBeFrozen != isFrozen);
             }
