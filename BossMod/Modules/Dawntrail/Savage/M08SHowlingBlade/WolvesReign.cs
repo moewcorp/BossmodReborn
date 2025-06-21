@@ -129,9 +129,9 @@ sealed class SovereignScar(BossModule module) : Components.GenericBaitStack(modu
         {
             var act = Module.CastFinishAt(spell);
             var party = Raid.WithSlot(true, true, true);
-            var source = new Actor(default, default, default, default!, default, default, default, default, spell.LocXZ.ToVec4());
+            var source = spell.LocXZ;
             var len = party.Length;
-            BitMask forbidden = new();
+            BitMask forbidden = default;
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var p = ref party[i];
@@ -143,7 +143,7 @@ sealed class SovereignScar(BossModule module) : Components.GenericBaitStack(modu
             {
                 ref readonly var p = ref party[i].Item2;
                 if (p.Role == Role.Healer)
-                    CurrentBaits.Add(new(source, p, cone, act, forbidden));
+                    CurrentBaits.Add(new(source, p, cone, act, forbidden: forbidden));
             }
         }
     }
@@ -159,7 +159,7 @@ sealed class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
         {
             var act = Module.CastFinishAt(spell);
             var party = Raid.WithoutSlot(true, true, true);
-            var source = new Actor(default, default, default, default!, default, default, default, default, spell.LocXZ.ToVec4());
+            var source = spell.LocXZ;
             var len = party.Length;
 
             for (var i = 0; i < len; ++i)

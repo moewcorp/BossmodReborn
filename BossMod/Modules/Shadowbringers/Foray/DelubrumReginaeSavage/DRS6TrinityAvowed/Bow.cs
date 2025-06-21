@@ -31,7 +31,7 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
     private readonly float _spawnToActivation = spawnToActivation;
     private DateTime _activation;
 
-    private static readonly AOEShapeRect _shapeCell = new(5, 5, 5);
+    private static readonly AOEShapeRect _shapeCell = new(5f, 5f, 5f);
     private static readonly int[,] _remap = { { 0, 1, 2, 3, 4 }, { 4, 2, 3, 0, 1 }, { 3, 4, 1, 2, 0 }, { 3, 4, 1, 2, 0 }, { 4, 2, 3, 0, 1 } };
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -45,7 +45,7 @@ class ShimmeringShot(BossModule module, float spawnToActivation) : TemperatureAO
 
         var xOffset = _pattern is Pattern.EWNormal or Pattern.EWInverted ? -20f : +20f;
         var zOffset = 10f * (cell - 2);
-        return new AOEInstance[1] { new(_shapeCell, TrinityAvowed.ArenaCenter + new WDir(xOffset, zOffset), new(), _activation, Colors.SafeFromAOE, false) };
+        return new AOEInstance[1] { new(_shapeCell, TrinityAvowed.ArenaCenter + new WDir(xOffset, zOffset), default, _activation, Colors.SafeFromAOE, false) };
     }
 
     public override void Update()

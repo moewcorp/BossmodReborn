@@ -15,7 +15,7 @@ public class TankbusterTether(BossModule module, uint aid, uint tetherID, AOESha
 
     public override void Update()
     {
-        _inAnyAOE = new();
+        _inAnyAOE = default;
 
         var count = _tethers.Count;
         if (count == 0)
@@ -225,7 +225,7 @@ public class InterceptTetherAOE(BossModule module, uint aid, uint tetherID, floa
 
     public override void Update()
     {
-        _inAnyAOE = new();
+        _inAnyAOE = default;
         foreach (var slot in _tetheredPlayers.SetBits())
         {
             var target = Raid[slot];

@@ -10,7 +10,7 @@ sealed class TyrannysGraspTowers(BossModule module) : Components.GenericTowers(m
         {
             var party = Module.Raid.WithSlot(true, true, true);
             var len = party.Length;
-            BitMask nontanks = new();
+            BitMask nontanks = default;
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var p = ref party[i];
@@ -42,7 +42,7 @@ sealed class TyrannysGraspTowers(BossModule module) : Components.GenericTowers(m
 
             var party = Raid.WithSlot(false, false, true);
             var lenP = party.Length;
-            BitMask forbidden = new();
+            BitMask forbidden = default;
             var targets = spell.Targets;
             var countT = targets.Count;
             for (var i = 0; i < countT; ++i)

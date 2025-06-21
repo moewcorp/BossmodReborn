@@ -109,8 +109,8 @@ class Spotlights1(BossModule module) : Components.GenericTowers(module)
     {
         get
         {
-            BitMask forbiddenFirst = new();
-            BitMask forbiddenSecond = new();
+            BitMask forbiddenFirst = default;
+            BitMask forbiddenSecond = default;
 
             for (var i = 0; i < 8; ++i)
             {

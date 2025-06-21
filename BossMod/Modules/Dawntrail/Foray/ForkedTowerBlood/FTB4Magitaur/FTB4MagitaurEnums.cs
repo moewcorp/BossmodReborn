@@ -45,21 +45,24 @@ public enum AID : uint
 
     ForkedFuryVisual = 41573, // Boss->self, 4.5+0,5s cast, single-target
     ForkedFury = 41574, // Helper->player, 0.5s cast, single-target
+
     ArcaneReaction = 41565, // Helper->self, no cast, range 55 width 6 rect
     ArcaneRecoil = 41564, // Helper->player, no cast, single-target
     HolyVisual = 41563, // Boss->self, 19.0+1,0s cast, single-target
     Holy = 39910, // Helper->self, 20.0s cast, ???
+    AuraBurstVisual = 41562, // Boss->self, 19.0+1,0s cast, single-target
+    AuraBurst = 39909, // Helper->self, 20.0s cast, ???
+
     SagesStaff = 41566, // Boss->self, 5.0s cast, single-target
-    ManaExpulsion = 41567, // SagesStaff->self, no cast, range 40 width 4 rect
+    ManaExpulsion = 41567, // SagesStaff->self, no cast, range 40 width 4 rect, line stack
 
     RuneAxe = 41551, // Boss->self, 5.0s cast, single-target
     RuinousRuneBig = 41553, // Helper->player, no cast, range 11 circle
     RuinousRuneSmall = 41552, // Helper->players, no cast, range 5 circle
     AxeglowCircle = 41556, // Helper->self, no cast, range 100 circle
-    CarvingRune = 41554, // Helper->player, no cast, single-target
     AxeglowRect = 41555, // Helper->self, no cast, range 20 width 20 rect
-    AuraBurstVisual = 41562, // Boss->self, 19.0+1,0s cast, single-target
-    AuraBurst = 39909, // Helper->self, 20.0s cast, ???
+    CarvingRune = 41554, // Helper->player, no cast, single-target
+
     HolyLance = 41557, // Boss->self, 5.0s cast, single-target
 
     LuminousLanceVisual = 41558, // LuminousLance->self, no cast, single-target

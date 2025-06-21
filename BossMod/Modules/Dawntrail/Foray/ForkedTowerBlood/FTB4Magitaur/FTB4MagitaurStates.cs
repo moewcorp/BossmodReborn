@@ -14,6 +14,9 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
         AssassinsDagger(id + 0x20000u, 6.6f);
         ForkedFury(id + 0x30000u, 10.1f);
         AuraBurstHoly(id + 0x40000u, 1.5f);
+        SagesStaff(id + 0x50000u, 23.1f);
+        UnsealedAura(id + 0x60000u, 4.8f);
+        Unseal(id + 0x70000u, 19.3f);
         SimpleState(id + 0xFF0000u, 10000, "???");
     }
 
@@ -119,5 +122,22 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
             .DeactivateOnExit<AuraBurstHolyRaidwide>()
             .DeactivateOnExit<ArcaneRecoil>()
             .DeactivateOnExit<ArcaneReaction>();
+    }
+
+    private void SagesStaff(uint id, float delay)
+    {
+        ComponentCondition<SagesStaff>(id, delay, comp => comp.CurrentBaits.Count != 0, "Line stacks 1 appear")
+            .ActivateOnEnter<SagesStaff>()
+            .ActivateOnEnter<CriticalAxeLanceBlow>();
+        ComponentCondition<CriticalAxeLanceBlow>(id + 0x10u, 6.5f, comp => comp.NumCasts > 1, "In OR Out AOEs 1")
+            .DeactivateOnExit<CriticalAxeLanceBlow>();
+        ComponentCondition<SagesStaff>(id + 0x20u, 4.8f, comp => comp.NumCasts != 0, "Line stacks 1 resolve")
+            .ResetComp<SagesStaff>()
+            .ActivateOnExit<CriticalAxeLanceBlow>();
+        ComponentCondition<SagesStaff>(id + 0x30u, 6.1f, comp => comp.CurrentBaits.Count != 0, "Line stacks 2 appear");
+        ComponentCondition<CriticalAxeLanceBlow>(id + 0x40u, 6.3f, comp => comp.NumCasts > 1, "In OR Out AOEs 2")
+            .DeactivateOnExit<CriticalAxeLanceBlow>();
+        ComponentCondition<SagesStaff>(id + 0x50u, 5.2f, comp => comp.NumCasts != 0, "Line stacks 2 resolve")
+            .DeactivateOnExit<SagesStaff>();
     }
 }

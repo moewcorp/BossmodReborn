@@ -38,7 +38,7 @@ public sealed class TrackPartyHealth(WorldState World)
     public const float AOEBreakpointHPVariance = 0.25f;
 
     public readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxAllies];
-    public PartyHealthState PartyHealth { get; private set; } = new();
+    public PartyHealthState PartyHealth = new();
 
     private bool _haveRealPartyMembers;
     private BitMask _trackedActors;
@@ -144,7 +144,7 @@ public sealed class TrackPartyHealth(WorldState World)
     public void Update(AIHints Hints)
     {
         // copied from veyn's HealerActions in EW bossmod - i am a thief
-        BitMask esunas = new();
+        BitMask esunas = default;
         foreach (var caster in World.Party.WithoutSlot(excludeAlliance: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
             esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
 

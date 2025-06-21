@@ -12,7 +12,7 @@ class Tilt(BossModule module) : Components.GenericKnockback(module, (uint)AID.Qu
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Distance > 0)
-            return new Knockback[1] { new(new(), Distance, Activation, null, Direction, Kind.DirForward) };
+            return new Knockback[1] { new(default, Distance, Activation, null, Direction, Kind.DirForward) };
         return [];
     }
 

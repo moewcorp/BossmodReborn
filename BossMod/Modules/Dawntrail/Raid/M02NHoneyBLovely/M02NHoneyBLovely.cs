@@ -33,7 +33,7 @@ sealed class Fracture(BossModule module) : Components.CastTowers(module, (uint)A
             return;
         var party = Raid.WithoutSlot(false, true, true);
         var len = party.Length;
-        BitMask forbidden = new();
+        BitMask forbidden = default;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var statuses = ref party[i].Statuses;

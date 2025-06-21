@@ -44,7 +44,7 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, (uint)AID.
         }
 
         _dangerDirty = false;
-        _dangerCells = new();
+        _dangerCells = default;
         var len = effStates.Length;
         for (var i = 0; i < len; ++i)
         {

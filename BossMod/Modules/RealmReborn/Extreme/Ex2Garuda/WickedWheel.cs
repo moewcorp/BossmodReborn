@@ -2,7 +2,7 @@
 
 class WickedWheel(BossModule module) : Components.CastCounter(module, (uint)AID.WickedWheel)
 {
-    private DateTime _expectedNext = module.WorldState.FutureTime(25);
+    private DateTime _expectedNext = module.WorldState.FutureTime(25d);
     private const float _radius = 8.7f;
 
     public override void AddGlobalHints(GlobalHints hints)
@@ -14,13 +14,13 @@ class WickedWheel(BossModule module) : Components.CastCounter(module, (uint)AID.
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // note: suparna also casts this, but we generally ignore it...
-        if (_expectedNext != default && Module.PrimaryActor.TargetID != actor.InstanceID && (_expectedNext - WorldState.CurrentTime).TotalSeconds < 3)
+        if (_expectedNext != default && Module.PrimaryActor.TargetID != actor.InstanceID && (_expectedNext - WorldState.CurrentTime).TotalSeconds < 3d)
             hints.AddForbiddenZone(ShapeDistance.Circle(Module.PrimaryActor.Position, _radius), _expectedNext);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (_expectedNext != default && (_expectedNext - WorldState.CurrentTime).TotalSeconds < 3)
+        if (_expectedNext != default && (_expectedNext - WorldState.CurrentTime).TotalSeconds < 3d)
             Arena.AddCircle(Module.PrimaryActor.Position, _radius, Colors.Danger);
     }
 
@@ -30,7 +30,7 @@ class WickedWheel(BossModule module) : Components.CastCounter(module, (uint)AID.
         if (spell.Action.ID == WatchedAction)
         {
             // not sure about this ...
-            _expectedNext = Module.Enemies(OID.Suparna).Any(a => a.IsTargetable && !a.IsDead) ? WorldState.FutureTime(25) : new();
+            _expectedNext = Module.Enemies(OID.Suparna).Any(a => a.IsTargetable && !a.IsDead) ? WorldState.FutureTime(25d) : default;
         }
     }
 }

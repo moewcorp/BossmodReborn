@@ -2,7 +2,6 @@ namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB4Magitaur;
 
 sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<Actor> players = new(48);
     private readonly List<Actor> targets = new(6);
     private bool? isClose;
     private DateTime activation;
@@ -20,23 +19,24 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
         List<Actor>[] squareActors = [new(16), new(16), new(16)];
 
         var primaryPos = Module.PrimaryActor.Position;
-        var count = players.Count;
-        if (count == 0)
+
+        var players = new List<Actor>(48);
+        // note: this is problematic because player culling messes this up and leads to incorrect results (eg not finding the actual bait target)
+        // in any frame players can be removed or added to the object table and will likely never contain all 48 players at the same time
+        // caching removed players is also pointless since the player position no longer gets updated when this happens
+        foreach (var a in Module.WorldState.Actors.Actors.Values)
         {
-            foreach (var a in Module.WorldState.Actors.Actors.Values)
+            if (a.OID == default && !a.IsDead)
             {
-                if (a.OID == default)
-                {
-                    players.Add(a);
-                }
+                players.Add(a);
             }
         }
+
+        var count = players.Count;
 
         for (var i = 0; i < count; ++i)
         {
             var a = players[i];
-            if (a.IsDead)
-                continue;
             for (var j = 0; j < 3; j++)
             {
                 if (a.Position.InSquare(FTB4Magitaur.SquarePositions[j], 10f, FTB4Magitaur.SquareDirs[j]))
@@ -51,7 +51,7 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
         {
             var square = squareActors[i];
             var countS = square.Count;
-            Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
+            (Actor actor, float distSq)[] distances = new (Actor, float)[countS];
 
             for (var j = 0; j < countS; ++j)
             {
@@ -144,17 +144,29 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
                     break;
                 }
             }
-
+            if (inSquare == -1)
+            {
+                return;
+            }
             List<Actor> squareActors = new(16);
             var primaryPos = Module.PrimaryActor.Position;
+
+            var players = new List<Actor>(48);
+            // note: this is problematic because player culling messes this up and leads to incorrect results (eg not finding the actual bait target)
+            // in any frame players can be removed or added to the object table and will likely never contain all 48 players at the same time
+            // caching removed players is also pointless since the player position no longer gets updated when this happens
+            foreach (var a in Module.WorldState.Actors.Actors.Values)
+            {
+                if (a.OID == default && !a.IsDead)
+                {
+                    players.Add(a);
+                }
+            }
+
             var count = players.Count;
             for (var i = 0; i < count; ++i)
             {
                 var a = players[i];
-                if (a.IsDead)
-                {
-                    continue;
-                }
                 if (a.Position.InSquare(FTB4Magitaur.SquarePositions[inSquare], 10f, FTB4Magitaur.SquareDirs[inSquare]))
                 {
                     squareActors.Add(a);
@@ -167,7 +179,7 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
 
             var targetsOnSquare = new List<Actor>(2);
 
-            Span<(Actor actor, float distSq)> distances = new (Actor, float)[countS];
+            (Actor actor, float distSq)[] distances = new (Actor, float)[countS];
 
             for (var i = 0; i < countS; ++i)
             {

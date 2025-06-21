@@ -11,7 +11,7 @@ sealed class HeatingBurningUp(BossModule module) : Components.GenericStackSpread
     {
         if (Spreads.Count < 2 || Stacks.Count == 0)
         {
-            BitMask forbidden = new();
+            BitMask forbidden = default;
             var act = WorldState.FutureTime(8d);
             for (var i = 0; i < 8; ++i)
             {

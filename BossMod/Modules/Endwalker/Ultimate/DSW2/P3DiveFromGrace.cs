@@ -208,7 +208,7 @@ class P3DiveFromGrace(BossModule module) : Components.CastTowers(module, (uint)A
             case (uint)AID.DarkElusiveJump:
                 ++NumJumps;
                 AssignLateSpot(spell.MainTargetID, caster.Position);
-                var offset = spell.Action.ID != (uint)AID.DarkHighJump ? _towerOffset * caster.Rotation.ToDirection() : new();
+                var offset = spell.Action.ID != (uint)AID.DarkHighJump ? _towerOffset * caster.Rotation.ToDirection() : default;
                 _predictedTowers.Add(CreateTower(caster.Position + offset));
                 break;
         }

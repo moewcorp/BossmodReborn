@@ -131,13 +131,16 @@ sealed class BreathSequence(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count != 0)
-            switch ((AID)spell.Action.ID)
+            switch (spell.Action.ID)
             {
-                case AID.BreathSequenceFirstFront:
-                case AID.BreathSequenceFirstLeft:
-                case AID.BreathSequenceFirstRight:
+                case (uint)AID.BreathSequenceFirstFront:
+                case (uint)AID.BreathSequenceFirstLeft:
+                case (uint)AID.BreathSequenceFirstRight:
+                    var aoes = CollectionsMarshal.AsSpan(_aoes);
                     for (var i = 0; i < count; ++i)
-                        _aoes[i] = _aoes[i] with { Activation = Module.CastFinishAt(spell, 2.3f * i) };
+                    {
+                        aoes[i].Activation = Module.CastFinishAt(spell, 2.3d * i);
+                    }
                     break;
             }
     }

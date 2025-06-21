@@ -84,7 +84,7 @@ class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.Roar1)
+        if (spell.Action.ID == (uint)AID.Roar1)
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9f));
     }
 }

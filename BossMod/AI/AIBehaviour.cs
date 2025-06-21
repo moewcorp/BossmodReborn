@@ -51,7 +51,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 var forbidTargeting = _config.ForbidActions || _afkMode || gazeImminent || pyreticImminent;
                 var hadNavi = _naviDecision.Destination != null;
 
-                Targeting target = new();
+                Targeting target = default;
                 if (!forbidTargeting && AIPreset != null && (!_config.ForbidAIMovementMounted || _config.ForbidAIMovementMounted && player.MountId == 0))
                 {
                     target = SelectPrimaryTarget(player, master);
@@ -61,7 +61,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                         if (t != null)
                             target.Target = new AIHints.Enemy(t, 100, false);
                         else
-                            target = new();
+                            target = default;
                     }
                     if (target.Target != null || TargetIsForbidden(player.TargetID))
                         autorot.Hints.ForcedTarget ??= target.Target?.Actor;
@@ -119,7 +119,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
         // if the previous line returned no target, there aren't any priority targets at all - give up
         if (target == null)
-            return new();
+            return default;
 
         // TODO: rethink all this... ai module should set forced target if it wants to switch... figure out positioning and stuff
         // now give class module a chance to improve targeting
@@ -291,7 +291,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
         else
         {
-            var toDest = _naviDecision.Destination != null ? _naviDecision.Destination.Value - player.Position : new();
+            var toDest = _naviDecision.Destination != null ? _naviDecision.Destination.Value - player.Position : default;
             var distSq = toDest.LengthSq();
             ctrl.NaviTargetPos = WorldState.CurrentTime >= _navStartTime ? _naviDecision.Destination : null;
             ctrl.NaviTargetVertical = master != player ? master.PosRot.Y : null;
