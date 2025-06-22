@@ -104,7 +104,6 @@ sealed class RuneAxeAOEs(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance>[] _aoeHintsForStatus = [new(3), new(1), new(3), new(1)];
     private readonly List<AOEInstance>[] _aoeHintsNoStatus = [new(1), new(1)];
     private bool prepare;
-    private static readonly AOEShapeRect square = new(15.5f, 15.5f, 15.5f);
     public bool Show = true;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -172,14 +171,9 @@ sealed class RuneAxeAOEs(BossModule module) : Components.GenericAOEs(module)
             var actOrder1 = act.AddSeconds(10.2d);
             var actOrder2 = act.AddSeconds(14.2d);
             var actOrder3 = act.AddSeconds(22.2d);
-            for (var i = 0; i < 3; ++i)
-            {
-                var pos = FTB4Magitaur.SquarePositions[i];
-                var rot = FTB4Magitaur.SquareAngles[i];
-                AddAOE(_aoeHintsForStatus[0], square, pos, actOrder1, rot);
-                AddAOE(_aoeHintsForStatus[2], square, pos, actOrder2, rot);
-            }
 
+            AddAOE(_aoeHintsForStatus[0], FTB4Magitaur.BigSpreadMinkowskiSum, center, actOrder1);
+            AddAOE(_aoeHintsForStatus[2], FTB4Magitaur.BigSpreadMinkowskiSum, center, actOrder2);
             AddAOE(_aoeHintsNoStatus[0], FTB4Magitaur.CircleMinusSquares, center, actOrder1);
             AddAOE(_aoeHintsNoStatus[1], FTB4Magitaur.CircleMinusSquares, center, actOrder3);
             AddAOE(_aoeHintsForStatus[1], FTB4Magitaur.CircleMinusSquaresSpread, center, actOrder2);
