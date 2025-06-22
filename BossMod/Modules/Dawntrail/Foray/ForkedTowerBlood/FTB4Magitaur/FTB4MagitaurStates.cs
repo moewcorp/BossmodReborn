@@ -17,6 +17,11 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
         SagesStaff(id + 0x50000u, 23.1f);
         UnsealedAura(id + 0x60000u, 4.8f);
         Unseal(id + 0x70000u, 19.3f);
+        RuneAxe(id + 0x80000u, 7.9f);
+        ForkedFury(id + 0x90000u, 12.5f);
+        AuraBurstHoly(id + 0xA0000u, 1.8f);
+        AssassinsDagger(id + 0xB0000u, 9.2f);
+        Unseal(id + 0xC0000u, 15.3f);
         SimpleState(id + 0xFF0000u, 10000, "???");
     }
 
@@ -139,5 +144,22 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
             .DeactivateOnExit<CriticalAxeLanceBlow>();
         ComponentCondition<SagesStaff>(id + 0x50u, 5.2f, comp => comp.NumCasts != 0, "Line stacks 2 resolve")
             .DeactivateOnExit<SagesStaff>();
+    }
+
+    private void RuneAxe(uint id, float delay)
+    {
+        ComponentCondition<RuneAxeStatus>(id, delay, comp => comp.StatusSmall.Count != 0, "Apply spread statuses")
+            .ActivateOnEnter<RuneAxeStatus>()
+            .ActivateOnEnter<RuneAxeAOEs>();
+        ComponentCondition<RuneAxeStatus>(id + 0x10u, 9.1f, comp => comp.NumCasts != 0, "Big spread 1");
+        ComponentCondition<RuneAxeStatus>(id + 0x20u, 3.9f, comp => comp.NumCasts > 2, "Small spreads 1")
+            .ExecOnExit<RuneAxeAOEs>(comp => comp.Show = false);
+        ComponentCondition<CriticalAxeLanceBlow>(id + 0x30u, 2.6f, comp => comp.NumCasts == 4, "Donut and square AOEs")
+            .ActivateOnEnter<CriticalAxeLanceBlow>()
+            .ExecOnExit<RuneAxeAOEs>(comp => comp.Show = true)
+            .DeactivateOnExit<CriticalAxeLanceBlow>();
+        ComponentCondition<RuneAxeStatus>(id + 0x40u, 5.4f, comp => comp.StatusBig.Count == 0 && comp.StatusSmall.Count == 0, "Remaining spreads")
+            .DeactivateOnExit<RuneAxeAOEs>()
+            .DeactivateOnExit<RuneAxeStatus>();
     }
 }
