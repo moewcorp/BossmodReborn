@@ -38,32 +38,28 @@ sealed class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module
         var count = bits.Count;
         Span<AOEInstance> aoes = new AOEInstance[count];
         var index = 0;
-        for (var i = 0; i < count; ++i)
+        var time = WorldState.CurrentTime > _times[0];
+        if (Type == Types.SatelliteLaser && time)
         {
-            var p = bits[i];
-            var pos = WPos.ClampToGrid(p.Position);
-            var rot = p.Rotation;
-            var time = WorldState.CurrentTime > _times[0];
-            if (Type == Types.SatelliteLaser && time)
+            for (var i = 0; i < count; ++i)
             {
-                aoes[index++] = new(rect, pos, rot, _times[1]);
+                var p = bits[i];
+                aoes[index++] = new(rect, WPos.ClampToGrid(p.Position), p.Rotation, _times[1]);
             }
-            else if (Type == Types.DiffractiveLaser && time || Type == Types.LaserShower)
+        }
+        else if (Type == Types.DiffractiveLaser && time || Type == Types.LaserShower)
+        {
+            var isMax4 = NumCasts < 5;
+            var color = Colors.Danger;
+            for (var i = 0; i < count; ++i)
             {
-                if (NumCasts < 5)
-                {
-                    if (rot.AlmostEqual(startrotation, Angle.DegToRad))
-                        aoes[index++] = new(rect, pos, rot, _times[1], Colors.Danger);
-                    else if (rot.AlmostEqual(startrotation + a90, Angle.DegToRad) || rot.AlmostEqual(startrotation - a90, Angle.DegToRad))
-                        aoes[index++] = new(rect, pos, rot, _times[2]);
-                }
-                else
-                {
-                    if (rot.AlmostEqual(startrotation + a180, Angle.DegToRad))
-                        aoes[index++] = new(rect, pos, rot, _times[3]);
-                    else if (NumCasts < 9 && (rot.AlmostEqual(startrotation + a90, Angle.DegToRad) || rot.AlmostEqual(startrotation - a90, Angle.DegToRad)))
-                        aoes[index++] = new(rect, pos, rot, _times[2], Colors.Danger);
-                }
+                var p = bits[i];
+                var pos = WPos.ClampToGrid(p.Position);
+                var rot = p.Rotation;
+                if (rot.AlmostEqual(startrotation + (isMax4 ? default : a180), Angle.DegToRad))
+                    aoes[index++] = new(rect, pos, rot, isMax4 ? _times[1] : _times[3], isMax4 ? color : default);
+                else if (NumCasts < 9 && (rot.AlmostEqual(startrotation + a90, Angle.DegToRad) || rot.AlmostEqual(startrotation - a90, Angle.DegToRad)))
+                    aoes[index++] = new(rect, pos, rot, _times[2], isMax4 ? default : color);
             }
         }
         return aoes[..index];
@@ -71,24 +67,26 @@ sealed class MagitekBitLasers(BossModule module) : Components.GenericAOEs(module
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var _time = WorldState.CurrentTime;
-        switch (spell.Action.ID)
+        if (Type == Types.None)
         {
-            case (uint)AID.SatelliteLaser:
-                Type = Types.SatelliteLaser;
-                _times = [_time.AddSeconds(2.5d), _time.AddSeconds(12.3d)];
-                break;
-            case (uint)AID.DiffractiveLaser:
-                startrotation = spell.Rotation + 180f.Degrees();
-                Type = Types.DiffractiveLaser;
-                _times = [_time.AddSeconds(2d), _time.AddSeconds(8.8d), _time.AddSeconds(10.6d), _time.AddSeconds(12.4d)];
-                break;
-            case (uint)AID.LaserShower:
-                if (spell.Action.ID == (uint)AID.SatelliteLaser)
+            var _time = WorldState.CurrentTime;
+            switch (spell.Action.ID)
+            {
+                case (uint)AID.SatelliteLaser:
+                    Type = Types.SatelliteLaser;
+                    _times = [_time.AddSeconds(2.5d), _time.AddSeconds(12.3d)];
+                    break;
+                case (uint)AID.DiffractiveLaser:
+                    startrotation = spell.Rotation + a180;
+                    Type = Types.DiffractiveLaser;
+                    _times = [_time.AddSeconds(2d), _time.AddSeconds(8.8d), _time.AddSeconds(10.6d), _time.AddSeconds(12.4d)];
+                    break;
+                case (uint)AID.LaserShower:
                     startrotation = caster.Rotation;
-                Type = Types.LaserShower;
-                _times = [_time, _time.AddSeconds(6.5d), _time.AddSeconds(8.3d), _time.AddSeconds(10.1d)];
-                break;
+                    Type = Types.LaserShower;
+                    _times = [_time, _time.AddSeconds(6.5d), _time.AddSeconds(8.3d), _time.AddSeconds(10.1d)];
+                    break;
+            }
         }
     }
 
