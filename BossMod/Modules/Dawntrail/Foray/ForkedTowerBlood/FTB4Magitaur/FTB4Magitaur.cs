@@ -16,6 +16,7 @@ public sealed class FTB4Magitaur(WorldState ws, Actor primary) : BossModule(ws, 
     public static readonly AOEShapeCustom BigSpreadMinkowskiSum = GenerateMinkowskiSum();
     public static readonly AOEShapeCustom CircleMinusSquaresSpread = new(baseArena, [new Square(SquarePositions[0], 5f, SquareAngles[0]),
     new Square(SquarePositions[1], 5f, SquareAngles[1]), new Square(SquarePositions[2], 5f, SquareAngles[2])]);
+    public static readonly AOEShapeRect Square = new(10f, 10f, 10f);
 
     private static AOEShapeCustom GenerateMinkowskiSum()
     {

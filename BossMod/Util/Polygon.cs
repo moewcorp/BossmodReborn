@@ -322,18 +322,6 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         }
         return path;
     }
-
-    public static Path64 ToPath64(List<WDir> vertices)
-    {
-        var count = vertices.Count;
-        var path = new Path64(count);
-        for (var i = 0; i < count; ++i)
-        {
-            var vertex = vertices[i];
-            path.Add(new(vertex.X * PolygonClipper.Scale, vertex.Z * PolygonClipper.Scale));
-        }
-        return path;
-    }
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
@@ -343,7 +331,7 @@ public sealed class PolygonClipper
     public const float InvScale = 1f / Scale;
 
     // reusable representation of the complex polygon ready for boolean operations
-    public record class Operand
+    public sealed class Operand
     {
         public Operand() { }
         public Operand(ReadOnlySpan<WDir> contour, bool isOpen = false) => AddContour(contour, isOpen);
@@ -384,8 +372,8 @@ public sealed class PolygonClipper
         // Compute Minkowski Sum of two polygons, useful to get the area where shape B can not intersect shape A
         public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
         {
-            var pathA = RelSimplifiedComplexPolygon.ToPath64(shapeA);
-            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+            var pathA = ToPath64(shapeA);
+            var pathB = ToPath64(shapeB);
 
             var result = Clipper.MinkowskiSum(pathB, pathA, isClosed);
             var simplified = new RelSimplifiedComplexPolygon();
@@ -396,7 +384,7 @@ public sealed class PolygonClipper
 
         public static RelSimplifiedComplexPolygon MinkowskiSum(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
         {
-            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+            var pathB = ToPath64(shapeB);
             var count = shapeA.Parts.Count;
             var resultPaths = new Paths64(count);
             for (var i = 0; i < count; ++i)
@@ -422,8 +410,8 @@ public sealed class PolygonClipper
         // Compute Minkowski Difference of two polygons, useful to get the area where shape B will intersect shape A
         public static RelSimplifiedComplexPolygon MinkowskiDifference(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
         {
-            var pathA = RelSimplifiedComplexPolygon.ToPath64(shapeA);
-            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+            var pathA = ToPath64(shapeA);
+            var pathB = ToPath64(shapeB);
 
             var result = Clipper.MinkowskiDiff(pathB, pathA, isClosed);
             var simplified = new RelSimplifiedComplexPolygon();
@@ -434,7 +422,7 @@ public sealed class PolygonClipper
 
         public static RelSimplifiedComplexPolygon MinkowskiDifference(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
         {
-            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+            var pathB = ToPath64(shapeB);
             var count = shapeA.Parts.Count;
             var resultPaths = new Paths64(count);
             for (var i = 0; i < count; ++i)
@@ -455,6 +443,18 @@ public sealed class PolygonClipper
             var simplified = new RelSimplifiedComplexPolygon();
             simplified.BuildResultFromPaths(simplified, resultPaths);
             return simplified;
+        }
+
+        private static Path64 ToPath64(List<WDir> vertices)
+        {
+            var count = vertices.Count;
+            var path = new Path64(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var vertex = vertices[i];
+                path.Add(new(vertex.X * Scale, vertex.Z * Scale));
+            }
+            return path;
         }
     }
 
@@ -641,7 +641,7 @@ public sealed class SpatialIndex
         }
     }
 
-    public ReadOnlySpan<int> Query(float px, float py)
+    public int[] Query(float px, float py)
     {
         var cellX = (int)MathF.Floor(px * InvGridSize) - _minX;
         var cellY = (int)MathF.Floor(py * InvGridSize) - _minY;
