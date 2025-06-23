@@ -381,7 +381,7 @@ public sealed class PolygonClipper
 
         private void AddContour(Path64 contour, bool isOpen) => _data.AddPaths([contour], PathType.Subject, isOpen);
 
-        // Compute Minkowski Sum of two polygons
+        // Compute Minkowski Sum of two polygons, useful to get the area where shape B can not intersect shape A
         public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
         {
             var pathA = RelSimplifiedComplexPolygon.ToPath64(shapeA);
@@ -411,6 +411,44 @@ public sealed class PolygonClipper
                     subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
                 }
                 var minkowski = Clipper.MinkowskiSum(pathB, subjectPath, isClosed);
+                resultPaths.AddRange(minkowski);
+            }
+
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, resultPaths);
+            return simplified;
+        }
+
+        // Compute Minkowski Difference of two polygons, useful to get the area where shape B will intersect shape A
+        public static RelSimplifiedComplexPolygon MinkowskiDifference(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathA = RelSimplifiedComplexPolygon.ToPath64(shapeA);
+            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+
+            var result = Clipper.MinkowskiDiff(pathB, pathA, isClosed);
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, result);
+
+            return simplified;
+        }
+
+        public static RelSimplifiedComplexPolygon MinkowskiDifference(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathB = RelSimplifiedComplexPolygon.ToPath64(shapeB);
+            var count = shapeA.Parts.Count;
+            var resultPaths = new Paths64(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var part = shapeA.Parts[i];
+                var exterior = part.Exterior;
+                var len = exterior.Length;
+                Path64 subjectPath = new(len);
+                for (var j = 0; j < len; ++j)
+                {
+                    ref readonly var p = ref exterior[j];
+                    subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
+                }
+                var minkowski = Clipper.MinkowskiDiff(pathB, subjectPath, isClosed);
                 resultPaths.AddRange(minkowski);
             }
 
