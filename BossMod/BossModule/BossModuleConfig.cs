@@ -1,7 +1,7 @@
 ﻿namespace BossMod;
 
 [ConfigDisplay(Name = "Boss模块和雷达", Order = 1)]
-public class BossModuleConfig : ConfigNode
+public sealed class BossModuleConfig : ConfigNode
 {
     // boss module settings
     [PropertyDisplay("模块加载的最低成熟度", tooltip: "某些模块将处于\"WIP\"状态，除非你更改此设置，否则不会自动加载")]

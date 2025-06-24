@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Alliance.A13Azeyma;
 
-class WildfireWard(BossModule module) : Components.SimpleKnockbacks(module, ActionID.MakeSpell(AID.IlluminatingGlimpse), 15f, false, 1, kind: Kind.DirLeft)
+class WildfireWard(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.IlluminatingGlimpse, 15f, false, 1, kind: Kind.DirLeft)
 {
     private static readonly WPos south = new(-750f, -744.5f), east = new(-745f, -753f), west = new(-755f, -753f);
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.Alliance.A13Azeyma;
 
-class SolarFans(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID.SolarFansAOE), 5f);
+class SolarFans(BossModule module) : Components.ChargeAOEs(module, (uint)AID.SolarFansAOE, 5f);
 
-class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.RadiantFlight))
+class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, (uint)AID.RadiantFlight)
 {
     private static readonly AOEShapeDonutSector _shape = new(20f, 30f, 45f.Degrees());
     private readonly List<AOEInstance> _aoes = new(10);
@@ -46,7 +46,7 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, ActionID
         base.OnEventCast(caster, spell);
         if (spell.Action.ID == (uint)AID.RadiantFinish)
             _aoes.Clear();
-        else if (_aoes.Count != 0 && spell.Action == WatchedAction)
+        else if (_aoes.Count != 0 && spell.Action.ID == WatchedAction)
             _aoes.RemoveAt(0);
     }
 }

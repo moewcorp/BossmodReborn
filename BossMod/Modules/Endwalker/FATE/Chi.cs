@@ -246,38 +246,28 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Hellburner(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.Hellburner), new AOEShapeCircle(5f), true, tankbuster: true);
+class Hellburner(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Hellburner, 5f, tankbuster: true);
 
-class MissileShower(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MissileShowerVisual), "Raidwide x2");
-class ThermobaricExplosive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ThermobaricExplosive2), 25f);
+class MissileShower(BossModule module) : Components.RaidwideCast(module, (uint)AID.MissileShowerVisual, "Raidwide x2");
+class ThermobaricExplosive(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermobaricExplosive2, 25f);
 
-abstract class AssaultCarapace(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeRect(120f, 16f));
-class AssaultCarapace1(BossModule module) : AssaultCarapace(module, AID.AssaultCarapace1);
-class AssaultCarapace2(BossModule module) : AssaultCarapace(module, AID.AssaultCarapace2);
+class AssaultCarapace(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AssaultCarapace1, (uint)AID.AssaultCarapace2], new AOEShapeRect(120f, 16f));
+class AssaultCarapace3(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AssaultCarapace3, new AOEShapeDonut(16f, 60f));
 
-class AssaultCarapace3(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AssaultCarapace3), new AOEShapeDonut(16f, 60f));
+class ForeArmsRearGuns(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ForeArms1, (uint)AID.ForeArms2,
+(uint)AID.RearGuns1, (uint)AID.RearGuns2], new AOEShapeCone(45f, 90f.Degrees()));
 
-abstract class Cleave(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(45f, 90f.Degrees()));
-class ForeArms1(BossModule module) : Cleave(module, AID.ForeArms1);
-class ForeArms2(BossModule module) : Cleave(module, AID.ForeArms2);
-class RearGuns1(BossModule module) : Cleave(module, AID.RearGuns1);
-class RearGuns2(BossModule module) : Cleave(module, AID.RearGuns2);
-
-class FreeFallBombs(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.FreeFallBombs), 6f);
+class FreeFallBombs(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FreeFallBombs, 6f);
 
 class ChiStates : StateMachineBuilder
 {
     public ChiStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<AssaultCarapace1>()
-            .ActivateOnEnter<AssaultCarapace2>()
+            .ActivateOnEnter<AssaultCarapace>()
             .ActivateOnEnter<AssaultCarapace3>()
             .ActivateOnEnter<Combos>()
-            .ActivateOnEnter<ForeArms1>()
-            .ActivateOnEnter<ForeArms2>()
-            .ActivateOnEnter<RearGuns1>()
-            .ActivateOnEnter<RearGuns2>()
+            .ActivateOnEnter<ForeArmsRearGuns>()
             .ActivateOnEnter<Hellburner>()
             .ActivateOnEnter<FreeFallBombs>()
             .ActivateOnEnter<ThermobaricExplosive>()

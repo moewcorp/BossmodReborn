@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.C02AMR.C021Shishio;
 
-abstract class LightningBolt(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), 6f);
-class NLightningBolt(BossModule module) : LightningBolt(module, AID.NLightningBoltAOE);
-class SLightningBolt(BossModule module) : LightningBolt(module, AID.SLightningBoltAOE);
+abstract class LightningBolt(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 6f);
+class NLightningBolt(BossModule module) : LightningBolt(module, (uint)AID.NLightningBoltAOE);
+class SLightningBolt(BossModule module) : LightningBolt(module, (uint)AID.SLightningBoltAOE);
 
 class CloudToCloud(BossModule module) : Components.GenericAOEs(module)
 {

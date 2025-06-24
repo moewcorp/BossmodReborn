@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A14ShadowLord;
 
-class BindingSigil(BossModule module) : Components.GenericAOEs(module)
+sealed class BindingSigil(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle _shape = new(9f);

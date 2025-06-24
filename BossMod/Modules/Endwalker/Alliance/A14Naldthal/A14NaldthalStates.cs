@@ -4,7 +4,7 @@ public class A14NaldthalStates : StateMachineBuilder
 {
     public A14NaldthalStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase)
+        DeathPhase(default, SinglePhase)
             .ActivateOnEnter<HeavensTrialCone>()
             .ActivateOnEnter<HeavensTrialStack>()
             .ActivateOnEnter<GoldenTenet>()
@@ -13,8 +13,7 @@ public class A14NaldthalStates : StateMachineBuilder
             .ActivateOnEnter<FarFlungFire>()
             .ActivateOnEnter<DeepestPit>()
             .ActivateOnEnter<OnceAboveEverBelow>()
-            .ActivateOnEnter<HellOfFireFront>()
-            .ActivateOnEnter<HellOfFireBack>()
+            .ActivateOnEnter<HellOfFire>()
             .ActivateOnEnter<WaywardSoul>()
             .ActivateOnEnter<FortuneFluxOrder>()
             .ActivateOnEnter<FortuneFluxAOE>()
@@ -59,19 +58,19 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private State AsAboveSoBelow(uint id, float delay)
     {
-        return CastMulti(id, [AID.AsAboveSoBelowNald, AID.AsAboveSoBelowThal], delay, 5f, "Raidwide")
+        return CastMulti(id, [(uint)AID.AsAboveSoBelowNald, (uint)AID.AsAboveSoBelowThal], delay, 5f, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
     private void HellsTrial(uint id, float delay)
     {
-        Cast(id, AID.HellsTrial, delay, 5f, "Raidwide")
+        Cast(id, (uint)AID.HellsTrial, delay, 5f, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
     private void HeavensTrial(uint id, float delay)
     {
-        CastStart(id, AID.HeavensTrial, delay);
+        CastStart(id, (uint)AID.HeavensTrial, delay);
         CastEnd(id + 1u, 5f);
         ComponentCondition<HeavensTrialStack>(id + 2u, 0.5f, comp => !comp.Active, "Stack");
         ComponentCondition<HeavensTrialCone>(id + 3u, 0.4f, comp => comp.NumCasts != 0, "Baited cones")
@@ -80,7 +79,7 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private State GoldenTenet(uint id, float delay)
     {
-        Cast(id, AID.GoldenTenet, delay, 5f);
+        Cast(id, (uint)AID.GoldenTenet, delay, 5f);
         return ComponentCondition<GoldenTenet>(id + 2u, 0.5f, comp => comp.NumCasts > 0, "Shared tankbuster")
             .ResetComp<GoldenTenet>()
             .SetHint(StateMachine.StateHint.Tankbuster);
@@ -88,8 +87,8 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private void StygianTenet(uint id, float delay)
     {
-        Cast(id, AID.StygianTenet, delay, 5f);
-        ComponentCondition<StygianTenet>(id + 0x10u, 0.5f, comp => comp.NumFinishedSpreads > 0, "Tankbusters")
+        Cast(id, (uint)AID.StygianTenet, delay, 5f);
+        ComponentCondition<StygianTenet>(id + 0x10u, 0.5f, comp => comp.NumCasts > 0, "Tankbusters")
             .ResetComp<StygianTenet>()
             .SetHint(StateMachine.StateHint.Tankbuster);
     }
@@ -97,7 +96,7 @@ public class A14NaldthalStates : StateMachineBuilder
     private void HeatAboveFlamesBelow(uint id, float delay)
     {
         // unfortunately, one of the boss casts ends 1s earlier - just use actual casts instead
-        CastStartMulti(id, [AID.HeatAboveFlamesBelowNald, AID.HeatAboveFlamesBelowThal], delay);
+        CastStartMulti(id, [(uint)AID.HeatAboveFlamesBelowNald, (uint)AID.HeatAboveFlamesBelowThal], delay);
         ComponentCondition<HeatAboveFlamesBelow>(id + 1u, 12f, comp => comp.NumCasts != 0, "In or out")
             .ResetComp<HeatAboveFlamesBelow>()
             .SetHint(StateMachine.StateHint.BossCastEnd);
@@ -105,7 +104,7 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private void FarAboveDeepBelow(uint id, float delay)
     {
-        CastStartMulti(id, [AID.FarAboveDeepBelowThal, AID.FarAboveDeepBelowNald], delay);
+        CastStartMulti(id, [(uint)AID.FarAboveDeepBelowThal, (uint)AID.FarAboveDeepBelowNald], delay);
         CastEnd(id + 1u, 12);
         Condition(id + 0x10u, 0.9f, () => Module.FindComponent<FarFlungFire>()!.NumCasts != 0 || Module.FindComponent<DeepestPit>()!.Active, "Line stack or baited puddles start") // note: deepest pit start is 1.4s instead
             .ResetComp<FarFlungFire>();
@@ -116,7 +115,7 @@ public class A14NaldthalStates : StateMachineBuilder
     private void OnceAboveEverBelowStart(uint id, float delay)
     {
         // unfortunately, one of the boss casts ends 1s earlier - just use actual casts instead
-        CastStartMulti(id, [AID.OnceAboveEverBelowThalNald, AID.OnceAboveEverBelowThal, AID.OnceAboveEverBelowNaldThal, AID.OnceAboveEverBelowNald], delay);
+        CastStartMulti(id, [(uint)AID.OnceAboveEverBelowThalNald, (uint)AID.OnceAboveEverBelowThal, (uint)AID.OnceAboveEverBelowNaldThal, (uint)AID.OnceAboveEverBelowNald], delay);
         ComponentCondition<OnceAboveEverBelow>(id + 2u, 12.6f, comp => comp.NumCasts != 0, "Exaflares start")
             .SetHint(StateMachine.StateHint.BossCastEnd);
     }
@@ -130,12 +129,12 @@ public class A14NaldthalStates : StateMachineBuilder
     private void OnceAboveEverBelowHeavensTrialOrStygianTenet(uint id, float delay)
     {
         OnceAboveEverBelowStart(id, delay);
-        CastStartMulti(id + 0x10u, [AID.HeavensTrial, AID.StygianTenet], 5.6f);
+        CastStartMulti(id + 0x10u, [(uint)AID.HeavensTrial, (uint)AID.StygianTenet], 5.6f);
         ComponentCondition<OnceAboveEverBelow>(id + 0x20u, 0.4f, comp => comp.NumCasts > 30);
         CastEnd(id + 0x30u, 4.6f)
             .ResetComp<OnceAboveEverBelow>();
         Condition(id + 0x40u, 0.5f, () => Module.FindComponent<HeavensTrialStack>()!.NumFinishedStacks != 0 ||
-        Module.FindComponent<HeavensTrialCone>()!.NumCasts != 0 && Module.FindComponent<StygianTenet>()!.NumFinishedSpreads != 0, "Tankbusters -or- Stack & baited cones")
+        Module.FindComponent<HeavensTrialCone>()!.NumCasts != 0 && Module.FindComponent<StygianTenet>()!.NumCasts != 0, "Tankbusters -or- Stack & baited cones")
             .ResetComp<StygianTenet>()
             .ResetComp<HeavensTrialStack>()
             .ResetComp<HeavensTrialCone>();
@@ -144,30 +143,29 @@ public class A14NaldthalStates : StateMachineBuilder
     private void HearthAboveFlightBelow(uint id, float delay)
     {
         // unfortunately, one of the boss casts ends 1s earlier - just use actual casts instead
-        CastStartMulti(id, [AID.HearthAboveFlightBelowThalNald, AID.HearthAboveFlightBelowThal, AID.HearthAboveFlightBelowNald, AID.HearthAboveFlightBelowNaldThal], delay);
+        CastStartMulti(id, [(uint)AID.HearthAboveFlightBelowThalNald, (uint)AID.HearthAboveFlightBelowThal, (uint)AID.HearthAboveFlightBelowNald, (uint)AID.HearthAboveFlightBelowNaldThal], delay);
         ComponentCondition<HeatAboveFlamesBelow>(id + 1u, 12f, comp => comp.NumCasts != 0, "In or out")
             .ResetComp<HeatAboveFlamesBelow>()
             .SetHint(StateMachine.StateHint.BossCastEnd);
         Condition(id + 0x10u, 0.9f, () => Module.FindComponent<FarFlungFire>()!.NumCasts != 0 || Module.FindComponent<DeepestPit>()!.Active, "Line stack or baited puddles start") // note: deepest pit start is 1.4s instead; sometimes we get 0.1 delay instead
             .ResetComp<FarFlungFire>();
         // orange => golden tenet, blue => hell's trial
-        CastMulti(id + 0x100u, [AID.GoldenTenet, AID.HellsTrial], 5.3f, 5, "Shared tankbuster -or- Raidwide")
+        CastMulti(id + 0x100u, [(uint)AID.GoldenTenet, (uint)AID.HellsTrial], 5.3f, 5, "Shared tankbuster -or- Raidwide")
             .ResetComp<DeepestPit>() // last puddle ends ~3s into cast
             .ResetComp<GoldenTenet>(); // note: actual aoe happens ~0.5s later, but that would complicate the condition...
     }
 
     private State HellOfFire(uint id, float delay)
     {
-        CastMulti(id, [AID.HellOfFireFront, AID.HellOfFireBack], delay, 8f)
+        CastMulti(id, [(uint)AID.HellOfFireFront, (uint)AID.HellOfFireBack], delay, 8f)
             .ResetComp<OnceAboveEverBelow>();
-        return Condition(id + 2u, 1f, () => Module.FindComponent<HellOfFireFront>()!.NumCasts + Module.FindComponent<HellOfFireBack>()!.NumCasts != 0, "Half-arena cleave")
-            .ResetComp<HellOfFireFront>()
-            .ResetComp<HellOfFireBack>();
+        return Condition(id + 2u, 1f, () => Module.FindComponent<HellOfFire>()!.NumCasts != 0, "Half-arena cleave")
+            .ResetComp<HellOfFire>();
     }
 
     private void WaywardSoulStart(uint id, float delay)
     {
-        Cast(id, AID.WaywardSoul, delay, 3f);
+        Cast(id, (uint)AID.WaywardSoul, delay, 3f);
         ComponentCondition<WaywardSoul>(id + 0x10u, 0.8f, comp => comp.Casters.Count != 0);
         ComponentCondition<WaywardSoul>(id + 0x20u, 8, comp => comp.NumCasts != 0, "Circles start");
         // +5.5s: second set of 3
@@ -190,11 +188,11 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private void FiredUp(uint id, float delay, bool three)
     {
-        CastMulti(id, [AID.FiredUp1Knockback, AID.FiredUp1AOE], delay, 4f);
-        CastMulti(id + 0x10u, [AID.FiredUp2Knockback, AID.FiredUp2AOE], 2.1f, 4f);
+        CastMulti(id, [(uint)AID.FiredUp1Knockback, (uint)AID.FiredUp1AOE], delay, 4f);
+        CastMulti(id + 0x10u, [(uint)AID.FiredUp2Knockback, (uint)AID.FiredUp2AOE], 2.1f, 4f);
         if (three)
-            CastMulti(id + 0x20u, [AID.FiredUp3Knockback, AID.FiredUp3AOE], 2.1f, 4f);
-        Cast(id + 0x100u, AID.FortuneFlux, 2.1f, 8);
+            CastMulti(id + 0x20u, [(uint)AID.FiredUp3Knockback, (uint)AID.FiredUp3AOE], 2.1f, 4f);
+        Cast(id + 0x100u, (uint)AID.FortuneFlux, 2.1f, 8);
         ComponentCondition<FortuneFluxOrder>(id + 0x110u, 2.5f, comp => comp.NumComplete != 0, "AOE/Knockback 1");
         var resolve = ComponentCondition<FortuneFluxOrder>(id + 0x120u, 2.0f, comp => comp.NumComplete > 1, "AOE/Knockback 2");
         if (three)
@@ -207,7 +205,7 @@ public class A14NaldthalStates : StateMachineBuilder
 
     private void SoulMeasure(uint id, float delay)
     {
-        Cast(id, AID.SoulsMeasure, delay, 6f);
+        Cast(id, (uint)AID.SoulsMeasure, delay, 6f);
         Targetable(id + 0x10u, false, 1.1f, "Boss disappears");
         ComponentCondition<SoulVessel>(id + 0x20u, 20.6f, comp => comp.ActiveActors.Count != 0, "Adds appear")
             .SetHint(StateMachine.StateHint.DowntimeEnd);
@@ -216,7 +214,7 @@ public class A14NaldthalStates : StateMachineBuilder
             .ResetComp<MagmaticSpell>()
             .ResetComp<SoulVessel>()
             .SetHint(StateMachine.StateHint.DowntimeStart);
-        Cast(id + 0x100u, AID.Balance, 5.2f, 12.5f, "Balance check");
+        Cast(id + 0x100u, (uint)AID.Balance, 5.2f, 12.5f, "Balance check");
         ComponentCondition<TippedScales>(id + 0x110u, 38.2f, comp => comp.NumCasts > 0, "Raidwide")
             .ResetComp<TippedScales>();
         Targetable(id + 0x120, true, 8.1f, "Boss reappears");

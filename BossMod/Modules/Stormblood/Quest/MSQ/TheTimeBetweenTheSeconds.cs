@@ -21,10 +21,10 @@ public enum AID : uint
     ArtOfTheSword1 = 8993, // 1CEE->self, 3.0s cast, range 40+R width 6 rect
 }
 
-class ArtOfTheSword(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword1), new AOEShapeRect(41f, 3f));
-class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.VeinSplitter), 10f);
-class Concentrativity(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Concentrativity));
-class LightlessFlame(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.LightlessFlame))
+class ArtOfTheSword(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArtOfTheSword1, new AOEShapeRect(41f, 3f));
+class VeinSplitter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VeinSplitter, 10f);
+class Concentrativity(BossModule module) : Components.RaidwideCast(module, (uint)AID.Concentrativity);
+class LightlessFlame(BossModule module) : Components.GenericAOEs(module, (uint)AID.LightlessFlame)
 {
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle circle = new(11f);
@@ -72,7 +72,7 @@ class LightlessFlame(BossModule module) : Components.GenericAOEs(module, ActionI
         }
     }
 }
-class LightlessSpark(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LightlessSpark), new AOEShapeCone(40.92f, 45.Degrees()));
+class LightlessSpark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightlessSpark, new AOEShapeCone(40.92f, 45.Degrees()));
 class P2Boss(BossModule module) : BossComponent(module)
 {
     public override void DrawArenaForeground(int pcSlot, Actor pc)

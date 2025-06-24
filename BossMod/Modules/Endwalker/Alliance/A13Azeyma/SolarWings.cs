@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.Alliance.A13Azeyma;
 
-class SolarWings(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(30f, 75f.Degrees()));
-class SolarWingsL(BossModule module) : SolarWings(module, AID.SolarWingsL);
-class SolarWingsR(BossModule module) : SolarWings(module, AID.SolarWingsR);
+class SolarWings(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeCone(30f, 75f.Degrees()));
+class SolarWingsL(BossModule module) : SolarWings(module, (uint)AID.SolarWingsL);
+class SolarWingsR(BossModule module) : SolarWings(module, (uint)AID.SolarWingsR);
 
 class SolarFlair(BossModule module) : Components.GenericAOEs(module)
 {

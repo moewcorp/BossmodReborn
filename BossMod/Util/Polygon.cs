@@ -16,7 +16,7 @@ public readonly struct RelTriangle(WDir a, WDir b, WDir c)
 
 // a complex polygon that is a single simple-polygon exterior minus 0 or more simple-polygon holes; all edges are assumed to be non intersecting
 // hole-starts list contains starting index of each hole
-public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
+public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
 {
     // constructor for simple polygon
     public RelPolygonWithHoles(List<WDir> simpleVertices) : this(simpleVertices, []) { }
@@ -39,7 +39,7 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
     public ReadOnlySpan<(WDir, WDir)> InteriorEdges(int index) => PolygonUtil.EnumerateEdges(Interior(index));
 
     private EdgeBuckets? _edgeBuckets;
-    private const int BucketCount = 20;
+    private const int BucketCount = 25;
     private const float Epsilon = 1e-8f;
 
     private int ExteriorEnd => HoleStarts.Count > 0 ? HoleStarts[0] : Vertices.Count;
@@ -64,13 +64,15 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
             pts[j + 1] = v.Z;
         }
         var tess = Earcut.Tessellate(pts[..(vertexCount * 2)], HoleStarts);
-        for (var i = 0; i < tess.Count; i += 3)
+        var count = tess.Count;
+        for (var i = 0; i < count; i += 3)
         {
             result.Add(new(Vertices[tess[i]], Vertices[tess[i + 1]], Vertices[tess[i + 2]]));
         }
 
-        return tess.Count > 0;
+        return count > 0;
     }
+
     public List<RelTriangle> Triangulate()
     {
         var result = new List<RelTriangle>(Vertices.Count);
@@ -96,7 +98,7 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
         {
             var holecount = HoleStarts.Count;
             ContourEdgeBuckets[] holeEdgeBuckets;
-            var exteriorTask = Task.Run(() => BuildEdgeBucketsForContour(Exterior));
+            var exterior = BuildEdgeBucketsForContour(Exterior);
             switch (holecount)
             {
                 case 0:
@@ -104,24 +106,18 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
                     break;
                 case 1:
                     holeEdgeBuckets = new ContourEdgeBuckets[1];
-                    holeEdgeBuckets[0] = Task.Run(() => BuildEdgeBucketsForContour(Interior(0))).Result;
+                    holeEdgeBuckets[0] = BuildEdgeBucketsForContour(Interior(0));
                     break;
                 default:
                     holeEdgeBuckets = new ContourEdgeBuckets[holecount];
-                    var holeTasks = new Task[holecount];
-                    for (var i = 0; i < holecount; ++i)
+                    Parallel.For(0, holecount, i =>
                     {
-                        var index = i;
-                        holeTasks[i] = Task.Run(() =>
-                        {
-                            holeEdgeBuckets[index] = BuildEdgeBucketsForContour(Interior(index));
-                        });
-                    }
-                    Task.WaitAll(holeTasks);
+                        holeEdgeBuckets[i] = BuildEdgeBucketsForContour(Interior(i));
+                    });
                     break;
             }
 
-            var newEdgeBuckets = new EdgeBuckets(exteriorTask.Result, holeEdgeBuckets);
+            var newEdgeBuckets = new EdgeBuckets(exterior, holeEdgeBuckets);
             var original = Interlocked.CompareExchange(ref _edgeBuckets, newEdgeBuckets, null);
 
             edgeBuckets = original ?? newEdgeBuckets;
@@ -149,7 +145,7 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
         var len = edges.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref var edge = ref edges[i];
+            ref readonly var edge = ref edges[i];
             if ((edge.y0 > y) != (edge.y1 > y) && x < edge.x0 + edge.slopeX * (y - edge.y0))
             {
                 inside = !inside;
@@ -239,8 +235,10 @@ public class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
 }
 
 // generic 'simplified' complex polygon that consists of 0 or more non-intersecting polygons with holes (note however that some polygons could be fully inside other polygon's hole)
-public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
+public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
 {
+    public readonly List<RelPolygonWithHoles> Parts = parts;
+
     public RelSimplifiedComplexPolygon() : this(new List<RelPolygonWithHoles>()) { }
 
     // constructors for simple polygon
@@ -250,32 +248,90 @@ public record class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> Parts)
     public List<RelTriangle> Triangulate()
     {
         List<RelTriangle> result = [];
-        for (var i = 0; i < Parts.Count; ++i)
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
             Parts[i].Triangulate(result);
         return result;
     }
 
     // build a new polygon by transformation
-    public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation) => new([.. Parts.Select(p => p.Transform(offset, rotation))]);
+    public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation)
+    {
+        var count = Parts.Count;
+        var transformedParts = new List<RelPolygonWithHoles>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            transformedParts.Add(Parts[i].Transform(offset, rotation));
+        }
+        return new(transformedParts);
+    }
 
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        for (var i = 0; i < Parts.Count; ++i)
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
             if (Parts[i].Contains(p))
                 return true;
         return false;
     }
+
+    // positive offsets inflate, negative shrink polygon
+    public RelSimplifiedComplexPolygon Offset(float offset)
+    {
+        var clipperOffset = new ClipperOffset();
+        var allPaths = new Paths64();
+        var count = Parts.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var part = Parts[i];
+            allPaths.Add(ToPath64(part.Exterior));
+            var holes = part.Holes;
+            var len = holes.Length;
+            for (var j = 0; j < len; ++j)
+                allPaths.Add(ToPath64(part.Interior(holes[j])));
+        }
+
+        var solution = new Paths64();
+        clipperOffset.AddPaths(allPaths, JoinType.Miter, EndType.Polygon);
+        clipperOffset.Execute(offset * PolygonClipper.Scale, solution);
+
+        var result = new RelSimplifiedComplexPolygon();
+        BuildResultFromPaths(result, solution);
+        return result;
+    }
+
+    public void BuildResultFromPaths(RelSimplifiedComplexPolygon result, Paths64 paths)
+    {
+        var c = new Clipper64();
+        c.AddPaths(paths, PathType.Subject);
+        var tree = new PolyTree64();
+        c.Execute(ClipType.Union, FillRule.NonZero, tree);
+
+        PolygonClipper.BuildResult(result, tree);
+    }
+
+    private static Path64 ToPath64(ReadOnlySpan<WDir> vertices)
+    {
+        var len = vertices.Length;
+        var path = new Path64(len);
+        for (var i = 0; i < len; ++i)
+        {
+            var vertex = vertices[i];
+            path.Add(new(vertex.X * PolygonClipper.Scale, vertex.Z * PolygonClipper.Scale));
+        }
+        return path;
+    }
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
-public class PolygonClipper
+public sealed class PolygonClipper
 {
-    public const float Scale = 1024 * 1024; // note: we need at least 10 bits for integer part (-1024 to 1024 range); using 11 bits leaves 20 bits for fractional part; power-of-two scale should reduce rounding issues
-    public const float InvScale = 1 / Scale;
+    public const float Scale = 1024f * 1024f; // note: we need at least 10 bits for integer part (-1024 to 1024 range); using 11 bits leaves 20 bits for fractional part; power-of-two scale should reduce rounding issues
+    public const float InvScale = 1f / Scale;
 
     // reusable representation of the complex polygon ready for boolean operations
-    public record class Operand
+    public sealed class Operand
     {
         public Operand() { }
         public Operand(ReadOnlySpan<WDir> contour, bool isOpen = false) => AddContour(contour, isOpen);
@@ -301,9 +357,10 @@ public class PolygonClipper
         public void AddPolygon(RelPolygonWithHoles polygon)
         {
             AddContour(polygon.Exterior);
-            var len = polygon.Holes.Length;
+            var holes = polygon.Holes;
+            var len = holes.Length;
             for (var i = 0; i < len; ++i)
-                AddContour(polygon.Interior(polygon.Holes[i]));
+                AddContour(polygon.Interior(holes[i]));
         }
 
         public void AddPolygon(RelSimplifiedComplexPolygon polygon) => polygon.Parts.ForEach(AddPolygon);
@@ -311,6 +368,94 @@ public class PolygonClipper
         public void Assign(Clipper64 clipper, PathType role) => clipper.AddReuseableData(_data, role);
 
         private void AddContour(Path64 contour, bool isOpen) => _data.AddPaths([contour], PathType.Subject, isOpen);
+
+        // Compute Minkowski Sum of two polygons, useful to get the area where shape B can not intersect shape A
+        public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathA = ToPath64(shapeA);
+            var pathB = ToPath64(shapeB);
+
+            var result = Clipper.MinkowskiSum(pathB, pathA, isClosed);
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, result);
+
+            return simplified;
+        }
+
+        public static RelSimplifiedComplexPolygon MinkowskiSum(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathB = ToPath64(shapeB);
+            var count = shapeA.Parts.Count;
+            var resultPaths = new Paths64(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var part = shapeA.Parts[i];
+                var exterior = part.Exterior;
+                var len = exterior.Length;
+                Path64 subjectPath = new(len);
+                for (var j = 0; j < len; ++j)
+                {
+                    ref readonly var p = ref exterior[j];
+                    subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
+                }
+                var minkowski = Clipper.MinkowskiSum(pathB, subjectPath, isClosed);
+                resultPaths.AddRange(minkowski);
+            }
+
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, resultPaths);
+            return simplified;
+        }
+
+        // Compute Minkowski Difference of two polygons, useful to get the area where shape B will intersect shape A
+        public static RelSimplifiedComplexPolygon MinkowskiDifference(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathA = ToPath64(shapeA);
+            var pathB = ToPath64(shapeB);
+
+            var result = Clipper.MinkowskiDiff(pathB, pathA, isClosed);
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, result);
+
+            return simplified;
+        }
+
+        public static RelSimplifiedComplexPolygon MinkowskiDifference(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
+        {
+            var pathB = ToPath64(shapeB);
+            var count = shapeA.Parts.Count;
+            var resultPaths = new Paths64(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var part = shapeA.Parts[i];
+                var exterior = part.Exterior;
+                var len = exterior.Length;
+                Path64 subjectPath = new(len);
+                for (var j = 0; j < len; ++j)
+                {
+                    ref readonly var p = ref exterior[j];
+                    subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
+                }
+                var minkowski = Clipper.MinkowskiDiff(pathB, subjectPath, isClosed);
+                resultPaths.AddRange(minkowski);
+            }
+
+            var simplified = new RelSimplifiedComplexPolygon();
+            simplified.BuildResultFromPaths(simplified, resultPaths);
+            return simplified;
+        }
+
+        private static Path64 ToPath64(List<WDir> vertices)
+        {
+            var count = vertices.Count;
+            var path = new Path64(count);
+            for (var i = 0; i < count; ++i)
+            {
+                var vertex = vertices[i];
+                path.Add(new(vertex.X * Scale, vertex.Z * Scale));
+            }
+            return path;
+        }
     }
 
     private readonly Clipper64 _clipper = new() { PreserveCollinear = false };
@@ -361,15 +506,16 @@ public class PolygonClipper
 
             var poly = new RelPolygonWithHoles(polygonPoints);
             result.Parts.Add(poly);
-
-            for (var j = 0; j < exterior.Count; ++j)
+            var countExt2 = exterior.Count;
+            for (var j = 0; j < countExt2; ++j)
             {
                 var interior = exterior[j];
                 if (interior.Polygon == null || interior.Polygon.Count == 0)
                     continue;
                 var holePoints = new List<WDir>(interior.Polygon.Count);
                 var intPolygon = interior.Polygon;
-                for (var k = 0; k < intPolygon.Count; k++)
+                var countInt = intPolygon.Count;
+                for (var k = 0; k < countInt; k++)
                     holePoints.Add(ConvertPoint(intPolygon[k]));
 
                 poly.AddHole(holePoints);
@@ -410,7 +556,7 @@ public readonly struct Edge(float ax, float ay, float dx, float dy)
     public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1f / (dx * dx + dy * dy + Epsilon);
 }
 
-public class SpatialIndex
+public sealed class SpatialIndex
 {
     private int[][] _grid = [];
     private readonly Edge[] _edges;
@@ -432,14 +578,15 @@ public class SpatialIndex
         for (var i = 0; i < len; ++i)
         {
             ref readonly var edge = ref _edges[i];
-            var edgeAx = edge.Ax * InvGridSize;
-            var edgeAy = edge.Ay * InvGridSize;
-            var edgeAxDx = (edgeAx + edge.Dx) * InvGridSize;
-            var edgeAydy = (edgeAy + edge.Dy) * InvGridSize;
-            var ex0 = (int)MathF.Floor(Math.Min(edgeAx, edgeAxDx));
-            var ex1 = (int)MathF.Floor(Math.Max(edgeAx, edgeAxDx));
-            var ey0 = (int)MathF.Floor(Math.Min(edgeAy, edgeAydy));
-            var ey1 = (int)MathF.Floor(Math.Max(edgeAy, edgeAydy));
+            var ax = edge.Ax;
+            var ay = edge.Ay;
+            var bx = ax + edge.Dx;
+            var by = ay + edge.Dy;
+
+            var ex0 = (int)MathF.Floor(Math.Min(ax, bx) * InvGridSize);
+            var ex1 = (int)MathF.Floor(Math.Max(ax, bx) * InvGridSize);
+            var ey0 = (int)MathF.Floor(Math.Min(ay, by) * InvGridSize);
+            var ey1 = (int)MathF.Floor(Math.Max(ay, by) * InvGridSize);
 
             minX = Math.Min(minX, ex0);
             minY = Math.Min(minY, ey0);
@@ -506,13 +653,14 @@ public class SpatialIndex
 public readonly struct PolygonWithHolesDistanceFunction
 {
     private readonly RelSimplifiedComplexPolygon _polygon;
-    private readonly WPos _origin;
+    private readonly float _originX, _originZ;
     private readonly Edge[] _edges;
     private readonly SpatialIndex _spatialIndex;
 
     public PolygonWithHolesDistanceFunction(WPos origin, RelSimplifiedComplexPolygon polygon)
     {
-        _origin = origin;
+        _originX = origin.X;
+        _originZ = origin.Z;
         _polygon = polygon;
         var edgeCount = 0;
         var countPolygonParts = polygon.Parts.Count;
@@ -559,7 +707,7 @@ public readonly struct PolygonWithHolesDistanceFunction
 
             for (var i = 0; i < count; ++i)
             {
-                var curr = vertices[i];
+                ref readonly var curr = ref vertices[i];
                 var prevX = prev.X;
                 var prevZ = prev.Z;
                 edges[i] = new(originX + prevX, originZ + prevZ, curr.X - prevX, curr.Z - prevZ);
@@ -574,9 +722,8 @@ public readonly struct PolygonWithHolesDistanceFunction
     {
         var pX = p.X;
         var pZ = p.Z;
-        var localPoint = new WDir(pX - _origin.X, pZ - _origin.Z);
-        if (_polygon.Contains(localPoint)) // NOTE: our usecase doesn't care about distance inside of the polygon, so we can short circuit here
-            return 0f;
+        if (_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance inside of the polygon, so we can short circuit here
+            return default;
         var minDistanceSq = float.MaxValue;
 
         var indices = _spatialIndex.Query(pX, pZ);
@@ -588,7 +735,7 @@ public readonly struct PolygonWithHolesDistanceFunction
             var edgeAy = edge.Ay;
             var edgeDx = edge.Dx;
             var edgeDy = edge.Dy;
-            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, 0f, 1f);
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
             var distX = pX - (edgeAx + t * edgeDx);
             var distY = pZ - (edgeAy + t * edgeDy);
 
@@ -601,9 +748,8 @@ public readonly struct PolygonWithHolesDistanceFunction
     {
         var pX = p.X;
         var pZ = p.Z;
-        var localPoint = new WDir(pX - _origin.X, pZ - _origin.Z);
-        if (!_polygon.Contains(localPoint)) // NOTE: our usecase doesn't care about distance outside of the polygon, so we can short circuit here
-            return 0f;
+        if (!_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance outside of the polygon, so we can short circuit here
+            return default;
         var minDistanceSq = float.MaxValue;
 
         var indices = _spatialIndex.Query(pX, pZ);
@@ -615,7 +761,7 @@ public readonly struct PolygonWithHolesDistanceFunction
             var edgeAy = edge.Ay;
             var edgeDx = edge.Dx;
             var edgeDy = edge.Dy;
-            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, 0f, 1f);
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
             var distX = pX - (edgeAx + t * edgeDx);
             var distY = pZ - (edgeAy + t * edgeDy);
 

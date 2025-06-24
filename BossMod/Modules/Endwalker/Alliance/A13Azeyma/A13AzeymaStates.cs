@@ -50,54 +50,54 @@ public class A13AzeymaStates : StateMachineBuilder
 
     private State WardensProminence(uint id, float delay)
     {
-        return Cast(id, AID.WardensProminence, delay, 6f, "Raidwide")
+        return Cast(id, (uint)AID.WardensProminence, delay, 6f, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide);
     }
 
     private void WardensWarmth(uint id, float delay)
     {
-        Cast(id, AID.WardensWarmth, delay, 5f, "Tankbusters")
+        Cast(id, (uint)AID.WardensWarmth, delay, 5f, "Tankbusters")
             .SetHint(StateMachine.StateHint.Tankbuster);
     }
 
     private void SolarWings(uint id, float delay)
     {
-        Cast(id, AID.SolarWings, delay, 4f, "Sides cleave");
+        Cast(id, (uint)AID.SolarWings, delay, 4f, "Sides cleave");
         ComponentCondition<SolarFlair>(id + 0x10u, 7.7f, comp => comp.NumCasts >= 6, "Circles")
             .ExecOnExit<SolarFlair>(comp => comp.NumCasts = 0);
     }
 
     private void SolarWingsSunShine(uint id, float delay)
     {
-        Cast(id, AID.SolarWings, delay, 4f, "Sides cleave");
-        Cast(id + 0x10, AID.SunShine, 2.5f, 3);
+        Cast(id, (uint)AID.SolarWings, delay, 4f, "Sides cleave");
+        Cast(id + 0x10, (uint)AID.SunShine, 2.5f, 3);
         ComponentCondition<SolarFlair>(id + 0x20u, 13.5f, comp => comp.NumCasts >= 6, "Circles")
             .ExecOnExit<SolarFlair>(comp => comp.NumCasts = 0);
     }
 
     private void SolarFans(uint id, float delay)
     {
-        Cast(id, AID.SolarFans, delay, 4, "Fans start");
+        Cast(id, (uint)AID.SolarFans, delay, 4, "Fans start");
         // +0.5s: charge cast end
-        CastStart(id + 0x10u, AID.RadiantRhythmFirst, 3.2f);
+        CastStart(id + 0x10u, (uint)AID.RadiantRhythmFirst, 3.2f);
         CastEnd(id + 0x11u, 5f);
         ComponentCondition<RadiantRhythm>(id + 0x12u, 0.1f, comp => comp.NumCasts >= 2); // first cast; after that there are 3 or 4 rhythm casts, 1.4s apart
-        CastStart(id + 0x20, AID.RadiantFinish, 5.4f) // or 6.8, depending on number of rhythm casts
+        CastStart(id + 0x20, (uint)AID.RadiantFinish, 5.4f) // or 6.8, depending on number of rhythm casts
             .ResetComp<RadiantRhythm>();
         CastEnd(id + 0x21u, 3f, "Fans resolve");
     }
 
     private void FleetingSpark(uint id, float delay)
     {
-        Cast(id, AID.FleetingSpark, delay, 5.5f, "Front/side cleave");
+        Cast(id, (uint)AID.FleetingSpark, delay, 5.5f, "Front/side cleave");
     }
 
     private void SolarFold(uint id, float delay, bool first)
     {
-        Cast(id, AID.SolarFold, delay, 2.6f); // TODO: this is very weird, need more recent data...
+        Cast(id, (uint)AID.SolarFold, delay, 2.6f); // TODO: this is very weird, need more recent data...
         ComponentCondition<SolarFold>(id + 2u, 1.4f, comp => comp.NumCasts != 0, "Cross")
             .ResetComp<SolarFold>();
-        Cast(id + 0x10u, AID.SunShine, 2.1f, 3f);
+        Cast(id + 0x10u, (uint)AID.SunShine, 2.1f, 3f);
         ComponentCondition<DancingFlame>(id + 0x20u, 5.8f, comp => comp.AOEs.Count < 4);
         ComponentCondition<DancingFlame>(id + 0x30u, 13.1f, comp => comp.NumCasts != 0, "Diagonals start");
         WardensProminence(id + 0x100u, first ? 2.3f : 0.3f)
@@ -106,7 +106,7 @@ public class A13AzeymaStates : StateMachineBuilder
 
     private void WildfireWard(uint id, float delay)
     {
-        Cast(id, AID.WildfireWard, delay, 5f);
+        Cast(id, (uint)AID.WildfireWard, delay, 5f);
         ComponentCondition<WildfireWard>(id + 0x10u, 16.2f, comp => comp.NumCasts != 0, "Knockback 1");
         ComponentCondition<WildfireWard>(id + 0x11u, 4f, comp => comp.NumCasts > 1, "Knockback 2");
         ComponentCondition<WildfireWard>(id + 0x12u, 4f, comp => comp.NumCasts > 2, "Knockback 3")
@@ -115,7 +115,7 @@ public class A13AzeymaStates : StateMachineBuilder
 
     private void NobleDawn(uint id, float delay)
     {
-        Cast(id, AID.NobleDawn, delay, 4f);
+        Cast(id, (uint)AID.NobleDawn, delay, 4f);
         ComponentCondition<Sunbeam>(id + 0x10u, 4.9f, comp => comp.Casters.Count != 0);
         ComponentCondition<Sunbeam>(id + 0x20u, 6f, comp => comp.NumCasts != 0, "Puddles 1");
         ComponentCondition<Sunbeam>(id + 0x21u, 2f, comp => comp.NumCasts > 7, "Puddles 2");
@@ -125,7 +125,7 @@ public class A13AzeymaStates : StateMachineBuilder
 
     private void SublimeSunset(uint id, float delay)
     {
-        Cast(id, AID.SublimeSunset, delay, 9f);
+        Cast(id, (uint)AID.SublimeSunset, delay, 9f);
         ComponentCondition<SublimeSunset>(id + 2u, 0.5f, comp => comp.NumCasts != 0, "Large AOE")
             .ResetComp<SublimeSunset>();
     }

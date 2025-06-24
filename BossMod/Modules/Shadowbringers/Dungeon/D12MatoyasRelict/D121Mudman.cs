@@ -45,14 +45,14 @@ public enum TetherID : uint
     Mudball = 7 // MudBubble1->player
 }
 
-class StoneAge(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.StoneAge));
-class HardRock(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.HardRock));
+class StoneAge(BossModule module) : Components.RaidwideCast(module, (uint)AID.StoneAge);
+class HardRock(BossModule module) : Components.SingleTargetCast(module, (uint)AID.HardRock);
 class MudVoidzone(BossModule module) : Components.Voidzone(module, 5f, GetVoidzone)
 {
     private static List<Actor> GetVoidzone(BossModule module) => module.Enemies((uint)OID.MudVoidzone);
 }
-class Quagmire(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Quagmire), 6f);
-class FallingRock(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.FallingRock), 6f, 4, 4);
+class Quagmire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Quagmire, 6f);
+class FallingRock(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.FallingRock, 6f, 4, 4);
 
 class BrittleBreccia(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {

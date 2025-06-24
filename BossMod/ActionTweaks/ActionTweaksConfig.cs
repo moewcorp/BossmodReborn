@@ -57,7 +57,13 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("为手动按下的技能使用自定义队列", tooltip: "此设置可以更好地与自动循环结合，并防止在自动循环过程中按下治疗技能时出现三插或卡GCD的情况")]
     public bool UseManualQueue = false;
 
-    [PropertyDisplay("自动管理自动循环", tooltip: "此设置可防止在倒计时期间过早启动自动循环，在切换目标时以及使用任何未明确取消自动循环的操作时自动启动自动循环。")]
+    [PropertyDisplay("尽量避免冲入 AOE", tooltip: "如果自动使用定向冲刺（例如 WAR Onslaught）会将你带入危险区域，则阻止其生效。在没有模块的实例中可能无法正常工作。\n\n如果你启用了“使用自定义队列执行手动操作”，则此选项也适用于手动按下的冲刺。")]
+    public bool DashSafety = true;
+
+    [PropertyDisplay("将上一个选项应用于所有冲刺，而不仅仅是缩短距离的冲刺", tooltip: "包括后退冲刺（例如 SAM Yaten）、传送（例如 NIN Shukuchi）和固定长度冲刺（例如 DRG Elusive Jump）")]
+    public bool DashSafetyExtra = true;
+
+    [PropertyDisplay("自动管理自动攻击", tooltip: "此设置可防止在倒计时期间提前启动自动循环，在拉动时、切换目标时以及使用任何未明确取消自动循环的操作时自动启动自动循环。")]
     public bool AutoAutos = false;
 
     [PropertyDisplay("使用技能时自动下坐骑")]
@@ -76,9 +82,6 @@ public sealed class ActionTweaksConfig : ConfigNode
     }
     [PropertyDisplay("地面目标技能的自动目标选择")]
     public GroundTargetingMode GTMode = GroundTargetingMode.Manual;
-
-    [PropertyDisplay("尽量避免冲入 AOE", tooltip: "防止自动使用带位移技能（如战士猛攻），如果它们会将您带入危险区域。在没有模块的情况下可能无法按预期工作。")]
-    public bool PreventDangerousDash = false;
 
     public bool ActivateAnticheat = true;
 }

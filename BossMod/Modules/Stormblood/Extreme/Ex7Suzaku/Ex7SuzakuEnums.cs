@@ -41,7 +41,6 @@ public enum AID : uint
     ScreamsOfTheDamned = 13010, // Boss->self, 3s cast, range 40 circle raidwide
     ScarletFever = 13017, // Helper1->self, 7s cast, range 41 circle raidwide, arena change
     SouthronStar = 13023, // Boss->self, 4s cast, range 41 circle raidwide
-    HotspotsEnd = 12858, // Boss->self, no cast, single-target
 
     Rout = 13040, // Boss->self, 3s cast, range 55 width 6 rect
 
@@ -73,6 +72,7 @@ public enum AID : uint
     PhantomFlurryAOE = 13022, // Helper->self, 6s cast, range 41 180-degree cone
 
     Hotspot = 13026, // Helper->self, 0.9s cast, range 21 90-degree cone
+    HotspotsEnd = 12858, // Boss->self, no cast, single-target
 
     CloseQuarterCrescendo = 13028, // Boss->self, 4s cast, single-target
     PayThePiperNorth = 13031, // NorthernPyre->player, no cast, single-target
@@ -81,8 +81,8 @@ public enum AID : uint
     PayThePiperWest = 13033, // WesternPyre->player, no cast, single-target
 
     IncandescentInterlude = 12860, // Boss->self, 4.0s cast, single-target
-    Immolate = 13030, // Helper->self, no cast, range 41 circle
-    Burn = 13029, // Helper->self, no cast, range 4 circle
+    Immolate = 13030, // Helper->self, no cast, range 41 circle, tower fail
+    Burn = 13029, // Helper->self, no cast, range 4 circle, tower success
 
     EnrageSouthronStar = 13036, // Boss->self, 39.0s cast, range 41 circle
     HotspotEnrage = 14067 // Helper->self, 0.9s cast, range 21 90-degree cone

@@ -44,11 +44,11 @@ class ExtremeCaution(BossModule module) : Components.StayMove(module)
             PlayerStates[slot] = default;
     }
 }
-class IronTempest(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.IronTempest), 5.5f);
-class FireII(BossModule module) : Components.VoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID.FireII), m => m.Enemies(OID.FireII).Where(x => x.EventState != 7), 0);
-class Overpower(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Overpower), new AOEShapeCone(6.5f, 45.Degrees()));
-class Rive(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Rive), new AOEShapeRect(30.5f, 1));
-class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.DiffractiveLaser), 5);
+class IronTempest(BossModule module) : Components.SimpleAOEs(module, (uint)AID.IronTempest, 5.5f);
+class FireII(BossModule module) : Components.VoidzoneAtCastTarget(module, 5, (uint)AID.FireII, m => m.Enemies(OID.FireII).Where(x => x.EventState != 7), 0);
+class Overpower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Overpower, new AOEShapeCone(6.5f, 45.Degrees()));
+class Rive(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Rive, new AOEShapeRect(30.5f, 1));
+class DiffractiveLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiffractiveLaser, 5);
 
 class IoStates : StateMachineBuilder
 {

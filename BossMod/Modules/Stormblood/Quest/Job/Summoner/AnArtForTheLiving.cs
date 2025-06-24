@@ -23,16 +23,16 @@ public enum SID : uint
     Invincibility = 325
 }
 
-class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W111TonzeSwing), 12f);
-class OneOneTonzeSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.W11TonzeSwipe), new AOEShapeCone(9f, 60f.Degrees()));
+class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.W111TonzeSwing, 12f);
+class OneOneTonzeSwipe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.W11TonzeSwipe, new AOEShapeCone(9f, 60f.Degrees()));
 
-class NerveGas1(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.NerveGas), new AOEShapeCone(35f, 60f.Degrees()));
+class NerveGas1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NerveGas, new AOEShapeCone(35f, 60f.Degrees()));
 
-abstract class NerveGasLR(BossModule module, AID aid) : Components.SimpleAOEs(module, ActionID.MakeSpell(aid), new AOEShapeCone(35f, 90f.Degrees()));
-class NerveGasRight(BossModule module) : NerveGasLR(module, AID.NerveGasRight);
-class NerveGasLeft(BossModule module) : NerveGasLR(module, AID.NerveGasLeft);
+abstract class NerveGasLR(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeCone(35f, 90f.Degrees()));
+class NerveGasRight(BossModule module) : NerveGasLR(module, (uint)AID.NerveGasRight);
+class NerveGasLeft(BossModule module) : NerveGasLR(module, (uint)AID.NerveGasLeft);
 
-class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(33.68f, 3f));
+class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PiercingLaser, new AOEShapeRect(33.68f, 3f));
 
 class AetherochemicalExplosive(BossModule module) : Components.GenericAOEs(module)
 {

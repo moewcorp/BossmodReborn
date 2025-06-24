@@ -1,6 +1,6 @@
 namespace BossMod.Stormblood.Extreme.Ex7Suzaku;
 
-class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module)
+sealed class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(5);
     private static readonly AOEShapeCircle circle = new(9f);
@@ -72,6 +72,19 @@ class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module
         var feathers = Module.Enemies(_feathers);
         var countB = birds.Count;
         var countF = feathers.Count;
+
+        var countT = hints.PotentialTargets.Count;
+        for (var i = 0; i < countT; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            e.Priority = e.Actor.OID switch
+            {
+                (uint)OID.ScarletTailFeather => AIHints.Enemy.PriorityInvincible,
+                (uint)OID.ScarletPlume => 1,
+                _ => 0
+            };
+        }
+
         for (var i = 0; i < countB; ++i)
         {
             var b = birds[i];
@@ -83,7 +96,7 @@ class ScarletPlumeTailFeather(BossModule module) : Components.GenericAOEs(module
                 var f = feathers[j];
                 if (f.IsDead)
                     continue;
-                if (b.Position.InCircle(f.Position, 7.12f))
+                if (b.Position.InCircle(f.Position, 9f))
                 {
                     notInAOE = false;
                     hints.SetPriority(b, AIHints.Enemy.PriorityForbidden);

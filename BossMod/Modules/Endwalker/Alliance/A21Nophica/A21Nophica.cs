@@ -31,16 +31,16 @@ class ArenaBounds(BossModule module) : Components.GenericAOEs(module)
 }
 
 class FloralHaze(BossModule module) : Components.StatusDrivenForcedMarch(module, 2, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, activationLimit: 8);
-class SummerShade(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SummerShade), new AOEShapeDonut(12, 40));
-class SpringFlowers(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SpringFlowers), 12);
-class ReapersGale(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.ReapersGaleAOE), new AOEShapeRect(72, 4), 9);
-class Landwaker(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.LandwakerAOE), 10);
-class Furrow(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID.Furrow), 6, 8);
-class HeavensEarth(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.HeavensEarthAOE), new AOEShapeCircle(5), true);
+class SummerShade(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SummerShade, new AOEShapeDonut(12f, 40f));
+class SpringFlowers(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpringFlowers, 12f);
+class ReapersGale(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ReapersGaleAOE, new AOEShapeRect(72f, 4f), 9);
+class Landwaker(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LandwakerAOE, 10f);
+class Furrow(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Furrow, 6f, 8);
+class HeavensEarth(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HeavensEarthAOE, 5f);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 911, NameID = 12065, PlanLevel = 90)]
-public class A21Nophica(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -238), DefaultBounds)
+public class A21Nophica(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -238f), DefaultBounds)
 {
-    public static readonly ArenaBoundsCircle DefaultBounds = new(34);
-    public static readonly ArenaBoundsCircle SmallerBounds = new(28);
+    public static readonly ArenaBoundsCircle DefaultBounds = new(34f);
+    public static readonly ArenaBoundsCircle SmallerBounds = new(28f);
 }

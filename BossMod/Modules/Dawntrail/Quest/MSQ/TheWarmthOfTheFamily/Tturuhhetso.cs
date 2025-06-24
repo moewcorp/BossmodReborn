@@ -56,8 +56,8 @@ public enum IconID : uint
     Spreadmarker = 140 // WukLamat/Koana/player->self
 }
 
-class CandescentRayLineStack(BossModule module) : Components.LineStack(module, null, ActionID.MakeSpell(AID.CandescentRayLineStack), minStackSize: 3, maxStackSize: 3);
-class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(module, ActionID.MakeSpell(AID.CandescentRayTB), new AOEShapeRect(50f, 4f))
+class CandescentRayLineStack(BossModule module) : Components.LineStack(module, aidMarker: null, (uint)AID.CandescentRayLineStack, minStackSize: 3, maxStackSize: 3);
+class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.CandescentRayTB, new AOEShapeRect(50f, 4f))
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -82,9 +82,9 @@ class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(modul
     }
 }
 
-class SearingSwell(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.SearingSwell), new AOEShapeCone(40f, 22.5f.Degrees()));
-class Ensnare(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Ensnare), 6f);
-class TriceraSnare(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, ActionID.MakeSpell(AID.TriceraSnare), 6f, 4.7f)
+class SearingSwell(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SearingSwell, new AOEShapeCone(40f, 22.5f.Degrees()));
+class Ensnare(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ensnare, 6f);
+class TriceraSnare(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.TriceraSnare, 6f, 4.7f)
 {
     public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
     {
@@ -93,8 +93,8 @@ class TriceraSnare(BossModule module) : Components.SpreadFromIcon(module, (uint)
     }
 }
 
-class PrimordialRoar1(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PrimordialRoar1));
-class PrimordialRoar2(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.PrimordialRoar2));
+class PrimordialRoar1(BossModule module) : Components.RaidwideCast(module, (uint)AID.PrimordialRoar1);
+class PrimordialRoar2(BossModule module) : Components.RaidwideCast(module, (uint)AID.PrimordialRoar2);
 
 class OrbCollecting(BossModule module) : BossComponent(module)
 {
@@ -191,38 +191,7 @@ class FlameBlast(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Firestorm(BossModule module) : Components.GenericAOEs(module)
-{
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCircle circle = new(10f);
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        var count = _aoes.Count;
-        if (count == 0)
-            return [];
-        var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var deadline = aoes[0].Activation.AddSeconds(1d);
-
-        var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
-            ++index;
-
-        return aoes[..index];
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.Firestorm)
-            _aoes.Add(new(circle, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Firestorm)
-            _aoes.RemoveAt(0);
-    }
-}
+class Firestorm(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.Firestorm], 10f, 1d, 10);
 
 class TturuhhetsoStates : StateMachineBuilder
 {

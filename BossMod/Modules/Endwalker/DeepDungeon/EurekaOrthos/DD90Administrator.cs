@@ -94,17 +94,17 @@ class AetheroChemicalLaserCombo(BossModule module) : Components.GenericAOEs(modu
         if (shapeIndex == -1)
             return;
 
-        var activation = iconID switch
+        var delay = iconID switch
         {
-            (uint)IconID.Icon1 => WorldState.FutureTime(7d),
-            (uint)IconID.Icon2 => WorldState.FutureTime(10.5d),
-            (uint)IconID.Icon3 => WorldState.FutureTime(14d),
+            (uint)IconID.Icon1 => 7d,
+            (uint)IconID.Icon2 => 10.5d,
+            (uint)IconID.Icon3 => 14d,
             _ => default
         };
 
-        AOEs.Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, activation));
+        AOEs.Add(new(_shapes[shapeIndex], WPos.ClampToGrid(actor.Position), actor.OID == (uint)OID.OrbInterceptor ? default : actor.Rotation, WorldState.FutureTime(delay)));
         if (AOEs.Count == 6)
-            AOEs.SortBy(x => x.Activation);
+            AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -140,7 +140,7 @@ class AetherLaserLine : Components.SimpleAOEs
 {
     private readonly AetheroChemicalLaserCombo _aoe;
 
-    public AetherLaserLine(BossModule module) : base(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine), new AOEShapeRect(40f, 2.5f), 4)
+    public AetherLaserLine(BossModule module) : base(module, (uint)AID.AetherochemicalLaserLine, new AOEShapeRect(40f, 2.5f), 4)
     {
         MaxDangerColor = 2;
         MaxRisky = 2;
@@ -150,10 +150,10 @@ class AetherLaserLine : Components.SimpleAOEs
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Count != 0 && _aoe.AOEs.Count == 0 ? base.ActiveAOEs(slot, actor) : [];
 }
 
-class AetherLaserLine2(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserLine2), new AOEShapeRect(40f, 2.5f));
-class AetherLaserCone(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaserCone2), new AOEShapeCone(50f, 60f.Degrees()));
-class HomingLasers(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.HomingLaser), 6f);
-class Laserstream(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.Laserstream));
+class AetherLaserLine2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AetherochemicalLaserLine2, new AOEShapeRect(40f, 2.5f));
+class AetherLaserCone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AetherochemicalLaserCone2, new AOEShapeCone(50f, 60f.Degrees()));
+class HomingLasers(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HomingLaser, 6f);
+class Laserstream(BossModule module) : Components.RaidwideCast(module, (uint)AID.Laserstream);
 
 class DD90AdministratorStates : StateMachineBuilder
 {

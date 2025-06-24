@@ -82,7 +82,7 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module)
     private static WPos RoundPosition(WPos position) => new(MathF.Round(position.X * 2) * 0.5f, MathF.Round(position.Z * 2) * 0.5f);
 }
 
-class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.PiercingLaser), new AOEShapeRect(40f, 2.5f));
+class PiercingLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PiercingLaser, new AOEShapeRect(40f, 2.5f));
 
 class DD20CloningNodeStates : StateMachineBuilder
 {

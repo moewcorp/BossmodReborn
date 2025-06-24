@@ -40,7 +40,7 @@ class MagitekPulsePlayer(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh != null && _aoe.AOEs.Count != 0)
+        if (_aoe.AOEs.Count != 0)
         {
             var turrets = Module.Enemies((uint)OID.MarkXLIIIMiniCannon);
             Actor? closest = null;
@@ -139,9 +139,9 @@ class WildSpeedHaywire(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MagitekPulse(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekPulse), 6f);
-class MagitekFireII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.MagitekFireII), 5f);
-class MagitekFireIII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.MagitekFireIII));
+class MagitekPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekPulse, 6f);
+class MagitekFireII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagitekFireII, 5f);
+class MagitekFireIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.MagitekFireIII);
 
 class D051MagnaRoaderStates : StateMachineBuilder
 {

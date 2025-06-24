@@ -29,9 +29,9 @@ public enum AID : uint
     TenTonzeSlash = 3971 // Boss->self, 4.0s cast, range 40+R 60-degree cone
 }
 
-class OneOneTonzeSwipe(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OneOneTonzeSwipe), new AOEShapeCone(9f, 60f.Degrees()));
-class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.OneOneOneTonzeSwing), 12f);
-class TenTonzeSlash(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.TenTonzeSlash), new AOEShapeCone(44f, 30f.Degrees()));
+class OneOneTonzeSwipe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OneOneTonzeSwipe, new AOEShapeCone(9f, 60f.Degrees()));
+class OneOneOneTonzeSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OneOneOneTonzeSwing, 12f);
+class TenTonzeSlash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TenTonzeSlash, new AOEShapeCone(44f, 30f.Degrees()));
 
 class OneOneOneOneTonzeSwing(BossModule module) : BossComponent(module)
 {
@@ -52,7 +52,7 @@ class OneOneOneOneTonzeSwing(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null || !casting)
+        if (!casting)
             return;
 
         var incubators = Module.Enemies(_incubators);
@@ -109,7 +109,7 @@ class OneOneOneOneTonzeSwing(BossModule module) : BossComponent(module)
     }
 }
 
-class DisorientingGroan(BossModule module) : Components.SimpleKnockbacks(module, ActionID.MakeSpell(AID.DisorientingGroan), 20f, stopAtWall: true);
+class DisorientingGroan(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.DisorientingGroan, 20f, stopAtWall: true);
 
 class D082MinotaurStates : StateMachineBuilder
 {

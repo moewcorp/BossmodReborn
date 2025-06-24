@@ -212,7 +212,7 @@ class FortuneFluxKnockback(BossModule module) : Components.GenericKnockback(modu
                         var mj = _order.Mechanics[j];
                         if (mj.mechanic == FortuneFluxOrder.Mechanic.AOE)
                         {
-                            hints.AddForbiddenZone(ShapeDistance.Cone(m.source, 100f, m.source.AngleTo(mj.source), Angle.Asin(20f / (mj.source - m.source).Length())), act.AddSeconds(1d));
+                            hints.AddForbiddenZone(ShapeDistance.Cone(m.source, 100f, Angle.FromDirection(m.source - mj.source), Angle.Asin(20f / (mj.source - m.source).Length())), act.AddSeconds(1d));
                         }
                     }
                     return;

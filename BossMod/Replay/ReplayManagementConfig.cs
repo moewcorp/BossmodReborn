@@ -3,13 +3,16 @@
 public record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
 
 [ConfigDisplay(Name = "Replays", Order = 0)]
-public class ReplayManagementConfig : ConfigNode
+public sealed class ReplayManagementConfig : ConfigNode
 {
     [PropertyDisplay("Show replay management UI")]
     public bool ShowUI = false;
 
     [PropertyDisplay("Auto record replays on duty start/end or outdoor module start/end")]
     public bool AutoRecord = false;
+
+    [PropertyDisplay("Auto record in Duty Recorder replays", tooltip: "Requires auto-record to be turned on")]
+    public bool AutoARR = false;
 
     [PropertyDisplay("Max replays to keep before removal")]
     [PropertySlider(0, 1000)]

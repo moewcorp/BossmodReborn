@@ -16,10 +16,10 @@ public enum AID : uint
     BlizzardIII = 1087, // Boss->location, 3.0s cast, range 5 circle
 }
 
-class Kasaya(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.Kasaya), new AOEShapeCone(7.6f, 60f.Degrees()));
-class WaterIII(BossModule module) : Components.SimpleAOEs(module, ActionID.MakeSpell(AID.WaterIII), 8f);
+class Kasaya(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Kasaya, new AOEShapeCone(7.6f, 60f.Degrees()));
+class WaterIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WaterIII, 8f);
 
-class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5f), 26, centerAtTarget: true)
+class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, 5f, 26u)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -33,7 +33,7 @@ class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, new A
             CurrentBaits.Clear();
     }
 }
-class BlizzardIIICast(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, ActionID.MakeSpell(AID.BlizzardIII), m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7), 0);
+class BlizzardIIICast(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.BlizzardIII, m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7), 0);
 
 class SlickshellCaptainStates : StateMachineBuilder
 {
