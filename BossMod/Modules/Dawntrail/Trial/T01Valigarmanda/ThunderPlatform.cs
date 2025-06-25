@@ -114,7 +114,7 @@ class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
             if (player.Item1 == slot)
                 continue;
 
-            for (var j = 0; j < levitateLen; j++)
+            for (var j = 0; j < levitateLen; ++j)
             {
                 if (levitateSpan[j].Check(pos))
                 {

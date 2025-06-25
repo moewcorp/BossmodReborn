@@ -206,18 +206,19 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
         FireSpread(id + 0x40u, 8, 0.5f, 2);
         ElementalImpact(id + 0x50u, 6, 3.6f, 3);
         FireSpread(id + 0x60u, 12, 0.5f, 3);
-        for (var i = 1; i <= 3; i++)
+        for (var i = 1; i <= 3; ++i)
         {
             var offset = id + 0x70u + (uint)((i - 1) * 0x10);
             var casts = 8 * i;
             var cond = ComponentCondition<GeothermalRupture>(offset, (i == 1) ? 7.7f : 2f, comp => comp.NumCasts == casts, $"Baited circles {i}");
             if (i == 1)
-                cond.ActivateOnEnter<GeothermalRupture>();
+                cond
+                    .ActivateOnEnter<FlameThrower>()
+                    .ActivateOnEnter<GeothermalRupture>();
             else if (i == 3)
                 cond.DeactivateOnExit<GeothermalRupture>();
         }
-        ComponentCondition<FlameThrower>(id + 0xA0u, 0.1f, comp => comp.NumCasts != 0, "Raidwide")
-            .ActivateOnEnter<FlameThrower>()
+        ComponentCondition<FlameThrower>(id + 0xA0u, 0.1f, comp => comp.NumCasts != 0, "Line stacks")
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<FlameThrower>();
         ElementalImpact(id + 0xB0u, 8, 5f, 4);

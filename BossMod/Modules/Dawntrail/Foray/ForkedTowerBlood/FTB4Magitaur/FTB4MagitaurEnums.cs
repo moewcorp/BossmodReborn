@@ -64,7 +64,6 @@ public enum AID : uint
     CarvingRune = 41554, // Helper->player, no cast, single-target
 
     HolyLance = 41557, // Boss->self, 5.0s cast, single-target
-
     LuminousLanceVisual = 41558, // LuminousLance->self, no cast, single-target
     LancelightRect = 41560, // Helper->self, no cast, range 20 width 20 rect
     LancelightCircle = 41561, // Helper->self, no cast, range 100 circle
@@ -72,13 +71,6 @@ public enum AID : uint
 
     UnsealedAuraEnrageVisual = 41575, // Boss->self, 9.2+0,8s cast, range 100 circle
     UnsealedAuraEnrage = 39912 // Helper->self, 10.0s cast, ???
-}
-
-public enum IconID : uint
-{
-    _Gen_Icon_loc08sp_08a_se_c = 573, // player->self
-    _Gen_Icon_tag_ae5m_8s_0v = 345, // player->self
-    _Gen_Icon_com_share2i = 100, // player->self
 }
 
 public enum SID : uint

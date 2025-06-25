@@ -132,7 +132,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                 Sequences.Sort((a, b) => MathF.Atan2(a.Origin.Z - centerZ, a.Origin.X - centerX).CompareTo(MathF.Atan2(b.Origin.Z - centerZ, b.Origin.X - centerX)));
 
                 // Find adjacent pair where left is CCW and right is CW
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < 4; ++i)
                 {
                     var next = (i + 1) % 4;
                     var a = Sequences[i];

@@ -276,10 +276,13 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         return false;
     }
 
-    // positive offsets inflate, negative shrink polygon
-    public RelSimplifiedComplexPolygon Offset(float offset)
+    // positive offsets inflate, negative shrink polygon, use join JoinType Round to simulate a Minkowski Sum with a circle
+    public RelSimplifiedComplexPolygon Offset(float offset, JoinType joinType = JoinType.Miter)
     {
-        var clipperOffset = new ClipperOffset();
+        var clipperOffset = new ClipperOffset
+        {
+            ArcTolerance = 1000d
+        };
         var allPaths = new Paths64();
         var count = Parts.Count;
         for (var i = 0; i < count; ++i)
@@ -293,7 +296,7 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         }
 
         var solution = new Paths64();
-        clipperOffset.AddPaths(allPaths, JoinType.Miter, EndType.Polygon);
+        clipperOffset.AddPaths(allPaths, joinType, EndType.Polygon);
         clipperOffset.Execute(offset * PolygonClipper.Scale, solution);
 
         var result = new RelSimplifiedComplexPolygon();
@@ -321,6 +324,17 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
             path.Add(new(vertex.X * PolygonClipper.Scale, vertex.Z * PolygonClipper.Scale));
         }
         return path;
+    }
+
+    public RelSimplifiedComplexPolygon RemoveAllHoles()
+    {
+        var count = Parts.Count;
+        var result = new List<RelPolygonWithHoles>(count);
+        for (var i = 0; i < count; ++i)
+        {
+            result.Add(new RelPolygonWithHoles([.. Parts[i].Exterior]));
+        }
+        return new(result);
     }
 }
 
@@ -369,20 +383,23 @@ public sealed class PolygonClipper
 
         private void AddContour(Path64 contour, bool isOpen) => _data.AddPaths([contour], PathType.Subject, isOpen);
 
-        // Compute Minkowski Sum of two polygons, useful to get the area where shape B can not intersect shape A
-        public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
+        // Compute Minkowski Sum of two polygons, useful to get the area where shape B will intersect shape A
+        public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true, bool removeHoles = true)
         {
             var pathA = ToPath64(shapeA);
             var pathB = ToPath64(shapeB);
 
-            var result = Clipper.MinkowskiSum(pathB, pathA, isClosed);
+            var result = Clipper.MinkowskiSum(pathA, pathB, isClosed);
             var simplified = new RelSimplifiedComplexPolygon();
             simplified.BuildResultFromPaths(simplified, result);
-
+            if (removeHoles)
+            {
+                simplified = simplified.RemoveAllHoles();
+            }
             return simplified;
         }
 
-        public static RelSimplifiedComplexPolygon MinkowskiSum(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
+        public static RelSimplifiedComplexPolygon MinkowskiSum(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true, bool removeHoles = true)
         {
             var pathB = ToPath64(shapeB);
             var count = shapeA.Parts.Count;
@@ -398,50 +415,16 @@ public sealed class PolygonClipper
                     ref readonly var p = ref exterior[j];
                     subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
                 }
-                var minkowski = Clipper.MinkowskiSum(pathB, subjectPath, isClosed);
+                var minkowski = Clipper.MinkowskiSum(subjectPath, pathB, isClosed);
                 resultPaths.AddRange(minkowski);
             }
 
             var simplified = new RelSimplifiedComplexPolygon();
             simplified.BuildResultFromPaths(simplified, resultPaths);
-            return simplified;
-        }
-
-        // Compute Minkowski Difference of two polygons, useful to get the area where shape B will intersect shape A
-        public static RelSimplifiedComplexPolygon MinkowskiDifference(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true)
-        {
-            var pathA = ToPath64(shapeA);
-            var pathB = ToPath64(shapeB);
-
-            var result = Clipper.MinkowskiDiff(pathB, pathA, isClosed);
-            var simplified = new RelSimplifiedComplexPolygon();
-            simplified.BuildResultFromPaths(simplified, result);
-
-            return simplified;
-        }
-
-        public static RelSimplifiedComplexPolygon MinkowskiDifference(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true)
-        {
-            var pathB = ToPath64(shapeB);
-            var count = shapeA.Parts.Count;
-            var resultPaths = new Paths64(count);
-            for (var i = 0; i < count; ++i)
+            if (removeHoles)
             {
-                var part = shapeA.Parts[i];
-                var exterior = part.Exterior;
-                var len = exterior.Length;
-                Path64 subjectPath = new(len);
-                for (var j = 0; j < len; ++j)
-                {
-                    ref readonly var p = ref exterior[j];
-                    subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
-                }
-                var minkowski = Clipper.MinkowskiDiff(pathB, subjectPath, isClosed);
-                resultPaths.AddRange(minkowski);
+                simplified = simplified.RemoveAllHoles();
             }
-
-            var simplified = new RelSimplifiedComplexPolygon();
-            simplified.BuildResultFromPaths(simplified, resultPaths);
             return simplified;
         }
 
@@ -515,7 +498,7 @@ public sealed class PolygonClipper
                 var holePoints = new List<WDir>(interior.Polygon.Count);
                 var intPolygon = interior.Polygon;
                 var countInt = intPolygon.Count;
-                for (var k = 0; k < countInt; k++)
+                for (var k = 0; k < countInt; ++k)
                     holePoints.Add(ConvertPoint(intPolygon[k]));
 
                 poly.AddHole(holePoints);

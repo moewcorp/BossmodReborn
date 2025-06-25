@@ -212,7 +212,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         Firestarter = Player.FindStatus(SID.Firestarter) != null;
         InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
 
-        for (var i = 0; i < Hints.Enemies.Length; i++)
+        for (var i = 0; i < Hints.Enemies.Length; ++i)
             EnemyDotTimers[i] = CalculateDotTimer(Hints.Enemies[i]?.Actor);
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
