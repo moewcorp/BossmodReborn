@@ -251,7 +251,7 @@ public sealed class ActionDefinitions : IDisposable
             if ((uint)act > 0)
                 RegisterSpell((EurekaActionID)act);
 
-        for (var i = 1u; i <= 6u; i++)
+        for (var i = 1u; i <= 6u; ++i)
         {
             var petAction = new ActionID(ActionType.PetAction, i);
             var def = new ActionDefinition(petAction)

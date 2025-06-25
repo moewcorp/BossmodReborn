@@ -15,7 +15,7 @@ class LetsDance(BossModule module) : Components.GenericAOEs(module)
         {
             var sb = new StringBuilder(4 * (count - 1) + 4 * count);
             var aoes = CollectionsMarshal.AsSpan(_aoes);
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 var roundedrot = (int)aoes[i].Rotation.Deg;
                 var shapeHint = roundedrot switch
@@ -100,7 +100,7 @@ sealed class LetsDanceRemix(BossModule module) : LetsDance(module)
         {
             var sb = new StringBuilder(4 * (count - 1) + count * 5);
             var aoes = CollectionsMarshal.AsSpan(_aoes);
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 var roundedrot = (int)aoes[i].Rotation.Deg;
                 var shapeHint = roundedrot switch

@@ -12,7 +12,7 @@ sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.
         {
             var sb = new StringBuilder(12);
             var aoes = CollectionsMarshal.AsSpan(AOEs);
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 var roundedrot = MathF.Round(aoes[i].Rotation.Normalized().Deg);
                 var shapeHint = roundedrot switch

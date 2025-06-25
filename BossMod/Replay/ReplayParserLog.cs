@@ -570,7 +570,7 @@ public sealed class ReplayParserLog : IDisposable
         var primary = _input.ReadActorID();
         var targets = new ClientState.Hate[32];
         var haterCount = _input.ReadInt();
-        for (var i = 0; i < haterCount; i++)
+        for (var i = 0; i < haterCount; ++i)
             targets[i] = new(_input.ReadActorID(), _input.ReadInt());
         return new(primary, targets);
     }
@@ -797,7 +797,7 @@ public sealed class ReplayParserLog : IDisposable
 
         var count = _input.ReadByte(false);
         var actions = new ClientState.DutyAction[count];
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < count; ++i)
             actions[i] = new ClientState.DutyAction(_input.ReadAction(), _input.ReadByte(false), _input.ReadByte(false));
 
         return new(actions);

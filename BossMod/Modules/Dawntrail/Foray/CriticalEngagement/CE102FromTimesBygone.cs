@@ -87,8 +87,47 @@ sealed class MythicMirror(BossModule module) : Components.GenericAOEs(module)
 sealed class MysticHeat(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MysticHeat, new AOEShapeCone(40f, 30f.Degrees()));
 sealed class LotsCast(BossModule module) : Components.RaidwideCast(module, (uint)AID.LotsCastVisual);
 sealed class ArcaneLight(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.ArcaneLightVisual, (uint)AID.ArcaneLight, 0.9f);
-sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LotsCastSpread, 6f);
-sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.LotsCastTB, 6f, true, tankbuster: true);
+sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LotsCastSpread, 6f)
+{
+    public override void Update()
+    {
+        var count = Spreads.Count;
+        if (count != 0) // due to culling players can get removed and added to the object table in any frame, after that we need to update their reference to get the current location again...
+        {
+            var spreads = CollectionsMarshal.AsSpan(Spreads);
+            for (var i = 0; i < count; ++i)
+            {
+                ref var s = ref spreads[i];
+                var target = WorldState.Actors.Find(s.Target.InstanceID);
+                if (target is Actor t)
+                {
+                    s.Target = t;
+                }
+            }
+        }
+    }
+}
+
+sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.LotsCastTB, 6f, true, tankbuster: true)
+{
+    public override void Update()
+    {
+        var count = CurrentBaits.Count;
+        if (count != 0) // due to culling players can get removed and added to the object table in any frame, after that we need to update their reference to get the current location again...
+        {
+            var spreads = CollectionsMarshal.AsSpan(CurrentBaits);
+            for (var i = 0; i < count; ++i)
+            {
+                ref var s = ref spreads[i];
+                var target = WorldState.Actors.Find(s.Target.InstanceID);
+                if (target is Actor t)
+                {
+                    s.Target = t;
+                }
+            }
+        }
+    }
+}
 
 sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
 {

@@ -60,7 +60,7 @@ sealed class EscelonsFall(BossModule module) : Components.GenericBaitAway(module
         {
             var sb = new StringBuilder(4 * (count - 1) + count * 4);
             var ord = CollectionsMarshal.AsSpan(order);
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 sb.Append(ord[i]);
 

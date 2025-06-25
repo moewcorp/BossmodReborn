@@ -215,7 +215,7 @@ public sealed record class AOEShapeCustom(IReadOnlyList<Shape> Shapes1, IReadOnl
     private static readonly Dictionary<int, RelSimplifiedComplexPolygon> cache = [];
     private static readonly LinkedList<int> cacheOrder = [];
 
-    public void AddToCache(RelSimplifiedComplexPolygon value)
+    private void AddToCache(RelSimplifiedComplexPolygon value)
     {
         if (cache.Count >= 50)
         {

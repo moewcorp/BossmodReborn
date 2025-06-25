@@ -125,7 +125,7 @@ class P4MirageDive(BossModule module) : Components.CastCounter(module, (uint)AID
             var count = _targets.Count;
             var startIndex = Math.Max(0, count - 4);
 
-            for (var i = startIndex; i < count; i++)
+            for (var i = startIndex; i < count; ++i)
             {
                 _forbidden[_targets[i]] = true;
             }
