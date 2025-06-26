@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 
-class PowerfulGustKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.PowerfulGust, 20f, kind: Kind.DirForward, stopAfterWall: true)
+sealed class PowerfulGustKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.PowerfulGust, 20f, kind: Kind.DirForward, stopAfterWall: true)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -14,35 +14,30 @@ class PowerfulGustKB(BossModule module) : Components.SimpleKnockbacks(module, (u
     }
 }
 
-class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Downburst, 10f, stopAfterWall: true)
+sealed class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Downburst, 10f, stopAfterWall: true)
 {
-    private Angle offset;
-    private static readonly WPos botLeft = new(92.5f, 100f), botRight = new(107.5f, 100f), topRight = new(107.5f, 85f);
-
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            var act = Module.CastFinishAt(source.CastInfo);
+            var castinfo = Casters[0].CastInfo!;
+            var act = Module.CastFinishAt(castinfo);
             if (!IsImmune(slot, act))
             {
-                if (source.Position != Arena.Center)
+                var origin = castinfo.LocXZ;
+                var center = Arena.Center;
+                var poly = T03QueenEternal.XArena.poly;
+                hints.AddForbiddenZone(p =>
                 {
-                    offset = source.Position == topRight ? -90f.Degrees() : source.Position == botLeft ? 90f.Degrees() : source.Position == botRight ? 180f.Degrees() : default;
-                    hints.AddForbiddenZone(ShapeDistance.InvertedCone(source.Position, 5f, source.Rotation + offset, 10f.Degrees()), act);
-                }
-                else
-                {
-                    var forbidden = new Func<WPos, float>[4];
-                    for (var i = 0; i < 4; ++i)
-                        forbidden[i] = ShapeDistance.InvertedCone(source.Position, 5, source.Rotation + Angle.AnglesCardinals[i], 10f.Degrees());
-                    hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
-                }
+                    // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
+                    var offset = (p - origin).Normalized();
+                    if (Module.InBounds(p + 10f * offset) && Intersect.RayPolygon(p - center, offset, poly) > 10f)
+                        return 1f;
+                    return default;
+                }, act);
             }
         }
     }
 }
 
-class PowerfulGustRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.PowerfulGust);
-class DownburstRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.Downburst);
+sealed class PowerfulGustDownburstRW(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.PowerfulGust, (uint)AID.Downburst]);

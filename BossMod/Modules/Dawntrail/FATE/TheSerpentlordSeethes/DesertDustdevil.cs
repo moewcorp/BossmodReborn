@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.FATE.Ttokrrone;
 
-class DesertDustdevil(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class DesertDustdevil(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private static readonly AOEShapeCone cone = new(60f, 45f.Degrees());
     private static readonly Angle offset = 180f.Degrees();
@@ -30,7 +30,7 @@ class DesertDustdevil(BossModule module) : Components.GenericRotatingAOE(module)
             rotation += offset;
         if (Sequences.Count != 0)
             Sequences.Clear();
-        Sequences.Add(new(cone, WPos.ClampToGrid(Module.PrimaryActor.Position), rotation, direction, Module.CastFinishAt(spell, 1), 2.6f, repeats));
+        Sequences.Add(new(cone, WPos.ClampToGrid(Module.PrimaryActor.Position), rotation, direction, Module.CastFinishAt(spell, 1d), 2.6f, repeats));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -47,7 +47,7 @@ class DesertDustdevil(BossModule module) : Components.GenericRotatingAOE(module)
     }
 }
 
-class DustcloakDustdevil(BossModule module) : Components.GenericAOEs(module)
+sealed class DustcloakDustdevil(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(13f);
     private AOEInstance? _aoe;

@@ -89,7 +89,7 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
                 {
                     if ((p + 30f * (p - origin).Normalized()).InCircle(center, 23f))
                         return 1f;
-                    return -1f;
+                    return default;
                 }, act);
             }
         }

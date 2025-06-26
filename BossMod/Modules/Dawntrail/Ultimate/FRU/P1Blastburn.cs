@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.FRU;
 
-class P1Blastburn(BossModule module) : Components.GenericKnockback(module, default, true)
+sealed class P1Blastburn(BossModule module) : Components.GenericKnockback(module, default, true)
 {
     private Actor? _caster;
     private bool _aoeDone;

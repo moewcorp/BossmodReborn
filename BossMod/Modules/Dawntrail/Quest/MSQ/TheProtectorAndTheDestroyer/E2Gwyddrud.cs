@@ -50,11 +50,11 @@ public enum AID : uint
     UntamedCurrentStack = 19276, // Helper->Alisaie, 5.0s cast, range 6 circle
 }
 
-class Gnaw(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Gnaw);
-class CracklingHowl(BossModule module) : Components.RaidwideCast(module, (uint)AID.CracklingHowl);
-class UntamedCurrentRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.UntamedCurrent);
+sealed class Gnaw(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Gnaw);
+sealed class CracklingHowl(BossModule module) : Components.RaidwideCast(module, (uint)AID.CracklingHowl);
+sealed class UntamedCurrentRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.UntamedCurrent);
 
-class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
+sealed class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeCone cone = new(20f, 90f.Degrees());
@@ -95,7 +95,7 @@ class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RoaringBoltKB, 12f, stopAtWall: true)
+sealed class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RoaringBoltKB, 12f, stopAtWall: true)
 {
     private readonly RoaringBolt _aoe = module.FindComponent<RoaringBolt>()!;
     private static readonly Angle a25 = 25f.Degrees();
@@ -126,19 +126,19 @@ class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(module, (ui
     }
 }
 
-class RollingThunder : Components.SimpleAOEs
+sealed class RollingThunder : Components.SimpleAOEs
 {
     public RollingThunder(BossModule module) : base(module, (uint)AID.RollingThunder, new AOEShapeCone(20f, 22.5f.Degrees()), 6) { MaxDangerColor = 2; }
 }
 
-class RoaringBolt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RoaringBolt, 6f);
-class UntamedCurrentSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.UntamedCurrentSpread, 5f);
-class UntamedCurrentStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.UntamedCurrentStack, 6f, 5, 5);
-class UntamedCurrentAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.UntamedCurrentAOE1, (uint)AID.UntamedCurrentAOE2, (uint)AID.UntamedCurrentAOE3,
+sealed class RoaringBolt(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RoaringBolt, 6f);
+sealed class UntamedCurrentSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.UntamedCurrentSpread, 5f);
+sealed class UntamedCurrentStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.UntamedCurrentStack, 6f, 5, 5);
+sealed class UntamedCurrentAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.UntamedCurrentAOE1, (uint)AID.UntamedCurrentAOE2, (uint)AID.UntamedCurrentAOE3,
 (uint)AID.UntamedCurrentAOE4, (uint)AID.UntamedCurrentAOE5, (uint)AID.UntamedCurrentAOE6, (uint)AID.UntamedCurrentAOE7,
 (uint)AID.UntamedCurrentAOE8, (uint)AID.UntamedCurrentAOE9, (uint)AID.UntamedCurrentAOE10], 5f);
 
-class GwyddrudStates : StateMachineBuilder
+sealed class GwyddrudStates : StateMachineBuilder
 {
     public GwyddrudStates(BossModule module) : base(module)
     {
@@ -157,7 +157,7 @@ class GwyddrudStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70478, NameID = 13170)]
-public class Gwyddrud(WorldState ws, Actor primary) : BossModule(ws, primary, OtisOathbroken.ArenaCenter, OtisOathbroken.ArenaBounds)
+public sealed class Gwyddrud(WorldState ws, Actor primary) : BossModule(ws, primary, OtisOathbroken.ArenaCenter, OtisOathbroken.ArenaBounds)
 {
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.SuperchargedLevin, (uint)OID.BallOfLevin];
 

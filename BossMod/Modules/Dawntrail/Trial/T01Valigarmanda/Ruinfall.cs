@@ -1,8 +1,8 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RuinfallAOE, 6f);
+sealed class RuinfallAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RuinfallAOE, 6f);
 
-class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuinfallKB, 21f, stopAfterWall: true, kind: Kind.DirForward)
+sealed class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.RuinfallKB, 21f, stopAfterWall: true, kind: Kind.DirForward)
 {
     private readonly RuinfallTower _tower = module.FindComponent<RuinfallTower>()!;
 
@@ -30,7 +30,7 @@ class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)
     }
 }
 
-class RuinfallTower(BossModule module) : Components.CastTowers(module, (uint)AID.RuinfallTower, 6f, 2, 2)
+sealed class RuinfallTower(BossModule module) : Components.CastTowers(module, (uint)AID.RuinfallTower, 6f, 2, 2)
 {
     public override void Update()
     {

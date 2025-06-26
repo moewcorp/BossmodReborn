@@ -82,7 +82,7 @@ public enum AID : uint
     HeartOfTural = 37195, // WukLamat->self, 8.0s cast, range 20 width 40 rect
 }
 
-class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(module)
+sealed class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeCone cone = new(30f, 90f.Degrees());
@@ -133,7 +133,7 @@ class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOEs(modul
     }
 }
 
-class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
+sealed class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect rect = new(50f, 5f);
@@ -153,7 +153,7 @@ class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SublimeHeat(BossModule module) : Components.GenericAOEs(module)
+sealed class SublimeHeat(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(9);
     private static readonly AOEShapeCircle circle = new(10);
@@ -183,7 +183,7 @@ class SublimeHeat(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class NobleTrail(BossModule module) : Components.GenericAOEs(module)
+sealed class NobleTrail(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance? _aoe;
 
@@ -205,13 +205,13 @@ class NobleTrail(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class LayOfTheSun(BossModule module) : Components.UniformStackSpread(module, 6f, 0, 8)
+sealed class LayOfTheSun(BossModule module) : Components.UniformStackSpread(module, 6f, 0, 8)
 {
     private int numCasts;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID is >= 37207 and <= 37215 or >= 40065 and <= 40073)
+        if (spell.Action.ID is >= 37207u and <= 37215u or >= 40065u and <= 40073u)
         {
             ++numCasts;
             if (numCasts == 9)
@@ -229,17 +229,17 @@ class LayOfTheSun(BossModule module) : Components.UniformStackSpread(module, 6f,
     }
 }
 
-class RoaringStar(BossModule module) : Components.RaidwideCast(module, (uint)AID.RoaringStarRaidwide);
-class CoiledStrike(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CoiledStrike, new AOEShapeCone(30f, 75f.Degrees()));
-class Burn(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burn, new AOEShapeRect(46f, 2.5f), 8);
-class FallenStar(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.FallenStar, 6f);
-class FirstLight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FirstLight, 6f);
-class InnerWake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InnerWake, 10f);
-class OuterWake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OuterWake, new AOEShapeDonut(6f, 40f));
-class BattleBreaker(BossModule module) : Components.RaidwideCast(module, (uint)AID.BattleBreaker);
-class HeartOfTuralRaidwides(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeartOfTural, "Raidwides x7");
+sealed class RoaringStar(BossModule module) : Components.RaidwideCast(module, (uint)AID.RoaringStarRaidwide);
+sealed class CoiledStrike(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CoiledStrike, new AOEShapeCone(30f, 75f.Degrees()));
+sealed class Burn(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burn, new AOEShapeRect(46f, 2.5f), 8);
+sealed class FallenStar(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.FallenStar, 6f);
+sealed class FirstLight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FirstLight, 6f);
+sealed class InnerWake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InnerWake, 10f);
+sealed class OuterWake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OuterWake, new AOEShapeDonut(6f, 40f));
+sealed class BattleBreaker(BossModule module) : Components.RaidwideCast(module, (uint)AID.BattleBreaker);
+sealed class HeartOfTuralRaidwides(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeartOfTural, "Raidwides x7");
 
-class HeartOfTural : Components.SimpleAOEs
+sealed class HeartOfTural : Components.SimpleAOEs
 {
     public HeartOfTural(BossModule module) : base(module, (uint)AID.HeartOfTural, new AOEShapeRect(20f, 20f, InvertForbiddenZone: true)) { Color = Colors.SafeFromAOE; }
 
@@ -255,7 +255,7 @@ class HeartOfTural : Components.SimpleAOEs
     }
 }
 
-class TheFeatOfBrotherhoodStates : StateMachineBuilder
+sealed class TheFeatOfBrotherhoodStates : StateMachineBuilder
 {
     public TheFeatOfBrotherhoodStates(BossModule module) : base(module)
     {
@@ -279,7 +279,7 @@ class TheFeatOfBrotherhoodStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70444, NameID = 12734)]
-public class TheFeatOfBrotherhood(WorldState ws, Actor primary) : BossModule(ws, primary, new(353.5f, 596.4f), new ArenaBoundsSquare(19.75f, -77.5f.Degrees()))
+public sealed class TheFeatOfBrotherhood(WorldState ws, Actor primary) : BossModule(ws, primary, new(353.5f, 596.4f), new ArenaBoundsSquare(19.75f, -77.5f.Degrees()))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

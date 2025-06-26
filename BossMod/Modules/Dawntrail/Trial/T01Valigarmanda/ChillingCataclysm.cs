@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class ChillingCataclysm(BossModule module) : Components.GenericAOEs(module)
+sealed class ChillingCataclysm(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = [];
 

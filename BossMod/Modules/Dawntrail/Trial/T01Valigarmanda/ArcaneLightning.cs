@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class ArcaneLightning(BossModule module) : Components.GenericAOEs(module)
+sealed class ArcaneLightning(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(50f, 2.5f);
     public readonly List<AOEInstance> AOEs = [];

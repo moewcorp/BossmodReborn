@@ -245,7 +245,7 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
                     var projected = p + 15f * (p - center).Normalized();
                     if (projected.InCircle(center, 20f) && !poly.Contains(projected - center))
                         return 1f;
-                    return -1f;
+                    return default;
                 }, activation);
             }
         }

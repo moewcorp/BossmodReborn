@@ -198,7 +198,7 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
                 {
                     if ((p + 20f * (p - origin).Normalized()).InCircle(center, 18f))
                         return 1f;
-                    return -1f;
+                    return default;
                 }, act);
             }
         }

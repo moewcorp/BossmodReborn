@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T04Zelenia;
 
-class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
+sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(16f, 30f.Degrees());
     private static readonly AOEShapeCircle circle = new(4f);

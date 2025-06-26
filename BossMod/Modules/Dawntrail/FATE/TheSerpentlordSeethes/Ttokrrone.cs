@@ -76,10 +76,10 @@ public enum AID : uint
     RightwardSandspoutDDVisual = 37325 // Boss->self, no cast, single-target
 }
 
-class Devour(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Devour, 8);
-class Touchdown(BossModule module) : Components.RaidwideCast(module, (uint)AID.Touchdown);
+sealed class Devour(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Devour, 8f);
+sealed class Touchdown(BossModule module) : Components.RaidwideCast(module, (uint)AID.Touchdown);
 
-class TtokrroneStates : StateMachineBuilder
+sealed class TtokrroneStates : StateMachineBuilder
 {
     public TtokrroneStates(BossModule module) : base(module)
     {
@@ -96,7 +96,7 @@ class TtokrroneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1871, NameID = 12733)]
-public class Ttokrrone(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class Ttokrrone(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(53, -820), 29.5f, 48)]);
 

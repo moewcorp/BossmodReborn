@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T03QueenEternal;
 
-class Besiegement(BossModule module) : Components.GenericAOEs(module)
+sealed class Besiegement(BossModule module) : Components.GenericAOEs(module)
 {
     private const float L = 60f;
     public readonly List<AOEInstance> AOEs = new(4);
@@ -28,7 +28,7 @@ class Besiegement(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x03)
+        if (index != 0x03u)
             return;
         States(state, NumCasts != 1);
     }

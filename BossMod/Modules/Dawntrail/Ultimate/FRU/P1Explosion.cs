@@ -1,11 +1,11 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.FRU;
 
-class P1ExplosionBurntStrikeFire(BossModule module) : BurntStrike(module, (uint)AID.ExplosionBurntStrikeFire);
-class P1ExplosionBurntStrikeLightning(BossModule module) : BurntStrike(module, (uint)AID.ExplosionBurntStrikeLightning);
-class P1ExplosionBurnout(BossModule module) : BurntOut(module, (uint)AID.ExplosionBurnout);
+sealed class P1ExplosionBurntStrikeFire(BossModule module) : BurntStrike(module, (uint)AID.ExplosionBurntStrikeFire);
+sealed class P1ExplosionBurntStrikeLightning(BossModule module) : BurntStrike(module, (uint)AID.ExplosionBurntStrikeLightning);
+sealed class P1ExplosionBurnout(BossModule module) : BurntOut(module, (uint)AID.ExplosionBurnout);
 
 // TODO: non-fixed conga?
-class P1Explosion(BossModule module) : Components.GenericTowers(module)
+sealed class P1Explosion(BossModule module) : Components.GenericTowers(module)
 {
     public WDir TowerDir;
     public DateTime Activation;
