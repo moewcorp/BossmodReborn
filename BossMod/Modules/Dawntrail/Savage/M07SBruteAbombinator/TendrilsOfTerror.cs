@@ -14,7 +14,7 @@ sealed class TendrilsOfTerrorBait(BossModule module) : Components.GenericBaitAwa
             var target = WorldState.Actors.Find(spell.TargetID)!;
             AddBait();
             AddBait(45f.Degrees());
-            void AddBait(Angle rotation = default) => CurrentBaits.Add(new(target, target, TendrilsOfTerror.Cross, Module.CastFinishAt(spell, 4.6f), rotation));
+            void AddBait(Angle rotation = default) => CurrentBaits.Add(new(target, target, TendrilsOfTerror.Cross, Module.CastFinishAt(spell, 4.6f), default, rotation));
         }
     }
 

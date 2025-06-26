@@ -143,7 +143,7 @@ class GlassyEyed(BossModule module) : Components.GenericGaze(module)
         var count = _affected.Count;
         if (count == 0 || WorldState.CurrentTime < _activation.AddSeconds(-10d))
             return [];
-        Span<Eye> eyes = new Eye[count];
+        var eyes = new Eye[count];
         for (var i = 0; i < count; ++i)
             eyes[i] = new(_affected[i].Position, _activation);
         return eyes;

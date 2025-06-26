@@ -281,7 +281,7 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     {
         var clipperOffset = new ClipperOffset
         {
-            ArcTolerance = 1000d
+            ArcTolerance = 2000d
         };
         var allPaths = new Paths64();
         var count = Parts.Count;
@@ -332,7 +332,7 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         var result = new List<RelPolygonWithHoles>(count);
         for (var i = 0; i < count; ++i)
         {
-            result.Add(new RelPolygonWithHoles([.. Parts[i].Exterior]));
+            result.Add(new([.. Parts[i].Exterior]));
         }
         return new(result);
     }

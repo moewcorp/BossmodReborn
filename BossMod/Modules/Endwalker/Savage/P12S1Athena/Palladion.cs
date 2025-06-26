@@ -191,7 +191,7 @@ class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 class PalladionWhiteFlame : Components.GenericBaitAway
 {
     private readonly Palladion? _palladion;
-    public static readonly Actor FakeActor = new(default, default, -1, "dummy", default, ActorType.None, Class.None, default, new(100f, default, 100f, default));
+    public static readonly WPos FakeActor = new(100f, 100f);
     private static readonly AOEShapeRect _shape = new(100f, 2f);
 
     public PalladionWhiteFlame(BossModule module) : base(module)

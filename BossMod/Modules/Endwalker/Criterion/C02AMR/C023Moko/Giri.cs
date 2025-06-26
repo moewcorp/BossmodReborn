@@ -149,7 +149,7 @@ class IaiGiriBait : Components.GenericBaitAway
     public class Instance(Actor source)
     {
         public Actor Source = source;
-        public Actor FakeSource = new(0, 0, -1, "", 0, ActorType.None, Class.None, 0, new());
+        public WPos FakeSource;
         public Actor? Target;
         public List<Angle> DirOffsets = [];
         public List<string> Hints = [];
@@ -171,7 +171,7 @@ class IaiGiriBait : Components.GenericBaitAway
     {
         foreach (var inst in Instances)
             if (inst.Target != null)
-                inst.FakeSource.PosRot = inst.Target.PosRot - _jumpOffset * inst.Target.Rotation.ToDirection().ToVec4();
+                inst.FakeSource = inst.Target.Position - _jumpOffset * inst.Target.Rotation.ToDirection();
 
         // these typically are assigned over a single frame
         if (_baitsDirty)
@@ -330,7 +330,7 @@ class IaiGiriResolve(BossModule module) : Components.GenericAOEs(module)
                 foreach (var off in bait.DirOffsets)
                 {
                     curRot += off;
-                    inst.AOEs.Add(new(new AOEShapeCone(comp!.Distance, 135f.Degrees()), bait.FakeSource.Position, curRot, nextActivation));
+                    inst.AOEs.Add(new(new AOEShapeCone(comp!.Distance, 135f.Degrees()), bait.FakeSource, curRot, nextActivation));
                     nextActivation = nextActivation.AddSeconds(3.1d);
                 }
                 _instances.Add(inst);

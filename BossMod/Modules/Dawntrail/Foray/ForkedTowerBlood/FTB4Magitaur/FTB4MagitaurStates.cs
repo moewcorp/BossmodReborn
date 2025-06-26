@@ -141,13 +141,13 @@ sealed class FTB4MagitaurStates : StateMachineBuilder
             .ActivateOnEnter<CriticalAxeLanceBlow>();
         ComponentCondition<CriticalAxeLanceBlow>(id + 0x10u, 6.5f, comp => comp.NumCasts > 1, "In OR Out AOEs 1")
             .DeactivateOnExit<CriticalAxeLanceBlow>();
-        ComponentCondition<SagesStaff>(id + 0x20u, 4.8f, comp => comp.NumCasts != 0, "Line stacks 1 resolve")
+        ComponentCondition<SagesStaff>(id + 0x20u, 4.8f, comp => comp.NumCasts == 3, "Line stacks 1 resolve")
             .ResetComp<SagesStaff>()
             .ActivateOnExit<CriticalAxeLanceBlow>();
         ComponentCondition<SagesStaff>(id + 0x30u, 6.1f, comp => comp.CurrentBaits.Count != 0, "Line stacks 2 appear");
         ComponentCondition<CriticalAxeLanceBlow>(id + 0x40u, 6.3f, comp => comp.NumCasts > 1, "In OR Out AOEs 2")
             .DeactivateOnExit<CriticalAxeLanceBlow>();
-        ComponentCondition<SagesStaff>(id + 0x50u, 5.2f, comp => comp.NumCasts != 0, "Line stacks 2 resolve")
+        ComponentCondition<SagesStaff>(id + 0x50u, 5.2f, comp => comp.NumCasts == 3, "Line stacks 2 resolve")
             .DeactivateOnExit<SagesStaff>();
     }
 

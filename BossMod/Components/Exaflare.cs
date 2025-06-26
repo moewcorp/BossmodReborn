@@ -33,7 +33,7 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
         var futureCount = futureAOEs.Count;
         var imminentCount = imminentAOEs.Length;
 
-        Span<AOEInstance> aoes = new AOEInstance[futureCount + imminentCount];
+        var aoes = new AOEInstance[futureCount + imminentCount];
         for (var i = 0; i < futureCount; ++i)
         {
             var aoe = futureAOEs[i];

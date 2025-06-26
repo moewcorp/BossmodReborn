@@ -32,7 +32,7 @@ sealed class SearchMarkOfDeath(BossModule module) : Components.GenericAOEs(modul
         var count = observers.Count;
         if (count == 0)
             return [];
-        Span<AOEInstance> aoes = new AOEInstance[count];
+        var aoes = new AOEInstance[count];
         var act = WorldState.FutureTime(1d);
         var index = 0;
         for (var i = 0; i < count; ++i)
@@ -43,7 +43,7 @@ sealed class SearchMarkOfDeath(BossModule module) : Components.GenericAOEs(modul
                 aoes[index++] = new(cone, observer.Position, observer.Rotation, act);
             }
         }
-        return aoes[..index];
+        return aoes.AsSpan()[..index];
     }
 }
 
