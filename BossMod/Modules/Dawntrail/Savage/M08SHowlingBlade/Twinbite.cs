@@ -14,7 +14,7 @@ sealed class Twinbite(BossModule module) : Components.GenericBaitAway(module, (u
             {
                 ref readonly var p = ref party[i];
                 if (p.Role == Role.Tank)
-                    CurrentBaits.Add(new(new Actor(default, default, default, default!, default, default, default, default, default), p, circle, Module.CastFinishAt(spell, 0.1f)));
+                    CurrentBaits.Add(new((WPos)default, p, circle, Module.CastFinishAt(spell, 0.1f)));
             }
         }
     }

@@ -183,7 +183,7 @@ class PalladianRayBait(BossModule module) : Components.GenericBaitAway(module, (
     {
         CurrentBaits.Clear();
         foreach (var d in _dummies)
-            foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(d.Position).Take(4))
+            foreach (var p in Raid.WithoutSlot(false, true, true).SortedByRange(d).Take(4))
                 CurrentBaits.Add(new(d, p, _shape));
     }
 }

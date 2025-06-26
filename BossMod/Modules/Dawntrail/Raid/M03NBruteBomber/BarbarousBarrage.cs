@@ -29,7 +29,7 @@ sealed class BarbarousBarrageKnockback(BossModule module) : Components.GenericKn
         var count = towers.Count;
         if (count == 0)
             return [];
-        Span<Knockback> sources = new Knockback[count];
+        var sources = new Knockback[count];
         for (var i = 0; i < count; ++i)
         {
             var t = towers[i];

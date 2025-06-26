@@ -76,7 +76,7 @@ class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBaitAway(
         var party = Raid.WithoutSlot(false, true, true);
         var len = party.Length;
 
-        Span<(Actor actor, float distSq)> distances = new (Actor, float)[len];
+        (Actor actor, float distSq)[] distances = new (Actor, float)[len];
         var sourcePos = _source.Position;
 
         for (var i = 0; i < len; ++i)

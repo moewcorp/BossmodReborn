@@ -11,7 +11,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        Span<AOEInstance> result = new AOEInstance[count];
+        var result = new AOEInstance[count];
         Span<bool> visited = stackalloc bool[6];
         const float slice = 1f / 60f;
 
@@ -33,7 +33,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
                 }
             }
         }
-        return result[..index];
+        return result.AsSpan()[..index];
     }
 
     public override void OnEventEnvControl(byte index, uint state)

@@ -19,7 +19,7 @@ sealed class EscelonsFall(BossModule module) : Components.GenericBaitAway(module
         var party = Raid.WithoutSlot(false, true, true);
         var len = party.Length;
 
-        Span<(Actor actor, float distSq)> distances = new (Actor, float)[len];
+        (Actor actor, float distSq)[] distances = new (Actor, float)[len];
         var center = Arena.Center;
 
         for (var i = 0; i < len; ++i)

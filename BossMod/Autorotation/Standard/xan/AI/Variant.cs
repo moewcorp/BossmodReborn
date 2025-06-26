@@ -35,7 +35,7 @@ public class VariantAI(RotationModuleManager manager, Actor player) : AIBase(man
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         var opt = strategy.Option(Track.Rampart);
         var canUse = false;
