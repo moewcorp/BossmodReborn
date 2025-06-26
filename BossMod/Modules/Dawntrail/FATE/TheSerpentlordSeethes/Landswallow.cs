@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.FATE.Ttokrrone;
 
-class Landswallow(BossModule module) : Components.GenericAOEs(module)
+sealed class Landswallow(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect1 = new(38f, 13.5f);
     private static readonly AOEShapeRect rect2 = new(50f, 13.5f);
@@ -24,7 +24,7 @@ class Landswallow(BossModule module) : Components.GenericAOEs(module)
         { (default, -135f.Degrees()), new (WPos, Angle, AOEShape)[]
             {
                 (new(52.995f, -820.005f), -0.003f.Degrees(), rect1),
-                (new(52.995f, -790.524f), -180.Degrees(), rect3),
+                (new(52.995f, -790.524f), -180f.Degrees(), rect3),
                 (new(52.995f, -849.516f), -45.003f.Degrees(), rect2),
                 (new(23.484f, -820.005f), 112.449f.Degrees(), rect4),
                 (new(73.747f, -840.757f), -0.003f.Degrees(), rect2),
@@ -63,14 +63,14 @@ class Landswallow(BossModule module) : Components.GenericAOEs(module)
             {
                 (new(52.995f, -820.005f), 89.999f.Degrees(), rect1),
                 (new(82.475f, -820.005f), -45.003f.Degrees(), rect2),
-                (new(52.995f, -790.524f), -180.Degrees(), rect3),
+                (new(52.995f, -790.524f), -180f.Degrees(), rect3),
                 (new(52.995f, -849.516f), -22.503f.Degrees(), rect4),
-                (new(32.242f, -799.252f), -180.Degrees(), rect2),
+                (new(32.242f, -799.252f), -180f.Degrees(), rect2),
                 (new(32.242f, -840.757f), 44.998f.Degrees(), rect3)
             }},
         { (180f.Degrees(), -45f.Degrees()), new (WPos, Angle, AOEShape)[]
             {
-                (new(52.995f, -820.005f), 180.Degrees(), rect1),
+                (new(52.995f, -820.005f), 180f.Degrees(), rect1),
                 (new(52.995f, -849.516f), -22.503f.Degrees(), rect4),
                 (new(32.242f, -799.252f), 89.999f.Degrees(), rect2),
                 (new(73.747f, -799.252f), -112.504f.Degrees(), rect4),
@@ -81,7 +81,7 @@ class Landswallow(BossModule module) : Components.GenericAOEs(module)
             {
                 (new(52.995f, -820.005f), 179.995f.Degrees(), rect1),
                 (new(52.995f, -849.516f), 22.498f.Degrees(), rect4),
-                (new(73.747f, -799.252f), 180.Degrees(), rect2),
+                (new(73.747f, -799.252f), 180f.Degrees(), rect2),
                 (new(73.747f, -840.757f), -22.503f.Degrees(), rect4),
                 (new(52.995f, -790.524f), -157.505f.Degrees(), rect4),
                 (new(32.242f, -840.757f), 44.998f.Degrees(), rect3)
@@ -95,14 +95,10 @@ class Landswallow(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        var aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        if (count > 1)
         {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe;
+            aoes[0].Color = Colors.Danger;
         }
         return aoes;
     }

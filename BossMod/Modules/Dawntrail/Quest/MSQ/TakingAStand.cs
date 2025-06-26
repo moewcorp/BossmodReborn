@@ -66,7 +66,7 @@ public enum AID : uint
     Fire = 966 // DopproIllusionist->player, 1.0s cast, single-target
 }
 
-class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 25f);
     private AOEInstance? _aoe;
@@ -85,11 +85,11 @@ class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Roar1)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9f));
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d));
     }
 }
 
-class MagickedStandard(BossModule module) : Components.GenericAOEs(module)
+sealed class MagickedStandard(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = [];
     private static readonly AOEShapeCircle circle = new(10f);
@@ -113,7 +113,7 @@ class MagickedStandard(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class GreatLeap(BossModule module) : Components.GenericAOEs(module)
+sealed class GreatLeap(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime activation;
     private static readonly AOEShapeCircle circle = new(18);
@@ -131,7 +131,7 @@ class GreatLeap(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.GreatLeapVisual)
-            activation = Module.CastFinishAt(spell, 0.2f);
+            activation = Module.CastFinishAt(spell, 0.2d);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -141,7 +141,7 @@ class GreatLeap(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SelfSacrifice(BossModule module) : Components.GenericAOEs(module)
+sealed class SelfSacrifice(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
     private static readonly AOEShapeCircle circle = new(10f);
@@ -150,7 +150,7 @@ class SelfSacrifice(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.LethalSwipeShade)
-            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 0.2f)));
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 0.2d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -160,7 +160,7 @@ class SelfSacrifice(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Kickdown(BossModule module) : Components.GenericKnockback(module)
+sealed class Kickdown(BossModule module) : Components.GenericKnockback(module)
 {
     private DateTime activation;
     private readonly MagickedStandard _aoe = module.FindComponent<MagickedStandard>()!;
@@ -217,17 +217,16 @@ class Kickdown(BossModule module) : Components.GenericKnockback(module)
     }
 }
 
-class RiotousRampage(BossModule module) : Components.CastTowers(module, (uint)AID.RiotousRampage, 4f);
-class Roar1(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar1);
-class Roar2(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar2);
-class LethalSwipe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LethalSwipe, new AOEShapeCone(45f, 90f.Degrees()));
-class Fireshower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireshower, 6f);
-class RunThrough(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RunThrough1, (uint)AID.RunThrough2], new AOEShapeRect(45f, 2.5f));
-class Fireflood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireflood, 18f);
-class TuraliStoneIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TuraliStoneIII, 4f);
-class TuraliQuake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TuraliQuake, 9f, maxCasts: 5);
+sealed class RiotousRampage(BossModule module) : Components.CastTowers(module, (uint)AID.RiotousRampage, 4f);
+sealed class Roar(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Roar1, (uint)AID.Roar2]);
+sealed class LethalSwipe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LethalSwipe, new AOEShapeCone(45f, 90f.Degrees()));
+sealed class Fireshower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireshower, 6f);
+sealed class RunThrough(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RunThrough1, (uint)AID.RunThrough2], new AOEShapeRect(45f, 2.5f));
+sealed class Fireflood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireflood, 18f);
+sealed class TuraliStoneIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TuraliStoneIII, 4f);
+sealed class TuraliQuake(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TuraliQuake, 9f, maxCasts: 5);
 
-class AutoWukLamat(WorldState ws) : QuestBattle.UnmanagedRotation(ws, 3f)
+sealed class AutoWukLamat(WorldState ws) : QuestBattle.UnmanagedRotation(ws, 3f)
 {
     protected override void Exec(Actor? primaryTarget)
     {
@@ -265,7 +264,7 @@ class AutoWukLamat(WorldState ws) : QuestBattle.UnmanagedRotation(ws, 3f)
     }
 }
 
-class WukLamatAI(BossModule module) : QuestBattle.RotationModule<AutoWukLamat>(module)
+sealed class WukLamatAI(BossModule module) : QuestBattle.RotationModule<AutoWukLamat>(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -283,14 +282,13 @@ class WukLamatAI(BossModule module) : QuestBattle.RotationModule<AutoWukLamat>(m
     }
 }
 
-class TakingAStandStates : StateMachineBuilder
+sealed class TakingAStandStates : StateMachineBuilder
 {
     public TakingAStandStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<RoarArenaChange>()
-            .ActivateOnEnter<Roar1>()
-            .ActivateOnEnter<Roar2>()
+            .ActivateOnEnter<Roar>()
             .ActivateOnEnter<MagickedStandard>()
             .ActivateOnEnter<Kickdown>()
             .ActivateOnEnter<RiotousRampage>()
@@ -303,12 +301,12 @@ class TakingAStandStates : StateMachineBuilder
             .ActivateOnEnter<Fireflood>()
             .ActivateOnEnter<RunThrough>()
             .ActivateOnEnter<WukLamatAI>()
-            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.HPMP.CurHP == 1;
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || module.PrimaryActor.HPMP.CurHP == 1u;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70438, NameID = 12677)]
-public class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, startingArena)
+public sealed class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, startingArena)
 {
     private static readonly WPos arenaCenter = new(500f, -175f);
     private static readonly ArenaBoundsComplex startingArena = new([new Polygon(arenaCenter, 24.5f, 20)]);

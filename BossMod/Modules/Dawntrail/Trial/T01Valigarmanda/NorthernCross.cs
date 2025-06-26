@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class NorthernCross(BossModule module) : Components.GenericAOEs(module)
+sealed class NorthernCross(BossModule module) : Components.GenericAOEs(module)
 {
     public AOEInstance? _aoe;
     private static readonly AOEShapeRect _shape = new(25f, 30f);
@@ -9,12 +9,12 @@ class NorthernCross(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x02)
+        if (index != 0x02u)
             return;
         var offset = state switch
         {
-            0x00200010 => -90f.Degrees(),
-            0x00020001 => 90f.Degrees(),
+            0x00200010u => -90f.Degrees(),
+            0x00020001u => 90f.Degrees(),
             _ => default
         };
         if (offset != default)

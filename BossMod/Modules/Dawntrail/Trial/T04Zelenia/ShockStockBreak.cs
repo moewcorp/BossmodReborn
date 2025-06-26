@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T04Zelenia;
 
-class ShockSpread(BossModule module) : Components.GenericStackSpread(module, true)
+sealed class ShockSpread(BossModule module) : Components.GenericStackSpread(module, true)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -15,7 +15,7 @@ class ShockSpread(BossModule module) : Components.GenericStackSpread(module, tru
     }
 }
 
-class ShockAOE(BossModule module) : Components.GenericAOEs(module)
+sealed class ShockAOE(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(4f);
     private readonly List<AOEInstance> _aoes = new(8);
@@ -37,7 +37,7 @@ class ShockAOE(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class StockBreak(BossModule module) : Components.GenericStackSpread(module)
+sealed class StockBreak(BossModule module) : Components.GenericStackSpread(module)
 {
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {

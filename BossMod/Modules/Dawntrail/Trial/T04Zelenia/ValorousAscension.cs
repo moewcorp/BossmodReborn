@@ -1,8 +1,8 @@
 namespace BossMod.Dawntrail.Trial.T04Zelenia;
 
-class ValorousAscension(BossModule module) : Components.RaidwideCast(module, (uint)AID.ValorousAscension1, "Raidwide x3");
+sealed class ValorousAscension(BossModule module) : Components.RaidwideCast(module, (uint)AID.ValorousAscension1, "Raidwide x3");
 
-class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(module)
+sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 4f);
     private readonly List<AOEInstance> _aoes = new(4);
