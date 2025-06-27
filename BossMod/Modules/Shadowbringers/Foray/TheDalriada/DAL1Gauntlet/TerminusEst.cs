@@ -2,7 +2,7 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL1Gauntlet;
 
 sealed class TerminusEst(BossModule module) : Components.GenericAOEs(module)
 {
-    public readonly List<AOEInstance> _aoes = new(4);
+    private readonly List<AOEInstance> _aoes = new(4);
     public static readonly AOEShapeRect Rect = new(50f, 4f);
     public readonly List<Actor> Casters = new(10);
     public Angle CommonAngle;
@@ -43,13 +43,14 @@ sealed class TerminusEst(BossModule module) : Components.GenericAOEs(module)
                 CommonAngle = countA > countB ? angleA : angleB;
                 var leastCommon = countA > countB ? angleB : angleA;
 
+                var act = WorldState.FutureTime(10d);
                 for (var i = 0; i < count; ++i)
                 {
                     var c = Casters[i];
                     var rot = c.Rotation;
                     if (rot == leastCommon)
                     {
-                        _aoes.Add(new(Rect, WPos.ClampToGrid(c.Position), rot, WorldState.FutureTime(10d)));
+                        _aoes.Add(new(Rect, WPos.ClampToGrid(c.Position), rot, act));
                     }
                 }
             }
