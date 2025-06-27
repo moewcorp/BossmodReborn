@@ -3,6 +3,7 @@ namespace BossMod.Dawntrail.Alliance.A11Prishe;
 sealed class AuroralUppercut(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
 {
     private Knockback? _kb;
+    private RelSimplifiedComplexPolygon poly = new();
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb != null && actor.FindStatus(SID.Knockback) == null ? Utils.ZeroOrOne(ref _kb) : [];
 
@@ -16,7 +17,13 @@ sealed class AuroralUppercut(BossModule module) : Components.GenericKnockback(mo
             _ => default
         };
         if (distance != default)
+        {
             _kb = new(Arena.Center, distance, Module.CastFinishAt(spell, 1.6d));
+            if (Arena.Bounds is ArenaBoundsComplex arena)
+            {
+                poly = arena.poly.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
+            }
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
@@ -34,9 +41,11 @@ sealed class AuroralUppercut(BossModule module) : Components.GenericKnockback(mo
         {
             var center = Arena.Center;
             var distance = kb.Distance;
+            var polygon = poly;
             hints.AddForbiddenZone(p =>
             {
-                if (Module.InBounds(p + distance * (p - center).Normalized()))
+                var offset = p - center;
+                if (polygon.Contains(offset + distance * offset.Normalized()))
                     return 1f;
                 return default;
             }, kb.Activation);

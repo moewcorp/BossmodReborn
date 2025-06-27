@@ -16,6 +16,9 @@ sealed class PowerfulGustKB(BossModule module) : Components.SimpleKnockbacks(mod
 
 sealed class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Downburst, 10f, stopAfterWall: true)
 {
+    private RelSimplifiedComplexPolygon polygon = new();
+    private bool polygonInit;
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
@@ -24,14 +27,20 @@ sealed class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module
             var act = Module.CastFinishAt(castinfo);
             if (!IsImmune(slot, act))
             {
+                if (!polygonInit)
+                {
+                    polygon = T03QueenEternal.XArena.poly.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
+                    polygonInit = true;
+                }
                 var origin = castinfo.LocXZ;
                 var center = Arena.Center;
-                var poly = T03QueenEternal.XArena.poly;
+                var poly = polygon;
                 hints.AddForbiddenZone(p =>
                 {
                     // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
-                    var offset = (p - origin).Normalized();
-                    if (Module.InBounds(p + 10f * offset) && Intersect.RayPolygon(p - center, offset, poly) > 10f)
+                    var offsetSource = (p - origin).Normalized();
+                    var offsetCenter = p - center;
+                    if (polygon.Contains(offsetCenter + 10f * offsetSource.Normalized()) && Intersect.RayPolygon(offsetCenter, offsetSource, poly) > 10f)
                         return 1f;
                     return default;
                 }, act);

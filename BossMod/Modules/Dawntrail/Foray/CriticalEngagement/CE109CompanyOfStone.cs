@@ -234,16 +234,16 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
                         ref readonly var aoe = ref aoes[i];
                         rectangle.Add(new(aoe.Origin, aoe.Origin + 60f * aoe.Rotation.ToDirection(), 4f));
                     }
-                    AOEShapeCustom combine = new([.. rectangle]);
-                    combine.GetCombinedPolygon(Arena.Center);
-                    poly = combine.Polygon!;
+                    AOEShapeCustom combine = new(rectangle);
+                    poly = combine.GetCombinedPolygon(Arena.Center);
                     polyInit = true;
                 }
                 var center = Arena.Center;
+                var polygon = poly;
                 hints.AddForbiddenZone(p =>
                 {
                     var projected = p + 15f * (p - center).Normalized();
-                    if (projected.InCircle(center, 20f) && !poly.Contains(projected - center))
+                    if (projected.InCircle(center, 20f) && !polygon.Contains(projected - center))
                         return 1f;
                     return default;
                 }, activation);

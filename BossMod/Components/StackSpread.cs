@@ -573,30 +573,69 @@ public class DonutStack(BossModule module, uint aid, uint icon, float innerRadiu
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == Icon)
+        {
             AddStack(actor, WorldState.FutureTime(ActivationDelay));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == Aid)
-            Stacks.Clear();
+        {
+            var count = Stacks.Count;
+            var t = spell.MainTargetID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (Stacks[i].Target.InstanceID == t)
+                {
+                    Stacks.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+    }
+
+    public override void Update()
+    {
+        var count = Stacks.Count - 1;
+        for (var i = count; i >= 0; --i)
+        {
+            if (Stacks[i].Target.IsDead)
+            {
+                Stacks.RemoveAt(i);
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveStacks.Count == 0)
+        var count = Stacks.Count;
+        if (count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var c in Raid.WithoutSlot().Where(x => ActiveStacks.Any(y => y.Target == x)).Exclude(actor))
-            forbidden.Add(ShapeDistance.InvertedCircle(c.Position, Donut.InnerRadius * 0.25f));
+        var forbidden = new List<Func<WPos, float>>(count);
+        var radius = Donut.InnerRadius * 0.25f;
+        for (var i = 0; i < count; ++i)
+        {
+            var s = Stacks[i];
+            if (s.Target == actor)
+            {
+                continue;
+            }
+            forbidden.Add(ShapeDistance.InvertedCircle(s.Target.Position, radius));
+        }
         if (forbidden.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveStacks.FirstOrDefault().Activation);
+        {
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Stacks[0].Activation);
+        }
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach (var c in ActiveStacks)
-            Donut.Draw(Arena, c.Target.Position);
+        var count = Stacks.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            Donut.Draw(Arena, Stacks[i].Target.Position);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) { }

@@ -4,6 +4,7 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
 {
     public readonly List<AOEInstance> AOEs = new(2);
     private static readonly AOEShapeCircle circle = new(35f);
+    private NorthSouthwind? _kb = module.FindComponent<NorthSouthwind>();
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Count == 0 ? [] : CollectionsMarshal.AsSpan(AOEs)[..1];
 
@@ -39,6 +40,18 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
         if (AOEs.Count != 0 && spell.Action.ID == WatchedAction)
         {
             AOEs.RemoveAt(0);
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        _kb ??= Module.FindComponent<NorthSouthwind>();
+        var kbs = _kb!.ActiveKnockbacks(slot, actor);
+        if (kbs.Length != 0 && !_kb.IsImmune(slot, kbs[0].Activation))
+        { }
+        else
+        {
+            base.AddAIHints(slot, actor, assignment, hints);
         }
     }
 }
