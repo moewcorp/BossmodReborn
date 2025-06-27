@@ -34,8 +34,8 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         WindfangStonefang2(id + 0xF0000u, 3.3f);
         TrackingTremors(id + 0x100000u, 10f);
         ExtraplanarPursuit(id + 0x110000u, 1.8f);
-        ExtraplanarPursuit(id + 0x120000u, 10.8f);
-        SimpleState(id + 0x130000u, 7.4f, "Enrage");
+        ExtraplanarPursuit(id + 0x120000u, 10.8f, true);
+        SimpleState(id + 0x130000u, 1.5f, "Enrage");
     }
 
     private void Phase2(uint id)
@@ -62,16 +62,21 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         HerosBlow(id + 0x100000u, 9.4f);
         UltraviolentRay(id + 0x110000u, 12.3f);
         HowlingEight(id + 0x120000u, 16f);
-        SimpleState(id + 0x130000u, 11.3f, "Enrage");
+        SimpleState(id + 0x130000u, 1.5f, "Enrage");
     }
 
-    private void ExtraplanarPursuit(uint id, float delay)
+    private void ExtraplanarPursuit(uint id, float delay, bool last = false)
     {
         Cast(id, (uint)AID.ExtraplanarPursuitVisual, delay, 1.6f)
             .ActivateOnEnter<ExtraplanarPursuit>();
-        ComponentCondition<ExtraplanarPursuit>(id + 0x10u, 2.4f, comp => comp.NumCasts != 0, "Raidwide")
+        var cond = ComponentCondition<ExtraplanarPursuit>(id + 0x10u, 2.4f, comp => comp.NumCasts != 0, "Raidwide")
             .SetHint(StateMachine.StateHint.Raidwide)
             .DeactivateOnExit<ExtraplanarPursuit>();
+        if (last)
+        {
+            cond
+                .SetHint(StateMachine.StateHint.GroupWithNext);
+        }
     }
 
     private void GreatDivide(uint id, float delay)

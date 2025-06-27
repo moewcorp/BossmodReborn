@@ -147,8 +147,9 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
     public CastWeakpoint(BossModule module, uint aid, float radius, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight) : this(module, aid, new AOEShapeCircle(radius), statusForward, statusBackward, statusLeft, statusRight) { }
     public AOEShape Shape = shape;
     public readonly uint[] Statuses = [statusForward, statusLeft, statusBackward, statusRight]; // 4 elements: fwd, left, back, right
-    private readonly List<Actor> _casters = [];
+    protected readonly List<Actor> _casters = [];
     private readonly Dictionary<ulong, Angle> _playerWeakpoints = [];
+    protected float fallbackTime;
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
@@ -161,12 +162,12 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
         for (var i = 0; i < count; ++i)
         {
             var a = _casters[i];
-            if (Shape.Check(actor.Position, a.Position, a.CastInfo!.Rotation))
+            if (Shape.Check(actor.Position, a.Position, a.CastInfo?.Rotation ?? a.Rotation))
             {
-                if (a.CastInfo!.RemainingTime < minRemainingTime)
+                if ((a.CastInfo?.RemainingTime ?? fallbackTime) < minRemainingTime)
                 {
                     caster = a;
-                    minRemainingTime = a.CastInfo.RemainingTime;
+                    minRemainingTime = a.CastInfo?.RemainingTime ?? fallbackTime;
                 }
             }
         }
