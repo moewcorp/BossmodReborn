@@ -2,7 +2,8 @@
 
 sealed class SmitingCircuitHalfCircuitDonut(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SmitingCircuitDonut, (uint)AID.HalfCircuitDonut], new AOEShapeDonut(10f, 30f));
 sealed class SmitingCircuitHalfCircuitCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SmitingCircuitCircle, (uint)AID.HalfCircuitCircle], 10f);
-sealed class DawnOfAnAgeBitterReapingActualize(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.DawnOfAnAge, (uint)AID.BitterReaping, (uint)AID.Actualize]);
+sealed class DawnOfAnAgeActualize(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.DawnOfAnAge, (uint)AID.Actualize]);
+sealed class BitterReaping(BossModule module) : Components.SingleTargetCast(module, (uint)AID.BitterReaping);
 
 abstract class HalfRect(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(60f, 30f));
 sealed class HalfFull(BossModule module) : HalfRect(module, (uint)AID.HalfFull)
@@ -28,7 +29,8 @@ sealed class T02ZoraalJaP2States : StateMachineBuilder
             .ActivateOnEnter<DawnOfAnAgeArenaChange>()
             .ActivateOnEnter<SmitingCircuitHalfCircuitDonut>()
             .ActivateOnEnter<SmitingCircuitHalfCircuitCircle>()
-            .ActivateOnEnter<DawnOfAnAgeBitterReapingActualize>()
+            .ActivateOnEnter<DawnOfAnAgeActualize>()
+            .ActivateOnEnter<BitterReaping>()
             .ActivateOnEnter<ChasmOfVollok>()
             .ActivateOnEnter<ForgedTrack>()
             .ActivateOnEnter<HalfFull>()
