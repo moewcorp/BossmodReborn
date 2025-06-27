@@ -262,7 +262,7 @@ sealed class DeepThunder2(BossModule module) : DeepThunder(module, (uint)AID.Dee
 
 sealed class WroughtFire(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WroughtFire, 6f, tankbuster: true);
 sealed class BuildingHeat(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BuildingHeat, 6f, 4, 4);
-sealed class Ashlayer(BossModule module) : Components.RaidwideCast(module, (uint)AID.Ashlayer);
+sealed class Ashlayer(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.AshlayerVisual, (uint)AID.Ashlayer, 2.2d);
 
 sealed class D033MaulskullStates : StateMachineBuilder
 {
