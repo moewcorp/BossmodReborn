@@ -45,7 +45,7 @@ class BeastlyFuryArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BeastlyFury && Arena.Bounds == D113SpectralBerserker.StartingBounds)
-            _aoe = new(cross, Arena.Center, default, Module.CastFinishAt(spell, 1.1f));
+            _aoe = new(cross, Arena.Center, default, Module.CastFinishAt(spell, 1.1d));
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -270,9 +270,7 @@ class CratersWildRampage(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-abstract class RagingSlice(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(50f, 3f));
-class RagingSliceFirst(BossModule module) : RagingSlice(module, (uint)AID.RagingSliceFirst);
-class RagingSliceRest(BossModule module) : RagingSlice(module, (uint)AID.RagingSliceRest);
+sealed class RagingSlice(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RagingSliceFirst, (uint)AID.RagingSliceRest], new AOEShapeRect(50f, 3f));
 
 class D113SpectralBerserkerStates : StateMachineBuilder
 {
@@ -288,8 +286,7 @@ class D113SpectralBerserkerStates : StateMachineBuilder
             .ActivateOnEnter<WildRageKnockback>()
             .ActivateOnEnter<WildRageRaidwide>()
             .ActivateOnEnter<WildRage>()
-            .ActivateOnEnter<RagingSliceFirst>()
-            .ActivateOnEnter<RagingSliceRest>();
+            .ActivateOnEnter<RagingSlice>();
     }
 }
 

@@ -4,6 +4,7 @@ sealed class Turbine(BossModule module) : Components.GenericKnockback(module)
 {
     private Knockback? _kb;
     private readonly List<Square> squares = new(6);
+    private readonly FlamingCyclone _aoe = module.FindComponent<FlamingCyclone>()!;
     private RelSimplifiedComplexPolygon poly = new();
     private bool polyInit;
 
@@ -61,9 +62,14 @@ sealed class Turbine(BossModule module) : Components.GenericKnockback(module)
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        if (polyInit && poly.Contains(pos - Arena.Center))
+        var casters = _aoe.Casters;
+        var count = casters.Count;
+        for (var i = 0; i < count; ++i)
         {
-            return true;
+            if (casters[i].Check(pos))
+            {
+                return true;
+            }
         }
         return !Module.InBounds(pos);
     }
