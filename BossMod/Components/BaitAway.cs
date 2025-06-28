@@ -63,7 +63,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         for (var i = 0; i < count; ++i)
         {
             var bait = CurrentBaits[i];
-            if (!bait.Source.IsDead && bait.Target.InstanceID != id)
+            if (!bait.Source.IsDead && bait.Target.InstanceID == id)
                 activeBaitsOnTarget.Add(bait);
         }
         return activeBaitsOnTarget;
