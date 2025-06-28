@@ -75,7 +75,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (active && gelatinous[slot])
+        if (active && !gelatinous[slot])
         {
             hints.Add("Move into a voidzone to turn into pudding!");
         }

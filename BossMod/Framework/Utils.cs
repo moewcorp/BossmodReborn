@@ -3,6 +3,7 @@ using PInvoke;
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace BossMod;
 
@@ -157,7 +158,9 @@ public static partial class Utils
     }
 
     // get reference to the list element (a bit of a hack, but oh well...)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T Ref<T>(this List<T> list, int index) => ref CollectionsMarshal.AsSpan(list)[index];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Span<T> AsSpan<T>(this List<T> list) => CollectionsMarshal.AsSpan(list);
 
     // lower bound: given sorted list, find index of first element with key >= than test value
