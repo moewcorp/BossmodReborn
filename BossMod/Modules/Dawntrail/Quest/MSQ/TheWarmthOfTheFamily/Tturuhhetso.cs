@@ -56,7 +56,7 @@ public enum IconID : uint
     Spreadmarker = 140 // WukLamat/Koana/player->self
 }
 
-sealed class CandescentRayLineStack(BossModule module) : Components.LineStack(module, aidMarker: null, (uint)AID.CandescentRayLineStack, minStackSize: 3, maxStackSize: 3);
+sealed class CandescentRayLineStack(BossModule module) : Components.LineStack(module, aidMarker: default, (uint)AID.CandescentRayLineStack, minStackSize: 3, maxStackSize: 3);
 sealed class CandescentRayTB(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.CandescentRayTB, new AOEShapeRect(50f, 4f))
 {
     public override void AddHints(int slot, Actor actor, TextHints hints)

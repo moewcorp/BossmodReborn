@@ -14,7 +14,7 @@ sealed class SelfDestruct(BossModule module) : Components.CastHints(module, [(ui
 sealed class GeothermalRupture(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GeothermalRupture, 8f);
 sealed class FlameThrower(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.FlameThrowerMarker, (uint)AID.FlameThrower, 5f, 40f, 4f, 24, 24);
 
-abstract class Firestrike(BossModule module, uint aidMarker, float delay) : Components.LineStack(module, aidMarker: aidMarker, (uint)AID.Firestrike, delay, 70f, 5f, 16, 24);
+abstract class Firestrike(BossModule module, uint aidMarker, float delay) : Components.LineStack(module, aidMarker: aidMarker, (uint)AID.Firestrike, delay, 70f, 5f, 16, 24, 1, true);
 sealed class Firestrike1(BossModule module) : Firestrike(module, (uint)AID.FirestrikeMarker1, 5.1f);
 sealed class Firestrike2(BossModule module) : Firestrike(module, (uint)AID.FirestrikeMarker2, 6.2f);
 

@@ -99,6 +99,8 @@ public enum AID : uint
     ElementalImpact1 = 42432, // GaseousNereid/GaseousPhobos->self, 3.0s cast, range 5 circle, tower
     ElementalImpact2 = 42433, // GaseousNereid/GaseousPhobos->self, 3.0s cast, range 5 circle, tower
     ElementalImpact3 = 42434, // GaseousNereid/GaseousPhobos->self, 5.0s cast, range 5 circle, tower
+    ElementalImpactFailVisual = 42435, // Helper->self, no cast, single-target
+    ElementalImpactFail = 42436, // Helper->self, no cast, ???, tower explodes
     FireSpread = 43272, // Helper->players, no cast, range 60 120-degree cone
 
     GeothermalRuptureVisual = 42441, // Boss->self, 5.0s cast, single-target
