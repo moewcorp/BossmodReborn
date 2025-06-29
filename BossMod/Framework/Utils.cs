@@ -130,6 +130,7 @@ public static partial class Utils
     }
 
     // get existing map element or create new
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> map, TKey key) where TValue : new()
     {
         if (!map.TryGetValue(key, out var value))
@@ -206,6 +207,7 @@ public static partial class Utils
     }
 
     // get read only span of zero or one elements, depending on whether argument is null
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<T> ZeroOrOne<T>(ref readonly T? value) where T : struct
     {
         return value != null ? new T[1] { value.Value } : [];

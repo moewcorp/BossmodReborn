@@ -16,7 +16,7 @@ sealed class GhastlyAura(BossModule module) : Components.TemporaryMisdirection(m
 sealed class FellFlowAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FellFlow, new AOEShapeCone(50f, 60f.Degrees()));
 sealed class FellFlowBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(50f, 15f.Degrees()), (uint)IconID.FellFlow, (uint)AID.FellFlowBait, 5.2d);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.TheDaldriada, GroupID = 778, NameID = 10004, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.TheDalriada, GroupID = 778, NameID = 10004, SortOrder = 3)]
 public sealed class DAL2Cuchulainn(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(650f, -187.4f);
