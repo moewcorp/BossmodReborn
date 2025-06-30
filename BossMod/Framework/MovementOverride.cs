@@ -1,4 +1,3 @@
-using BossMod.AI;
 using Dalamud.Game.Config;
 using Dalamud.Plugin;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
