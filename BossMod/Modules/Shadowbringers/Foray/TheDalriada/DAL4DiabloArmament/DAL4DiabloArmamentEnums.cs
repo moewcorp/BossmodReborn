@@ -2,26 +2,28 @@
 
 public enum OID : uint
 {
-    Boss = 0x31B3, // R28.500, x1
-    Helper = 0x233C, // R0.500, x33, mixed types
-    DiabolicBit = 0x31B4, // R1.200, x0 (spawn during fight)
-    Aether = 0x31B5, // R1.500, x0 (spawn during fight)
-    Actor1eb1d8 = 0x1EB1D8, // R0.500, x0 (spawn during fight), EventObj type
-    Actor1eb1d7 = 0x1EB1D7, // R0.500, x0 (spawn during fight), EventObj type
-    Actor1eb1d6 = 0x1EB1D6, // R0.500, x0 (spawn during fight), EventObj type
-    Actor1eb1d9 = 0x1EB1D9, // R0.500, x0 (spawn during fight), EventObj type
+    Boss = 0x31B3, // R28.5
+
+    DiabolicBit = 0x31B4, // R1.2
+    Aether = 0x31B5, // R1.5
+    DiabolicGate1 = 0x1EB1D8, // R0.5
+    DiabolicGate2 = 0x1EB1D7, // R0.5
+    DiabolicGate3 = 0x1EB1D6, // R0.5
+    DiabolicGate4 = 0x1EB1D9, // R0.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     BrutalCamisado = 24899, // Boss->player, no cast, single-target
+    DeathWall = 24994, // Helper->self, no cast, range 17-60 donut
     TeleportBit = 23725, // DiabolicBit->location, no cast, single-target
 
-    AdvancedDeathIV = 23727, // Boss->self, 4.0s cast, single-target
-    AdvancedDeathIVAOE = 23728, // Helper->location, 7.0s cast, range 1 circle
+    AdvancedDeathIVVisual = 23727, // Boss->self, 4.0s cast, single-target
+    AdvancedDeathIV = 23728, // Helper->location, 7.0s cast, range 10 circle
 
-    AdvancedDeathRay = 23748, // Boss->self, 5.0s cast, single-target
-    AdvancedDeathRayAOE = 23749, // Helper->player, no cast, range 70 width 8 rect
+    AdvancedDeathRayVisual = 23748, // Boss->self, 5.0s cast, single-target, tankbuster
+    AdvancedDeathRay = 23749, // Helper->player, no cast, range 70 width 8 rect
 
     AdvancedNox = 23743, // Boss->self, 4.0s cast, single-target
     AdvancedNoxAOEFirst = 23744, // Helper->self, 10.0s cast, range 10 circle
@@ -34,13 +36,15 @@ public enum AID : uint
     AethericExplosion2 = 23751, // Helper->self, 5.0s cast, ???
 
     Aetheroplasm = 23733, // Aether->self, no cast, range 6 circle
+
+    MagitekBit = 23724, // Boss->self, 4.0s cast, single-target
     AssaultCannon = 23726, // DiabolicBit->self, 7.0s cast, range 100 width 6 rect
 
     DeadlyDealingAOE = 23746, // Boss->location, 7.0s cast, range 6 circle
-    DeadlyDealing = 23747, // Helper->self, 7.5s cast, ???
+    DeadlyDealing = 23747, // Helper->self, 7.5s cast, ???, knockback 30, away from source
 
     DiabolicGate1 = 23711, // Boss->self, 4.0s cast, single-target
-    DiabolicGate2 = 25028, // Helper->self, 5.0s cast, ???
+    DiabolicGate2 = 25028, // Helper->self, 5.0s cast, ???, raidwide
 
     AetherochemicalLaserAOE1 = 23716, // Boss->self, no cast, range 60 width 22 rect
     AetherochemicalLaserAOE2 = 23717, // Boss->self, no cast, range 60 width 60 rect
@@ -62,14 +66,12 @@ public enum AID : uint
     LightPseudopillar = 23729, // Boss->self, 3.0s cast, single-target
     LightPseudopillarAOE = 23730, // Helper->location, 4.0s cast, range 10 circle
 
-    MagitekBit = 23724, // Boss->self, 4.0s cast, single-target
-
-    PillarOfShamash1 = 23737, // Helper->self, 8.0s cast, range 70 20-degree cone
-    PillarOfShamash2 = 23738, // Helper->self, 9.5s cast, range 70 20-degree cone
-    PillarOfShamash3 = 23739, // Helper->self, 11.0s cast, range 70 20-degree cone
-    PillarOfShamash4 = 23740, // Helper->player, no cast, range 70 width 4 rect
-    PillarOfShamash5 = 23741, // Helper->player, no cast, single-target
-    PillarOfShamash6 = 23742, // Helper->player, no cast, range 70 width 8 rect
+    PillarOfShamashCone1 = 23737, // Helper->self, 8.0s cast, range 70 20-degree cone
+    PillarOfShamashCone2 = 23738, // Helper->self, 9.5s cast, range 70 20-degree cone
+    PillarOfShamashCone3 = 23739, // Helper->self, 11.0s cast, range 70 20-degree cone
+    PillarOfShamashBait = 23740, // Helper->player, no cast, range 70 width 4 rect, bait away
+    PillarOfShamashMarker = 23741, // Helper->player, no cast, single-target, line stack
+    PillarOfShamashStack = 23742, // Helper->player, no cast, range 70 width 8 rect
 
     RuinousPseudomen1 = 23712, // Boss->self, 15.0s cast, single-target
     RuinousPseudomen2 = 23713, // Helper->self, 1.0s cast, single-target
@@ -80,30 +82,18 @@ public enum AID : uint
 
     UltimatePseudoterror = 23715, // Boss->self, 4.0s cast, range 15-70 donut
 
-    DeathWall = 24994, // Helper->self, no cast, range 17-60 donut
-
-    VoidSystemsOverload1 = 23735, // Boss->self, 5.0s cast, single-target
-    VoidSystemsOverload2 = 23736, // Helper->self, 5.0s cast, ???
-    VoidSystemsOverload3 = 25364, // Boss->self, 5.0s cast, single-target
+    VoidSystemsOverloadVisual1 = 23735, // Boss->self, 5.0s cast, single-target
+    VoidSystemsOverloadVisual2 = 25364, // Boss->self, 5.0s cast, single-target
+    VoidSystemsOverload = 23736 // Helper->self, 5.0s cast, ???, raidwide
 }
 
 public enum SID : uint
 {
-    VulnerabilityUp = 1789, // Helper/Aether/Boss->player, extra=0x1/0x2/0x3/0x4
-    UnknownStatus = 2056, // none->DiabolicBit, extra=0xE1
-    AreaOfInfluenceUp = 1749, // none->Helper, extra=0x9
-    AccelerationBomb = 2657, // none->player, extra=0x0
-    Weakness = 43, // none->player, extra=0x0
-    Transcendent = 418, // none->player, extra=0x0
-
+    AccelerationBomb = 2657 // none->player, extra=0x0
 }
+
 public enum IconID : uint
 {
-    Nox = 230, // player
-    AccelerationBomb = 267, // player
-    Spreadmarker = 23, // player
-}
-public enum TetherID : uint
-{
-    Tether1 = 1, // Aether->Aether
+    AdvancedDeathRay = 230, // player
+    PillarOfShamash = 23 // player
 }

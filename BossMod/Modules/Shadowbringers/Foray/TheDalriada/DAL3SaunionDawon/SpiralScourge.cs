@@ -126,6 +126,7 @@ sealed class SpiralScourge(BossModule module) : Components.GenericAOEs(module)
                     {
                         _aoes.Add(new(circle, pattern[j], default, act.AddSeconds(0.6d * i)));
                     }
+                    return;
                 }
             }
         }
