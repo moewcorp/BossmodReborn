@@ -2,7 +2,7 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL3SaunionDawon;
 
 sealed class MobileHaloCrossray(BossModule module) : Components.GenericAOEs(module)
 {
-    public static readonly AOEShapeCross Cross = new(60f, 8f);
+    public static readonly AOEShapeCross Cross = new(60f, 8.5f);
     public static readonly AOEShapeDonut Donut = new(9f, 60f);
     private AOEInstance? _aoe;
 

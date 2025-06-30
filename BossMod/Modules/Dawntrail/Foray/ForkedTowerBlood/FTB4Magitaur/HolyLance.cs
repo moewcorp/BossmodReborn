@@ -124,7 +124,7 @@ sealed class HolyIV(BossModule module) : Components.GenericStackSpread(module)
             ++numTargets;
             Status.Add((order, actor, expire, squareIndex));
 
-            var party = Raid.WithSlot(true, true, true);
+            var party = Raid.WithSlot(false, true, true);
             var lenP = party.Length;
             Array.Fill(InitialPositions, -1);
             var lastSquare = -1;
@@ -135,14 +135,14 @@ sealed class HolyIV(BossModule module) : Components.GenericStackSpread(module)
                 {
                     if (player.Item2.Position.InSquare(FTB4Magitaur.SquarePositions[j], 10f, FTB4Magitaur.SquareDirs[j]))
                     {
-                        InitialPositions[i] = lastSquare = j;
+                        InitialPositions[player.Item1] = lastSquare = j;
                         break;
                     }
                 }
             }
-            for (var i = 0; i < lenP; ++i)
+            for (var i = 0; i < 8; ++i)
             {
-                if (InitialPositions[i] == -1) // not in a square, assume last square as correct?
+                if (InitialPositions[i] == -1) // not in a square, assume last assigned square as correct?
                 {
                     InitialPositions[i] = lastSquare;
                 }
@@ -227,7 +227,7 @@ sealed class HolyIVHints(BossModule module) : Components.GenericAOEs(module)
                 if (s.squareIndex == index) // there might be no spread for the square if player died
                 {
                     var casts = _status.NumCasts;
-                    var isOutsideStack = index == 0 && casts < 3 || index == 1 && casts is > 3 and < 7 || index == 2 && casts is > 7 and < 11;
+                    var isOutsideStack = index == 1 && casts < 3 || index == 0 && casts is > 3 and < 7 || index == 2 && casts is > 7 and < 11;
                     return new AOEInstance[1] { new(isOutsideStack ? FTB4Magitaur.StackOutsideSquare[index] : FTB4Magitaur.StackInsideSquare[index], Arena.Center, default, _status.Stacks[0].Activation) };
                 }
             }

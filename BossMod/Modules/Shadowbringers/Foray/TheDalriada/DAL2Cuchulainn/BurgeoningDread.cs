@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL2Cuchulainn;
 
-sealed class BurgeoningDread(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace)
+sealed class BurgeoningDread(BossModule module) : Components.StatusDrivenForcedMarch(module, 3f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace, (uint)SID.RightFace, stopAtWall: true)
 {
     private static readonly Random random = new();
     private float rng = random.Next(1, 51); // used as pseudo randomisation
