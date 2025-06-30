@@ -27,7 +27,7 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         TerrestrialTitans(id + 0x80000u, 14.8f);
         WolvesReign(id + 0x90000u, 0.5f);
         TacticalPack(id + 0xA0000u, 9.2f);
-        TerrestrialRage1(id + 0xB0000u, 14.5f);
+        TerrestrialRage(id + 0xB0000u, 14.5f);
         WolvesReign3(id + 0xC0000u, 4.1f);
         GreatDivide(id + 0xD0000u, 5.4f);
         BeckonMoonlight(id + 0xE0000u, 11.3f);
@@ -35,7 +35,7 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         TrackingTremors(id + 0x100000u, 10f);
         ExtraplanarPursuit(id + 0x110000u, 1.8f);
         ExtraplanarPursuit(id + 0x120000u, 10.8f, true);
-        SimpleState(id + 0x130000u, 1.5f, "Enrage");
+        SimpleState(id + 0x130000u, 1.5f, "Enrage"); // timing varies depending on length of add phase, boss becomes untargetable after 406 seconds
     }
 
     private void Phase2(uint id)
@@ -206,9 +206,9 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
             .DeactivateOnExit<RavenousSaber>();
     }
 
-    private void TerrestrialRage1(uint id, float delay)
+    private void TerrestrialRage(uint id, float delay)
     {
-        Cast(id, (uint)AID.TerrestrialRage, delay, 3f, "Terrestial Rage 1")
+        Cast(id, (uint)AID.TerrestrialRage, delay, 3f, "Terrestial Rage")
             .ActivateOnExit<FangedCharge>()
             .ActivateOnExit<Heavensearth>()
             .ActivateOnExit<SuspendedStone>();

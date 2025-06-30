@@ -10,7 +10,9 @@ abstract class CalamitousCry(BossModule module, uint aid) : Components.LineStack
     {
         base.OnEventCast(caster, spell);
         if (spell.Action.ID == (uint)AID.LimitBreakVisual4) // not sure if line stack gets cancelled when limit break phase ends, just a safety feature
+        {
             CurrentBaits.Clear();
+        }
     }
 }
 sealed class CalamitousCry1(BossModule module) : CalamitousCry(module, (uint)AID.CalamitousCryMarker1);
@@ -21,19 +23,25 @@ sealed class FreezingDust(BossModule module) : Components.StayMove(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FreezingDust)
+        {
             Array.Fill(PlayerStates, new(Requirement.Move, Module.CastFinishAt(spell, 1d)));
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.FreezingUp && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        {
             PlayerStates[slot] = default;
+        }
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status) // it sometimes seems to skip the freezing up debuff?
     {
         if (status.ID == (uint)SID.DeepFreeze && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        {
             PlayerStates[slot] = default;
+        }
     }
 }
 
@@ -65,7 +73,6 @@ sealed class T01ValigarmandaStates : StateMachineBuilder
             .ActivateOnEnter<CalamitousEcho>()
             .ActivateOnEnter<CalamitousCry1>()
             .ActivateOnEnter<CalamitousCry2>()
-            .ActivateOnEnter<Tulidisaster1>()
             .ActivateOnEnter<Eruption>()
             .ActivateOnEnter<IceTalon>()
             .ActivateOnEnter<Tulidisaster1>()
