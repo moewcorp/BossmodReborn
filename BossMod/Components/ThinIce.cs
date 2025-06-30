@@ -12,7 +12,7 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Mask[slot] != default)
-            return new Knockback[1] { new(actor.Position, Distance, default, default, actor.Rotation, Kind.DirForward) };
+            return new Knockback[1] { new(actor.Position, Distance, default, default, MovementOverride.Instance?.LegacyMode == true ? Camera.Instance!.CameraAzimuth.Radians() + 180f.Degrees() : actor.Rotation, Kind.DirForward) };
         return [];
     }
 
