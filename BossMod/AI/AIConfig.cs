@@ -44,22 +44,28 @@ sealed class AIConfig : ConfigNode
     public Positional DesiredPositional = Positional.Any;
 
     [PropertyDisplay("Max distance to slot")]
-    public float MaxDistanceToSlot = 1;
+    public float MaxDistanceToSlot = 1f;
 
     [PropertyDisplay("Max distance to target")]
     public float MaxDistanceToTarget = 2.6f;
+
+    [PropertyDisplay("Minimum distance to hitbox")]
+    public float MinDistance = default;
+
+    [PropertyDisplay("Preferred distance to forbidden zones")]
+    public float PreferredDistance = default;
 
     [PropertyDisplay("Enable auto AFK", tooltip: "Enables auto AFK if out of combat. While AFK AI will not use autorotation or target anything")]
     public bool AutoAFK = false;
 
     [PropertyDisplay("Auto AFK timer", tooltip: "Time in seconds out of combat until AFK mode enables. Any movement will reset timer or disable AFK mode if already active.")]
-    public float AFKModeTimer = 10;
+    public float AFKModeTimer = 10f;
 
     [PropertyDisplay("Disable loading obstacle maps", tooltip: "Might be required to be enabled for some some content such as deep dungeons.")]
     public bool DisableObstacleMaps = false;
 
     [PropertyDisplay("Movement decision delay", tooltip: "Only change this at your own risk and keep this value low! Too high and it won't move in time for some mechanics. Make sure to readjust the value for different content.")]
-    public double MoveDelay = 0;
+    public double MoveDelay = default;
 
     [PropertyDisplay("Idle while mounted")]
     public bool ForbidAIMovementMounted = false;

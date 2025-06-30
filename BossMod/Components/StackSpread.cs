@@ -677,11 +677,12 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, float
         {
             return;
         }
-        if (spell.Action.ID == AidMarker && WorldState.Actors.Find(spell.MainTargetID) is Actor target)
+        var id = spell.Action.ID;
+        if (id == AidMarker && WorldState.Actors.Find(spell.MainTargetID) is Actor target)
         {
-            CurrentBaits.Add(new(caster, target, rect, WorldState.FutureTime(ActionDelay)));
+            CurrentBaits.Add(new(caster, target, rect, WorldState.FutureTime(ActionDelay), maxCasts: MaxCasts));
         }
-        else if (spell.Action.ID == AidResolve)
+        else if (id == AidResolve)
         {
             ++NumCasts;
             if (MarkerIsFinalTarget)
@@ -691,18 +692,16 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, float
                 {
                     CurrentBaits.Ref(0).Target = t;
                 }
-                if (++castCounter == MaxCasts)
+
+                var count = CurrentBaits.Count;
+                for (var i = 0; i < count; ++i)
                 {
-                    var count = CurrentBaits.Count;
-                    for (var i = 0; i < count; ++i)
+                    var b = CurrentBaits[i];
+                    if (b.Target.InstanceID == tID && --CurrentBaits.Ref(i).MaxCasts == 0)
                     {
-                        if (CurrentBaits[i].Target.InstanceID == tID)
-                        {
-                            CurrentBaits.RemoveAt(i);
-                            castCounter = 0;
-                            ++NumCasts;
-                            return;
-                        }
+                        CurrentBaits.RemoveAt(i);
+                        ++NumCasts;
+                        return;
                     }
                 }
             }
@@ -711,6 +710,7 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, float
                 if (++castCounter == MaxCasts && CurrentBaits.Count != 0)
                 {
                     CurrentBaits.RemoveAt(0);
+                    castCounter -= MaxCasts;
                     castCounter = 0;
                     ++NumCasts;
                 }

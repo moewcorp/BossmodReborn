@@ -445,6 +445,21 @@ public sealed class AIHints
     }
     public Func<WPos, float> GoalProximity(Actor target, float range, float weight = 1f) => GoalProximity(target.Position, range + target.HitboxRadius, weight);
 
+    public Func<WPos, float> GoalDonut(WPos center, float innerRadius, float outerRadius, float weight = 1f)
+    {
+        var innerR = Math.Max(0f, innerRadius);
+        var outerR = Math.Max(innerR + 1f, outerRadius);
+        var innerSQ = innerR * innerR;
+        var outerSQ = outerR * outerR;
+        return p =>
+        {
+            var distSq = (p - center).LengthSq();
+            if (distSq <= innerSQ || distSq >= outerSQ)
+                return default;
+            return weight;
+        };
+    }
+
     public Func<WPos, float> PullTargetToLocation(Actor target, WPos destination, float destRadius = 2f)
     {
         var enemy = FindEnemy(target);

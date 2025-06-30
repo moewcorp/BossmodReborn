@@ -31,18 +31,20 @@ sealed class DesertTempest(BossModule module) : Components.GenericAOEs(module)
         void AddAOEs(AOEShape first, AOEShape? second = null)
         {
             var act = Module.CastFinishAt(spell, 1d);
-            AddAOE(first, Angle.AnglesCardinals[3]);
+            var a90 = 90f.Degrees();
+            AddAOE(first, a90);
             if (second != null)
             {
-                AddAOE(second, Angle.AnglesCardinals[0]);
+                AddAOE(second, -a90);
             }
-            void AddAOE(AOEShape shape, Angle offset) => _aoes.Add(new(first, spell.LocXZ, spell.Rotation + offset, act));
+            void AddAOE(AOEShape shape, Angle offset) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation + offset, act));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0)
+        {
             switch (spell.Action.ID)
             {
                 case (uint)AID.DesertTempestCircle:
@@ -54,5 +56,6 @@ sealed class DesertTempest(BossModule module) : Components.GenericAOEs(module)
                     _aoes.Clear();
                     break;
             }
+        }
     }
 }
