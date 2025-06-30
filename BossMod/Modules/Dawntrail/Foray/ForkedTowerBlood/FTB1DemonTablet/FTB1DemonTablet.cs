@@ -14,6 +14,6 @@ public sealed class FTB1DemonTablet(WorldState ws, Actor primary) : BossModule(w
     public static readonly WPos ArenaCenter = new(700f, 379f);
     private static readonly Rectangle[] defaultRect = [new Rectangle(ArenaCenter, 15f, 33f)];
     public static readonly ArenaBoundsComplex DefaultArena = new(defaultRect, [new Rectangle(ArenaCenter, 15f, 3.5f)]);
-    public static readonly ArenaBoundsComplex RotationArena = new(defaultRect, [new Rectangle(ArenaCenter, 3.5f, 15.5f)]);
+    public static readonly ArenaBoundsComplex RotationArena = new(defaultRect, [new Rectangle(ArenaCenter, 15f, 3.5f, -89.98f.Degrees())]); // collision is slightly rotated
     public static readonly ArenaBoundsRect CompleteArena = new(15f, 33f);
 }
