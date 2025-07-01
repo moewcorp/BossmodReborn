@@ -32,7 +32,7 @@ sealed class Explosion(BossModule module) : Components.SimpleAOEGroupsByTimewind
 (uint)AID.Explosion3, (uint)AID.Explosion4, (uint)AID.Explosion5, (uint)AID.Explosion6, (uint)AID.Explosion7, (uint)AID.Explosion8, (uint)AID.Explosion9],
 new AOEShapeRect(60f, 11f), 4d);
 
-sealed class LightPseudopillarAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightPseudopillarAOE, 10f);
+sealed class LightPseudopillar(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightPseudopillar, 10f);
 
 sealed class PillarOfShamash(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.PillarOfShamashCone1, (uint)AID.PillarOfShamashCone2,
 (uint)AID.PillarOfShamashCone3], new AOEShapeCone(70f, 10f.Degrees()), expectedNumCasters: 9);
