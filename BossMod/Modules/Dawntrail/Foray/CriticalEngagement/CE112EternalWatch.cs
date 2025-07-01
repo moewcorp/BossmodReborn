@@ -1,5 +1,3 @@
-using BossMod.Dawntrail.Chaotic.Ch01CloudOfDarkness;
-
 namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE112EternalWatch;
 
 public enum OID : uint
@@ -55,7 +53,21 @@ sealed class AncientStoneAncientAeroIIISlow : Components.SimpleAOEGroups
         MaxDangerColor = 2;
     }
 }
-sealed class AncientStoneAncientAeroIIIFast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AncientAeroIII1, (uint)AID.AncientStoneIII1], WindStoneLightSurge.Cone);
+
+sealed class AncientStoneAncientAeroIIIFast(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AncientAeroIII1, (uint)AID.AncientStoneIII1], WindStoneLightSurge.Cone)
+{
+    private readonly WindStoneLightSurge _aoe = module.FindComponent<WindStoneLightSurge>()!;
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (_aoe.AOEs.Count != 0 && Casters.Count != 0 && (_aoe.AOEs[0].Activation - Casters[0].Activation).TotalSeconds < 1.5d)
+        {
+            return [];
+        }
+        return base.ActiveAOEs(slot, actor);
+    }
+}
+
 sealed class AncientHoly(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientHoly1, 26f);
 sealed class RadiantWave(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.RadiantWaveVisual, (uint)AID.RadiantWave, 1.2f);
 sealed class Scratch(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.Scratch);
@@ -63,7 +75,7 @@ sealed class HolyBlaze(BossModule module) : Components.SimpleAOEs(module, (uint)
 
 sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(12);
+    public readonly List<AOEInstance> AOEs = new(12);
     private static readonly AOEShapeCircle circle = new(15f);
     public static readonly AOEShapeCone Cone = new(40f, 30f.Degrees());
     private readonly List<Actor> spheres = new(12);
@@ -73,13 +85,13 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        var count = _aoes.Count;
+        var count = AOEs.Count;
         if (count == 0)
             return [];
-        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
 
         var act0 = aoes[0].Activation;
-        if (count > 3 && Math.Abs((act0 - aoes[3].Activation).TotalSeconds) > 0.5d)
+        if (count > 3 && (aoes[3].Activation - act0).TotalSeconds > 0.5d)
         {
             for (var i = 0; i < 2; ++i)
             {
@@ -113,12 +125,12 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 for (var i = 0; i < count; ++i)
                 {
                     var sphere = spheres[i];
-                    AddAOE(sphere.Position, sphere.InstanceID, act);
+                    AddAOE(sphere.Position, ref sphere.InstanceID, ref act);
                 }
                 spheres.Clear();
                 break;
         }
-        void AddAOE(WPos position, ulong instanceID, DateTime activation, Angle rotation = default) => _aoes.Add(new(circle, WPos.ClampToGrid(position), rotation, activation, ActorID: instanceID));
+        void AddAOE(WPos position, ref readonly ulong instanceID, ref readonly DateTime activation, Angle rotation = default) => AOEs.Add(new(circle, WPos.ClampToGrid(position), rotation, activation, ActorID: instanceID));
         void AddAOEs(List<Actor> list)
         {
             var count = list.Count - 1;
@@ -130,12 +142,12 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 var sphere = list[i];
                 if (Cone.Check(sphere.Position, pos, rot))
                 {
-                    AddAOE(sphere.Position, sphere.InstanceID, act);
+                    AddAOE(sphere.Position, ref sphere.InstanceID, ref act);
                     list.RemoveAt(i);
                 }
                 if (i == 0)
                 {
-                    _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                    AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 }
             }
         }
@@ -145,13 +157,13 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
     {
         if (spell.Action.ID is (uint)AID.WindSurge or (uint)AID.SandSurge or (uint)AID.LightSurge)
         {
-            var count = _aoes.Count;
+            var count = AOEs.Count;
             var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
-                if (_aoes[i].ActorID == id)
+                if (AOEs[i].ActorID == id)
                 {
-                    _aoes.RemoveAt(i);
+                    AOEs.RemoveAt(i);
                     return;
                 }
             }
@@ -177,8 +189,9 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 for (var i = 0; i < 4; ++i)
                 {
                     var sphere = spheres[i];
-                    _aoes.Add(new(circle, WPos.ClampToGrid(sphere.Position), default, act, ActorID: sphere.InstanceID));
+                    AOEs.Add(new(circle, WPos.ClampToGrid(sphere.Position), default, act, ActorID: sphere.InstanceID));
                 }
+                spheres.Clear();
             }
         }
         void UpdateList(List<Actor> list)
@@ -203,12 +216,12 @@ sealed class CE112EternalWatchStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<AncientStoneAncientAeroIIISlow>()
-            .ActivateOnEnter<AncientStoneAncientAeroIIIFast>()
             .ActivateOnEnter<AncientHoly>()
             .ActivateOnEnter<RadiantWave>()
             .ActivateOnEnter<Scratch>()
             .ActivateOnEnter<HolyBlaze>()
-            .ActivateOnEnter<WindStoneLightSurge>();
+            .ActivateOnEnter<WindStoneLightSurge>()
+            .ActivateOnEnter<AncientStoneAncientAeroIIIFast>();
     }
 }
 

@@ -3,7 +3,6 @@
 public enum OID : uint
 {
     Boss = 0x31B3, // R28.5
-
     DiabolicBit = 0x31B4, // R1.2
     Aether = 0x31B5, // R1.5
     DiabolicGate1 = 0x1EB1D8, // R0.5
@@ -25,7 +24,7 @@ public enum AID : uint
     AdvancedDeathRayVisual = 23748, // Boss->self, 5.0s cast, single-target, tankbuster
     AdvancedDeathRay = 23749, // Helper->player, no cast, range 70 width 8 rect
 
-    AdvancedNox = 23743, // Boss->self, 4.0s cast, single-target
+    AdvancedNox = 23743, // Boss->self, 4.0s cast, single-target, exaflare
     AdvancedNoxAOEFirst = 23744, // Helper->self, 10.0s cast, range 10 circle
     AdvancedNoxAOERest = 23745, // Helper->self, no cast, range 10 circle
 
@@ -52,19 +51,17 @@ public enum AID : uint
     Explosion1 = 23718, // Helper->self, 10.0s cast, range 60 width 22 rect
     Explosion2 = 23719, // Helper->self, 10.0s cast, range 60 width 22 rect
     Explosion3 = 24721, // Helper->self, 10.0s cast, range 60 width 22 rect
-
     Explosion4 = 23720, // Helper->self, 8.0s cast, range 60 width 22 rect
     Explosion5 = 23721, // Helper->self, 8.0s cast, range 60 width 22 rect
     Explosion6 = 24722, // Helper->self, 8.0s cast, range 60 width 22 rect
-
     Explosion7 = 23722, // Helper->self, 6.0s cast, range 60 width 22 rect
     Explosion8 = 23723, // Helper->self, 6.0s cast, range 60 width 22 rect
     Explosion9 = 24723, // Helper->self, 6.0s cast, range 60 width 22 rect
 
     FusionBurst = 23734, // Aether->self, no cast, range 100 circle
 
-    LightPseudopillar = 23729, // Boss->self, 3.0s cast, single-target
-    LightPseudopillarAOE = 23730, // Helper->location, 4.0s cast, range 10 circle
+    LightPseudopillarVisual = 23729, // Boss->self, 3.0s cast, single-target
+    LightPseudopillar = 23730, // Helper->location, 4.0s cast, range 10 circle
 
     PillarOfShamashCone1 = 23737, // Helper->self, 8.0s cast, range 70 20-degree cone
     PillarOfShamashCone2 = 23738, // Helper->self, 9.5s cast, range 70 20-degree cone
@@ -73,12 +70,12 @@ public enum AID : uint
     PillarOfShamashMarker = 23741, // Helper->player, no cast, single-target, line stack
     PillarOfShamashStack = 23742, // Helper->player, no cast, range 70 width 8 rect
 
-    RuinousPseudomen1 = 23712, // Boss->self, 15.0s cast, single-target
-    RuinousPseudomen2 = 23713, // Helper->self, 1.0s cast, single-target
-    RuinousPseudomen3 = 23714, // Boss->self, no cast, single-target
-    RuinousPseudomen4 = 24908, // Helper->self, 1.5s cast, range 100 width 24 rect
-    RuinousPseudomen5 = 24911, // Helper->self, 4.5s cast, range 80 width 24 rect
-    RuinousPseudomen6 = 24995, // Helper->self, 1.5s cast, range 80 width 24 rect
+    RuinousPseudomenVisual1 = 23712, // Boss->self, 15.0s cast, single-target
+    RuinousPseudomenVisual2 = 23713, // Helper->self, 1.0s cast, single-target
+    RuinousPseudomenVisual3 = 23714, // Boss->self, no cast, single-target
+    RuinousPseudomen1 = 24995, // Helper->self, 1.5s cast, range 80 width 24 rect
+    RuinousPseudomen2 = 24908, // Helper->self, 1.5s cast, range 100 width 24 rect
+    RuinousPseudomen3 = 24911, // Helper->self, 4.5s cast, range 80 width 24 rect
 
     UltimatePseudoterror = 23715, // Boss->self, 4.0s cast, range 15-70 donut
 

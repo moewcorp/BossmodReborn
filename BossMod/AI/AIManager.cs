@@ -41,6 +41,7 @@ sealed class AIManager : IDisposable
         SwitchToIdle();
         _wndAI.Dispose();
         Service.CommandManager.RemoveHandler("/bmrai");
+        Instance = null;
     }
 
     public void Update()

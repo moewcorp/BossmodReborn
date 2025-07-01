@@ -5,12 +5,13 @@ sealed class DAL4DiabloArmamentStates : StateMachineBuilder
     public DAL4DiabloArmamentStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<AdvancedDeathIV>()
+            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<RuinousPseudoomen>()
             //.ActivateOnEnter<AdvancedNox>() not displaying properly
             .ActivateOnEnter<AssaultCannon>()
             .ActivateOnEnter<DeadlyDealingAOE>()
             .ActivateOnEnter<Explosion>()
-            .ActivateOnEnter<LightPseudopillarAOE>()
+            .ActivateOnEnter<LightPseudopillar>()
             .ActivateOnEnter<PillarOfShamash>()
             .ActivateOnEnter<UltimatePseudoterror>()
             .ActivateOnEnter<AdvancedDeathIV>()

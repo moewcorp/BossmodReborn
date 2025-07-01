@@ -96,8 +96,7 @@ public sealed unsafe class MovementOverride : IDisposable
         _mcIsInputActiveHook.Dispose();
         _rmiWalkHook.Dispose();
         _rmiFlyHook.Dispose();
-        if (Instance == this)
-            Instance = null;
+        Instance = null;
     }
 
     private bool FollowpathActive()
