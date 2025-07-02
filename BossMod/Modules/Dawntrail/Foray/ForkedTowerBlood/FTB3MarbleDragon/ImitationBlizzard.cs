@@ -32,15 +32,18 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         var actLast = aoes[^1].Activation;
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline1)
+        while (index < count)
         {
             ref var cur = ref aoes[index];
             var curAct = cur.Activation;
-            if (!IsRain4 && curAct < deadline2)
+            if (curAct < deadline1)
             {
-                cur.Color = wickedWater[slot] ? Colors.SafeFromAOE : curAct != actLast ? Colors.Danger : default;
+                if (!IsRain4 && curAct < deadline2)
+                {
+                    cur.Color = wickedWater[slot] ? Colors.SafeFromAOE : curAct != actLast ? Colors.Danger : default;
+                }
+                ++index;
             }
-            ++index;
         }
         return aoes[..index];
     }

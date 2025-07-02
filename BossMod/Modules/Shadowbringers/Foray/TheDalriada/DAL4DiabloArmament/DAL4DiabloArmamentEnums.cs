@@ -24,17 +24,19 @@ public enum AID : uint
     AdvancedDeathRayVisual = 23748, // Boss->self, 5.0s cast, single-target, tankbuster
     AdvancedDeathRay = 23749, // Helper->player, no cast, range 70 width 8 rect
 
-    AdvancedNox = 23743, // Boss->self, 4.0s cast, single-target, exaflare
-    AdvancedNoxAOEFirst = 23744, // Helper->self, 10.0s cast, range 10 circle
-    AdvancedNoxAOERest = 23745, // Helper->self, no cast, range 10 circle
+    AdvancedNoxVisual = 23743, // Boss->self, 4.0s cast, single-target, exaflare
+    AdvancedNoxFirst = 23744, // Helper->self, 10.0s cast, range 10 circle
+    AdvancedNoxRest = 23745, // Helper->self, no cast, range 10 circle
 
-    AethericBoom1 = 23731, // Boss->self, 5.0s cast, single-target
-    AethericBoom2 = 23732, // Helper->self, 5.0s cast, ???
+    AethericBoomVisual = 23731, // Boss->self, 5.0s cast, single-target
+    AethericBoom = 23732, // Helper->self, 5.0s cast, ???, raidwide
+    AethericExplosionVisual = 23750, // Boss->self, 5.0s cast, single-target
+    AethericExplosion = 23751, // Helper->self, 5.0s cast, ???, raidwide
+    DiabolicGateVisual = 23711, // Boss->self, 4.0s cast, single-target
+    DiabolicGate = 25028, // Helper->self, 5.0s cast, ???, raidwide
 
-    AethericExplosion1 = 23750, // Boss->self, 5.0s cast, single-target
-    AethericExplosion2 = 23751, // Helper->self, 5.0s cast, ???
-
-    Aetheroplasm = 23733, // Aether->self, no cast, range 6 circle
+    Aetheroplasm = 23733, // Aether->self, no cast, range 6 circle, orb soaked
+    FusionBurst = 23734, // Aether->self, no cast, range 100 circle, orbs fused
 
     MagitekBit = 23724, // Boss->self, 4.0s cast, single-target
     AssaultCannon = 23726, // DiabolicBit->self, 7.0s cast, range 100 width 6 rect
@@ -42,11 +44,8 @@ public enum AID : uint
     DeadlyDealingAOE = 23746, // Boss->location, 7.0s cast, range 6 circle
     DeadlyDealing = 23747, // Helper->self, 7.5s cast, ???, knockback 30, away from source
 
-    DiabolicGate1 = 23711, // Boss->self, 4.0s cast, single-target
-    DiabolicGate2 = 25028, // Helper->self, 5.0s cast, ???, raidwide
-
-    AetherochemicalLaserAOE1 = 23716, // Boss->self, no cast, range 60 width 22 rect
-    AetherochemicalLaserAOE2 = 23717, // Boss->self, no cast, range 60 width 60 rect
+    AetherochemicalLaserAOE1 = 23716, // Boss->self, no cast, range 60 width 22 rect, mini raidwide, spawns explosions
+    AetherochemicalLaserAOE2 = 23717, // Boss->self, no cast, range 60 width 60 rect, mini raidwide, spawns explosions
 
     Explosion1 = 23718, // Helper->self, 10.0s cast, range 60 width 22 rect
     Explosion2 = 23719, // Helper->self, 10.0s cast, range 60 width 22 rect
@@ -57,8 +56,6 @@ public enum AID : uint
     Explosion7 = 23722, // Helper->self, 6.0s cast, range 60 width 22 rect
     Explosion8 = 23723, // Helper->self, 6.0s cast, range 60 width 22 rect
     Explosion9 = 24723, // Helper->self, 6.0s cast, range 60 width 22 rect
-
-    FusionBurst = 23734, // Aether->self, no cast, range 100 circle
 
     LightPseudopillarVisual = 23729, // Boss->self, 3.0s cast, single-target
     LightPseudopillar = 23730, // Helper->location, 4.0s cast, range 10 circle

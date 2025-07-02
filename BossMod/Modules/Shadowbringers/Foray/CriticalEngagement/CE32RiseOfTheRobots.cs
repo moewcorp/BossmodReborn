@@ -258,7 +258,7 @@ sealed class OrderForcedMarch(BossModule module) : Components.StatusDrivenForced
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        ref var aoes = ref _math.AOEs[slot];
+        ref readonly var aoes = ref _math.AOEs[slot];
         if (aoes != default)
         {
             ref readonly var aoe = ref aoes[0];

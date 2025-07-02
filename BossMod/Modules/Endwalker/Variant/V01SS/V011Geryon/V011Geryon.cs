@@ -29,8 +29,8 @@ class Shockwave(BossModule module) : Components.GenericKnockback(module)
         {
             var act = Module.CastFinishAt(spell);
             // knockback rect always happens through center, so create two sources with origin at center looking orthogonally
-            _sources.Add(new(Arena.Center, 15, act, _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
-            _sources.Add(new(Arena.Center, 15, act, _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(Arena.Center, 15f, act, _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(Arena.Center, 15f, act, _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
         }
     }
 
@@ -49,8 +49,11 @@ class Shockwave(BossModule module) : Components.GenericKnockback(module)
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

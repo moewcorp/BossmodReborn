@@ -81,18 +81,24 @@ class RahuCometKB(BossModule module, uint aid, float distance) : Components.Simp
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         var count1 = _aoe1.Casters.Count;
+        var aoes1 = CollectionsMarshal.AsSpan(_aoe1.Casters);
         for (var i = 0; i < count1; ++i)
         {
-            var aoe = _aoe1.Casters[i];
+            ref readonly var aoe = ref aoes1[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         var count2 = _aoe2.Casters.Count;
+        var aoes2 = CollectionsMarshal.AsSpan(_aoe1.Casters);
         for (var i = 0; i < count2; ++i)
         {
-            var aoe = _aoe2.Casters[i];
+            ref readonly var aoe = ref aoes2[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }

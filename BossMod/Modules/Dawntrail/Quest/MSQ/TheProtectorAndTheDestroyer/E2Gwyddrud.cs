@@ -102,10 +102,16 @@ sealed class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(modu
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
+        var aoes = CollectionsMarshal.AsSpan(_aoe.Casters);
         var count = _aoe.Casters.Count;
         for (var i = 0; i < count; ++i)
-            if (_aoe.Casters[i].Check(pos))
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
+        }
         return false;
     }
 
@@ -118,9 +124,11 @@ sealed class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(modu
         var count = aoes.Count;
         if (count != 0)
         {
-            var forbidden = new List<Func<WPos, float>>(count);
+            var forbidden = new Func<WPos, float>[count];
             for (var i = 0; i < count; ++i)
-                forbidden.Add(ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(aoes[i].Origin - Arena.Center), a25));
+            {
+                forbidden[i] = ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(aoes[i].Origin - Arena.Center), a25);
+            }
             hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }

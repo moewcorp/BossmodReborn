@@ -21,24 +21,36 @@ class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(module, (u
             {
                 ShapeDistance.InvertedCircle(source.Position, 5f)
             };
-            if (component.Count != 0)
-                for (var i = 0; i < component.Count; ++i)
-                    forbidden.Add(ShapeDistance.Cone(source.Position, 20f, Angle.FromDirection(component[i].Position - Arena.Center), 20f.Degrees()));
+            var count = component.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                forbidden.Add(ShapeDistance.Cone(source.Position, 20f, Angle.FromDirection(component[i].Position - Arena.Center), 20f.Degrees()));
+            }
             hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
         }
     }
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        foreach (var aoe in _aoe1.ActiveAOEs(slot, actor))
+        var aoes = _aoe1.ActiveAOEs(slot, actor);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            if (aoe.Shape.Check(pos, aoe.Origin, aoe.Rotation))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
-        foreach (var aoe in _aoe2.ActiveAOEs(slot, actor))
+        var aoes2 = _aoe2.ActiveAOEs(slot, actor);
+        var len2 = aoes2.Length;
+        for (var i = 0; i < len2; ++i)
         {
-            if (aoe.Shape.Check(pos, aoe.Origin, aoe.Rotation))
+            ref readonly var aoe = ref aoes2[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Arena.InBounds(pos);
     }
@@ -54,7 +66,7 @@ class ArtOfTheFluff2(BossModule module) : Components.CastGaze(module, (uint)AID.
 class TatamiGaeshi(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TatamiGaeshi, new AOEShapeRect(40f, 5f));
 class AccursedSeedling(BossModule module) : Components.Voidzone(module, 4f, m => m.Enemies((uint)OID.AccursedSeedling));
 
-class RootArrangement(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4f), (uint)AID.RockRootArrangementFirst, (uint)AID.RockRootArrangementRest, 4, 1, 4, true, (uint)IconID.ChasingAOE)
+class RootArrangement(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.RockRootArrangementFirst, (uint)AID.RockRootArrangementRest, 4, 1, 4, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
