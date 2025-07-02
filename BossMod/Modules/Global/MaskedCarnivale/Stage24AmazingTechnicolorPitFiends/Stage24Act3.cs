@@ -56,8 +56,11 @@ class HeadDownKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

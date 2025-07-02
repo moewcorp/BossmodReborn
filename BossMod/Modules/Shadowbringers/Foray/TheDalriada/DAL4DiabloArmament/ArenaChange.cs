@@ -9,7 +9,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.DiabolicGate1)
+        if (spell.Action.ID == (uint)AID.DiabolicGateVisual)
         {
             _aoe = new(donut, WPos.ClampToGrid(Arena.Center), default, Module.CastFinishAt(spell, 9.2d));
         }

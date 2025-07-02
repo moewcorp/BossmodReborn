@@ -103,16 +103,19 @@ sealed class PathogenicPowerAOE(BossModule module) : Components.GenericAOEs(modu
 
         var index = 0;
         var color = Colors.Danger;
-        while (index < count && aoes[index].Activation < deadline1)
+        while (index < count)
         {
             ref var cur = ref aoes[index];
             var curAct = cur.Activation;
-            if (curAct < deadline2)
+            if (curAct < deadline1)
             {
-                cur.Risky = true;
-                cur.Color = curAct < actLast ? color : default;
+                if (curAct < deadline2)
+                {
+                    cur.Risky = true;
+                    cur.Color = curAct < actLast ? color : default;
+                }
+                ++index;
             }
-            ++index;
         }
         return aoes[..index];
     }
@@ -120,13 +123,17 @@ sealed class PathogenicPowerAOE(BossModule module) : Components.GenericAOEs(modu
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.PathogenicPowerAOE)
+        {
             _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), Risky: false));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.PathogenicPowerAOE)
+        {
             _aoes.RemoveAt(0);
+        }
     }
 }
 
@@ -153,7 +160,17 @@ sealed class Burst(BossModule module) : Components.Exaflare(module, 6f)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BurstFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.2f, ExplosionsLeft = 9, MaxShownExplosions = 4 });
+        {
+            Lines.Add(new()
+            {
+                Next = caster.Position,
+                Advance = 5f * spell.Rotation.ToDirection(),
+                NextExplosion = Module.CastFinishAt(spell),
+                TimeToMove = 1.2d,
+                ExplosionsLeft = 9,
+                MaxShownExplosions = 4
+            });
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -169,7 +186,9 @@ sealed class Burst(BossModule module) : Components.Exaflare(module, 6f)
                 {
                     AdvanceLine(line, pos);
                     if (line.ExplosionsLeft == 0)
+                    {
                         Lines.RemoveAt(i);
+                    }
                     break;
                 }
             }

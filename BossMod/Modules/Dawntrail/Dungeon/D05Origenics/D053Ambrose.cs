@@ -83,7 +83,9 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
         {
             var activeAOE = aoe.AOE.Value;
             if (activeAOE.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

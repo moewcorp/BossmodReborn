@@ -87,7 +87,9 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
     {
         var count = AOEs.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(AOEs);
 
         var act0 = aoes[0].Activation;
@@ -101,8 +103,15 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
         var deadline = act0.AddSeconds(2.4d);
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
+        while (index < count)
+        {
+            ref readonly var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
+            {
+                break;
+            }
             ++index;
+        }
 
         return aoes[..index];
     }

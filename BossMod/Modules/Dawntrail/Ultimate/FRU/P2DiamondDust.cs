@@ -560,7 +560,7 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
         if (shape1 != null && shape2 != null)
         {
             AOEs.Add(new(shape1, spell.LocXZ, spell.Rotation + off1, Module.CastFinishAt(spell)));
-            AOEs.Add(new(shape2, spell.LocXZ, spell.Rotation + off2, Module.CastFinishAt(spell, 2.1f)));
+            AOEs.Add(new(shape2, spell.LocXZ, spell.Rotation + off2, Module.CastFinishAt(spell, 2.1d)));
         }
     }
 
@@ -583,17 +583,22 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
 
 sealed class P2ThinIce(BossModule module) : Components.ThinIce(module, 32f)
 {
+    private P2TwinStillnessSilence? _aoe = module.FindComponent<P2TwinStillnessSilence>();
+
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        var comp = Module.FindComponent<P2TwinStillnessSilence>();
-        if (comp != null)
+        _aoe ??= Module.FindComponent<P2TwinStillnessSilence>();
+        if (_aoe != null)
         {
-            var aoes = comp.ActiveAOEs(slot, actor);
+            var aoes = _aoe.ActiveAOEs(slot, actor);
             var len = aoes.Length;
             for (var i = 0; i < len; ++i)
             {
-                if (aoes[i].Check(pos))
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                {
                     return true;
+                }
             }
         }
         return !Module.InBounds(pos);

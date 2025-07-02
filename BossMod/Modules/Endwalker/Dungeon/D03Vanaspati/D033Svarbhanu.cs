@@ -204,11 +204,14 @@ class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(modul
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         var count = _aoe.AOEs.Count;
+        var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
         for (var i = 0; i < count; ++i)
         {
-            var z = _aoe.AOEs[i];
-            if (z.Shape.Check(pos, z.Origin, z.Rotation))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

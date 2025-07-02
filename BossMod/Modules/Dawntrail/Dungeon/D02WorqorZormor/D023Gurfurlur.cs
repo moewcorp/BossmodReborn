@@ -259,9 +259,13 @@ sealed class Windswrath2(BossModule module) : Windswrath(module, (uint)AID.Winds
         if (actor.OID == (uint)OID.BitingWind)
         {
             if (actor.Position.Z == -180f)
+            {
                 CurrentPattern = Pattern.EWEW;
+            }
             else if (actor.Position.Z == -210f)
+            {
                 CurrentPattern = Pattern.WEWE;
+            }
         }
     }
 
@@ -271,8 +275,11 @@ sealed class Windswrath2(BossModule module) : Windswrath(module, (uint)AID.Winds
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

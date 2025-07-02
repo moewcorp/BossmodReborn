@@ -46,6 +46,7 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
     public DateTime CurrentDeadline; // for current target - expected time when stun starts, which is deadline for positioning
     public float CurrentKnockbackDistance;
     public WPos Cache;
+    private ElevateAndEviscerateHint? _hint = module.FindComponent<ElevateAndEviscerateHint>();
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
         => player == CurrentTarget ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
@@ -114,15 +115,18 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        var comp = Module.FindComponent<ElevateAndEviscerateHint>();
-        if (comp != null)
+        _hint ??= Module.FindComponent<ElevateAndEviscerateHint>();
+        if (_hint != null)
         {
-            var aoes = comp.ActiveAOEs(slot, actor);
+            var aoes = _hint.ActiveAOEs(slot, actor);
             var len = aoes.Length;
             for (var i = 0; i < len; ++i)
             {
-                if (aoes[i].Check(pos))
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                {
                     return true;
+                }
             }
         }
         return !Module.InBounds(pos);

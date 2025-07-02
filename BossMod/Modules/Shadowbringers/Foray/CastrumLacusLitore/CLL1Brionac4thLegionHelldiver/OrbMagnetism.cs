@@ -153,11 +153,14 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         var count = _aoe.AOEs.Count;
+        var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
         for (var i = 0; i < count; ++i)
         {
-            var aoe = _aoe.AOEs[i];
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }

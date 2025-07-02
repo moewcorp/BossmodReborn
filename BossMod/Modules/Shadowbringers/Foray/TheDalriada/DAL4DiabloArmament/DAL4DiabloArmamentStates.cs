@@ -7,8 +7,11 @@ sealed class DAL4DiabloArmamentStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<RuinousPseudoomen>()
-            //.ActivateOnEnter<AdvancedNox>() not displaying properly
+            .ActivateOnEnter<AethericBoomExplosionDiabolicGateVoidSystemsOverload>()
+            .ActivateOnEnter<AdvancedNox>()
+            .ActivateOnEnter<Aetheroplasm>()
             .ActivateOnEnter<AssaultCannon>()
+            .ActivateOnEnter<DeadlyDealingKB>()
             .ActivateOnEnter<DeadlyDealingAOE>()
             .ActivateOnEnter<Explosion>()
             .ActivateOnEnter<LightPseudopillar>()

@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Endwalker.Savage.P12S1Athena;
 
 // general mechanic tracking
-class Palladion(BossModule module) : BossComponent(module)
+sealed class Palladion(BossModule module) : BossComponent(module)
 {
     public Actor?[] JumpTargets = new Actor?[PartyState.MaxPartySize];
     public Actor?[] Partners = new Actor?[PartyState.MaxPartySize];
@@ -61,13 +61,15 @@ class Palladion(BossModule module) : BossComponent(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.ClearCut or (uint)AID.WhiteFlame)
+        {
             ++NumBaitsDone;
+        }
     }
 }
 
 // limited arena for limit cuts
 // TODO: reconsider - base activation on env controls, show danger zone instead of border?..
-class PalladionArena(BossModule module) : BossComponent(module)
+sealed class PalladionArena(BossModule module) : BossComponent(module)
 {
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -78,11 +80,11 @@ class PalladionArena(BossModule module) : BossComponent(module)
 }
 
 // shockwave is targeted at next jump target; everyone except target and partner should avoid it
-class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
+sealed class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Palladion? _palladion = module.FindComponent<Palladion>();
     private WPos _origin = module.PrimaryActor.Position;
-    private DateTime _activation = module.CastFinishAt(module.PrimaryActor.CastInfo, 0.3f);
+    private DateTime _activation = module.CastFinishAt(module.PrimaryActor.CastInfo, 0.3d);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -122,7 +124,7 @@ class PalladionShockwave(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class PalladionStack : Components.UniformStackSpread
+sealed class PalladionStack : Components.UniformStackSpread
 {
     private int _numCasts;
     private readonly Palladion? _palladion;
@@ -152,7 +154,7 @@ class PalladionStack : Components.UniformStackSpread
     }
 }
 
-class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.PalladionAOE, GetVoidzones, 0.9f)
+sealed class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.PalladionAOE, GetVoidzones, 0.9f)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -166,14 +168,14 @@ class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(mod
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7)
+            if (z.EventState != 7u)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
     }
 }
 
-class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
+sealed class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Palladion? _palladion = module.FindComponent<Palladion>();
 
@@ -188,7 +190,7 @@ class PalladionClearCut(BossModule module) : Components.GenericAOEs(module)
 }
 
 // TODO: reconsider - show always, even if next is clear cut?..
-class PalladionWhiteFlame : Components.GenericBaitAway
+sealed class PalladionWhiteFlame : Components.GenericBaitAway
 {
     private readonly Palladion? _palladion;
     public static readonly WPos FakeActor = new(100f, 100f);
@@ -249,7 +251,7 @@ class PalladionWhiteFlame : Components.GenericBaitAway
     }
 }
 
-class PalladionDestroyPlatforms(BossModule module) : Components.GenericAOEs(module, (uint)AID.PalladionDestroyPlatforms, "Go to safe platform!")
+sealed class PalladionDestroyPlatforms(BossModule module) : Components.GenericAOEs(module, (uint)AID.PalladionDestroyPlatforms, "Go to safe platform!")
 {
     private static readonly AOEShapeRect _shape = new(10f, 20f, 10f);
 

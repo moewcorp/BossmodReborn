@@ -93,13 +93,17 @@ class DarkWhispers(BossModule module) : Components.UniformStackSpread(module, de
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DarkWhispers)
+        {
             AddSpread(actor, WorldState.FutureTime(5d));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (Spreads.Count != 0 && spell.Action.ID == (uint)AID.AncientDarkness)
+        {
             Spreads.Clear();
+        }
     }
 }
 
@@ -134,13 +138,22 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var deadline = aoes[0].Activation.AddSeconds(1d);
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
+        while (index < count)
+        {
+            ref readonly var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
+            {
+                break;
+            }
             ++index;
+        }
 
         return aoes[..index];
     }
@@ -154,22 +167,28 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
             AddAOE(donut, _donut, reverse);
             if (reverse)
                 _aoes.Reverse();
-            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, WPos.ClampToGrid(pos), default, WorldState.FutureTime(first ? 11.8d : 14.8f)));
+            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, WPos.ClampToGrid(pos), default, WorldState.FutureTime(first ? 11.8d : 14.8d)));
         }
 
         if (actor.OID == (uint)OID.FrozenStar)
         {
             if (actor.Position == _frozenStarLongTether)
+            {
                 AddAOEs(false);
+            }
             else if (actor.Position == _frozenStarShortTether)
+            {
                 AddAOEs(true);
+            }
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.CircleOfIcePrime or (uint)AID.FireSpherePrime)
+        {
             _aoes.RemoveAt(0);
+        }
     }
 }
 

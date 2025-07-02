@@ -62,11 +62,12 @@ sealed class Turbine(BossModule module) : Components.GenericKnockback(module)
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        var casters = _aoe.Casters;
-        var count = casters.Count;
-        for (var i = 0; i < count; ++i)
+        var aoes = CollectionsMarshal.AsSpan(_aoe.Casters);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            if (casters[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
             {
                 return true;
             }

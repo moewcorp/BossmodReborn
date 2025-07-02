@@ -64,11 +64,14 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreI
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         var count = _aoe1.AOEs.Count;
+        var aoes = CollectionsMarshal.AsSpan(_aoe1.AOEs);
         for (var i = 0; i < count; ++i)
         {
-            var aoe = _aoe1.AOEs[i];
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
 
         return _aoe2.AOE != null && _aoe2.AOE.Value.Check(pos) || !Module.InBounds(pos);

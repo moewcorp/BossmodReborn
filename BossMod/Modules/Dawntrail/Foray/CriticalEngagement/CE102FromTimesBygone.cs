@@ -28,7 +28,7 @@ public enum AID : uint
     LotsCastTB = 41139, // Helper->players, 5.0s cast, range 6 circle
     LotsCastSpread = 41140, // Helper->players, 6.0s cast, range 6 circle
     ArcaneLightVisual = 41141, // Boss->self, 5.0s cast, single-target, raidwide
-    ArcaneLight = 41142, // Helper->self, no cast, ???
+    ArcaneLight = 41142 // Helper->self, no cast, ???
 }
 
 sealed class MythicMirror(BossModule module) : Components.GenericAOEs(module)
@@ -42,13 +42,22 @@ sealed class MythicMirror(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var deadline = aoes[0].Activation.AddSeconds(5d);
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
+        while (index < count)
+        {
+            ref readonly var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
+            {
+                break;
+            }
             ++index;
+        }
 
         return aoes[..index];
     }
@@ -63,7 +72,9 @@ sealed class MythicMirror(BossModule module) : Components.GenericAOEs(module)
             _ => null
         };
         if (shape != null)
+        {
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -86,7 +97,7 @@ sealed class MythicMirror(BossModule module) : Components.GenericAOEs(module)
 
 sealed class MysticHeat(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MysticHeat, new AOEShapeCone(40f, 30f.Degrees()));
 sealed class LotsCast(BossModule module) : Components.RaidwideCast(module, (uint)AID.LotsCastVisual);
-sealed class ArcaneLight(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.ArcaneLightVisual, (uint)AID.ArcaneLight, 0.9f);
+sealed class ArcaneLight(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.ArcaneLightVisual, (uint)AID.ArcaneLight, 0.9d);
 sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.LotsCastSpread, 6f)
 {
     public override void Update()
@@ -98,8 +109,7 @@ sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTarget
             for (var i = 0; i < count; ++i)
             {
                 ref var s = ref spreads[i];
-                var target = WorldState.Actors.Find(s.Target.InstanceID);
-                if (target is Actor t)
+                if (WorldState.Actors.Find(s.Target.InstanceID) is Actor t)
                 {
                     s.Target = t;
                 }
@@ -119,8 +129,7 @@ sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (ui
             for (var i = 0; i < count; ++i)
             {
                 ref var s = ref spreads[i];
-                var target = WorldState.Actors.Find(s.Target.InstanceID);
-                if (target is Actor t)
+                if (WorldState.Actors.Find(s.Target.InstanceID) is Actor t)
                 {
                     s.Target = t;
                 }
@@ -138,7 +147,9 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
 
         var max = count > 32 ? 32 : count;
         var aoes = CollectionsMarshal.AsSpan(_aoes);
@@ -149,8 +160,9 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ArcaneOrbTelegraph)
+        {
             _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(8.2d)));
-
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -169,7 +181,9 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (_aoes.Count == 0)
+        {
             return;
+        }
         hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 6.6f), WorldState.FutureTime(8d));
     }
 }

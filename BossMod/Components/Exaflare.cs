@@ -9,7 +9,7 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
         public WDir Advance;
         public Angle Rotation;
         public DateTime NextExplosion;
-        public float TimeToMove;
+        public double TimeToMove;
         public int ExplosionsLeft;
         public int MaxShownExplosions;
     }
@@ -55,7 +55,9 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
         {
             var l = Lines[i];
             if (l.ExplosionsLeft != 0)
+            {
                 exas[i] = (WPos.ClampToGrid(l.Next), l.NextExplosion, l.Rotation);
+            }
         }
         return exas;
     }
@@ -88,20 +90,20 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
     }
 }
 
-public class SimpleExaflare(BossModule module, AOEShape shape, uint aidFirst, uint aidRest, float distance, float timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false,
+public class SimpleExaflare(BossModule module, AOEShape shape, uint aidFirst, uint aidRest, float distance, double timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false,
 bool locationBased = false) : Exaflare(module, shape)
 {
     private readonly uint AIDFirst = aidFirst;
     private readonly uint AIDRest = aidRest;
     private readonly float Distance = distance;
-    private readonly float TimeToMove = timeToMove;
+    private readonly double TimeToMove = timeToMove;
     private readonly int ExplosionsLeft = explosionsLeft;
     private readonly int MaxShownExplosions = maxShownExplosions;
     private readonly bool CastEvent = castEvent; // if exaflare gets advanced by castevent instead of castfinished
     private readonly bool LocationBased = locationBased; // if cast is location based
     public int NumLinesFinished;
 
-    public SimpleExaflare(BossModule module, float radius, uint aidFirst, uint aidRest, float distance, float timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false, bool locationBased = false)
+    public SimpleExaflare(BossModule module, float radius, uint aidFirst, uint aidRest, float distance, double timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false, bool locationBased = false)
     : this(module, new AOEShapeCircle(radius), aidFirst, aidRest, distance, timeToMove, explosionsLeft, maxShownExplosions, castEvent, locationBased) { }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -104,7 +104,9 @@ class OnHigh(BossModule module) : Components.GenericKnockback(module)
         for (var i = 0; i < count; ++i)
         {
             if (pos.InCircle(whirlwinds[i].Position, 6f))
+            {
                 return true;
+            }
         }
         return !Arena.InBounds(pos);
     }

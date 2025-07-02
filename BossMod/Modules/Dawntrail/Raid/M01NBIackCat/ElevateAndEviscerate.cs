@@ -71,16 +71,22 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         _aoe ??= Module.FindComponent<ElevateAndEviscerateImpact>();
         var aoes2 = _aoe!.ActiveAOEs(slot, actor);
         var len2 = aoes2.Length;
         for (var i = 0; i < len2; ++i)
         {
-            if (aoes2[i].Check(pos))
+            ref readonly var aoe = ref aoes2[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

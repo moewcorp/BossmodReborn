@@ -37,7 +37,7 @@ public enum AID : uint
     ChocoAeroII = 41162 // Helper->location, 3.0s cast, range 4 circle
 }
 
-sealed class ChocoSlaughter(BossModule module) : Components.SimpleExaflare(module, 5f, (uint)AID.ChocoSlaughterFirst, (uint)AID.ChocoSlaughterRest, 5f, 1.1f, 5, 3, true);
+sealed class ChocoSlaughter(BossModule module) : Components.SimpleExaflare(module, 5f, (uint)AID.ChocoSlaughterFirst, (uint)AID.ChocoSlaughterRest, 5f, 1.1d, 5, 3, true);
 
 sealed class ChocoBeak(BossModule module) : Components.GenericAOEs(module)
 {

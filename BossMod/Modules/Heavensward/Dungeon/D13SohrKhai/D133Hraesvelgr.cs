@@ -112,11 +112,14 @@ class ThinIce(BossModule module) : Components.ThinIce(module, 11f, true, stopAtW
         if (_aoe2.Casters.Count != 0 && _aoe2.Casters[0].Check(pos))
             return true;
         var count = _aoe1.Casters.Count;
+        var aoes = CollectionsMarshal.AsSpan(_aoe1.Casters);
         for (var i = 0; i < count; ++i)
         {
-            var aoe = _aoe1.Casters[i];
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }
