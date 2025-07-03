@@ -1,9 +1,9 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class Unenlightenment(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.Unenlightenment, (uint)AID.UnenlightenmentAOE, 0.5f);
-class SpikeOfFlameAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpikeOfFlameAOE, 5f);
+sealed class Unenlightenment(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.Unenlightenment, (uint)AID.UnenlightenmentAOE, 0.5d);
+sealed class SpikeOfFlameAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpikeOfFlameAOE, 5f);
 
-class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
 {
     private static readonly AOEShape[] _shapes = [new AOEShapeCircle(10f), new AOEShapeDonut(10f, 20f), new AOEShapeDonut(20f, 30f)];
 
@@ -29,15 +29,15 @@ class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _shapes)
     }
 }
 
-class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.TorchingTorment, 5.9f, tankbuster: true);
+sealed class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.TorchingTorment, 5.9f, tankbuster: true);
 
-class PureShock(BossModule module) : Components.RaidwideCast(module, (uint)AID.PureShock);
-class HumbleHammer(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HumbleHammer, 3f);
-class FightingSpirits(BossModule module) : Components.RaidwideCast(module, (uint)AID.FightingSpirits);
-class BiwaBreaker(BossModule module) : Components.RaidwideCast(module, (uint)AID.BiwaBreakerFirst, "Raidwide x5");
+sealed class PureShock(BossModule module) : Components.RaidwideCast(module, (uint)AID.PureShock);
+sealed class HumbleHammer(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HumbleHammer, 3f);
+sealed class FightingSpirits(BossModule module) : Components.RaidwideCast(module, (uint)AID.FightingSpirits);
+sealed class BiwaBreaker(BossModule module) : Components.RaidwideCast(module, (uint)AID.BiwaBreakerFirst, "Raidwide x5");
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12373, SortOrder = 4)]
-public class V023Gorai(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChange.ArenaCenter, ArenaChange.StartingBounds)
+public sealed class V023Gorai(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChange.ArenaCenter, ArenaChange.StartingBounds)
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

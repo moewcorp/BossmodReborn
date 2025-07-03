@@ -5,7 +5,7 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
     private float _predictionDelay = predictionDelay;
     private readonly List<AOEInstance> _aoes = [];
 
-    private static readonly AOEShapeRect _shape = new(54.2f, 6);
+    private static readonly AOEShapeRect _shape = new(54.2f, 6f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
@@ -13,9 +13,9 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
     {
         if (spell.Action.ID == WatchedAction)
         {
-            if (_predictionDelay > 0)
+            if (_predictionDelay > 0f)
             {
-                _predictionDelay = 0;
+                _predictionDelay = default;
                 _aoes.Clear();
             }
             _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
@@ -40,5 +40,5 @@ abstract class SpiralThrust(BossModule module, float predictionDelay) : Componen
     }
 }
 
-class SpiralThrust1(BossModule module) : SpiralThrust(module, 10f);
-class SpiralThrust2(BossModule module) : SpiralThrust(module, 12.1f);
+sealed class SpiralThrust1(BossModule module) : SpiralThrust(module, 10f);
+sealed class SpiralThrust2(BossModule module) : SpiralThrust(module, 12.1f);

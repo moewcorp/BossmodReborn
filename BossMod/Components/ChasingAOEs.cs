@@ -113,7 +113,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     public readonly uint Icon = icon;
     public readonly float ActivationDelay = activationDelay;
     public readonly bool ResetExcludedTargets = resetExcludedTargets;
-    public readonly List<Actor> Actors = []; // to keep track of the icon before mechanic starts for handling custom forbidden zones
+    public BitMask Targets; // to keep track of the icon before mechanic starts for handling custom forbidden zones
     public DateTime Activation;
 
     public override void Update()
@@ -151,7 +151,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
             var (slot, target) = Raid.WithSlot().ExcludedFromMask(ExcludedTargets).MinBy(ip => (ip.Item2.Position - pos).LengthSq());
             if (target != null)
             {
-                Actors.Remove(target);
+                Targets[Module.Raid.FindSlot(target.InstanceID)] = false;
                 Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
                 ExcludedTargets[slot] = true;
             }
@@ -177,7 +177,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         if (iconID == Icon)
         {
             Activation = WorldState.FutureTime(ActivationDelay);
-            Actors.Add(actor);
+            Targets[Module.Raid.FindSlot(targetID)] = false;
         }
     }
 }
@@ -195,7 +195,7 @@ public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, ui
             Actor? target = null;
             var minDistanceSq = float.MaxValue;
 
-            foreach (var actor in WorldState.Actors)
+            foreach (var actor in WorldState.Actors.Actors.Values)
             {
                 if (actor.OID == 0 && !ExcludedTargets.Contains(actor))
                 {
@@ -209,7 +209,7 @@ public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, ui
             }
             if (target != null)
             {
-                Actors.Remove(target);
+                Targets[Module.Raid.FindSlot(target.InstanceID)] = false;
                 Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
                 ExcludedTargets.Add(target);
             }

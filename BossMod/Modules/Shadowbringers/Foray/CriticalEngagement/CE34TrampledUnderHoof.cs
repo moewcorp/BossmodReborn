@@ -43,7 +43,9 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BullHorn)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 6f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 6d));
+        }
     }
 
     public override void OnActorCreated(Actor actor)
@@ -109,7 +111,9 @@ sealed class DemonEye(BossModule module) : Components.GenericGaze(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FalseDemonEye)
+        {
             _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), Inverted: inverted));
+        }
         else if (spell.Action.ID == (uint)AID.DemonEye)
         {
             inverted = true; // depending on timing eyes can spawn after cast start

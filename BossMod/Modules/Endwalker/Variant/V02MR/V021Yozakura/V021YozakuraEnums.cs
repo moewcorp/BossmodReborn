@@ -56,7 +56,7 @@ public enum AID : uint
     SeasonOfLightning = 33671, // Helper->self, 0.8s cast, range 70 45-degree cone
     SeasonOfEarth = 33672, // Helper->self, 0.8s cast, range 70 45-degree cone
 
-    //Left Windy
+    // Left Windy
     WindblossomWhirlVisual = 33679, // Boss->self, 3.0s cast, single-target
     WindblossomWhirl1 = 33680, // Helper->self, 5.0s cast, range 5-60 donut
     WindblossomWhirl2 = 34544, // Helper->self, 3.0s cast, range 5-60 donut
@@ -64,7 +64,7 @@ public enum AID : uint
     LevinblossomStrike = 33682, // Helper->location, 3.0s cast, range 3 circle
     DriftingPetals = 33683, // Boss->self, 5.0s cast, range 60 circle, knockback
 
-    //Left Rainy
+    // Left Rainy
     Bunshin = 33662, // Boss->self, 5.0s cast, single-target
     ShadowflightVisual = 33663, // Boss->self, 3.0s cast, single-target
     Shadowflight = 33664, // MirroredYozakura->self, 2.5s cast, range 10 width 6 rect
@@ -75,7 +75,7 @@ public enum AID : uint
     MudPieVisual = 33677, // Boss->self, 3.0s cast, single-target
     MudPie = 33678, // MudBubble->self, 4.0s cast, range 60 width 6 rect
 
-    //Middle Rope Pulled
+    // Middle Rope Pulled
     ArtOfTheFluff1 = 33693, // Shibamaru/Kuromaru->self, 6.5s cast, range 60 circle, gaze
     ArtOfTheFluff2 = 33694, // Shiromaru->self, 6.5s cast, range 60 circle, gaze
 
@@ -85,7 +85,7 @@ public enum AID : uint
     DondenGaeshi = 33692, // Boss->self, 3.0s cast, single-target, indicates platforms
     SilentWhistle = 33691, // Boss->self, 3.0s cast, single-target, dog summons
 
-    //Middle Rope Unpulled
+    // Middle Rope Unpulled
     LevinblossomLanceCW = 33687, // Boss->self, 5.0s cast, single-target
     LevinblossomLanceCCW = 33688, // Boss->self, 5.0s cast, single-target
     LevinblossomLanceFirst = 33689, // Helper->self, 5.8s cast, range 60 width 7 rect
@@ -95,7 +95,7 @@ public enum AID : uint
     TatamiGaeshiVisual = 33685, // Boss->self, 3.0s cast, single-target
     TatamiGaeshi = 33686, // Helper->self, 3.8s cast, range 40 width 10 rect
 
-    //Right No Dogu
+    // Right No Dogu
     Mebuki = 33697, // Boss->self, 3.0s cast, single-target
     RockRootArrangementVisual = 33700, // Boss->self, 5.0s cast, single-target
     RockRootArrangementFirst = 33701, // Helper->location, 3.0s cast, range 4 circle
@@ -103,16 +103,12 @@ public enum AID : uint
     BehindBarbs = 33698, // AccursedSeedling->player, no cast, single-target
     Explosion = 33699, // LivingGaol->player, 15.0s cast, single-target, seedling turns into prison if touched, explodes after 15s if not killed
 
-    //Right Dogu
+    // Right Dogu
     Witherwind = 33703, // Boss->self, 3.0s cast, single-target
     CuttingLeaves = 33704 // Helper->player, no cast, single-target, touch whirlwind
 }
 
 public enum IconID : uint
 {
-    Tankbuster = 218, // player
-    Gaze = 374, // Shibamaru/Shiromaru/Kuromaru
-    RotateCW = 167, // Boss
-    RotateCCW = 168, // Boss
     ChasingAOE = 197 // player
 }

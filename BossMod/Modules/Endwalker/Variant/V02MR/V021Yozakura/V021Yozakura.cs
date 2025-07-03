@@ -1,12 +1,12 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
-class GloryNeverlasting(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.GloryNeverlasting);
-class ArtOfTheFireblossom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArtOfTheFireblossom, 9f);
-class ArtOfTheWindblossom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArtOfTheWindblossom, new AOEShapeDonut(5f, 60f));
-class KugeRantsui(BossModule module) : Components.RaidwideCast(module, (uint)AID.KugeRantsui);
-class OkaRanman(BossModule module) : Components.RaidwideCast(module, (uint)AID.OkaRanman);
-class LevinblossomStrike(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LevinblossomStrike, 3f);
-class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.DriftingPetals, 15, ignoreImmunes: true)
+sealed class GloryNeverlasting(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.GloryNeverlasting);
+sealed class ArtOfTheFireblossom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArtOfTheFireblossom, 9f);
+sealed class ArtOfTheWindblossom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArtOfTheWindblossom, new AOEShapeDonut(5f, 60f));
+sealed class KugeRantsuiOkaRanman(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.KugeRantsui, (uint)AID.OkaRanman]);
+sealed class LevinblossomStrike(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LevinblossomStrike, 3f);
+
+sealed class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.DriftingPetals, 15f, ignoreImmunes: true)
 {
     private readonly Mudrain _aoe1 = module.FindComponent<Mudrain>()!;
     private readonly Witherwind _aoe2 = module.FindComponent<Witherwind>()!;
@@ -56,30 +56,56 @@ class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(module, (u
     }
 }
 
-class Mudrain(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.Mudrain, module => module.Enemies((uint)OID.MudVoidzone).Where(z => z.EventState != 7), 0.7f);
-class Icebloom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Icebloom, 6);
-class Shadowflight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shadowflight, new AOEShapeRect(10f, 3f));
-class MudPie(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MudPie, new AOEShapeRect(60f, 3f));
-class FireblossomFlare(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FireblossomFlare, 6f);
-class ArtOfTheFluff1(BossModule module) : Components.CastGaze(module, (uint)AID.ArtOfTheFluff1);
-class ArtOfTheFluff2(BossModule module) : Components.CastGaze(module, (uint)AID.ArtOfTheFluff2);
-class TatamiGaeshi(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TatamiGaeshi, new AOEShapeRect(40f, 5f));
-class AccursedSeedling(BossModule module) : Components.Voidzone(module, 4f, m => m.Enemies((uint)OID.AccursedSeedling));
+sealed class Mudrain(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.Mudrain, GetVoidzones, 0.7d)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.MudVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+            return [];
 
-class RootArrangement(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.RockRootArrangementFirst, (uint)AID.RockRootArrangementRest, 4, 1, 4, true, (uint)IconID.ChasingAOE)
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7u)
+                voidzones[index++] = z;
+        }
+        return voidzones[..index];
+    }
+}
+sealed class Icebloom(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Icebloom, 6);
+sealed class Shadowflight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shadowflight, new AOEShapeRect(10f, 3f));
+sealed class MudPie(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MudPie, new AOEShapeRect(60f, 3f));
+sealed class FireblossomFlare(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FireblossomFlare, 6f);
+sealed class ArtOfTheFluff(BossModule module) : Components.CastGazes(module, [(uint)AID.ArtOfTheFluff1, (uint)AID.ArtOfTheFluff2]);
+sealed class TatamiGaeshi(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TatamiGaeshi, new AOEShapeRect(40f, 5f));
+sealed class AccursedSeedling(BossModule module) : Components.Voidzone(module, 4f, GetSeedlings)
+{
+    private static List<Actor> GetSeedlings(BossModule module) => module.Enemies((uint)OID.AccursedSeedling);
+}
+
+sealed class RootArrangement(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.RockRootArrangementFirst, (uint)AID.RockRootArrangementRest, 4, 1, 4, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Actors.Contains(actor))
+        if (Targets[slot])
+        {
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(19f, default), Arena.Center + new WDir(-19f, default), 20f), Activation);
+        }
     }
 }
 
-class Witherwind(BossModule module) : Components.Voidzone(module, 3f, m => m.Enemies((uint)OID.AutumnalTempest), 20f);
+sealed class Witherwind(BossModule module) : Components.Voidzone(module, 3f, GetWhirlwind, 20f)
+{
+    private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.AutumnalTempest);
+}
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12325, SortOrder = 1)]
-public class V021Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -700 ? ArenaCenter1 : primary.Position.X > 700 ? ArenaCenter2 : ArenaCenter3, primary.Position.X < -700 ? StartingBounds : primary.Position.X > 700 ? DefaultBounds2 : StartingBounds)
+public sealed class V021Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -700f ? ArenaCenter1 : primary.Position.X > 700f ? ArenaCenter2 : ArenaCenter3, primary.Position.X < -700f ? StartingBounds : primary.Position.X > 700f ? DefaultBounds2 : StartingBounds)
 {
     public static readonly WPos ArenaCenter1 = new(-775f, 16f);
     public static readonly WPos ArenaCenter2 = new(737f, 220f);

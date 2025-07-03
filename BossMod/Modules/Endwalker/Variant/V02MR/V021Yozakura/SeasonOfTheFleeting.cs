@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
-class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
+sealed class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(70f, 22.5f.Degrees());
     private static readonly AOEShapeRect rect = new(46f, 2.5f);
@@ -12,15 +12,13 @@ class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var max = count > 8 ? 8 : count;
-        var aoes = new AOEInstance[max];
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        if (max > 4)
         {
-            for (var i = 0; i < max; ++i)
+            for (var i = 0; i < 4; ++i)
             {
-                var aoe = _aoes[i];
-                if (i < 4)
-                    aoes[i] = count > 4 ? aoe with { Color = Colors.Danger } : aoe;
-                else
-                    aoes[i] = aoe;
+                ref var aoe = ref aoes[i];
+                aoe.Color = Colors.Danger;
             }
         }
         return aoes;
@@ -28,7 +26,7 @@ class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 7.4f)));
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 7.4d)));
         switch (spell.Action.ID)
         {
             case (uint)AID.FireAndWaterTelegraph:
@@ -43,6 +41,7 @@ class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0)
+        {
             switch (spell.Action.ID)
             {
                 case (uint)AID.SeasonOfFire:
@@ -52,5 +51,6 @@ class SeasonsOfTheFleeting(BossModule module) : Components.GenericAOEs(module)
                     _aoes.RemoveAt(0);
                     break;
             }
+        }
     }
 }

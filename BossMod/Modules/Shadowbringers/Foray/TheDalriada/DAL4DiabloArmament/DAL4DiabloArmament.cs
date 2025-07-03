@@ -95,7 +95,7 @@ sealed class PillarOfShamash(BossModule module) : Components.SimpleAOEGroupsByTi
 (uint)AID.PillarOfShamashCone3], new AOEShapeCone(70f, 10f.Degrees()), expectedNumCasters: 9);
 sealed class UltimatePseudoterror(BossModule module) : Components.SimpleAOEs(module, (uint)AID.UltimatePseudoterror, new AOEShapeDonut(15f, 70f));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.TheDalriada, GroupID = 778, NameID = 10007, SortOrder = 5)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.TheDalriada, GroupID = 778, NameID = 10007, SortOrder = 6)]
 public sealed class DAL4DiabloArmament(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
 {
     public static readonly WPos ArenaCenter = new(-720f, -760f);
