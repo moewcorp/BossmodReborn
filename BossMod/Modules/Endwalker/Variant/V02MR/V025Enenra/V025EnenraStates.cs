@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.V02MR.V025Enenra;
 
-class V025EnenraStates : StateMachineBuilder
+sealed class V025EnenraStates : StateMachineBuilder
 {
     public V025EnenraStates(BossModule module) : base(module)
     {

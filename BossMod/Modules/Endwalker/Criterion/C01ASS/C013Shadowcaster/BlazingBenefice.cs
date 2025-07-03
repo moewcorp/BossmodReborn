@@ -21,7 +21,7 @@ abstract class BlazingBenifice(BossModule module, uint aid, uint oid) : Componen
         {
             ref readonly var aoe = ref aoes[index];
             var act = aoe.Activation;
-            if (act >= startTime && act < deadline)
+            if (act < startTime || act >= deadline)
             {
                 break;
             }

@@ -51,6 +51,5 @@ public enum AID : uint
 
 public enum TetherID : uint
 {
-    SmokeRings = 244, // EnenraClone->Boss
-    PipeCleaner = 17, // player->Boss
+    PipeCleaner = 17 // player->Boss
 }

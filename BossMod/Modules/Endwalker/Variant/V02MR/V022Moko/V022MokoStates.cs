@@ -1,19 +1,17 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class V022MokoOtherPathsStates : StateMachineBuilder
+abstract class V022MokoStates : StateMachineBuilder
 {
-    public V022MokoOtherPathsStates(BossModule module) : base(module)
+    public V022MokoStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            //Route 1
+            // Route 1
             .ActivateOnEnter<Unsheathing>()
             .ActivateOnEnter<VeilSever>()
-            //Route 2
+            // Route 2
             .ActivateOnEnter<ScarletAuspice>()
-            .ActivateOnEnter<MoonlessNight>()
             .ActivateOnEnter<Clearout>()
-            .ActivateOnEnter<BoundlessScarlet>()
             .ActivateOnEnter<Explosion>()
             // Route 3
             .ActivateOnEnter<GhastlyGrasp>()
@@ -21,17 +19,18 @@ class V022MokoOtherPathsStates : StateMachineBuilder
             // Route 4
             .ActivateOnEnter<Spiritflame>()
             .ActivateOnEnter<Spiritflames>()
-            //Standard
+            // Standard
             .ActivateOnEnter<SpearmanOrdersFast>()
             .ActivateOnEnter<SpearmanOrdersSlow>()
-            .ActivateOnEnter<KenkiRelease>()
+            .ActivateOnEnter<KenkiReleaseMoonlessNight>()
             .ActivateOnEnter<IronRain>()
             .ActivateOnEnter<Giri>()
             .ActivateOnEnter<AzureAuspice>()
-            .ActivateOnEnter<BoundlessAzure>()
+            .ActivateOnEnter<BoundlessScarletAzure>()
             .ActivateOnEnter<UpwellFirst>()
             .ActivateOnEnter<UpwellRest>();
     }
 }
 
-class V022MokoPath2States(BossModule module) : V022MokoOtherPathsStates(module) { }
+sealed class V022MokoPath2States(BossModule module) : V022MokoStates(module) { }
+sealed class V022MokoOtherPathsStates(BossModule module) : V022MokoStates(module) { }

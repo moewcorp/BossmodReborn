@@ -59,7 +59,9 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BlindsideBarrageAOE)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8d));
+        }
     }
 
     public override void OnActorCreated(Actor actor)
@@ -94,7 +96,7 @@ sealed class Wind(BossModule module) : Components.GenericKnockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.WindVisual)
-            _kb = new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1f), Direction: spell.Rotation, Kind: Kind.DirForward);
+            _kb = new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1d), Direction: spell.Rotation, Kind: Kind.DirForward);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

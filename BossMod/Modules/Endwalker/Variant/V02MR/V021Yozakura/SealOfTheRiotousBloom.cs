@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
-class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
+sealed class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Element { Fire, Water, Thunder, Wind }
     private readonly List<AOEInstance> _aoes = new(10);
@@ -15,10 +15,7 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var max = count > 5 ? 5 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
-            aoes[i] = _aoes[i];
-        return aoes;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
@@ -35,13 +32,19 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
         {
             switch (state)
             {
-                case 0x00100020: // seals spawn
+                case 0x00100020u: // seals spawn
                     elements.Add(e);
                     break;
-
-                case 0x00400080: // seal activates
-                    if (elements.Contains(e))
-                        ActivateAOE(e, WorldState.FutureTime(8.1d));
+                case 0x00400080u: // seal activates
+                    var count = elements.Count;
+                    for (var i = 0; i < count; ++i)
+                    {
+                        if (elements[i] == e)
+                        {
+                            ActivateAOE(e, WorldState.FutureTime(8.1d));
+                            break;
+                        }
+                    }
                     break;
             }
         }
@@ -50,7 +53,9 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count > 4 && spell.Action.ID is (uint)AID.SealOfTheFireblossom or (uint)AID.SealOfTheWindblossom)
+        {
             _aoes.RemoveRange(0, 5);
+        }
     }
 
     private void ActivateAOE(Element element, DateTime activation)
@@ -74,17 +79,21 @@ class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
         var eCount = elements.Count;
         if (_aoes.Count == 5 && eCount != 0)
         {
-            Element[] ele = [.. elements];
+            var act = WorldState.FutureTime(16.3d);
             for (var i = 0; i < eCount; ++i)
-                ActivateAOE(ele[i], WorldState.FutureTime(16.3d));
+            {
+                ActivateAOE(elements[i], act);
+            }
         }
-    }
 
-    private void AddAOE(AOEShape shape, DateTime activation, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
+        void AddAOE(AOEShape shape, DateTime activation, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
 
-    private void AddConeAOEs(ReadOnlySpan<Angle> angles, DateTime activation)
-    {
-        for (var i = 0; i < 4; ++i)
-            AddAOE(cone, activation, angles[i]);
+        void AddConeAOEs(Angle[] angles, DateTime activation)
+        {
+            for (var i = 0; i < 4; ++i)
+            {
+                AddAOE(cone, activation, angles[i]);
+            }
+        }
     }
 }

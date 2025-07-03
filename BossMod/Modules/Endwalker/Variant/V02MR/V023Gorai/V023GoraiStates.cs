@@ -1,21 +1,21 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class V023GoraiStates : StateMachineBuilder
+sealed class V023GoraiStates : StateMachineBuilder
 {
     public V023GoraiStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<ArenaChange>()
-            //Route 5
+            // Route 5
             .ActivateOnEnter<PureShock>()
-            //Route 6
+            // Route 6
             .ActivateOnEnter<HumbleHammer>()
             .ActivateOnEnter<Thundercall>()
-            //Route 7
+            // Route 7
             .ActivateOnEnter<WorldlyPursuit>()
             .ActivateOnEnter<FightingSpirits>()
             .ActivateOnEnter<BiwaBreaker>()
-            //Standard
+            // Standard
             .ActivateOnEnter<ImpurePurgation>()
             .ActivateOnEnter<StringSnap>()
             .ActivateOnEnter<SpikeOfFlameAOE>()

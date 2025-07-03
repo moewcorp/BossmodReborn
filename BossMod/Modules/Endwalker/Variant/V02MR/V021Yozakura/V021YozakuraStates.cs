@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
-class V021YozakuraStates : StateMachineBuilder
+sealed class V021YozakuraStates : StateMachineBuilder
 {
     public V021YozakuraStates(BossModule module) : base(module)
     {
@@ -22,15 +22,13 @@ class V021YozakuraStates : StateMachineBuilder
             .ActivateOnEnter<MudPie>()
             //Middle Rope Pulled
             .ActivateOnEnter<FireblossomFlare>()
-            .ActivateOnEnter<ArtOfTheFluff1>()
-            .ActivateOnEnter<ArtOfTheFluff2>()
+            .ActivateOnEnter<ArtOfTheFluff>()
             //Middle Rope Unpulled
             .ActivateOnEnter<LevinblossomLance>()
             .ActivateOnEnter<TatamiGaeshi>()
             //Standard
             .ActivateOnEnter<GloryNeverlasting>()
-            .ActivateOnEnter<KugeRantsui>()
-            .ActivateOnEnter<OkaRanman>()
+            .ActivateOnEnter<KugeRantsuiOkaRanman>()
             .ActivateOnEnter<SealOfRiotousBloom>()
             .ActivateOnEnter<SeasonsOfTheFleeting>()
             .ActivateOnEnter<ArtOfTheFireblossom>()

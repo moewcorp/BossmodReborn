@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V024Shishio;
 
-class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
+sealed class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(30f, 20f);
     private static readonly AOEShapeDonut donut = new(23f, 40f, true);
@@ -38,7 +38,8 @@ class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001)
+        if (state == 0x00020001u)
+        {
             _aoe = index switch
             {
                 0x67 => new(rect, Arena.Center - new WDir(20f, default), 90f.Degrees()),
@@ -47,8 +48,11 @@ class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
                 0x68 => new(rect, Arena.Center - new WDir(default, -20f), 180f.Degrees()),
                 _ => default
             };
-        else if (state == 0x00080004 && index is 0x65 or 0x66 or 0x67 or 0x68)
+        }
+        else if (state == 0x00080004u && index is 0x65 or 0x66 or 0x67 or 0x68)
+        {
             _aoe = default;
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -56,7 +60,9 @@ class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         var expireAt = actor.FindStatus((uint)SID.SixFulmsUnder)?.ExpireAt ?? DateTime.MaxValue;
         if (_aoe is AOEInstance aoe && aoe.Shape == donut && (expireAt - WorldState.CurrentTime).TotalSeconds <= 8d)
+        {
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -64,9 +70,13 @@ class FocusedTremorYokiUzu(BossModule module) : Components.GenericAOEs(module)
         if (_aoe is AOEInstance aoe)
         {
             if (aoe.Shape == rect)
+            {
                 base.AddHints(slot, actor, hints);
+            }
             else if (!aoe.Check(actor.Position))
+            {
                 hints.Add("Go into quicksand to avoid AOE!");
+            }
         }
     }
 }

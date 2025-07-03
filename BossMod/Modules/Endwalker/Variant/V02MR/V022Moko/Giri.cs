@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class Giri(BossModule module) : Components.GenericAOEs(module)
+sealed class Giri(BossModule module) : Components.GenericAOEs(module)
 {
     private enum NextSafeDirection { None, Front, Back, Left, Right }
     private NextSafeDirection nextDirection;
@@ -60,6 +60,7 @@ class Giri(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (_aoes.Count != 0)
+        {
             switch (spell.Action.ID)
             {
                 case (uint)AID.IaiKasumiGiri1:
@@ -82,6 +83,7 @@ class Giri(BossModule module) : Components.GenericAOEs(module)
                     }
                     break;
             }
+        }
     }
 
     private static Angle CalculateRotation(NextSafeDirection direction, Angle baseAngle, bool isFirstAoe)

@@ -4,9 +4,9 @@ namespace BossMod.Components;
 // voidzone (circle aoe that stays active for some time) centered at each existing object with specified OID, assumed to be persistent voidzone center
 // for moving 'voidzones', the hints can mark the area in front of each source as dangerous
 // TODO: typically sources are either eventobj's with eventstate != 7 or normal actors that are non dead; other conditions are much rarer
-public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, float moveHintLength = 0) : GenericAOEs(module, default, "GTFO from voidzone!")
+public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, float moveHintLength = default) : GenericAOEs(module, default, "GTFO from voidzone!")
 {
-    public readonly AOEShape Shape = moveHintLength == 0 ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
+    public readonly AOEShape Shape = moveHintLength == default ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
     public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -49,11 +49,11 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
 // note that if voidzone is predicted by cast start rather than cast event, we have to account for possibility of cast finishing without event (e.g. if actor dies before cast finish)
 // TODO: this has problems when target moves - castevent and spawn position could be quite different
 // TODO: this has problems if voidzone never actually spawns after castevent, eg because of phase changes
-public class VoidzoneAtCastTarget(BossModule module, float radius, uint aid, Func<BossModule, IEnumerable<Actor>> sources, float castEventToSpawn) : GenericAOEs(module, aid, "GTFO from voidzone!")
+public class VoidzoneAtCastTarget(BossModule module, float radius, uint aid, Func<BossModule, IEnumerable<Actor>> sources, double castEventToSpawn) : GenericAOEs(module, aid, "GTFO from voidzone!")
 {
     public readonly AOEShapeCircle Shape = new(radius);
     public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
-    public readonly float CastEventToSpawn = castEventToSpawn;
+    public readonly double CastEventToSpawn = castEventToSpawn;
     protected readonly List<(WPos pos, DateTime time, ulong InstanceID)> _predicted = [];
 
     public bool HaveCasters => _predicted.Count > 0;
@@ -123,7 +123,7 @@ public class VoidzoneAtCastTarget(BossModule module, float radius, uint aid, Fun
     }
 }
 
-public class VoidzoneAtCastTargetGroup(BossModule module, float radius, uint[] aids, Func<BossModule, IEnumerable<Actor>> sources, float castEventToSpawn) : VoidzoneAtCastTarget(module, radius, default, sources, castEventToSpawn)
+public class VoidzoneAtCastTargetGroup(BossModule module, float radius, uint[] aids, Func<BossModule, IEnumerable<Actor>> sources, double castEventToSpawn) : VoidzoneAtCastTarget(module, radius, default, sources, castEventToSpawn)
 {
     private readonly uint[] AIDs = aids;
 
