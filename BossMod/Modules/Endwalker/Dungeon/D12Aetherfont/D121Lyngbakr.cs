@@ -62,7 +62,7 @@ class ExplosiveResonantFrequency(BossModule module) : Components.GenericAOEs(mod
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
             if (_aoes.Count == 11)
             {
                 _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));

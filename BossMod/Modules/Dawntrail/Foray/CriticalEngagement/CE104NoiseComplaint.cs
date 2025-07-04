@@ -86,7 +86,7 @@ sealed class LightningCrossingMammothBoltEpicenterShock(BossModule module) : Com
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
             if (_aoes.Count > 4)
             {
                 _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));

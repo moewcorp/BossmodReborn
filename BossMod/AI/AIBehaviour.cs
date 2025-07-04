@@ -255,17 +255,17 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             ctrl.NaviTargetVertical = null;
             ctrl.ForceCancelCast = true;
         }
-        else if (misdirectionAngle != default && _naviDecision.Destination != null)
+        else if (misdirectionAngle != default && _naviDecision.Destination is WPos destination)
         {
             ctrl.AllowInterruptingCastByMovement = true;
-            var dir = _naviDecision.Destination.Value - player.Position;
+            var dir = destination - player.Position;
             var distSq = dir.LengthSq();
             var threshold = 45f.Degrees();
             var forceddir = WorldState.Client.ForcedMovementDirection;
             var allowMovement = forceddir.AlmostEqual(Angle.FromDirection(dir), threshold.Rad);
             if (allowMovement)
                 allowMovement = CalculateUnobstructedPathLength(forceddir) >= Math.Min(3f, distSq);
-            ctrl.NaviTargetPos = allowMovement && distSq >= 0.01f ? _naviDecision.Destination.Value : null;
+            ctrl.NaviTargetPos = allowMovement && distSq >= 0.01f ? destination : null;
 
             float CalculateUnobstructedPathLength(Angle dir)
             {

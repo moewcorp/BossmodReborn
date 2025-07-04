@@ -150,7 +150,7 @@ sealed class ElevateAndEviscerateHint(BossModule module) : Components.GenericAOE
             for (var i = 0; i < len; ++i)
             {
                 var tile = tiles[damagedCells[i]];
-                aoes.Add(new(ElevateAndEviscerateShockwave.Rect, tile.Center, Color: Colors.FutureVulnerable, Risky: false));
+                aoes.Add(new(ElevateAndEviscerateShockwave.Rect, tile.Center, color: Colors.FutureVulnerable, risky: false));
             }
             return CollectionsMarshal.AsSpan(aoes);
         }

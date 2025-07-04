@@ -96,7 +96,7 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
             };
             if (activation != default)
             {
-                AOEs.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation), ActorID: actor.InstanceID));
+                AOEs.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation), actorID: actor.InstanceID));
             }
         }
     }

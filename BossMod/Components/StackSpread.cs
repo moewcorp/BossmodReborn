@@ -35,11 +35,12 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         public readonly bool IsInside(Actor actor) => IsInside(actor.Position);
     }
 
-    public record struct Spread(
-        Actor Target,
-        float Radius,
-        DateTime Activation = default
-    );
+    public struct Spread(Actor target, float radius, DateTime activation = default)
+    {
+        public Actor Target = target;
+        public float Radius = radius;
+        public DateTime Activation = activation;
+    }
 
     public readonly bool AlwaysShowSpreads = alwaysShowSpreads; // if false, we only shown own spread radius for spread targets - this reduces visual clutter
     public readonly bool RaidwideOnResolve = raidwideOnResolve; // if true, assume even if mechanic is correctly resolved everyone will still take damage
@@ -423,6 +424,7 @@ public class DonutStack(BossModule module, uint aid, uint icon, float innerRadiu
                     return;
                 }
             }
+            Stacks.Clear(); // stack was not found, just clear all - this can happen if donut stacks is self targeted instead of player targeted
         }
     }
 

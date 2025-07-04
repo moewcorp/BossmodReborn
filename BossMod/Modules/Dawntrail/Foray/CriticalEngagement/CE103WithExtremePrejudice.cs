@@ -91,7 +91,7 @@ sealed class RockSlideStoneSwell(BossModule module) : Components.GenericAOEs(mod
         {
             AddAOE(circle, source.Position, default, source.InstanceID);
         }
-        void AddAOE(AOEShape shape, WPos position, Angle rotation, ulong cid) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, WorldState.FutureTime(6.1d), ActorID: cid));
+        void AddAOE(AOEShape shape, WPos position, Angle rotation, ulong cid) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, WorldState.FutureTime(6.1d), actorID: cid));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

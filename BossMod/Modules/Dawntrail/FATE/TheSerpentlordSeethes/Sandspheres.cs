@@ -42,7 +42,7 @@ sealed class Sandspheres(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(circleBig);
                 break;
         }
-        void AddAOE(AOEShape circle) => _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+        void AddAOE(AOEShape circle) => _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

@@ -71,7 +71,7 @@ sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
             {
                 var col = Colors.SafeFromAOE;
                 for (var i = 0; i < len; ++i)
-                    _aoes.Add(new(circle, positions[i], Risky: false, Color: col));
+                    _aoes.Add(new(circle, positions[i], risky: false, color: col));
             }
         }
     }

@@ -11,7 +11,8 @@ sealed class VirtualShiftEarth(BossModule module) : BossComponent(module)
     public static bool OnPlatform(WPos p)
     {
         var off = p - Midpoint;
-        off.X = Math.Abs(off.X);
+        var offX = Math.Abs(off.X);
+        off = new(offX, off.Z);
         off -= CenterOffset;
         off = off.Abs();
         return off.X <= HalfExtent.X && off.Z <= HalfExtent.Z;

@@ -18,11 +18,11 @@ class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(modu
         var aoes = new AOEInstance[lenF + lenI];
         for (var i = 0; i < lenF; ++i)
         {
-            aoes[i] = new(_blasterShape, future[i], Risky: false);
+            aoes[i] = new(_blasterShape, future[i], risky: false);
         }
         for (var i = 0; i < lenI; ++i)
         {
-            aoes[i + lenF] = new(_blasterShape, imminent[i], Color: Colors.Danger);
+            aoes[i + lenF] = new(_blasterShape, imminent[i], color: Colors.Danger);
         }
         return aoes;
     }

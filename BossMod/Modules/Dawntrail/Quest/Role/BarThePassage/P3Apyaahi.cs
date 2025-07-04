@@ -124,7 +124,7 @@ sealed class PathogenicPowerAOE(BossModule module) : Components.GenericAOEs(modu
     {
         if (spell.Action.ID == (uint)AID.PathogenicPowerAOE)
         {
-            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), Risky: false));
+            _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), risky: false));
         }
     }
 

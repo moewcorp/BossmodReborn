@@ -18,7 +18,7 @@ class P6WrothFlames : Components.GenericAOEs
         if (cauterizeCaster != null)
         {
             _aoes.Add(new(_shapeCauterize, WPos.ClampToGrid(cauterizeCaster.Position), cauterizeCaster.Rotation, WorldState.FutureTime(8.1d)));
-            _startingSpot.X = cauterizeCaster.Position.X < 95f ? 120f : 80f; // assume nidhogg is at 78, prefer uptime if possible
+            _startingSpot = new(cauterizeCaster.Position.X < 95f ? 120f : 80f, _startingSpot.Z); // assume nidhogg is at 78, prefer uptime if possible
         }
     }
 
@@ -45,7 +45,9 @@ class P6WrothFlames : Components.GenericAOEs
         if (actor.OID == (uint)OID.ScarletPrice)
         {
             if (_aoes.Count == 4)
-                _startingSpot.Z = actor.Position.Z < Arena.Center.Z ? 120 : 80;
+            {
+                _startingSpot = new(_startingSpot.X, actor.Position.Z < Arena.Center.Z ? 120f : 80f);
+            }
 
             var delay = _aoes.Count switch
             {

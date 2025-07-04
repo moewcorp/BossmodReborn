@@ -16,7 +16,7 @@ sealed class P2IcicleImpact(BossModule module) : Components.GenericAOEs(module, 
         if (spell.Action.ID == WatchedAction)
         {
             // initially all aoes start as non-risky
-            AOEs.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), Risky: false));
+            AOEs.Add(new(_shape, spell.LocXZ, default, Module.CastFinishAt(spell), risky: false));
         }
     }
 

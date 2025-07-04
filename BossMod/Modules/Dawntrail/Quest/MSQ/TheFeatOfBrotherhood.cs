@@ -107,7 +107,7 @@ sealed class DualPyresSteelfoldStrike(BossModule module) : Components.GenericAOE
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: false));
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: false));
         switch (spell.Action.ID)
         {
             case (uint)AID.DualPyres1:

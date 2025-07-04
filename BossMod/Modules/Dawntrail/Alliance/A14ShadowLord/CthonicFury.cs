@@ -51,7 +51,7 @@ class BurningCourtMoatKeepBattlements(BossModule module) : Components.GenericAOE
     {
         var shape = ShapeForAction(spell.Action);
         if (shape != null)
-            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

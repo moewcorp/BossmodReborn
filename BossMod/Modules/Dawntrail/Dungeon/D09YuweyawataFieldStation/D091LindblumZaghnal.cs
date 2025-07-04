@@ -73,7 +73,7 @@ abstract class LineVoltage(BossModule module, uint narrow, double delay, uint? w
 
         void AddAOE(AOEShapeRect shape)
         {
-            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            AOEs.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
             if (AOEs.Count > 1)
                 AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }

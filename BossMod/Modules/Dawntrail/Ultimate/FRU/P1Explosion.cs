@@ -113,7 +113,8 @@ sealed class P1Explosion(BossModule module) : Components.GenericTowers(module)
             return;
         }
         Towers.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
-        TowerDir.X = Towers.Sum(t => t.Position.X - Arena.Center.X) > 0 ? 1 : -1;
+        var towerDirX = Towers.Sum(t => t.Position.X - Arena.Center.X) > 0 ? 1 : -1;
+        TowerDir = new(towerDirX, TowerDir.Z);
 
         Span<int> slotByGroup = [-1, -1, -1, -1, -1, -1, -1, -1];
         foreach (var (slot, group) in _config.P1ExplosionsAssignment.Resolve(Raid))
