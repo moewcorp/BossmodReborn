@@ -70,7 +70,7 @@ sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(m
             var id = caster.InstanceID;
             var act = Module.CastFinishAt(spell);
 
-            _aoes.Add(new(circle, loc, default, act, ActorID: id));
+            _aoes.Add(new(circle, loc, default, act, actorID: id));
 
             for (var i = 0; i < 6; ++i)
             {
@@ -106,7 +106,7 @@ sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(m
                     if (!visited[j])
                     {
                         visited[j] = true;
-                        _aoes.Add(new(cone, pos, (180f - 60f * j).Degrees(), act, ActorID: id));
+                        _aoes.Add(new(cone, pos, (180f - 60f * j).Degrees(), act, actorID: id));
                     }
 
                     if (j == right)

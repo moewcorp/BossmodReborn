@@ -21,7 +21,7 @@ sealed class PainStormFrigidPulsePainfulGust(BossModule module) : Components.Gen
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 

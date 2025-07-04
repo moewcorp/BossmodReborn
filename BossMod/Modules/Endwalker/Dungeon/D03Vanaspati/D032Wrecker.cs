@@ -65,7 +65,7 @@ class QueerBubble(BossModule module) : Components.GenericAOEs(module)
         {
             var b = AOEs[i];
             if (!b.IsDead)
-                aoes[index++] = new(circle, b.Position, Color: _aoe.Active ? color : default);
+                aoes[index++] = new(circle, b.Position, color: _aoe.Active ? color : default);
         }
         return aoes.AsSpan()[..index];
     }

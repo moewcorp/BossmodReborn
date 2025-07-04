@@ -231,6 +231,7 @@ sealed class Ex3ThordanStates : StateMachineBuilder
         ComponentCondition<MeteorCircle>(id + 0x1000u, 3.4f, comp => comp.ActiveActors.Count != 0, "Comets appear") // note: quite large variance
             .ActivateOnEnter<CometCircle>()
             .ActivateOnEnter<MeteorCircle>()
+            .ActivateOnEnter<HeavyImpact>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
         // +3.4s: prey icons, first aoe after 4.1s, then every 1.1s
         // +29.9s: all live comets cast raidwides
@@ -254,7 +255,6 @@ sealed class Ex3ThordanStates : StateMachineBuilder
             }
             return true;
         })
-            .ActivateOnEnter<HeavyImpact>()
             .DeactivateOnExit<HeavyImpact>()
             .DeactivateOnExit<CometCircle>()
             .DeactivateOnExit<MeteorCircle>()

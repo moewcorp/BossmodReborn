@@ -93,7 +93,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         var isNull = _aoe == null;
         var activate = ShouldActivateAOEs;
         if (activate && isNull)
-            _aoe = new(new AOEShapeCustom(tiles), Arena.Center, Color: Colors.FutureVulnerable);
+            _aoe = new(new AOEShapeCustom(tiles), Arena.Center, color: Colors.FutureVulnerable);
         else if (!activate && !isNull)
             _aoe = null;
     }
@@ -102,7 +102,9 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
     {
         var tiles = new Square[8];
         for (var i = 0; i < 8; ++i)
+        {
             tiles[i] = new Square(positions[i], HalfSize);
+        }
         return tiles;
     }
 
@@ -110,7 +112,9 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
     {
         var tiles = new Square[8];
         for (var i = 0; i < 8; ++i)
+        {
             tiles[i] = new Square(WPos.RotateAroundOrigin(angle, D092LeananSith.ArenaCenter, defaultGreenTiles[i]), HalfSize);
+        }
         return tiles;
     }
 

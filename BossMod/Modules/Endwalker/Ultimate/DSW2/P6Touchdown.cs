@@ -79,13 +79,18 @@ class P6TouchdownPyretic(BossModule module) : Components.StayMove(module)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Boiling)
-            SetState(Raid.FindSlot(actor.InstanceID), new(Requirement.Stay, status.ExpireAt));
+        if (status.ID == (uint)SID.Boiling)
+        {
+            PlayerState state = new(Requirement.Stay, status.ExpireAt);
+            SetState(Raid.FindSlot(actor.InstanceID), ref state);
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if ((SID)status.ID == SID.Pyretic)
+        if (status.ID == (uint)SID.Pyretic)
+        {
             ClearState(Raid.FindSlot(actor.InstanceID));
+        }
     }
 }

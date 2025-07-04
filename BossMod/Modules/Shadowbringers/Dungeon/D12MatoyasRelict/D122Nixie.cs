@@ -117,10 +117,11 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
                 }
                 if (closestGeysir != null)
                 {
+                    var id = closestGeysir.Value.ActorID;
                     for (var i = 0; i < count; ++i)
                     {
                         ref var aoe = ref aoes[i];
-                        if (aoe == closestGeysir)
+                        if (aoe.ActorID == id)
                         {
                             aoe.Shape = circle with { InvertForbiddenZone = true };
                             aoe.Color = Colors.SafeFromAOE;
@@ -147,7 +148,9 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Geyser)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.9d)));
+        {
+            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.9d), actorID: actor.InstanceID));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

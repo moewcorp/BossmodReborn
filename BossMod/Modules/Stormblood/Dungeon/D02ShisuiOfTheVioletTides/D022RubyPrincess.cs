@@ -73,7 +73,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             aoes[i] = new(circle, openChests[i].Center);
         }
         if (closedAOE is AOEShapeCustom aoe)
-            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, Color: IsOld(actor) || !active ? 0 : Colors.SafeFromAOE);
+            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, color: IsOld(actor) || !active ? default : Colors.SafeFromAOE);
         return aoes;
     }
 
@@ -85,7 +85,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             var c = chests[i];
             if (c.Position.AlmostEqual(actor.Position, 5f))
             {
-                if (state == 0x00040008)
+                if (state == 0x00040008u)
                 {
                     var countC = closedChests.Count;
                     for (var j = 0; j < countC; ++j)

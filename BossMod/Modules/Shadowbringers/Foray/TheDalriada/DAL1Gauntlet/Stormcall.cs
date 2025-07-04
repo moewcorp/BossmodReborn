@@ -12,9 +12,11 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
     {
         if (tether.ID == (uint)TetherID.Stormcall)
         {
-            AOEs.Add(new(circle, WPos.ClampToGrid(source.Position + 48f * source.Rotation.ToDirection()), default, WorldState.FutureTime(source.OID == (uint)OID.VorticalOrb ? 20.9d : 13.7d), ActorID: source.InstanceID));
+            AOEs.Add(new(circle, WPos.ClampToGrid(source.Position + 48f * source.Rotation.ToDirection()), default, WorldState.FutureTime(source.OID == (uint)OID.VorticalOrb ? 20.9d : 13.7d), actorID: source.InstanceID));
             if (AOEs.Count == 2)
+            {
                 AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+            }
         }
     }
 
@@ -28,7 +30,7 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
             {
                 if (AOEs[i].ActorID == id)
                 {
-                    AOEs[i] = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), ActorID: id);
+                    AOEs[i] = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: id);
                     return;
                 }
             }

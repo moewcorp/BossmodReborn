@@ -44,12 +44,14 @@ public sealed class AIHints
         Shared, // cast is expected to hit multiple players; modules might have special behavior when intentionally taking this damage solo
     }
 
-    public record struct DamagePrediction(BitMask Players, DateTime Activation, PredictedDamageType Type = PredictedDamageType.None)
+    public readonly struct DamagePrediction(BitMask players, DateTime activation, PredictedDamageType type = PredictedDamageType.None)
     {
-        public readonly BitMask Players = Players;
+        public readonly BitMask Players = players;
+        public readonly DateTime Activation = activation;
+        public readonly PredictedDamageType Type = type;
     }
 
-    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30);
+    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30f);
 
     // information needed to build base pathfinding map (onto which forbidden/goal zones are later rasterized), if needed (lazy, since it's somewhat expensive and not always needed)
     public WPos PathfindMapCenter;

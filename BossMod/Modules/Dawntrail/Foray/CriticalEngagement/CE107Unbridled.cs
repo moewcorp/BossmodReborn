@@ -116,7 +116,7 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
             if (_aoes.Count == 4)
                 _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
-        void AddAOE(AOEShape shape, float delay = default) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay), Risky: false));
+        void AddAOE(AOEShape shape, float delay = default) => _aoes.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay), risky: false));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -151,7 +151,7 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
                 var aoe = _aoes[i];
                 if (aoe.Shape == shape.Item1)
                 {
-                    _aoes.Insert(1, new(shape.Item2, aoe.Origin, default, aoe.Activation.AddSeconds(2.1d), Risky: false));
+                    _aoes.Insert(1, new(shape.Item2, aoe.Origin, default, aoe.Activation.AddSeconds(2.1d), risky: false));
                     return;
                 }
             }

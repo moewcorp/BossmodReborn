@@ -144,10 +144,12 @@ sealed class BuyersRemorseECFreeze(BossModule module) : Components.StayMove(modu
         switch (status.ID)
         {
             case (uint)SID.BuyersRemorseExtremeCaution:
-                SetState(Raid.FindSlot(actor.InstanceID), new(Requirement.Stay, status.ExpireAt));
+                PlayerState stateStay = new(Requirement.Stay, status.ExpireAt);
+                SetState(Raid.FindSlot(actor.InstanceID), ref stateStay);
                 break;
             case (uint)SID.BuyersRemorseDeepFreeze:
-                SetState(Raid.FindSlot(actor.InstanceID), new(Requirement.Move, status.ExpireAt));
+                PlayerState stateMove = new(Requirement.Move, status.ExpireAt);
+                SetState(Raid.FindSlot(actor.InstanceID), ref stateMove);
                 break;
         }
     }

@@ -57,17 +57,18 @@ public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStart
     {
         var vertexCount = Vertices.Count;
         Span<double> pts = vertexCount <= 256 ? stackalloc double[vertexCount * 2] : new double[vertexCount * 2];
+        var verticesSpan = CollectionsMarshal.AsSpan(Vertices);
         for (int i = 0, j = 0; i < vertexCount; ++i, j += 2)
         {
-            var v = Vertices[i];
+            ref readonly var v = ref verticesSpan[i];
             pts[j] = v.X;
             pts[j + 1] = v.Z;
         }
-        var tess = Earcut.Tessellate(pts[..(vertexCount * 2)], HoleStarts);
-        var count = tess.Count;
+        var tess = CollectionsMarshal.AsSpan(Earcut.Tessellate(pts[..(vertexCount * 2)], HoleStarts));
+        var count = tess.Length;
         for (var i = 0; i < count; i += 3)
         {
-            result.Add(new(Vertices[tess[i]], Vertices[tess[i + 1]], Vertices[tess[i + 2]]));
+            result.Add(new(verticesSpan[tess[i]], verticesSpan[tess[i + 1]], verticesSpan[tess[i + 2]]));
         }
 
         return count > 0;

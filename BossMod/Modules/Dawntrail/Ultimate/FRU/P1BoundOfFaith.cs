@@ -73,7 +73,8 @@ sealed class P1BoundOfFaith(BossModule module) : Components.UniformStackSpread(m
             WDir averageOffset = default;
             foreach (var aoe in Module.Enemies(_safeHalo))
                 averageOffset += aoe.Position - Arena.Center;
-            SafeSide.X = averageOffset.X > 0 ? 1 : -1;
+            var safeSideX = averageOffset.X > 0 ? 1 : -1;
+            SafeSide = new(safeSideX, SafeSide.Z);
         }
 
         // initial assignments

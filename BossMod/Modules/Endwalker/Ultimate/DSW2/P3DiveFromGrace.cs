@@ -51,8 +51,8 @@ class P3GnashAndLash(BossModule module) : Components.GenericAOEs(module)
         {
             _aoes.Clear(); // just a precaution, in one pull i had unfortunate cast time updates which 'restarted' the spell several times
             // note: marking aoes as non-risky, so that we don't spam warnings - reconsider (maybe mark as risky when cast ends?)
-            _aoes.Add(new(first, spell.LocXZ, default, WorldState.FutureTime(3.7d), Risky: false));
-            _aoes.Add(new(second, spell.LocXZ, default, WorldState.FutureTime(6.8d), Risky: false));
+            _aoes.Add(new(first, spell.LocXZ, default, WorldState.FutureTime(3.7d), risky: false));
+            _aoes.Add(new(second, spell.LocXZ, default, WorldState.FutureTime(6.8d), risky: false));
         }
     }
 

@@ -35,7 +35,7 @@ sealed class BlackCatCrossing(BossModule module) : Components.GenericAOEs(module
         {
             case (uint)AID.BlackCatCrossingFirst:
             case (uint)AID.BlackCatCrossingRest:
-                _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: false));
+                _aoes.Add(new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: false));
                 if (_aoes.Count == 8)
                     _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 break;

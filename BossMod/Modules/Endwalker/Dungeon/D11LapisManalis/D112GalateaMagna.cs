@@ -71,7 +71,7 @@ class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
     {
         if (iconID is >= (uint)IconID.Icon1 and <= (uint)IconID.Icon4)
         {
-            _aoes.Add(new(cross, WPos.ClampToGrid(actor.Position), Angle.AnglesIntercardinals[1], WorldState.FutureTime(9.9d + (-(uint)IconID.Icon1 + iconID) * 3d), Risky: false));
+            _aoes.Add(new(cross, WPos.ClampToGrid(actor.Position), Angle.AnglesIntercardinals[1], WorldState.FutureTime(9.9d + (-(uint)IconID.Icon1 + iconID) * 3d), risky: false));
             if (_aoes.Count is var count && (count == 4 || count == 2 && first))
             {
                 first = false;

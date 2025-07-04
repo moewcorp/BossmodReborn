@@ -3,12 +3,20 @@
 // generic component that shows arbitrary shapes representing avoidable aoes
 public abstract class GenericAOEs(BossModule module, uint aid = default, string warningText = "GTFO from aoe!") : CastCounter(module, aid)
 {
-    public record struct AOEInstance(AOEShape Shape, WPos Origin, Angle Rotation = default, DateTime Activation = default, uint Color = default, bool Risky = true, ulong ActorID = default)
+    public struct AOEInstance(AOEShape shape, WPos origin, Angle rotation = default, DateTime activation = default, uint color = default, bool risky = true, ulong actorID = default)
     {
+        public AOEShape Shape = shape;
+        public WPos Origin = origin;
+        public Angle Rotation = rotation;
+        public DateTime Activation = activation;
+        public uint Color = color;
+        public bool Risky = risky;
+        public ulong ActorID = actorID;
+
         public readonly bool Check(WPos pos) => Shape.Check(pos, Origin, Rotation);
     }
 
-    public string WarningText = warningText;
+    public readonly string WarningText = warningText;
 
     public abstract ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor);
 
@@ -35,7 +43,9 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
         {
             ref readonly var c = ref aoes[i];
             if (c.Risky)
+            {
                 hints.AddForbiddenZone(c.Shape, c.Origin, c.Rotation, c.Activation);
+            }
         }
     }
 
@@ -103,7 +113,7 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -134,7 +144,7 @@ public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCas
         if (spell.Action.ID == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 }
@@ -154,7 +164,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
         {
             if (spell.Action.ID == AIDs[i])
             {
-                Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+                Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 return;
@@ -245,7 +255,7 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
             if (spell.Action.ID == AIDs[i])
             {
                 var dir = spell.LocXZ - caster.Position;
-                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 return;

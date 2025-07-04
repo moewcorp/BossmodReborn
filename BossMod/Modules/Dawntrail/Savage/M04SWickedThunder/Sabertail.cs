@@ -8,7 +8,7 @@ sealed class Sabertail(BossModule module) : Components.Exaflare(module, 6f)
         {
             var dir = spell.Rotation.ToDirection();
             var startOffset = caster.Position - Arena.Center;
-            startOffset.Z *= 0.99f; // handle exaflares right on N/S borders
+            startOffset = new(startOffset.X, startOffset.Z * 0.99f); // handle exaflares right on N/S borders
             var distanceToBorder = Arena.Bounds.IntersectRay(startOffset, dir);
             Lines.Add(new() { Next = caster.Position, Advance = 6.5f * dir, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.7f, ExplosionsLeft = (int)(distanceToBorder / 6.5f) + 1, MaxShownExplosions = 5 });
         }

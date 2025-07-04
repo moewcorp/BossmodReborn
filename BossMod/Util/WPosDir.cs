@@ -1,14 +1,18 @@
 ﻿namespace BossMod;
 
 // 2d vector that represents world-space direction on XZ plane
-public record struct WDir(float X, float Z)
+public readonly struct WDir(float x, float z) : IEquatable<WDir>
 {
+    public readonly float X = x;
+    public readonly float Z = z;
     public WDir(Vector2 v) : this(v.X, v.Y) { }
     public readonly Vector2 ToVec2() => new(X, Z);
-    public readonly Vector3 ToVec3(float y = 0f) => new(X, y, Z);
-    public readonly Vector4 ToVec4(float y = 0f, float w = 0f) => new(X, y, Z, w);
+    public readonly Vector3 ToVec3(float y = default) => new(X, y, Z);
+    public readonly Vector4 ToVec4(float y = default, float w = default) => new(X, y, Z, w);
     public readonly WPos ToWPos() => new(X, Z);
 
+    public static bool operator ==(WDir left, WDir right) => left.X == right.X && left.Z == right.Z;
+    public static bool operator !=(WDir left, WDir right) => left.X != right.X || left.Z != right.Z;
     public static WDir operator +(WDir a, WDir b) => new(a.X + b.X, a.Z + b.Z);
     public static WDir operator -(WDir a, WDir b) => new(a.X - b.X, a.Z - b.Z);
     public static WDir operator -(WDir a) => new(-a.X, -a.Z);
@@ -47,6 +51,8 @@ public record struct WDir(float X, float Z)
     public readonly WDir Floor() => new(MathF.Floor(X), MathF.Floor(Z));
 
     public override readonly string ToString() => $"({X:f3}, {Z:f3})";
+    public readonly bool Equals(WDir other) => X == other.X && Z == other.Z;
+    public override readonly bool Equals(object? obj) => obj is WDir other && Equals(other);
     public override readonly int GetHashCode() => (X, Z).GetHashCode(); // TODO: this is a hack, the default should be good enough, but for whatever reason (X, -Z).GetHashCode() == (-X, Z).GetHashCode()...
 
     // area checks, assuming this is an offset from shape's center
@@ -68,14 +74,18 @@ public record struct WDir(float X, float Z)
 }
 
 // 2d vector that represents world-space position on XZ plane
-public record struct WPos(float X, float Z)
+public readonly struct WPos(float x, float z) : IEquatable<WPos>
 {
+    public readonly float X = x;
+    public readonly float Z = z;
     public WPos(Vector2 v) : this(v.X, v.Y) { }
     public readonly Vector2 ToVec2() => new(X, Z);
     public readonly Vector3 ToVec3(float y = 0) => new(X, y, Z);
     public readonly Vector4 ToVec4(float y = 0, float w = 0) => new(X, y, Z, w);
     public readonly WDir ToWDir() => new(X, Z);
 
+    public static bool operator ==(WPos left, WPos right) => left.X == right.X && left.Z == right.Z;
+    public static bool operator !=(WPos left, WPos right) => left.X != right.X || left.Z != right.Z;
     public static WPos operator *(WPos a, float b) => new(a.X * b, a.Z * b);
     public static WPos operator +(WPos a, float b) => new(a.X + b, a.Z + b);
     public static WPos operator /(WPos a, int b)
@@ -127,6 +137,8 @@ public record struct WPos(float X, float Z)
     }
 
     public override readonly string ToString() => $"[{X:f3}, {Z:f3}]";
+    public readonly bool Equals(WPos other) => X == other.X && Z == other.Z;
+    public override readonly bool Equals(object? obj) => obj is WPos other && Equals(other);
     public override readonly int GetHashCode() => (X, Z).GetHashCode(); // TODO: this is a hack, the default should be good enough, but for whatever reason (X, -Z).GetHashCode() == (-X, Z).GetHashCode()...
 
     // area checks

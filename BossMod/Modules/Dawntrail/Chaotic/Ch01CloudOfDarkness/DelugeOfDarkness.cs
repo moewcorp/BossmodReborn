@@ -32,7 +32,7 @@ sealed class Phase2InnerCells(BossModule module) : Components.GenericAOEs(module
                     }
                 }
                 else
-                    tiles[index++] = new(square, CellCenter(i), Color: Colors.FutureVulnerable);
+                    tiles[index++] = new(square, CellCenter(i), color: Colors.FutureVulnerable);
             }
         }
         return tiles.AsSpan()[..index];

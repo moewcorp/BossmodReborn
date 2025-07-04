@@ -130,7 +130,7 @@ class RushOfMight(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.RushOfMightFront or (uint)AID.RushOfMightBack)
         {
-            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), Risky: false));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: false));
             if (_aoes.Count == 2)
                 _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }

@@ -121,10 +121,10 @@ sealed class AncientFlare(BossModule module) : Components.StayMove(module, 2.5d)
         {
             var party = Raid.WithSlot(false, true, true);
             var len = party.Length;
-            var act = Module.CastFinishAt(spell);
+            PlayerState state = new(Requirement.Stay, Module.CastFinishAt(spell));
             for (var i = 0; i < len; ++i)
             {
-                SetState(party[i].Item1, new(Requirement.Stay, act));
+                SetState(party[i].Item1, ref state);
             }
         }
     }
@@ -136,10 +136,10 @@ sealed class AncientFlare(BossModule module) : Components.StayMove(module, 2.5d)
             Array.Clear(PlayerStates);
             var targets = spell.Targets;
             var count = targets.Count;
-            var act = WorldState.CurrentTime;
+            PlayerState state = new(Requirement.Stay, WorldState.CurrentTime);
             for (var i = 0; i < count; ++i)
             {
-                SetState(Raid.FindSlot(targets[i].ID), new(Requirement.Stay, act));
+                SetState(Raid.FindSlot(targets[i].ID), ref state);
             }
         }
     }

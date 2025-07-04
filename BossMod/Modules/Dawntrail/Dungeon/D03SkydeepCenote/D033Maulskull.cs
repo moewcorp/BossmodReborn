@@ -145,7 +145,7 @@ sealed class Shatter(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < count; ++i)
         {
             var a = _aoes[i];
-            aoes[i] = new(a.Shape, a.Origin, a.Rotation, a.Activation, Risky: a.Activation.AddSeconds(-6d) <= WorldState.CurrentTime);
+            aoes[i] = new(a.Shape, a.Origin, a.Rotation, a.Activation, risky: a.Activation.AddSeconds(-6d) <= WorldState.CurrentTime);
         }
         return aoes;
     }

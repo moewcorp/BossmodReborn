@@ -45,7 +45,7 @@ public enum SID : uint
     ReflectionShield = 2195 // none->Boss, extra=0x182/0x183 (NE+SW/NW+SE)
 }
 
-class Voidzone(BossModule module) : Components.GenericAOEs(module)
+sealed class Voidzone(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(6f);
     private AOEInstance? _aoe;
@@ -54,18 +54,22 @@ class Voidzone(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if (actor.OID == (uint)OID.Voidzone && state == 0x0004)
+        if (actor.OID == (uint)OID.Voidzone && state == 0x0004u)
+        {
             _aoe = null;
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ArticulatedBits)
-            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 0.8f));
+        {
+            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 0.8d));
+        }
     }
 }
 
-class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
+sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Type { None, OneWave, TwoWaves }
     private Type currentType;
@@ -103,9 +107,9 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E43)
+        if (id == 0x1E43u)
             _activeDrudges.Add(actor);
-        else if (id == 0x1E39)
+        else if (id == 0x1E39u)
             _activeDrudges.Remove(actor);
     }
 
@@ -125,12 +129,12 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         var activationFirst = WorldState.FutureTime(7.1d);
         var activationSecond = WorldState.FutureTime(15d);
 
-        if (modelState == 4)
+        if (modelState == 4u)
         {
             AddConeAOEs(activationFirst, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
             AddConeAOEs(activationSecond, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
         }
-        else if (modelState == 5)
+        else if (modelState == 5u)
         {
             AddConeAOEs(activationFirst, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
             AddConeAOEs(activationSecond, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
@@ -141,12 +145,15 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     {
         var activation = WorldState.FutureTime(6.9d);
 
-        if (modelState == 4)
+        if (modelState == 4u)
             AddConeAOEs(activation, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
-        else if (modelState == 5)
+        else if (modelState == 5u)
             AddConeAOEs(activation, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
-        foreach (var drudge in _activeDrudges)
+
+        var count = _activeDrudges.Count;
+        for (var i = 0; i < count; ++i)
         {
+            var drudge = _activeDrudges[i];
             var shape = cornerPositions.Contains(drudge.Position) ? rectShort : rectLong;
             _aoesRects.Add(new(shape, WPos.ClampToGrid(drudge.Position), drudge.Rotation, activation));
         }
@@ -162,7 +169,7 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.CannonOrder)
         {
-            var activation = status.Extra == 0x180 ? 6.9d : 15d;
+            var activation = status.Extra == 0x180u ? 6.9d : 15d;
             _aoesRects.Add(new(rectShort, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation)));
         }
     }
@@ -208,11 +215,11 @@ class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class DiffusionRay(BossModule module) : Components.RaidwideCast(module, (uint)AID.DiffusionRay);
-class RailCannon(BossModule module) : Components.SingleTargetCast(module, (uint)AID.RailCannon);
-class GravitonCannon(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.GravitonCannon, 6f);
+sealed class DiffusionRay(BossModule module) : Components.RaidwideCast(module, (uint)AID.DiffusionRay);
+sealed class RailCannon(BossModule module) : Components.SingleTargetCast(module, (uint)AID.RailCannon);
+sealed class GravitonCannon(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.GravitonCannon, 6f);
 
-class D092ArmoredChariotStates : StateMachineBuilder
+sealed class D092ArmoredChariotStates : StateMachineBuilder
 {
     public D092ArmoredChariotStates(BossModule module) : base(module)
     {
@@ -226,4 +233,4 @@ class D092ArmoredChariotStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 844, NameID = 11239)]
-public class D092ArmoredChariot(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -182f), new ArenaBoundsSquare(19.5f));
+public sealed class D092ArmoredChariot(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, -182f), new ArenaBoundsSquare(19.5f));
