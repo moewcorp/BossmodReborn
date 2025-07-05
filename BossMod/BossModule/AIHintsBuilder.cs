@@ -87,6 +87,10 @@ public sealed class AIHintsBuilder : IDisposable
             {
                 _rsr.PauseRSR();
                 isRSRpaused = true;
+                if (hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic)
+                {
+                    hints.ForceCancelCast = true;
+                }
             }
             else if (isRSRpaused && (!hasForbiddenDirection || hints.ForbiddenDirections[0].activation > soon) && (hints.ImminentSpecialMode.mode != AIHints.SpecialMode.Pyretic || hints.ImminentSpecialMode.activation > soon) && _rsr.IsInstalled)
             {
