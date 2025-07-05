@@ -61,8 +61,8 @@ class UpperLaser(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 736, NameID = 9650)]
-public class A23ArtilleryUnit(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 736, NameID = 9650, SortOrder = 4)]
+public class A23ArtilleryUnit(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Circle(new(200f, -100f), 29.5f)], [new Circle(new(200f, -100f), 6)]);
+    private static readonly ArenaBoundsComplex arena = new([new DonutV(new(200f, -100f), 6.5f, 29.5f, 192)]);
 }
