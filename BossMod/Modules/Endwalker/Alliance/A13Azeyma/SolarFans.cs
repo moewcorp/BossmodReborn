@@ -11,14 +11,20 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, (uint)AI
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var max = count > 4 ? 4 : count;
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        if (count > 2)
+        if (count > 3)
+        {
+            var color = Colors.Danger;
             for (var i = 0; i < 2; ++i)
             {
-                aoes[i].Color = Colors.Danger;
+                ref var aoe = ref aoes[i];
+                aoe.Color = color;
             }
+        }
         return aoes[..max];
     }
 
@@ -26,10 +32,12 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, (uint)AI
     {
         if (_aoes.Count == 0 && spell.Action.ID == (uint)AID.SolarFansCharge) // since it seems impossible to determine early enough if 4 or 5 casts happen, we draw one extra one just incase
         {
-            var activation = Module.CastFinishAt(spell, 7.7f);
+            var activation = Module.CastFinishAt(spell, 7.7d);
             var pattern1 = false;
             if ((int)spell.LocXZ.Z == -750f)
+            {
                 pattern1 = true;
+            }
             for (var i = 1; i < 6; ++i)
             {
                 var act = activation.AddSeconds(1.3d * (i - 1));

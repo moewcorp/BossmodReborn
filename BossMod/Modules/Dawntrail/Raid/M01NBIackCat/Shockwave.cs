@@ -28,7 +28,7 @@ sealed class Shockwave(BossModule module) : Components.SimpleKnockbacks(module, 
                     // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
                     var offset = p - center;
                     var dir = offset.Normalized();
-                    if (polygon.Contains(offset + 18f * dir) && Intersect.RayPolygon(offset, dir, poly) > 18f)
+                    if (poly.Contains(offset + 18f * dir) && Intersect.RayPolygon(offset, dir, poly) > 18f)
                         return 1f;
                     return default;
                 }, act);

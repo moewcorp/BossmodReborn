@@ -60,7 +60,7 @@ sealed class DeadlyDealingKB(BossModule module) : Components.SimpleKnockbacks(mo
 
 sealed class AdvancedDeathRay(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(70f, 4f), (uint)IconID.AdvancedDeathRay, (uint)AID.AdvancedDeathRay, 5.9d, tankbuster: true);
 sealed class PillarOfShamashBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(70f, 2f), (uint)IconID.PillarOfShamash, (uint)AID.PillarOfShamashBait);
-sealed class PillarOfShamashStack(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.PillarOfShamashMarker, (uint)AID.PillarOfShamashStack, 6f, 70f, 4f, 24, 24, markerIsFinalTarget: true);
+sealed class PillarOfShamashStack(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.PillarOfShamashMarker, (uint)AID.PillarOfShamashStack, 6d, 70f, 4f, 24, 24, markerIsFinalTarget: true);
 sealed class Explosion(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.Explosion1, (uint)AID.Explosion2,
 (uint)AID.Explosion3, (uint)AID.Explosion4, (uint)AID.Explosion5, (uint)AID.Explosion6, (uint)AID.Explosion7, (uint)AID.Explosion8, (uint)AID.Explosion9],
 new AOEShapeRect(60f, 11f), 1d)

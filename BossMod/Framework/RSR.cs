@@ -5,7 +5,7 @@ namespace BossMod;
 public sealed class RotationSolverRebornModule(IDalamudPluginInterface pluginInterface)
 {
     private readonly ICallGateSubscriber<SpecialCommandType, object> _changeOperationMode = pluginInterface.GetIpcSubscriber<SpecialCommandType, object>("RotationSolverReborn.TriggerSpecialState");
-    private static readonly string rsr = "Rotation Solver Reborn";
+    private const string rsr = "Rotation Solver Reborn";
 
     public bool IsInstalled
     {

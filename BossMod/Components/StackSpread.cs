@@ -655,14 +655,14 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
 
 // generic single hit "line stack" component, usually do not have an iconID, instead players get marked by cast event
 // usually these have 50 range and 4 halfWidth, but it can be modified
-public class LineStack(BossModule module, uint aidMarker, uint aidResolve, float activationDelay = 5.1f, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true, uint iconID = default) : GenericBaitStack(module)
+public class LineStack(BossModule module, uint aidMarker, uint aidResolve, double activationDelay = 5.1d, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true, uint iconID = default) : GenericBaitStack(module)
 {
-    public LineStack(BossModule module, uint iconID, uint aidResolve, float activationDelay = 5.1f, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true) : this(module, default, aidResolve, activationDelay, range, halfWidth, minStackSize, maxStackSize, maxCasts, markerIsFinalTarget, iconID) { }
+    public LineStack(BossModule module, uint iconID, uint aidResolve, double activationDelay = 5.1d, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true) : this(module, default, aidResolve, activationDelay, range, halfWidth, minStackSize, maxStackSize, maxCasts, markerIsFinalTarget, iconID) { }
 
     // TODO: add logic for min and max stack size
     public readonly uint AidMarker = aidMarker;
     public readonly uint AidResolve = aidResolve;
-    public readonly float ActionDelay = activationDelay;
+    public readonly double ActionDelay = activationDelay;
     public readonly float Range = range;
     public readonly float HalfWidth = halfWidth;
     public readonly int MaxStackSize = maxStackSize;
