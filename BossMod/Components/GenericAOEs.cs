@@ -103,7 +103,9 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
             var risky = Risky && (MaxRisky == null || i < MaxRisky);
 
             if (RiskyWithSecondsLeft != default)
+            {
                 risky &= aoe.Activation.AddSeconds(-RiskyWithSecondsLeft) <= time;
+            }
             aoe.Color = color;
             aoe.Risky = risky;
         }
@@ -113,7 +115,9 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
+        {
             Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -166,7 +170,9 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
             {
                 Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
+                {
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                }
                 return;
             }
         }
@@ -257,7 +263,9 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
                 var dir = spell.LocXZ - caster.Position;
                 Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
+                {
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                }
                 return;
             }
         }

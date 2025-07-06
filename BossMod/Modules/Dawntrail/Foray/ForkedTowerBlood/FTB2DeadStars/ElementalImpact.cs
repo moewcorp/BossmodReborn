@@ -31,7 +31,7 @@ sealed class FireSpread(BossModule module) : Components.GenericBaitAway(module)
     {
         if (spell.Action.ID is (uint)AID.ElementalImpact1 or (uint)AID.ElementalImpact2 or (uint)AID.ElementalImpact3)
         {
-            towerPositions.Add((spell.LocXZ, Module.CastFinishAt(spell, 0.5f)));
+            towerPositions.Add((spell.LocXZ, Module.CastFinishAt(spell, 0.5d)));
         }
     }
 

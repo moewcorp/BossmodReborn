@@ -1,15 +1,17 @@
-namespace BossMod.Dawntrail.Raid.M05NDancingGreen;
+namespace BossMod.Shadowbringers.Alliance.A22SuperiorFlightUnits;
 
-sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
+sealed class SlidingSwipe(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(8);
-    private static readonly AOEShapeRect rect = new(25f, 45f);
+    private readonly List<AOEInstance> _aoes = new(3);
+    private static readonly AOEShapeRect rect = new(30f, 110f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var max = count > 2 ? 2 : count;
         ref var aoe0 = ref aoes[0];
@@ -21,19 +23,24 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
         return aoes[..max];
     }
 
-    public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (actor.OID == (uint)OID.Frogtourage && modelState is 5 or 7)
+        // two additional AIDs exist in the sheets, but never seen in 12+ logs. I assume they are cut content unless proven otherwise
+        var offset = spell.Action.ID switch
         {
-            var count = _aoes.Count;
-            var act = count != 0 ? _aoes[0].Activation.AddSeconds(count * 2d) : WorldState.FutureTime(18.2d);
-            _aoes.Add(new(rect, WPos.ClampToGrid(Arena.Center), modelState == 5u ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], act));
+            (uint)AID.SlidingSwipeAlphaR or (uint)AID.SlidingSwipeChiR => -1f,
+            (uint)AID.SlidingSwipeAlphaL or (uint)AID.SlidingSwipeBetaL => 1f,
+            _ => default
+        };
+        if (offset != default)
+        {
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation + offset * 90f.Degrees(), Module.CastFinishAt(spell, 0.5d), risky: false));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.LetsDance)
+        if (_aoes.Count != 0 && spell.Action.ID is (uint)AID.SlidingSwipe1 or (uint)AID.SlidingSwipe2)
         {
             _aoes.RemoveAt(0);
         }

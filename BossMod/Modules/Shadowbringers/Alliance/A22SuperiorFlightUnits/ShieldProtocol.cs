@@ -1,16 +1,16 @@
-namespace BossMod.Dawntrail.Alliance.A13ArkAngels;
+namespace BossMod.Shadowbringers.Alliance.A22SuperiorFlightUnits;
 
-sealed class DecisiveBattle(BossModule module) : BossComponent(module)
+sealed class ShieldProtocol(BossModule module) : BossComponent(module)
 {
     public readonly Actor?[] AssignedBoss = new Actor?[PartyState.MaxAllianceSize];
-    private readonly A13ArkAngels bossmod = (A13ArkAngels)module;
+    private readonly A22SuperiorFlightUnits bossmod = (A22SuperiorFlightUnits)module;
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         ref var assignedSlot = ref AssignedBoss[slot];
         if (slot < PartyState.MaxAllianceSize && assignedSlot != null && WorldState.Actors.Find(actor.TargetID) is Actor target)
         {
-            if (target != assignedSlot && target.OID is (uint)OID.BossMR or (uint)OID.BossTT or (uint)OID.BossGK)
+            if (target != assignedSlot && target.OID is (uint)OID.FlightUnitALpha or (uint)OID.FlightUnitBEta or (uint)OID.FlightUnitCHi)
             {
                 hints.Add($"Target {assignedSlot?.Name}!");
             }
@@ -19,7 +19,7 @@ sealed class DecisiveBattle(BossModule module) : BossComponent(module)
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if (tether.ID == (uint)TetherID.DecisiveBattle && Raid.FindSlot(source.InstanceID) is var slot && slot >= 0)
+        if (tether.ID == (uint)TetherID.ShieldProtocol && Raid.FindSlot(source.InstanceID) is var slot && slot >= 0)
         {
             AssignedBoss[slot] = WorldState.Actors.Find(tether.Target);
         }
@@ -30,9 +30,9 @@ sealed class DecisiveBattle(BossModule module) : BossComponent(module)
     {
         var boss = status.ID switch
         {
-            (uint)SID.EpicHero => bossmod.BossMR(),
-            (uint)SID.VauntedHero => bossmod.BossTT(),
-            (uint)SID.FatedHero => Module.PrimaryActor,
+            (uint)SID.ShieldProtocolA => Module.PrimaryActor,
+            (uint)SID.ShieldProtocolB => bossmod.FlightUnitBEta(),
+            (uint)SID.ShieldProtocolC => bossmod.FlightUnitCHi(),
             _ => null
         };
         if (boss != null && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -41,12 +41,11 @@ sealed class DecisiveBattle(BossModule module) : BossComponent(module)
         }
     }
 
-    // if player joins fight late, statemachine won't reset this component properly
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (status.ID is (uint)SID.EpicVillain)
+        if (status.ID is (uint)SID.ShieldProtocolA or (uint)SID.ShieldProtocolB or (uint)SID.ShieldProtocolC && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
-            Array.Clear(AssignedBoss);
+            AssignedBoss[slot] = null;
         }
     }
 

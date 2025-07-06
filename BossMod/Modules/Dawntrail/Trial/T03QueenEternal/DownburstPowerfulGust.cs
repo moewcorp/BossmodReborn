@@ -40,8 +40,10 @@ sealed class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module
                     // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
                     var offsetSource = (p - origin).Normalized();
                     var offsetCenter = p - center;
-                    if (polygon.Contains(offsetCenter + 10f * offsetSource) && Intersect.RayPolygon(offsetCenter, offsetSource, poly) > 10f)
+                    if (poly.Contains(offsetCenter + 10f * offsetSource) && Intersect.RayPolygon(offsetCenter, offsetSource, poly) > 10f)
+                    {
                         return 1f;
+                    }
                     return default;
                 }, act);
             }

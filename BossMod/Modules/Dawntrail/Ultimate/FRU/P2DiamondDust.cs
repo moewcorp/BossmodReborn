@@ -120,7 +120,7 @@ sealed class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBa
         {
             if (baitIndex < 0)
                 hints.Add("Stay closer to bait!");
-            else if (PlayersClippedBy(CurrentBaits[baitIndex]).Count != 0)
+            else if (PlayersClippedBy(ref CurrentBaits.Ref(baitIndex)).Count != 0)
                 hints.Add("Bait cone away from raid!");
         }
 

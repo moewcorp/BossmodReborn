@@ -28,6 +28,7 @@ public enum AID : uint
     WhirlingAssault = 21416, // YorhaCloseCombatUnitBlade->player, no cast, single-target
     WeightedBlade = 21417, // YorhaCloseCombatUnitBlade->player, no cast, single-target
 
+    ManeuverMartialArm = 21011, // Boss->player, 5.0s cast, single-target, tankbuster
     ManeuverLongBarreledLaser = 21010, // Boss->self, 4.0s cast, range 70 width 8 rect
     AuthorizationNoRestrictions = 21006, // Boss->self, 2.0s cast, single-target
     SurfaceMissileImpact = 21007, // Helper->location, 4.0s cast, range 6 circle
@@ -72,6 +73,7 @@ sealed class FireVoidzone(BossModule module) : Components.Voidzone(module, 6f, G
 sealed class VoltArray(BossModule module) : Components.CastInterruptHint(module, (uint)AID.ManeuverVoltArray, showNameInHint: true);
 sealed class LongBarreledLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ManeuverLongBarreledLaser, new AOEShapeRect(70f, 4f));
 sealed class SurfaceMissileImpact(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurfaceMissileImpact, 6f);
+sealed class ManeuverMartialArm(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ManeuverMartialArm);
 sealed class InitiateSelfDestruct(BossModule module) : Components.CastCounter(module, (uint)AID.InitiateSelfDestruct);
 
 sealed class A20LightArtilleryUnitStates : StateMachineBuilder
@@ -86,6 +88,7 @@ sealed class A20LightArtilleryUnitStates : StateMachineBuilder
             .ActivateOnEnter<HomingMissileImpact>()
             .ActivateOnEnter<LongBarreledLaser>()
             .ActivateOnEnter<VoltArray>()
+            .ActivateOnEnter<ManeuverMartialArm>()
             .ActivateOnEnter<InitiateSelfDestruct>()
             .Raw.Update = () =>
             {

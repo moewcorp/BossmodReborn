@@ -9,14 +9,14 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     private bool isInit;
     private PolygonWithHolesDistanceFunction distance;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => isInit && slot is >= 0 and < 8 ? CollectionsMarshal.AsSpan(_aoesPerPlayer[slot]) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => isInit && slot < PartyState.MaxPartySize ? CollectionsMarshal.AsSpan(_aoesPerPlayer[slot]) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.SnowBoulderVisual)
         {
             rectangles.Add(new(caster.Position, spell.LocXZ, 5f));
-            activations.Add(Module.CastFinishAt(spell, 0.1f));
+            activations.Add(Module.CastFinishAt(spell, 0.1d));
             if (rectangles.Count % 2 == 0)
             {
                 ComputeNonOverlappingArea();
@@ -63,7 +63,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count; ++i)
             {
                 var slot = Raid.FindSlot(targets[i].ID);
-                if (slot is >= 0 and < 8)
+                if (slot < PartyState.MaxPartySize)
                 {
                     Vulnerable[slot] = true;
                 }
@@ -78,12 +78,16 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!isInit)
+        if (!isInit || slot > PartyState.MaxPartySize)
+        {
             return;
+        }
         var aoes = _aoesPerPlayer[slot];
         var count = aoes.Count;
         if (count == 0)
+        {
             return;
+        }
         if (!Vulnerable[slot])
         {
             var risky = true;

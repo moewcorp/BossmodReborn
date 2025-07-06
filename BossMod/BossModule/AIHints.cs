@@ -266,7 +266,7 @@ public sealed class AIHints
         }
     }
 
-    public IEnumerable<Enemy> ForbiddenTargets
+    public List<Enemy> ForbiddenTargets
     {
         get
         {
