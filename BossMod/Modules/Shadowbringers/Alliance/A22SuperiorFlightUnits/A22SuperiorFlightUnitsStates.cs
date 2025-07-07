@@ -2,11 +2,8 @@
 
 sealed class A22SuperiorFlightUnitsStates : StateMachineBuilder
 {
-    private readonly A22SuperiorFlightUnits _module;
-
     public A22SuperiorFlightUnitsStates(A22SuperiorFlightUnits module) : base(module)
     {
-        _module = module;
         TrivialPhase()
             .ActivateOnEnter<ShieldProtocol>()
             .ActivateOnEnter<IncendiaryBombing>()
@@ -23,6 +20,6 @@ sealed class A22SuperiorFlightUnitsStates : StateMachineBuilder
             .ActivateOnEnter<SharpTurn>()
             .ActivateOnEnter<SlidingSwipe>()
             .ActivateOnEnter<IncendiaryBarrage>()
-            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.FlightUnitBEta()?.IsDeadOrDestroyed ?? true) && (_module.FlightUnitCHi()?.IsDeadOrDestroyed ?? true);
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && (module.FlightUnitBEta()?.IsDeadOrDestroyed ?? true) && (module.FlightUnitCHi()?.IsDeadOrDestroyed ?? true);
     }
 }

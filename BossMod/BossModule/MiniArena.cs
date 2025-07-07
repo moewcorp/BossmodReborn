@@ -10,21 +10,20 @@ namespace BossMod;
 public sealed class MiniArena(WPos center, ArenaBounds bounds)
 {
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();
-    private WPos _center = center;
     private readonly TriangulationCache _triCache = new();
 
     public WPos Center
     {
-        get => _center;
+        get;
         set
         {
-            if (_center != value)
+            if (field != value)
             {
-                _center = value;
+                field = value;
                 _triCache.Invalidate();
             }
         }
-    }
+    } = center;
 
     public ArenaBounds Bounds
     {
@@ -48,9 +47,9 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     private float _cameraSinAzimuth;
     private float _cameraCosAzimuth = 1f;
 
-    public bool InBounds(WPos position) => Bounds.Contains(position - _center);
-    public WPos ClampToBounds(WPos position) => _center + Bounds.ClampToBounds(position - _center);
-    public float IntersectRayBounds(WPos rayOrigin, WDir rayDir) => Bounds.IntersectRay(rayOrigin - _center, rayDir);
+    public bool InBounds(WPos position) => Bounds.Contains(position - Center);
+    public WPos ClampToBounds(WPos position) => Center + Bounds.ClampToBounds(position - Center);
+    public float IntersectRayBounds(WPos rayOrigin, WDir rayDir) => Bounds.IntersectRay(rayOrigin - Center, rayDir);
 
     // prepare for drawing - set up internal state, clip rect etc.
     public void Begin(Angle cameraAzimuth)

@@ -13,7 +13,7 @@ sealed class DAL3SaunionDawonStates : StateMachineBuilder
             .ActivateOnEnter<SurfaceMissile>()
             .ActivateOnEnter<Touchdown>()
             .ActivateOnEnter<HighPoweredMagitekRay>()
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || (module.BossDawon()?.IsTargetable ?? false);
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || (module.BossDawon()?.IsTargetable ?? false);
         TrivialPhase(1u)
             .ActivateOnEnter<VerdantPlumeVermilionFlame>()
             .ActivateOnEnter<FrigidPulse>()
@@ -24,6 +24,6 @@ sealed class DAL3SaunionDawonStates : StateMachineBuilder
             .ActivateOnEnter<Obey>()
             .ActivateOnEnter<SpiralScourge>()
             .ActivateOnEnter<OneMind>()
-            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (module.BossDawon()?.IsDeadOrDestroyed ?? true);
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && (module.BossDawon()?.IsDeadOrDestroyed ?? true);
     }
 }
