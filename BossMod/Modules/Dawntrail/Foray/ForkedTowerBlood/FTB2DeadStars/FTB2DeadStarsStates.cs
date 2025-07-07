@@ -8,9 +8,9 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
     {
         _module = module;
         SimplePhase(default, Phase1, "")
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || (Module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false) || (module.FindComponent<PhaseChange>()?.PhaseChanged ?? false);
+            .Raw.Update = () => _module.PrimaryActor.IsDestroyed || (_module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false) || (_module.FindComponent<PhaseChange>()?.PhaseChanged ?? false);
         SimplePhase(1u, Phase2, "")
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || module.BossDeadStars()?.HPMP.CurHP <= 1u || (Module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false);
+            .Raw.Update = () => _module.PrimaryActor.IsDestroyed || _module.BossDeadStars()?.HPMP.CurHP <= 1u || (_module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false);
     }
 
     private void Phase1(uint id)
@@ -156,6 +156,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
     {
         ComponentCondition<NoisomeNuisanceIceboundBuffoonBlazingBelligerent>(id, delay, comp => comp.NumCasts != 0, "Circle AOEs")
             .ActivateOnEnter<NoisomeNuisanceIceboundBuffoonBlazingBelligerent>()
+            .ActivateOnExit<IceboundBuffoonery>()
             .DeactivateOnExit<NoisomeNuisanceIceboundBuffoonBlazingBelligerent>()
             .DeactivateOnExit<DecisiveBattleStatus>();
         for (var i = 1; i <= 3; ++i)
@@ -184,6 +185,7 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
             .DeactivateOnExit<ChillingCollision>();
         ComponentCondition<Avalaunch>(id + 0x50u, 1.6f, comp => comp.NumFinishedStacks != 0, "Stacks resolve")
             .SetHint(StateMachine.StateHint.Raidwide)
+            .DeactivateOnExit<IceboundBuffoonery>()
             .DeactivateOnExit<AvalaunchTether>()
             .DeactivateOnExit<Avalaunch>();
         ActorCastStart(id + 0x60u, _module.BossNereid, (uint)AID.ToTheWinds1, 5.5f, true, "Snowball enrage start")

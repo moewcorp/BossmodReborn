@@ -7,8 +7,7 @@ sealed class DecisiveBattle(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        ref var assignedSlot = ref AssignedBoss[slot];
-        if (slot < PartyState.MaxAllianceSize && assignedSlot != null && WorldState.Actors.Find(actor.TargetID) is Actor target)
+        if (slot < PartyState.MaxAllianceSize && AssignedBoss[slot] is var assignedSlot && assignedSlot != null && WorldState.Actors.Find(actor.TargetID) is Actor target)
         {
             if (target != assignedSlot && target.OID is (uint)OID.BossMR or (uint)OID.BossTT or (uint)OID.BossGK)
             {
@@ -52,15 +51,16 @@ sealed class DecisiveBattle(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        ref var assignedSlot = ref AssignedBoss[slot];
-        if (slot < PartyState.MaxAllianceSize && assignedSlot != null)
+        if (slot < PartyState.MaxAllianceSize && AssignedBoss[slot] is var assignedSlot && assignedSlot != null)
         {
             var count = hints.PotentialTargets.Count;
             for (var i = 0; i < count; ++i)
             {
                 var enemy = hints.PotentialTargets[i];
                 if (enemy.Actor != assignedSlot)
+                {
                     enemy.Priority = AIHints.Enemy.PriorityInvincible;
+                }
             }
         }
     }

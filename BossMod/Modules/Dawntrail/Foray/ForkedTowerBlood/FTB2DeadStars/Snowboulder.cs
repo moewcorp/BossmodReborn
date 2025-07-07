@@ -179,3 +179,19 @@ sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockba
 }
 
 sealed class AvalaunchTether(BossModule module) : Components.StretchTetherDuo(module, 58f, 8f, (uint)TetherID.AvalaunchBad);
+
+sealed class IceboundBuffoonery(BossModule module) : BossComponent(module)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = hints.PotentialTargets[i];
+            if (e.Actor.OID != (uint)OID.Nereid)
+            {
+                e.Priority = AIHints.Enemy.PriorityInvincible;
+            }
+        }
+    }
+}

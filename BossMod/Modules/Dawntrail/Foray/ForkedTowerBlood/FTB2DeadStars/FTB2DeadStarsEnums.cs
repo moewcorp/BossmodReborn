@@ -142,7 +142,8 @@ public enum AID : uint
 public enum SID : uint
 {
     IceOoze = 4442, // none->player, extra=0x1/0x2/0x3
-    NovaOoze = 4441 // none->player, extra=0x2/0x1/0x3
+    NovaOoze = 4441, // none->player, extra=0x2/0x1/0x3
+    IceboundBuffoonery = 4443 // none->FrozenTriton/FrozenPhobos, extra=0x4/0x3/0x2/0x1
 }
 
 public enum IconID : uint

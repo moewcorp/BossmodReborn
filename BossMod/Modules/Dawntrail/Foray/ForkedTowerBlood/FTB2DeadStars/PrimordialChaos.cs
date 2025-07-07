@@ -14,7 +14,7 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         var id = status.ID;
-        if (NumTelegraphCasts == 0 && id is (uint)SID.NovaOoze or (uint)SID.IceOoze && Raid.FindSlot(actor.InstanceID) is var slot && slot < PartyState.MaxPartySize)
+        if (NumTelegraphCasts == 0 && id is (uint)SID.NovaOoze or (uint)SID.IceOoze && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             playerTemperatures[slot] = (id == (uint)SID.NovaOoze ? 1 : -1) * status.Extra;
         }
@@ -22,7 +22,7 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (actor.IsDead && status.ID is (uint)SID.NovaOoze or (uint)SID.IceOoze && Raid.FindSlot(actor.InstanceID) is var slot && slot < PartyState.MaxPartySize)
+        if (actor.IsDead && status.ID is (uint)SID.NovaOoze or (uint)SID.IceOoze && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
             playerTemperatures[slot] = default;
         }
@@ -85,8 +85,7 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
             var isBlue = id == (uint)AID.FrozenFalloutBlue;
             for (var i = 0; i < count; ++i)
             {
-                var slot = Raid.FindSlot(targets[i].ID);
-                if (slot is >= 0 and < 8)
+                if (Raid.FindSlot(targets[i].ID) is var slot && slot >= 0)
                 {
                     playerTemperatures[slot] += isBlue ? -1 : 1;
                 }

@@ -12,7 +12,7 @@ sealed class DAL1GauntletStates : StateMachineBuilder
             .ActivateOnEnter<TerminusEst>()
             .ActivateOnEnter<TerminusEstUnseen>()
             .ActivateOnEnter<CeruleumExplosion>()
-            .Raw.Update = () => Module.PrimaryActor.IsDestroyed || (module.BossAugur()?.IsTargetable ?? false);
+            .Raw.Update = () => module.PrimaryActor.IsDestroyed || (module.BossAugur()?.IsTargetable ?? false);
         TrivialPhase(1u)
             .ActivateOnEnter<Pyroclysm>()
             .ActivateOnEnter<SeventyFourDegrees>()

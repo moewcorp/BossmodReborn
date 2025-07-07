@@ -82,11 +82,11 @@ public class VoidzoneAtCastTarget(BossModule module, float radius, uint aid, Fun
 
     public override void Update()
     {
-        var count = _predictedByEvent.Count;
-        if (count != 0)
+        if (_predictedByEvent.Count != 0)
         {
             foreach (var s in Sources(Module))
             {
+                var count = _predictedByEvent.Count;
                 for (var i = 0; i < count; ++i)
                 {
                     if (_predictedByEvent[i].pos.InCircle(s.Position, 2f))

@@ -385,6 +385,18 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
             CurrentBaits.Clear();
         }
     }
+
+    public override void Update()
+    {
+        var count = CurrentBaits.Count - 1;
+        for (var i = count; i >= 0; --i)
+        {
+            if (CurrentBaits[i].Target.IsDead)
+            {
+                CurrentBaits.RemoveAt(i);
+            }
+        }
+    }
 }
 
 // component for mechanics requiring cast targets to gtfo from raid (aoe tankbusters etc)

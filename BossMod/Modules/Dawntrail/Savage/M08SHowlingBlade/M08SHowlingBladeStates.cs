@@ -35,7 +35,7 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         TrackingTremors(id + 0x100000u, 10f);
         ExtraplanarPursuit(id + 0x110000u, 1.8f);
         ExtraplanarPursuit(id + 0x120000u, 10.8f, true);
-        SimpleState(id + 0x130000u, 1.5f, "Enrage"); // timing varies depending on length of add phase, boss becomes untargetable after 406 seconds
+        SimpleState(id + 0x130000u, 1.5f, "Enrage (timing varies)"); // timing varies depending on length of add phase, boss becomes untargetable after 406 seconds
     }
 
     private void Phase2(uint id)
