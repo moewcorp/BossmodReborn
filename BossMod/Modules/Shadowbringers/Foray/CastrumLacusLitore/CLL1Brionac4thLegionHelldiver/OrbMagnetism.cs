@@ -7,7 +7,6 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
     public static readonly AOEShapeDonut Donut = new(5f, 20f);
     private static readonly AOEShapeCircle circle = new(12f);
     public readonly List<AOEInstance> AOEs = new(4);
-    private bool poleShiftComplete;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -28,20 +27,21 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.PolarMagnetism:
             case (uint)AID.FalseThunder1:
             case (uint)AID.FalseThunder2:
-                AddAOEs();
+                AddAOEs(11d);
                 break;
             case (uint)AID.PoleShiftVisual:
-                AddAOEs(11.9d);
+                AddAOEs(11.9d, true);
                 break;
         }
-        void AddAOEs(double delay = 11d)
+        void AddAOEs(double delay, bool poleshift = false)
         {
             var count = orbs.Count;
             var activation = WorldState.FutureTime(delay);
             for (var i = 0; i < count; ++i)
             {
                 var orb = orbs[i];
-                AddAOE(orb.Shape, orb.Orb, activation);
+                var shape = orb.Shape;
+                AddAOE(poleshift ? shape == Donut ? circle : Donut : shape, orb.Orb, activation);
             }
         }
     }
@@ -52,7 +52,6 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
         {
             AOEs.Clear();
             orbs.Clear();
-            poleShiftComplete = false;
         }
     }
 
@@ -69,26 +68,13 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
         if (shape != null)
         {
             if (NumCasts > 2)
+            {
                 orbs.Add((actor, shape));
+            }
             else
             {
                 AddAOE(shape, actor, WorldState.FutureTime(11d));
             }
-        }
-    }
-
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
-    {
-        if (!poleShiftComplete && tether.ID == (uint)TetherID.PoleShift)
-        {
-            var count = orbs.Count;
-            var orbz = CollectionsMarshal.AsSpan(orbs);
-            for (var i = 0; i < count; ++i)
-            {
-                ref var orb = ref orbz[i];
-                orb.Shape = orb.Shape == Donut ? circle : Donut;
-            }
-            poleShiftComplete = true;
         }
     }
 }
@@ -167,11 +153,14 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         var count = _aoe.AOEs.Count;
+        var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
         for (var i = 0; i < count; ++i)
         {
-            var aoe = _aoe.AOEs[i];
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }

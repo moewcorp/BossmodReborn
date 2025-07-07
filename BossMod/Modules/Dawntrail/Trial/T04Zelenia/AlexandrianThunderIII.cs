@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T04Zelenia;
 
-class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
+sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(16f, 30f.Degrees());
     private static readonly AOEShapeCircle circle = new(4f);
@@ -11,7 +11,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        Span<AOEInstance> result = new AOEInstance[count];
+        var result = new AOEInstance[count];
         Span<bool> visited = stackalloc bool[6];
         const float slice = 1f / 60f;
 
@@ -33,7 +33,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
                 }
             }
         }
-        return result[..index];
+        return result.AsSpan()[..index];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -70,7 +70,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
             var id = caster.InstanceID;
             var act = Module.CastFinishAt(spell);
 
-            _aoes.Add(new(circle, loc, default, act, ActorID: id));
+            _aoes.Add(new(circle, loc, default, act, actorID: id));
 
             for (var i = 0; i < 6; ++i)
             {
@@ -106,7 +106,7 @@ class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(module)
                     if (!visited[j])
                     {
                         visited[j] = true;
-                        _aoes.Add(new(cone, pos, (180f - 60f * j).Degrees(), act, ActorID: id));
+                        _aoes.Add(new(cone, pos, (180f - 60f * j).Degrees(), act, actorID: id));
                     }
 
                     if (j == right)

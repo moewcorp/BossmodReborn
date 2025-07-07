@@ -65,7 +65,7 @@ class QueerBubble(BossModule module) : Components.GenericAOEs(module)
         {
             var b = AOEs[i];
             if (!b.IsDead)
-                aoes[index++] = new(circle, b.Position, Color: _aoe.Active ? color : default);
+                aoes[index++] = new(circle, b.Position, color: _aoe.Active ? color : default);
         }
         return aoes.AsSpan()[..index];
     }
@@ -122,8 +122,11 @@ class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks(module
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

@@ -1,7 +1,8 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class Spiritflame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spiritflame, 6);
-class Spiritflames(BossModule module) : Components.GenericAOEs(module)
+sealed class Spiritflame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spiritflame, 6f);
+
+sealed class Spiritflames(BossModule module) : Components.GenericAOEs(module)
 {
     private const float Radius = 2.4f;
     private const int Length = 6;
@@ -26,10 +27,14 @@ class Spiritflames(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Spiritflame)
         {
-            if (id == 0x1E46)
+            if (id == 0x1E46u)
+            {
                 _flames.Add(actor);
-            else if (id == 0x1E3C)
+            }
+            else if (id == 0x1E3Cu)
+            {
                 _flames.Remove(actor);
+            }
         }
     }
 

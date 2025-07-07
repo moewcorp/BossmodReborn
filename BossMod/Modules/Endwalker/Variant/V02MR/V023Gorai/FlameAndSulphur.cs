@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
+sealed class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect _shapeFlameExpand = new(46f, 5f);
@@ -12,7 +12,6 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var activation = Module.CastFinishAt(spell, 3.1f);
         switch (spell.Action.ID)
         {
             case (uint)AID.BrazenBalladExpanding:
@@ -29,14 +28,17 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
         {
             var enemies = Module.Enemies(actors);
             var count = enemies.Count;
-
+            var activation = Module.CastFinishAt(spell, 3.1d);
             if (!twice)
+            {
                 for (var i = 0; i < count; ++i)
                 {
                     var enemy = enemies[i];
                     AddAOE(shape, enemy.Position, enemy.Rotation);
                 }
+            }
             else
+            {
                 for (var i = 0; i < count; ++i)
                 {
                     var enemy = enemies[i];
@@ -45,6 +47,7 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
                     AddAOE(shape, enemy.Position + offset, rot);
                     AddAOE(shape, enemy.Position - offset, rot);
                 }
+            }
             void AddAOE(AOEShape shape, WPos origin, Angle rotation) => _aoes.Add(new(shape, WPos.ClampToGrid(origin), rotation, activation));
         }
     }
@@ -52,6 +55,8 @@ class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.FireSpreadExpand or (uint)AID.FireSpreadSplit or (uint)AID.FallingRockExpand or (uint)AID.FallingRockSplit)
+        {
             _aoes.Clear();
+        }
     }
 }

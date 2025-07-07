@@ -68,22 +68,20 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module, (
         if (count == 0)
             return [];
         var max = count > 2 ? 2 : count;
-        var aoes = new AOEInstance[max];
-        for (var i = 0; i < max; ++i)
+        var aoes = CollectionsMarshal.AsSpan(_aoes);
+        if (count > 1)
         {
-            var aoe = _aoes[i];
-            if (i == 0)
-                aoes[i] = count > 1 ? aoe with { Color = Colors.Danger } : aoe;
-            else
-                aoes[i] = aoe;
+            aoes[0].Color = Colors.Danger;
         }
-        return aoes;
+        return aoes[..max];
     }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.IceBoulder)
+        {
             _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(6.5d)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

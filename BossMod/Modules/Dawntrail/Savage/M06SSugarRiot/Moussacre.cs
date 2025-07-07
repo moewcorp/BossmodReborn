@@ -14,7 +14,7 @@ sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module)
             var party = Raid.WithoutSlot(false, true, true);
             var len = party.Length;
 
-            Span<(Actor actor, float distSq)> distances = new (Actor, float)[len];
+            (Actor actor, float distSq)[] distances = new (Actor, float)[len];
             var source = Module.PrimaryActor;
             var sourcePos = source.Position;
 

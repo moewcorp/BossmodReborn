@@ -25,11 +25,14 @@ class BurningTwister(BossModule module) : Components.SimpleAOEs(module, (uint)AI
 
 class DarkTwister(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.DarkTwister, _knockbackRange, true)
 {
-    private const float _knockbackRange = 17;
-    private const float _aoeInnerRadius = 5;
-    private const float _aoeMiddleRadius = 7;
-    private const float safeOffset = _knockbackRange + (_aoeInnerRadius + _aoeMiddleRadius) / 2;
-    private const float safeRadius = (_aoeMiddleRadius - _aoeInnerRadius) / 2;
+    private const float _knockbackRange = 17f;
+    private const float _aoeInnerRadius = 5f;
+    private const float _aoeMiddleRadius = 7f;
+    private const float safeOffset = _knockbackRange + (_aoeInnerRadius + _aoeMiddleRadius) / 2f;
+    private const float safeRadius = (_aoeMiddleRadius - _aoeInnerRadius) / 2f;
+
+    private TwisterVoidzone? _aoe1 = module.FindComponent<TwisterVoidzone>();
+    private BurningTwister? _aoe2 = module.FindComponent<BurningTwister>();
 
     public List<Actor> BurningTwisters()
     {
@@ -61,26 +64,32 @@ class DarkTwister(BossModule module) : Components.SimpleKnockbacks(module, (uint
     }
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        var comp1 = Module.FindComponent<TwisterVoidzone>();
-        if (comp1 != null)
+        _aoe1 ??= Module.FindComponent<TwisterVoidzone>();
+        if (_aoe1 != null)
         {
-            var aoes = comp1.ActiveAOEs(slot, actor);
+            var aoes = _aoe1.ActiveAOEs(slot, actor);
             var len = aoes.Length;
             for (var i = 0; i < len; ++i)
             {
-                if (aoes[i].Check(pos))
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                {
                     return true;
+                }
             }
         }
-        var comp2 = Module.FindComponent<BurningTwister>();
-        if (comp2 != null)
+        _aoe2 ??= Module.FindComponent<BurningTwister>();
+        if (_aoe2 != null)
         {
-            var aoes = comp2.ActiveAOEs(slot, actor);
+            var aoes = _aoe2.ActiveAOEs(slot, actor);
             var len = aoes.Length;
             for (var i = 0; i < len; ++i)
             {
-                if (aoes[i].Check(pos))
+                ref readonly var aoe = ref aoes[i];
+                if (aoe.Check(pos))
+                {
                     return true;
+                }
             }
         }
         return !Module.InBounds(pos);

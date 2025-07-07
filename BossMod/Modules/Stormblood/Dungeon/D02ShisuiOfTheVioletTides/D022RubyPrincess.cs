@@ -73,7 +73,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             aoes[i] = new(circle, openChests[i].Center);
         }
         if (closedAOE is AOEShapeCustom aoe)
-            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, Color: IsOld(actor) || !active ? 0 : Colors.SafeFromAOE);
+            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, color: IsOld(actor) || !active ? default : Colors.SafeFromAOE);
         return aoes;
     }
 
@@ -85,7 +85,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             var c = chests[i];
             if (c.Position.AlmostEqual(actor.Position, 5f))
             {
-                if (state == 0x00040008)
+                if (state == 0x00040008u)
                 {
                     var countC = closedChests.Count;
                     for (var j = 0; j < countC; ++j)
@@ -168,13 +168,15 @@ class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
 
 class AbyssalVolcano(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AbyssalVolcano, 7f);
 
-class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4f), (uint)AID.GeothermalFlatulenceFirst, (uint)AID.GeothermalFlatulenceRest, 3, 0.8f, 10, true, (uint)IconID.ChasingAOE)
+class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.GeothermalFlatulenceFirst, (uint)AID.GeothermalFlatulenceRest, 3, 0.8f, 10, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Actors.Contains(actor))
+        if (Targets[slot])
+        {
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 18f), Activation);
+        }
     }
 }
 

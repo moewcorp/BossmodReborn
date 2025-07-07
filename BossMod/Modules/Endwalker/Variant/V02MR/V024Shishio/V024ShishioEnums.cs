@@ -59,24 +59,24 @@ public enum AID : uint
     CloudToCloud2 = 33764, // Raiun->self, 3.0s cast, range 100 width 6 rect
     CloudToCloud3 = 33765, // Raiun->self, 4.0s cast, range 100 width 12 rect
 
-    //Route 8
+    // Route 8
     HauntingCry = 33768, // Boss->self, 3.0s cast, single-target, summons adds
     ThunderVortex = 33780, // Boss->self, 5.0s cast, range 6-30 donut
     UnsagelySpin = 33773, // VenomousThrallSnakes->self, 4.0s cast, range 6 circle
     Rush = 33774, // FeralThrallTigers->location, 6.0s cast, width 8 rect charge
     Vasoconstrictor = 33775, // VenomousThrall->location, 3.0s cast, range 5 circle
 
-    //Route 9
+    // Route 9
     FocusedTremor = 33769, // Helper->self, 5.0s cast, range 60 circle
     YokiVisual = 33770, // Boss->self, 3.0s cast, single-target
     Yoki = 33771, // Helper->self, 4.0s cast, range 6 circle
     YokiUzu = 33772, // Boss->self, 8.0s cast, range 23 circle
 
-    //Route 10
+    // Route 10
     RightSwipe = 33776, // DevilishThrall->self, 8.0s cast, range 40 180-degree cone
     LeftSwipe = 33777, // DevilishThrall->self, 8.0s cast, range 40 180-degree cone
 
-    //Route 11
+    // Route 11
     ReishoVisual = 34603, // HauntingThrall->self, 4.0s cast, single-target, each ghost tethers a player, if there are not enough players, ghost moves seemingly randomly
     ReishoFirst = 34604, // Helper->self, 4.0s cast, range 6 circle
     ReishoRest = 33778 // Helper->self, no cast, range 6 circle

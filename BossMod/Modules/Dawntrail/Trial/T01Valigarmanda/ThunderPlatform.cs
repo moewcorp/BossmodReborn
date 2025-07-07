@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Trial.T01Valigarmanda;
 
-class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
+sealed class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
 {
     private BitMask requireLevitating;
     private BitMask requireHint;
@@ -89,7 +89,7 @@ class ThunderPlatform(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
+sealed class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly ThunderPlatform _levitate = module.FindComponent<ThunderPlatform>()!;
     private static readonly AOEShapeCircle circle = new(3);
@@ -114,7 +114,7 @@ class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
             if (player.Item1 == slot)
                 continue;
 
-            for (var j = 0; j < levitateLen; j++)
+            for (var j = 0; j < levitateLen; ++j)
             {
                 if (levitateSpan[j].Check(pos))
                 {
@@ -140,4 +140,4 @@ class BlightedBolt1(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class BlightedBolt2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBolt2, 7f);
+sealed class BlightedBolt2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlightedBolt2, 7f);

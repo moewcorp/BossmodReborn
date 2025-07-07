@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V022Moko;
 
-class YamaKagura(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.YamaKagura, 33, shape: new AOEShapeRect(40, 2.5f), kind: Kind.DirForward)
+sealed class YamaKagura(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.YamaKagura, 33f, shape: new AOEShapeRect(40f, 2.5f), kind: Kind.DirForward)
 {
     private readonly GhastlyGrasp _aoe = module.FindComponent<GhastlyGrasp>()!;
 
@@ -26,8 +26,11 @@ class YamaKagura(BossModule module) : Components.SimpleKnockbacks(module, (uint)
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

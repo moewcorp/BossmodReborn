@@ -55,13 +55,22 @@ sealed class LightningCrossingMammothBoltEpicenterShock(BossModule module) : Com
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var deadline = aoes[0].Activation.AddSeconds(3.5d);
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
+        while (index < count)
+        {
+            ref readonly var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
+            {
+                break;
+            }
             ++index;
+        }
 
         return aoes[..index];
     }
@@ -77,9 +86,11 @@ sealed class LightningCrossingMammothBoltEpicenterShock(BossModule module) : Com
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), ActorID: caster.InstanceID));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
             if (_aoes.Count > 4)
+            {
                 _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+            }
         }
     }
 
@@ -103,7 +114,7 @@ sealed class LightningCrossingMammothBoltEpicenterShock(BossModule module) : Com
 
 sealed class Heave(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Heave1, (uint)AID.Heave2], new AOEShapeCone(60f, 60f.Degrees()));
 sealed class Squash(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.Squash);
-sealed class AgitatedGroan(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.AgitatedGroanVisual, (uint)AID.AgitatedGroan, 0.9f);
+sealed class AgitatedGroan(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.AgitatedGroanVisual, (uint)AID.AgitatedGroan, 0.9d);
 
 sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(module)
 {
@@ -116,7 +127,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!showBait || activebirds.Count == 0)
+        {
             return CollectionsMarshal.AsSpan(_aoes);
+        }
         else
         {
             var dir = activebirds[0].Position - Arena.Center;
@@ -147,7 +160,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         if (iconID == (uint)IconID.Chatterbird)
         {
             if (_aoes.Count == 0)
+            {
                 activebirds.Clear();
+            }
             activebirds.Add(actor);
             if (NumCasts != 1)
             {
@@ -183,10 +198,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Rumble)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.Rumble)
         {
-            if (_aoes.Count != 0)
-                _aoes.RemoveAt(0);
+            _aoes.RemoveAt(0);
         }
     }
 
@@ -197,7 +211,9 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         {
             showBait = false;
             if (++NumCasts == 5) // to make the rest of the logic easier, it always alternates between two versions after the initial tutorial
+            {
                 NumCasts = 1;
+            }
             if (_aoes.Count != 0)
             {
                 _aoes.RemoveAt(0);
@@ -218,14 +234,18 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (!showBait)
+        {
             return;
+        }
         hints.GoalZones.Add(hints.GoalSingleTarget(activebirds[0].Position, 12f, 5f)); // follow the charge
     }
 
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (!showBait)
+        {
             return;
+        }
         hints.Add("Follow the charge!");
     }
 }

@@ -145,7 +145,7 @@ sealed class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(m
                     if (_status[slot] == (uint)SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset < 0)
                         break; // we're gonna bait this
                     if (FindBaitTarget(i, p) is var tf && tf != null)
-                        aoes.Add(new(_shapeBait, p.Position, Angle.FromDirection(tf.Position - p.Position), _activation, Risky: _status[slot] != (uint)SID.RemoteCurrent)); // common strat has two remotes hitting each other, which is fine
+                        aoes.Add(new(_shapeBait, p.Position, Angle.FromDirection(tf.Position - p.Position), _activation, risky: _status[slot] != (uint)SID.RemoteCurrent)); // common strat has two remotes hitting each other, which is fine
                     break;
                 case (uint)SID.ProximateCurrent:
                     if (_status[slot] == (uint)SID.ColliderConductor && (p.Position.Z - Module.PrimaryActor.Position.Z) * actorOffset > 0)

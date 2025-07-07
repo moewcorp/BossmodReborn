@@ -141,14 +141,66 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
     }
 }
 
+public class CastGazes(BossModule module, uint[] aids, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, int expectedNumCasters = 99) : CastGaze(module, default, maxCasts: maxCasts)
+{
+    protected readonly uint[] AIDs = aids;
+    protected readonly int ExpectedNumCasters = expectedNumCasters;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (spell.Action.ID == AIDs[i])
+            {
+                Eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
+                if (Eyes.Count == ExpectedNumCasters)
+                {
+                    Eyes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                }
+                return;
+            }
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        // we probably dont need to check for AIDs here since actorID should already be unique to any active spell
+        var count = Eyes.Count;
+        var id = caster.InstanceID;
+        for (var i = 0; i < count; ++i)
+        {
+            if (Eyes[i].ActorID == id)
+            {
+                Eyes.RemoveAt(i);
+                return;
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        var len = AIDs.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (spell.Action.ID == AIDs[i])
+            {
+                ++NumCasts;
+                return;
+            }
+        }
+    }
+}
+
 // cast weakpoint component: a number of casts (with supposedly non-intersecting shapes), player should face specific side determined by active status to the caster for aoe he's in
 public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight) : GenericGaze(module, aid)
 {
     public CastWeakpoint(BossModule module, uint aid, float radius, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight) : this(module, aid, new AOEShapeCircle(radius), statusForward, statusBackward, statusLeft, statusRight) { }
     public AOEShape Shape = shape;
     public readonly uint[] Statuses = [statusForward, statusLeft, statusBackward, statusRight]; // 4 elements: fwd, left, back, right
-    private readonly List<Actor> _casters = [];
+    protected readonly List<Actor> _casters = [];
     private readonly Dictionary<ulong, Angle> _playerWeakpoints = [];
+    protected float fallbackTime;
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
@@ -161,12 +213,12 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
         for (var i = 0; i < count; ++i)
         {
             var a = _casters[i];
-            if (Shape.Check(actor.Position, a.Position, a.CastInfo!.Rotation))
+            if (Shape.Check(actor.Position, a.Position, a.CastInfo?.Rotation ?? a.Rotation))
             {
-                if (a.CastInfo!.RemainingTime < minRemainingTime)
+                if ((a.CastInfo?.RemainingTime ?? fallbackTime) < minRemainingTime)
                 {
                     caster = a;
-                    minRemainingTime = a.CastInfo.RemainingTime;
+                    minRemainingTime = a.CastInfo?.RemainingTime ?? fallbackTime;
                 }
             }
         }

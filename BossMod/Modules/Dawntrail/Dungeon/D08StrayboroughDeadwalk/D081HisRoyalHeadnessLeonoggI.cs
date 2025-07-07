@@ -78,15 +78,19 @@ sealed class LoomingNightmare(BossModule module) : Components.StandardChasingAOE
         {
             ++totalChasers;
             if (totalChasers > 1)
+            {
                 MaxCasts = 4;
+            }
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Actors.Contains(actor))
+        if (Targets[slot])
+        {
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 13.5f), Activation);
+        }
     }
 }
 

@@ -398,7 +398,7 @@ class P5DeltaHyperPulse(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeRect _shape = new(100f, 4f);
-    private const int _numRepeats = 6;
+    private const uint _numRepeats = 6u;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -416,9 +416,9 @@ class P5DeltaHyperPulse(BossModule module) : Components.GenericAOEs(module)
                 if (Raid.WithoutSlot(false, true, true).Closest(pos) == actor)
                 {
                     var angle = Angle.FromDirection(actor.Position - pos);
-                    for (var j = 0; j < _numRepeats; ++j)
+                    for (var j = 0u; j < _numRepeats; ++j)
                     {
-                        aoes.Add(new(_shape, pos, angle + j * _delta.ArmRotations[i], Risky: false));
+                        aoes.Add(new(_shape, pos, angle + j * _delta.ArmRotations[i], risky: false));
                     }
                 }
             }
@@ -432,9 +432,9 @@ class P5DeltaHyperPulse(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.DeltaHyperPulseFirst && _delta != null)
         {
             var rot = _delta.ArmRotations[_delta.ArmIndex(caster.Position - Arena.Center)];
-            for (var i = 0; i < _numRepeats; ++i)
+            for (var i = 0u; i < _numRepeats; ++i)
             {
-                _aoes.Add(new(_shape, spell.LocXZ, (spell.Rotation + i * rot).Normalized(), Module.CastFinishAt(spell, i * 0.6f), ActorID: caster.InstanceID));
+                _aoes.Add(new(_shape, spell.LocXZ, (spell.Rotation + i * rot).Normalized(), Module.CastFinishAt(spell, i * 0.6d), actorID: caster.InstanceID));
             }
         }
     }

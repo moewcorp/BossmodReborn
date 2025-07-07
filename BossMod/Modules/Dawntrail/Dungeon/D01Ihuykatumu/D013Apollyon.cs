@@ -74,7 +74,7 @@ sealed class LevinsickleSpark(BossModule module) : Components.VoidzoneAtCastTarg
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7)
+            if (z.EventState != 7u)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
@@ -114,20 +114,28 @@ sealed class CuttingWind(BossModule module) : Components.GenericAOEs(module)
                 var delay = WorldState.FutureTime(delays[i]);
                 var posi = WPos.ClampToGrid(pos[i]);
                 for (var j = 0; j < 4; ++j)
+                {
                     _aoes.Add(new(rect, posi, angles[j], delay));
+                }
             }
         }
         if (actor.OID == (uint)OID.Whirlwind)
             if (actor.Position.AlmostEqual(new WPos(-121f, 279f), 1f))
+            {
                 AddWhirlwind([new(-102.935f, 274.357f), new(-108.935f, 262.224f), new(-105.733f, 252.340f)]); // SW whirlwind
+            }
             else
+            {
                 AddWhirlwind([new(-111.688f, 253.942f), new(-102.276f, 264.313f), new(-108.922f, 276.528f)]); // NW whirlwind
+            }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.CuttingWind)
+        {
             _aoes.RemoveAt(0);
+        }
     }
 }
 

@@ -11,7 +11,7 @@ sealed class TheUnpotted(BossModule module) : Components.GenericBaitAway(module,
     {
         if (spell.Action.ID == (uint)AID.ItCameFromTheDirt)
         {
-            var act = Module.CastFinishAt(spell, 0.1f);
+            var act = Module.CastFinishAt(spell, 0.1d);
             var party = Raid.WithoutSlot(false, true, true);
             var source = Module.PrimaryActor;
             var len = party.Length;

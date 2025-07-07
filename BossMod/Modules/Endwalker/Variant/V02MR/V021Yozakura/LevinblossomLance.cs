@@ -1,12 +1,12 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V021Yozakura;
 
-class LevinblossomLance(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class LevinblossomLance(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private static readonly AOEShapeRect rect = new(30f, 3.5f, 30f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddSequence(Angle increment) => Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell, 0.8f), 1, 5, 2));
+        void AddSequence(Angle increment) => Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell, 0.8d), 1, 5, 2));
         switch (spell.Action.ID)
         {
             case (uint)AID.LevinblossomLanceCCW:
@@ -21,6 +21,8 @@ class LevinblossomLance(BossModule module) : Components.GenericRotatingAOE(modul
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.LevinblossomLanceFirst or (uint)AID.LevinblossomLanceRest)
+        {
             AdvanceSequence(0, WorldState.CurrentTime);
+        }
     }
 }

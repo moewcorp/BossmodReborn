@@ -96,11 +96,6 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
             _queue.RemoveAt(index);
             _queue.Add(new(action, target, targetPos, angleOverride, def, expireAt, castTime));
         }
-        else if (isGCD)
-        {
-            // spamming GCD - just extend expiration time; don't bother moving stuff around, since GCD vs oGCD order doesn't matter
-            e = e with { ExpireAt = expireAt };
-        }
         else
         {
             Service.Log($"[MAO] Entering emergency mode for {e.Action}");
@@ -201,7 +196,8 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
             target = def.SmartTarget(ws, player, target, hints);
 
         // fallback: if requested, use native "target nearest" function to try to find a valid hostile target
-        if (target == null && !def.AllowedTargets.HasFlag(ActionTargets.Self))
+        // this conditional ensures we don't get a false positive for holmgang (can target self or hostile) or phantom oracle invuln (can target ally, but not self)
+        if (target == null && def.AllowedTargets.HasFlag(ActionTargets.Hostile) && !def.AllowedTargets.HasFlag(ActionTargets.Self))
         {
             target = ws.Actors.Find(targetNearest());
             return true;

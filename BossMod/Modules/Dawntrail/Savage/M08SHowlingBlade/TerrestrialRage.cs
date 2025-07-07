@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-sealed class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1f);
+sealed class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1d);
 sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1f, 4, 4)
 {
     private BitMask forbidden;
@@ -19,7 +19,9 @@ sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, 
         base.Update();
         var count = Stacks.Count;
         if (count == 0)
+        {
             forbidden = default;
+        }
         else if (count == 1)
         {
             var stack = CollectionsMarshal.AsSpan(Stacks)[0];
@@ -42,8 +44,15 @@ sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
         var deadline = aoes[0].Activation.AddSeconds(1d);
 
         var index = 0;
-        while (index < count && aoes[index].Activation < deadline)
+        while (index < count)
+        {
+            ref readonly var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
+            {
+                break;
+            }
             ++index;
+        }
 
         return aoes[..index];
     }
@@ -78,7 +87,7 @@ sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FangedCharge)
+        if (_aoes.Count != 0 && spell.Action.ID == (uint)AID.FangedCharge)
         {
             _aoes.RemoveAt(0);
             ++NumCasts;
@@ -96,7 +105,9 @@ sealed class Shadowchase(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor.OID == (uint)OID.HowlingBladeShadow && id == 0x11D1u)
+        {
             _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(3.1d)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

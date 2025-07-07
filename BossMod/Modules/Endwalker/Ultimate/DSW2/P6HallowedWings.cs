@@ -77,7 +77,7 @@ abstract class P6HallowedPlume(BossModule module) : Components.GenericBaitAway(m
         {
             if (shouldBait)
             {
-                if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(b).Count != 0))
+                if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(ref b).Count != 0))
                     hints.Add("Bait away from raid!");
             }
             else
@@ -135,8 +135,11 @@ class P6HallowedPlume1(BossModule module) : P6HallowedPlume(module)
             yield break;
 
         var safeSpotCenter = Arena.Center;
-        safeSpotCenter.Z -= _wings.AOE.Value.Origin.Z - Arena.Center.Z;
-        safeSpotCenter.X -= _cauterize.AOE.Value.Origin.X - Arena.Center.X;
+        var safeSpotCenterX = safeSpotCenter.X;
+        var safeSpotCenterZ = safeSpotCenter.Z;
+        safeSpotCenterZ -= _wings.AOE.Value.Origin.Z - safeSpotCenterZ;
+        safeSpotCenterX -= _cauterize.AOE.Value.Origin.X - safeSpotCenterX;
+        safeSpotCenter = new(safeSpotCenterX, safeSpotCenterZ);
 
         var shouldBait = actor.Role == Role.Tank;
         var stayFar = shouldBait == _far;
@@ -170,11 +173,13 @@ class P6HallowedPlume2(BossModule module) : P6HallowedPlume(module)
             _ => 1
         };
         var safeSpotCenter = Arena.Center;
-        safeSpotCenter.Z -= zCoeff * (_wings.AOE.Value.Origin.Z - Arena.Center.Z);
+        var safeSpotCenterZ = safeSpotCenter.Z;
+        safeSpotCenterZ -= zCoeff * (_wings.AOE.Value.Origin.Z - safeSpotCenterZ);
+        safeSpotCenter = new(safeSpotCenter.X, safeSpotCenterZ);
 
         var shouldBait = actor.Role == Role.Tank;
         var stayFar = shouldBait == _far;
-        float xOffset = stayFar ? -20 : +20; // assume hraesvelgr is always at +22
+        float xOffset = stayFar ? -20f : 20f; // assume hraesvelgr is always at +22
         if (shouldBait)
         {
             // TODO: configurable tank assignments (e.g. MT always center/border/near/far)

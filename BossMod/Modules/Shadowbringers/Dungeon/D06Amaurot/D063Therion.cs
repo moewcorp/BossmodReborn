@@ -103,7 +103,7 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
                         Arena.Bounds = arena;
                         Arena.Center = arena.Center;
                     }
-                    BreakingPlatforms.Remove(new(_square, positions[i], Color: Colors.FutureVulnerable));
+                    BreakingPlatforms.Remove(new(_square, positions[i], color: Colors.FutureVulnerable));
                 }
             }
         }
@@ -112,7 +112,7 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
             for (var i = 0; i < 8; ++i)
             {
                 if (actor.Position.AlmostEqual(positions[i], MaxError))
-                    BreakingPlatforms.Add(new(_square, positions[i], Color: Colors.FutureVulnerable));
+                    BreakingPlatforms.Add(new(_square, positions[i], color: Colors.FutureVulnerable));
             }
         }
     }

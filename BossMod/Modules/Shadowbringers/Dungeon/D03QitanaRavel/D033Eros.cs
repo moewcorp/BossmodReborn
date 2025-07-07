@@ -98,8 +98,11 @@ class Inhale(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -126,10 +129,15 @@ class HeavingBreath(BossModule module) : Components.SimpleKnockbacks(module, (ui
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        foreach (var aoe in _aoe.ActiveAOEs(slot, actor))
+        var aoes = _aoe.ActiveAOEs(slot, actor);
+        var len1 = aoes.Length;
+        for (var i = 0; i < len1; ++i)
         {
+            ref readonly var aoe = ref aoes[i];
             if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return false;
     }

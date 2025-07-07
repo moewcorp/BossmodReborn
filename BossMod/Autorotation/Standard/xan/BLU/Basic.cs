@@ -118,19 +118,19 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (CanUse(AID.TheRamsVoice) && CanUse(AID.Ultravibration))
         {
-            Hints.GoalZones.Add(Hints.GoalAOECircle(6));
+            Hints.GoalZones.Add(Hints.GoalAOECircle(6f));
             var priorityTotal = 0;
             var nearbyTotal = 0;
             var nearbyFrozen = 0;
 
             foreach (var target in Hints.PriorityTargets)
             {
-                priorityTotal++;
+                ++priorityTotal;
                 if (target.Actor.Position.InCircle(Player.Position, 6 + Player.HitboxRadius + target.Actor.HitboxRadius))
                 {
-                    nearbyTotal++;
+                    ++nearbyTotal;
                     if (StatusDetails(target.Actor, SID.DeepFreeze, Player.InstanceID).Left > 3)
-                        nearbyFrozen++;
+                        ++nearbyFrozen;
                 }
             }
             if (nearbyTotal == priorityTotal && nearbyTotal > 2)

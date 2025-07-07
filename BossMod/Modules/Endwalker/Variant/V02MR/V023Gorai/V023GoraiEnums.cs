@@ -52,14 +52,14 @@ public enum AID : uint
     TorchingTormentVisual = 34046, // Boss->player, 5.0s cast, single-target, AoE tankbuster
     TorchingTorment = 34047, // Helper->player, no cast, range 6 circle
 
-    //Route 5
+    // Route 5
     PureShockVisual = 34029, // Boss->self, 2.5s cast, single-target
     PureShock = 34030, // Helper->self, 3.0s cast, range 40 circle
     Pull = 34031, // Helper->player, no cast, single-target, pulls players into octagon
     SelfDestruct = 34033, // ShishuWhiteBaboon->self, 30.0s cast, range 10 circle
     WilyWall = 34032, // ShishuWhiteBaboon->self, 7.0s cast, single-target
 
-    //Route 6
+    // Route 6
     HumbleHammerVisual = 34038, // Boss->self, 5.0s cast, single-target
     HumbleHammer = 34039, // Helper->location, 3.0s cast, range 3 circle
     ShockVisual1 = 34012, // BallOfLevin->self, 6.0s cast, range 18 circle
@@ -68,7 +68,7 @@ public enum AID : uint
     ShockLarge = 34037, // BallOfLevin->self, no cast, range 8 circle
     Thundercall = 34034, // Boss->self, 3.0s cast, single-target
 
-    //Route 7
+    // Route 7
     WorldlyPursuitFirstCW = 34043, // Boss->self, 5.0s cast, range 60 width 20 cross
     WorldlyPursuitFirstCCW = 34042, // Boss->self, 5.0s cast, range 60 width 20 cross
     WorldlyPursuitRest = 34044, // Boss->self, 1.5s cast, range 60 width 20 cross

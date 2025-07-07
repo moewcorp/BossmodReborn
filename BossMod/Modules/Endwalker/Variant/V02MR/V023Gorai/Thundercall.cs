@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class Thundercall(BossModule module) : Components.GenericAOEs(module)
+sealed class Thundercall(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private int counter;
@@ -31,7 +31,9 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
             {
                 var orb = orbs[i];
                 if (orb != actor)
+                {
                     AddAOE(circleBig, orb.Position);
+                }
             }
             void AddAOE(AOEShape shape, WPos origin) => _aoes.Add(new(shape, WPos.ClampToGrid(origin), default, activation));
         }
@@ -40,6 +42,8 @@ class Thundercall(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.ShockSmall or (uint)AID.ShockLarge)
+        {
             _aoes.Clear();
+        }
     }
 }

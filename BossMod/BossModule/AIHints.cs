@@ -44,12 +44,14 @@ public sealed class AIHints
         Shared, // cast is expected to hit multiple players; modules might have special behavior when intentionally taking this damage solo
     }
 
-    public record struct DamagePrediction(BitMask Players, DateTime Activation, PredictedDamageType Type = PredictedDamageType.None)
+    public readonly struct DamagePrediction(BitMask players, DateTime activation, PredictedDamageType type = PredictedDamageType.None)
     {
-        public readonly BitMask Players = Players;
+        public readonly BitMask Players = players;
+        public readonly DateTime Activation = activation;
+        public readonly PredictedDamageType Type = type;
     }
 
-    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30);
+    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30f);
 
     // information needed to build base pathfinding map (onto which forbidden/goal zones are later rasterized), if needed (lazy, since it's somewhat expensive and not always needed)
     public WPos PathfindMapCenter;
@@ -264,7 +266,7 @@ public sealed class AIHints
         }
     }
 
-    public IEnumerable<Enemy> ForbiddenTargets
+    public List<Enemy> ForbiddenTargets
     {
         get
         {
@@ -444,6 +446,21 @@ public sealed class AIHints
         };
     }
     public Func<WPos, float> GoalProximity(Actor target, float range, float weight = 1f) => GoalProximity(target.Position, range + target.HitboxRadius, weight);
+
+    public Func<WPos, float> GoalDonut(WPos center, float innerRadius, float outerRadius, float weight = 1f)
+    {
+        var innerR = Math.Max(0f, innerRadius);
+        var outerR = Math.Max(innerR + 1f, outerRadius);
+        var innerSQ = innerR * innerR;
+        var outerSQ = outerR * outerR;
+        return p =>
+        {
+            var distSq = (p - center).LengthSq();
+            if (distSq <= innerSQ || distSq >= outerSQ)
+                return default;
+            return weight;
+        };
+    }
 
     public Func<WPos, float> PullTargetToLocation(Actor target, WPos destination, float destRadius = 2f)
     {

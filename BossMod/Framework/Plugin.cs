@@ -43,12 +43,13 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ReplayManagementWindow _wndReplay;
     private readonly UIRotationWindow _wndRotation;
     private readonly MainDebugWindow _wndDebug;
-    private IDalamudPluginInterface PluginInterface;
+    private readonly RotationSolverRebornModule _rsr;
+
     private bool isDev;
+
     public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
     {
 #if !DEBUG
-        PluginInterface = dalamud;
         if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
         {
             isDev = true;
@@ -88,10 +89,11 @@ public sealed class Plugin : IDalamudPlugin
         var qpf = (ulong)FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->PerformanceCounterFrequency;
         _rotationDB = new(new(dalamud.ConfigDirectory.FullName + "/autorot"), new(dalamud.AssemblyLocation.DirectoryName! + "/DefaultRotationPresets.json"));
         _ws = new(qpf, gameVersion);
+        _rsr = new(dalamud);
         _hints = new();
         _bossmod = new(_ws);
         _zonemod = new(_ws);
-        _hintsBuilder = new(_ws, _bossmod, _zonemod);
+        _hintsBuilder = new(_ws, _bossmod, _zonemod, _rsr);
         _movementOverride = new(dalamud);
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
@@ -101,7 +103,6 @@ public sealed class Plugin : IDalamudPlugin
         _ipc = new(_rotation, _amex, _movementOverride, _ai);
         _dtr = new(_rotation, _ai);
         _wndBossmod = new(_bossmod, _zonemod);
-
         _wndBossmodHints = new(_bossmod, _zonemod);
         _wndZone = new(_zonemod);
         var config = Service.Config.Get<ReplayManagementConfig>();
@@ -122,9 +123,7 @@ public sealed class Plugin : IDalamudPlugin
     {
 #if !DEBUG
         if (isDev)
-        {
             return;
-        }
 #endif
         Service.Condition.ConditionChange -= OnConditionChanged;
         _wndDebug.Dispose();

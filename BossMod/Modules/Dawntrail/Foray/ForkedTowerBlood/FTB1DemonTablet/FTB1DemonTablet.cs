@@ -9,11 +9,11 @@ sealed class DarkDefenses(BossModule module) : Components.Dispel(module, (uint)S
 sealed class SummonedDemons(BossModule module) : Components.AddsMulti(module, [(uint)OID.SummonedArchDemon, (uint)OID.SummonedDemon], 1);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13760, PlanLevel = 100, SortOrder = 2)]
-public sealed class FTB1DemonTablet(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
+public sealed class FTB1DemonTablet(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, DefaultArena)
 {
-    public static readonly WPos ArenaCenter = new(700f, 379f);
-    private static readonly Rectangle[] defaultRect = [new Rectangle(ArenaCenter, 15f, 33f)];
-    public static readonly ArenaBoundsComplex DefaultArena = new(defaultRect, [new Rectangle(ArenaCenter, 15f, 3.5f)]);
-    public static readonly ArenaBoundsComplex RotationArena = new(defaultRect, [new Rectangle(ArenaCenter, 3.5f, 15.5f)]);
+    private static readonly WPos arenaCenter = new(700f, 379f);
+    private static readonly Rectangle[] defaultRect = [new Rectangle(arenaCenter, 15f, 33f)];
+    public static readonly ArenaBoundsComplex DefaultArena = new(defaultRect, [new Rectangle(arenaCenter, 15f, 3.5f)]);
+    public static readonly ArenaBoundsComplex RotationArena = new(defaultRect, [new Rectangle(arenaCenter, 15.5f, 3.5f, -89.98f.Degrees())]); // collision is slightly rotated
     public static readonly ArenaBoundsRect CompleteArena = new(15f, 33f);
 }

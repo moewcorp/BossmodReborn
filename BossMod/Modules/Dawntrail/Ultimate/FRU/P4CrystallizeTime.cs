@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.FRU;
 
-class P4CrystallizeTime(BossModule module) : BossComponent(module)
+sealed class P4CrystallizeTime(BossModule module) : BossComponent(module)
 {
     public enum Mechanic { None, FangEruption, FangWater, FangDarkness, FangBlizzard, ClawAir, ClawBlizzard }
 
@@ -97,7 +97,7 @@ class P4CrystallizeTime(BossModule module) : BossComponent(module)
     }
 }
 
-class P4CrystallizeTimeDragonHead(BossModule module) : BossComponent(module)
+sealed class P4CrystallizeTimeDragonHead(BossModule module) : BossComponent(module)
 {
     public readonly List<(Actor head, int side)> Heads = [];
     private readonly P4CrystallizeTime? _ct = module.FindComponent<P4CrystallizeTime>();
@@ -222,7 +222,7 @@ class P4CrystallizeTimeDragonHead(BossModule module) : BossComponent(module)
     }
 }
 
-class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(module, (uint)AID.CrystallizeTimeMaelstrom)
+sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(module, (uint)AID.CrystallizeTimeMaelstrom)
 {
     public readonly List<AOEInstance> AOEs = [];
 
@@ -294,7 +294,7 @@ class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericAOEs(mod
     }
 }
 
-class P4CrystallizeTimeDarkWater(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4, 4)
+sealed class P4CrystallizeTimeDarkWater(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4, 4)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
@@ -329,7 +329,7 @@ class P4CrystallizeTimeDarkWater(BossModule module) : Components.UniformStackSpr
     }
 }
 
-class P4CrystallizeTimeDarkEruption(BossModule module) : Components.GenericBaitAway(module, (uint)AID.DarkEruption)
+sealed class P4CrystallizeTimeDarkEruption(BossModule module) : Components.GenericBaitAway(module, (uint)AID.DarkEruption)
 {
     private static readonly AOEShapeCircle _shape = new(6f);
 
@@ -344,7 +344,7 @@ class P4CrystallizeTimeDarkEruption(BossModule module) : Components.GenericBaitA
     }
 }
 
-class P4CrystallizeTimeDarkAero(BossModule module) : Components.GenericKnockback(module, (uint)AID.CrystallizeTimeDarkAero) // TODO: not sure whether it actually ignores immunes, if so need to warn about immunity
+sealed class P4CrystallizeTimeDarkAero(BossModule module) : Components.GenericKnockback(module, (uint)AID.CrystallizeTimeDarkAero) // TODO: not sure whether it actually ignores immunes, if so need to warn about immunity
 {
     private readonly List<Actor> _sources = [];
     private DateTime _activation;
@@ -376,7 +376,7 @@ class P4CrystallizeTimeDarkAero(BossModule module) : Components.GenericKnockback
     }
 }
 
-class P4CrystallizeTimeUnholyDarkness(BossModule module) : Components.UniformStackSpread(module, 6f, default, 5, 5)
+sealed class P4CrystallizeTimeUnholyDarkness(BossModule module) : Components.UniformStackSpread(module, 6f, default, 5, 5)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
@@ -410,7 +410,7 @@ class P4CrystallizeTimeUnholyDarkness(BossModule module) : Components.UniformSta
     }
 }
 
-class P4CrystallizeTimeTidalLight : Components.Exaflare
+sealed class P4CrystallizeTimeTidalLight : Components.Exaflare
 {
     public List<(WPos pos, Angle dir)> StartingPositions = [];
     public WDir StartingOffsetSum;
@@ -453,9 +453,9 @@ class P4CrystallizeTimeTidalLight : Components.Exaflare
     }
 }
 
-class P4CrystallizeTimeQuietus(BossModule module) : Components.CastCounter(module, (uint)AID.Quietus);
+sealed class P4CrystallizeTimeQuietus(BossModule module) : Components.CastCounter(module, (uint)AID.Quietus);
 
-class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
+sealed class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
 {
     [Flags]
     public enum Hint
@@ -651,7 +651,7 @@ class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
     }
 }
 
-class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnockback(module)
+sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnockback(module)
 {
     public bool RewindDone;
     public bool ReturnDone;
@@ -757,4 +757,4 @@ class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnockback(m
 }
 
 // TODO: custom preposition ai hints
-class P4CrystallizeTimeSpiritTaker(BossModule module) : SpiritTaker(module);
+sealed class P4CrystallizeTimeSpiritTaker(BossModule module) : SpiritTaker(module);

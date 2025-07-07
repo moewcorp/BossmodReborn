@@ -1,8 +1,8 @@
 namespace BossMod.Endwalker.VariantCriterion.V02MR.V023Gorai;
 
-class ImpurePurgation(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ImpurePurgationFirst, (uint)AID.ImpurePurgationSecond], new AOEShapeCone(60f, 22.5f.Degrees()), 4, 8);
+sealed class ImpurePurgation(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ImpurePurgationFirst, (uint)AID.ImpurePurgationSecond], new AOEShapeCone(60f, 22.5f.Degrees()), 4, 8);
 
-class MalformedPrayer(BossModule module) : Components.GenericTowers(module)
+sealed class MalformedPrayer(BossModule module) : Components.GenericTowers(module)
 {
     private readonly ImpurePurgation _aoe = module.FindComponent<ImpurePurgation>()!;
 
@@ -23,13 +23,17 @@ class MalformedPrayer(BossModule module) : Components.GenericTowers(module)
             _ => null
         };
         if (pos is WPos origin)
+        {
             Towers.Add(new(WPos.ClampToGrid(origin), 4f, activation: WorldState.FutureTime(9d)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (Towers.Count != 0 && spell.Action.ID == (uint)AID.Burst)
+        {
             Towers.RemoveAt(0);
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -39,7 +43,9 @@ class MalformedPrayer(BossModule module) : Components.GenericTowers(module)
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 3f));
         }
         else
+        {
             base.AddAIHints(slot, actor, assignment, hints);
+        }
     }
 
     public override void Update()
@@ -47,9 +53,12 @@ class MalformedPrayer(BossModule module) : Components.GenericTowers(module)
         var count = Towers.Count;
         if (count == 0)
             return;
+        var towers = CollectionsMarshal.AsSpan(Towers);
         for (var i = 0; i < count; ++i)
         {
-            Towers[i] = Towers[i] with { MinSoakers = i > 0 ? 0 : 1, MaxSoakers = i > 0 ? 0 : 4 };
+            ref var t = ref towers[i];
+            t.MinSoakers = i > 0 ? 0 : 1;
+            t.MaxSoakers = i > 0 ? 0 : 4;
         }
     }
 }

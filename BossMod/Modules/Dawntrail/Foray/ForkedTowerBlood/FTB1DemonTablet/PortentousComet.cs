@@ -96,7 +96,7 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
             var kb = targets[i];
             if (isTarget && kb.target == actor || !isTarget && pos.InCircle(kb.target.Position, 4f)) // only draw one knockback since they cant be chained, give priority to actor's own knockback
             {
-                Span<Knockback> knockback = new Knockback[1];
+                var knockback = new Knockback[1];
                 // the knockback range for knockbacks away from meteor side does not seem very consistent. Theory: if the knockback ends up inside the demon tablet, it gets extended to land 3y behind the wall
                 knockback[0] = new Knockback(kb.target.Position, 13f, activation, circle, kb.dir, Kind: Kind.DirForward);
                 var dir = kb.dir.ToDirection();

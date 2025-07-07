@@ -17,11 +17,14 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         {
             var count = 0;
             var party = module.Raid.WithSlot();
-            for (var i = 0; i < party.Length; ++i)
+            var len = party.Length;
+            for (var i = 0; i < len; ++i)
             {
                 var indexActor = party[i];
                 if (!ForbiddenPlayers[indexActor.Item1] && indexActor.Item2.Position.InCircle(WPos.ClampToGrid(Target.Position), Radius))
+                {
                     ++count;
+                }
             }
             return count;
         }
@@ -32,11 +35,12 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         public readonly bool IsInside(Actor actor) => IsInside(actor.Position);
     }
 
-    public record struct Spread(
-        Actor Target,
-        float Radius,
-        DateTime Activation = default
-    );
+    public struct Spread(Actor target, float radius, DateTime activation = default)
+    {
+        public Actor Target = target;
+        public float Radius = radius;
+        public DateTime Activation = activation;
+    }
 
     public readonly bool AlwaysShowSpreads = alwaysShowSpreads; // if false, we only shown own spread radius for spread targets - this reduces visual clutter
     public readonly bool RaidwideOnResolve = raidwideOnResolve; // if true, assume even if mechanic is correctly resolved everyone will still take damage
@@ -274,9 +278,6 @@ public abstract class UniformStackSpread(BossModule module, float stackRadius, f
     public int MinStackSize = minStackSize;
     public int MaxStackSize = maxStackSize;
 
-    public IEnumerable<Actor> ActiveStackTargets => ActiveStacks.Select(s => s.Target);
-    public IEnumerable<Actor> ActiveSpreadTargets => ActiveSpreads.Select(s => s.Target);
-
     public void AddStack(Actor target, DateTime activation = default, BitMask forbiddenPlayers = default) => Stacks.Add(new(target, StackRadius, MinStackSize, MaxStackSize, activation, forbiddenPlayers));
     public void AddStacks(IEnumerable<Actor> targets, DateTime activation = default) => Stacks.AddRange(targets.Select(target => new Stack(target, StackRadius, MinStackSize, MaxStackSize, activation)));
     public void AddSpread(Actor target, DateTime activation = default) => Spreads.Add(new(target, SpreadRadius, activation));
@@ -326,14 +327,14 @@ public class SpreadFromCastTargets(BossModule module, uint aid, float radius, bo
 public class StackWithCastTargets(BossModule module, uint aid, float radius, int minStackSize = 2, int maxStackSize = int.MaxValue) : CastStackSpread(module, aid, default, radius, 0, minStackSize, maxStackSize);
 
 // spread/stack mechanic that selects targets by icon and finishes by cast event
-public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon, uint stackAID, uint spreadAID, float stackRadius, float spreadRadius, float activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, bool alwaysShowSpreads = false, int maxCasts = 1)
+public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon, uint stackAID, uint spreadAID, float stackRadius, float spreadRadius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, bool alwaysShowSpreads = false, int maxCasts = 1)
     : UniformStackSpread(module, stackRadius, spreadRadius, minStackSize, maxStackSize, alwaysShowSpreads)
 {
     public readonly uint StackIcon = stackIcon;
     public readonly uint SpreadIcon = spreadIcon;
     public readonly uint StackAction = stackAID;
     public readonly uint SpreadAction = spreadAID;
-    public readonly float ActivationDelay = activationDelay;
+    public readonly double ActivationDelay = activationDelay;
     public int NumFinishedStacks;
     public int NumFinishedSpreads;
     public readonly int MaxCasts = maxCasts; // for stacks where the final AID hits multiple times
@@ -373,7 +374,7 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
 }
 
 // generic 'spread from actors with specific icon' mechanic
-public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius, float activationDelay, bool drawAllSpreads = true) : IconStackSpread(module, 0, icon, default, aid, 0, radius, activationDelay, alwaysShowSpreads: drawAllSpreads)
+public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, bool drawAllSpreads = true) : IconStackSpread(module, 0, icon, default, aid, 0, radius, activationDelay, alwaysShowSpreads: drawAllSpreads)
 {
     public override void Update()
     {
@@ -389,214 +390,85 @@ public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius
 }
 
 // generic 'stack with actors with specific icon' mechanic
-public class StackWithIcon(BossModule module, uint icon, uint aid, float radius, float activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, int maxCasts = 1) : IconStackSpread(module, icon, 0, aid, default, radius, 0, activationDelay, minStackSize, maxStackSize, false, maxCasts);
-
-// generic single hit "line stack" component, usually do not have an iconID, instead players get marked by cast event
-// usually these have 50 range and 4 halfWidth, but it can be modified
-public class LineStack(BossModule module, uint? aidMarker, uint aidResolve, float activationDelay = 5.1f, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true, uint? iconid = null) : GenericBaitAway(module)
-{
-    public LineStack(BossModule module, uint iconid, uint aidResolve, float activationDelay = 5.1f, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true) : this(module, null, aidResolve, activationDelay, range, halfWidth, minStackSize, maxStackSize, maxCasts, markerIsFinalTarget, iconid) { }
-
-    // TODO: add forbidden slots logic?
-    // TODO: add logic for min and max stack size
-    public readonly uint? AidMarker = aidMarker;
-    public readonly uint AidResolve = aidResolve;
-    public readonly float ActionDelay = activationDelay;
-    public readonly float Range = range;
-    public readonly float HalfWidth = halfWidth;
-    public readonly int MaxStackSize = maxStackSize;
-    public readonly int MinStackSize = minStackSize;
-    public readonly int MaxCasts = maxCasts; // for stacks where the final AID hits multiple times
-    public readonly bool MarkerIsFinalTarget = markerIsFinalTarget; // rarely the marked player is not the target of the line stack
-    public readonly HashSet<Actor> ForbiddenActors = [];
-    private int castCounter;
-    public readonly uint? Iconid = iconid;
-    public const string HintStack = "Stack!";
-    public const string HintAvoidOther = "GTFO from other line stacks!";
-    public const string HintAvoid = "GTFO from line stacks!";
-    private readonly AOEShape rect = new AOEShapeRect(range, halfWidth);
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (AidMarker == null && Iconid == null)
-            return;
-        if (spell.Action.ID == AidMarker)
-            CurrentBaits.Add(new(caster, WorldState.Actors.Find(spell.MainTargetID)!, rect, WorldState.FutureTime(ActionDelay)));
-        else if (spell.Action.ID == AidResolve && CurrentBaits.Count != 0)
-        {
-            ++NumCasts;
-            if (MarkerIsFinalTarget)
-            {
-                if (CurrentBaits.Count == 1 && CurrentBaits.Any(x => x.Target.InstanceID != spell.MainTargetID))
-                    CurrentBaits[0] = CurrentBaits[0] with { Target = WorldState.Actors.Find(spell.MainTargetID)! };
-                if (++castCounter == MaxCasts)
-                {
-                    CurrentBaits.RemoveAll(s => s.Target.InstanceID == spell.MainTargetID);
-                    castCounter = 0;
-                }
-            }
-            else
-            {
-                if (++castCounter == MaxCasts)
-                {
-                    CurrentBaits.RemoveAt(0);
-                    castCounter = 0;
-                }
-            }
-        }
-    }
-
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
-    {
-        if (Iconid != null && iconID == Iconid && WorldState.Actors.Find(targetID) is var target && target != null)
-            CurrentBaits.Add(new(actor, WorldState.Actors.Find(targetID)!, rect, WorldState.FutureTime(ActionDelay)));
-    }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (AidMarker != null || Iconid != null)
-            return;
-        if (spell.Action.ID == AidResolve)
-            CurrentBaits.Add(new(caster, WorldState.Actors.Find(spell.TargetID)!, rect, Module.CastFinishAt(spell)));
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if (AidMarker != null || Iconid != null)
-            return;
-        if (spell.Action.ID == AidResolve && CurrentBaits.Count != 0)
-        {
-            if (MarkerIsFinalTarget)
-            {
-                if (CurrentBaits.Count == 1 && CurrentBaits.Any(x => x.Target.InstanceID != spell.TargetID))
-                    CurrentBaits[0] = CurrentBaits[0] with { Target = WorldState.Actors.Find(spell.TargetID)! };
-                if (++castCounter == MaxCasts)
-                {
-                    CurrentBaits.RemoveAll(s => s.Target.InstanceID == spell.TargetID);
-                    castCounter = 0;
-                    ++NumCasts;
-                }
-            }
-            else
-            {
-                if (++castCounter == MaxCasts)
-                {
-                    CurrentBaits.RemoveAt(0);
-                    castCounter = 0;
-                    ++NumCasts;
-                }
-            }
-        }
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (ActiveBaits.Count == 0)
-            return;
-        var isBaitTarget = ActiveBaits.Any(x => x.Target == actor);
-        var isBaitNotTarget = ActiveBaits.Any(x => x.Target != actor);
-        var forbiddenInverted = new List<Func<WPos, float>>();
-        var forbidden = new List<Func<WPos, float>>();
-        var forbiddenActors = ForbiddenActors.Contains(actor);
-        // if line stack target and NPCs in party, go stack with them. usually they won't come to you
-        if (Raid.WithoutSlot().Any(x => x.Type == ActorType.Buddy) && ActiveBaits.Any(x => x.Target == actor))
-        {
-            var closestAlly = Raid.WithoutSlot().Exclude(actor).Closest(actor.Position)!;
-            forbiddenInverted.Add(ShapeDistance.InvertedCircle(closestAlly.Position, 2));
-        }
-        if (isBaitNotTarget && !isBaitTarget && !forbiddenActors)
-            foreach (var b in ActiveBaits.Where(x => x.Target != actor))
-                forbiddenInverted.Add(ShapeDistance.InvertedRect(b.Source.Position, b.Rotation, Range, 0, HalfWidth));
-        // prevent overlapping if there are multiple line stacks, or if an actor is forbidden to enter
-        if (isBaitNotTarget && isBaitTarget || forbiddenActors)
-            foreach (var b in ActiveBaits.Where(x => x.Target != actor))
-                forbidden.Add(ShapeDistance.Rect(b.Source.Position, b.Rotation, Range, 0, 2 * HalfWidth));
-        if (forbiddenInverted.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), ActiveBaits.FirstOrDefault().Activation);
-        if (forbidden.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), ActiveBaits.FirstOrDefault().Activation);
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints)
-    {
-        if (ActiveBaits.Count == 0)
-            return;
-
-        var isBaitTarget = ActiveBaits.Any(x => x.Target == actor);
-        var isBaitNotTarget = ActiveBaits.Any(x => x.Target != actor);
-        var isInBaitShape = ActiveBaits.Any(x => actor.Position.InRect(x.Source.Position, x.Rotation, Range, 0, HalfWidth));
-
-        if (isBaitNotTarget && !isBaitTarget && !isInBaitShape)
-            hints.Add(HintStack);
-        else if ((isBaitNotTarget || isBaitTarget) && isInBaitShape)
-            hints.Add(HintStack, false);
-
-        if (ActiveBaits.Count > 1 && isBaitTarget)
-        {
-            var isInOtherBaitShape = ActiveBaits.Any(x => x.Target != actor && actor.Position.InRect(x.Source.Position, x.Rotation, Range, 0, 2 * HalfWidth));
-            if (isInOtherBaitShape)
-                hints.Add(HintAvoidOther);
-        }
-
-        if (ForbiddenActors.Contains(actor) && isInBaitShape)
-            hints.Add(HintAvoid);
-    }
-
-    public override void DrawArenaBackground(int pcSlot, Actor pc)
-    {
-        if (ActiveBaits.Count == 0)
-            return;
-
-        var isBaitTarget = ActiveBaits.Any(x => x.Target == pc);
-        var isBaitNotTarget = ActiveBaits.Any(x => x.Target != pc);
-
-        foreach (var bait in ActiveBaits)
-        {
-            var color = isBaitTarget && bait.Target == pc || !isBaitTarget && bait.Target != pc ? Colors.SafeFromAOE : default;
-            bait.Shape.Draw(Arena, BaitOrigin(bait), bait.Rotation, color);
-        }
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc) { }
-}
+public class StackWithIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, int maxCasts = 1) : IconStackSpread(module, icon, default, aid, default, radius, default, activationDelay, minStackSize, maxStackSize, false, maxCasts);
 
 // generic 'donut stack' mechanic
-public class DonutStack(BossModule module, uint aid, uint icon, float innerRadius, float outerRadius, float activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue) : UniformStackSpread(module, innerRadius / 3, default, minStackSize, maxStackSize)
+public class DonutStack(BossModule module, uint aid, uint icon, float innerRadius, float outerRadius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue) : UniformStackSpread(module, innerRadius / 3, default, minStackSize, maxStackSize)
 {
     // this is a donut targeted on each player, it is best solved by stacking
     // regular stack component won't work because this is self targeted
     public readonly AOEShapeDonut Donut = new(innerRadius, outerRadius);
-    public readonly float ActivationDelay = activationDelay;
+    public readonly double ActivationDelay = activationDelay;
     public readonly uint Icon = icon;
     public readonly uint Aid = aid;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == Icon)
+        {
             AddStack(actor, WorldState.FutureTime(ActivationDelay));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == Aid)
-            Stacks.Clear();
+        {
+            var count = Stacks.Count;
+            var t = spell.MainTargetID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (Stacks[i].Target.InstanceID == t)
+                {
+                    Stacks.RemoveAt(i);
+                    return;
+                }
+            }
+            Stacks.Clear(); // stack was not found, just clear all - this can happen if donut stacks is self targeted instead of player targeted
+        }
+    }
+
+    public override void Update()
+    {
+        var count = Stacks.Count - 1;
+        for (var i = count; i >= 0; --i)
+        {
+            if (Stacks[i].Target.IsDead)
+            {
+                Stacks.RemoveAt(i);
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (ActiveStacks.Count == 0)
+        var count = Stacks.Count;
+        if (count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>();
-        foreach (var c in Raid.WithoutSlot().Where(x => ActiveStacks.Any(y => y.Target == x)).Exclude(actor))
-            forbidden.Add(ShapeDistance.InvertedCircle(c.Position, Donut.InnerRadius * 0.25f));
+        var forbidden = new List<Func<WPos, float>>(count);
+        var radius = Donut.InnerRadius * 0.25f;
+        for (var i = 0; i < count; ++i)
+        {
+            var s = Stacks[i];
+            if (s.Target == actor)
+            {
+                continue;
+            }
+            forbidden.Add(ShapeDistance.InvertedCircle(s.Target.Position, radius));
+        }
         if (forbidden.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveStacks.FirstOrDefault().Activation);
+        {
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Stacks[0].Activation);
+        }
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        foreach (var c in ActiveStacks)
-            Donut.Draw(Arena, c.Target.Position);
+        var count = Stacks.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            Donut.Draw(Arena, Stacks[i].Target.Position);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) { }
@@ -604,7 +476,7 @@ public class DonutStack(BossModule module, uint aid, uint icon, float innerRadiu
 
 // generic single hit "line stack" component, usually do not have an iconID, instead players get marked by cast event
 // usually these have 50 range and 4 halfWidth, but it can be modified
-public class GenericBaitStack(BossModule module, uint aid = default, bool onlyShowOutlines = false) : GenericBaitAway(module, aid)
+public abstract class GenericBaitStack(BossModule module, uint aid = default, bool onlyShowOutlines = false) : GenericBaitAway(module, aid)
 {
     // TODO: add logic for min and max stack size
     public const string HintStack = "Stack!";
@@ -672,6 +544,7 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
         var isInBaitShape = false; // determine if inside of any stack
         var isInWrongBait = false; // determine if inside of any forbidden stack
         var allForbidden = true; // determine if all stacks are forbidden
+        var id = actor.InstanceID;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var b = ref baits[i];
@@ -679,7 +552,7 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
             {
                 allForbidden = false;
             }
-            if (b.Target == actor)
+            if (b.Target.InstanceID == id)
             {
                 isBaitTarget = true;
                 continue;
@@ -697,7 +570,7 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var b = ref baits[i];
-                if (b.Target == actor)
+                if (b.Target.InstanceID == id)
                     continue;
                 if (b.Shape.Check(actor.Position, BaitOrigin(b), b.Rotation))
                 {
@@ -712,10 +585,13 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
             return;
         }
         if (!isBaitTarget && !isInBaitShape)
+        {
             hints.Add(HintStack);
+        }
         else if (isBaitTarget || !isBaitTarget && isInBaitShape)
+        {
             hints.Add(HintStack, false);
-
+        }
         if (isBaitTarget && isBaitTargetAndInExtraStack)
         {
             hints.Add(HintAvoidOther);
@@ -731,10 +607,11 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
         if (len == 0)
             return;
         var isBaitTarget = false; // determine if target of any stack
+        var id = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var b = ref baits[i];
-            if (b.Target == pc)
+            if (b.Target.InstanceID == id)
             {
                 isBaitTarget = true;
                 break;
@@ -743,7 +620,7 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
         for (var i = 0; i < len; ++i)
         {
             ref readonly var b = ref baits[i];
-            var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target == pc || !isBaitTarget && b.Target != pc) ? Colors.SafeFromAOE : default;
+            var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target.InstanceID == id || !isBaitTarget && b.Target.InstanceID != id) ? Colors.SafeFromAOE : default;
             b.Shape.Draw(Arena, BaitOrigin(b), b.Rotation, color);
         }
     }
@@ -757,10 +634,11 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
         if (len == 0)
             return;
         var isBaitTarget = false; // determine if target of any stack
+        var id = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
             ref readonly var b = ref baits[i];
-            if (b.Target == pc)
+            if (b.Target.InstanceID == id)
             {
                 isBaitTarget = true;
                 break;
@@ -769,8 +647,136 @@ public class GenericBaitStack(BossModule module, uint aid = default, bool onlySh
         for (var i = 0; i < len; ++i)
         {
             ref readonly var b = ref baits[i];
-            var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target == pc || !isBaitTarget && b.Target != pc) ? Colors.Safe : default;
+            var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target.InstanceID == id || !isBaitTarget && b.Target.InstanceID != id) ? Colors.Safe : default;
             b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation, color);
+        }
+    }
+}
+
+// generic single hit "line stack" component, usually do not have an iconID, instead players get marked by cast event
+// usually these have 50 range and 4 halfWidth, but it can be modified
+public class LineStack(BossModule module, uint aidMarker, uint aidResolve, double activationDelay = 5.1d, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true, uint iconID = default) : GenericBaitStack(module)
+{
+    public LineStack(BossModule module, uint iconID, uint aidResolve, double activationDelay = 5.1d, float range = 50f, float halfWidth = 4f, int minStackSize = 4, int maxStackSize = int.MaxValue, int maxCasts = 1, bool markerIsFinalTarget = true) : this(module, default, aidResolve, activationDelay, range, halfWidth, minStackSize, maxStackSize, maxCasts, markerIsFinalTarget, iconID) { }
+
+    // TODO: add logic for min and max stack size
+    public readonly uint AidMarker = aidMarker;
+    public readonly uint AidResolve = aidResolve;
+    public readonly double ActionDelay = activationDelay;
+    public readonly float Range = range;
+    public readonly float HalfWidth = halfWidth;
+    public readonly int MaxStackSize = maxStackSize;
+    public readonly int MinStackSize = minStackSize;
+    public readonly int MaxCasts = maxCasts; // for stacks where the final AID hits multiple times
+    public readonly bool MarkerIsFinalTarget = markerIsFinalTarget; // rarely the marked player is not the target of the line stack
+    private int castCounter;
+    public readonly uint IconId = iconID;
+    private readonly AOEShape rect = new AOEShapeRect(range, halfWidth);
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (AidMarker == default && IconId == default)
+        {
+            return;
+        }
+        var id = spell.Action.ID;
+        if (id == AidMarker && WorldState.Actors.Find(spell.MainTargetID) is Actor target)
+        {
+            CurrentBaits.Add(new(caster, target, rect, WorldState.FutureTime(ActionDelay), maxCasts: MaxCasts));
+        }
+        else if (id == AidResolve)
+        {
+            ++NumCasts;
+            if (MarkerIsFinalTarget)
+            {
+                var tID = spell.MainTargetID;
+                if (CurrentBaits.Count == 1 && CurrentBaits[0].Target.InstanceID != tID && WorldState.Actors.Find(tID) is Actor t)
+                {
+                    CurrentBaits.Ref(0).Target = t;
+                }
+
+                var count = CurrentBaits.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var b = CurrentBaits[i];
+                    if (b.Target.InstanceID == tID && --CurrentBaits.Ref(i).MaxCasts == 0)
+                    {
+                        CurrentBaits.RemoveAt(i);
+                        ++NumCasts;
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (++castCounter == MaxCasts && CurrentBaits.Count != 0)
+                {
+                    CurrentBaits.RemoveAt(0);
+                    castCounter -= MaxCasts;
+                    castCounter = 0;
+                    ++NumCasts;
+                }
+            }
+        }
+    }
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
+    {
+        if (IconId != default && iconID == IconId && WorldState.Actors.Find(targetID) is Actor target)
+        {
+            CurrentBaits.Add(new(actor, target, rect, WorldState.FutureTime(ActionDelay)));
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (AidMarker != default || IconId != default)
+            return;
+        if (spell.Action.ID == AidResolve && WorldState.Actors.Find(spell.TargetID) is Actor target)
+        {
+            CurrentBaits.Add(new(caster, target, rect, Module.CastFinishAt(spell)));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (AidMarker != default || IconId != default)
+        {
+            return;
+        }
+        if (spell.Action.ID == AidResolve)
+        {
+            var tID = spell.TargetID;
+            if (MarkerIsFinalTarget)
+            {
+                if (CurrentBaits.Count == 1 && CurrentBaits[0].Target.InstanceID != tID && WorldState.Actors.Find(tID) is Actor t)
+                {
+                    CurrentBaits.Ref(0).Target = t;
+                }
+                if (++castCounter == MaxCasts)
+                {
+                    var count = CurrentBaits.Count;
+                    for (var i = 0; i < count; ++i)
+                    {
+                        if (CurrentBaits[i].Target.InstanceID == tID)
+                        {
+                            CurrentBaits.RemoveAt(i);
+                            castCounter = 0;
+                            ++NumCasts;
+                            return;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (++castCounter == MaxCasts && CurrentBaits.Count != 0)
+                {
+                    CurrentBaits.RemoveAt(0);
+                    castCounter = 0;
+                    ++NumCasts;
+                }
+            }
         }
     }
 }

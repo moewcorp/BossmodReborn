@@ -132,7 +132,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                 Sequences.Sort((a, b) => MathF.Atan2(a.Origin.Z - centerZ, a.Origin.X - centerX).CompareTo(MathF.Atan2(b.Origin.Z - centerZ, b.Origin.X - centerX)));
 
                 // Find adjacent pair where left is CCW and right is CW
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < 4; ++i)
                 {
                     var next = (i + 1) % 4;
                     var a = Sequences[i];
@@ -234,18 +234,18 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
                         ref readonly var aoe = ref aoes[i];
                         rectangle.Add(new(aoe.Origin, aoe.Origin + 60f * aoe.Rotation.ToDirection(), 4f));
                     }
-                    AOEShapeCustom combine = new([.. rectangle]);
-                    combine.GetCombinedPolygon(Arena.Center);
-                    poly = combine.Polygon!;
+                    AOEShapeCustom combine = new(rectangle);
+                    poly = combine.GetCombinedPolygon(Arena.Center);
                     polyInit = true;
                 }
                 var center = Arena.Center;
+                var polygon = poly;
                 hints.AddForbiddenZone(p =>
                 {
                     var projected = p + 15f * (p - center).Normalized();
-                    if (projected.InCircle(center, 20f) && !poly.Contains(projected - center))
+                    if (projected.InCircle(center, 20f) && !polygon.Contains(projected - center))
                         return 1f;
-                    return -1f;
+                    return default;
                 }, activation);
             }
         }
@@ -257,8 +257,11 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
                 return true;
+            }
         }
         return !Module.InBounds(pos);
     }

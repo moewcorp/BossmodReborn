@@ -28,7 +28,7 @@ sealed class BlazingMeteor(BossModule module) : Components.CastLineOfSightAOE(mo
     public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.BestialCorpse));
 }
 
-sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.ZombieJuiceFirst, GetVoidzones, 0.9f)
+sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.ZombieJuiceFirst, GetVoidzones, 0.9d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -42,14 +42,14 @@ sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(mo
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7)
+            if (z.EventState != 7u)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
     }
 }
 
-sealed class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9f);
+sealed class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9d);
 sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
 
 sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)

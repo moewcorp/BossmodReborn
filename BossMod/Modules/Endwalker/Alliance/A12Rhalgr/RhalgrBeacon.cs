@@ -13,7 +13,7 @@ class RhalgrBeaconShock(BossModule module) : Components.GenericAOEs(module, (uin
     {
         if (NumCasts != 7 && actor.OID == (uint)OID.LightningOrb)
         {
-            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.7d), ActorID: actor.InstanceID));
+            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.7d), actorID: actor.InstanceID));
         }
     }
 

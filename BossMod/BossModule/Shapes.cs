@@ -131,7 +131,7 @@ public record class Rectangle(WPos Center, float HalfWidth, float HalfHeight, An
     {
         if (Points == null)
         {
-            var dir = Rotation != default ? Rotation.ToDirection() : new(0, 1);
+            var dir = Rotation != default ? Rotation.ToDirection() : new(default, 1f);
             var dx = dir.OrthoL() * HalfWidth;
             var dz = dir * HalfHeight;
             Points =

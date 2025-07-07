@@ -96,7 +96,7 @@ class DuplicitousBattery(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.DuplicitousBatteryTelegraph)
-            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(6.5d), Risky: false));
+            _aoes.Add(new(circle, spell.LocXZ, default, WorldState.FutureTime(6.5d), risky: false));
 
     }
 

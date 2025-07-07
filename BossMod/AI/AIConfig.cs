@@ -44,22 +44,28 @@ sealed class AIConfig : ConfigNode
     public Positional DesiredPositional = Positional.Any;
 
     [PropertyDisplay("到队友的最大距离")]
-    public float MaxDistanceToSlot = 1;
+    public float MaxDistanceToSlot = 1f;
 
     [PropertyDisplay("到目标的最大距离")]
     public float MaxDistanceToTarget = 2.6f;
 
-    [PropertyDisplay("启用自动 AFK", tooltip: "脱离战斗时启用自动 AFK。AFK 期间 AI 不会使用自动循环或选中任何东西")]
+    [PropertyDisplay("到目标圈的最小距离")]
+    public float MinDistance = default;
+
+    [PropertyDisplay("距禁区的优选距离")]
+    public float PreferredDistance = default;
+
+    [PropertyDisplay("启用自动挂机", tooltip: "脱离战斗时启用自动挂机。挂机期间，AI不会使用自动循环或瞄准任何目标")]
     public bool AutoAFK = false;
 
-    [PropertyDisplay("自动 AFK 时间", tooltip: "离开战斗直至启用 AFK 模式的时间（秒）。任何移动都将重置计时器或禁用已激活的 AFK 模式")]
-    public float AFKModeTimer = 10;
+    [PropertyDisplay("自动挂机时间", tooltip: "离开战斗直至启用挂机模式的时间（秒）。任何移动都将重置计时器或禁用已激活的挂机模式")]
+    public float AFKModeTimer = 10f;
 
     [PropertyDisplay("禁用加载障碍物地图", tooltip: "可能需要启用某些内容，例如深层迷宫")]
     public bool DisableObstacleMaps = false;
 
-    [PropertyDisplay("运动决策延迟", tooltip: "更改此值需您自担风险，并保持此值较低！太高则无法及时适应某些机制。请确保针对不同内容重新调整此值")]
-    public double MoveDelay = 0;
+    [PropertyDisplay("移动决策延迟", tooltip: "更改此值需您自担风险，并保持此值较低！太高则无法及时适应某些机制。请确保针对不同内容重新调整此值")]
+    public double MoveDelay = default;
 
     [PropertyDisplay("骑乘时空闲")]
     public bool ForbidAIMovementMounted = false;

@@ -212,7 +212,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         Firestarter = Player.FindStatus(SID.Firestarter) != null;
         InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
 
-        for (var i = 0; i < Hints.Enemies.Length; i++)
+        for (var i = 0; i < Hints.Enemies.Length; ++i)
             EnemyDotTimers[i] = CalculateDotTimer(Hints.Enemies[i]?.Actor);
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
@@ -627,7 +627,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
     private void UseLeylines(StrategyValues strategy, Enemy? primaryTarget)
     {
-        if (Player.FindStatus(SID.LeyLines) != null)
+        if (Player.FindStatus(SID.LeyLines) != null || Player.FindStatus(PhantomSID.OccultQuick) != null)
             return;
 
         var opt = strategy.Option(Track.Leylines);
@@ -674,7 +674,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                 || Ice > 0 && Hearts > 0 && MP >= 2400;
 
         // fire phase transpose: use TC B3
-        if (Fire > 0 && MP < MinAstralFireMP && CanWeave(AID.Triplecast) && SwiftB3(strategy))
+        if (Fire > 0 && MP < MinAstralFireMP && CanWeave(AID.Triplecast) && SwiftB3(strategy) && AstralSoul < 6)
             return true;
 
         // ice phase transpose

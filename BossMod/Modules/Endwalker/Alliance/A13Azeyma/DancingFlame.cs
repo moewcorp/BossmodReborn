@@ -16,7 +16,9 @@ class DancingFlame(BossModule module) : Components.GenericAOEs(module, (uint)AID
         {
             AOEs.Add(new(_shape, WPos.ClampToGrid(caster.Position + 40f * caster.Rotation.ToDirection()), spell.Rotation, Module.CastFinishAt(spell, 1f)));
             if (AOEs.Count == 6)
+            {
                 AOEs.RemoveRange(0, 4);
+            }
         }
     }
 

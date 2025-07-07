@@ -68,7 +68,7 @@ sealed class BrutalSmash(BossModule module) : Components.GenericSharedTankbuster
         {
             Source = caster;
             close = spell.Action.ID == (uint)AID.SmashHere;
-            Activation = Module.CastFinishAt(spell, 2.1f);
+            Activation = Module.CastFinishAt(spell, 2.1d);
         }
     }
 

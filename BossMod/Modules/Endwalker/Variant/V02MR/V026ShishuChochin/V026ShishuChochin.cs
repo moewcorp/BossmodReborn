@@ -13,7 +13,7 @@ public enum AID : uint
     Illume = 33618, // 3EFC->self, 3.0s cast, range 6 90-degree cone
 }
 
-class Lanterns(BossModule module) : Components.GenericAOEs(module)
+sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly V026ShishuChochinConfig _config = Service.Config.Get<V026ShishuChochinConfig>();
 
@@ -24,14 +24,19 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001)
+        if (state == 0x00020001u)
         {
-            if (index == 0x48)
-                lanterns.Remove(lantern1);
-            else if (index == 0x47)
-                lanterns.Remove(lantern2);
-            else if (index == 0x46)
-                lanterns.Remove(lantern3);
+            var circ = index switch
+            {
+                0x48 => lantern1,
+                0x47 => lantern2,
+                0x46 => lantern3,
+                _ => null
+            };
+            if (circ != null)
+            {
+                lanterns.Remove(circ);
+            }
             _aoe = new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99d), Colors.SafeFromAOE);
         }
     }
@@ -39,16 +44,22 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Illume)
+        {
             ++NumCasts;
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (!_config.P12LanternAI)
+        {
             return;
+        }
         var count = (3 - NumCasts) == lanterns.Count;
         if (count)
+        {
             base.AddAIHints(slot, actor, assignment, hints);
+        }
         var lanternPriorityCount = 0;
 
         var countT = hints.PotentialTargets.Count;
@@ -82,7 +93,9 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
                     }
                 }
                 else
+                {
                     e.Priority = AIHints.Enemy.PriorityUndesirable;
+                }
             }
         }
     }
@@ -98,13 +111,15 @@ class Lanterns(BossModule module) : Components.GenericAOEs(module)
     {
         var count = lanterns.Count;
         for (var i = 0; i < count; ++i)
+        {
             Arena.AddCircle(lanterns[i].Center, 5f, Colors.Safe, 5f);
+        }
     }
 }
 
-class Illume(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Illume, new AOEShapeCone(6f, 45f.Degrees()));
+sealed class Illume(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Illume, new AOEShapeCone(6f, 45f.Degrees()));
 
-class V026ShishuChochinStates : StateMachineBuilder
+sealed class V026ShishuChochinStates : StateMachineBuilder
 {
     public V026ShishuChochinStates(BossModule module) : base(module)
     {
@@ -126,7 +141,7 @@ class V026ShishuChochinStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12396, SortOrder = 6)]
-public class V026ShishuChochin(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class V026ShishuChochin(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(701.34f, -29.85f), new(701.24f, -19.5f), new(701.24f, 6.28f), new(701.24f, 6.79f), new(700.88f, 7.17f),
     new(686.24f, 17.56f), new(685.38f, 17.77f), new(685.07f, 18.25f), new(685.05f, 18.76f), new(685.12f, 19.34f),

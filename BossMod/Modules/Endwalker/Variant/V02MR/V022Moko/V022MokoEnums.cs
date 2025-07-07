@@ -46,12 +46,12 @@ public enum AID : uint
     SoldiersOfDeath = 34195, // Boss->self, 3.0s cast, single-target
     IronRain = 34196, // AshigaruKyuhei->location, 8.0s cast, range 10 circle
 
-    //Route 1
+    // Route 1
     UntemperedSword = 34216, // Boss->self, 3.0s cast, single-target
     Unsheathing = 34217, // AncientKatana->location, 2.0s cast, range 3 circle
     VeilSever = 34218, // AncientKatana->self, 5.0s cast, range 40 width 5 rect
 
-    //Route 2
+    // Route 2
     ScarletAuspice = 34200, // Boss->self, 5.0s cast, range 6 circle
     MoonlessNight = 34219, // Boss->self, 3.0s cast, range 60 circle
     Clearout = 34220, // OnisClaw->self, 5.0s cast, range 22 180-degree cone
@@ -59,13 +59,13 @@ public enum AID : uint
     BoundlessScarlet = 34202, // Helper->self, 3.0s cast, range 60 width 10 rect
     Explosion = 34203, // Helper->self, 10.0s cast, range 60 width 30 rect
 
-    //Route 3
+    // Route 3
     TenguYobi = 34209, // Boss->self, 3.0s cast, single-target
     YamaKagura = 34210, // IllComeTengu->self, 9.0s cast, range 40 width 5 rect, knockback 33 dir forward
     GhastlyGraspVisual = 34211, // Boss->self, 11.0s cast, single-target
     GhastlyGrasp = 34212, // Helper->location, 11.0s cast, range 5 circle
 
-    //Route 4
+    // Route 4
     Spiritspark = 34213, // Boss->self, 3.0s cast, single-target
     Spiritflame = 34214, // Helper->location, 4.0s cast, range 6 circle
     ArmOfPurgatory = 34215, // Helper->player, no cast, single-target, touch spiritflame
@@ -79,7 +79,5 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    GiriDirection = 2970, // none->Boss, extra=0x248/0x24A/0x249/0x24B
-    unknown = 2056, // none->AshigaruKyuhei/AshigaruSohei1/AshigaruSohei2/Boss/Spiritflame, extra=0x1E8/0x26E/0x26B/0x257
-    unknown2 = 2193 // none->Boss, extra=0x266/0x267
+    GiriDirection = 2970 // none->Boss, extra=0x248/0x24A/0x249/0x24B
 }

@@ -360,6 +360,8 @@ public sealed class ReplayParserLog : IDisposable
             [new("SLOG"u8)] = ParseSystemLog,
             [new("WAY+"u8)] = () => ParseWaymarkChange(true),
             [new("WAY-"u8)] = () => ParseWaymarkChange(false),
+            [new("SGN+"u8)] = () => ParseSignChange(true),
+            [new("SGN-"u8)] = () => ParseSignChange(false),
             [new("ACT+"u8)] = ParseActorCreate,
             [new("ACT-"u8)] = ParseActorDestroy,
             [new("NAME"u8)] = ParseActorRename,
@@ -423,6 +425,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("CLKV"u8)] = ParseClientContentKVData,
             [new("FATE"u8)] = ParseClientFateInfo,
             [new("HATE"u8)] = ParseClientHateInfo,
+            [new("CLPR"u8)] = ParseClientProcTimers,
             [new("DDPG"u8)] = ParseDeepDungeonProgress,
             [new("DDMP"u8)] = ParseDeepDungeonMap,
             [new("DDPT"u8)] = ParseDeepDungeonParty,
@@ -570,13 +573,17 @@ public sealed class ReplayParserLog : IDisposable
         var primary = _input.ReadActorID();
         var targets = new ClientState.Hate[32];
         var haterCount = _input.ReadInt();
-        for (var i = 0; i < haterCount; i++)
+        for (var i = 0; i < haterCount; ++i)
             targets[i] = new(_input.ReadActorID(), _input.ReadInt());
         return new(primary, targets);
     }
 
+    private ClientState.OpProcTimersChange ParseClientProcTimers() => new([_input.ReadFloat(), _input.ReadFloat(), _input.ReadFloat(), _input.ReadFloat()]);
+
     private WaymarkState.OpWaymarkChange ParseWaymarkChange(bool set)
         => new(_version < 10 ? Enum.Parse<Waymark>(_input.ReadString()) : (Waymark)_input.ReadByte(false), set ? _input.ReadVec3() : null);
+
+    private WaymarkState.OpSignChange ParseSignChange(bool set) => new((Sign)_input.ReadByte(false), set ? _input.ReadActorID() : 0);
 
     private ActorState.OpCreate ParseActorCreate()
     {
@@ -595,6 +602,7 @@ public sealed class ReplayParserLog : IDisposable
                 ulong.Parse(parts[0], NumberStyles.HexNumber),
                 uint.Parse(parts[1], NumberStyles.HexNumber),
                 spawnIndex,
+                0,
                 parts[2],
                 0,
                 parts[3] == "Unknown" ? ActorType.Part : Enum.Parse<ActorType>(parts[3]),
@@ -616,6 +624,7 @@ public sealed class ReplayParserLog : IDisposable
                 _input.ReadULong(true),
                 _input.ReadUInt(true),
                 _input.ReadInt(),
+                _version >= 26 ? _input.ReadUInt(true) : 0,
                 _input.ReadString(),
                 _version >= 13 ? _input.ReadUInt(false) : 0,
                 (ActorType)_input.ReadUShort(true),
@@ -797,7 +806,7 @@ public sealed class ReplayParserLog : IDisposable
 
         var count = _input.ReadByte(false);
         var actions = new ClientState.DutyAction[count];
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < count; ++i)
             actions[i] = new ClientState.DutyAction(_input.ReadAction(), _input.ReadByte(false), _input.ReadByte(false));
 
         return new(actions);

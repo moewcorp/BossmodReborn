@@ -52,9 +52,14 @@ public struct NavigationDecision
     {
         var d = (int)(forbiddenZoneCushion / map.Resolution);
         map.MaxPriority = -1;
-        foreach (var (x, y, _) in map.EnumeratePixels())
+        var pixels = map.EnumeratePixels();
+        var len = pixels.Length;
+        for (var i = 0; i < len; ++i)
         {
-            var cellIndex = map.GridToIndex(x, y);
+            ref readonly var p = ref pixels[i];
+            ref readonly var px = ref p.x;
+            ref readonly var py = ref p.y;
+            var cellIndex = map.GridToIndex(px, py);
             if (map.PixelMaxG[cellIndex] == float.MaxValue)
             {
                 var hasDangerousNeighbour = false;
@@ -63,9 +68,10 @@ public struct NavigationDecision
                     for (var oy = -1; oy <= 1; ++oy)
                     {
                         if (ox == 0 && oy == 0)
+                        {
                             continue;
-
-                        var (nx, ny) = map.ClampToGrid((x + ox * d, y + oy * d));
+                        }
+                        var (nx, ny) = map.ClampToGrid((px + ox * d, py + oy * d));
                         if (map.PixelMaxG[map.GridToIndex(nx, ny)] != float.MaxValue)
                         {
                             hasDangerousNeighbour = true;
