@@ -8,6 +8,9 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("Show replay management UI")]
     public bool ShowUI = false;
 
+    [PropertyDisplay("Show chat alert when a duty with no module is entered or recorded")]
+    public bool ImportantDutyAlert = true;
+
     [PropertyDisplay("Auto record replays on duty start/end or outdoor module start/end")]
     public bool AutoRecord = false;
 
