@@ -207,10 +207,13 @@ public sealed class ReplayManagementWindow : UIWindow
         return false;
     }
 
+    private static readonly uint[] AlwaysImportantDuties = [ 280, 539, 694, 788, 908, 1006 ];
     private bool IsImportantDuty(uint cfcId)
     {
         if (cfcId == 0)
             return false;
+        if (AlwaysImportantDuties.Contains(cfcId))
+            return true;
         var existingModules = _bmm.LoadedModules.Where(m => m.Info?.Maturity != BossModuleInfo.Maturity.WIP).Select(m => m.Info?.GroupID);
         return !existingModules.Contains(cfcId);
     }
