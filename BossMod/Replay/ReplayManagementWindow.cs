@@ -214,7 +214,7 @@ public sealed class ReplayManagementWindow : UIWindow
             return false;
         if (AlwaysImportantDuties.Contains(cfcId))
             return true;
-        var existingModules = _bmm.LoadedModules.Where(m => m.Info?.Maturity != BossModuleInfo.Maturity.WIP).Select(m => m.Info?.GroupID);
+        var existingModules = BossModuleRegistry.RegisteredModules.Values.Where(m => m.Maturity != BossModuleInfo.Maturity.WIP).Select(m => m.GroupID);
         return !existingModules.Contains(cfcId);
     }
 
