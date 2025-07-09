@@ -1,6 +1,10 @@
 ﻿using BossMod.Autorotation;
+using Dalamud.Game.Gui.Toast;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.ImGuiFileDialog;
+using Dalamud.Interface.ImGuiNotification;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 using System.Diagnostics;
@@ -15,6 +19,7 @@ public sealed class ReplayManagementWindow : UIWindow
     private static readonly ReplayManagementConfig _config = Service.Config.Get<ReplayManagementConfig>();
     private readonly ReplayManager _manager;
     private readonly EventSubscriptions _subscriptions;
+    private readonly BossModuleManager _bmm;
     private ReplayRecorder? _recorder;
     private string _message = "";
     private bool _recordingManual; // recording was started manually, and so should not be stopped automatically
@@ -22,6 +27,9 @@ public sealed class ReplayManagementWindow : UIWindow
     private int _recordingActiveModules; // recording was started automatically, because we've activated N modules
     private FileDialog? _folderDialog;
     private string _lastErrorMessage = "";
+    private DalamudLinkPayload? _startLinkPayload;
+    private DalamudLinkPayload? _uploadLinkPayload;
+    private DalamudLinkPayload? _disableAlertLinkPayload;
 
     private const string _windowID = "###Replay recorder";
 
@@ -30,6 +38,7 @@ public sealed class ReplayManagementWindow : UIWindow
         _ws = ws;
         _logDir = logDir;
         _manager = new(rotationDB, logDir.FullName);
+        _bmm = bmm;
         _subscriptions = new
         (
             _config.Modified.ExecuteAndSubscribe(() =>
@@ -38,8 +47,8 @@ public sealed class ReplayManagementWindow : UIWindow
                 UpdateLogDirectory();
             }),
             _ws.CurrentZoneChanged.Subscribe(op => OnZoneChange(op.CFCID)),
-            bmm.ModuleActivated.Subscribe(OnModuleActivation),
-            bmm.ModuleDeactivated.Subscribe(OnModuleDeactivation)
+            _bmm.ModuleActivated.Subscribe(OnModuleActivation),
+            _bmm.ModuleDeactivated.Subscribe(OnModuleDeactivation)
         );
         if (!OnZoneChange(_ws.CurrentCFCID))
             UpdateTitle();
@@ -139,6 +148,42 @@ public sealed class ReplayManagementWindow : UIWindow
 
     private bool OnZoneChange(uint cfcId)
     {
+        if (_config.ImportantDutyAlert && IsImportantDuty(cfcId))
+        {
+            _startLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(0, (id, str) =>
+            {
+                if (id == 0)
+                {
+                    StartRecording("");
+                    Service.ChatGui.Print("[BMR] Replay recording started");
+                }
+            });
+            _disableAlertLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(2, (id, str) =>
+            {
+                if (id == 2)
+                {
+                    _config.ImportantDutyAlert = false;
+                    _config.Modified.Fire();
+                    Service.ChatGui.Print("[BMR] Important duty alert disabled");
+                }
+            });
+            var alertPayload =
+                new TextPayload("[BMR] This duty does not yet have a complete module. Recording and uploading a replay will help enable module creation. ");
+            var linkTextPayload = new TextPayload("[Start replay recording]");
+            var disableTextPayload = new TextPayload("[Permanently disable these alerts]");
+
+            var seString = new SeStringBuilder()
+                .Add(alertPayload)
+                .Add(_startLinkPayload)
+                .Add(linkTextPayload)
+                .Add(RawPayload.LinkTerminator)
+                .AddText(" ")
+                .Add(_disableAlertLinkPayload)
+                .Add(disableTextPayload)
+                .Add(RawPayload.LinkTerminator)
+                .Build();
+            Service.ChatGui.Print(seString);
+        }
         if (!ShouldAutoRecord || _recordingManual)
             return false; // don't care
 
@@ -160,6 +205,14 @@ public sealed class ReplayManagementWindow : UIWindow
         }
 
         return false;
+    }
+
+    private bool IsImportantDuty(uint cfcId)
+    {
+        if (cfcId == 0)
+            return false;
+        var existingModules = _bmm.LoadedModules.Where(m => m.Info?.Maturity != BossModuleInfo.Maturity.WIP).Select(m => m.Info?.GroupID);
+        return !existingModules.Contains(cfcId);
     }
 
     private void OnModuleActivation(BossModule m)
@@ -219,6 +272,31 @@ public sealed class ReplayManagementWindow : UIWindow
 
     public void StopRecording()
     {
+        if (_config.ImportantDutyAlert && IsImportantDuty(_recorder?.CFCID ?? 0))
+        {
+            var path = _recorder?.LogPath;
+            _uploadLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(1, (id, str) =>
+            {
+                if (id == 1)
+                {
+                    Task.Run(() =>
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "https://forms.gle/z6czgekaEnFBtgbB6",
+                            UseShellExecute = true
+                        });
+                    });
+                    Service.ChatGui.Print($"[BMR] The path to your replay is: {path}");
+                }
+            });
+            var alertPayload =
+                new TextPayload(
+                    "[BMR] You recorded a duty without a complete module. Uploading this replay helps with module development. ");
+            var linkTextPayload = new TextPayload("[Upload the replay]");
+            var seString = new SeStringBuilder().Add(alertPayload).Add(_uploadLinkPayload).Add(linkTextPayload).Add(RawPayload.LinkTerminator).Build();
+            Service.ChatGui.Print(seString);
+        }
         _recordingManual = false;
         _recordingDuty = false;
         _recordingActiveModules = 0;
@@ -246,7 +324,7 @@ public sealed class ReplayManagementWindow : UIWindow
 
         var player = _ws.Party.Player();
         if (player != null)
-            prefix += $"_{player.Class}{player.Level}_{player.Name.Replace(" ", null, StringComparison.Ordinal)}";
+            prefix += $"_{player.Class}{player.Level}_{string.Join('_', player.Name.Split(' ').Select(s => new string(s.Take(2).ToArray())))}";
 
         var cf = FFXIVClientStructs.FFXIV.Client.Game.UI.ContentsFinder.Instance();
         if (cf->IsUnrestrictedParty)
