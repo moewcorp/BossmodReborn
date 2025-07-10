@@ -148,7 +148,7 @@ public sealed class ReplayManagementWindow : UIWindow
 
     private bool OnZoneChange(uint cfcId)
     {
-        if (_config.ImportantDutyAlert && IsImportantDuty(cfcId))
+        if (_config.ImportantDutyAlert && IsImportantDuty(cfcId) && !ShouldAutoRecord)
         {
             _startLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(0, (id, str) =>
             {
