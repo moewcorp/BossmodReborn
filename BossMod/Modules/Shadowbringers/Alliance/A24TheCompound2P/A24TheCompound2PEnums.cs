@@ -61,12 +61,12 @@ public enum AID : uint
     CompoundPodR011 = 20900, // Boss->self, 4.0s cast, single-target
     CompoundPodR012 = 20907, // Boss->self, 3.0s cast, single-target
 
-    R012Laser1 = 20908, // CompoundPod->self, no cast, single-target
-    R012LaserTankBuster = 20909, // Helper->player, 5.0s cast, range 6 circle
+    R012LaserVisual = 20908, // CompoundPod->self, no cast, single-target
+    R012LaserTB = 20909, // Helper->player, 5.0s cast, range 6 circle
     R012LaserSpread = 20910, // Helper->players, 5.0s cast, range 6 circle
-    R012LaserLoc = 20911, // Helper->location, 4.0s cast, range 6 circle
-    R011Laser5 = 20901, // CompoundPod->self, 11.5s cast, single-target
-    R011LaserLine = 21531, // Helper->self, 1.5s cast, range 70 width 15 rect
+    R012LaserAOE = 20911, // Helper->location, 4.0s cast, range 6 circle
+    R011LaserVisual = 20901, // CompoundPod->self, 11.5s cast, single-target
+    R011Laser = 21531, // Helper->self, 1.5s cast, range 70 width 15 rect
 
     Reproduce = 20897, // Boss->self, 4.0s cast, single-target
 

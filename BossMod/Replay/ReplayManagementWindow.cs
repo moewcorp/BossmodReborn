@@ -207,15 +207,30 @@ public sealed class ReplayManagementWindow : UIWindow
         return false;
     }
 
-    private static readonly uint[] AlwaysImportantDuties = [ 280, 539, 694, 788, 908, 1006 ];
+    private static readonly uint[] alwaysImportantDuties = [280u, 539u, 694u, 788u, 908u, 1006u, 700u, 736u, 779u, 878u, 879u, 946u, 947u, 979u, 980u,
+    801u, 807u, 809u, 811u, 873u, 877u, 881u, 884u, 937u, 939u, 941u, 943u]; // update loop in IsImportantDuty upon changing this array
+
     private bool IsImportantDuty(uint cfcId)
     {
-        if (cfcId == 0)
+        if (cfcId == default)
+        {
             return false;
-        if (AlwaysImportantDuties.Contains(cfcId))
-            return true;
-        var existingModules = BossModuleRegistry.RegisteredModules.Values.Where(m => m.Maturity != BossModuleInfo.Maturity.WIP).Select(m => m.GroupID);
-        return !existingModules.Contains(cfcId);
+        }
+        for (var i = 0; i < 27; ++i)
+        {
+            if (alwaysImportantDuties[i] == cfcId)
+            {
+                return true;
+            }
+        }
+        foreach (var module in BossModuleRegistry.RegisteredModules.Values)
+        {
+            if (module.Maturity != BossModuleInfo.Maturity.WIP && module.GroupID == cfcId)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void OnModuleActivation(BossModule m)

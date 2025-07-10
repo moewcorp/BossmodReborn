@@ -25,7 +25,7 @@ sealed class EnergyCompression(BossModule module) : Components.GenericTowers(mod
 
     public override void OnActorCreated(Actor actor)
     {
-        if (actor.OID == (uint)OID.Towers1)
+        if (Towers.Count != 6 && actor.OID == (uint)OID.Towers1)
         {
             Towers.Add(new(WPos.ClampToGrid(actor.Position), 5f, activation: WorldState.FutureTime(9.9d)));
         }
@@ -37,6 +37,14 @@ sealed class EnergyCompression(BossModule module) : Components.GenericTowers(mod
         {
             Towers.Clear();
             movedTowers = 0;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.ForcedTransfer1 or (uint)AID.ForcedTransfer2)
+        {
+            _tethers.Clear(); // other mechanics use the same tether ID
         }
     }
 
