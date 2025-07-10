@@ -11,9 +11,13 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_arena.IsBrionacArena)
+        {
             return CollectionsMarshal.AsSpan(AOEs);
+        }
         else
+        {
             return [];
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

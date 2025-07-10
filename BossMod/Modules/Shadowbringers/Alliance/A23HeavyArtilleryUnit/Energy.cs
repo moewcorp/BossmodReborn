@@ -37,14 +37,6 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnActorDestroyed(Actor actor)
-    {
-        if (actor.OID == (uint)OID.Energy)
-        {
-            _energy.Remove(actor);
-        }
-    }
-
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.EnergyBomb)

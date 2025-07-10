@@ -19,12 +19,12 @@ public enum AID : uint
 
     LowerLaserFirstCone = 20614, // Helper->self, 1.8s cast, range 30 60-degree cone
     UpperLaserFirstSector1 = 20615, // Helper->self, 1.8s cast, range 6-16 60-degree donut sector
-    UpperLaserFirstSector2 = 20616, // Helper->self, 4.8s cast, range 16-23 60-degree donut sector
-    UpperLaserFirstSector3 = 20617, // Helper->self, 7.8s cast, range 23-30 60-degree donut sector
+    UpperLaserFirstSector2 = 20616, // Helper->self, 4.8s cast, range 14-23 60-degree donut sector
+    UpperLaserFirstSector3 = 20617, // Helper->self, 7.8s cast, range 21-30 60-degree donut sector
     LowerLaserRepeatCone = 20470, // Helper->self, no cast, range 60 60-degree cone
     UpperLaserRepeatSector1 = 20471, // Helper->self, no cast, range 6-16 60-degree donut sector
-    UpperLaserRepeatSector2 = 20472, // Helper->self, no cast, range 16-23 60-degree donut sector
-    UpperLaserRepeatSector3 = 20473, // Helper->self, no cast, range 23-30 60-degree donut sector
+    UpperLaserRepeatSector2 = 20472, // Helper->self, no cast, range 14-23 60-degree donut sector
+    UpperLaserRepeatSector3 = 20473, // Helper->self, no cast, range 21-30 60-degree donut sector
 
     EnergyBomb = 20474, // Energy->player, no cast, single-target
     EnergyBombardmentVisual = 20475, // Boss->self, 2.0s cast, single-target

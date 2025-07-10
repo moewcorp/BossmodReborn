@@ -31,8 +31,8 @@ sealed class ShieldProtocol(BossModule module) : BossComponent(module)
         var boss = status.ID switch
         {
             (uint)SID.ShieldProtocolA => Module.PrimaryActor,
-            (uint)SID.ShieldProtocolB => bossmod.FlightUnitBEta(),
-            (uint)SID.ShieldProtocolC => bossmod.FlightUnitCHi(),
+            (uint)SID.ShieldProtocolB => bossmod.BossBeta,
+            (uint)SID.ShieldProtocolC => bossmod.BossChi,
             _ => null
         };
         if (boss != null && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
