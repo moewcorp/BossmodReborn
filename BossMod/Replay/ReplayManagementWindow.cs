@@ -207,38 +207,71 @@ public sealed class ReplayManagementWindow : UIWindow
         return false;
     }
 
-    private static readonly uint[] alwaysImportantDuties = [280u, 539u, 694u, 788u, 908u, 1006u, 700u, 736u, 779u, 878u, 879u, 946u, 947u, 979u, 980u,
-    801u, 807u, 809u, 811u, 873u, 877u, 881u, 884u, 937u, 939u, 941u, 943u]; // update loop in IsImportantDuty upon changing this array
-    private static readonly uint[] alwaysIgnoredDuties = [650u, 127u, 130u, 195u, 756u, 180u, 701u, 599u, 473u]; // update loop in IsImportantDuty upon changing this array
+    private static readonly Dictionary<uint, bool> StaticDutyImportance = GenerateStaticDutyMap();
+
+    private static Dictionary<uint, bool> GenerateStaticDutyMap()
+    {
+        var map = new Dictionary<uint, bool>();
+
+        uint[] alwaysImportantDuties = [280u, 539u, 694u, 788u, 908u, 1006u, 700u, 736u, 779u, 878u, 879u, 946u, 947u, 979u, 980u,
+        801u, 807u, 809u, 811u, 873u, 877u, 881u, 884u, 937u, 939u, 941u, 943u];
+        for (var i = 0; i < 27; ++i)
+        {
+            map[alwaysImportantDuties[i]] = true;
+        }
+
+        // ignored duties
+        uint[] alwaysIgnoredDuties = [0u, 650u, 127u, 130u, 195u, 756u, 180u, 701u, 473u, 721u];
+        for (var i = 0; i < 10; ++i)
+        {
+            map[alwaysIgnoredDuties[i]] = false;
+        }
+
+        static void AddRange(Dictionary<uint, bool> dict, uint start, uint end)
+        {
+            for (var i = start; i <= end; ++i)
+            {
+                dict[i] = false;
+            }
+        }
+
+        AddRange(map, 197, 199); // lord of verminion
+        AddRange(map, 481, 535); // chocobo races
+        AddRange(map, 552, 579); // lord of verminion
+        AddRange(map, 599, 608); // hidden gorge + leap of faith
+        AddRange(map, 640, 645); // air force one + mahjong
+        AddRange(map, 705, 713); // leap of faith
+        AddRange(map, 730, 734); // ocean fishing
+        AddRange(map, 766, 775); // mahjong + ocean fishing
+        AddRange(map, 835, 843); // crystalline conflict
+        AddRange(map, 847, 864); // crystalline conflict
+        AddRange(map, 912, 923); // crystalline conflict
+        AddRange(map, 927, 935); // leap of faith
+        AddRange(map, 952, 957); // ocean fishing
+        AddRange(map, 967, 978); // crystalline conflict
+        AddRange(map, 1012, 1014); // tutorial
+
+        // check modules for WIP and non existing
+        foreach (var module in BossModuleRegistry.RegisteredModules.Values)
+        {
+            if (module.Maturity != BossModuleInfo.Maturity.WIP)
+            {
+                var id = module.GroupID;
+                if (!map.ContainsKey(id))
+                {
+                    map[id] = false;
+                }
+            }
+        }
+
+        return map;
+    }
 
     private bool IsImportantDuty(uint cfcId)
     {
-        if (cfcId is 0u or >= 481u and <= 535u or >= 599u and <= 608u or >= 640u and <= 645u or >= 705u and <= 713u or >= 927u and <= 935u or >= 766u and <= 775u
-        or >= 835u and <= 843u or >= 847u and <= 864u or >= 912u and <= 923u or >= 952u and <= 957u or >= 967u and <= 978u
-        or >= 1012u and <= 1014u or >= 197u and <= 199u or >= 552u and <= 579u) // exclude pvp, chocobo races and other gold saucer stuff
+        if (StaticDutyImportance.TryGetValue(cfcId, out var isImportant))
         {
-            return false;
-        }
-        for (var i = 0; i < 9; ++i)
-        {
-            if (alwaysIgnoredDuties[i] == cfcId)
-            {
-                return false;
-            }
-        }
-        for (var i = 0; i < 27; ++i)
-        {
-            if (alwaysImportantDuties[i] == cfcId)
-            {
-                return true;
-            }
-        }
-        foreach (var module in BossModuleRegistry.RegisteredModules.Values)
-        {
-            if (module.Maturity != BossModuleInfo.Maturity.WIP && module.GroupID == cfcId)
-            {
-                return false;
-            }
+            return isImportant;
         }
         return true;
     }
