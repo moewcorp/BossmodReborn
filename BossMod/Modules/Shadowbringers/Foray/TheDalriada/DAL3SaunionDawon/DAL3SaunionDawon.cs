@@ -28,23 +28,22 @@ sealed class WildfireWinds(BossModule module) : Components.RaidwideCast(module, 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.TheDalriada, GroupID = 778, NameID = 10192, SortOrder = 5)]
 public sealed class DAL3SaunionDawon(WorldState ws, Actor primary) : BossModule(ws, primary, new(650f, -659f), new ArenaBoundsSquare(26.5f))
 {
-    private Actor? _bossDawon;
-    public Actor? BossDawon() => _bossDawon;
+    public Actor? BossDawon;
 
     protected override void UpdateModule()
     {
         // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
         // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossDawon == null)
+        if (BossDawon == null)
         {
             var b = Enemies((uint)OID.Dawon);
-            _bossDawon = b.Count != 0 ? b[0] : null;
+            BossDawon = b.Count != 0 ? b[0] : null;
         }
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(_bossDawon);
+        Arena.Actor(BossDawon);
         Arena.Actor(PrimaryActor);
     }
 }

@@ -13,7 +13,7 @@ sealed class Obey(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID is (uint)OID.FireBrandJump or (uint)OID.FrigidPulseJump && state is 0x00010002u or 0x00100020u or 0x00400080u)
         {
-            if (bossmod.BossDawon()?.IsDeadOrDestroyed ?? true)
+            if (bossmod.BossDawon?.IsDeadOrDestroyed ?? true)
             {
                 return;
             }
@@ -28,7 +28,7 @@ sealed class Obey(BossModule module) : Components.GenericAOEs(module)
                 Angle rotation = default;
                 if (shape == cross)
                 {
-                    rotation = Angle.FromDirection(WPos.ClampToGrid(actor.Position) - (_aoes.Count == 0 ? bossmod.BossDawon()!.Position : _aoes[^1].Origin));
+                    rotation = Angle.FromDirection(WPos.ClampToGrid(actor.Position) - (_aoes.Count == 0 ? bossmod.BossDawon!.Position : _aoes[^1].Origin));
                 }
                 _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), rotation, _aoes.Count == 0 ? WorldState.FutureTime(16.2d) : _aoes[0].Activation.AddSeconds(6.4d * _aoes.Count)));
             }
@@ -47,7 +47,7 @@ sealed class Obey(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoes.Count != 0)
         {
-            if (bossmod.BossDawon()?.IsDeadOrDestroyed ?? true)
+            if (bossmod.BossDawon?.IsDeadOrDestroyed ?? true)
             {
                 _aoes.Clear();
             }

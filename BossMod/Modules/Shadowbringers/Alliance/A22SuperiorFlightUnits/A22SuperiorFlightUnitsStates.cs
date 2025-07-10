@@ -20,6 +20,6 @@ sealed class A22SuperiorFlightUnitsStates : StateMachineBuilder
             .ActivateOnEnter<SharpTurn>()
             .ActivateOnEnter<SlidingSwipe>()
             .ActivateOnEnter<IncendiaryBarrage>()
-            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && (module.FlightUnitBEta()?.IsDeadOrDestroyed ?? true) && (module.FlightUnitCHi()?.IsDeadOrDestroyed ?? true);
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && (module.BossBeta?.IsDeadOrDestroyed ?? true) && (module.BossChi?.IsDeadOrDestroyed ?? true);
     }
 }

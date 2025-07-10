@@ -14,33 +14,30 @@ public sealed class DAL1Gauntlet(WorldState ws, Actor primary) : BossModule(ws, 
     public static readonly WPos ArenaCenter = new(222f, -689f);
     public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
     public static readonly ArenaBoundsSquare DefaultArena = new(23f);
-    private Actor? _bossAugur;
-    public Actor? BossAugur() => _bossAugur;
-    private Actor? _bossAlkonost;
-    public Actor? BossAlkonost() => _bossAlkonost;
-    private Actor? _bossCrow;
-    public Actor? BossCrow() => _bossCrow;
+    public Actor? BossAugur;
+    public Actor? BossAlkonost;
+    public Actor? BossCrow;
 
     protected override void UpdateModule()
     {
         // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
         // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossAugur == null)
+        if (BossAugur == null)
         {
             var b = Enemies((uint)OID.ForthLegionAugur1);
-            _bossAugur = b.Count != 0 ? b[0] : null;
+            BossAugur = b.Count != 0 ? b[0] : null;
         }
         if (StateMachine.ActivePhaseIndex >= 1)
         {
-            if (_bossAlkonost == null)
+            if (BossAlkonost == null)
             {
                 var b = Enemies((uint)OID.TamedAlkonost);
-                _bossAlkonost = b.Count != 0 ? b[0] : null;
+                BossAlkonost = b.Count != 0 ? b[0] : null;
             }
-            if (_bossCrow == null)
+            if (BossCrow == null)
             {
                 var b = Enemies((uint)OID.TamedCrow);
-                _bossCrow = b.Count != 0 ? b[0] : null;
+                BossCrow = b.Count != 0 ? b[0] : null;
             }
         }
     }
@@ -55,13 +52,13 @@ public sealed class DAL1Gauntlet(WorldState ws, Actor primary) : BossModule(ws, 
                 Arena.Actors(Enemies((uint)OID.ForthLegionInfantry));
                 break;
             case 1:
-                Arena.Actor(_bossAugur);
+                Arena.Actor(BossAugur);
                 Arena.Actors(Enemies((uint)OID.WaveborneZirnitra));
                 Arena.Actors(Enemies((uint)OID.FlameborneZirnitra));
                 break;
             case 2:
-                Arena.Actor(_bossAlkonost);
-                Arena.Actor(_bossCrow);
+                Arena.Actor(BossAlkonost);
+                Arena.Actor(BossCrow);
                 break;
         }
     }

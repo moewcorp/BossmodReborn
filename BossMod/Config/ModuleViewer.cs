@@ -37,36 +37,36 @@ public sealed class ModuleViewer : IDisposable
         _planDB = planDB;
         _ws = ws;
 
-        uint defaultIcon = 61762;
+        var defaultIcon = 61762u;
         _expansions = [.. Enum.GetNames<BossModuleInfo.Expansion>().Take((int)BossModuleInfo.Expansion.Count).Select(n => (n, defaultIcon))];
         _categories = [.. Enum.GetNames<BossModuleInfo.Category>().Take((int)BossModuleInfo.Category.Count).Select(n => (n, defaultIcon))];
 
         var exVersion = Service.LuminaSheet<ExVersion>()!;
-        Customize(BossModuleInfo.Expansion.RealmReborn, 61875, exVersion.GetRow(0).Name);
-        Customize(BossModuleInfo.Expansion.Heavensward, 61876, exVersion.GetRow(1).Name);
-        Customize(BossModuleInfo.Expansion.Stormblood, 61877, exVersion.GetRow(2).Name);
-        Customize(BossModuleInfo.Expansion.Shadowbringers, 61878, exVersion.GetRow(3).Name);
-        Customize(BossModuleInfo.Expansion.Endwalker, 61879, exVersion.GetRow(4).Name);
-        Customize(BossModuleInfo.Expansion.Dawntrail, 61880, exVersion.GetRow(5).Name);
+        Customize(BossModuleInfo.Expansion.RealmReborn, 61875u, exVersion.GetRow(0u).Name);
+        Customize(BossModuleInfo.Expansion.Heavensward, 61876u, exVersion.GetRow(1u).Name);
+        Customize(BossModuleInfo.Expansion.Stormblood, 61877u, exVersion.GetRow(2u).Name);
+        Customize(BossModuleInfo.Expansion.Shadowbringers, 61878u, exVersion.GetRow(3u).Name);
+        Customize(BossModuleInfo.Expansion.Endwalker, 61879u, exVersion.GetRow(4u).Name);
+        Customize(BossModuleInfo.Expansion.Dawntrail, 61880u, exVersion.GetRow(5u).Name);
 
         var contentType = Service.LuminaSheet<ContentType>()!;
-        Customize(BossModuleInfo.Category.Dungeon, contentType.GetRow(2));
-        Customize(BossModuleInfo.Category.Trial, contentType.GetRow(4));
-        Customize(BossModuleInfo.Category.Raid, contentType.GetRow(5));
-        Customize(BossModuleInfo.Category.Chaotic, contentType.GetRow(37));
-        Customize(BossModuleInfo.Category.PVP, contentType.GetRow(6));
-        Customize(BossModuleInfo.Category.Quest, contentType.GetRow(7));
-        Customize(BossModuleInfo.Category.FATE, contentType.GetRow(8));
-        Customize(BossModuleInfo.Category.TreasureHunt, contentType.GetRow(9));
-        Customize(BossModuleInfo.Category.GoldSaucer, contentType.GetRow(19));
-        Customize(BossModuleInfo.Category.DeepDungeon, contentType.GetRow(21));
-        Customize(BossModuleInfo.Category.Ultimate, contentType.GetRow(28));
-        Customize(BossModuleInfo.Category.VariantCriterion, contentType.GetRow(30));
+        Customize(BossModuleInfo.Category.Dungeon, contentType.GetRow(2u));
+        Customize(BossModuleInfo.Category.Trial, contentType.GetRow(4u));
+        Customize(BossModuleInfo.Category.Raid, contentType.GetRow(5u));
+        Customize(BossModuleInfo.Category.Chaotic, contentType.GetRow(37u));
+        Customize(BossModuleInfo.Category.PVP, contentType.GetRow(6u));
+        Customize(BossModuleInfo.Category.Quest, contentType.GetRow(7u));
+        Customize(BossModuleInfo.Category.FATE, contentType.GetRow(8u));
+        Customize(BossModuleInfo.Category.TreasureHunt, contentType.GetRow(9u));
+        Customize(BossModuleInfo.Category.GoldSaucer, contentType.GetRow(19u));
+        Customize(BossModuleInfo.Category.DeepDungeon, contentType.GetRow(21u));
+        Customize(BossModuleInfo.Category.Ultimate, contentType.GetRow(28u));
+        Customize(BossModuleInfo.Category.VariantCriterion, contentType.GetRow(30u));
 
         var playStyle = Service.LuminaSheet<CharaCardPlayStyle>()!;
-        Customize(BossModuleInfo.Category.Foray, playStyle.GetRow(6));
-        Customize(BossModuleInfo.Category.MaskedCarnivale, playStyle.GetRow(8));
-        Customize(BossModuleInfo.Category.Hunt, playStyle.GetRow(10));
+        Customize(BossModuleInfo.Category.Foray, playStyle.GetRow(6u));
+        Customize(BossModuleInfo.Category.MaskedCarnivale, playStyle.GetRow(8u));
+        Customize(BossModuleInfo.Category.Hunt, playStyle.GetRow(10u));
 
         _categories[(int)BossModuleInfo.Category.Extreme].icon = _categories[(int)BossModuleInfo.Category.Trial].icon;
         _categories[(int)BossModuleInfo.Category.Unreal].icon = _categories[(int)BossModuleInfo.Category.Trial].icon;
