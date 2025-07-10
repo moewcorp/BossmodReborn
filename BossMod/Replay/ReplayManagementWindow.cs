@@ -209,12 +209,22 @@ public sealed class ReplayManagementWindow : UIWindow
 
     private static readonly uint[] alwaysImportantDuties = [280u, 539u, 694u, 788u, 908u, 1006u, 700u, 736u, 779u, 878u, 879u, 946u, 947u, 979u, 980u,
     801u, 807u, 809u, 811u, 873u, 877u, 881u, 884u, 937u, 939u, 941u, 943u]; // update loop in IsImportantDuty upon changing this array
+    private static readonly uint[] alwaysIgnoredDuties = [650u, 127u, 130u, 195u, 756u, 180u, 701u, 599u, 473u]; // update loop in IsImportantDuty upon changing this array
 
     private bool IsImportantDuty(uint cfcId)
     {
-        if (cfcId == default)
+        if (cfcId is 0u or >= 481u and <= 535u or >= 599u and <= 608u or >= 640u and <= 645u or >= 705u and <= 713u or >= 927u and <= 935u or >= 766u and <= 775u
+        or >= 835u and <= 843u or >= 847u and <= 864u or >= 912u and <= 923u or >= 952u and <= 957u or >= 967u and <= 978u
+        or >= 1012u and <= 1014u or >= 197u and <= 199u or >= 552u and <= 579u) // exclude pvp, chocobo races and other gold saucer stuff
         {
             return false;
+        }
+        for (var i = 0; i < 9; ++i)
+        {
+            if (alwaysIgnoredDuties[i] == cfcId)
+            {
+                return false;
+            }
         }
         for (var i = 0; i < 27; ++i)
         {
