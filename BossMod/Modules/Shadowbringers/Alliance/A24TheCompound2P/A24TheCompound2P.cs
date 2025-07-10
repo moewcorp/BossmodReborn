@@ -1,11 +1,9 @@
 ﻿namespace BossMod.Shadowbringers.Alliance.A24TheCompound2P;
 
 sealed class CentrifugalSlice(BossModule module) : Components.RaidwideCast(module, (uint)AID.CentrifugalSlice);
-class ThreePartsDisdainStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.ThreePartsDisdain1, 6, 8);
-class R012LaserLoc(BossModule module) : Components.SimpleAOEs(module, (uint)AID.R012LaserLoc, 6);
-class R012LaserSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.R012LaserSpread, 6);
-class R012LaserTankBuster(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.R012LaserTankBuster, 6);
-class R011LaserLine(BossModule module) : Components.SimpleAOEs(module, (uint)AID.R011LaserLine, new AOEShapeRect(70, 7.5f));
+sealed class R012LaserAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.R012LaserAOE, 6f);
+sealed class R012LaserSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.R012LaserSpread, 6f);
+sealed class R012LaserTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.R012LaserTB, 6f, tankbuster: true);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 736, NameID = 9646)]
 public sealed class A24TheCompound2P(WorldState ws, Actor primary) : BossModule(ws, primary, new(200f, -700f), new ArenaBoundsSquare(30f))

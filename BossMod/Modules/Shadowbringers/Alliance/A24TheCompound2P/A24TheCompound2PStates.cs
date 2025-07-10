@@ -22,10 +22,11 @@ sealed class A24TheCompound2PStates : StateMachineBuilder
             .ActivateOnEnter<PrimeBladeTransfer>()
             .ActivateOnEnter<RelentlessSpiralTransfer>()
             .ActivateOnEnter<ThreePartsDisdainStack>()
-            .ActivateOnEnter<R012LaserLoc>()
+            .ActivateOnEnter<ThreePartsDisdainKnockback>()
+            .ActivateOnEnter<R012LaserAOE>()
             .ActivateOnEnter<R012LaserSpread>()
-            .ActivateOnEnter<R012LaserTankBuster>()
-            .ActivateOnEnter<R011LaserLine>()
+            .ActivateOnEnter<R012LaserTB>()
+            .ActivateOnEnter<R011Laser>()
             .ActivateOnEnter<EnergyCompression>()
             .Raw.Update = () => module.PrimaryActor.IsDestroyed && (module.BossP2?.IsDeadOrDestroyed ?? true);
     }

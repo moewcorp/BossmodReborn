@@ -38,7 +38,9 @@ sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.Gen
             hints.AddForbiddenZone(p =>
             {
                 if ((p + 10f * (p - center).Normalized()).InSquare(center, 28f))
+                {
                     return 1f;
+                }
                 return default;
             }, kb.Activation);
         }
