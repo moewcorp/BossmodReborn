@@ -28,6 +28,8 @@ sealed class A24TheCompound2PStates : StateMachineBuilder
             .ActivateOnEnter<R012LaserTB>()
             .ActivateOnEnter<R011Laser>()
             .ActivateOnEnter<EnergyCompression>()
+            .ActivateOnEnter<FourPartsResolveCircle>()
+            .ActivateOnEnter<FourPartsResolveRect>()
             .Raw.Update = () => module.PrimaryActor.IsDestroyed && (module.BossP2?.IsDeadOrDestroyed ?? true);
     }
 }

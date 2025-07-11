@@ -52,8 +52,10 @@ sealed class P2HiemalRay(BossModule module) : Components.VoidzoneAtCastTarget(mo
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7)
+            if (z.EventState != 7u)
+            {
                 voidzones[index++] = z;
+            }
         }
         return voidzones[..index];
     }
@@ -64,9 +66,9 @@ sealed class P2Intermission(BossModule module) : Components.GenericBaitAway(modu
 {
     private readonly FRUConfig _config = Service.Config.Get<FRUConfig>();
     private readonly P2SinboundBlizzard? _cones = module.FindComponent<P2SinboundBlizzard>();
-    private readonly IReadOnlyList<Actor> _crystalsOfLight = module.Enemies((uint)OID.CrystalOfLight);
-    private readonly IReadOnlyList<Actor> _crystalsOfDarkness = module.Enemies((uint)OID.CrystalOfDarkness);
-    private readonly IReadOnlyList<Actor> _iceVeil = module.Enemies((uint)OID.IceVeil);
+    private readonly List<Actor> _crystalsOfLight = module.Enemies((uint)OID.CrystalOfLight);
+    private readonly List<Actor> _crystalsOfDarkness = module.Enemies((uint)OID.CrystalOfDarkness);
+    private readonly List<Actor> _iceVeil = module.Enemies((uint)OID.IceVeil);
     private bool _iceVeilInvincible = true;
 
     public bool CrystalsActive => CrystalsOfLight.Any();

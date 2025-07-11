@@ -54,9 +54,9 @@ public enum AID : uint
     ThreePartsDisdain2 = 20892, // Boss->players, no cast, range 6 circle, knockback 8, dir forward
     ThreePartsDisdain3 = 20893, // Boss->players, no cast, range 6 circle, knockback 12, dir forward
 
-    FourPartsResolve1 = 20894, // Boss->self, 8.0s cast, single-target
-    FourPartsResolve2 = 20895, // Boss->players, no cast, range 6 circle
-    FourPartsResolve3 = 20896, // Boss->self, no cast, range 85 width 12 rect
+    FourPartsResolveVisual = 20894, // Boss->self, 8.0s cast, single-target
+    FourPartsResolveCircle = 20895, // Boss->players, no cast, range 6 circle
+    FourPartsResolveRect = 20896, // Boss->self, no cast, range 85 width 12 rect
 
     CompoundPodR011 = 20900, // Boss->self, 4.0s cast, single-target
     CompoundPodR012 = 20907, // Boss->self, 3.0s cast, single-target
@@ -80,19 +80,14 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    Spreadmarker = 139, // player
-    Icon62 = 62, // player
-    Tankbuster = 218, // player
-    Icon79 = 79, // player
-    Icon80 = 80, // player
-    Icon81 = 81, // player
-    Icon82 = 82, // player
+    Icon1 = 79, // player
+    Icon2 = 80, // player
+    Icon3 = 81, // player
+    Icon4 = 82 // player
 }
 
 public enum TetherID : uint
 {
     Transfer1 = 116, // Helper->Helper
-    Transfer2 = 117, // Helper->Helper
-    _Gen_Tether_chn_d1007_01f = 41, // player->Compound2P
-    _Gen_Tether_chn_m0354_0c = 54, // Puppet2P->Compound2P
+    Transfer2 = 117 // Helper->Helper
 }

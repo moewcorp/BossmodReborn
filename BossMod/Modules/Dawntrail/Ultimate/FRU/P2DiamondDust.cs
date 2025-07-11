@@ -70,9 +70,10 @@ sealed class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBa
     {
         CurrentBaits.Clear();
 
-        if (_source == null || ForbiddenPlayers != default)
+        if (_source == null || ForbiddenPlayers == default)
+        {
             return;
-
+        }
         var party = Raid.WithoutSlot(false, true, true);
         var len = party.Length;
 
