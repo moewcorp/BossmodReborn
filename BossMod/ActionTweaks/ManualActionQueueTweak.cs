@@ -195,11 +195,18 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
         if (allowSmartTarget && _config.SmartTargets && def.SmartTarget != null)
             target = def.SmartTarget(ws, player, target, hints);
 
-        // fallback: if requested, use native "target nearest" function to try to find a valid hostile target
+        // fallback: if requested, use intelligent targeting (AIHints priority system) or native "target nearest" function
         // this conditional ensures we don't get a false positive for holmgang (can target self or hostile) or phantom oracle invuln (can target ally, but not self)
         if (target == null && def.AllowedTargets.HasFlag(ActionTargets.Hostile) && !def.AllowedTargets.HasFlag(ActionTargets.Self))
         {
-            target = ws.Actors.Find(targetNearest());
+            if (_config.UseIntelligentTargeting && hints.PotentialTargets.Count > 0)
+            {
+                // Use AIHints priority system for intelligent target selection
+                target = SelectBestHostileTarget(def, player, hints);
+            }
+            
+            // Fallback to native targeting if intelligent targeting is disabled or found no target
+            target ??= ws.Actors.Find(targetNearest());
             return true;
         }
 
@@ -207,6 +214,53 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
         var targetInvalid = target == null || !def.AllowedTargets.HasFlag(ActionTargets.Hostile) && !target.IsAlly;
         if (targetInvalid && def.AllowedTargets.HasFlag(ActionTargets.Self))
             target = player;
+
+        return true;
+    }
+
+    private Actor? SelectBestHostileTarget(ActionDefinition def, Actor player, AIHints hints)
+    {
+        Actor? bestTarget = null;
+        int bestPriority = int.MinValue;
+        float bestDistance = float.MaxValue;
+
+        foreach (var enemy in hints.PotentialTargets)
+        {
+            if (enemy.Actor.IsDead || enemy.Actor.IsDestroyed)
+                continue;
+
+            // Skip forbidden targets for manual actions
+            if (enemy.Priority <= AIHints.Enemy.PriorityForbidden)
+                continue;
+
+            // Check if target is valid for this action
+            if (!IsValidTargetForAction(def, player, enemy.Actor))
+                continue;
+
+            var distance = enemy.Actor.DistanceToHitbox(player);
+            
+            // Select target with highest priority, breaking ties by distance
+            if (enemy.Priority > bestPriority || (enemy.Priority == bestPriority && distance < bestDistance))
+            {
+                bestTarget = enemy.Actor;
+                bestPriority = enemy.Priority;
+                bestDistance = distance;
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private bool IsValidTargetForAction(ActionDefinition def, Actor player, Actor target)
+    {
+        // Check if target type is allowed
+        if (!def.AllowedTargets.HasFlag(ActionTargets.Hostile) && !target.IsAlly)
+            return false;
+
+        // Check range with hitbox consideration
+        var maxRange = def.Range + player.HitboxRadius + target.HitboxRadius;
+        if (player.DistanceToHitbox(target) > maxRange)
+            return false;
 
         return true;
     }

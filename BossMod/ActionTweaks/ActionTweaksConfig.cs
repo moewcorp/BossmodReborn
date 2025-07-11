@@ -57,6 +57,9 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("Use custom queueing for manually pressed actions", tooltip: "This setting allows better integration with autorotations and will prevent you from triple-weaving or drifting GCDs if you press a healing ability while autorotation is going on")]
     public bool UseManualQueue = false;
 
+    [PropertyDisplay("Use intelligent targeting for manual actions", tooltip: "When enabled, manual hostile actions will use the AI priority system to select optimal targets instead of the native 'target nearest' function. Requires custom queueing to be enabled.")]
+    public bool UseIntelligentTargeting = true;
+
     [PropertyDisplay("Try to prevent dashing into AOEs", tooltip: "Prevent automatic use of targeted dashes (like WAR Onslaught) if they would move you into a dangerous area. May not work as expected in instances that do not have modules.\n\nThis option will also apply to manually pressed dashes if you have \"Use custom queueing for manually pressed actions\" enabled.")]
     public bool DashSafety = true;
 
