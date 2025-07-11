@@ -27,15 +27,15 @@ public sealed class PartyState
         // note that a valid member can have 0 contentid (eg buddy) or 0 instanceid (eg player in a different zone)
         public readonly bool IsValid() => ContentId != default || InstanceId != default;
 
-        public static bool operator ==(Member left, Member right) => left.ContentId == right.ContentId && left.InstanceId == right.InstanceId;
-        public static bool operator !=(Member left, Member right) => left.ContentId != right.ContentId || left.InstanceId != right.InstanceId;
+        public static bool operator ==(Member left, Member right) => left.ContentId == right.ContentId && left.InstanceId == right.InstanceId && left.InCutscene == right.InCutscene;
+        public static bool operator !=(Member left, Member right) => left.ContentId != right.ContentId || left.InstanceId != right.InstanceId || left.InCutscene != right.InCutscene;
 
         public override readonly string ToString() => $"ContentID: {ContentId}, " + $"InstanceID: {InstanceId}, " + $"Name: {Name}";
         public readonly bool Equals(Member other) => this == other;
         public override readonly bool Equals(object? obj) => obj is Member other && Equals(other);
-        public override readonly int GetHashCode() => (ContentId, InstanceId).GetHashCode();
+        public override readonly int GetHashCode() => (ContentId, InstanceId, InCutscene).GetHashCode();
     }
-    public static readonly Member EmptySlot = new(0, 0, false, "");
+    public static readonly Member EmptySlot = new(default, default, false, "");
 
     public readonly Member[] Members = Utils.MakeArray(MaxAllies, EmptySlot);
     private readonly Actor?[] _actors = new Actor?[MaxAllies]; // transient
