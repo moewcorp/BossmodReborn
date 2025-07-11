@@ -71,7 +71,8 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module, (
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         if (count > 1)
         {
-            aoes[0].Color = Colors.Danger;
+            ref var aoe = ref aoes[0];
+            aoe.Color = Colors.Danger;
         }
         return aoes[..max];
     }

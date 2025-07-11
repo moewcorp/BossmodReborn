@@ -7,9 +7,9 @@ sealed class FourPartsResolveCircle(BossModule module) : Components.GenericBaitA
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if (iconID is (uint)IconID.Icon1 or (uint)IconID.Icon3 && WorldState.Actors.Find(targetID) is Actor target)
+        if (iconID is (uint)IconID.Icon1 or (uint)IconID.Icon3)
         {
-            CurrentBaits.Add(new(bossmod.BossP2!, target, circle, WorldState.FutureTime(iconID == (uint)IconID.Icon1 ? 7.5d : 12.2d)));
+            CurrentBaits.Add(new(bossmod.BossP2!, actor, circle, WorldState.FutureTime(iconID == (uint)IconID.Icon1 ? 7.5d : 12.2d)));
         }
     }
 
@@ -41,9 +41,9 @@ sealed class FourPartsResolveRect(BossModule module) : Components.GenericBaitAwa
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if (iconID is (uint)IconID.Icon2 or (uint)IconID.Icon4 && WorldState.Actors.Find(targetID) is Actor target)
+        if (iconID is (uint)IconID.Icon2 or (uint)IconID.Icon4)
         {
-            CurrentBaits.Add(new(bossmod.BossP2!, target, rect, WorldState.FutureTime(iconID == (uint)IconID.Icon2 ? 8.8d : 13.6d)));
+            CurrentBaits.Add(new(bossmod.BossP2!, actor, rect, WorldState.FutureTime(iconID == (uint)IconID.Icon2 ? 8.8d : 13.6d)));
         }
     }
 
