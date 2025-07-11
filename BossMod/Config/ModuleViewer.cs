@@ -23,12 +23,12 @@ public sealed class ModuleViewer : IDisposable
     private BitMask _filterExpansions;
     private BitMask _filterCategories;
 
-    private readonly (string name, uint icon)[] _expansions;
-    private readonly (string name, uint icon)[] _categories;
+    private readonly (string name, uint icon)[] _expansions = new (string, uint)[(int)BossModuleInfo.Expansion.Count];
+    private readonly (string name, uint icon)[] _categories = new (string, uint)[(int)BossModuleInfo.Category.Count];
     private readonly uint _iconFATE;
     private readonly uint _iconHunt;
     private readonly List<ModuleGroup>[,] _groups;
-    private readonly Vector2 _iconSize = new(30, 30);
+    private readonly Vector2 _iconSize = new(30f, 30f);
 
     private string _searchText = "";
 
@@ -37,9 +37,18 @@ public sealed class ModuleViewer : IDisposable
         _planDB = planDB;
         _ws = ws;
 
-        var defaultIcon = 61762u;
-        _expansions = [.. Enum.GetNames<BossModuleInfo.Expansion>().Take((int)BossModuleInfo.Expansion.Count).Select(n => (n, defaultIcon))];
-        _categories = [.. Enum.GetNames<BossModuleInfo.Category>().Take((int)BossModuleInfo.Category.Count).Select(n => (n, defaultIcon))];
+        const uint defaultIcon = 61762u;
+        var expansionNames = Enum.GetNames<BossModuleInfo.Expansion>();
+        for (var i = 0; i < (int)BossModuleInfo.Expansion.Count; ++i)
+        {
+            _expansions[i] = (expansionNames[i], defaultIcon);
+        }
+
+        var categoryNames = Enum.GetNames<BossModuleInfo.Category>();
+        for (var i = 0; i < (int)BossModuleInfo.Category.Count; ++i)
+        {
+            _categories[i] = (categoryNames[i], defaultIcon);
+        }
 
         var exVersion = Service.LuminaSheet<ExVersion>()!;
         Customize(BossModuleInfo.Expansion.RealmReborn, 61875u, exVersion.GetRow(0u).Name);
@@ -74,8 +83,8 @@ public sealed class ModuleViewer : IDisposable
         _categories[(int)BossModuleInfo.Category.Alliance].icon = _categories[(int)BossModuleInfo.Category.Raid].icon;
         //_categories[(int)BossModuleInfo.Category.Event].icon = GetIcon(61757);
 
-        _iconFATE = contentType.GetRow(8).Icon;
-        _iconHunt = (uint)playStyle.GetRow(10).Icon;
+        _iconFATE = contentType.GetRow(8u).Icon;
+        _iconHunt = (uint)playStyle.GetRow(10u).Icon;
 
         _groups = new List<ModuleGroup>[(int)BossModuleInfo.Expansion.Count, (int)BossModuleInfo.Category.Count];
         for (var i = 0; i < (int)BossModuleInfo.Expansion.Count; ++i)
@@ -99,19 +108,40 @@ public sealed class ModuleViewer : IDisposable
             groups[groupIndex].Modules.Add(moduleInfo);
         }
 
-        foreach (var groups in _groups)
+        for (var i = 0; i < (int)BossModuleInfo.Expansion.Count; ++i)
         {
-            groups.Sort((a, b) => a.Info.SortOrder.CompareTo(b.Info.SortOrder));
-            foreach (var (g1, g2) in groups.Pairwise())
-                if (g1.Info.SortOrder == g2.Info.SortOrder)
-                    Service.Log($"[ModuleViewer] Same sort order between groups {g1.Info} and {g2.Info}");
-
-            foreach (var g in groups)
+            for (var j = 0; j < (int)BossModuleInfo.Category.Count; ++j)
             {
-                g.Modules.Sort((a, b) => a.SortOrder.CompareTo(b.SortOrder));
-                foreach (var (m1, m2) in g.Modules.Pairwise())
-                    if (m1.SortOrder == m2.SortOrder)
-                        Service.Log($"[ModuleViewer] Same sort order between modules {m1.Info.ModuleType.FullName} and {m2.Info.ModuleType.FullName}");
+                var groups = _groups[i, j];
+                groups.Sort((a, b) => a.Info.SortOrder.CompareTo(b.Info.SortOrder));
+
+                var count = groups.Count;
+                for (var g = 0; g < count - 1; ++g)
+                {
+                    var g1 = groups[g];
+                    var g2 = groups[g + 1];
+                    if (g1.Info.SortOrder == g2.Info.SortOrder)
+                    {
+                        Service.Log($"[ModuleViewer] Same sort order between groups {g1.Info} and {g2.Info}");
+                    }
+                }
+
+                for (var g = 0; g < count; ++g)
+                {
+                    var group = groups[g];
+                    group.Modules.Sort((a, b) => a.SortOrder.CompareTo(b.SortOrder));
+
+                    var countM = group.Modules.Count - 1;
+                    for (var m = 0; m < countM; ++m)
+                    {
+                        var m1 = group.Modules[m];
+                        var m2 = group.Modules[m + 1];
+                        if (m1.SortOrder == m2.SortOrder)
+                        {
+                            Service.Log($"[ModuleViewer] Same sort order between modules {m1.Info.ModuleType.FullName} and {m2.Info.ModuleType.FullName}");
+                        }
+                    }
+                }
             }
         }
     }

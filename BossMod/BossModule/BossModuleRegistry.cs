@@ -125,10 +125,33 @@ public static class BossModuleRegistry
             }
 
             var sortOrder = infoAttr?.SortOrder ?? 0;
-            if (sortOrder == 0 && int.TryParse([.. module.Name.SkipWhile(c => !char.IsAsciiDigit(c)).TakeWhile(char.IsAsciiDigit)], out var inferredSortOrder))
+
+            if (sortOrder == 0)
             {
-                sortOrder = inferredSortOrder;
+                var name = module.Name;
+                var i = 0;
+                var len = name.Length;
+                // Find the first ASCII digit
+                while (i < len && !char.IsAsciiDigit(name[i]))
+                {
+                    ++i;
+                }
+                // Extract digit sequence
+                var start = i;
+                while (i < len && char.IsAsciiDigit(name[i]))
+                {
+                    ++i;
+                }
+                if (start < i)
+                {
+                    var numberStr = name[start..i];
+                    if (int.TryParse(numberStr, out var inferredSortOrder))
+                    {
+                        sortOrder = inferredSortOrder;
+                    }
+                }
             }
+
             if (sortOrder == 0)
             {
                 sortOrder = (int)primaryOID;
@@ -169,14 +192,21 @@ public static class BossModuleRegistry
 
     static BossModuleRegistry()
     {
-        foreach (var t in Utils.GetDerivedTypes<BossModule>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract && t != typeof(DemoModule)))
+        foreach (var t in Utils.GetDerivedTypes<BossModule>(Assembly.GetExecutingAssembly()))
         {
-            var info = Info.Build(t);
-            if (info == null)
-                continue;
-            _modulesByType[t] = info;
-            if (!RegisteredModules.TryAdd(info.PrimaryActorOID, info))
-                Service.Log($"[ModuleRegistry] Two boss modules have same primary actor OID: {t.FullName} and {RegisteredModules[info.PrimaryActorOID].ModuleType.FullName}");
+            if (!t.IsAbstract && t != typeof(DemoModule))
+            {
+                var info = Info.Build(t);
+                if (info == null)
+                {
+                    continue;
+                }
+                _modulesByType[t] = info;
+                if (!RegisteredModules.TryAdd(info.PrimaryActorOID, info))
+                {
+                    Service.Log($"[ModuleRegistry] Two boss modules have same primary actor OID: {t.FullName} and {RegisteredModules[info.PrimaryActorOID].ModuleType.FullName}");
+                }
+            }
         }
     }
 

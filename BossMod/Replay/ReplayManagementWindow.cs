@@ -1,10 +1,8 @@
 ﻿using BossMod.Autorotation;
-using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.ImGuiFileDialog;
-using Dalamud.Interface.ImGuiNotification;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 using System.Diagnostics;
@@ -376,16 +374,31 @@ public sealed class ReplayManagementWindow : UIWindow
     private unsafe string GetPrefix()
     {
         string? prefix = null;
-        if (_ws.CurrentCFCID != 0)
+        if (_ws.CurrentCFCID != default)
             prefix = Service.LuminaRow<ContentFinderCondition>(_ws.CurrentCFCID)?.Name.ToString();
-        if (_ws.CurrentZone != 0)
+        if (_ws.CurrentZone != default)
             prefix ??= Service.LuminaRow<TerritoryType>(_ws.CurrentZone)?.PlaceName.ValueNullable?.NameNoArticle.ToString();
         prefix ??= "World";
         prefix = Utils.StringToIdentifier(prefix);
 
         var player = _ws.Party.Player();
         if (player != null)
-            prefix += $"_{player.Class}{player.Level}_{string.Join('_', player.Name.Split(' ').Select(s => new string(s.Take(2).ToArray())))}";
+        {
+            prefix += "_" + player.Class + player.Level + "_";
+
+            var nameParts = player.Name.Split(' ');
+            List<string> shortenedParts = [];
+            var nameLen = nameParts.Length;
+            for (var i = 0; i < nameLen; ++i)
+            {
+                ref var part = ref nameParts[i];
+                var len = Math.Min(2, part.Length);
+                shortenedParts.Add(part[..len]);
+            }
+
+            prefix += string.Join("_", shortenedParts);
+        }
+
 
         var cf = FFXIVClientStructs.FFXIV.Client.Game.UI.ContentsFinder.Instance();
         if (cf->IsUnrestrictedParty)
