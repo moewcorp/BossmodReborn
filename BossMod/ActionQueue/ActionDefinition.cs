@@ -286,27 +286,6 @@ public sealed class ActionDefinitions : IDisposable
     public static Actor? FindEsunaTarget(WorldState ws) => ws.Party.WithoutSlot().FirstOrDefault(p => p.Statuses.Any(s => Utils.StatusIsRemovable(s.ID)));
     public static Actor? SmartTargetEsunable(WorldState ws, Actor player, Actor? primaryTarget, AIHints hints) => SmartTargetFriendly(primaryTarget) ?? FindEsunaTarget(ws) ?? player;
 
-    // smart targeting utility: return highest priority hostile target from AIHints
-    public static Actor? SmartTargetHighestPriority(WorldState ws, Actor player, Actor? primaryTarget, AIHints hints)
-    {
-        if (primaryTarget != null && !primaryTarget.IsAlly && !primaryTarget.IsDead)
-            return primaryTarget;
-
-        return hints.PotentialTargets.FirstOrDefault(e => !e.Actor.IsDead && e.Priority > AIHints.Enemy.PriorityForbidden)?.Actor;
-    }
-
-    // smart targeting utility: return nearest hostile target with acceptable priority
-    public static Actor? SmartTargetNearestHostile(WorldState ws, Actor player, Actor? primaryTarget, AIHints hints)
-    {
-        if (primaryTarget != null && !primaryTarget.IsAlly && !primaryTarget.IsDead)
-            return primaryTarget;
-
-        return hints.PotentialTargets
-            .Where(e => !e.Actor.IsDead && e.Priority > AIHints.Enemy.PriorityPointless)
-            .OrderBy(e => player.DistanceToHitbox(e.Actor))
-            .FirstOrDefault()?.Actor;
-    }
-
     public static bool DashToTargetCheck(WorldState _, Actor player, ActionQueue.Entry action, AIHints hints)
     {
         var target = action.Target;
