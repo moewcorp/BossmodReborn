@@ -32,7 +32,7 @@ class Fungah(BossModule module) : Components.GenericKnockback(module, stopAtWall
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (_activation != default || otherpatterns)
-            return new Knockback[1] { new(Module.PrimaryActor.Position, 15f, _activation, cone, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)) };
+            return new Knockback[1] { new(Module.PrimaryActor.Position, 15f, _activation, cone, direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position)) };
         return [];
     }
 

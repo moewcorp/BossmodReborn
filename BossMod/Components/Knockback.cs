@@ -3,7 +3,7 @@
 namespace BossMod.Components;
 
 // generic knockback/attract component; it's a cast counter for convenience
-public abstract class GenericKnockback(BossModule module, uint aid = default, bool ignoreImmunes = false, int maxCasts = int.MaxValue, bool stopAtWall = false, bool stopAfterWall = false, List<SafeWall>? safeWalls = null) : CastCounter(module, aid)
+public abstract class GenericKnockback(BossModule module, uint aid = default, bool ignoreImmunes = false, int maxCasts = int.MaxValue, bool stopAtWall = false, bool stopAfterWall = false) : CastCounter(module, aid)
 {
     public enum Kind
     {
@@ -13,21 +13,35 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
         DirBackward, // standard pull - "knockback" to source - forward along source's direction + 180 degrees
         DirForward, // directional knockback - forward along source's direction
         DirLeft, // directional knockback - forward along source's direction + 90 degrees
-        DirRight, // directional knockback - forward along source's direction - 90 degrees
+        DirRight // directional knockback - forward along source's direction - 90 degrees
     }
 
-    public record struct Knockback(
-        WPos Origin,
-        float Distance,
-        DateTime Activation = default,
-        AOEShape? Shape = null, // if null, assume it is unavoidable raidwide knockback/attract
-        Angle Direction = default, // irrelevant for non-directional knockback/attract
-        Kind Kind = Kind.AwayFromOrigin,
-        float MinDistance = 0, // irrelevant for knockbacks
-        IReadOnlyList<SafeWall>? SafeWalls = null
-    );
+    public readonly struct Knockback(
+        WPos origin,
+        float distance,
+        DateTime activation = default,
+        AOEShape? shape = null, // if null, assume it is unavoidable raidwide knockback/attract
+        Angle direction = default, // irrelevant for non-directional knockback/attract
+        Kind kind = Kind.AwayFromOrigin,
+        float minDistance = 0, // irrelevant for knockbacks
+        IReadOnlyList<SafeWall>? safeWalls = null
+    )
+    {
+        public readonly WPos Origin = origin;
+        public readonly float Distance = distance;
+        public readonly DateTime Activation = activation;
+        public readonly AOEShape? Shape = shape;
+        public readonly Angle Direction = direction;
+        public readonly Kind Kind = kind;
+        public readonly float MinDistance = minDistance;
+        public readonly SafeWall[] SafeWalls = safeWalls?.ToArray() ?? [];
+    }
 
-    public readonly record struct SafeWall(WPos Vertex1, WPos Vertex2);
+    public readonly struct SafeWall(WPos vertex1, WPos vertex2)
+    {
+        public readonly WPos Vertex1 = vertex1;
+        public readonly WPos Vertex2 = vertex2;
+    }
 
     protected struct PlayerImmuneState
     {
@@ -44,7 +58,6 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
     public readonly int MaxCasts = maxCasts; // use to limit number of drawn knockbacks
     private const float approxHitBoxRadius = 0.499f; // calculated because due to floating point errors this does not result in 0.001
     private const float maxIntersectionError = 0.5f - approxHitBoxRadius; // calculated because due to floating point errors this does not result in 0.001
-    public readonly List<SafeWall> SafeWalls = safeWalls ?? [];
 
     protected readonly PlayerImmuneState[] PlayerImmunes = new PlayerImmuneState[PartyState.MaxAllies];
 
@@ -99,6 +112,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot >= 0)
+        {
             switch (status.ID)
             {
                 case 3054u: //Guard in PVP
@@ -114,12 +128,14 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
                     PlayerImmunes[slot].DutyBuffExpire = status.ExpireAt;
                     break;
             }
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot >= 0)
+        {
             switch (status.ID)
             {
                 case 3054u: //Guard in PVP
@@ -135,6 +151,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
                     PlayerImmunes[slot].DutyBuffExpire = default;
                     break;
             }
+        }
     }
 
     public List<(WPos from, WPos to)> CalculateMovements(int slot, Actor actor)
@@ -148,7 +165,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
         var len = activeKnockbacks.Length;
         for (var i = 0; i < len; ++i)
         {
-            var s = activeKnockbacks[i];
+            ref readonly var s = ref activeKnockbacks[i];
             if (IsImmune(slot, s.Activation))
                 continue; // this source won't affect player due to immunity
             if (s.Shape != null && !s.Shape.Check(from, s.Origin, s.Direction))
@@ -177,7 +194,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
                 distance = Math.Min(s.Distance, perpendicularDistance);
             }
 
-            if (distance <= 0)
+            if (distance <= 0f)
                 continue; // this could happen if attract starts from < min distance
 
             if (StopAtWall)
@@ -185,17 +202,19 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
             if (StopAfterWall)
                 distance = Math.Min(distance, Arena.IntersectRayBounds(from, dir) + maxIntersectionError);
 
-            var walls = s.SafeWalls ?? SafeWalls;
-            var countW = walls.Count;
-            if (countW != 0)
+            var walls = s.SafeWalls;
+            var lenW = walls.Length;
+            if (lenW != 0)
             {
                 var distanceToWall = float.MaxValue;
-                for (var j = 0; j < countW; ++j)
+                for (var j = 0; j < lenW; ++j)
                 {
                     var wall = walls[j];
                     var t = Intersect.RaySegment(from, dir, wall.Vertex1, wall.Vertex2);
                     if (t < distanceToWall && t <= s.Distance)
+                    {
                         distanceToWall = t;
+                    }
                 }
                 var hitboxradius = actor.HitboxRadius < approxHitBoxRadius ? 0.5f : actor.HitboxRadius; // some NPCs have less than 0.5 radius and cause error while clamping
                 distance = distanceToWall < float.MaxValue
@@ -208,7 +227,9 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
             from = to;
 
             if (++count == MaxCasts)
+            {
                 break;
+            }
         }
         return movements;
     }
@@ -216,8 +237,8 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
 
 // generic 'knockback from/attract to cast target' component
 // TODO: knockback is really applied when effectresult arrives rather than when actioneffect arrives, this is important for ai hints (they can reposition too early otherwise)
-public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool ignoreImmunes = false, int maxCasts = int.MaxValue, AOEShape? shape = null, Kind kind = Kind.AwayFromOrigin, float minDistance = default, bool minDistanceBetweenHitboxes = false, bool stopAtWall = false, bool stopAfterWall = false, List<SafeWall>? safeWalls = null)
-    : GenericKnockback(module, aid, ignoreImmunes, maxCasts, stopAtWall, stopAfterWall, safeWalls)
+public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool ignoreImmunes = false, int maxCasts = int.MaxValue, AOEShape? shape = null, Kind kind = Kind.AwayFromOrigin, float minDistance = default, bool minDistanceBetweenHitboxes = false, bool stopAtWall = false, bool stopAfterWall = false)
+    : GenericKnockback(module, aid, ignoreImmunes, maxCasts, stopAtWall, stopAfterWall)
 {
     public readonly float Distance = distance;
     public readonly AOEShape? Shape = shape;
@@ -231,7 +252,7 @@ public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool 
         var count = Casters.Count;
         if (count == 0)
             return [];
-        Span<Knockback> knockbacks = new Knockback[count];
+        var knockbacks = new Knockback[count];
         for (var i = 0; i < count; ++i)
         {
             var c = Casters[i];
@@ -263,7 +284,7 @@ public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool 
     }
 }
 
-public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distance, bool ignoreImmunes = false, int maxCasts = int.MaxValue, AOEShape? shape = null, Kind kind = Kind.AwayFromOrigin, float minDistance = default, bool minDistanceBetweenHitboxes = false, bool stopAtWall = false, bool stopAfterWall = false, List<SafeWall>? safeWalls = null) : SimpleKnockbacks(module, default, distance, ignoreImmunes, maxCasts, shape, kind, minDistance, minDistanceBetweenHitboxes, stopAtWall, stopAfterWall, safeWalls)
+public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distance, bool ignoreImmunes = false, int maxCasts = int.MaxValue, AOEShape? shape = null, Kind kind = Kind.AwayFromOrigin, float minDistance = default, bool minDistanceBetweenHitboxes = false, bool stopAtWall = false, bool stopAfterWall = false) : SimpleKnockbacks(module, default, distance, ignoreImmunes, maxCasts, shape, kind, minDistance, minDistanceBetweenHitboxes, stopAtWall, stopAfterWall)
 {
     protected readonly uint[] AIDs = aids;
 

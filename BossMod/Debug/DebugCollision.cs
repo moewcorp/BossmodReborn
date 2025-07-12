@@ -423,7 +423,7 @@ public sealed unsafe class DebugCollision() : IDisposable
             // Render vertices in sorted order
             foreach (var (vertex, index, type) in vertices)
             {
-                var vertexStr = $"new({vertex.X.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}f, {vertex.Z.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}f)";
+                var vertexStr = $"new({vertex.X.ToString("F5", System.Globalization.CultureInfo.InvariantCulture)}f, {vertex.Z.ToString("F5", System.Globalization.CultureInfo.InvariantCulture)}f)";
                 using var node2 = _tree.Node2($"[{index}] ({type}): {Vec3Str(vertex)}");
                 if (node2.SelectedOrHovered)
                 {

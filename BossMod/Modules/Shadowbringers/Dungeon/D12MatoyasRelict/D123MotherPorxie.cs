@@ -91,15 +91,23 @@ class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, igno
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HuffAndPuffVisual)
+        {
             _sourceCache = new(spell.LocXZ, 15f, default, null, spell.Rotation, Kind.DirForward);
-        else if (_sourceCache != null && spell.Action.ID == (uint)AID.NeerDoneWell)
-            Source = _sourceCache.Value with { Activation = WorldState.FutureTime(5.4d), Distance = 50f };
+        }
+        else if (_sourceCache is Knockback knockback && spell.Action.ID == (uint)AID.NeerDoneWell)
+        {
+            ref readonly var kb = ref knockback;
+            Source = new(kb.Origin, 50f, WorldState.FutureTime(5.4d), null, kb.Direction, kb.Kind);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_sourceCache != null && spell.Action.ID == (uint)AID.Explosion)
-            Source = _sourceCache.Value with { Activation = Module.CastFinishAt(spell, 10.9f) };
+        if (_sourceCache is Knockback knockback && spell.Action.ID == (uint)AID.Explosion)
+        {
+            ref readonly var kb = ref knockback;
+            Source = new(kb.Origin, 15f, WorldState.FutureTime(10.9d), null, kb.Direction, kb.Kind);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -113,8 +121,11 @@ class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, igno
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Source is Knockback kb)
+        if (Source is Knockback knockback)
+        {
+            ref readonly var kb = ref knockback;
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(kb.Origin, 5f));
+        }
     }
 }
 
@@ -128,7 +139,7 @@ class Barbeque(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x10)
+        if (state == 0x00020001u && index == 0x10u)
             _aoe = new(rect, new(-19.5f, default), 89.999f.Degrees()); // activates 22.2s later, but should never be entered anyway, since you must go to the opposite of the arena
     }
 

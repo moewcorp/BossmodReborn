@@ -89,7 +89,7 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreI
                 return knockback;
             }
             else
-                return new Knockback[1] { new(Arena.Center, 5f, activation, Kind: isPull ? Kind.TowardsOrigin : Kind.AwayFromOrigin) };
+                return new Knockback[1] { new(Arena.Center, 5f, activation, kind: isPull ? Kind.TowardsOrigin : Kind.AwayFromOrigin) };
         }
         return [];
     }

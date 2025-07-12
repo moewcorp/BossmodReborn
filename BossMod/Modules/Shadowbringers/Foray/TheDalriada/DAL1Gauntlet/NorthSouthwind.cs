@@ -15,7 +15,7 @@ sealed class NorthSouthwind(BossModule module) : Components.GenericKnockback(mod
         switch (spell.Action.ID)
         {
             case (uint)AID.WindVisual:
-                _kb = new(spell.LocXZ, 40f, Module.CastFinishAt(spell, 0.1d), Direction: spell.Rotation, Kind: Kind.DirForward);
+                _kb = new(spell.LocXZ, 40f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward);
                 break;
             case (uint)AID.PainStormShadow:
                 shapes.Add(new ConeV(spell.LocXZ, 35f, spell.Rotation, 65f.Degrees(), 32));

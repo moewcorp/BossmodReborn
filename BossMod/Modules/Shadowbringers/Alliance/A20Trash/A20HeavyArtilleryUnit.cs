@@ -92,7 +92,7 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
             forbiddenFuture[i] = ShapeDistance.Capsule(h.Position, h.Rotation, Length, 1.5f);
             forbiddenImminent[i] = ShapeDistance.Circle(h.Position, Radius);
         }
-        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.1d));
         hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
     }
 }

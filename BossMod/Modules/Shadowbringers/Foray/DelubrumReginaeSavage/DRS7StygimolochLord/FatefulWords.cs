@@ -8,7 +8,7 @@ sealed class FatefulWords(BossModule module) : Components.GenericKnockback(modul
     {
         var kind = _mechanics[slot];
         if (kind != Kind.None)
-            return new Knockback[1] { new(Arena.Center, 6f, Module.CastFinishAt(Module.PrimaryActor.CastInfo), Kind: kind) };
+            return new Knockback[1] { new(Arena.Center, 6f, Module.CastFinishAt(Module.PrimaryActor.CastInfo), kind: kind) };
         return [];
     }
 
