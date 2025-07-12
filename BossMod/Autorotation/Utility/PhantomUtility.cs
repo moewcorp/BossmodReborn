@@ -36,7 +36,7 @@ public class PhantomUtility(RotationModuleManager manager, Actor player) : Gener
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         var cotank = ActionDefinitions.FindCoTank(World, Player);
 
