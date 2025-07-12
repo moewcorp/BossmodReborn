@@ -22,8 +22,6 @@ public enum AID : uint
     ExplodingCatapult = 29895, // Boss->self, 5.0s cast, range 60 circle
     ExplosionAOE = 29908, // PowderKegBlue/PowderKegRed->self, 2.5s cast, range 15 circle
     ExplosionDonut = 29909, // PowderKegRed/PowderKegBlue->self, 2.5s cast, range 5-17 donut
-    GigantomillFirst = 29897, // Boss->self, 8.0s cast, range 72 width 10 cross
-    GigantomillRest = 29899, // Boss->self, no cast, range 72 width 10 cross
     SubterraneanShudder = 29906, // Boss->self, 5.0s cast, range 60 circle raidwide
     Unknown1 = 29894, // Boss->location, no cast, single-target
     Unknown2 = 31260, // PowderKegRed->self, no cast, single-target
@@ -33,6 +31,8 @@ public enum AID : uint
 
     RunawayRunoff = 29911, // Helper->self, 9.0s cast, range 60 circle
     Gigantomill = 29898, // Boss->self, 8.0s cast, range 72 width 10 cross
+    GigantomillFirst = 29897, // Boss->self, 8.0s cast, range 72 width 10 cross
+    GigantomillRest = 29899, // Boss->self, no cast, range 72 width 10 cross
 
     RollingBoulder = 29914, // Helper->self, no cast, range 10 width 10 rect
 
