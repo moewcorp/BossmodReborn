@@ -95,7 +95,7 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreI
             else if (IsKnockback(ref target))
                 AddSource(true);
 
-            void AddSource(bool isKnockback) => _sources[Raid.FindSlot(target.InstanceID)] = new(source.Position, 10f, WorldState.FutureTime(10d), Kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
+            void AddSource(bool isKnockback) => _sources[Raid.FindSlot(target.InstanceID)] = new(source.Position, 10f, WorldState.FutureTime(10d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
         }
     }
 

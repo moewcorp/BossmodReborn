@@ -23,9 +23,9 @@ class ArchaicRockbreakerShockwave(BossModule module) : Components.GenericKnockba
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Arena.Bounds == P9SKokytos.arenaUplift0)
-            return new Knockback[1] { new(Arena.Center, 21f, _activation, SafeWalls: Walls0) };
+            return new Knockback[1] { new(Arena.Center, 21f, _activation, safeWalls: Walls0) };
         else if (Arena.Bounds == P9SKokytos.arenaUplift45)
-            return new Knockback[1] { new(Arena.Center, 21f, _activation, SafeWalls: Walls45) };
+            return new Knockback[1] { new(Arena.Center, 21f, _activation, safeWalls: Walls45) };
         return [];
     }
 

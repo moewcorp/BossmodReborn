@@ -6,7 +6,7 @@ public abstract record class Shape
 {
     public const float MaxApproxError = CurveApprox.ScreenError;
     public const float Half = 0.5f;
-    protected WDir[]? Points;
+    public WDir[]? Points;
 
     public abstract List<WDir> Contour(WPos center);
 

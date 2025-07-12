@@ -227,7 +227,7 @@ sealed class VacuumWave(BossModule module) : Components.GenericKnockback(module,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.VacuumWave)
-            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), SafeWalls: safeWalls);
+            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), safeWalls: safeWalls);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

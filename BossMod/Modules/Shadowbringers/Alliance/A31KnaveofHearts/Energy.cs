@@ -1,4 +1,4 @@
-namespace BossMod.Shadowbringers.Alliance.A23HeavyArtilleryUnit;
+namespace BossMod.Shadowbringers.Alliance.A31KnaveofHearts;
 
 sealed class Energy(BossModule module) : Components.GenericAOEs(module)
 {
@@ -22,24 +22,25 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
         return aoes;
     }
 
-    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
+    public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Energy)
         {
-            if (id == 0x11D2u)
-            {
-                _energy.Add(actor);
-            }
-            else if (id == 0x11E7u)
-            {
-                _energy.Remove(actor);
-            }
+            _energy.Add(actor);
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Energy)
+        {
+            _energy.Remove(actor);
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.EnergyBomb)
+        if (spell.Action.ID == (uint)AID.Burst)
         {
             _energy.Remove(caster);
         }

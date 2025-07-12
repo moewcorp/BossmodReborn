@@ -260,7 +260,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
                 }
             }
         }
-        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), Kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
+        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

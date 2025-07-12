@@ -104,7 +104,7 @@ sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKno
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (affectedPlayers[slot])
-            return new Knockback[1] { new(actor.Position, 35f, activation, Direction: actor.Rotation, Kind: Kind.DirForward) };
+            return new Knockback[1] { new(actor.Position, 35f, activation, direction: actor.Rotation, kind: Kind.DirForward) };
         return [];
     }
 
