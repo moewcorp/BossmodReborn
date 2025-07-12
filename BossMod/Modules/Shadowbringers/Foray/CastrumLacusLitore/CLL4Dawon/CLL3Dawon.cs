@@ -200,7 +200,9 @@ public sealed class CLL4Dawon(WorldState ws, Actor primary) : BossModule(ws, pri
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         if (Arena.Center == LyonCenter)
+        {
             Arena.Actors(Enemies((uint)OID.LyonTheBeastKing));
+        }
         else
         {
             Arena.Actors(Enemies(adds));

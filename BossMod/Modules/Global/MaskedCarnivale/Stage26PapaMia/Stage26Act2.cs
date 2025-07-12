@@ -58,7 +58,7 @@ class DadJoke(BossModule module) : Components.GenericKnockback(module)
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (_activation != default)
-            return new Knockback[1] { new(Module.PrimaryActor.Position, 15f, _activation, Direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position), Kind: Kind.DirForward) };
+            return new Knockback[1] { new(Module.PrimaryActor.Position, 15f, _activation, direction: Angle.FromDirection(actor.Position - Module.PrimaryActor.Position), kind: Kind.DirForward) };
         return [];
     }
 

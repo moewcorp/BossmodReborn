@@ -380,9 +380,9 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);
-        if (spell.Action.ID == WatchedAction)
+        if (CurrentBaits.Count != 0 && spell.Action.ID == WatchedAction)
         {
-            CurrentBaits.Clear();
+            CurrentBaits.RemoveAt(0);
         }
     }
 

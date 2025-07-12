@@ -63,13 +63,15 @@ sealed class PillarOfShamashBait(BossModule module) : Components.BaitAwayIcon(mo
 sealed class PillarOfShamashStack(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.PillarOfShamashMarker, (uint)AID.PillarOfShamashStack, 6d, 70f, 4f, 24, 24, markerIsFinalTarget: true);
 sealed class Explosion(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.Explosion1, (uint)AID.Explosion2,
 (uint)AID.Explosion3, (uint)AID.Explosion4, (uint)AID.Explosion5, (uint)AID.Explosion6, (uint)AID.Explosion7, (uint)AID.Explosion8, (uint)AID.Explosion9],
-new AOEShapeRect(60f, 11f), 1d)
+new AOEShapeRect(60f, 11f))
 {
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = Casters.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(Casters);
         ref readonly var aoe0 = ref aoes[0];
         var deadline = aoe0.Activation.AddSeconds(TimeWindowInSeconds);

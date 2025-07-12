@@ -43,7 +43,7 @@ public sealed class ActionTweaksConfig : ConfigNode
 
     [PropertyDisplay("自动精神失常：如果正常移动和精神失常之间的角度大于此阈值（设置为 180 度以禁用），则防止精神失常下的移动。")]
     [PropertySlider(0, 180)]
-    public float MisdirectionThreshold = 180;
+    public float MisdirectionThreshold = 180f;
 
     [PropertyDisplay("使用技能后恢复角色面向")]
     public bool RestoreRotation = false;

@@ -14,10 +14,10 @@ class BodySlamKB(BossModule module) : Components.GenericKnockback(module, stopAt
         var z = Module.PrimaryActor.Position.Z;
         if (LeviathanZ == default)
             LeviathanZ = z;
-        if (z != LeviathanZ && z != 0)
+        if (z != LeviathanZ && z != default)
         {
             LeviathanZ = z;
-            _knockback = new(Arena.Center, 25f, WorldState.FutureTime(4.8d), Direction: z <= 0 ? 180f.Degrees() : default, Kind: Kind.DirForward);
+            _knockback = new(Arena.Center, 25f, WorldState.FutureTime(4.8d), direction: z <= 0f ? 180f.Degrees() : default, kind: Kind.DirForward);
         }
     }
 

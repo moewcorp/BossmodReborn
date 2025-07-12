@@ -75,7 +75,7 @@ class KnockbackPull(BossModule module) : Components.GenericKnockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         void AddSource(Kind kind)
-            => _knockback = new(spell.LocXZ, 6f, Module.CastFinishAt(spell), Kind: kind);
+            => _knockback = new(spell.LocXZ, 6f, Module.CastFinishAt(spell), kind: kind);
         if (spell.Action.ID == (uint)AID.FerrofluidKB)
             AddSource(Kind.AwayFromOrigin);
         else if (spell.Action.ID == (uint)AID.FerrofluidAttract)

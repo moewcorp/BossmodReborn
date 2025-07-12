@@ -5,6 +5,8 @@ class ColossalStrike(BossModule module) : Components.SingleTargetCast(module, (u
 class ColossalCharge1(BossModule module) : Components.ChargeAOEs(module, (uint)AID.ColossalCharge1, 7f);
 class ColossalCharge2(BossModule module) : Components.ChargeAOEs(module, (uint)AID.ColossalCharge2, 7f);
 
+class Gigantomill(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Gigantomill, new AOEShapeCross(72f, 5f));
+
 class ColossalLaunch(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ColossalLaunch, new AOEShapeRect(20f, 20f));
 class ExplosionAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExplosionAOE, 15);
 class ExplosionDonut(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExplosionDonut, new AOEShapeDonut(5f, 17f));

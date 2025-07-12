@@ -5,7 +5,8 @@ sealed class UpperLaser(BossModule module) : Components.GenericAOEs(module)
     private readonly LowerLaser _aoe = module.FindComponent<LowerLaser>()!;
     private readonly List<AOEInstance> _aoes = new(9);
     private static readonly Angle a30 = 30f.Degrees();
-    private static readonly AOEShapeDonutSector[] donutsectors = [new(6f, 16f, a30), new(16f, 23f, a30), new(23f, 30f, a30)];
+    private static readonly AOEShape[] donutsectors = [new AOEShapeCone(16f, a30), new AOEShapeDonutSector(14f, 23f, a30),
+    new AOEShapeDonutSector(21f, 30f, a30)]; // waves slightly overlap with previous wave, we can use cone instead of donut sector for first wave since it will get clipped with arena shape anyway and save cpu cycles with less vertices
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -33,7 +34,7 @@ sealed class UpperLaser(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (actor.OID == (uint)OID.ArenaFeatures && state == 0x00800100u)
+        if (state == 0x00800100u && actor.OID == (uint)OID.ArenaFeatures)
         {
             var center = Arena.Center;
             var angle = Angle.FromDirection(actor.Position - center);
@@ -56,7 +57,7 @@ sealed class UpperLaser(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoes.Count != 0 && spell.Action.ID is >= (uint)AID.UpperLaserFirstSector1 and <= (uint)AID.UpperLaserFirstSector3 or >= (uint)AID.UpperLaserRepeatSector1 and <= (uint)AID.UpperLaserRepeatSector3)
         {
-            if (++NumCasts % 15 == 0)
+            if (++NumCasts == 15)
             {
                 _aoes.RemoveRange(0, 3);
                 NumCasts = 0;
@@ -74,7 +75,7 @@ sealed class LowerLaser(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (actor.OID == (uint)OID.ArenaFeatures && state == 0x00100020u)
+        if (state == 0x00100020u && actor.OID == (uint)OID.ArenaFeatures)
         {
             var center = Arena.Center;
             var angle = Angle.FromDirection(actor.Position - center);

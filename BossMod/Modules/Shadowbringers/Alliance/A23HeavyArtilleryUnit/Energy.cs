@@ -37,14 +37,6 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnActorDestroyed(Actor actor)
-    {
-        if (actor.OID == (uint)OID.Energy)
-        {
-            _energy.Remove(actor);
-        }
-    }
-
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.EnergyBomb)
@@ -68,7 +60,7 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
             forbiddenFuture[i] = ShapeDistance.Capsule(h.Position, h.Rotation, Length, 1.5f);
             forbiddenImminent[i] = ShapeDistance.Circle(h.Position, Radius);
         }
-        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.1d));
         hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
     }
 }

@@ -668,7 +668,7 @@ sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnoc
             for (var i = 0; i < count; ++i)
             {
                 var s = exas[i];
-                sources.Add(new(s.pos, 20f, Direction: s.dir, Kind: Kind.DirForward));
+                sources.Add(new(s.pos, 20f, direction: s.dir, kind: Kind.DirForward));
             }
             return CollectionsMarshal.AsSpan(sources);
         }

@@ -96,7 +96,7 @@ sealed class Wind(BossModule module) : Components.GenericKnockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.WindVisual)
-            _kb = new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1d), Direction: spell.Rotation, Kind: Kind.DirForward);
+            _kb = new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

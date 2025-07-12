@@ -132,7 +132,7 @@ class OnHigh(BossModule module) : Components.GenericKnockback(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.OnHigh)
-            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), SafeWalls: allSafeWalls);
+            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), safeWalls: allSafeWalls);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

@@ -11,9 +11,13 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_arena.IsBrionacArena)
+        {
             return CollectionsMarshal.AsSpan(AOEs);
+        }
         else
+        {
             return [];
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -256,7 +260,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
                 }
             }
         }
-        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), Kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
+        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

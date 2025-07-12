@@ -47,9 +47,9 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         if (activation != default)
         {
             if (positiveCharge[slot])
-                return new Knockback[1] { new(Module.PrimaryActor.Position, 10f, activation, Kind: bossCharge ? Kind.AwayFromOrigin : Kind.TowardsOrigin) };
+                return new Knockback[1] { new(Module.PrimaryActor.Position, 10f, activation, kind: bossCharge ? Kind.AwayFromOrigin : Kind.TowardsOrigin) };
             if (negativeCharge[slot])
-                return new Knockback[1] { new(Module.PrimaryActor.Position, 10f, activation, Kind: bossCharge ? Kind.TowardsOrigin : Kind.AwayFromOrigin) };
+                return new Knockback[1] { new(Module.PrimaryActor.Position, 10f, activation, kind: bossCharge ? Kind.TowardsOrigin : Kind.AwayFromOrigin) };
         }
         return [];
     }

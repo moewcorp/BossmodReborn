@@ -188,7 +188,7 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
         }
 
         target = ws.Actors.Find(targetId);
-        if (target == null && targetId is not 0 and not 0xE0000000)
+        if (target == null && targetId is not 0u and not 0xE0000000)
             return false; // target is valid, but not found in world, bail... (TODO this shouldn't be happening really)
 
         // custom smart-targeting

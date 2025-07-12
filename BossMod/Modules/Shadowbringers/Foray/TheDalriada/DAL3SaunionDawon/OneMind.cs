@@ -25,13 +25,13 @@ sealed class OneMind(BossModule module) : BossComponent(module)
     {
         if (oneMind)
         {
-            hints.Add($"Pull {Module.PrimaryActor.Name} & {bossmod.BossDawon()?.Name} further apart!");
+            hints.Add($"Pull {Module.PrimaryActor.Name} & {bossmod.BossDawon?.Name} further apart!");
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (oneMind && bossmod.BossDawon() is Actor dawon)
+        if (oneMind && bossmod.BossDawon is Actor dawon)
         {
             var primary = Module.PrimaryActor;
             var primaryID = primary.TargetID;
