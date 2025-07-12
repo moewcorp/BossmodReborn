@@ -34,12 +34,13 @@ public struct NavigationDecision
         Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
         if (hints.ForbiddenZones.Count != 0)
             RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
-        if (hints.GoalZones.Count != 0)
-            RasterizeGoalZones(ctx.Map, localGoalZones);
-
-        if (forbiddenZoneCushion > 0)
-            AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
-
+        if (player.CastInfo == null)
+        {
+            if (hints.GoalZones.Count != 0)
+                RasterizeGoalZones(ctx.Map, localGoalZones);
+            if (forbiddenZoneCushion > 0)
+                AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
+        }
         // execute pathfinding
         ctx.ThetaStar.Start(ctx.Map, player.Position, 1.0f / playerSpeed);
         var bestNodeIndex = ctx.ThetaStar.Execute();

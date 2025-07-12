@@ -5,6 +5,7 @@ class V011GeryonStates : StateMachineBuilder
     public V011GeryonStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<Gigantomill>()
             .ActivateOnEnter<SubterraneanShudder>()
             .ActivateOnEnter<ColossalStrike>()
             .ActivateOnEnter<ColossalCharge1>()
