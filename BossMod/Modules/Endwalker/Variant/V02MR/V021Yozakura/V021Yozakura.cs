@@ -15,18 +15,20 @@ sealed class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(mod
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            var component = _aoe1.Sources(Module).ToList();
-            var forbidden = new List<Func<WPos, float>>
+            ref readonly var c = ref Casters.Ref(0);
+            var aoes = _aoe1.ActiveAOEs(slot, actor);
+            var origin = c.Origin;
+            var a20 = 20f.Degrees();
+            var len = aoes.Length;
+            var forbidden = new Func<WPos, float>[len + 1];
+            forbidden[len] = ShapeDistance.InvertedCircle(origin, 5f);
+
+            for (var i = 0; i < len; ++i)
             {
-                ShapeDistance.InvertedCircle(source.Position, 5f)
-            };
-            var count = component.Count;
-            for (var i = 0; i < count; ++i)
-            {
-                forbidden.Add(ShapeDistance.Cone(source.Position, 20f, Angle.FromDirection(component[i].Position - Arena.Center), 20f.Degrees()));
+                ref readonly var aoe = ref aoes[i];
+                forbidden[i] = ShapeDistance.Cone(origin, 20f, Angle.FromDirection(aoe.Origin - origin), a20);
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), c.Activation);
         }
     }
 

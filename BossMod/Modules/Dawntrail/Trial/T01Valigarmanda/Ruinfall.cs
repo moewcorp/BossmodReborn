@@ -12,15 +12,15 @@ sealed class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module,
             return;
         if (actor.Role != Role.Tank)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new WDir(default, 1f), 1f, default, 20f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new WDir(default, 1f), 1f, default, 20f), c.Activation);
             return;
         }
         var towers = _tower.Towers;
         var count = towers.Count;
         if (count == 0)
             return;
-        var t0 = towers[0];
+        ref var t0 = ref towers.Ref(0);
         var isDelayDeltaLow = (t0.Activation - WorldState.CurrentTime).TotalSeconds < 5d;
         var isActorInsideTower = false;
         if (t0.IsInside(actor))

@@ -169,7 +169,7 @@ sealed class MeteorImpact(BossModule module) : Components.CastCounter(module, de
             ref readonly var p = ref party[i];
             if (_activeMeteors[p.Item1] && VirtualShiftEarth.OnPlatform(p.Item2.Position))
             {
-                _meteorsAbovePlatforms[p.Item1] = true;
+                _meteorsAbovePlatforms.Set(p.Item1);
             }
         }
     }
@@ -191,7 +191,7 @@ sealed class MeteorImpact(BossModule module) : Components.CastCounter(module, de
             var lenPWithoutSlot = partyWithoutSlot.Length;
             for (var i = 0; i < lenPWithoutSlot; ++i)
             {
-                ref readonly var p = ref partyWithoutSlot[i];
+                var p = partyWithoutSlot[i];
                 if (p == actor)
                     continue;
                 if (p.Position.InCircle(origin, 4f))
@@ -241,7 +241,7 @@ sealed class MeteorImpact(BossModule module) : Components.CastCounter(module, de
     {
         if (iconID == (uint)IconID.MeteorImpact)
         {
-            _activeMeteors[Raid.FindSlot(actor.InstanceID)] = true;
+            _activeMeteors.Set(Raid.FindSlot(actor.InstanceID));
             NumCasts = 0;
         }
     }

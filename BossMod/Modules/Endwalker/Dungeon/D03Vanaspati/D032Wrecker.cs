@@ -135,20 +135,20 @@ class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks(module
     {
         if (Casters.Count != 0 && _aoe.AOEs.Count != 0)
         {
-            var source = Casters[0];
-            var act = Module.CastFinishAt(source.CastInfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (IsImmune(slot, act))
                 return;
-            var pos = source.CastInfo!.LocXZ;
+            var pos = c.Origin;
             var bubbles = Module.Enemies((uint)OID.QueerBubble);
             var count = bubbles.Count;
             var forbidden = new Func<WPos, float>[count + 1];
-            forbidden[0] = ShapeDistance.InvertedCircle(pos, 7f);
+            forbidden[count] = ShapeDistance.InvertedCircle(pos, 7f);
 
             for (var i = 0; i < count; ++i)
             {
                 var a = bubbles[i].Position;
-                forbidden[i + 1] = ShapeDistance.Cone(pos, 100f, Angle.FromDirection(a - pos), Angle.Asin(2.5f / (a - pos).Length()));
+                forbidden[i] = ShapeDistance.Cone(pos, 100f, Angle.FromDirection(a - pos), Angle.Asin(2.5f / (a - pos).Length()));
             }
             hints.AddForbiddenZone(ShapeDistance.Union(forbidden), act);
         }

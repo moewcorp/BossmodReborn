@@ -101,15 +101,19 @@ class EclipsingExhaustKnockback(BossModule module) : Components.SimpleKnockbacks
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
+            ref readonly var c = ref Casters.Ref(0);
             var component = _aoe.Casters;
             var count = component.Count;
             var forbidden = new Func<WPos, float>[count + 1];
             var center = Arena.Center;
+            var aoes = CollectionsMarshal.AsSpan(component);
             for (var i = 0; i < count; ++i)
-                forbidden[i] = ShapeDistance.Cone(center, 16f, Angle.FromDirection(component[i].Origin - center), a36);
+            {
+                ref readonly var aoe = ref aoes[i];
+                forbidden[i] = ShapeDistance.Cone(center, 16f, Angle.FromDirection(aoe.Origin - center), a36);
+            }
             forbidden[count] = ShapeDistance.InvertedCircle(center, 4f);
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), c.Activation);
         }
     }
 }

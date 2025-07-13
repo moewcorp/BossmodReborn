@@ -79,12 +79,12 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
     {
         if (Casters.Count != 0)
         {
-            var castinfo = Casters[0].CastInfo!;
-            var act = Module.CastFinishAt(castinfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (!IsImmune(slot, act))
             {
                 var center = Arena.Center;
-                var origin = castinfo.LocXZ;
+                var origin = c.Origin;
                 hints.AddForbiddenZone(p =>
                 {
                     if ((p + 30f * (p - origin).Normalized()).InCircle(center, 23f))

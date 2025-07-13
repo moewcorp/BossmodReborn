@@ -20,8 +20,6 @@ sealed class MoonbeamsBite : Components.SimpleAOEGroups
 public sealed class M08SHowlingBlade(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
     private Actor? _bossP2;
-
-    public Actor? BossP1() => PrimaryActor;
     public Actor? BossP2() => _bossP2;
 
     protected override void UpdateModule()

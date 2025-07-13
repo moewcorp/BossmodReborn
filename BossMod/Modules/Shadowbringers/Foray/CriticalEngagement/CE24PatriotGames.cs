@@ -91,13 +91,14 @@ sealed class LightningRod(BossModule module) : Components.GenericTowers(module)
             ref readonly var p = ref party[i];
             if (p.Item2.Role != Role.Tank && p.Item2.HPMP.CurHP < 40000u) // might lead to tanks sacrificing themselves, but oh well...
             {
-                forbidden[p.Item1] = true;
+                forbidden.Set(p.Item1);
             }
         }
         var towers = CollectionsMarshal.AsSpan(Towers);
         for (var i = 0; i < count; ++i)
         {
-            towers[i].ForbiddenSoakers = forbidden;
+            ref var t = ref towers[i];
+            t.ForbiddenSoakers = forbidden;
         }
     }
 }

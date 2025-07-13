@@ -16,12 +16,12 @@ public enum AID : uint
     BoneShaker = 15053 // Boss->self, no cast, range 50 circle, harmless raidwide
 }
 
-class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Explosion, 10f);
-class Fireball(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireball, 6f);
-class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RipperClaw, new AOEShapeCone(8f, 45f.Degrees()));
-class TailSmash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TailSmash, new AOEShapeCone(15f, 45f.Degrees()));
+sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Explosion, 10f);
+sealed class Fireball(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireball, 6f);
+sealed class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RipperClaw, new AOEShapeCone(8f, 45f.Degrees()));
+sealed class TailSmash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TailSmash, new AOEShapeCone(15f, 45f.Degrees()));
 
-class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.WildCharge, 4f)
+sealed class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.WildCharge, 4f)
 {
     public static List<Actor> GetKegs(BossModule module)
     {
@@ -35,7 +35,9 @@ class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, (uin
         {
             var z = enemies[i];
             if (!z.IsDead)
+            {
                 kegs.Add(z);
+            }
         }
         return kegs;
     }
@@ -43,18 +45,22 @@ class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, (uin
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (CurrentBaits.Count != 0 && GetKegs(Module).Count != 0)
+        {
             hints.Add("Aim charge at a keg!");
+        }
     }
 }
 
-class KegExplosion(BossModule module) : Components.GenericStackSpread(module)
+sealed class KegExplosion(BossModule module) : BossComponent(module)
 {
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         var kegs = WildCharge.GetKegs(Module);
         var count = kegs.Count;
         for (var i = 0; i < count; ++i)
+        {
             Arena.AddCircle(kegs[i].Position, 10f);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -62,15 +68,17 @@ class KegExplosion(BossModule module) : Components.GenericStackSpread(module)
         var kegs = WildCharge.GetKegs(Module);
         var count = kegs.Count;
         for (var i = 0; i < count; ++i)
+        {
             if (actor.Position.InCircle(kegs[i].Position, 10f))
             {
                 hints.Add("In keg explosion radius!");
                 return;
             }
+        }
     }
 }
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -78,7 +86,7 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Stage18Act2States : StateMachineBuilder
+sealed class Stage18Act2States : StateMachineBuilder
 {
     public Stage18Act2States(BossModule module) : base(module)
     {
@@ -105,7 +113,7 @@ class Stage18Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 628, NameID = 8116, SortOrder = 2)]
-public class Stage18Act2 : BossModule
+public sealed class Stage18Act2 : BossModule
 {
     public Stage18Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {

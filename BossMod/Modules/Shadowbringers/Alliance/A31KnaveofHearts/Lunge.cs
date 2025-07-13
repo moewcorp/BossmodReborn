@@ -66,11 +66,11 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
             var act = kb.Activation;
             if (!IsImmune(pcSlot, act))
             {
-                var walls = kb.SafeWalls!.ToArray();
-                var len = walls!.Length;
-                var count = _aoe.Casters.Count;
-                var color = Colors.SafeFromAOE;
+                var walls = kb.SafeWalls;
+                var len = walls.Length;
                 var aoesC = _aoe.Casters;
+                var count = aoesC.Count;
+                var color = Colors.SafeFromAOE;
                 for (var i = 0; i < len; ++i)
                 {
                     ref readonly var w = ref walls[i];
@@ -107,8 +107,8 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
             if (!IsImmune(slot, act))
             {
                 var dir = kb.Direction.ToDirection();
-                var walls = kb.SafeWalls!.ToArray();
-                var len = walls!.Length;
+                var walls = kb.SafeWalls;
+                var len = walls.Length;
                 var count = _aoe.Casters.Count;
                 if (count != 0)
                 {

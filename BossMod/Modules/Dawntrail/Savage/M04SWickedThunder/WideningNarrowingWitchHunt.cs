@@ -62,7 +62,7 @@ sealed class WideningNarrowingWitchHuntBait(BossModule module) : Components.Gene
 
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
+            var p = party[i];
             var distSq = (p.Position - center).LengthSq();
             distances[i] = (p, distSq);
         }

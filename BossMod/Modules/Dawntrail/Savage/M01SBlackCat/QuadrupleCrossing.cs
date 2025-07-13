@@ -22,7 +22,7 @@ sealed class QuadrupleCrossingProtean(BossModule module) : Components.GenericBai
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 var distSq = (p.Position - origin).LengthSq();
                 distances[i] = (p, distSq);
             }

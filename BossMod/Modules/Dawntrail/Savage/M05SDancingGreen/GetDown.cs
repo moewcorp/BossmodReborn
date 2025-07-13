@@ -55,7 +55,7 @@ sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module)
             var len = party.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 CurrentBaits.Add(new(Module.PrimaryActor, p, Cone, Module.CastFinishAt(spell, 0.3f)));
             }
         }

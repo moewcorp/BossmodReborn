@@ -494,9 +494,10 @@ sealed class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
                 var len = party.Length;
                 for (var i = 0; i < len; ++i)
                 {
-                    ref readonly var p = ref party[i];
-                    if (p.PendingKnockbacks.Count != 0)
+                    if (party[i].PendingKnockbacks.Count != 0)
+                    {
                         return; // don't even try moving until all knockbacks are resolved, that can fuck up others...
+                    }
                 }
             }
             if (hint.hint.HasFlag(Hint.SafespotRough))

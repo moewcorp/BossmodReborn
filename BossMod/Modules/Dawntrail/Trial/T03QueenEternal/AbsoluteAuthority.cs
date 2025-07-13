@@ -37,7 +37,7 @@ sealed class AbsoluteAuthorityDorito(BossModule module) : Components.GenericStac
             var lenaoes = aoes.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
 
                 if (p == player)
                     continue;

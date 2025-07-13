@@ -19,10 +19,10 @@ public enum AID : uint
     MassiveExplosion = 19261 // MagitekExplosive->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
 }
 
-class Fireball(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireball, 8f);
-class Snort(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Snort, 15f, stopAtWall: true);
+sealed class Fireball(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireball, 8f);
+sealed class Snort(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Snort, 15f, stopAtWall: true);
 
-class Fungah(BossModule module) : Components.GenericKnockback(module, stopAtWall: true)
+sealed class Fungah(BossModule module) : Components.GenericKnockback(module, stopAtWall: true)
 {
     private DateTime _activation;
     private bool otherpatterns;
@@ -76,7 +76,7 @@ class Fungah(BossModule module) : Components.GenericKnockback(module, stopAtWall
     }
 }
 
-class Explosion(BossModule module) : Components.GenericAOEs(module)
+sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<Actor> _casters = [];
     private static readonly AOEShapeCircle circle = new(8);
@@ -114,7 +114,7 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Bomb)
         {
-            if (animState1 == 1)
+            if (animState1 == 1u)
             {
                 _casters.Add(actor);
                 _activation = WorldState.FutureTime(6d);
@@ -125,23 +125,29 @@ class Explosion(BossModule module) : Components.GenericAOEs(module)
     public override void Update()
     {
         if (_snortingeffectends != default && _snortingeffectends < WorldState.CurrentTime)
+        {
             _snortingeffectends = default;
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (_casters.Count > 0 && spell.Action.ID == (uint)AID.Explosion)
+        {
             _casters.Remove(caster);
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Snort)
-            _snortingeffectends = Module.CastFinishAt(spell, 2.5f);
+        {
+            _snortingeffectends = Module.CastFinishAt(spell, 2.5d);
+        }
     }
 }
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -149,7 +155,7 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Hints2(BossModule module) : BossComponent(module)
+sealed class Hints2(BossModule module) : BossComponent(module)
 {
     private DateTime _activation;
 
@@ -161,7 +167,9 @@ class Hints2(BossModule module) : BossComponent(module)
             return;
         var explosive = explosives[0];
         if (!explosive.IsDead)
+        {
             hints.Add($"A {explosive!.Name} spawned, destroy it asap.");
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -172,17 +180,21 @@ class Hints2(BossModule module) : BossComponent(module)
             return;
         var explosive = explosives[0];
         if (explosive.IsTargetable)
-            hints.Add($"Explosion in ca.: {Math.Max(35 - (WorldState.CurrentTime - _activation).TotalSeconds, 0.0f):f1}s");
+        {
+            hints.Add($"Explosion in ca.: {Math.Max(35f - (WorldState.CurrentTime - _activation).TotalSeconds, 0.0f):f1}s");
+        }
     }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.MagitekExplosive)
+        {
             _activation = WorldState.CurrentTime;
+        }
     }
 }
 
-class Stage27States : StateMachineBuilder
+sealed class Stage27States : StateMachineBuilder
 {
     public Stage27States(BossModule module) : base(module)
     {
@@ -197,7 +209,7 @@ class Stage27States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 696, NameID = 3046)]
-public class Stage27 : BossModule
+public sealed class Stage27 : BossModule
 {
     public Stage27(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleBig)
     {

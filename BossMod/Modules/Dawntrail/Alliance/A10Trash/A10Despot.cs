@@ -36,7 +36,7 @@ sealed class ScraplineStorm(BossModule module) : Components.SimpleKnockbacks(mod
         {
             var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
             ref readonly var aoe = ref aoes[0];
-            return aoes[0].Check(pos);
+            return aoe.Check(pos);
         }
         return false;
     }
@@ -45,8 +45,8 @@ sealed class ScraplineStorm(BossModule module) : Components.SimpleKnockbacks(mod
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.Circle(source.Position, 20f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var source = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.Circle(source.Origin, 20f), source.Activation);
         }
     }
 }

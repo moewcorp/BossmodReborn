@@ -124,8 +124,8 @@ class BodySlamKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)
     {
         if (Casters.Count != 0 && _aoe.NumCasts >= 4)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Position, 10f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 10f), c.Activation);
         }
     }
 }
@@ -141,7 +141,10 @@ class HydraulicRam(BossModule module) : Components.GenericAOEs(module)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         if (count > 1)
-            aoes[0].Color = Colors.Danger;
+        {
+            ref var aoe0 = ref aoes[0];
+            aoe0.Color = Colors.Danger;
+        }
         return aoes;
     }
 
@@ -174,7 +177,10 @@ class Hydrobomb(BossModule module) : Components.GenericAOEs(module)
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         var max = count > 2 ? 2 : 0;
         for (var i = 0; i < max; ++i)
-            aoes[i].Color = Colors.Danger;
+        {
+            ref var aoe = ref aoes[i];
+            aoe.Color = Colors.Danger;
+        }
         return aoes;
     }
 

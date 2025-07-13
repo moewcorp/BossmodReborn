@@ -24,7 +24,7 @@ sealed class EscelonsFall(BossModule module) : Components.GenericBaitAway(module
 
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
+            var p = party[i];
             var distSq = (p.Position - center).LengthSq();
             distances[i] = (p, distSq);
         }
@@ -102,7 +102,7 @@ sealed class EscelonsFall(BossModule module) : Components.GenericBaitAway(module
                 ForbiddenPlayers = default;
                 CurMechanic = order.Count != 0 ? order[0] : Mechanic.None;
             }
-            ForbiddenPlayers[Raid.FindSlot(spell.MainTargetID)] = true;
+            ForbiddenPlayers.Set(Raid.FindSlot(spell.MainTargetID));
             _activation = WorldState.FutureTime(3d);
         }
     }

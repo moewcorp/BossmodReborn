@@ -55,10 +55,15 @@ sealed class BracingWind(BossModule module) : Components.SimpleKnockbacks(module
     {
         const float length = 24f * 2f; // casters are at the border, orthogonal to borders
         var count = Casters.Count;
+        if (count == 0)
+        {
+            return;
+        }
+        var casters = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            var c = Casters[i];
-            hints.AddForbiddenZone(ShapeDistance.Rect(c.Position, c.CastInfo!.Rotation, length, Distance - length, 6), Module.CastFinishAt(c.CastInfo!));
+            ref readonly var c = ref casters[i];
+            hints.AddForbiddenZone(ShapeDistance.Rect(c.Origin, c.Direction, length, Distance - length, 6), c.Activation);
         }
     }
 }

@@ -23,8 +23,9 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
         AOEShape? shape = null, // if null, assume it is unavoidable raidwide knockback/attract
         Angle direction = default, // irrelevant for non-directional knockback/attract
         Kind kind = Kind.AwayFromOrigin,
-        float minDistance = 0, // irrelevant for knockbacks
-        IReadOnlyList<SafeWall>? safeWalls = null
+        float minDistance = default, // irrelevant for knockbacks
+        IReadOnlyList<SafeWall>? safeWalls = null,
+        ulong actorID = default
     )
     {
         public readonly WPos Origin = origin;
@@ -35,6 +36,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
         public readonly Kind Kind = kind;
         public readonly float MinDistance = minDistance;
         public readonly SafeWall[] SafeWalls = safeWalls?.ToArray() ?? [];
+        public readonly ulong ActorID = actorID;
     }
 
     public readonly struct SafeWall(WPos vertex1, WPos vertex2)
@@ -245,42 +247,34 @@ public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool 
     public readonly Kind KnockbackKind = kind;
     public readonly float MinDistance = minDistance;
     public readonly bool MinDistanceBetweenHitboxes = minDistanceBetweenHitboxes;
-    public readonly List<Actor> Casters = [];
+    public readonly List<Knockback> Casters = [];
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
-    {
-        var count = Casters.Count;
-        if (count == 0)
-            return [];
-        var knockbacks = new Knockback[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var c = Casters[i];
-            // note that majority of knockback casts are self-targeted
-            var minDist = MinDistance + (MinDistanceBetweenHitboxes ? actor.HitboxRadius + c.HitboxRadius : default);
-            if (c.CastInfo!.TargetID == c.InstanceID)
-            {
-                knockbacks[i] = new(c.CastInfo.LocXZ, Distance, Module.CastFinishAt(c.CastInfo), Shape, c.CastInfo.Rotation, KnockbackKind, minDist);
-            }
-            else
-            {
-                var origin = c.CastInfo.LocXZ;
-                knockbacks[i] = new(origin, Distance, Module.CastFinishAt(c.CastInfo), Shape, Angle.FromDirection(origin - c.Position), KnockbackKind, minDist);
-            }
-        }
-        return knockbacks;
-    }
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => CollectionsMarshal.AsSpan(Casters);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            Casters.Add(caster);
+        {
+            var minDist = KnockbackKind == Kind.TowardsOrigin ? (MinDistance + (MinDistanceBetweenHitboxes ? Raid.Player()!.HitboxRadius + caster.HitboxRadius : default)) : default;
+            Casters.Add(new(spell.LocXZ, Distance, Module.CastFinishAt(spell), Shape, spell.Rotation, KnockbackKind, minDist, [], caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            Casters.Remove(caster);
+        {
+            var count = Casters.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (Casters[i].ActorID == id)
+                {
+                    Casters.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -295,7 +289,8 @@ public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distanc
         {
             if (spell.Action.ID == AIDs[i])
             {
-                Casters.Add(caster);
+                var minDist = KnockbackKind == Kind.TowardsOrigin ? (MinDistance + (MinDistanceBetweenHitboxes ? Raid.Player()!.HitboxRadius + caster.HitboxRadius : default)) : default;
+                Casters.Add(new(spell.LocXZ, Distance, Module.CastFinishAt(spell), Shape, spell.Rotation, KnockbackKind, minDist, [], caster.InstanceID));
                 return;
             }
         }
@@ -308,7 +303,7 @@ public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distanc
         var id = caster.InstanceID;
         for (var i = 0; i < count; ++i)
         {
-            if (Casters[i].InstanceID == id)
+            if (Casters[i].ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;

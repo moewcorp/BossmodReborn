@@ -10,8 +10,8 @@ sealed class RosebloodBloom(BossModule module) : Components.SimpleKnockbacks(mod
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Position, 6f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 6f), c.Activation);
         }
     }
 }

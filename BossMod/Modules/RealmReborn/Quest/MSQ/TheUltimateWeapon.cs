@@ -33,7 +33,7 @@ class BurstFlare(BossModule module) : Components.SimpleKnockbacks(module, (uint)
         if (_aoe.ActiveAOEs(slot, actor).Length != 0)
             return;
         if (Casters.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5f), Module.CastFinishAt(Casters[0].CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 5f), Casters.Ref(0).Activation);
     }
 }
 

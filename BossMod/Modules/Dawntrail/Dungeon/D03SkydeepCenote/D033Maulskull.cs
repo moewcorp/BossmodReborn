@@ -183,8 +183,8 @@ sealed class Impact1(BossModule module) : Impact(module, (uint)AID.Impact1, 18f)
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 12f, default, halfAngle), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(c.Origin, 10f, 12f, default, halfAngle), c.Activation);
         }
     }
 }
@@ -200,8 +200,8 @@ sealed class Impact2(BossModule module) : Impact(module, (uint)AID.Impact2, 18f)
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 12f, default, halfAngle), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(c.Origin, 10f, 12f, default, halfAngle), c.Activation);
         }
     }
 }
@@ -214,8 +214,8 @@ sealed class Impact3(BossModule module) : Impact(module, (uint)AID.Impact3, 20f)
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 10f, 15f, (source.Position.X == 90f ? 1f : -1f) * direction, halfAngle), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(c.Origin, 10f, 15f, (c.Origin.X == 90f ? 1f : -1f) * direction, halfAngle), c.Activation);
         }
     }
 }
@@ -224,7 +224,6 @@ sealed class ColossalImpactSkullcrush(BossModule module) : Components.SimpleAOEG
 
 sealed class DestructiveHeat(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.DestructiveHeat, 6f)
 {
-    private WPos origin;
     private readonly Impact1 _kb1 = module.FindComponent<Impact1>()!;
     private readonly Impact2 _kb2 = module.FindComponent<Impact2>()!;
     private readonly Impact3 _kb3 = module.FindComponent<Impact3>()!;
@@ -233,20 +232,23 @@ sealed class DestructiveHeat(BossModule module) : Components.SpreadFromCastTarge
     {
         if (Spreads.Count != 0)
         {
-            var source1 = _kb1.Casters.Count != 0 ? _kb1.Casters[0] : null;
-            var source2 = _kb2.Casters.Count != 0 ? _kb2.Casters[0] : null;
-            var source3 = _kb3.Casters.Count != 0 ? _kb3.Casters[0] : null;
-            var knockback = source1 != null || source2 != null || source3 != null;
-            if (source1 != default)
+            WPos origin = default;
+            if (_kb1.Casters.Count != 0)
+            {
                 origin = new(100f, -400f);
-            else if (source2 != default)
-                origin = source2.Position;
-            else if (source3 != default)
-                origin = source3.Position;
-            if (!knockback)
+            }
+            else if (_kb2.Casters.Count != 0)
+            {
+                origin = _kb2.Casters.Ref(0).Origin;
+            }
+            else if (_kb3.Casters.Count != 0)
+            {
+                origin = _kb3.Casters.Ref(0).Origin;
+            }
+            if (origin != default)
             {
                 base.AddAIHints(slot, actor, assignment, hints);
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(origin, 15f), Spreads[0].Activation);
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(origin, 15f), Spreads.Ref(0).Activation);
             }
             else
             { }

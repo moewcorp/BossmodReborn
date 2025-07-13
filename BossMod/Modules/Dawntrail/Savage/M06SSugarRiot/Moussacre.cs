@@ -20,7 +20,7 @@ sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module)
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 var distSq = (p.Position - sourcePos).LengthSq();
                 distances[i] = (p, distSq);
             }

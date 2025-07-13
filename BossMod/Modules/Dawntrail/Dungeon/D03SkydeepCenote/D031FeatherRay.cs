@@ -175,7 +175,7 @@ sealed class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway
             var len = party.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 CurrentBaits.Add(new(p, p, Cone, WorldState.FutureTime(6.3d)));
             }
         }
@@ -206,7 +206,7 @@ sealed class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway
             var len = party.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 var direction = Angle.FromDirection(p.Position - actor.Position);
                 hints.ForbiddenDirections.Add((direction, 15f.Degrees(), b.Activation));
             }

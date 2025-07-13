@@ -43,7 +43,7 @@ class GroundToGroundBallistic(BossModule module) : Components.SimpleKnockbacks(m
             var forbidden = new Func<WPos, float>[2];
             forbidden[0] = ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20f, a180, a18);
             forbidden[1] = ShapeDistance.InvertedCone(D132MagitekFortress.DefaultCenter, 20f, default, a18);
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(Casters[0].CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Casters.Ref(0).Activation);
         }
     }
 }

@@ -11,14 +11,15 @@ sealed class DonutSectorTowers(BossModule module) : Components.GenericTowers(mod
     {
         if (iconID == (uint)IconID.Emblazon)
         {
-            forbidden[Raid.FindSlot(targetID)] = true;
+            forbidden.Set(Raid.FindSlot(targetID));
             if (++emblazoncounter == 4)
             {
                 var towers = CollectionsMarshal.AsSpan(Towers);
                 var len = towers.Length;
                 for (var i = 0; i < len; ++i)
                 {
-                    towers[i].ForbiddenSoakers = forbidden;
+                    ref var t = ref towers[i];
+                    t.ForbiddenSoakers = forbidden;
                 }
             }
         }

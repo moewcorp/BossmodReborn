@@ -102,8 +102,8 @@ sealed class DancingWind(BossModule module) : Components.SimpleKnockbacks(module
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.Circle(source.Position, 18.5f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.Circle(c.Origin, 18.5f), c.Activation);
         }
     }
 }

@@ -143,8 +143,8 @@ sealed class PathogenicPowerKB(BossModule module) : Components.SimpleKnockbacks(
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0].CastInfo!;
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.LocXZ, 6f), Module.CastFinishAt(source));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 6f), c.Activation);
         }
     }
 }

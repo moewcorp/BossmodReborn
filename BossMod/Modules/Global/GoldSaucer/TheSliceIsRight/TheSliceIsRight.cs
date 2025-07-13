@@ -37,7 +37,7 @@ public enum AID : uint
     BadCup = 18337 // Daigoro->self, 1.0s cast, range 15+R 120-degree cone
 }
 
-class BambooSplits(BossModule module) : Components.GenericAOEs(module)
+sealed class BambooSplits(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
     private static readonly AOEShapeRect rect = new(28f, 2.5f);
@@ -49,7 +49,9 @@ class BambooSplits(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID is (uint)OID.HelperCircle or (uint)OID.HelperDoubleRect or (uint)OID.HelperSingleRect)
+        {
             _aoes.Add(new(bamboospawn, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(2.7d)));
+        }
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
@@ -107,23 +109,21 @@ class BambooSplits(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class DaigoroFirstGilJump(BossModule module) : Components.ChargeAOEs(module, (uint)AID.FirstGilJump, 3.5f, extraLengthFront: 5f);
-class DaigoroNextGilJump(BossModule module) : Components.ChargeAOEs(module, (uint)AID.NextGilJump, 3.5f, extraLengthFront: 5f);
+sealed class DaigoroGilJump(BossModule module) : Components.SimpleChargeAOEGroups(module, [(uint)AID.FirstGilJump, (uint)AID.NextGilJump], 3.5f, extraLengthFront: 5f);
 
-class TheSliceIsRightStates : StateMachineBuilder
+sealed class TheSliceIsRightStates : StateMachineBuilder
 {
     public TheSliceIsRightStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<BambooSplits>()
-            .ActivateOnEnter<DaigoroFirstGilJump>()
-            .ActivateOnEnter<DaigoroNextGilJump>()
+            .ActivateOnEnter<DaigoroGilJump>()
             .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed || !module.InBounds(module.Raid.Player()!.Position);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.GoldSaucer, GroupID = 181, NameID = 9066)]
-public class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(70.5f, -36f), 15f * CosPI.Pi28th, 28)]);
     protected override bool CheckPull() => InBounds(Raid.Player()!.Position); // only activate module if player is taking part in the event

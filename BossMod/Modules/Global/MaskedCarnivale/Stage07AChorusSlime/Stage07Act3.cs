@@ -13,9 +13,9 @@ public enum AID : uint
     Object130 = 14711 // Boss->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
 
-class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.LowVoltage, 35f, true); // TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
+sealed class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.LowVoltage, 35f, true); // TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
 
-class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
+sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
     private static List<Actor> GetEnemies(BossModule module)
     {
@@ -39,7 +39,9 @@ class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
         var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
-            Arena.AddCircle(slimes[i].Position, 7.6f, Colors.Danger);
+        {
+            Arena.AddCircle(slimes[i].Position, 7.6f);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -47,12 +49,16 @@ class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
         var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
+        {
             if (actor.Position.InCircle(slimes[i].Position, 7.6f))
+            {
                 hints.Add("In slime explosion radius!");
+            }
+        }
     }
 }
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -60,7 +66,7 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Stage07Act3States : StateMachineBuilder
+sealed class Stage07Act3States : StateMachineBuilder
 {
     public Stage07Act3States(BossModule module) : base(module)
     {
@@ -82,7 +88,7 @@ class Stage07Act3States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8095, SortOrder = 3)]
-public class Stage07Act3 : BossModule
+public sealed class Stage07Act3 : BossModule
 {
     public Stage07Act3(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.Layout2Corners)
     {
