@@ -134,7 +134,7 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
             return;
         _kb ??= Module.FindComponent<CosmicKissKnockback>();
 
-        if (_kb!.Casters.Count != 0 && !_kb.IsImmune(slot, Module.CastFinishAt(_kb.Casters[0].CastInfo)))
+        if (_kb!.Casters.Count != 0 && !_kb.IsImmune(slot, _kb.Casters.Ref(0).Activation))
         { } // remove forbidden zones while knockback is active to not confuse the AI
         else
             base.AddAIHints(slot, actor, assignment, hints);
@@ -222,8 +222,8 @@ class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(modul
         var count = component.Count;
         if (count != 0 && Casters.Count != 0)
         {
-            var source = Casters[0];
-            var act = Module.CastFinishAt(source.CastInfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (IsImmune(slot, act))
                 return;
 
@@ -253,7 +253,7 @@ class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(modul
                         break;
                 }
             }
-            var pos = Arena.Center;
+            var pos = c.Origin;
             if (hasMinus152 && hasMinus162)
             {
                 forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, default, a45));
@@ -268,7 +268,7 @@ class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(modul
                 forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, a180, a90));
             else
                 forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, default, a90));
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Module.CastFinishAt(source.CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
         }
     }
 }

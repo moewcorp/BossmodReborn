@@ -40,7 +40,7 @@ sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
             var first = false;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 if (p.FindStatus((uint)SID.BurnBabyBurn) != null)
                 {
                     first = true;

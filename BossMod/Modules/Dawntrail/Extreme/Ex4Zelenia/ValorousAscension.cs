@@ -13,7 +13,9 @@ sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(m
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor.OID == (uint)OID.BriarThorn && id == 0x11DBu)
+        {
             _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(10.9d)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -22,7 +24,9 @@ sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(m
         {
             ++NumCasts;
             if (_aoes.Count != 0)
+            {
                 _aoes.RemoveAt(0);
+            }
         }
     }
 }

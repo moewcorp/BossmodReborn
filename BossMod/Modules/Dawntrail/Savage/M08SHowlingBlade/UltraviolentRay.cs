@@ -1,14 +1,15 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (uint)AID.UltraviolentRay, onlyShowOutlines: true)
+sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (uint)AID.UltraviolentRay, onlyShowOutlines: true, damageType: AIHints.PredictedDamageType.Raidwide)
 {
     private static readonly AOEShapeRect rect = new(40f, 8.5f);
+    private readonly M08SHowlingBlade bossmod = (M08SHowlingBlade)module;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.UltraviolentRay)
         {
-            CurrentBaits.Add(new(Module.Enemies((uint)OID.BossP2)[0], actor, rect, WorldState.FutureTime(6.1d)));
+            CurrentBaits.Add(new(bossmod.BossP2()!, actor, rect, WorldState.FutureTime(6.1d)));
         }
     }
 

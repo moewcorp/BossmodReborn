@@ -127,7 +127,7 @@ sealed class SovereignScar(BossModule module) : Components.GenericBaitStack(modu
     {
         if (spell.Action.ID is (uint)AID.WolvesReignTeleport1 or (uint)AID.WolvesReignTeleport2)
         {
-            var act = Module.CastFinishAt(spell);
+            var act = Module.CastFinishAt(spell, 3.6d);
             var party = Raid.WithSlot(true, true, true);
             var source = spell.LocXZ;
             var len = party.Length;
@@ -136,20 +136,25 @@ sealed class SovereignScar(BossModule module) : Components.GenericBaitStack(modu
             {
                 ref readonly var p = ref party[i];
                 if (p.Item2.Role == Role.Tank)
-                    forbidden[p.Item1] = true;
+                {
+                    forbidden.Set(p.Item1);
+                }
             }
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i].Item2;
+                ref readonly var player = ref party[i];
+                var p = player.Item2;
                 if (p.Role == Role.Healer)
+                {
                     CurrentBaits.Add(new(source, p, cone, act, forbidden: forbidden));
+                }
             }
         }
     }
 }
 
-sealed class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
+sealed class ReignsEnd(BossModule module) : Components.GenericBaitAway(module, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     private static readonly AOEShapeCone cone = new(40f, 30f.Degrees());
 
@@ -157,16 +162,18 @@ sealed class ReignsEnd(BossModule module) : Components.GenericBaitAway(module)
     {
         if (spell.Action.ID is (uint)AID.WolvesReignTeleport1 or (uint)AID.WolvesReignTeleport2)
         {
-            var act = Module.CastFinishAt(spell);
+            var act = Module.CastFinishAt(spell, 3.6d);
             var party = Raid.WithoutSlot(true, true, true);
             var source = spell.LocXZ;
             var len = party.Length;
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 if (p.Role == Role.Tank)
+                {
                     CurrentBaits.Add(new(source, p, cone, act));
+                }
             }
         }
     }
@@ -183,7 +190,9 @@ sealed class RoaringWind(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor.OID == (uint)OID.WolfOfWind4 && id == 0x11D2u)
+        {
             _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(5.6d)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -205,12 +214,16 @@ sealed class WealOfStone(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.WealOfStone1 or (uint)AID.WealOfStone2)
+        {
             _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.WealOfStone1 or (uint)AID.WealOfStone2)
+        {
             ++NumCasts;
+        }
     }
 }

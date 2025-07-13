@@ -16,15 +16,19 @@ sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)
         var count = Casters.Count;
         if (count == 0)
             return [];
-        var hasDifferentRotations = count > 1 && Casters[0].Rotation != Casters[1].Rotation;
+        var aoes = CollectionsMarshal.AsSpan(Casters);
+        ref readonly var aoe0 = ref aoes[0];
+        ref readonly var aoe1 = ref aoes[1];
+        var hasDifferentRotations = count > 1 && aoe0.Rotation != aoe1.Rotation;
         var max = count > MaxCasts ? MaxCasts : count;
-        var aoes = new AOEInstance[max];
+
         for (var i = 0; i < max; ++i)
         {
-            var caster = Casters[i];
-            aoes[i] = (caster with { Color = i == 0 && count > i ? Colors.Danger : 0, Risky = caster.Origin == Casters[0].Origin || hasDifferentRotations });
+            ref var aoe = ref aoes[i];
+            aoe.Color = i == 0 && count > i ? Colors.Danger : default;
+            aoe.Risky = i == 0 || hasDifferentRotations;
         }
-        return aoes;
+        return aoes[..max];
     }
 }
 

@@ -42,9 +42,12 @@ sealed class IncandescentInterlude(BossModule module) : Components.GenericTowers
         {
             var towers = Module.Enemies((uint)OID.Towers);
             var forbidden = new Func<WPos, float>[4];
+            var a35 = 35f.Degrees();
             for (var i = 0; i < 4; ++i)
-                forbidden[i] = ShapeDistance.Cone(UnSuzaku.ArenaCenter, 20f, _forbidden[slot] ? Angle.AnglesCardinals[i] : Angle.AnglesIntercardinals[i], 35f.Degrees());
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(_kb.Casters[0].CastInfo));
+            {
+                forbidden[i] = ShapeDistance.Cone(UnSuzaku.ArenaCenter, 20f, _forbidden[slot] ? Angle.AnglesCardinals[i] : Angle.AnglesIntercardinals[i], a35);
+            }
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), _kb.Casters.Ref(0).Activation);
         }
     }
 }

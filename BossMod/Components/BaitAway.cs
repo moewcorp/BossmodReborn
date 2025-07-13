@@ -173,8 +173,10 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         var baits = CollectionsMarshal.AsSpan(ActiveBaits);
         var count = baits.Length;
         if (count == 0)
+        {
             return;
-        var predictedDamage = new BitMask();
+        }
+        BitMask predictedDamage = default;
         for (var i = 0; i < count; ++i)
         {
             ref var bait = ref baits[i];
@@ -184,12 +186,17 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             }
             else
             {
-                predictedDamage[Raid.FindSlot(bait.Target.InstanceID)] = true;
                 AddTargetSpecificHints(ref actor, ref bait, ref hints);
+            }
+            if (DamageType != AIHints.PredictedDamageType.None)
+            {
+                predictedDamage.Set(Raid.FindSlot(bait.Target.InstanceID));
             }
         }
         if (predictedDamage != default)
-            hints.AddPredictedDamage(predictedDamage, baits[0].Activation, DamageType);
+        {
+            hints.AddPredictedDamage(predictedDamage, CurrentBaits.Ref(0).Activation, DamageType);
+        }
     }
 
     private void AddTargetSpecificHints(ref Actor actor, ref Bait bait, ref AIHints hints)

@@ -17,10 +17,10 @@ public enum AID : uint
     Burst = 14680 // Boss->self, 6.0s cast, range 50 circle
 }
 
-class Sap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Sap, 8);
-class Burst(BossModule module) : Components.CastInterruptHint(module, (uint)AID.Burst);
+sealed class Sap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Sap, 8f);
+sealed class Burst(BossModule module) : Components.CastInterruptHint(module, (uint)AID.Burst);
 
-class Selfdetonations(BossModule module) : BossComponent(module)
+sealed class Selfdetonations(BossModule module) : BossComponent(module)
 {
     private const string hint = "In bomb explosion radius!";
 
@@ -38,7 +38,9 @@ class Selfdetonations(BossModule module) : BossComponent(module)
         {
             var z = enemies[i];
             if (!z.IsDead)
+            {
                 bombs.Add(z);
+            }
         }
         return bombs;
     }
@@ -48,7 +50,9 @@ class Selfdetonations(BossModule module) : BossComponent(module)
         var bombs = GetBombs(Module);
         var count = bombs.Count;
         for (var i = 0; i < count; ++i)
+        {
             Arena.AddCircle(bombs[i].Position, 6f);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -56,15 +60,17 @@ class Selfdetonations(BossModule module) : BossComponent(module)
         var bombs = GetBombs(Module);
         var count = bombs.Count;
         for (var i = 0; i < count; ++i)
+        {
             if (actor.Position.InCircle(bombs[i].Position, 6f))
             {
                 hints.Add(hint);
                 return;
             }
+        }
     }
 }
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -72,7 +78,7 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Stage08Act2States : StateMachineBuilder
+sealed class Stage08Act2States : StateMachineBuilder
 {
     public Stage08Act2States(BossModule module) : base(module)
     {
@@ -95,7 +101,7 @@ class Stage08Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 618, NameID = 8098, SortOrder = 2)]
-public class Stage08Act2 : BossModule
+public sealed class Stage08Act2 : BossModule
 {
     public Stage08Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.Layout2Corners)
     {

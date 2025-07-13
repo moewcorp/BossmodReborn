@@ -11,7 +11,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.QueensCrusade)
         {
-            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 0.1f));
+            _aoe = new(circle, Arena.Center, default, Module.CastFinishAt(spell, 0.1d));
         }
     }
 
@@ -110,9 +110,12 @@ class FloorTiles(BossModule module) : BossComponent(module)
     {
         var active = new List<int>();
         for (var i = 0; i < 8; ++i)
+        {
             if (ring[i])
+            {
                 active.Add(i);
-
+            }
+        }
         if (active.Count < 2) // only relevant for old replays before new ENVC were added
         {
             midTile = opp1 = opp2 = oppMid = 0;

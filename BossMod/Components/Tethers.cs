@@ -55,7 +55,7 @@ public class TankbusterTether(BossModule module, uint aid, uint tetherID, AOESha
             var len = party.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 if (p == actor)
                     continue;
                 var count = _tethers.Count;
@@ -247,7 +247,7 @@ public class InterceptTetherAOE(BossModule module, uint aid, uint tetherID, floa
         var len = party.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
+            var p = party[i];
             if (p == actor)
                 continue;
             if (p.Position.InCircle(actor.Position, Radius))

@@ -9,14 +9,14 @@ sealed class YamaKagura(BossModule module) : Components.SimpleKnockbacks(module,
         var count = Casters.Count;
         if (count != 0)
         {
-            var length = Arena.Bounds.Radius * 2;
+            var casters = CollectionsMarshal.AsSpan(Casters);
             var forbidden = new Func<WPos, float>[count];
             for (var i = 0; i < count; ++i)
             {
-                var c = Casters[i];
-                forbidden[i] = ShapeDistance.Rect(c.Position, c.Rotation, length, Distance - length, 2.5f);
+                ref readonly var c = ref casters[i];
+                forbidden[i] = ShapeDistance.Rect(c.Origin, c.Direction, 40f, Distance - 40f, 2.5f);
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(Casters[0].CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Casters.Ref(0).Activation);
         }
     }
 

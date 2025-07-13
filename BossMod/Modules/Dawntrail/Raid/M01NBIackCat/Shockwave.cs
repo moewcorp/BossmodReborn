@@ -9,8 +9,8 @@ sealed class Shockwave(BossModule module) : Components.SimpleKnockbacks(module, 
     {
         if (Casters.Count != 0)
         {
-            var castinfo = Casters[0].CastInfo!;
-            var act = Module.CastFinishAt(castinfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (!IsImmune(slot, act))
             {
                 if (!polygonInit)

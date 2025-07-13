@@ -11,31 +11,37 @@ public enum AID : uint
     TheLastSong = 14756 // Boss->self, 6.0s cast, range 60 circle, heavy dmg, applies silence to player
 }
 
-class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.TheLastSong, 60f, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
+sealed class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.TheLastSong, 60f, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
 
-class LastSongHint(BossModule module) : BossComponent(module)
+sealed class LastSongHint(BossModule module) : BossComponent(module)
 {
     public bool Casting;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.TheLastSong)
+        {
             Casting = true;
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.TheLastSong)
+        {
             Casting = false;
+        }
     }
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (Casting)
+        {
             hints.Add("Use the cube to take cover!");
+        }
     }
 }
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -43,7 +49,7 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Stage14Act2States : StateMachineBuilder
+sealed class Stage14Act2States : StateMachineBuilder
 {
     public Stage14Act2States(BossModule module) : base(module)
     {
@@ -67,7 +73,7 @@ class Stage14Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 624, NameID = 8108, SortOrder = 2)]
-public class Stage14Act2 : BossModule
+public sealed class Stage14Act2 : BossModule
 {
     public Stage14Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.LayoutBigQuad)
     {

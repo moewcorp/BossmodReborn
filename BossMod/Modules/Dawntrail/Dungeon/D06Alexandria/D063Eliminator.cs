@@ -133,8 +133,8 @@ sealed class Impact(BossModule module) : Components.SimpleKnockbacks(module, (ui
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(source.Position, 6f, 8f, source.Position.Z == -640f ? 180f.Degrees() : default, halfAngle), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(c.Origin, 6f, 8f, c.Origin.Z == -640f ? 180f.Degrees() : default, halfAngle), c.Activation);
         }
     }
 }

@@ -1,7 +1,7 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
 sealed class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1d);
-sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1f, 4, 4)
+sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1d, 4, 4)
 {
     private BitMask forbidden;
 
@@ -10,7 +10,7 @@ sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, 
         base.OnEventIcon(actor, iconID, targetID);
         if (iconID == (uint)IconID.SuspendedStone)
         {
-            forbidden[Raid.FindSlot(targetID)] = true;
+            forbidden.Set(Raid.FindSlot(targetID));
         }
     }
 
@@ -22,10 +22,9 @@ sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, 
         {
             forbidden = default;
         }
-        else if (count == 1)
+        else
         {
-            var stack = CollectionsMarshal.AsSpan(Stacks)[0];
-            stack.ForbiddenPlayers = forbidden;
+            Stacks.Ref(0).ForbiddenPlayers = forbidden;
         }
     }
 }
@@ -41,7 +40,8 @@ sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var deadline = aoes[0].Activation.AddSeconds(1d);
+        ref readonly var aoe0 = ref aoes[0];
+        var deadline = aoe0.Activation.AddSeconds(1d);
 
         var index = 0;
         while (index < count)

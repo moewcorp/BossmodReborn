@@ -72,8 +72,7 @@ sealed class ElectrogeneticForce(BossModule module) : Components.GenericStackSpr
         var len = party.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
-            Spreads.Add(new(p, 6f, activation));
+            Spreads.Add(new(party[i], 6f, activation));
         }
     }
 

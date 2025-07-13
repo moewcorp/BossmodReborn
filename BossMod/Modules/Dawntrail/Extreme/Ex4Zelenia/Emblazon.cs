@@ -77,7 +77,7 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
     {
         if (iconID == (uint)IconID.Emblazon)
         {
-            Allowed[Raid.FindSlot(targetID)] = true;
+            Allowed.Set(Raid.FindSlot(targetID));
             if (Mechanic == true)
                 return;
             if (++emblazoncounter == 4)
@@ -87,7 +87,8 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
                 var forbidden = ~Allowed;
                 for (var i = 0; i < len; ++i)
                 {
-                    towers[i].ForbiddenSoakers = forbidden;
+                    ref var t = ref towers[i];
+                    t.ForbiddenSoakers = forbidden;
                 }
             }
             if (Towers.Count == 0)
@@ -118,7 +119,7 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
         }
         else if (iconID == (uint)IconID.AlexandrianThunderIII)
         {
-            forbiddenAlexandrianBanish[Raid.FindSlot(targetID)] = true;
+            forbiddenAlexandrianBanish.Set(Raid.FindSlot(targetID));
         }
     }
 

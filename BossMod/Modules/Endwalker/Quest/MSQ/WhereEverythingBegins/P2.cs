@@ -109,11 +109,11 @@ class VacuumWave(BossModule module) : Components.SimpleKnockbacks(module, (uint)
     {
         if (Casters.Count == 0)
             return;
-        var c = Casters[0];
-        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Position, 13f), activation: Module.CastFinishAt(c.CastInfo));
+        ref readonly var c = ref Casters.Ref(0);
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 13f), c.Activation);
     }
 }
-class VoidQuakeIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidQuakeIII, new AOEShapeCross(40, 5));
+class VoidQuakeIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidQuakeIII, new AOEShapeCross(40f, 5f));
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {

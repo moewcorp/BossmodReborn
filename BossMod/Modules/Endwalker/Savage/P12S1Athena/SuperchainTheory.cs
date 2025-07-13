@@ -104,7 +104,7 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                     var angle = Angle.FromDirection(actor.Position - posOrigin);
                     for (var j = 0; j < len; ++j)
                     {
-                        ref readonly var p = ref party[i];
+                        var p = party[i];
                         if (p.InstanceID == actorID)
                         {
                             continue;
@@ -174,7 +174,7 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                     var actorID = pc.InstanceID;
                     for (var j = 0; j < len; ++j)
                     {
-                        ref readonly var p = ref party[i];
+                        var p = party[i];
                         if (p.InstanceID == actorID)
                         {
                             continue;
@@ -190,7 +190,7 @@ abstract class SuperchainTheory(BossModule module) : BossComponent(module)
                     var actorID2 = pc.InstanceID;
                     for (var j = 0; j < len2; ++j)
                     {
-                        ref readonly var p = ref party2[i];
+                        var p = party2[i];
                         if (p.InstanceID != actorID2 && p.Class.IsSupport() == pcIsSupport)
                         {
                             _shapePair.Draw(Arena, posOrigin2, Angle.FromDirection(p.Position - posOrigin2));

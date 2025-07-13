@@ -9,8 +9,8 @@ sealed class CoursingRiver(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (_aoe.Casters.Count == 0 && Casters.Count != 0)
         {
-            var c = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.Rect(c.CastInfo!.Rotation.AlmostEqual(90f.Degrees(), Angle.DegToRad) ? c.Position - new WDir(12.5f, default) : c.Position - new WDir(-12.5f, default), c.Rotation, 50f, default, 20f), Module.CastFinishAt(c.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.Rect(c.Direction.AlmostEqual(90f.Degrees(), Angle.DegToRad) ? c.Origin - new WDir(12.5f, default) : c.Origin - new WDir(-12.5f, default), c.Direction, 50f, default, 20f), c.Activation);
         }
     }
 }
@@ -30,11 +30,11 @@ sealed class ForceOfNature1(BossModule module) : Components.SimpleKnockbacks(mod
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 10f), Module.CastFinishAt(Casters[0].CastInfo));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 10f), Casters.Ref(0).Activation);
     }
 }
 sealed class ForceOfNature2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ForceOfNature2, 5f);
-sealed class KanaboBait(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(45f, 30f.Degrees()), (uint)TetherID.BaitAway, (uint)AID.KanaboVisual2, (uint)OID.IwaNoShiki, 5.9f)
+sealed class KanaboBait(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(45f, 30f.Degrees()), (uint)TetherID.BaitAway, (uint)AID.KanaboVisual2, (uint)OID.IwaNoShiki, 5.9d)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -45,7 +45,7 @@ sealed class KanaboBait(BossModule module) : Components.BaitAwayTethers(module, 
 }
 
 sealed class KanaboAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Kanabo, new AOEShapeCone(45f, 30f.Degrees()));
-sealed class BlueBolt(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.BlueBoltMarker, (uint)AID.BlueBolt, 5.9f, 83f, 2.5f)
+sealed class BlueBolt(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.BlueBoltMarker, (uint)AID.BlueBolt, 5.9d, 83f, 2.5f)
 {
     public override void Update()
     {

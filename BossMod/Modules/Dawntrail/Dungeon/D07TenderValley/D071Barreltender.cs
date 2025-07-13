@@ -89,7 +89,7 @@ sealed class NeedleStormSuperstorm(BossModule module) : Components.GenericAOEs(m
 
         var kb = _kb;
         var isKnockback = kb.Casters.Count != 0;
-        var isKnockbackImmune = isKnockback && _kb.IsImmune(slot, Module.CastFinishAt(_kb.Casters[0].CastInfo));
+        var isKnockbackImmune = isKnockback && _kb.IsImmune(slot, _kb.Casters.Ref(0).Activation);
         var isKnockbackButImmune = isKnockback && isKnockbackImmune;
         for (var i = 0; i < max; ++i)
         {
@@ -161,16 +161,14 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            var act = Module.CastFinishAt(source.CastInfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (!IsImmune(slot, act))
             {
                 var forbidden = new Func<WPos, float>[2];
                 var pattern = CurrentPattern == Pattern.NESW;
-                var castInfo = source.CastInfo;
-                var pos = castInfo!.LocXZ;
-                forbidden[0] = ShapeDistance.InvertedCone(pos, 4f, pattern ? a135 : -a135, a10);
-                forbidden[1] = ShapeDistance.InvertedCone(pos, 4f, pattern ? -a45 : a45, a10);
+                forbidden[0] = ShapeDistance.InvertedCone(c.Origin, 4f, pattern ? a135 : -a135, a10);
+                forbidden[1] = ShapeDistance.InvertedCone(c.Origin, 4f, pattern ? -a45 : a45, a10);
                 hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
             }
         }

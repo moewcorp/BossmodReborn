@@ -207,24 +207,42 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         if (RaidwideOnResolve)
         {
             var firstActivation = DateTime.MaxValue;
-            var spreadMask = new BitMask();
-            var stackMask = new BitMask();
 
-            foreach (var s in ActiveSpreads)
+            var countSpread = ActiveSpreads.Count;
+            var countStack = ActiveStacks.Count;
+            if (countSpread != 0)
             {
-                spreadMask.Set(Raid.FindSlot(s.Target.InstanceID));
-                firstActivation = firstActivation < s.Activation ? firstActivation : s.Activation;
-            }
-            foreach (var s in ActiveStacks)
-            {
-                stackMask |= Raid.WithSlot().Mask() & ~s.ForbiddenPlayers; // assume everyone will take damage except forbidden players (so-so assumption really...)
-                firstActivation = firstActivation < s.Activation ? firstActivation : s.Activation;
-            }
+                BitMask spreadMask = default;
 
-            if (spreadMask.Any())
-                hints.AddPredictedDamage(spreadMask, firstActivation, AIHints.PredictedDamageType.Raidwide);
-            if (stackMask.Any())
-                hints.AddPredictedDamage(stackMask, firstActivation, AIHints.PredictedDamageType.Shared);
+                var spreads = CollectionsMarshal.AsSpan(ActiveSpreads);
+                for (var i = 0; i < countSpread; ++i)
+                {
+                    ref var s = ref spreads[i];
+                    spreadMask.Set(Raid.FindSlot(s.Target.InstanceID));
+                    firstActivation = firstActivation < s.Activation ? firstActivation : s.Activation;
+                }
+                if (spreadMask != default)
+                {
+                    hints.AddPredictedDamage(spreadMask, firstActivation, AIHints.PredictedDamageType.Raidwide);
+                }
+            }
+            if (countStack != 0)
+            {
+                BitMask stackMask = default;
+                var stacks = CollectionsMarshal.AsSpan(ActiveStacks);
+                BitMask mask = default;
+                mask.Raw = 0xFFFFFFFFFFFFFFFF;
+                for (var i = 0; i < countStack; ++i)
+                {
+                    ref var s = ref stacks[i];
+                    stackMask |= mask & ~s.ForbiddenPlayers; // assume everyone will take damage except forbidden players (so-so assumption really...)
+                    firstActivation = firstActivation < s.Activation ? firstActivation : s.Activation;
+                }
+                if (stackMask != mask)
+                {
+                    hints.AddPredictedDamage(stackMask, firstActivation, AIHints.PredictedDamageType.Shared);
+                }
+            }
         }
     }
 
@@ -532,6 +550,21 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
             hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), ActiveBaits[0].Activation);
         if (forbidden.Count != 0)
             hints.AddForbiddenZone(ShapeDistance.Union(forbidden), ActiveBaits[0].Activation);
+
+        var firstActivation = DateTime.MaxValue;
+        BitMask baitMask = default;
+        BitMask mask = default;
+        mask.Raw = 0xFFFFFFFFFFFFFFFF;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var b = ref baits[i];
+            baitMask |= mask & ~b.Forbidden; // assume everyone will take damage except forbidden players (so-so assumption really...)
+            firstActivation = firstActivation < b.Activation ? firstActivation : b.Activation;
+        }
+        if (baitMask != default)
+        {
+            hints.AddPredictedDamage(baitMask, firstActivation, AIHints.PredictedDamageType.Shared);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -690,7 +723,7 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, doubl
             if (MarkerIsFinalTarget)
             {
                 var tID = spell.MainTargetID;
-                if (CurrentBaits.Count == 1 && CurrentBaits[0].Target.InstanceID != tID && WorldState.Actors.Find(tID) is Actor t)
+                if (CurrentBaits.Count == 1 && CurrentBaits.Ref(0).Target.InstanceID != tID && WorldState.Actors.Find(tID) is Actor t)
                 {
                     CurrentBaits.Ref(0).Target = t;
                 }
