@@ -141,6 +141,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ClientState.OpCooldown => false,
             ClientState.OpForcedMovementDirectionChange => false,
             ClientState.OpProcTimersChange => false,
+            WorldState.OpRSVData => false,
             NetworkState.OpServerIPC => false,
             _ => true
         };

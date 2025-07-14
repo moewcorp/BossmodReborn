@@ -18,6 +18,7 @@ sealed class A32HanselGretelStates : StateMachineBuilder
             .ActivateOnEnter<HungryLance>()
             .ActivateOnEnter<Breakthrough>()
             .ActivateOnEnter<SeedOfMagicBeta>()
+            .ActivateOnEnter<MagicalConfluence>()
             .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && (module.BossHansel?.IsDeadOrDestroyed ?? true);
     }
 }
