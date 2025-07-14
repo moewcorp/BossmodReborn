@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Alliance.A21AegisUnit;
 
-sealed class AntiPersonnelLaser(BossModule module) : Components.BaitAwayIcon(module, 3f, (uint)IconID.AntiPersonnelLaser, (uint)AID.AntiPersonnelLaser, 4d, tankbuster: true);
+sealed class AntiPersonnelLaser(BossModule module) : Components.BaitAwayIcon(module, 3f, (uint)IconID.AntiPersonnelLaser, (uint)AID.AntiPersonnelLaser, 4d, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class FlightPath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FlightPath, new AOEShapeRect(60f, 5f));
 sealed class HighPoweredLaser(BossModule module) : Components.StackWithIcon(module, (uint)IconID.HighPoweredLaser, (uint)AID.HighPoweredLaser, 6f, 5.1d, 8, 8);
 sealed class LifesLastSong(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LifesLastSong, new AOEShapeCone(30f, 50f.Degrees()), 3);

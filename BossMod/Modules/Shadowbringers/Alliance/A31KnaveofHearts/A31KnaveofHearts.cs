@@ -30,7 +30,7 @@ sealed class ColossalImpact(BossModule module) : Components.SimpleAOEGroups(modu
     }
 }
 
-sealed class MagicArtilleryBeta(BossModule module) : Components.BaitAwayCast(module, (uint)AID.MagicArtilleryBeta, 3f, tankbuster: true);
+sealed class MagicArtilleryBeta(BossModule module) : Components.BaitAwayCast(module, (uint)AID.MagicArtilleryBeta, 3f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class MagicArtilleryAlpha(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.MagicArtilleryAlpha, 5f);
 sealed class LightLeap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LightLeap, 28f);
 sealed class MagicBarrage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MagicBarrage, new AOEShapeRect(61, 2.5f), 6);
