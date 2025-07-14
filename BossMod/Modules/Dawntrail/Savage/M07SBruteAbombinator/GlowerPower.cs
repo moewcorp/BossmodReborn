@@ -61,7 +61,7 @@ sealed class ElectrogeneticForce(BossModule module) : Components.GenericStackSpr
         {
             case (uint)AID.BrutishSwingCone2:
             case (uint)AID.BrutishSwingDonutSegment1:
-                AddSpreads(Module.CastFinishAt(spell, 4.7f));
+                AddSpreads(Module.CastFinishAt(spell, 4.7d));
                 break;
         }
     }

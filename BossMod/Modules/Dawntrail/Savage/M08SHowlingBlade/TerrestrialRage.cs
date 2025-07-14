@@ -1,30 +1,27 @@
 namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
-sealed class SuspendedStone(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SuspendedStone, (uint)AID.SuspendedStone, 6f, 5.1d);
-sealed class Heavensearth(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Heavensearth, (uint)AID.Heavensearth, 6f, 5.1d, 4, 4)
+sealed class HeavensearthSuspendedStone(BossModule module) : Components.IconStackSpread(module, (uint)IconID.Heavensearth, (uint)IconID.SuspendedStone, (uint)AID.Heavensearth, (uint)AID.SuspendedStone, 6f, 6f, 5.1d, 4, 4, true)
 {
     private BitMask forbidden;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         base.OnEventIcon(actor, iconID, targetID);
-        if (iconID == (uint)IconID.SuspendedStone)
+        if (iconID == SpreadIcon)
         {
             forbidden.Set(Raid.FindSlot(targetID));
+            if (Stacks.Count != 0)
+            {
+                Stacks.Ref(0).ForbiddenPlayers = forbidden;
+            }
         }
     }
-
-    public override void Update()
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        base.Update();
-        var count = Stacks.Count;
-        if (count == 0)
+        base.OnEventCast(caster, spell);
+        if (spell.Action.ID == SpreadAction)
         {
             forbidden = default;
-        }
-        else
-        {
-            Stacks.Ref(0).ForbiddenPlayers = forbidden;
         }
     }
 }

@@ -210,17 +210,15 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
     {
         Cast(id, (uint)AID.TerrestrialRage, delay, 3f, "Terrestial Rage")
             .ActivateOnExit<FangedCharge>()
-            .ActivateOnExit<Heavensearth>()
-            .ActivateOnExit<SuspendedStone>();
+            .ActivateOnExit<HeavensearthSuspendedStone>();
         ComponentCondition<FangedCharge>(id + 0x10u, 7f, comp => comp.NumCasts != 0, "Line AOEs 1");
-        ComponentCondition<SuspendedStone>(id + 0x20u, 1.3f, comp => comp.NumFinishedSpreads == 4, "Spreads + Stack 1 resolve");
+        ComponentCondition<HeavensearthSuspendedStone>(id + 0x20u, 1.3f, comp => comp.NumFinishedSpreads == 4, "Spreads + Stack 1 resolve");
         ComponentCondition<FangedCharge>(id + 0x30u, 1.2f, comp => comp.NumCasts > 2, "Line AOEs 2")
             .DeactivateOnExit<FangedCharge>()
             .ActivateOnExit<RoaringWind>()
             .ActivateOnExit<Shadowchase>();
-        ComponentCondition<SuspendedStone>(id + 0x40u, 5.5f, comp => comp.NumFinishedSpreads == 8, "Spreads + Stack 2 resolve")
-            .DeactivateOnExit<Heavensearth>()
-            .DeactivateOnExit<SuspendedStone>();
+        ComponentCondition<HeavensearthSuspendedStone>(id + 0x40u, 5.5f, comp => comp.NumFinishedSpreads == 8, "Spreads + Stack 2 resolve")
+            .DeactivateOnExit<HeavensearthSuspendedStone>();
         ComponentCondition<Shadowchase>(id + 0x50u, 0.4f, comp => comp.NumCasts != 0, "Line AOEs 3")
             .ExecOnExit<RoaringWind>(comp => comp.Draw = true)
             .DeactivateOnExit<Shadowchase>();
@@ -253,9 +251,8 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
     {
         Cast(id, (uint)AID.BeckonMoonlight, delay, 3f, "Beckon Moonlight")
             .ActivateOnExit<MoonbeamsBite>()
-            .ActivateOnExit<Heavensearth>()
-            .ActivateOnExit<SuspendedStone>();
-        ComponentCondition<SuspendedStone>(id + 0x10u, 12.7f, comp => comp.NumFinishedSpreads == 4, "Spreads + Stack 1 resolve");
+            .ActivateOnExit<HeavensearthSuspendedStone>();
+        ComponentCondition<HeavensearthSuspendedStone>(id + 0x10u, 12.7f, comp => comp.NumFinishedSpreads == 4, "Spreads + Stack 1 resolve");
         for (var i = 1; i <= 4; ++i)
         {
             var offset = id + 0x20u + (uint)((i - 1) * 0x10u);
@@ -264,11 +261,10 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
             var casts = i;
             ComponentCondition<MoonbeamsBite>(offset, time, comp => comp.NumCasts == casts, desc);
         }
-        ComponentCondition<SuspendedStone>(id + 0x60u, 1f, comp => comp.NumFinishedSpreads == 8, "Spreads + Stack 2 resolve")
+        ComponentCondition<HeavensearthSuspendedStone>(id + 0x60u, 1f, comp => comp.NumFinishedSpreads == 8, "Spreads + Stack 2 resolve")
             .DeactivateOnEnter<MoonbeamsBite>()
-            .DeactivateOnExit<SuspendedStone>()
-            .ActivateOnExit<WealOfStone>()
-            .DeactivateOnExit<Heavensearth>();
+            .DeactivateOnExit<HeavensearthSuspendedStone>()
+            .ActivateOnExit<WealOfStone>();
     }
 
     private void WindfangStonefang2(uint id, float delay)

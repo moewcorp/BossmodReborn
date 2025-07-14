@@ -100,6 +100,7 @@ sealed class Stonecarver(BossModule module) : Components.GenericAOEs(module)
                 AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: false));
                 if (AOEs.Count == 2)
                 {
+                    _kb ??= Module.FindComponent<Impact2>();
                     AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 }
                 break;
@@ -127,7 +128,6 @@ sealed class Stonecarver(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         if (AOEs.Count != 0)
         {
-            _kb ??= Module.FindComponent<Impact2>();
             hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center, new WDir(1f, default), 1.5f, 1.5f, 40f), _kb!.Casters.Count != 0 ? _kb.Casters.Ref(0).Activation : AOEs.Ref(0).Activation);
         }
     }
@@ -144,12 +144,12 @@ sealed class Shatter(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        for (var i = 0; i < count; ++i)
+        ref readonly var aoe = ref aoes[0];
+        if (aoe.Activation.AddSeconds(-6d) <= WorldState.CurrentTime)
         {
-            ref var aoe = ref aoes[i];
-            aoe.Risky = aoe.Activation.AddSeconds(-6d) <= WorldState.CurrentTime;
+            return aoes;
         }
-        return aoes;
+        return [];
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -216,14 +216,18 @@ sealed class Impact3(BossModule module) : Impact(module, (uint)AID.Impact3, 20f)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         base.OnCastStarted(caster, spell);
-        switch (spell.Action.ID)
+        if (spell.Action.ID == (uint)AID.BuildingHeat)
         {
-            case (uint)AID.BuildingHeat:
-                halfWidth = 14f;
-                break;
-            case (uint)AID.DestructiveHeat:
-                halfWidth = 19f;
-                break;
+            halfWidth = 14f;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        base.OnCastFinished(caster, spell);
+        if (spell.Action.ID == (uint)AID.BuildingHeat)
+        {
+            halfWidth = 19f;
         }
     }
 }

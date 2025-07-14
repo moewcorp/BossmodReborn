@@ -94,11 +94,10 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
     {
         if (CurrentBaits.Count < 4 && source.OID == (uint)OID.WolfOfWind1 && tether.ID is (uint)TetherID.WindsOfDecayGood or (uint)TetherID.WindsOfDecayBad)
         {
-            if (WorldState.Actors.Find(tether.Target) is not Actor t)
+            if (WorldState.Actors.Find(tether.Target) is Actor t)
             {
-                return;
+                CurrentBaits.Add(new(source, t, cone, WorldState.FutureTime(7.1d)));
             }
-            CurrentBaits.Add(new(source, t, cone, WorldState.FutureTime(7.1d)));
         }
     }
 
@@ -123,7 +122,8 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
             {
                 return;
             }
-            Arena.AddCone(Arena.Center, 4f, bait.Source.Rotation, 20f.Degrees(), Colors.Safe);
+            var center = Arena.Center;
+            Arena.AddCone(center, 4f, Angle.FromDirection(center - bait.Source.Position), 20f.Degrees(), Colors.Safe);
         }
     }
 
@@ -139,7 +139,8 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
                 {
                     return;
                 }
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(Arena.Center, 4f, bait.Source.Rotation, 20f.Degrees()), bait.Activation);
+                var center = Arena.Center;
+                hints.AddForbiddenZone(ShapeDistance.InvertedCone(center, 4f, Angle.FromDirection(center - bait.Source.Position), 20f.Degrees()), bait.Activation);
             }
         }
         else

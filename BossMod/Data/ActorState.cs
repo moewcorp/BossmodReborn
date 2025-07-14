@@ -508,7 +508,7 @@ public sealed class ActorState : IEnumerable<Actor>
             if (Value.GlobalSequence != 0)
             {
                 if (prev.Effects.Any(eff => eff.Type is >= ActionEffectType.Knockback and <= ActionEffectType.AttractCustom3))
-                    actor.PendingKnockbacks.Add(new(Value.GlobalSequence, Value.TargetIndex, Value.SourceInstanceId, ws.FutureTime(3))); // note: sometimes effect can never be applied (eg if source dies shortly after actioneffect), so we need a timeout
+                    actor.PendingKnockbacks.Add(new(Value.GlobalSequence, Value.TargetIndex, Value.SourceInstanceId, ws.FutureTime(3d))); // note: sometimes effect can never be applied (eg if source dies shortly after actioneffect), so we need a timeout
                 ws.Actors.IncomingEffectAdd.Fire(actor, Index);
             }
         }
