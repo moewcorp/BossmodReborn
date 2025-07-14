@@ -39,7 +39,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
                 forbiddenFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, moveHintLength, radius));
                 forbiddenImminent.Add(ShapeDistance.Circle(s.Position, radius));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.1d));
             hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
         }
     }
