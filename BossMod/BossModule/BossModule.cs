@@ -105,6 +105,8 @@ public abstract class BossModule : IDisposable
             }
             if (actor.IsTargetable)
                 comp.OnActorTargetable(actor);
+            if (nonPlayer && actor.IsDead)
+                comp.OnActorDeath(actor);
             ref var tether = ref actor.Tether;
             if (tether.ID != default)
                 comp.OnTethered(actor, tether);
@@ -157,6 +159,7 @@ public abstract class BossModule : IDisposable
             WorldState.Actors.CastStarted.Subscribe(OnActorCastStarted),
             WorldState.Actors.CastFinished.Subscribe(OnActorCastFinished),
             WorldState.Actors.IsTargetableChanged.Subscribe(OnIsTargetableChanged),
+            WorldState.Actors.IsDeadChanged.Subscribe(OnIsDead),
             WorldState.Actors.Tethered.Subscribe(OnActorTethered),
             WorldState.Actors.Untethered.Subscribe(OnActorUntethered),
             WorldState.Actors.StatusGain.Subscribe(OnActorStatusGain),
@@ -538,6 +541,16 @@ public abstract class BossModule : IDisposable
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
                 Components[i].OnActorUntargetable(actor);
+        }
+    }
+
+    private void OnIsDead(Actor actor)
+    {
+        if (actor.Type is not ActorType.Player and not ActorType.Pet and not ActorType.Chocobo and not ActorType.Buddy)
+        {
+            var count = Components.Count;
+            for (var i = 0; i < count; ++i)
+                Components[i].OnActorDeath(actor);
         }
     }
 

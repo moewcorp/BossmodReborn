@@ -3,7 +3,7 @@
 sealed class CrueltyP1(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.CrueltyVisualP1, (uint)AID.Cruelty, 0.1d);
 sealed class CrueltyP2(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.CrueltyVisualP2, (uint)AID.Cruelty, 0.1d);
 sealed class SublimeTranscendence(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.SublimeTranscendenceVisual, (uint)AID.SublimeTranscendence, 0.1d);
-sealed class ShockWhiteBlack(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ShockWhiteAOE, (uint)AID.ShockBlackAOE], 5f);
+sealed class ManipulateEnergy(BossModule module) : Components.BaitAwayIcon(module, 3f, (uint)IconID.ManipulateEnergy, (uint)AID.ManipulateEnergy, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class GenerateBarrier1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GenerateBarrierVisual1, new AOEShapeRect(18f, 1.5f));
 sealed class GenerateBarrier2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GenerateBarrierVisual2, new AOEShapeRect(24f, 1.5f));
@@ -17,9 +17,11 @@ public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, pr
 {
     public static readonly WPos ArenaCenter = new(845f, -851f);
     public static readonly ArenaBoundsSquare StartingArena = new(24.5f);
-    public static readonly PolygonCustom InnerSquare = new([new(842.49945f, -848.50018f), new(842.5f, -853.5f), new(847.5f, -853.5f), new(847.5f, -848.5f)]); // one vertice of the inner square is slightly misplaced. since it kills instantly we prefer perfection.
-    public static readonly AOEShapeCustom ArenaTransition = new([new Square(ArenaCenter, 25f)], [new Square(ArenaCenter, 20f)], [InnerSquare]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Square(ArenaCenter, 20f)], [InnerSquare]);
+    public static readonly PolygonCustom InnerSquare = new([new(847.5f, -848.5f), new(847.5f, -853.5f), new(842.5f, -853.5f), new(842.49945f, -848.50018f)]); // one vertice of the inner square is slightly misplaced. since it kills instantly we prefer perfection.
+    public static readonly Square[] BigSquare = [new(ArenaCenter, 24.5f)];
+    public static readonly Square[] DefaultSquare = [new(ArenaCenter, 20f)];
+    public static readonly AOEShapeCustom ArenaTransition = new(BigSquare, DefaultSquare, [InnerSquare]);
+    public static readonly ArenaBoundsComplex DefaultArena = new(DefaultSquare, [InnerSquare]);
     public static readonly PolygonCustomO[] VirusArena1 = [new([new(6f, 856f), new(-6f, 856f), new(-6f, 868f), new(-1.5f, 868f), new(-1.5f, 880f),
     new(-8f, 880f), new(-8f, 882f), new(-12f, 882f), new(-12f, 884f), new(-14f, 884f),
     new(-14f, 886f), new(-16f, 886f), new(-16f, 888f), new(-18f, 888f), new(-18f, 892f),
@@ -32,8 +34,8 @@ public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, pr
     new(20f, 908f), new(20f, 892f), new(18f, 892f), new(18f, 888f), new(16f, 888f),
     new(16f, 886f), new(14f, 886f), new(14f, 884f), new(12f, 884f), new(12f, 882f),
     new(8f, 882f), new(8f, 880f), new(1.5f, 880f), new(1.5f, 868f), new(6f, 868f)], -0.5f)];
-    public static readonly PolygonCustomO[] VirusArena2 = GenerateVirusArena(new(default, -412f));
-    public static readonly PolygonCustomO[] VirusArena3 = GenerateVirusArena(new(default, -912f));
+    public static readonly PolygonCustomO[] VirusArena2 = GenerateVirusArena(new(default, -500f));
+    public static readonly PolygonCustomO[] VirusArena3 = GenerateVirusArena(new(default, -1000f));
     private static PolygonCustomO[] GenerateVirusArena(WDir offset)
     {
         var vertices = new WPos[60];
@@ -45,7 +47,6 @@ public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, pr
         }
         return [new(vertices, -0.5f)];
     }
-    // wall sizes 1.625, 1
 
     public Actor? BossP2;
     public Actor? RedSphere;

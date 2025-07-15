@@ -123,12 +123,13 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2 && WorldState.Actors.Find(spell.TargetID) is Actor target)
+        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2)
         {
             var count = targets.Count;
+            var id = spell.TargetID;
             for (var i = 0; i < count; ++i)
             {
-                if (targets[i].target == target)
+                if (targets[i].target.InstanceID == id)
                 {
                     targets.RemoveAt(i);
                     return;
@@ -138,5 +139,33 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
     }
 }
 
-sealed class PortentousComet1(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PortentousComet1, 4f, 12);
-sealed class PortentousComet2(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PortentousComet2, 4f, 12);
+sealed class PortentousComet(BossModule module) : Components.GenericStackSpread(module)
+{
+    public int NumFinishedStacks;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2 && WorldState.Actors.Find(spell.TargetID) is Actor t)
+        {
+            Stacks.Add(new(t, 4f, 12, 12, Module.CastFinishAt(spell)));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.PortentousComet1 or (uint)AID.PortentousComet2)
+        {
+            var count = Stacks.Count;
+            var id = spell.TargetID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (Stacks[i].Target.InstanceID == id)
+                {
+                    Stacks.RemoveAt(i);
+                    ++NumFinishedStacks;
+                    return;
+                }
+            }
+        }
+    }
+}

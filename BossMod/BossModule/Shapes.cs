@@ -57,6 +57,25 @@ public sealed record class PolygonCustom(IReadOnlyList<WPos> Vertices) : Shape
     }
 }
 
+public sealed record class PolygonCustomRel(IReadOnlyList<WDir> Vertices) : Shape
+{
+    public override List<WDir> Contour(WPos center) => [.. Vertices];
+
+    public override string ToString()
+    {
+        var vertices = Vertices;
+        var count = vertices.Count;
+        var sb = new StringBuilder("PolygonCustomRel:", 17 + count * 9);
+        for (var i = 0; i < count; ++i)
+        {
+            var vertex = vertices[i];
+            sb.Append(vertex.X).Append(',').Append(vertex.Z).Append(';');
+        }
+        --sb.Length;
+        return sb.ToString();
+    }
+}
+
 // for custom polygons defined by an IReadOnlyList of vertices with an offset, eg to account for hitbox radius
 public sealed record class PolygonCustomO(IReadOnlyList<WPos> Vertices, float Offset) : Shape
 {

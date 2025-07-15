@@ -46,6 +46,7 @@ public class BossComponent(BossModule module)
     // world state event handlers
     public virtual void OnActorCreated(Actor actor) { }
     public virtual void OnActorDestroyed(Actor actor) { }
+    public virtual void OnActorDeath(Actor actor) { }
     public virtual void OnActorTargetable(Actor actor) { }
     public virtual void OnActorUntargetable(Actor actor) { }
     public virtual void OnStatusGain(Actor actor, ActorStatus status) { } // note: also called for status-change events; if component needs to distinguish between lose+gain and change, it can use the fact that 'lose' is not called for change
