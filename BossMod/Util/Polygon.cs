@@ -16,9 +16,10 @@ public readonly struct RelTriangle(WDir a, WDir b, WDir c)
 
 // a complex polygon that is a single simple-polygon exterior minus 0 or more simple-polygon holes; all edges are assumed to be non intersecting
 // hole-starts list contains starting index of each hole
-public sealed class RelPolygonWithHoles(List<WDir> Vertices, List<int> HoleStarts)
+public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStarts)
 {
     // constructor for simple polygon
+    public readonly List<WDir> Vertices = vertices;
     public RelPolygonWithHoles(List<WDir> simpleVertices) : this(simpleVertices, []) { }
     public ReadOnlySpan<WDir> AllVertices => CollectionsMarshal.AsSpan(Vertices);
     public ReadOnlySpan<WDir> Exterior => AllVertices[..ExteriorEnd];
@@ -752,5 +753,126 @@ public readonly struct PolygonWithHolesDistanceFunction
             minDistanceSq = Math.Min(minDistanceSq, distX * distX + distY * distY);
         }
         return MathF.Sqrt(minDistanceSq);
+    }
+}
+
+// used to create a visibility polygon of a point source and a RelSimplifiedComplexPolygon
+public static class Visibility
+{
+    public static WDir[] ComputeVisibilityPolygon(WDir origin, RelSimplifiedComplexPolygon polygon)
+    {
+        List<(WDir A, WDir B)> blockingEdges = [];
+        var parts = polygon.Parts;
+        var countParts = polygon.Parts.Count;
+
+        for (var i = 0; i < countParts; ++i)
+        {
+            var part = parts[i];
+            blockingEdges.AddRange(part.ExteriorEdges);
+            var holes = part.Holes;
+            var len = holes.Length;
+            for (var j = 0; j < len; ++j)
+            {
+                blockingEdges.AddRange(part.InteriorEdges(holes[j]));
+            }
+        }
+
+        // get all unique vertices
+        HashSet<WDir> uniquePoints = [];
+        for (var i = 0; i < countParts; ++i)
+        {
+            var part = parts[i];
+            var countV = part.Vertices.Count;
+            for (var j = 0; j < countV; ++j)
+            {
+                uniquePoints.Add(part.Vertices[j]);
+            }
+        }
+
+        // cast rays toward each vertex, slightly offset left/right
+        List<(float angle, WDir intersection)> hits = [];
+        float[] offsets = [0f, -10e-4f, 10e-4f];
+        var originX = origin.X;
+        var originZ = origin.Z;
+        foreach (var pt in uniquePoints)
+        {
+            var baseAngle = MathF.Atan2(pt.Z - originZ, pt.X - originX);
+            for (var i = 0; i < 3; ++i)
+            {
+                var rayAngle = baseAngle + offsets[i];
+                var (sin, cos) = ((float, float))Math.SinCos(rayAngle);
+                var dir = new WDir(cos, sin);
+                var hit = Raycast(origin, dir, blockingEdges);
+                if (hit.HasValue)
+                {
+                    var intersection = hit.Value;
+                    var angle = MathF.Atan2(intersection.Z - originZ, intersection.X - originX);
+                    hits.Add((angle, intersection));
+                }
+            }
+        }
+
+        // sort points counterclockwise around the light origin
+        hits.Sort((a, b) => a.angle.CompareTo(b.angle));
+
+        var count = hits.Count;
+        var visibilityPolygon = new WDir[count];
+        for (var i = 0; i < count; ++i)
+        {
+            visibilityPolygon[i] = hits[i].intersection;
+        }
+
+        return visibilityPolygon;
+    }
+
+    private static WDir? Raycast(WDir origin, WDir dir, List<(WDir A, WDir B)> edges)
+    {
+        WDir? closest = null;
+        var minT = float.MaxValue;
+        var count = edges.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var edge = edges[i];
+            if (TryIntersectRaySegment(origin, dir, edge.A, edge.B, out var intersection, out var t))
+            {
+                if (t < minT)
+                {
+                    minT = t;
+                    closest = intersection;
+                }
+            }
+        }
+        return closest;
+    }
+
+    private static bool TryIntersectRaySegment(WDir rayOrigin, WDir rayDir, WDir segA, WDir segB, out WDir intersection, out float tRay)
+    {
+        intersection = default;
+        tRay = float.MaxValue;
+
+        var dx1 = rayDir.X;
+        var dy1 = rayDir.Z;
+        var dx2 = segB.X - segA.X;
+        var dy2 = segB.Z - segA.Z;
+
+        var det = dx1 * dy2 - dy1 * dx2;
+        if (MathF.Abs(det) < 1e-6f)
+        {
+            return false;
+        }
+        var dx3 = segA.X - rayOrigin.X;
+        var dy3 = segA.Z - rayOrigin.Z;
+        var invDet = 1f / det;
+        var t1 = (dx3 * dy2 - dy3 * dx2) * invDet;
+        var t2 = (dx3 * dy1 - dy3 * dx1) * invDet;
+
+        if (t1 >= 0 && t2 >= 0 && t2 <= 1)
+        {
+            intersection = rayOrigin + t1 * rayDir;
+            tRay = t1;
+            return true;
+        }
+
+        return false;
     }
 }

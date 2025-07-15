@@ -35,7 +35,7 @@ public enum AID : uint
 
     GenerateBarrierVisualP1 = 24580, // Boss->self, 4.0s cast, single-target
     GenerateBarrierVisualP2 = 24581, // BossP2->self, 4.0s cast, single-target
-    GenerateBarrierVisual1 = 24584, // Helper->self, 4.0s cast, range 18 width 3 rect, actual damage AOEs happen in same frame, so we can use these
+    GenerateBarrierVisual1 = 24584, // Helper->self, 4.0s cast, range 18 width 3 rect
     GenerateBarrierVisual2 = 24585, // Helper->self, 4.0s cast, range 24 width 3 rect
     GenerateBarrierVisual3 = 24583, // Helper->self, 4.0s cast, range 12 width 3 rect
     GenerateBarrierVisual4 = 24582, // Helper->self, 4.0s cast, range 6 width 3 rect
@@ -49,8 +49,9 @@ public enum AID : uint
     PointBlack1 = 24608, // BlackLance->self, no cast, range 50 width 6 rect
     PointBlack2 = 24610, // BlackLance->self, no cast, range 24 width 6 rect
 
-    ManipulateEnergy1 = 24600, // Boss->self, 4.0s cast, single-target
-    ManipulateEnergy2 = 24602, // Helper->players, no cast, range 3 circle
+    ManipulateEnergyVisualP1 = 24600, // Boss->self, 4.0s cast, single-target
+    ManipulateEnergyVisualP2 = 24601, // BossP2->self, 4.0s cast, single-target
+    ManipulateEnergy = 24602, // Helper->players, no cast, range 3 circle
 
     DiffuseEnergyFirst = 24611, // RedGirl1->self, 5.0s cast, range 12 120-degree cone
     DiffuseEnergyRest = 24662, // RedGirl1->self, no cast, range 12 120-degree cone
@@ -58,7 +59,7 @@ public enum AID : uint
     SublimeTranscendenceVisual = 25098, // Boss->self, 5.0s cast, single-target
     SublimeTranscendence = 25099, // Helper->location, no cast, range 75 circle
 
-    Vortex = 24599, // Helper->location, no cast, ???
+    Vortex = 24599, // Helper->location, no cast, ???, pull into center for p1 meteor
     RecreateMeteor = 24903, // Boss->self, 2.0s cast, single-target
     ReplicateP1 = 24586, // Boss->self, 3.0s cast, single-target
     ReplicateP2 = 24587, // BossP2->self, 3.0s cast, single-target
@@ -69,13 +70,11 @@ public enum AID : uint
     WaveWhite = 24973, // RedSphere->self, 8.0s cast, range 22 circle
 
     ChildsPlay1 = 24613, // BossP2/RedGirl3->self, 10.0s cast, single-target
-    ChildsPlay2 = 24612, // BossP2->self, 10.0s cast, single-target
+    ChildsPlay2 = 24612, // BossP2/RedGirl3->self, 10.0s cast, single-target
     Explosion = 24614, // BlackPylonP2->self, 15.0s cast, range 9 circle
 
     WipeWhite = 24588, // Helper->self, 13.0s cast, range 75 circle
     WipeBlack = 24589, // Helper->self, 13.0s cast, range 75 circle
-
-    ManipulateEnergy = 24601, // BossP2->self, 4.0s cast, single-target
 }
 
 public enum SID : uint
@@ -87,12 +86,12 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    Icon262 = 262, // player
-    Icon263 = 263, // player
-    Icon264 = 264, // player
-    Tankbuster = 218, // player
-    Icon167 = 167, // RedGirl1
-    Icon168 = 168, // RedGirl1
+    ShockWhiteSlow = 262, // player
+    ShockBlack = 263, // player
+    ShockWhiteFast = 264, // player
+    ManipulateEnergy = 218, // player
+    RotateCW = 167, // RedGirl1
+    RotateCCW = 168 // RedGirl1
 }
 
 public enum TetherID : uint

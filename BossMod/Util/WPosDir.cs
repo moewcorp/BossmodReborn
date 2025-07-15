@@ -163,9 +163,10 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     {
         return InRect(origin, end - origin, halfWidth);
     }
-    public readonly bool InSquare(WPos origin, float halfWidth) => (this - origin).InRect(new(default, 1f), halfWidth, halfWidth, halfWidth);
+
     public readonly bool InSquare(WPos origin, float halfWidth, Angle rotation) => (this - origin).InRect(rotation.ToDirection(), halfWidth, halfWidth, halfWidth);
     public readonly bool InSquare(WPos origin, float halfWidth, WDir rotation) => (this - origin).InRect(rotation, halfWidth, halfWidth, halfWidth);
+    public readonly bool InSquare(WPos origin, float halfWidth) => Math.Abs(X - origin.X) <= halfWidth && Math.Abs(Z - origin.Z) <= halfWidth;
 
     public readonly bool InCross(WPos origin, Angle direction, float length, float halfWidth) => (this - origin).InCross(direction.ToDirection(), length, halfWidth);
     public readonly bool InCross(WPos origin, WDir direction, float length, float halfWidth) => (this - origin).InCross(direction, length, halfWidth);
