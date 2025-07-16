@@ -274,7 +274,7 @@ abstract class DeepThunder(BossModule module, uint aid) : Components.CastTowers(
 sealed class DeepThunder1(BossModule module) : DeepThunder(module, (uint)AID.DeepThunderTower1);
 sealed class DeepThunder2(BossModule module) : DeepThunder(module, (uint)AID.DeepThunderTower2);
 
-sealed class WroughtFire(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WroughtFire, 6f, tankbuster: true);
+sealed class WroughtFire(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WroughtFire, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class BuildingHeat(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BuildingHeat, 6f, 4, 4);
 sealed class Ashlayer(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.AshlayerVisual, (uint)AID.Ashlayer, 2.2d);
 

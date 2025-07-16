@@ -12,7 +12,7 @@ sealed class GenerateBarrier4(BossModule module) : Components.SimpleAOEs(module,
 
 sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Explosion, 9f, riskyWithSecondsLeft: 5d);
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 779, NameID = 9920)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 779, NameID = 9920, SortOrder = 4)]
 public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
 {
     public static readonly WPos ArenaCenter = new(845f, -851f);

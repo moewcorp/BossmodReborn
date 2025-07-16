@@ -14,7 +14,7 @@ sealed class CloudToCloud1(BossModule module) : CloudToCloud(module, (uint)AID.C
 sealed class CloudToCloud2(BossModule module) : CloudToCloud(module, (uint)AID.CloudToCloud2, 3f, 4);
 sealed class CloudToCloud3(BossModule module) : CloudToCloud(module, (uint)AID.CloudToCloud3, 6f, 2);
 
-sealed class SplittingCry(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(60f, 7f), (uint)IconID.Tankbuster, (uint)AID.SplittingCry, 5d, tankbuster: true);
+sealed class SplittingCry(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(60f, 7f), (uint)IconID.Tankbuster, (uint)AID.SplittingCry, 5d, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class ThunderVortex(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThunderVortex, new AOEShapeDonut(8f, 30f));
 sealed class UnsagelySpinYokiThunderOneTwoThreefold(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.UnsagelySpin, (uint)AID.Yoki,

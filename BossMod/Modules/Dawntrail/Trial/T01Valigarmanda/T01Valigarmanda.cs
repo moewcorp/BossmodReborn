@@ -4,7 +4,7 @@ sealed class SlitheringStrike(BossModule module) : Components.SimpleAOEs(module,
 sealed class SkyruinHailOfFeathersDisasterZoneRuinForetold(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.Skyruin1, (uint)AID.Skyruin2, (uint)AID.HailOfFeathers,
 (uint)AID.DisasterZone1, (uint)AID.DisasterZone2, (uint)AID.RuinForetold]);
 
-abstract class CalamitousCry(BossModule module, uint aid) : Components.LineStack(module, aidMarker: aid, (uint)AID.CalamitousCry, 5f, 60f, 3f)
+abstract class CalamitousCry(BossModule module, uint aid) : Components.LineStack(module, aidMarker: aid, (uint)AID.CalamitousCry, 5d, 60f, 3f)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -47,13 +47,13 @@ sealed class FreezingDust(BossModule module) : Components.StayMove(module)
 
 sealed class CalamitousEcho(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CalamitousEcho, new AOEShapeCone(40f, 10f.Degrees()));
 
-abstract class Tulidisaster(BossModule module, uint aid, float delay) : Components.RaidwideCastDelay(module, (uint)AID.TulidisasterVisual, aid, delay);
-sealed class Tulidisaster1(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster1, 3.1f);
-sealed class Tulidisaster2(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster2, 11.6f);
-sealed class Tulidisaster3(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster3, 19.6f);
+abstract class Tulidisaster(BossModule module, uint aid, double delay) : Components.RaidwideCastDelay(module, (uint)AID.TulidisasterVisual, aid, delay);
+sealed class Tulidisaster1(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster1, 3.1d);
+sealed class Tulidisaster2(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster2, 11.6d);
+sealed class Tulidisaster3(BossModule module) : Tulidisaster(module, (uint)AID.Tulidisaster3, 19.6d);
 
 sealed class Eruption(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Eruption, 6f);
-sealed class IceTalon(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.IceTalon, 5f, tankbuster: true);
+sealed class IceTalon(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.IceTalon, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class T01ValigarmandaStates : StateMachineBuilder
 {

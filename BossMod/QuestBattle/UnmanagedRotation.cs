@@ -61,12 +61,12 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
 
     protected float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - World.CurrentTime).TotalSeconds, 0.0f);
 
-    protected (float Left, int Stacks) StatusDetails(Actor? actor, uint sid, ulong sourceID, float pendingDuration = 1000)
+    protected (float Left, int Stacks) StatusDetails(Actor? actor, uint sid, ulong sourceID, float pendingDuration = 1000f)
     {
         var status = actor?.FindStatus(sid, sourceID, World.FutureTime(pendingDuration));
         return status != null ? (StatusDuration(status.Value.ExpireAt), status.Value.Extra & 0xFF) : (0, 0);
     }
-    protected (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, ulong sourceID, float pendingDuration = 1000) where SID : Enum => StatusDetails(actor, (uint)(object)sid, sourceID, pendingDuration);
+    protected (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, ulong sourceID, float pendingDuration = 1000f) where SID : Enum => StatusDetails(actor, (uint)(object)sid, sourceID, pendingDuration);
 }
 
 public abstract class RotationModule<R>(BossModule module) : BossComponent(module) where R : UnmanagedRotation

@@ -232,7 +232,7 @@ class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAt
     }
 }
 
-class Resonance(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Resonance, new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true);
+class Resonance(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Resonance, new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class DD80ProtoKaliyaStates : StateMachineBuilder
 {

@@ -173,18 +173,12 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        for (var i = 0; i < count; ++i)
+        ref var aoe0 = ref aoes[0];
+        if (count > 1)
         {
-            ref var aoe = ref aoes[i];
-            if (i == 0)
-            {
-                if (count > 1)
-                    aoe.Color = Colors.Danger;
-                aoe.Risky = true;
-            }
-            else
-                aoe.Risky = false;
+            aoe0.Color = Colors.Danger;
         }
+        aoe0.Risky = true;
         return aoes;
     }
 
@@ -192,8 +186,8 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     {
         void AddAOEs(AOEShape shape, bool backwards = false)
         {
-            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
-            _aoes.Add(new(cone, shape == rect ? caster.Position : spell.LocXZ, spell.Rotation + (backwards ? 180f.Degrees() : default), Module.CastFinishAt(spell, 3.1f)));
+            _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: false));
+            _aoes.Add(new(cone, shape == rect ? caster.Position : spell.LocXZ, spell.Rotation + (backwards ? 180f.Degrees() : default), Module.CastFinishAt(spell, 3.1d), risky: false));
         }
 
         switch (spell.Action.ID)
@@ -220,6 +214,7 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (_aoes.Count != 0)
+        {
             switch (spell.Action.ID)
             {
                 case (uint)AID.CarapaceForeArms2dot0B:
@@ -233,6 +228,7 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
                     _aoes.RemoveAt(0);
                     break;
             }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -246,7 +242,7 @@ class Combos(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Hellburner(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Hellburner, 5f, tankbuster: true);
+class Hellburner(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Hellburner, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class MissileShower(BossModule module) : Components.RaidwideCast(module, (uint)AID.MissileShowerVisual, "Raidwide x2");
 class ThermobaricExplosive(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThermobaricExplosive2, 25f);

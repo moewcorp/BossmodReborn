@@ -15,7 +15,7 @@ sealed class HotCharge(BossModule module) : Components.ChargeAOEs(module, (uint)
 sealed class Firebreathe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Firebreathe, new AOEShapeCone(60f, 45f.Degrees()));
 sealed class HeadDown(BossModule module) : Components.ChargeAOEs(module, (uint)AID.HeadDown, 2f);
 sealed class HuntersClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HuntersClaw, 8f);
-sealed class HeatBreath(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HeatBreath, new AOEShapeCone(10f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true);
+sealed class HeatBreath(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HeatBreath, new AOEShapeCone(10f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class RipperClaw(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RipperClaw, new AOEShapeCone(10f, 45f.Degrees()));
 sealed class TailSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TailSwing, 10f);
 

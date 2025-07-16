@@ -3,7 +3,7 @@
 // generic 'rotating aoes' component - a sequence of aoes (typically cones) with same origin and increasing rotation
 public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
 {
-    public struct Sequence(AOEShape shape, WPos origin, Angle rotation, Angle increment, DateTime nextActivation, double secondsBetweenActivations, int numRemainingCasts, int maxShownAOEs = 2)
+    public struct Sequence(AOEShape shape, WPos origin, Angle rotation, Angle increment, DateTime nextActivation, double secondsBetweenActivations, int numRemainingCasts, int maxShownAOEs = 2, ulong actorID = default)
     {
         public AOEShape Shape = shape;
         public WPos Origin = origin;
@@ -13,6 +13,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         public double SecondsBetweenActivations = secondsBetweenActivations;
         public int NumRemainingCasts = numRemainingCasts;
         public int MaxShownAOEs = maxShownAOEs;
+        public ulong ActorID = actorID;
     }
 
     public readonly List<Sequence> Sequences = [];

@@ -410,6 +410,12 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
                         return;
                     }
                 }
+                // stack not found, probably due to being self targeted
+                if (count != 0)
+                {
+                    ++NumFinishedStacks;
+                    Stacks.RemoveAt(0);
+                }
             }
         }
         else if (spell.Action.ID == SpreadAction)
@@ -757,7 +763,6 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, doubl
         }
         else if (id == AidResolve)
         {
-            ++NumCasts;
             if (MarkerIsFinalTarget)
             {
                 var tID = spell.MainTargetID;
@@ -780,11 +785,10 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, doubl
             }
             else
             {
-                if (++castCounter == MaxCasts && CurrentBaits.Count != 0)
+                if (++castCounter >= MaxCasts && CurrentBaits.Count != 0)
                 {
                     CurrentBaits.RemoveAt(0);
                     castCounter -= MaxCasts;
-                    castCounter = 0;
                     ++NumCasts;
                 }
             }

@@ -29,7 +29,7 @@ sealed class StringSnap(BossModule module) : Components.ConcentricAOEs(module, _
     }
 }
 
-sealed class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.TorchingTorment, 5.9f, tankbuster: true);
+sealed class TorchingTorment(BossModule module) : Components.BaitAwayIcon(module, 6f, (uint)IconID.Tankbuster, (uint)AID.TorchingTorment, 5.9f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class PureShock(BossModule module) : Components.RaidwideCast(module, (uint)AID.PureShock);
 sealed class HumbleHammer(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HumbleHammer, 3f);

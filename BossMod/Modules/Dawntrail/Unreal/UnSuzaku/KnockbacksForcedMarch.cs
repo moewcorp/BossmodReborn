@@ -41,7 +41,7 @@ abstract class PayThePiper : Components.GenericForcedMarch
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         var target = WorldState.Actors.Find(tether.Target)!;
-        if (target == Module.PrimaryActor || (TetherID)tether.ID != TetherID.PayThePiper)
+        if (target == Module.PrimaryActor || tether.ID != (uint)TetherID.PayThePiper)
             return;
         Angle? rot = source.OID switch
         {

@@ -34,9 +34,7 @@ sealed class ScraplineStorm(BossModule module) : Components.SimpleKnockbacks(mod
     {
         if (_aoe.AOEs.Count != 0)
         {
-            var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
-            ref readonly var aoe = ref aoes[0];
-            return aoe.Check(pos);
+            return _aoe.AOEs.Ref(0).Check(pos);
         }
         return false;
     }

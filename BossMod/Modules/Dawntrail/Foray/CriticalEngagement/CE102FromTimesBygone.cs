@@ -118,7 +118,7 @@ sealed class LotsCastSpread(BossModule module) : Components.SpreadFromCastTarget
     }
 }
 
-sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.LotsCastTB, 6f, true, tankbuster: true)
+sealed class LotsCastTB(BossModule module) : Components.BaitAwayCast(module, (uint)AID.LotsCastTB, 6f, true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public override void Update()
     {

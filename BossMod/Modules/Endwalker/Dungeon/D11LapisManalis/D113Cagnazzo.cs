@@ -68,7 +68,7 @@ class StygianDelugeArenaChange(BossModule module) : Components.GenericAOEs(modul
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.StygianDeluge && Arena.Bounds == D113Cagnazzo.StartingBounds)
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -81,14 +81,14 @@ class StygianDelugeArenaChange(BossModule module) : Components.GenericAOEs(modul
     }
 }
 
-class VoidTorrent(BossModule module) : Components.BaitAwayCast(module, (uint)AID.VoidTorrent, new AOEShapeRect(60f, 4f), tankbuster: true);
+class VoidTorrent(BossModule module) : Components.BaitAwayCast(module, (uint)AID.VoidTorrent, new AOEShapeRect(60f, 4f), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class Voidcleaver(BossModule module) : Components.RaidwideCast(module, (uint)AID.Voidcleaver);
 class VoidMiasmaBait(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeCone(50f, 15f.Degrees()), (uint)TetherID.BaitAway);
 
 class LifescleaverVoidMiasma(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.VoidMiasma, (uint)AID.Lifescleaver], new AOEShapeCone(50f, 15f.Degrees()));
 
-class Tsunami(BossModule module) : Components.RaidwideAfterNPCYell(module, (uint)AID.Tsunami, (uint)NPCYell.LimitBreakStart, 4.5f);
+class Tsunami(BossModule module) : Components.RaidwideAfterNPCYell(module, (uint)AID.Tsunami, (uint)NPCYell.LimitBreakStart, 4.5d);
 class StygianDeluge(BossModule module) : Components.RaidwideCast(module, (uint)AID.StygianDeluge);
 class Antediluvian(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Antediluvian, 15)
 {
@@ -198,7 +198,7 @@ class Hydrobomb(BossModule module) : Components.GenericAOEs(module)
 }
 
 class Hydrovent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Hydrovent, 6f);
-class NeapTide(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.NeapTide, 6f, 5);
+class NeapTide(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.NeapTide, 6f, 5d);
 
 class SpringTideHydroFall(BossModule module) : Components.UniformStackSpread(module, 6f, default, 4) // both use the same icon
 {

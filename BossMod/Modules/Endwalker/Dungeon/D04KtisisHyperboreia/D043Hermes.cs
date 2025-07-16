@@ -75,7 +75,7 @@ class TrismegistosArenaChange(BossModule module) : Components.GenericAOEs(module
 class TrueBraveryInterruptHint(BossModule module) : Components.CastInterruptHint(module, (uint)AID.TrueBravery);
 class Trismegistos(BossModule module) : Components.RaidwideCast(module, (uint)AID.Trismegistos);
 
-class TrueTornadoTankbuster(BossModule module) : Components.BaitAwayIcon(module, 4f, (uint)IconID.Tankbuster, (uint)AID.TrueTornado4, 5.1f, tankbuster: true);
+class TrueTornadoTankbuster(BossModule module) : Components.BaitAwayIcon(module, 4f, (uint)IconID.Tankbuster, (uint)AID.TrueTornado4, 5.1f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class TrueTornadoAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TrueTornadoAOE, 4f);
 

@@ -103,7 +103,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                         lastCountWhite = countWhite;
                     }
                     _wipe ??= Module.FindComponent<WipeBlackWhite>();
-                    _wipe?.UpdateAOE((countWhite + countBlack) < 10);
+                    _wipe?.UpdateAOE(lastCountWhite, lastCountBlack, (countWhite + countBlack) < 10);
                     Arena.Bounds = new ArenaBoundsComplex(baseArena, [.. differenceShapes]);
                     break;
             }

@@ -85,7 +85,7 @@ public enum TetherID : uint
     BurningChains = 9 // player->player
 }
 
-class AncientCircle(BossModule module) : Components.DonutStack(module, (uint)AID.AncientCircle, (uint)IconID.AncientCircle, 10f, 20f, 8f, 4, 4);
+class AncientCircle(BossModule module) : Components.DonutStack(module, (uint)AID.AncientCircle, (uint)IconID.AncientCircle, 10f, 20f, 8d, 4, 4);
 
 class DarkWhispers(BossModule module) : Components.UniformStackSpread(module, default, 6f, alwaysShowSpreads: true)
 {
@@ -107,13 +107,13 @@ class DarkWhispers(BossModule module) : Components.UniformStackSpread(module, de
     }
 }
 
-class AncientFrost(BossModule module) : Components.StackWithIcon(module, (uint)IconID.AncientFrost, (uint)AID.AncientFrost, 6f, 5f, 4, 4);
+class AncientFrost(BossModule module) : Components.StackWithIcon(module, (uint)IconID.AncientFrost, (uint)AID.AncientFrost, 6f, 5d, 4, 4);
 class ShadowFlare(BossModule module) : Components.RaidwideCast(module, (uint)AID.ShadowFlare1);
 class ShadowFlareLBPhase(BossModule module) : Components.RaidwideCast(module, (uint)AID.ShadowFlare2, "Raidwide x2");
 class Annihilation(BossModule module) : Components.RaidwideCast(module, (uint)AID.AnnihilationAOE);
 class UniversalManipulation(BossModule module) : Components.RaidwideCast(module, (uint)AID.UniversalManipulation, "Raidwide + Apply debuffs for later");
 
-class HeightOfChaos(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HeightOfChaos, 5f, tankbuster: true);
+class HeightOfChaos(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HeightOfChaos, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class AncientEruption(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientEruption, 5f);
 
