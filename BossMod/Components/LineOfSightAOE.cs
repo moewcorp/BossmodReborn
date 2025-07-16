@@ -1,8 +1,6 @@
 ﻿namespace BossMod.Components;
 
 // generic component that shows line-of-sight cones for arbitrary origin and blocking shapes
-// TODO: add support for multiple AOE sources at the same time (I simplified Hermes from 4 AOEs into one)
-// add support for blockers that spawn or get destroyed after cast already started (Hermes: again a cheat here by only using that meteor that exists for the whole mechanic)
 public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float maxRange, bool blockersImpassable = false, bool rect = false, bool safeInsideHitbox = true) : GenericAOEs(module, aid, "Hide behind obstacle!")
 {
     public DateTime NextExplosion;
@@ -171,5 +169,72 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
             blockerData[i] = (b.Position, b.HitboxRadius);
         }
         Modify(position, blockerData, Module.CastFinishAt(caster?.CastInfo));
+    }
+}
+
+public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, RelSimplifiedComplexPolygon blockerShape, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : GenericAOEs(module, aid)
+{
+    public readonly RelSimplifiedComplexPolygon BlockerShape = blockerShape;
+    public int MaxCasts = maxCasts; // used for staggered aoes, when showing all active would be pointless
+    public uint Color; // can be customized if needed
+    public bool Risky = true; // can be customized if needed
+    public int? MaxDangerColor;
+    public int? MaxRisky; // set a maximum amount of AOEs that are considered risky
+    public readonly double RiskyWithSecondsLeft = riskyWithSecondsLeft; // can be used to delay risky status of AOEs, so AI waits longer to dodge, if 0 it will just use the bool Risky
+
+    public readonly List<AOEInstance> AOEs = [];
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = AOEs.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var time = WorldState.CurrentTime;
+        var max = count > MaxCasts ? MaxCasts : count;
+        var hasMaxDangerColor = count > MaxDangerColor;
+
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
+        for (var i = 0; i < max; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            var color = (hasMaxDangerColor && i < MaxDangerColor) ? Colors.Danger : Color;
+            var risky = Risky && (MaxRisky == null || i < MaxRisky);
+
+            if (RiskyWithSecondsLeft != default)
+            {
+                risky &= aoe.Activation.AddSeconds(-RiskyWithSecondsLeft) <= time;
+            }
+            aoe.Color = color;
+            aoe.Risky = risky;
+        }
+        return aoes[..max];
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == WatchedAction)
+        {
+            var center = Arena.Center;
+            AOEs.Add(new(new AOEShapeCustom([new PolygonCustomRel(Visibility.Compute(spell.LocXZ - center, BlockerShape))]), center, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == WatchedAction)
+        {
+            var count = AOEs.Count;
+            var id = caster.InstanceID;
+            for (var i = 0; i < count; ++i)
+            {
+                if (AOEs[i].ActorID == id)
+                {
+                    AOEs.RemoveAt(i);
+                    return;
+                }
+            }
+        }
     }
 }

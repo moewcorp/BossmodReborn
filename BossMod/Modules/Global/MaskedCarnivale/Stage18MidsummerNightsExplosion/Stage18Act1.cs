@@ -23,28 +23,27 @@ sealed class TailSmash(BossModule module) : Components.SimpleAOEs(module, (uint)
 
 sealed class WildCharge(BossModule module) : Components.BaitAwayChargeCast(module, (uint)AID.WildCharge, 4f)
 {
-    public static List<Actor> GetKegs(BossModule module)
-    {
-        var enemies = module.Enemies((uint)OID.Keg);
-        var count = enemies.Count;
-        if (count == 0)
-            return [];
+    private readonly List<Actor> kegs = new(12);
 
-        var kegs = new List<Actor>(count);
-        for (var i = 0; i < count; ++i)
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Keg)
         {
-            var z = enemies[i];
-            if (!z.IsDead)
-            {
-                kegs.Add(z);
-            }
+            kegs.Add(actor);
         }
-        return kegs;
+    }
+
+    public override void OnActorDeath(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Keg)
+        {
+            kegs.Remove(actor);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Count != 0 && GetKegs(Module).Count != 0)
+        if (CurrentBaits.Count != 0 && kegs.Count != 0)
         {
             hints.Add("Aim charge at a keg!");
         }
@@ -53,9 +52,26 @@ sealed class WildCharge(BossModule module) : Components.BaitAwayChargeCast(modul
 
 sealed class KegExplosion(BossModule module) : BossComponent(module)
 {
+    private readonly List<Actor> kegs = new(12);
+
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Keg)
+        {
+            kegs.Add(actor);
+        }
+    }
+
+    public override void OnActorDeath(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Keg)
+        {
+            kegs.Remove(actor);
+        }
+    }
+
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        var kegs = WildCharge.GetKegs(Module);
         var count = kegs.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -65,7 +81,6 @@ sealed class KegExplosion(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var kegs = WildCharge.GetKegs(Module);
         var count = kegs.Count;
         for (var i = 0; i < count; ++i)
         {

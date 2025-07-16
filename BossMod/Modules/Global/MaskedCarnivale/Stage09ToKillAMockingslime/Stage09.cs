@@ -26,7 +26,7 @@ public enum AID : uint
 }
 
 sealed class GoldenTongue(BossModule module) : Components.CastInterruptHint(module, (uint)AID.GoldenTongue);
-sealed class DarkVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.Dark, GetVoidzones, 1f)
+sealed class DarkVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.Dark, GetVoidzones, 1d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {

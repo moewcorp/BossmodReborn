@@ -11,8 +11,7 @@ public enum AID : uint
     TheLastSong = 14756 // Boss->self, 6.0s cast, range 60 circle, heavy dmg, applies silence to player
 }
 
-sealed class LastSong(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.TheLastSong, 60f, true); //TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
-
+sealed class LastSong(BossModule module) : Components.CastLineOfSightAOEComplex(module, (uint)AID.TheLastSong, Layouts.LayoutBigQuadBlockers);
 sealed class LastSongHint(BossModule module) : BossComponent(module)
 {
     public bool Casting;
@@ -55,7 +54,7 @@ sealed class Stage14Act2States : StateMachineBuilder
     {
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
-            // .ActivateOnEnter<LastSong>()
+            .ActivateOnEnter<LastSong>()
             .ActivateOnEnter<LastSongHint>()
             .Raw.Update = () =>
             {
