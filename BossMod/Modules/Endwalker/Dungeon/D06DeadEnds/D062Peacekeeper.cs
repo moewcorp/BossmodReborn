@@ -55,7 +55,7 @@ class DecimationArenaChange(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ElectromagneticRepellant(BossModule module) : Components.VoidzoneAtCastTarget(module, 9f, (uint)AID.ElectromagneticRepellant, GetVoidzone, 0.7f)
+class ElectromagneticRepellant(BossModule module) : Components.VoidzoneAtCastTarget(module, 9f, (uint)AID.ElectromagneticRepellant, GetVoidzone, 0.7d)
 {
     private static Actor[] GetVoidzone(BossModule module)
     {
@@ -72,7 +72,7 @@ class NoFutureAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.N
 class Peacefire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Peacefire, 10f);
 class SmallBoreLaser(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SmallBoreLaser, new AOEShapeRect(20f, 2f));
 
-class Elimination(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Elimination, new AOEShapeRect(46f, 5f), endsOnCastEvent: true, tankbuster: true);
+class Elimination(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Elimination, new AOEShapeRect(46f, 5f), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 class Decimation(BossModule module) : Components.RaidwideCast(module, (uint)AID.Decimation);
 class EclipsingExhaust(BossModule module) : Components.RaidwideCast(module, (uint)AID.EclipsingExhaust);

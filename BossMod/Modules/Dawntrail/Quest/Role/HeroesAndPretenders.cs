@@ -41,7 +41,7 @@ sealed class FledglingFury(BossModule module) : Components.SimpleAOEs(module, (u
 sealed class PromisedFall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PromisedFall, 13f);
 sealed class GoldDust(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.GoldDust, 8f, 2, 2);
 sealed class AcidRain(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AcidRain, 8f);
-sealed class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, (uint)AID.UnboundArrow, 5f, tankbuster: true);
+sealed class UnboundArrow(BossModule module) : Components.BaitAwayCast(module, (uint)AID.UnboundArrow, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4f)
 {

@@ -218,7 +218,7 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
             x1 = bx;
             y1 = by;
             var dy = by - ay;
-            var invDy = dy != 0 ? 1f / dy : 0;
+            var invDy = dy != 0 ? 1f / dy : default;
             slopeX = (x1 - x0) * invDy;
         }
     }
@@ -759,7 +759,7 @@ public readonly struct PolygonWithHolesDistanceFunction
 // used to create a visibility polygon of a point source and a RelSimplifiedComplexPolygon
 public static class Visibility
 {
-    public static WDir[] ComputeVisibilityPolygon(WDir origin, RelSimplifiedComplexPolygon polygon)
+    public static WDir[] Compute(WDir origin, RelSimplifiedComplexPolygon polygon)
     {
         List<(WDir A, WDir B)> blockingEdges = [];
         var parts = polygon.Parts;
@@ -778,23 +778,23 @@ public static class Visibility
         }
 
         // get all unique vertices
-        HashSet<WDir> uniquePoints = [];
+        HashSet<WDir> uniqueVertices = [];
         for (var i = 0; i < countParts; ++i)
         {
             var part = parts[i];
             var countV = part.Vertices.Count;
             for (var j = 0; j < countV; ++j)
             {
-                uniquePoints.Add(part.Vertices[j]);
+                uniqueVertices.Add(part.Vertices[j]);
             }
         }
 
         // cast rays toward each vertex, slightly offset left/right
         List<(float angle, WDir intersection)> hits = [];
-        float[] offsets = [0f, -10e-4f, 10e-4f];
+        float[] offsets = [-1e-4f, 0f, 1e-4f];
         var originX = origin.X;
         var originZ = origin.Z;
-        foreach (var pt in uniquePoints)
+        foreach (var pt in uniqueVertices)
         {
             var baseAngle = MathF.Atan2(pt.Z - originZ, pt.X - originX);
             for (var i = 0; i < 3; ++i)
@@ -821,7 +821,6 @@ public static class Visibility
         {
             visibilityPolygon[i] = hits[i].intersection;
         }
-
         return visibilityPolygon;
     }
 

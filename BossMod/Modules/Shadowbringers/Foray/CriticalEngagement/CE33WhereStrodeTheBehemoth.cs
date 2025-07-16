@@ -50,7 +50,7 @@ sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(mo
 }
 
 sealed class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9d);
-sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
+sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
 {

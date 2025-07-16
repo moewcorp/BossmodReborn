@@ -1,7 +1,7 @@
 namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB1DemonTablet;
 
-sealed class DemonicDarkII(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.DemonicDarkIIVisual, (uint)AID.DemonicDarkII, 0.8f);
-sealed class OccultChisel(BossModule module) : Components.BaitAwayCast(module, (uint)AID.OccultChisel, 5f, tankbuster: true);
+sealed class DemonicDarkII(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.DemonicDarkIIVisual, (uint)AID.DemonicDarkII, 0.8d);
+sealed class OccultChisel(BossModule module) : Components.BaitAwayCast(module, (uint)AID.OccultChisel, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class RotationBig(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Rotation1, new AOEShapeCone(37f, 45f.Degrees()));
 sealed class RotationSmall(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Rotation2, (uint)AID.Rotation3], new AOEShapeRect(33f, 1.5f));
 sealed class Summon(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Summon, new AOEShapeRect(36f, 15f));

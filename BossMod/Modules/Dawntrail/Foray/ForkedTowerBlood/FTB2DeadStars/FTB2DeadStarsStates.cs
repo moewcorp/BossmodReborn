@@ -8,9 +8,12 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
     {
         _module = module;
         SimplePhase(default, Phase1, "")
-            .Raw.Update = () => _module.PrimaryActor.IsDestroyed || (_module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false) || (_module.FindComponent<PhaseChange>()?.PhaseChanged ?? false);
+            .Raw.Update = () => _module.PrimaryActor.IsDestroyed || (_module.DeathWall?.IsDestroyed ?? false) || (_module.FindComponent<PhaseChange>()?.PhaseChanged ?? false);
         SimplePhase(1u, Phase2, "")
-            .Raw.Update = () => _module.PrimaryActor.IsDestroyed || _module.BossDeadStars()?.HPMP.CurHP <= 1u || (_module.PrimaryActor.CastInfo?.IsSpell(AID.Return) ?? false);
+            .Raw.Update = () => _module.BossDeadStars?.HPMP.CurHP <= 1u || _module.DeathWall!.IsDestroyed;
+        SimplePhase(2u, Wait, "")
+            .OnEnter(() => module.Arena.Bounds = FTB2DeadStars.DefaultArena)
+            .Raw.Update = () => _module.DeathWall!.IsDestroyed;
     }
 
     private void Phase1(uint id)
@@ -33,6 +36,11 @@ sealed class FTB2DeadStarsStates : StateMachineBuilder
         VengefulBioIIIBlizzardIIIFireIII(id, 12f, true);
         SixHandedFistfight(id + 0x10000u, 24.9f);
         SimpleState(id + 0x20000u, 15f, "Enrage");
+    }
+
+    private void Wait(uint id)
+    {
+        SimpleState(id, 15f, "Wait for deathwall to disappear!");
     }
 
     private void DecisiveBattle(uint id, float delay)

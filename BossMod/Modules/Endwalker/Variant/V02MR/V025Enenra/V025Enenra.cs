@@ -2,7 +2,7 @@ namespace BossMod.Endwalker.VariantCriterion.V02MR.V025Enenra;
 
 sealed class PipeCleaner(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(60f, 5f), (uint)TetherID.PipeCleaner);
 sealed class Uplift(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Uplift, 6f);
-sealed class Snuff(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Snuff, 6f, tankbuster: true);
+sealed class Snuff(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Snuff, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class Smoldering(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Smoldering, 8f, 8);
 sealed class FlagrantCombustion(BossModule module) : Components.RaidwideCast(module, (uint)AID.FlagrantCombustion);

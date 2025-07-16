@@ -69,8 +69,8 @@ public enum AID : uint
     WaveBlack = 24974, // RedSphere->self, 8.0s cast, range 22 circle
     WaveWhite = 24973, // RedSphere->self, 8.0s cast, range 22 circle
 
-    ChildsPlay1 = 24613, // BossP2/RedGirl3->self, 10.0s cast, single-target
-    ChildsPlay2 = 24612, // BossP2/RedGirl3->self, 10.0s cast, single-target
+    ChildsPlay1 = 24612, // BossP2/RedGirl3->self, 10.0s cast, single-target, forced march north
+    ChildsPlay2 = 24613, // BossP2/RedGirl3->self, 10.0s cast, single-target, forced march east
     Explosion = 24614, // BlackPylonP2->self, 15.0s cast, range 9 circle
 
     WipeWhite = 24588, // Helper->self, 13.0s cast, range 75 circle
@@ -81,7 +81,7 @@ public enum SID : uint
 {
     ProgramFFFFFFF = 2632, // none->player, extra=0x1AB
     Program000000 = 2633, // none->player, extra=0x1AC
-    PayingThePiper = 1681, // none->player, extra=0x4/0x2
+    PayingThePiper = 1681 // none->player, extra=0x4/0x2
 }
 
 public enum IconID : uint
@@ -96,5 +96,5 @@ public enum IconID : uint
 
 public enum TetherID : uint
 {
-    _Gen_Tether_chn_d1050_chain01w = 149, // player/RedGirl1->BossP2/RedGirl3
+    ChildsPlay = 149 // player/RedGirl1->BossP2/RedGirl3
 }

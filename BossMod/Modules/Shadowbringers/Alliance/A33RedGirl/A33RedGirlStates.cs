@@ -14,7 +14,6 @@ sealed class A33RedGirlStates : StateMachineBuilder
             .ActivateOnEnter<ShockWhiteBaitSlow>()
             .ActivateOnEnter<ShockWhiteBaitFast>()
             .ActivateOnEnter<ShockBlackBait>()
-            .ActivateOnEnter<CrueltyP1>()
             .ActivateOnEnter<SublimeTranscendence>()
             .ActivateOnEnter<GenerateBarrier1>()
             .ActivateOnEnter<GenerateBarrier2>()
@@ -24,6 +23,7 @@ sealed class A33RedGirlStates : StateMachineBuilder
             .Raw.Update = () => module.PrimaryActor.IsDestroyed && IsWipedOrLeftRaid() || module.RedSphere != null;
         TrivialPhase(1u)
             .ActivateOnEnter<IntermissionArena>()
+            .ActivateOnEnter<IntermissionAIModule>()
             .ActivateOnEnter<WaveWhite>()
             .ActivateOnEnter<WaveBlack>()
             .ActivateOnEnter<BigExplosion>()
@@ -43,6 +43,7 @@ sealed class A33RedGirlStates : StateMachineBuilder
             .ActivateOnEnter<GenerateBarrier4>()
             .ActivateOnEnter<ManipulateEnergy>()
             .ActivateOnEnter<DiffuseEnergy>()
+            .ActivateOnEnter<ChildsPlay>()
             .Raw.Update = () => (module.BossP2?.IsDestroyed ?? true) || module.BossP2?.HPMP.CurHP <= 1u;
     }
 }

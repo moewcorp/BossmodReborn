@@ -66,7 +66,7 @@ class Gurgle(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Crack(BossModule module) : Components.GenericBaitAway(module, tankbuster: true)
+class Crack(BossModule module) : Components.GenericBaitAway(module, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     private static readonly AOEShapeRect rect = new(80f, 1.5f);
 
