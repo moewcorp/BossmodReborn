@@ -13,30 +13,30 @@ public enum AID : uint
     Object130 = 14711 // Boss->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
 
-sealed class LowVoltage(BossModule module) : Components.GenericLineOfSightAOE(module, (uint)AID.LowVoltage, 35f, true); // TODO: find a way to use the obstacles on the map and draw proper AOEs, this does nothing right now
+sealed class LowVoltage(BossModule module) : Components.CastLineOfSightAOEComplex(module, (uint)AID.LowVoltage, Layouts.Layout2CornersBlockers, riskyWithSecondsLeft: 4d);
 
 sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
-    private static List<Actor> GetEnemies(BossModule module)
-    {
-        var enemies = module.Enemies((uint)OID.Boss);
-        var count = enemies.Count;
-        if (count == 0)
-            return [];
+    private readonly List<Actor> slimes = new(6);
 
-        var slimes = new List<Actor>(count);
-        for (var i = 0; i < count; ++i)
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Slime)
         {
-            var z = enemies[i];
-            if (!z.IsDead)
-                slimes.Add(z);
+            slimes.Add(actor);
         }
-        return slimes;
+    }
+
+    public override void OnActorDeath(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Slime)
+        {
+            slimes.Remove(actor);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -46,7 +46,6 @@ sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(m
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -71,7 +70,7 @@ sealed class Stage07Act3States : StateMachineBuilder
     public Stage07Act3States(BossModule module) : base(module)
     {
         TrivialPhase()
-            // .ActivateOnEnter<LowVoltage>()
+            .ActivateOnEnter<LowVoltage>()
             .Raw.Update = () =>
             {
                 var enemies = module.Enemies(Stage07Act3.Trash);

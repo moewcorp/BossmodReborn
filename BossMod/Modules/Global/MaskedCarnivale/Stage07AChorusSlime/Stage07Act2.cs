@@ -14,26 +14,26 @@ public enum AID : uint
 
 sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
-    private static List<Actor> GetEnemies(BossModule module)
-    {
-        var enemies = module.Enemies((uint)OID.Boss);
-        var count = enemies.Count;
-        if (count == 0)
-            return [];
+    private readonly List<Actor> slimes = new(4);
 
-        var slimes = new List<Actor>(count);
-        for (var i = 0; i < count; ++i)
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Boss)
         {
-            var z = enemies[i];
-            if (!z.IsDead)
-                slimes.Add(z);
+            slimes.Add(actor);
         }
-        return slimes;
+    }
+
+    public override void OnActorDeath(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Boss)
+        {
+            slimes.Remove(actor);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -43,7 +43,6 @@ sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(m
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var slimes = GetEnemies(Module);
         var count = slimes.Count;
         for (var i = 0; i < count; ++i)
         {
