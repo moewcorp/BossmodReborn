@@ -6,27 +6,28 @@ sealed class RiotOfMagicSeedOfMagicAlpha(BossModule module) : Components.CastSta
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        base.OnCastStarted(caster, spell);
-        if (spell.Action.ID == SpreadAction)
+        var id = spell.Action.ID;
+        if (id == SpreadAction && WorldState.Actors.Find(spell.TargetID) is Actor spreadTarget) // stack and spreads can appear in any order during the same frame
         {
             forbidden.Set(Raid.FindSlot(spell.TargetID));
             if (Stacks.Count != 0)
             {
                 Stacks.Ref(0).ForbiddenPlayers = forbidden;
             }
+            AddSpread(spreadTarget, Module.CastFinishAt(spell));
+        }
+        else if (id == StackAction && WorldState.Actors.Find(spell.TargetID) is Actor stackTarget)
+        {
+            AddStack(stackTarget, Module.CastFinishAt(spell), forbidden);
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         base.OnCastFinished(caster, spell);
-        if (spell.Action.ID == SpreadAction)
+        if (spell.Action.ID == StackAction)
         {
-            forbidden.Clear(Raid.FindSlot(spell.TargetID));
-            if (Stacks.Count != 0)
-            {
-                Stacks.Ref(0).ForbiddenPlayers = forbidden;
-            }
+            forbidden = default;
         }
     }
 }
