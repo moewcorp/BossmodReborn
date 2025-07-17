@@ -6,16 +6,21 @@ sealed class HeavensearthSuspendedStone(BossModule module) : Components.IconStac
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        base.OnEventIcon(actor, iconID, targetID);
-        if (iconID == SpreadIcon)
+        if (iconID == SpreadIcon) // stack and spreads can appear in any order during the same frame
         {
+            AddSpread(actor, WorldState.FutureTime(ActivationDelay));
             forbidden.Set(Raid.FindSlot(targetID));
             if (Stacks.Count != 0)
             {
                 Stacks.Ref(0).ForbiddenPlayers = forbidden;
             }
         }
+        else if (iconID == StackIcon)
+        {
+            AddStack(actor, WorldState.FutureTime(ActivationDelay), forbidden);
+        }
     }
+
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         base.OnEventCast(caster, spell);

@@ -313,11 +313,12 @@ public class CastStackSpread(BossModule module, uint stackAID, uint spreadAID, f
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == StackAction && WorldState.Actors.Find(spell.TargetID) is var stackTarget && stackTarget != null)
+        var id = spell.Action.ID;
+        if (id == StackAction && WorldState.Actors.Find(spell.TargetID) is Actor stackTarget)
         {
             AddStack(stackTarget, Module.CastFinishAt(spell));
         }
-        else if (spell.Action.ID == SpreadAction && WorldState.Actors.Find(spell.TargetID) is var spreadTarget && spreadTarget != null)
+        else if (id == SpreadAction && WorldState.Actors.Find(spell.TargetID) is Actor spreadTarget)
         {
             AddSpread(spreadTarget, Module.CastFinishAt(spell));
         }
@@ -325,7 +326,8 @@ public class CastStackSpread(BossModule module, uint stackAID, uint spreadAID, f
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == StackAction)
+        var aid = spell.Action.ID;
+        if (aid == StackAction)
         {
             var count = Stacks.Count;
             var id = spell.TargetID;
@@ -339,7 +341,7 @@ public class CastStackSpread(BossModule module, uint stackAID, uint spreadAID, f
                 }
             }
         }
-        else if (spell.Action.ID == SpreadAction)
+        else if (aid == SpreadAction)
         {
             var count = Spreads.Count;
             var id = spell.TargetID;
@@ -390,7 +392,8 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == StackAction)
+        var aid = spell.Action.ID;
+        if (aid == StackAction)
         {
             var id = spell.MainTargetID;
             if (MaxCasts != 1 && Stacks.Count == 1 && Stacks.Ref(0).Target.InstanceID != id) // multi hit stack target died and new target got selected
@@ -418,7 +421,7 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
                 }
             }
         }
-        else if (spell.Action.ID == SpreadAction)
+        else if (aid == SpreadAction)
         {
             var count = Spreads.Count;
             var id = spell.MainTargetID;
@@ -433,11 +436,7 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
             }
         }
     }
-}
 
-// generic 'spread from actors with specific icon' mechanic
-public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, bool drawAllSpreads = true) : IconStackSpread(module, default, icon, default, aid, default, radius, activationDelay, alwaysShowSpreads: drawAllSpreads)
-{
     public override void Update()
     {
         var count = Spreads.Count - 1;
@@ -451,11 +450,17 @@ public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius
     }
 }
 
+// generic 'spread from actors with specific icon' mechanic
+public class SpreadFromIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, bool drawAllSpreads = true) :
+IconStackSpread(module, default, icon, default, aid, default, radius, activationDelay, alwaysShowSpreads: drawAllSpreads);
+
 // generic 'stack with actors with specific icon' mechanic
-public class StackWithIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, int maxCasts = 1) : IconStackSpread(module, icon, default, aid, default, radius, default, activationDelay, minStackSize, maxStackSize, false, maxCasts);
+public class StackWithIcon(BossModule module, uint icon, uint aid, float radius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue, int maxCasts = 1) :
+IconStackSpread(module, icon, default, aid, default, radius, default, activationDelay, minStackSize, maxStackSize, false, maxCasts);
 
 // generic 'donut stack' mechanic
-public class DonutStack(BossModule module, uint aid, uint icon, float innerRadius, float outerRadius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue) : UniformStackSpread(module, innerRadius / 3, default, minStackSize, maxStackSize)
+public class DonutStack(BossModule module, uint aid, uint icon, float innerRadius, float outerRadius, double activationDelay, int minStackSize = 2, int maxStackSize = int.MaxValue) :
+UniformStackSpread(module, innerRadius / 3f, default, minStackSize, maxStackSize)
 {
     // this is a donut targeted on each player, it is best solved by stacking
     // regular stack component won't work because this is self targeted
