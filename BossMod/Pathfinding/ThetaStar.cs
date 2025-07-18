@@ -367,7 +367,7 @@ public sealed class ThetaStar
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
 
-        if (currentParentNode.Score == Score.Safe && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        if (currentParentNode.Score >= Score.SemiSafeAsStart && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
             return;
 
         var grandParentIndex = currentParentNode.ParentIndex;

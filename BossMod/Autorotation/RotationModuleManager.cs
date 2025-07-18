@@ -90,6 +90,15 @@ public sealed class RotationModuleManager : IDisposable
 
     public void Dispose()
     {
+        if (ActiveModules != null)
+        {
+            var count = ActiveModules.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                ActiveModules[i].Module.Dispose();
+            }
+            ActiveModules = null;
+        }
         _subscriptions.Dispose();
     }
 
@@ -218,8 +227,16 @@ public sealed class RotationModuleManager : IDisposable
 
     private void DirtyActiveModules(bool condition)
     {
-        if (condition)
-            ActiveModules = null;
+        if (!condition || ActiveModules == null)
+        {
+            return;
+        }
+        var count = ActiveModules.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            ActiveModules[i].Module.Dispose();
+        }
+        ActiveModules = null;
     }
 
     private void OnCombatChanged(Actor actor)

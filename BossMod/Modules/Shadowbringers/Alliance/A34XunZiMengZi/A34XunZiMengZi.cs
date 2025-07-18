@@ -2,7 +2,7 @@
 
 sealed class DeployArmaments(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DeployArmaments1, (uint)AID.DeployArmaments2,
 (uint)AID.DeployArmaments3, (uint)AID.DeployArmaments4], new AOEShapeRect(50f, 9f));
-class UniversalAssault(BossModule module) : Components.RaidwideCast(module, (uint)AID.UniversalAssault);
+sealed class UniversalAssault(BossModule module) : Components.RaidwideCast(module, (uint)AID.UniversalAssault);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.XunZi, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 779, NameID = 9921, SortOrder = 5)]
 public sealed class A34XunZiMengZi(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)

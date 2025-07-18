@@ -172,7 +172,7 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
     }
 }
 
-public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, RelSimplifiedComplexPolygon blockerShape, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : GenericAOEs(module, aid)
+public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, RelSimplifiedComplexPolygon blockerShape, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default, float maxRange = default) : GenericAOEs(module, aid)
 {
     public readonly RelSimplifiedComplexPolygon BlockerShape = blockerShape;
     public int MaxCasts = maxCasts; // used for staggered aoes, when showing all active would be pointless
@@ -181,6 +181,7 @@ public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, Rel
     public int? MaxDangerColor;
     public int? MaxRisky; // set a maximum amount of AOEs that are considered risky
     public readonly double RiskyWithSecondsLeft = riskyWithSecondsLeft; // can be used to delay risky status of AOEs, so AI waits longer to dodge, if 0 it will just use the bool Risky
+    public readonly float MaxRange = maxRange; // useful if the AOE is smaller than the arena size
 
     public readonly List<AOEInstance> AOEs = [];
 
@@ -217,7 +218,10 @@ public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, Rel
         if (spell.Action.ID == WatchedAction)
         {
             var center = Arena.Center;
-            AOEs.Add(new(new AOEShapeCustom([new PolygonCustomRel(Visibility.Compute(spell.LocXZ - center, BlockerShape))]), center, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            var pos = caster.Position; // these LoS casts seem to typically use caster.Position instead of spell.LocXz
+            AOEs.Add(new(new AOEShapeCustom([new PolygonCustomRel(Visibility.Compute(pos - center, BlockerShape))],
+            MaxRange != default ? [new DonutV(pos, MaxRange, 1000f, 64)] : null),
+            center, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 

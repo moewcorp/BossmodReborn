@@ -33,13 +33,23 @@ public struct NavigationDecision
         (Func<WPos, float>, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
         Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
         if (hints.ForbiddenZones.Count != 0)
-            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
-        if (player.CastInfo == null)
         {
-            if (hints.GoalZones.Count != 0)
-                RasterizeGoalZones(ctx.Map, localGoalZones);
-            if (forbiddenZoneCushion > 0)
-                AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
+            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
+        }
+        if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
+        {
+            var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
+            if (ctx.Map.PixelMaxG.Length >= index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
+            {
+                if (hints.GoalZones.Count != 0)
+                {
+                    RasterizeGoalZones(ctx.Map, localGoalZones);
+                }
+                if (forbiddenZoneCushion > 0)
+                {
+                    AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
+                }
+            }
         }
         // execute pathfinding
         ctx.ThetaStar.Start(ctx.Map, player.Position, 1.0f / playerSpeed);

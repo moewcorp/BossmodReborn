@@ -32,8 +32,3 @@ public enum SID : uint
 {
     Tracking = 2056, // none->SerialJointedModel, extra=0x87
 }
-
-public enum IconID : uint
-{
-    HighPoweredLaser = 164 // player
-}

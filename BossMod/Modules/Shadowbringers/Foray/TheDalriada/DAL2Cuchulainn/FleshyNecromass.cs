@@ -12,9 +12,10 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
     private static AOEShapeCustom VoidzoneShape()
     {
         var circles = new Polygon[4];
+        var circle = new Polygon(default, 5.676f, 40);
         for (var i = 0; i < 4; ++i)
         {
-            circles[i] = new Polygon(positions[i], 5.676f, 40);
+            circles[i] = circle with { Center = positions[i] };
         }
         return new(circles);
     }
