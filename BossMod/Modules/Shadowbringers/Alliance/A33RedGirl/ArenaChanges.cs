@@ -5,7 +5,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private WipeBlackWhite? _wipe;
     private AOEInstance? _aoe;
     private DateTime activation;
-    private static readonly Angle am90 = -89.98f.Degrees();
+    private static readonly Angle am90 = -89.9802f.Degrees();
     private readonly (WPos position, Angle rotation, bool? isWhite)[] walls =
     [
         (new(845f, -873f), am90, null), // 0x1D
@@ -89,22 +89,22 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                             }
                         }
                     }
-                    var baseArena = isDefaultArena ? A33RedGirl.DefaultSquare : A33RedGirl.BigSquare;
+
                     var countBlack = differenceShapesBlack.Count;
                     if (countBlack != lastCountBlack)
                     {
-                        BlackWalls = new AOEShapeCustom(baseArena, [.. differenceShapesBlack]).GetCombinedPolygon(Arena.Center);
+                        BlackWalls = new AOEShapeCustom(A33RedGirl.BigSquare, [.. differenceShapesBlack]).GetCombinedPolygon(Arena.Center);
                         lastCountBlack = countBlack;
                     }
                     var countWhite = differenceShapesWhite.Count;
                     if (differenceShapesWhite.Count != lastCountWhite)
                     {
-                        WhiteWalls = new AOEShapeCustom(baseArena, [.. differenceShapesWhite]).GetCombinedPolygon(Arena.Center);
+                        WhiteWalls = new AOEShapeCustom(A33RedGirl.BigSquare, [.. differenceShapesWhite]).GetCombinedPolygon(Arena.Center);
                         lastCountWhite = countWhite;
                     }
                     _wipe ??= Module.FindComponent<WipeBlackWhite>();
                     _wipe?.UpdateAOE(lastCountWhite, lastCountBlack, (countWhite + countBlack) < 10);
-                    Arena.Bounds = new ArenaBoundsComplex(baseArena, [.. differenceShapes]);
+                    Arena.Bounds = new ArenaBoundsComplex(isDefaultArena ? A33RedGirl.DefaultSquare : A33RedGirl.BigSquare, [.. differenceShapes]);
                     break;
             }
         }

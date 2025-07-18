@@ -844,34 +844,56 @@ public static class Visibility
         return closest;
     }
 
-    private static bool TryIntersectRaySegment(WDir rayOrigin, WDir rayDir, WDir segA, WDir segB, out WDir intersection, out float tRay)
+    private static bool TryIntersectRaySegment(in WDir o, in WDir d, in WDir a, in WDir b, out WDir intersection, out float tRay)
     {
         intersection = default;
         tRay = float.MaxValue;
 
-        var dx1 = rayDir.X;
-        var dy1 = rayDir.Z;
-        var dx2 = segB.X - segA.X;
-        var dy2 = segB.Z - segA.Z;
-
+        float dx1 = d.X, dy1 = d.Z;
+        float dx2 = b.X - a.X, dy2 = b.Z - a.Z;
         var det = dx1 * dy2 - dy1 * dx2;
+        float dx3 = a.X - o.X, dy3 = a.Z - o.Z;
+
         if (MathF.Abs(det) < 1e-6f)
         {
-            return false;
+            var dd = dx1 * dx1 + dy1 * dy1;
+            var invdd = 1f / dd;
+
+            if (dd < 1e-8f)
+            {
+                return false;
+            }
+
+            float ox = o.X, oz = o.Z;
+            var any = false;
+
+            var tA = ((a.X - ox) * dx1 + (a.Z - oz) * dy1) * invdd;
+            if (tA >= 0)
+            {
+                any = true;
+                tRay = tA;
+                intersection = o + tA * d;
+            }
+
+            var tB = ((b.X - ox) * dx1 + (b.Z - oz) * dy1) * invdd;
+            if (tB >= 0f && tB < tRay)
+            {
+                tRay = tB;
+                intersection = o + tB * d;
+            }
+            return any;
         }
-        var dx3 = segA.X - rayOrigin.X;
-        var dy3 = segA.Z - rayOrigin.Z;
+
         var invDet = 1f / det;
         var t1 = (dx3 * dy2 - dy3 * dx2) * invDet;
         var t2 = (dx3 * dy1 - dy3 * dx1) * invDet;
 
         if (t1 >= 0 && t2 >= 0 && t2 <= 1)
         {
-            intersection = rayOrigin + t1 * rayDir;
             tRay = t1;
+            intersection = o + t1 * d;
             return true;
         }
-
         return false;
     }
 }

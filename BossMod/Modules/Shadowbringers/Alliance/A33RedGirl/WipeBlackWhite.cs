@@ -5,8 +5,9 @@ sealed class WipeBlackWhite(BossModule module) : Components.GenericAOEs(module)
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
     private readonly List<AOEInstance> _aoes = new(2);
     private readonly WDir[] positions = new WDir[2];
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 && _aoes.Ref(0).Risky ? CollectionsMarshal.AsSpan(_aoes) : [];
     private int lastCountBlack, lastCountWhite;
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoes.Count != 0 && _aoes.Ref(0).Risky ? CollectionsMarshal.AsSpan(_aoes) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -23,7 +24,8 @@ sealed class WipeBlackWhite(BossModule module) : Components.GenericAOEs(module)
         void AddAOE(ulong id = default)
         {
             var center = Arena.Center;
-            var pos = spell.LocXZ - center;
+            // TODO: it seems like you can still get hit by these if you trust the current way to calculate the visibility, maybe it is actually just using rectangle shapes
+            var pos = caster.Position - center;
             positions[id] = pos;
             _aoes.Add(new(new AOEShapeCircle(default), center, default, Module.CastFinishAt(spell), risky: false, actorID: id));
         }
@@ -52,7 +54,13 @@ sealed class WipeBlackWhite(BossModule module) : Components.GenericAOEs(module)
                 lastCountBlack = lastBlack;
             }
             aoe.Risky = risky;
-            AOEShapeCustom GetAOEShapeCustom(RelSimplifiedComplexPolygon poly) => new([new PolygonCustomRel(Visibility.Compute(positions[id], poly))]);
+            AOEShapeCustom GetAOEShapeCustom(RelSimplifiedComplexPolygon poly)
+            {
+                var aoeshape = new AOEShapeCustom([new PolygonCustomRel(Visibility.Compute(positions[id], poly))]);
+                var polyAdj = aoeshape.GetCombinedPolygon(Arena.Center).Offset(0.2f); // TODO: is an offset of 0.2 enough to combat the uncertainity in how the game handles visibility?
+                aoeshape.Polygon = polyAdj;
+                return aoeshape;
+            }
         }
     }
 

@@ -239,11 +239,36 @@ public sealed class AIHints
         {
             var offX = -PathfindMapObstacles.Rect.Left;
             var offY = -PathfindMapObstacles.Rect.Top;
-            var r = PathfindMapObstacles.Rect.Clamped(PathfindMapObstacles.Bitmap.FullRect).Clamped(new(0, 0, map.Width, map.Height), offX, offY);
-            for (var y = r.Top; y < r.Bottom; ++y)
-                for (var x = r.Left; x < r.Right; ++x)
-                    if (PathfindMapObstacles.Bitmap[x, y])
-                        map.PixelMaxG[(y + offY) * map.Width + x + offX] = -900f;
+            var r = PathfindMapObstacles.Rect.Clamped(PathfindMapObstacles.Bitmap.FullRect);
+            var height = map.Height;
+            var width = map.Width;
+            var rTop = r.Top;
+            var rBottom = r.Bottom;
+            var rLeft = r.Left;
+            var rRight = r.Right;
+
+            for (var y = rTop; y < rBottom; ++y)
+            {
+                var my = y + offY;
+                if (my < 0 || my >= height)
+                {
+                    continue;
+                }
+                for (var x = rLeft; x < rRight; ++x)
+                {
+                    if (!PathfindMapObstacles.Bitmap[x, y])
+                    {
+                        continue;
+                    }
+
+                    var mx = x + offX;
+                    if (mx < 0 || mx >= width)
+                    {
+                        continue;
+                    }
+                    map.PixelMaxG[map.GridToIndex(mx, my)] = -900f;
+                }
+            }
         }
     }
 

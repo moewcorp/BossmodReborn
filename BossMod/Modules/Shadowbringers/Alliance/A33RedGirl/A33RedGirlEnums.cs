@@ -8,7 +8,7 @@ public enum OID : uint
     BlackLance = 0x32E4, // R1.0
     RedSphere = 0x32E9, // R4.0
     RedGirl1 = 0x32BC, // R2.25
-    RedGirl3 = 0x32BE, // R12.25
+    RedGirl2 = 0x32BE, // R12.25
     WhiteWall = 0x32EB, // R1.0
     BlackWall = 0x32EC, // R1.0
     BlackPylon = 0x32E8, // R1.5
@@ -69,8 +69,8 @@ public enum AID : uint
     WaveBlack = 24974, // RedSphere->self, 8.0s cast, range 22 circle
     WaveWhite = 24973, // RedSphere->self, 8.0s cast, range 22 circle
 
-    ChildsPlay1 = 24612, // BossP2/RedGirl3->self, 10.0s cast, single-target, forced march north
-    ChildsPlay2 = 24613, // BossP2/RedGirl3->self, 10.0s cast, single-target, forced march east
+    ChildsPlay1 = 24612, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march north
+    ChildsPlay2 = 24613, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march east
     Explosion = 24614, // BlackPylonP2->self, 15.0s cast, range 9 circle
 
     WipeWhite = 24588, // Helper->self, 13.0s cast, range 75 circle

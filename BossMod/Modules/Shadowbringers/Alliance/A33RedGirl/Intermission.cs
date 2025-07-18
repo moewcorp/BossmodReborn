@@ -89,7 +89,6 @@ sealed class IntermissionAIRotation(WorldState ws) : QuestBattle.UnmanagedRotati
                 }
             }
         }
-
         else if (redSphere.CastInfo is ActorCastInfo castInfo) // be same color as boss cast to dodge raidwide
         {
             bool? waveIsWhite = castInfo.Action.ID switch

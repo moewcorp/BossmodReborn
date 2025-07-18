@@ -21,7 +21,7 @@ public enum AID : uint
     BalancedEdge = 23546, // Boss->self, 4.0s cast, range 5 circle
 
     Defeated1 = 22826, // Boss->self, no cast, single-target
-    Defeated2 = 23567, // Helper->self, no cast, range 36 circle, doesn't seem to do anything
+    Defeated2 = 23567 // Helper->self, no cast, range 36 circle, doesn't seem to do anything
 }
 
 sealed class LightfastBlade : Components.SimpleAOEs

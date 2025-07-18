@@ -49,6 +49,7 @@ sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(m
             if (actor.Position.InCircle(slimes[i].Position, 7.6f))
             {
                 hints.Add("In slime explosion radius!");
+                return;
             }
         }
     }

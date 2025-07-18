@@ -4,16 +4,19 @@ sealed class BoxSpawn(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
-    public readonly List<Square> SquaresInflated = new(4);
+    private readonly List<Square> squaresInflated = new(4);
     public readonly List<Square> Squares = new(4);
+    private static readonly Square inflatedSquare = new(default, 4.5f);
+    private static readonly Square square = new(default, 4f);
     private DateTime lastUpdate;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BoxSpawn)
         {
-            SquaresInflated.Add(new(caster.Position, 4.5f)); // squares adjusted for player hitbox radius
-            Squares.Add(new(caster.Position, 4f));
+            var pos = caster.Position;
+            squaresInflated.Add(inflatedSquare with { Center = pos }); // squares adjusted for player hitbox radius
+            Squares.Add(square with { Center = pos });
         }
     }
 
@@ -23,8 +26,8 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
         {
             if (state == 0x00010002u)
             {
-                Arena.Bounds = new ArenaBoundsComplex(A31KnaveofHearts.BaseSquare, [.. SquaresInflated]);
-                SquaresInflated.Clear();
+                Arena.Bounds = new ArenaBoundsComplex(A31KnaveofHearts.BaseSquare, [.. squaresInflated]);
+                squaresInflated.Clear();
                 lastUpdate = WorldState.CurrentTime;
             }
             else if (state == 0x00040008u && WorldState.CurrentTime > lastUpdate.AddSeconds(1d)) // clearing old squares can happen in the same frame as new squares got added

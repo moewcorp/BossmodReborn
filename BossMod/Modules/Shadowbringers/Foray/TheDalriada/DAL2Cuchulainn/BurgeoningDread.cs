@@ -21,8 +21,9 @@ sealed class BurgeoningDread(BossModule module) : Components.StatusDrivenForcedM
     {
         var state = State.GetValueOrDefault(actor.InstanceID);
         if (state == null || state.PendingMoves.Count == 0)
+        {
             return;
-
+        }
         var act = state.PendingMoves[0].activation;
         hints.AddForbiddenZone(ShapeDistance.InvertedCircle(DAL2Cuchulainn.ArenaCenter, 5f), act);
         hints.ForbiddenDirections.Add((a90 * rng, a175, act));

@@ -13,7 +13,7 @@ public enum AID : uint
     Object130 = 14711 // Boss->self, no cast, range 30+R circle - instant kill if you do not line of sight the towers when they die
 }
 
-sealed class LowVoltage(BossModule module) : Components.CastLineOfSightAOEComplex(module, (uint)AID.LowVoltage, Layouts.Layout2CornersBlockers, riskyWithSecondsLeft: 4d);
+sealed class LowVoltage(BossModule module) : Components.CastLineOfSightAOEComplex(module, (uint)AID.LowVoltage, Layouts.Layout2CornersBlockers, riskyWithSecondsLeft: 99d);
 
 sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(module)
 {
@@ -52,6 +52,7 @@ sealed class SlimeExplosion(BossModule module) : Components.GenericStackSpread(m
             if (actor.Position.InCircle(slimes[i].Position, 7.6f))
             {
                 hints.Add("In slime explosion radius!");
+                return;
             }
         }
     }
