@@ -95,18 +95,28 @@ public abstract class BossModule : IDisposable
         // execute callbacks for existing state
         foreach (var actor in WorldState.Actors)
         {
-            var nonPlayer = actor.Type is not ActorType.Player and not ActorType.Pet and not ActorType.Chocobo and not ActorType.Buddy;
-            if (nonPlayer)
+            if (actor.Type is not ActorType.Player and not ActorType.Pet and not ActorType.Chocobo and not ActorType.Buddy)
             {
                 comp.OnActorCreated(actor);
-                ref var castinfo = ref actor.CastInfo;
+                var castinfo = actor.CastInfo;
                 if (castinfo?.IsSpell() ?? false)
+                {
                     comp.OnCastStarted(actor, castinfo);
+                }
+                if (actor.IsTargetable)
+                {
+                    comp.OnActorTargetable(actor);
+                }
+                else
+                {
+                    comp.OnActorUntargetable(actor);
+                }
+                if (actor.IsDead)
+                {
+                    comp.OnActorDeath(actor);
+                }
+                comp.OnActorRenderflags(actor, actor.Renderflags);
             }
-            if (actor.IsTargetable)
-                comp.OnActorTargetable(actor);
-            if (nonPlayer && actor.IsDead)
-                comp.OnActorDeath(actor);
             ref var tether = ref actor.Tether;
             if (tether.ID != default)
                 comp.OnTethered(actor, tether);
@@ -115,7 +125,9 @@ public abstract class BossModule : IDisposable
             {
                 ref var status = ref actor.Statuses[i];
                 if (status.ID != default)
+                {
                     comp.OnStatusGain(actor, status);
+                }
             }
         }
     }
@@ -159,7 +171,8 @@ public abstract class BossModule : IDisposable
             WorldState.Actors.CastStarted.Subscribe(OnActorCastStarted),
             WorldState.Actors.CastFinished.Subscribe(OnActorCastFinished),
             WorldState.Actors.IsTargetableChanged.Subscribe(OnIsTargetableChanged),
-            WorldState.Actors.IsDeadChanged.Subscribe(OnIsDead),
+            WorldState.Actors.IsDeadChanged.Subscribe(OnActorIsDead),
+            WorldState.Actors.RenderflagsChanged.Subscribe(OnActorRenderflags),
             WorldState.Actors.Tethered.Subscribe(OnActorTethered),
             WorldState.Actors.Untethered.Subscribe(OnActorUntethered),
             WorldState.Actors.StatusGain.Subscribe(OnActorStatusGain),
@@ -544,13 +557,23 @@ public abstract class BossModule : IDisposable
         }
     }
 
-    private void OnIsDead(Actor actor)
+    private void OnActorIsDead(Actor actor)
     {
         if (actor.Type is not ActorType.Player and not ActorType.Pet and not ActorType.Chocobo and not ActorType.Buddy)
         {
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
                 Components[i].OnActorDeath(actor);
+        }
+    }
+
+    private void OnActorRenderflags(Actor actor, int renderflags)
+    {
+        if (actor.Type is not ActorType.Player and not ActorType.Pet and not ActorType.Chocobo and not ActorType.Buddy)
+        {
+            var count = Components.Count;
+            for (var i = 0; i < count; ++i)
+                Components[i].OnActorRenderflags(actor, renderflags);
         }
     }
 

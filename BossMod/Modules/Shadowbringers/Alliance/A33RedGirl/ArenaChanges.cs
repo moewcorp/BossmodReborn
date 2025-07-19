@@ -6,7 +6,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
     private DateTime activation;
     private static readonly Angle am90 = -89.9802f.Degrees();
-    private readonly (WPos position, Angle rotation, bool? isWhite)[] walls =
+    public readonly (WPos position, Angle rotation, bool? isWhite)[] Walls =
     [
         (new(845f, -873f), am90, null), // 0x1D
         (new(845f, -867f), am90, null), // 0x1E
@@ -38,9 +38,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         (new(836f, -856f), am90, null), // 0x38
     ];
     private bool isDefaultArena;
-    public RelSimplifiedComplexPolygon BlackWalls = new();
-    public RelSimplifiedComplexPolygon WhiteWalls = new();
-    private int lastCountBlack, lastCountWhite;
+    public int NumWalls;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
@@ -63,47 +61,26 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                     }
                     break;
                 default:
-                    ref var w = ref walls[index - 0x1Du];
+                    ref var w = ref Walls[index - 0x1Du];
                     w.isWhite = state == 0x00020001u ? false : state == 0x00800040u ? true : null;
                     var differenceShapes = new List<Shape>(17);
-                    var differenceShapesWhite = new List<Shape>(8);
-                    var differenceShapesBlack = new List<Shape>(8);
                     if (isDefaultArena)
                     {
                         differenceShapes.Add(A33RedGirl.InnerSquare);
                     }
+                    NumWalls = 0;
                     for (var i = 0; i < 28; ++i)
                     {
-                        ref readonly var wall = ref walls[i];
+                        ref readonly var wall = ref Walls[i];
                         if (wall.isWhite != null)
                         {
                             differenceShapes.Add(new Rectangle(wall.position, 3.5f, 1.5f, wall.rotation));
-                            var rect = new Rectangle(wall.position, 3f, 1f, wall.rotation);
-                            if (wall.isWhite == true)
-                            {
-                                differenceShapesWhite.Add(rect);
-                            }
-                            else
-                            {
-                                differenceShapesBlack.Add(rect);
-                            }
+                            ++NumWalls;
                         }
                     }
 
-                    var countBlack = differenceShapesBlack.Count;
-                    if (countBlack != lastCountBlack)
-                    {
-                        BlackWalls = new AOEShapeCustom(A33RedGirl.BigSquare, [.. differenceShapesBlack]).GetCombinedPolygon(Arena.Center);
-                        lastCountBlack = countBlack;
-                    }
-                    var countWhite = differenceShapesWhite.Count;
-                    if (differenceShapesWhite.Count != lastCountWhite)
-                    {
-                        WhiteWalls = new AOEShapeCustom(A33RedGirl.BigSquare, [.. differenceShapesWhite]).GetCombinedPolygon(Arena.Center);
-                        lastCountWhite = countWhite;
-                    }
                     _wipe ??= Module.FindComponent<WipeBlackWhite>();
-                    _wipe?.UpdateAOE(lastCountWhite, lastCountBlack, (countWhite + countBlack) < 10);
+                    _wipe?.UpdateAOE();
                     Arena.Bounds = new ArenaBoundsComplex(isDefaultArena ? A33RedGirl.DefaultSquare : A33RedGirl.BigSquare, [.. differenceShapes]);
                     break;
             }

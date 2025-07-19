@@ -120,5 +120,6 @@ sealed class IntermissionAIModule(BossModule module) : QuestBattle.RotationModul
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID is (uint)OID.WhitePylon or (uint)OID.BlackPylon ? 2 : e.Actor.TargetID == actor.InstanceID ? 1 : 0;
         }
+        base.AddAIHints(slot, actor, assignment, hints);
     }
 }

@@ -133,6 +133,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ActorState.OpRename op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ActorState.OpIcon op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
             ActorState.OpTether op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
+            ActorState.OpRenderflags op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ClientState.OpActionRequest => false,
             ClientState.OpHateChange => false,
             ClientState.OpActionReject => false,

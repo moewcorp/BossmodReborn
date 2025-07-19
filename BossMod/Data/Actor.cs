@@ -79,7 +79,7 @@ public record struct PendingEffectDelta(PendingEffect Effect, int Value);
 public record struct PendingEffectStatus(PendingEffect Effect, uint StatusId);
 public record struct PendingEffectStatusExtra(PendingEffect Effect, uint StatusId, byte ExtraLo);
 
-public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layoutID, string name, uint nameID, ActorType type, Class classID, int level, Vector4 posRot, float hitboxRadius = 1f, ActorHPMP hpmp = default, bool targetable = true, bool ally = false, ulong ownerID = default, uint fateID = default)
+public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layoutID, string name, uint nameID, ActorType type, Class classID, int level, Vector4 posRot, float hitboxRadius = 1f, ActorHPMP hpmp = default, bool targetable = true, bool ally = false, ulong ownerID = default, uint fateID = default, int renderflags = 0)
 {
     public ulong InstanceID = instanceID; // 'uuid'
     public uint OID = oid;
@@ -107,6 +107,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
     public ulong OwnerID = ownerID; // uuid of owner, for pets and similar
     public ulong TargetID;
     public uint MountId; // ID of current mount, 0 if not mounted
+    public int Renderflags = renderflags; // renderflags = 0 means visible, higher values seem to be invisible actors
     public ActorCastInfo? CastInfo;
     public ActorTetherInfo Tether;
     public ActorStatus[] Statuses = new ActorStatus[60]; // empty slots have ID=0
