@@ -17,7 +17,19 @@ sealed class IPCProvider : IDisposable
         Service.Config.Modified.Subscribe(() => lastModified = DateTime.Now);
         Register("Configuration.LastModified", () => lastModified);
 
-        Register("Rotation.ActionQueue.HasEntries", () => autorotation.Hints.ActionsToExecute.Entries.Any(x => !x.Manual));
+        Register("Rotation.ActionQueue.HasEntries", () =>
+        {
+            var entries = CollectionsMarshal.AsSpan(autorotation.Hints.ActionsToExecute.Entries);
+            var len = entries.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref var e = ref entries[i];
+                if (!e.Manual)
+                    return true;
+            }
+            return false;
+        });
+
         Register("Presets.Get", (string name) =>
         {
             var preset = autorotation.Database.Presets.FindPresetByName(name);
