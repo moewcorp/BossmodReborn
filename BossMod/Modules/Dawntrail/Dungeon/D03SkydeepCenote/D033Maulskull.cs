@@ -239,12 +239,12 @@ sealed class DestructiveHeat(BossModule module) : Components.SpreadFromCastTarge
     private readonly Impact1 _kb1 = module.FindComponent<Impact1>()!;
     private readonly Impact2 _kb2 = module.FindComponent<Impact2>()!;
     private readonly Impact3 _kb3 = module.FindComponent<Impact3>()!;
+    private WPos origin;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Spreads.Count != 0)
         {
-            WPos origin = default;
             if (_kb1.Casters.Count != 0)
             {
                 origin = new(100f, -400f);

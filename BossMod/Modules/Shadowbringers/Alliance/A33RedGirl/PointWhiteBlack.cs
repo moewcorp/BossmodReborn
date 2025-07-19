@@ -8,44 +8,39 @@ sealed class PointBlackWhite(BossModule module) : Components.GenericAOEs(module)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
-    public override void OnActorCreated(Actor actor)
+    public override void OnActorRenderflags(Actor actor, int renderflags)
     {
-        if (Module.StateMachine.ActivePhaseIndex != 0)
+        if (renderflags == 0)
         {
-            return; // in phase 2 we can't use this
-        }
-        var id = actor.OID;
-        if (id == (uint)OID.WhiteLance)
-        {
-            AddAOE(actor, _arena.WhiteWalls);
-        }
-        else if (id == (uint)OID.BlackLance)
-        {
-            AddAOE(actor, _arena.BlackWalls);
-        }
-    }
+            var oid = actor.OID;
+            if (oid == (uint)OID.WhiteLance)
+            {
+                AddAOE(true);
+            }
+            else if (oid == (uint)OID.BlackLance)
+            {
+                AddAOE(false);
+            }
 
-    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
-    {
-        if (Module.StateMachine.ActivePhaseIndex != 2)
-        {
-            return; // in phase 1 we can't use this
+            void AddAOE(bool isWhite)
+            {
+                var pos = actor.Position;
+                var rot = actor.Rotation;
+                var dir = rot.ToDirection();
+                var walls = _arena.Walls;
+                var isShort = false;
+                for (var i = 0; i < 28; ++i)
+                {
+                    ref readonly var w = ref walls[i];
+                    if (w.isWhite == isWhite && w.position.InRect(pos, dir, 30f, default, 3f))
+                    {
+                        isShort = true;
+                        break;
+                    }
+                }
+                _aoes.Add(new(isShort ? rectShort : rectLong, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(7.8d)));
+            }
         }
-        var oid = actor.OID;
-        if (oid == (uint)OID.WhiteLance && id == 0x11D1u)
-        {
-            AddAOE(actor, _arena.WhiteWalls);
-        }
-        else if (oid == (uint)OID.BlackLance && id == 0x11D2u)
-        {
-            AddAOE(actor, _arena.BlackWalls);
-        }
-    }
-
-    private void AddAOE(Actor actor, RelSimplifiedComplexPolygon wallPolygon)
-    {
-        var pos = actor.Position;
-        _aoes.Add(new(!wallPolygon.Contains(pos + 25f * actor.Rotation.ToDirection() - Arena.Center) ? rectShort : rectLong, WPos.ClampToGrid(pos), actor.Rotation, WorldState.FutureTime(7.8d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

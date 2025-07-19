@@ -271,7 +271,7 @@ sealed class HeartOfTural : Components.SimpleAOEs
         {
             return;
         }
-        hints.Add("Wait in safe area!", !Casters[0].Check(actor.Position));
+        hints.Add("Wait in safe area!", !Casters.Ref(0).Check(actor.Position));
     }
 }
 
