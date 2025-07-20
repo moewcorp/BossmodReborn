@@ -62,7 +62,7 @@ class TurretTour(BossModule module) : Components.Voidzone(module, 2f, GetVoidzon
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.ModelState.ModelState == 8)
+            if (z.ModelState.ModelState == 8u)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
@@ -82,7 +82,7 @@ class TurretTourHint(BossModule module) : Components.Voidzone(module, 2f, GetVoi
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.ModelState.ModelState != 8 && !z.Position.AlmostEqual(module.Center, 10f))
+            if (z.ModelState.ModelState != 8u && !z.Position.AlmostEqual(module.Center, 10f))
                 voidzones[index++] = z;
         }
         return voidzones[..index];

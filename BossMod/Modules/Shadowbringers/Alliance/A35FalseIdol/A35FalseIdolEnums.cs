@@ -6,6 +6,16 @@ public enum OID : uint
     BossP2 = 0x3190, // R5.999
     Energy = 0x3192, // R1.0
     RedGirl = 0x3191, // R3.45
+    _Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x10, EventObj type
+    _Gen_Actor1e8fb8 = 0x1E8FB8, // R2.000, x1, EventObj type
+    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
+    _Gen_ = 0x318F, // R1.000, x0 (spawn during fight)
+    _Gen_1 = 0x318E, // R1.000, x0 (spawn during fight)
+    MagicalInterference = 0x1EB169, // R0.5
+    _Gen_Actor1eb16c = 0x1EB16C, // R0.500, x0 (spawn during fight), EventObj type
+    _Gen_Actor1eb16a = 0x1EB16A, // R0.500, x0 (spawn during fight), EventObj type
+    _Gen_Actor1eb16b = 0x1EB16B, // R0.500, x0 (spawn during fight), EventObj type
+    _Gen_Actor1eb16d = 0x1EB16D, // R0.500, x0 (spawn during fight), EventObj type
     Helper = 0x233C
 }
 

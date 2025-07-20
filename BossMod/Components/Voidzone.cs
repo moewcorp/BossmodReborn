@@ -6,6 +6,7 @@ namespace BossMod.Components;
 // TODO: typically sources are either eventobj's with eventstate != 7 or normal actors that are non dead; other conditions are much rarer
 public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumerable<Actor>> sources, float moveHintLength = default) : GenericAOEs(module, default, "GTFO from voidzone!")
 {
+    public readonly float MovementHintLength = moveHintLength;
     public readonly AOEShape Shape = moveHintLength == default ? new AOEShapeCircle(radius) : new AOEShapeCapsule(radius, moveHintLength);
     public readonly Func<BossModule, IEnumerable<Actor>> Sources = sources;
 
@@ -23,7 +24,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
     {
         if (!Sources(Module).Any())
             return;
-        if (moveHintLength == 0)
+        if (MovementHintLength == 0)
         {
             var forbidden = new List<Func<WPos, float>>();
             foreach (var s in Sources(Module))
@@ -33,14 +34,23 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
         else
         {
             var forbiddenImminent = new List<Func<WPos, float>>();
-            var forbiddenFuture = new List<Func<WPos, float>>();
+            var forbiddenNearFuture = new List<Func<WPos, float>>();
+            var forbiddenSoon = new List<Func<WPos, float>>();
+            var forbiddenFarFuture = new List<Func<WPos, float>>();
+            var forbiddenFarFarFuture = new List<Func<WPos, float>>();
             foreach (var s in Sources(Module))
             {
-                forbiddenFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, moveHintLength, radius));
+                forbiddenNearFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius));
+                forbiddenSoon.Add(ShapeDistance.Capsule(s.Position, s.Rotation, MovementHintLength, radius));
+                forbiddenFarFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, 2f * MovementHintLength, radius));
+                forbiddenFarFarFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, 3f * MovementHintLength, radius));
                 forbiddenImminent.Add(ShapeDistance.Circle(s.Position, radius));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.1d));
             hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenNearFuture), WorldState.FutureTime(1.1d));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenSoon), WorldState.FutureTime(3d));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFarFuture), WorldState.FutureTime(10d));
+            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFarFarFuture), DateTime.MaxValue);
         }
     }
 }

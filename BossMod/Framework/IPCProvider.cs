@@ -23,9 +23,11 @@ sealed class IPCProvider : IDisposable
             var len = entries.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref var e = ref entries[i];
+                ref readonly var e = ref entries[i];
                 if (!e.Manual)
+                {
                     return true;
+                }
             }
             return false;
         });
