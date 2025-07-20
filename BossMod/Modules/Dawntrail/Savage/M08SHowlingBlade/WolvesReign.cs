@@ -25,7 +25,7 @@ sealed class WolvesReignConeCircle(BossModule module) : Components.GenericAOEs(m
         if (shape != null)
         {
             var pos = spell.LocXZ;
-            _aoe = new(shape, pos, Angle.FromDirection(Arena.Center - pos), Module.CastFinishAt(spell, 3.6f), Colors.Danger);
+            _aoe = new(shape, pos, Angle.FromDirection(Arena.Center - pos), Module.CastFinishAt(spell, 3.6d), Colors.Danger);
         }
         else if (id is (uint)AID.EminentReign or (uint)AID.RevolutionaryReign)
         {
@@ -114,8 +114,31 @@ sealed class WolvesReignConeCircle(BossModule module) : Components.GenericAOEs(m
         }
     }
 }
+sealed class WolvesReignRect(BossModule module) : Components.GenericAOEs(module)
+{
+    private static readonly AOEShapeRect rect = new(28f, 5f);
+    private AOEInstance? _aoe;
 
-sealed class WolvesReignRect(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignRect1, (uint)AID.WolvesReignRect2], new AOEShapeRect(28f, 5f));
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.RevolutionaryReign or (uint)AID.EminentReign)
+        {
+            var rot = spell.Rotation;
+            _aoe = new(rect, WPos.ClampToGrid(caster.Position - 4f * rot.ToDirection()), rot, Module.CastFinishAt(spell, 2.4d));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.WolvesReignRect1 or (uint)AID.WolvesReignRect2)
+        {
+            ++NumCasts;
+        }
+    }
+}
+
 sealed class WolvesReignCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WolvesReignCircle1, (uint)AID.WolvesReignCircle2,
 (uint)AID.WolvesReignCircle3, (uint)AID.EminentReign, (uint)AID.RevolutionaryReign], 6f);
 

@@ -27,7 +27,7 @@ sealed class UpgradedShield(BossModule module) : Components.DirectionalParry(mod
     }
 }
 
-sealed class MagicalConfluence(BossModule module) : Components.Voidzone(module, 4f, GetVoidzones, 5f)
+sealed class MagicalConfluence(BossModule module) : Components.Voidzone(module, 4f, GetVoidzones, 8f)
 {
     private static List<Actor> GetVoidzones(BossModule module) => module.Enemies((uint)OID.MagicalConfluence);
 }

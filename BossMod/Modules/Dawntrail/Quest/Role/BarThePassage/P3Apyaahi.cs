@@ -96,10 +96,12 @@ sealed class PathogenicPowerAOE(BossModule module) : Components.GenericAOEs(modu
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var act0 = aoes[0].Activation;
+        ref var aoe0 = ref aoes[0];
+        ref var aoeL = ref aoes[^1];
+        var act0 = aoe0.Activation;
         var deadline1 = act0.AddSeconds(2d);
         var deadline2 = act0.AddSeconds(1d);
-        var actLast = aoes[^1].Activation.AddSeconds(-1d);
+        var actLast = aoeL.Activation.AddSeconds(-1d);
 
         var index = 0;
         var color = Colors.Danger;
@@ -114,8 +116,8 @@ sealed class PathogenicPowerAOE(BossModule module) : Components.GenericAOEs(modu
                     cur.Risky = true;
                     cur.Color = curAct < actLast ? color : default;
                 }
-                ++index;
             }
+            ++index;
         }
         return aoes[..index];
     }

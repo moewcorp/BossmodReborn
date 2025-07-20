@@ -26,10 +26,12 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var act0 = aoes[0].Activation;
+        ref var aoe0 = ref aoes[0];
+        ref var aoeL = ref aoes[^1];
+        var act0 = aoe0.Activation;
         var deadline1 = act0.AddSeconds(5d);
         var deadline2 = act0.AddSeconds(1d);
-        var actLast = aoes[^1].Activation;
+        var actLast = aoeL.Activation;
 
         var index = 0;
         while (index < count)
