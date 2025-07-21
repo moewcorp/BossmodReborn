@@ -46,7 +46,7 @@ sealed class AetherialConversionTailThrust(BossModule module) : Components.Gener
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_comp?.CurMechanic == AetherialConversion.Mechanic.AOE && _comp.NumCasts < 2)
-            return new AOEInstance[1] { new(_shape, WPos.ClampToGrid(Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0)), default) };
+            return new AOEInstance[1] { new(_shape, (Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, default)).Quantized(), default) };
         return [];
     }
 }

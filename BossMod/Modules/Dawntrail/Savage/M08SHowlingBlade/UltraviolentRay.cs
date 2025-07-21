@@ -71,4 +71,26 @@ sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(mod
     }
 }
 
-sealed class GleamingBeam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GleamingBeam, new AOEShapeRect(31f, 4f));
+sealed class GleamingBeam(BossModule module) : Components.GenericAOEs(module)
+{
+    public static readonly AOEShapeRect Rect = new(31f, 4f);
+    private readonly List<AOEInstance> _aoes = new(5);
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
+    {
+        if (id == 0x11D3u && actor.OID == (uint)OID.GleamingFangP21)
+        {
+            _aoes.Add(new(Rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.1d)));
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.GleamingBeam)
+        {
+            ++NumCasts;
+        }
+    }
+}

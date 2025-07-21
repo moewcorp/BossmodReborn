@@ -149,7 +149,7 @@ sealed class RapidRotary(BossModule module) : Components.GenericAOEs(module)
         }
         void AddAOEs(AOEShape shape2, Angle initialAngle)
         {
-            var pos = WPos.ClampToGrid(Arena.Center);
+            var pos = Arena.Center.Quantized();
             for (var i = 0; i < 3; ++i)
             {
                 var activation = Module.CastFinishAt(spell, 1.8f + i * 0.3f);

@@ -22,7 +22,7 @@ class SolarFlair(BossModule module) : Components.GenericAOEs(module)
         var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
-            aoes[i] = new(_shape, WPos.ClampToGrid(_sunstorms[i]));
+            aoes[i] = new(_shape, _sunstorms[i].Quantized());
         }
         return aoes;
     }

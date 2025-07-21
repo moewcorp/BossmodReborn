@@ -82,7 +82,7 @@ class Tideline(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(rect2, initialpos2 + -i * dir, act, rot);
             }
         }
-        void AddAOE(AOEShapeRect shape, WPos position = default, float delay = default, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, Module.CastFinishAt(spell, delay), risky: false));
+        void AddAOE(AOEShapeRect shape, WPos position = default, float delay = default, Angle rotation = default) => _aoes.Add(new(shape, position.Quantized(), rotation, Module.CastFinishAt(spell, delay), risky: false));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

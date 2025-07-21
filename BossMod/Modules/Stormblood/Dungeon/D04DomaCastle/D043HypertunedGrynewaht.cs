@@ -89,7 +89,7 @@ class ChainMine(BossModule module) : Components.GenericAOEs(module)
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HexadroneBits)
-            _aoes.Add(new(rect, WPos.ClampToGrid(source.Position), source.Rotation, WorldState.FutureTime(5.6d)));
+            _aoes.Add(new(rect, source.Position.Quantized(), source.Rotation, WorldState.FutureTime(5.6d)));
     }
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
@@ -159,7 +159,7 @@ class Gunsaw(BossModule module) : Components.GenericBaitAway(module)
             for (var i = 0; i < len; ++i)
             {
                 var p = party[i];
-                if (p.Position.InRect(WPos.ClampToGrid(Module.PrimaryActor.Position), Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f))
+                if (p.Position.InRect(Module.PrimaryActor.Position.Quantized(), Module.PrimaryActor.Rotation, rect.LengthFront, 0, 0.02f))
                 {
                     CurrentBaits.Add(new(caster, p, rect));
                     return;

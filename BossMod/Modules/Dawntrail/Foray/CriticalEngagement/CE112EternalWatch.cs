@@ -142,7 +142,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 spheres.Clear();
                 break;
         }
-        void AddAOE(WPos position, ref readonly ulong instanceID, ref readonly DateTime activation, Angle rotation = default) => AOEs.Add(new(circle, WPos.ClampToGrid(position), rotation, activation, actorID: instanceID));
+        void AddAOE(WPos position, ref readonly ulong instanceID, ref readonly DateTime activation, Angle rotation = default) => AOEs.Add(new(circle, position.Quantized(), rotation, activation, actorID: instanceID));
         void AddAOEs(List<Actor> list)
         {
             var count = list.Count - 1;
@@ -201,7 +201,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 for (var i = 0; i < 4; ++i)
                 {
                     var sphere = spheres[i];
-                    AOEs.Add(new(circle, WPos.ClampToGrid(sphere.Position), default, act, actorID: sphere.InstanceID));
+                    AOEs.Add(new(circle, sphere.Position.Quantized(), default, act, actorID: sphere.InstanceID));
                 }
                 spheres.Clear();
             }

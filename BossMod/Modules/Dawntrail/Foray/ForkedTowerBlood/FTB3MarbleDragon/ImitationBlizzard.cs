@@ -66,7 +66,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             if (crossPuddle.Count != 0)
             {
                 var crossP = crossPuddle[0];
-                _aoes.Add(new(cross, WPos.ClampToGrid(crossP.Position), crossP.Rotation, Module.CastFinishAt(spell, 4.1d)));
+                _aoes.Add(new(cross, crossP.Position.Quantized(), crossP.Rotation, Module.CastFinishAt(spell, 4.1d)));
             }
         }
         else if (id == (uint)AID.ImitationIcicle)
@@ -110,7 +110,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                         < 7 => 2f,
                         _ => 3f
                     };
-                    _aoes.Add(new(shapes[i], WPos.ClampToGrid(positions[order[i]]), Angle.AnglesCardinals[1], act.AddSeconds(delay)));
+                    _aoes.Add(new(shapes[i], positions[order[i]].Quantized(), Angle.AnglesCardinals[1], act.AddSeconds(delay)));
                 }
             }
         }
@@ -226,7 +226,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
                 }
                 aoesAdded = true;
             }
-            void AddAOE(AOEShape shape, WPos position, DateTime activation) => _aoes.Add(new(shape, WPos.ClampToGrid(position), Angle.AnglesCardinals[1], activation));
+            void AddAOE(AOEShape shape, WPos position, DateTime activation) => _aoes.Add(new(shape, position.Quantized(), Angle.AnglesCardinals[1], activation));
         }
     }
 
@@ -343,7 +343,7 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
             for (var i = count; i >= 0; --i)
             {
                 var t = towerPuddles[i].Position;
-                var posClamp = WPos.ClampToGrid(t);
+                var posClamp = t.Quantized();
                 if (t.InRect(origin, dir, 60f, default, 10f))
                 {
                     Towers.Insert(0, new(posClamp, 4f, 4, 8, null, act0));
@@ -375,7 +375,7 @@ sealed class ImitationBlizzardTowers(BossModule module) : Components.GenericTowe
             Towers.Capacity = 6;
             for (var i = count; i >= 0; --i)
             {
-                Towers.Add(new(WPos.ClampToGrid(towerPuddles[i].Position), 4f, 4, 8, null, act));
+                Towers.Add(new(towerPuddles[i].Position.Quantized(), 4f, 4, 8, null, act));
             }
         }
     }
@@ -398,7 +398,7 @@ sealed class BallOfIce(BossModule module) : Components.GenericAOEs(module)
         };
         if (circle != null)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.6d))); // activation time depends on mechanic, this is only the lowest possible
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(12.6d))); // activation time depends on mechanic, this is only the lowest possible
         }
     }
 

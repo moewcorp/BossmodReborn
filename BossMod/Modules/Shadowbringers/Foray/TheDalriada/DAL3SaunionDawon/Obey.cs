@@ -28,9 +28,9 @@ sealed class Obey(BossModule module) : Components.GenericAOEs(module)
                 Angle rotation = default;
                 if (shape == cross)
                 {
-                    rotation = Angle.FromDirection(WPos.ClampToGrid(actor.Position) - (_aoes.Count == 0 ? bossmod.BossDawon!.Position : _aoes[^1].Origin));
+                    rotation = Angle.FromDirection(actor.Position.Quantized() - (_aoes.Count == 0 ? bossmod.BossDawon!.Position : _aoes[^1].Origin));
                 }
-                _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), rotation, _aoes.Count == 0 ? WorldState.FutureTime(16.2d) : _aoes[0].Activation.AddSeconds(6.4d * _aoes.Count)));
+                _aoes.Add(new(shape, actor.Position.Quantized(), rotation, _aoes.Count == 0 ? WorldState.FutureTime(16.2d) : _aoes[0].Activation.AddSeconds(6.4d * _aoes.Count)));
             }
         }
     }

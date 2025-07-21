@@ -244,7 +244,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
     {
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
-            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(13.2d)));
+            AOEs.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(13.2d)));
             AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }

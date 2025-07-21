@@ -64,7 +64,7 @@ class Tetraktys(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(_triSmall, positions[i], rotations[i]);
             }
         }
-        void AddAOE(AOEShapeTriCone shape, WPos pos, Angle rot) => AOEs.Add(new(shape, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(3.8d)));
+        void AddAOE(AOEShapeTriCone shape, WPos pos, Angle rot) => AOEs.Add(new(shape, pos.Quantized(), rot, WorldState.FutureTime(3.8d)));
 
         if (state == 0x00020001)
         {
@@ -215,7 +215,7 @@ class TetraktuosKosmos(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < indices.Length; ++i)
         {
             var (shape, pos, angle) = combos[indices[i]];
-            AOEs.Add(new(shape, WPos.ClampToGrid(pos), Angles[angle], WorldState.FutureTime(7.9d)));
+            AOEs.Add(new(shape, pos.Quantized(), Angles[angle], WorldState.FutureTime(7.9d)));
         }
     }
 

@@ -58,7 +58,7 @@ sealed class RavenousGale(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.RavenousGaleVoidzone)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(4.6d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(4.6d)));
     }
 
     public override void OnActorDestroyed(Actor actor)
@@ -159,7 +159,7 @@ sealed class SpitefulFlameCircleVoidzone(BossModule module) : Components.Generic
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.VermillionFlame)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position)));
+            _aoes.Add(new(circle, actor.Position.Quantized()));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

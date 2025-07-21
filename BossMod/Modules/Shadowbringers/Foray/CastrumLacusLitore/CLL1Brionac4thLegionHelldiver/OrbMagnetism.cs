@@ -59,7 +59,7 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    private void AddAOE(AOEShape shape, Actor actor, DateTime activation) => AOEs.Add(new(shape, WPos.ClampToGrid(actor.Position), default, activation));
+    private void AddAOE(AOEShape shape, Actor actor, DateTime activation) => AOEs.Add(new(shape, actor.Position.Quantized(), default, activation));
 
     public override void OnActorCreated(Actor actor)
     {

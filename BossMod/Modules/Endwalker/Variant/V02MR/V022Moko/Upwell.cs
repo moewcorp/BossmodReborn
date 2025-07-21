@@ -32,7 +32,7 @@ sealed class UpwellRest(BossModule module) : Components.Exaflare(module, new AOE
             var aoe = futureAOEs[i];
             if (aoe.Item2 <= imminentDeadline)
             {
-                aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, FutureColor);
+                aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, FutureColor);
             }
         }
 
@@ -41,7 +41,7 @@ sealed class UpwellRest(BossModule module) : Components.Exaflare(module, new AOE
             var aoe = imminentAOEs[i];
             if (aoe.Item2 <= imminentDeadline)
             {
-                aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, ImminentColor);
+                aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, ImminentColor);
             }
         }
         return aoes.AsSpan()[..index];

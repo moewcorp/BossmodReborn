@@ -155,14 +155,14 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         {
             var drudge = _activeDrudges[i];
             var shape = cornerPositions.Contains(drudge.Position) ? rectShort : rectLong;
-            _aoesRects.Add(new(shape, WPos.ClampToGrid(drudge.Position), drudge.Rotation, activation));
+            _aoesRects.Add(new(shape, drudge.Position.Quantized(), drudge.Rotation, activation));
         }
     }
 
     private void AddConeAOEs(DateTime activation, params Angle[] angles)
     {
         for (var i = 0; i < 2; ++i)
-            _aoesCones.Add(new(cone, WPos.ClampToGrid(Arena.Center), angles[i], activation));
+            _aoesCones.Add(new(cone, Arena.Center.Quantized(), angles[i], activation));
     }
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
@@ -170,7 +170,7 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         if (status.ID == (uint)SID.CannonOrder)
         {
             var activation = status.Extra == 0x180u ? 6.9d : 15d;
-            _aoesRects.Add(new(rectShort, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation)));
+            _aoesRects.Add(new(rectShort, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(activation)));
         }
     }
 

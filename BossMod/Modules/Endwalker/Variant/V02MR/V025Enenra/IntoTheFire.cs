@@ -23,7 +23,7 @@ sealed class IntoTheFire(BossModule module) : Components.GenericAOEs(module)
 
             if (positionOffset is WDir o && rotation is Angle a)
             {
-                var correctedPosition = WPos.ClampToGrid(RoundPosition(actor.Position + o));
+                var correctedPosition = RoundPosition(actor.Position + o).Quantized();
                 _aoes.Add(new(rect, correctedPosition, a, WorldState.FutureTime(16.6d)));
             }
 

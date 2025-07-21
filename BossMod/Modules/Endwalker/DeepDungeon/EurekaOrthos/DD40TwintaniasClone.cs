@@ -68,7 +68,7 @@ class TwistingDive(BossModule module) : Components.GenericAOEs(module)
             if (id == 0x1E3A)
                 preparing = true;
             else if (preparing && id == 0x1E43)
-                _aoe = new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6.9d));
+                _aoe = new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.9d));
         }
     }
 

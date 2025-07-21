@@ -36,7 +36,7 @@ class Subduction(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.SandSphere)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.2d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(3.2d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

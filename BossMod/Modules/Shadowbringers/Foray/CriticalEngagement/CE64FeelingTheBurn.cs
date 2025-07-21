@@ -210,7 +210,7 @@ sealed class ChainCannonBoss(BossModule module) : Components.GenericAOEs(module)
             }
             else
             {
-                _aoe = new(ChainCannonEscort.Rect, WPos.ClampToGrid(caster.Position), caster.Rotation, WorldState.FutureTime(1d));
+                _aoe = new(ChainCannonEscort.Rect, caster.Position.Quantized(), caster.Rotation, WorldState.FutureTime(1d));
             }
         }
     }

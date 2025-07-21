@@ -44,7 +44,7 @@ sealed class FangedCrossing(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.GleamingFang1 && id == 0x11D1u)
         {
-            _aoes.Add(new(cross, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6d)));
+            _aoes.Add(new(cross, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6d)));
         }
     }
 

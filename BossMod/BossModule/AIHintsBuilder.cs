@@ -197,7 +197,7 @@ public sealed class AIHintsBuilder : IDisposable
             var rot = caster.Rotation;
             var finishAt = _ws.FutureTime(caster.NPCRemainingTime);
             if (aoe.IsCharge)
-                hints.AddForbiddenZone(ShapeDistance.Rect(WPos.ClampToGrid(aoe.Caster.Position), target, ((AOEShapeRect)aoe.Shape).HalfWidth), finishAt, aoe.Caster.InstanceID);
+                hints.AddForbiddenZone(ShapeDistance.Rect(aoe.Caster.Position.Quantized(), target, ((AOEShapeRect)aoe.Shape).HalfWidth), finishAt, aoe.Caster.InstanceID);
             else
                 hints.AddForbiddenZone(aoe.Shape, target, rot, finishAt);
         }

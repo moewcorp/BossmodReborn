@@ -46,7 +46,7 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module, (uint)AI
                 AddAOE(angle + 180f.Degrees(), act);
             }
         }
-        void AddAOE(Angle rotation, DateTime activation) => _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
+        void AddAOE(Angle rotation, DateTime activation) => _aoes.Add(new(_shape, Arena.Center.Quantized(), rotation, activation));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -91,7 +91,7 @@ class RadiantFlourish(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(_aoes[1].Origin);
                 _aoes.RemoveRange(0, 2);
 
-                void AddAOE(WPos origin) => _aoes.Add(new(circle, WPos.ClampToGrid(WPos.RotateAroundOrigin(90f, A13Azeyma.NormalCenter, origin)), default, activation));
+                void AddAOE(WPos origin) => _aoes.Add(new(circle, WPos.RotateAroundOrigin(90f, A13Azeyma.NormalCenter, origin.Quantized()), default, activation));
             }
         }
     }

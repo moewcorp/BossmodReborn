@@ -18,7 +18,7 @@ sealed class HighPoweredLaser(BossModule module) : Components.GenericAOEs(module
         for (var i = 0; i < count; ++i)
         {
             var c = casters[i];
-            aoes[i] = new(rect, WPos.ClampToGrid(c.Position), c.Rotation, activation, risky: isRisky);
+            aoes[i] = new(rect, c.Position.Quantized(), c.Rotation, activation, risky: isRisky);
         }
         return aoes;
     }

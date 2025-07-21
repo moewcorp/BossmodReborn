@@ -151,7 +151,7 @@ sealed class QuadrupleCrossingAOE(BossModule module) : Components.GenericAOEs(mo
             case (uint)AID.QuadrupleCrossingProtean:
             case (uint)AID.LeapingQuadrupleCrossingBossProtean:
             case (uint)AID.LeapingQuadrupleCrossingShadeProtean:
-                _aoes.Add(new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation, WorldState.FutureTime(5.9d), _aoes.Count < 4 ? Colors.Danger : default, risky: false));
+                _aoes.Add(new(_shape, caster.Position.Quantized(), caster.Rotation, WorldState.FutureTime(5.9d), _aoes.Count < 4 ? Colors.Danger : default, risky: false));
                 break;
             case (uint)AID.QuadrupleCrossingAOE:
             case (uint)AID.LeapingQuadrupleCrossingBossAOE:

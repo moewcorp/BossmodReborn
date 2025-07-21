@@ -6,7 +6,7 @@ sealed class ChemicalBurn(BossModule module) : Components.GenericTowers(module)
     {
         if (state == 0x00010002u && actor.OID == (uint)OID.Tower)
         {
-            Towers.Add(new(WPos.ClampToGrid(actor.Position), 3, 3, activation: WorldState.FutureTime(20d)));
+            Towers.Add(new(actor.Position.Quantized(), 3, 3, activation: WorldState.FutureTime(20d)));
         }
     }
 

@@ -15,7 +15,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
         var aoes = new List<AOEInstance>();
         foreach (var source in Sources(Module))
         {
-            aoes.Add(new(Shape, WPos.ClampToGrid(source.Position), source.Rotation));
+            aoes.Add(new(Shape, source.Position.Quantized(), source.Rotation));
         }
         return CollectionsMarshal.AsSpan(aoes);
     }
@@ -28,7 +28,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
         {
             var forbidden = new List<Func<WPos, float>>();
             foreach (var s in Sources(Module))
-                forbidden.Add(ShapeDistance.Circle(WPos.ClampToGrid(s.Position), radius));
+                forbidden.Add(ShapeDistance.Circle(s.Position.Quantized(), radius));
             hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
         }
         else
@@ -85,7 +85,7 @@ public class VoidzoneAtCastTarget(BossModule module, float radius, uint aid, Fun
             _aoes.Add(new(Shape, p.pos, default, p.time));
         }
         foreach (var z in Sources(Module))
-            _aoes.Add(new(Shape, WPos.ClampToGrid(z.Position)));
+            _aoes.Add(new(Shape, z.Position.Quantized()));
 
         return CollectionsMarshal.AsSpan(_aoes);
     }
@@ -217,7 +217,7 @@ public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<
 
         foreach (var source in Sources(Module))
         {
-            var shape = Shape.Distance(WPos.ClampToGrid(source.Position), source.Rotation);
+            var shape = Shape.Distance(source.Position.Quantized(), source.Rotation);
             shapes.Add(shape);
         }
         if (shapes.Count == 0)

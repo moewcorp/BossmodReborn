@@ -19,7 +19,7 @@ sealed class TwofoldTempestVoidzone(BossModule module) : Components.GenericAOEs(
     {
         if (actor.OID == (uint)OID.WindVoidzone)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position)));
+            _aoes.Add(new(circle, actor.Position.Quantized()));
         }
     }
 }

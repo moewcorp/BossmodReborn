@@ -21,7 +21,7 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
             for (var i = 0; i < len; ++i)
             {
                 var indexActor = party[i];
-                if (!ForbiddenPlayers[indexActor.Item1] && indexActor.Item2.Position.InCircle(WPos.ClampToGrid(Target.Position), Radius))
+                if (!ForbiddenPlayers[indexActor.Item1] && indexActor.Item2.Position.InCircle(Target.Position.Quantized(), Radius))
                 {
                     ++count;
                 }
@@ -31,7 +31,7 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         public readonly bool CorrectAmountInside(BossModule module) => NumInside(module) is var count && count >= MinSize && count <= MaxSize;
         public readonly bool InsufficientAmountInside(BossModule module) => NumInside(module) is var count && count < MaxSize;
         public readonly bool TooManyInside(BossModule module) => NumInside(module) is var count && count > MaxSize;
-        public readonly bool IsInside(WPos pos) => pos.InCircle(WPos.ClampToGrid(Target.Position), Radius);
+        public readonly bool IsInside(WPos pos) => pos.InCircle(Target.Position.Quantized(), Radius);
         public readonly bool IsInside(Actor actor) => IsInside(actor.Position);
     }
 
@@ -139,7 +139,7 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
             var numUnsatisfiedStacks = 0;
             foreach (var s in ActiveStacks.Where(s => !s.ForbiddenPlayers[slot]))
             {
-                if (actor.Position.InCircle(WPos.ClampToGrid(s.Target.Position), s.Radius))
+                if (actor.Position.InCircle(s.Target.Position.Quantized(), s.Radius))
                     ++numParticipatingStacks;
                 else if (Raid.WithoutSlot().InRadiusExcluding(s.Target, s.Radius).Count() + 1 < s.MinSize)
                     ++numUnsatisfiedStacks;
@@ -155,11 +155,11 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
             //hints.Add("Stack!", ActiveStacks.Count(s => !s.ForbiddenPlayers[slot] && actor.Position.InCircle(s.Target.Position, s.Radius)) != 1);
         }
 
-        if (ActiveSpreads.Any(s => s.Target != actor && actor.Position.InCircle(WPos.ClampToGrid(s.Target.Position), s.Radius)))
+        if (ActiveSpreads.Any(s => s.Target != actor && actor.Position.InCircle(s.Target.Position.Quantized(), s.Radius)))
         {
             hints.Add("GTFO from spreads!");
         }
-        else if (ActiveStacks.Any(s => s.Target != actor && s.ForbiddenPlayers[slot] && actor.Position.InCircle(WPos.ClampToGrid(s.Target.Position), s.Radius)))
+        else if (ActiveStacks.Any(s => s.Target != actor && s.ForbiddenPlayers[slot] && actor.Position.InCircle(s.Target.Position.Quantized(), s.Radius)))
         {
             hints.Add("GTFO from forbidden stacks!");
         }
@@ -171,25 +171,25 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         // TODO: think how to improve this, current implementation works, but isn't particularly good - e.g. nearby players tend to move to same spot, turn around, etc.
         // ideally we should provide per-mechanic spread spots, but for simple cases we should try to let melee spread close and healers/rdd spread far from main target...
         foreach (var spreadFrom in ActiveSpreads.Where(s => s.Target != actor))
-            hints.AddForbiddenZone(ShapeDistance.Circle(WPos.ClampToGrid(spreadFrom.Target.Position), spreadFrom.Radius + ExtraAISpreadThreshold), spreadFrom.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(spreadFrom.Target.Position.Quantized(), spreadFrom.Radius + ExtraAISpreadThreshold), spreadFrom.Activation);
         foreach (var spreadFrom in ActiveSpreads.Where(s => s.Target == actor))
             foreach (var x in Raid.WithoutSlot())
                 if (!ActiveSpreads.Any(s => s.Target == x))
-                    hints.AddForbiddenZone(ShapeDistance.Circle(WPos.ClampToGrid(x.Position), spreadFrom.Radius + ExtraAISpreadThreshold), spreadFrom.Activation);
+                    hints.AddForbiddenZone(ShapeDistance.Circle(x.Position.Quantized(), spreadFrom.Radius + ExtraAISpreadThreshold), spreadFrom.Activation);
         foreach (var avoid in ActiveStacks.Where(s => s.Target != actor && (s.ForbiddenPlayers[slot] || !s.IsInside(actor) && (s.CorrectAmountInside(Module) || s.TooManyInside(Module)) || s.IsInside(actor) && s.TooManyInside(Module))))
-            hints.AddForbiddenZone(ShapeDistance.Circle(WPos.ClampToGrid(avoid.Target.Position), avoid.Radius), avoid.Activation);
+            hints.AddForbiddenZone(ShapeDistance.Circle(avoid.Target.Position.Quantized(), avoid.Radius), avoid.Activation);
 
         if (Stacks.FirstOrDefault(s => s.Target == actor) is var actorStack && actorStack.Target != null)
         {
             // forbid standing next to other stack markers or overlapping them
             foreach (var stackWith in ActiveStacks.Where(s => s.Target != actor))
-                hints.AddForbiddenZone(ShapeDistance.Circle(WPos.ClampToGrid(stackWith.Target.Position), stackWith.Radius * 2), stackWith.Activation);
+                hints.AddForbiddenZone(ShapeDistance.Circle(stackWith.Target.Position.Quantized(), stackWith.Radius * 2), stackWith.Activation);
             // if player got stackmarker and is playing with NPCs, go to a NPC to stack with them since they will likely not come to you
             if (Raid.WithoutSlot().Any(x => x.Type == ActorType.Buddy))
             {
                 var forbidden = new List<Func<WPos, float>>();
                 foreach (var stackWith in ActiveStacks.Where(s => s.Target == actor))
-                    forbidden.Add(ShapeDistance.InvertedCircle(WPos.ClampToGrid(Raid.WithoutSlot().FirstOrDefault(x => !x.IsDead && !IsSpreadTarget(x) && !IsStackTarget(x))!.Position), actorStack.Radius * 0.33f));
+                    forbidden.Add(ShapeDistance.InvertedCircle(Raid.WithoutSlot().FirstOrDefault(x => !x.IsDead && !IsSpreadTarget(x) && !IsStackTarget(x))!.Position.Quantized(), actorStack.Radius * 0.33f));
                 if (forbidden.Count > 0)
                     hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), actorStack.Activation);
             }
@@ -199,7 +199,7 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
             var forbidden = new List<Func<WPos, float>>();
             foreach (var s in ActiveStacks.Where(x => !x.ForbiddenPlayers[slot] && (x.IsInside(actor) && !x.TooManyInside(Module)
             || !x.IsInside(actor) && x.InsufficientAmountInside(Module))))
-                forbidden.Add(ShapeDistance.InvertedCircle(WPos.ClampToGrid(s.Target.Position), s.Radius - 0.25f));
+                forbidden.Add(ShapeDistance.InvertedCircle(s.Target.Position.Quantized(), s.Radius - 0.25f));
             if (forbidden.Count > 0)
                 hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveStacks.FirstOrDefault().Activation);
         }
@@ -264,7 +264,7 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
         if (!AlwaysShowSpreads && Spreads.FindIndex(s => s.Target == pc) is var iSpread && iSpread >= 0)
         {
             // Draw only own circle if spreading; no one should be inside.
-            DrawCircle(WPos.ClampToGrid(pc.Position), Spreads[iSpread].Radius);
+            DrawCircle(pc.Position.Quantized(), Spreads[iSpread].Radius);
         }
         else
         {
@@ -272,17 +272,17 @@ public abstract class GenericStackSpread(BossModule module, bool alwaysShowSprea
             foreach (var s in ActiveStacks.Where(x => x.Target == pc || !x.ForbiddenPlayers[pcSlot]
                     && !IsSpreadTarget(pc) && !IsStackTarget(pc) && (x.IsInside(pc)
                     && !x.TooManyInside(Module) || !x.IsInside(pc) && x.InsufficientAmountInside(Module))))
-                DrawCircle(WPos.ClampToGrid(s.Target.Position), s.Radius, Colors.Safe);
+                DrawCircle(s.Target.Position.Quantized(), s.Radius, Colors.Safe);
 
             // Handle dangerous stack circles
             foreach (var s in ActiveStacks.Where(x => x.Target != pc && (IsStackTarget(pc) || x.ForbiddenPlayers[pcSlot] || IsSpreadTarget(pc) ||
                 !x.IsInside(pc) && (x.CorrectAmountInside(Module) || x.TooManyInside(Module)) ||
                 x.IsInside(pc) && x.TooManyInside(Module))))
-                DrawCircle(WPos.ClampToGrid(s.Target.Position), s.Radius);
+                DrawCircle(s.Target.Position.Quantized(), s.Radius);
 
             // Handle spread circles
             foreach (var s in ActiveSpreads)
-                DrawCircle(WPos.ClampToGrid(s.Target.Position), s.Radius);
+                DrawCircle(s.Target.Position.Quantized(), s.Radius);
         }
     }
 }

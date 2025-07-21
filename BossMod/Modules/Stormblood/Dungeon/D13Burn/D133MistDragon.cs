@@ -79,7 +79,7 @@ class ColdFog(BossModule module) : Components.GenericAOEs(module)
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.AreaOfInfluenceUp)
-            _aoe = new(new AOEShapeCircle(4f + status.Extra), WPos.ClampToGrid(Arena.Center), default, activation);
+            _aoe = new(new AOEShapeCircle(4f + status.Extra), Arena.Center.Quantized(), default, activation);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -273,7 +273,7 @@ class Cauterize(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Helper2)
-            _aoe = new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(7.3d));
+            _aoe = new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(7.3d));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

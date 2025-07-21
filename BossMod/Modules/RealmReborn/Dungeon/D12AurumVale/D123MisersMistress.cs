@@ -53,7 +53,7 @@ sealed class GoldBilePlume(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorCreated(Actor actor)
     {
-        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation));
+        void AddAOE(AOEShape shape) => _aoes.Add(new(shape, actor.Position.Quantized(), actor.Rotation));
         if (actor.OID == (uint)OID.Plume1)
         {
             AddAOE(circle);

@@ -80,7 +80,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.Deathwall)
         {
             Arena.Bounds = CE42FromBeyondTheGrave.DefaultArena;
-            Arena.Center = WPos.ClampToGrid(Arena.Center);
+            Arena.Center = Arena.Center.Quantized();
             _aoe = null;
         }
     }

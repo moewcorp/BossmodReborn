@@ -10,7 +10,7 @@ sealed class Levinburst(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Rairin)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6.9d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.9d)));
         }
     }
 

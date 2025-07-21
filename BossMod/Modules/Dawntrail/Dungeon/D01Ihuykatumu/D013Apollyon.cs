@@ -112,7 +112,7 @@ sealed class CuttingWind(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < 3; ++i)
             {
                 var delay = WorldState.FutureTime(delays[i]);
-                var posi = WPos.ClampToGrid(pos[i]);
+                var posi = pos[i].Quantized();
                 for (var j = 0; j < 4; ++j)
                 {
                     _aoes.Add(new(rect, posi, angles[j], delay));

@@ -147,7 +147,7 @@ sealed class Shock(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.7d)));
+            _aoes.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(3.7d)));
         }
     }
 

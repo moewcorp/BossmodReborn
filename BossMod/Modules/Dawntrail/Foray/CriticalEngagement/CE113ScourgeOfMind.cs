@@ -85,7 +85,7 @@ sealed class FireIceTrap(BossModule module) : Components.GenericAOEs(module)
                     var isFire = status.Extra == 0x344u;
                     if (first)
                     {
-                        AddTraps(WPos.ClampToGrid(position), WorldState.FutureTime(10d), isFire);
+                        AddTraps(position.Quantized(), WorldState.FutureTime(10d), isFire);
                     }
                     jesters.Add((position, isFire));
                 }

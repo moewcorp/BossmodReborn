@@ -100,7 +100,7 @@ sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
                 _aoes.Clear();
                 break;
         }
-        void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(cone, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(12.8d)));
+        void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(cone, pos.Quantized(), rot, WorldState.FutureTime(12.8d)));
     }
 }
 

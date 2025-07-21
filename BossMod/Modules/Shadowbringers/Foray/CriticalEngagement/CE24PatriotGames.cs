@@ -61,7 +61,7 @@ sealed class LightningRod(BossModule module) : Components.GenericTowers(module)
     {
         if (spell.Action.ID == (uint)AID.LightningRod)
         {
-            Towers.Add(new(WPos.ClampToGrid(caster.Position), 4f)); // no activation time because player might need to do multiple mines within 12s
+            Towers.Add(new(caster.Position.Quantized(), 4f)); // no activation time because player might need to do multiple mines within 12s
         }
         else if (spell.Action.ID is (uint)AID.Explosion or (uint)AID.MassiveExplosion)
         {
@@ -128,7 +128,7 @@ sealed class ElectrochemicalReaction(BossModule module) : Components.GenericAOEs
                         goto skip; // each bartizan got 2 actors, don't add duplicates
                     }
                 }
-                bartizans.Add((WPos.ClampToGrid(loc), default));
+                bartizans.Add((loc.Quantized(), default));
             }
         skip:
             var pos = source.Position;

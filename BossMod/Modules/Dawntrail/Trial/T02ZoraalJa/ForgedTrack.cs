@@ -24,7 +24,7 @@ sealed class ForgedTrack(BossModule module) : Components.GenericAOEs(module)
         var lane1 = laneOffset is < -7 and > -8;
         var lane3 = laneOffset is > 2 and < 3;
         var adjustedLaneOffset = laneOffset + (patternX ? 5 * (lane1 || lane3 ? 1 : -1) : 0);
-        _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center + rightDir * adjustedLaneOffset), source.Rotation, WorldState.FutureTime(13.3d)));
+        _aoes.Add(new(_shape, (Arena.Center + rightDir * adjustedLaneOffset).Quantized(), source.Rotation, WorldState.FutureTime(13.3d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

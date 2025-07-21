@@ -70,7 +70,7 @@ sealed class Rokujo(BossModule module) : Components.GenericAOEs(module)
                 var count = _clouds.Count;
                 for (var i = 0; i < count; ++i)
                 {
-                    _aoes.Add(new(circles[2], WPos.ClampToGrid(_clouds[i].Position), default, Module.CastFinishAt(spell, 7.1d)));
+                    _aoes.Add(new(circles[2], _clouds[i].Position.Quantized(), default, Module.CastFinishAt(spell, 7.1d)));
                 }
                 break;
         }
@@ -85,7 +85,7 @@ sealed class Rokujo(BossModule module) : Components.GenericAOEs(module)
                 var cloud = _clouds[i].Position;
                 if (cloud.InRect(pos, rot, 30f, 30f, 7f))
                 {
-                    _aoes.Add(new(circle, WPos.ClampToGrid(cloud), default, Module.CastFinishAt(spell, initialActivation)));
+                    _aoes.Add(new(circle, cloud.Quantized(), default, Module.CastFinishAt(spell, initialActivation)));
                     _clouds.RemoveAt(i);
                 }
             }
@@ -105,7 +105,7 @@ sealed class Rokujo(BossModule module) : Components.GenericAOEs(module)
                         var cloud = _clouds[i].Position;
                         if (_aoes[j].Origin.InCircle(cloud, radius))
                         {
-                            newAOEs.Add(new(circle, WPos.ClampToGrid(cloud), default, Module.CastFinishAt(spell, activation(count))));
+                            newAOEs.Add(new(circle, cloud.Quantized(), default, Module.CastFinishAt(spell, activation(count))));
                             _clouds.RemoveAt(i);
                             removedAny = true;
                             break;

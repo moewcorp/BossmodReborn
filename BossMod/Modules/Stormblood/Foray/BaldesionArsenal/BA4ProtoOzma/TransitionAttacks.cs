@@ -42,7 +42,7 @@ sealed class TransitionAttacks(BossModule module) : Components.GenericAOEs(modul
             }
         }
         void AddAOE(AOEShape shape, Angle rotation = default, WPos position = default)
-        => AOEs.Add(new(shape, WPos.ClampToGrid(position == default ? caster.Position : position), rotation, WorldState.FutureTime(7.8d)));
+        => AOEs.Add(new(shape, position == default ? caster.Position : position.Quantized(), rotation, WorldState.FutureTime(7.8d)));
         void TransfigurationCounter()
         {
             if (caster == Module.PrimaryActor)

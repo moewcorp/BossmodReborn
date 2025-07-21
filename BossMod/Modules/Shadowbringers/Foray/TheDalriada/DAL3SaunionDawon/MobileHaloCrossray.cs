@@ -27,7 +27,7 @@ sealed class MobileHaloCrossray(BossModule module) : Components.GenericAOEs(modu
                 (uint)AID.MobileHaloVisual3 or (uint)AID.MobileCrossrayVisual3 => new(18f, default),
                 _ => new(default, -18f)
             };
-            _aoe = new(shape, WPos.ClampToGrid(Arena.Center + dir), default, Module.CastFinishAt(spell, 2.1d));
+            _aoe = new(shape, (Arena.Center + dir).Quantized(), default, Module.CastFinishAt(spell, 2.1d));
         }
     }
 

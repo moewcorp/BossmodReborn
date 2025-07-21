@@ -148,7 +148,7 @@ public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCas
         if (spell.Action.ID == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 }
@@ -261,7 +261,7 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
             if (spell.Action.ID == AIDs[i])
             {
                 var dir = spell.LocXZ - caster.Position;
-                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
                 {
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));

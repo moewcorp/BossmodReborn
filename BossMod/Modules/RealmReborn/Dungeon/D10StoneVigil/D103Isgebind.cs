@@ -39,7 +39,7 @@ class Touchdown(BossModule module) : Components.GenericAOEs(module, (uint)AID.To
     {
         if (actor.OID == (uint)OID.Boss && id == 0x008Eu)
         {
-            _aoe = new(_shape, WPos.ClampToGrid(D103Isgebind.ArenaCenter), default, WorldState.FutureTime(7.8d));
+            _aoe = new(_shape, D103Isgebind.ArenaCenter.Quantized(), default, WorldState.FutureTime(7.8d));
         }
     }
 

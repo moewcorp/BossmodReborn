@@ -245,12 +245,12 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
         for (var i = 0; i < futureCount; ++i)
         {
             var aoe = futureAOEs[i];
-            aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, FutureColor);
+            aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, FutureColor);
         }
         for (var i = 0; i < imminentCount; ++i)
         {
             var aoe = imminentAOEs[i];
-            aoes[index++] = new(Shape, WPos.ClampToGrid(aoe.Item1), aoe.Item3, aoe.Item2, ImminentColor);
+            aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, ImminentColor);
         }
         for (var i = 0; i < aoesCount; ++i)
         {
@@ -308,7 +308,7 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
             _aoes.RemoveAt(0);
         if (NumCasts <= 14)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(WPos.RotateAroundOrigin(45, D013Philia.ArenaCenter, caster.Position)), default, WorldState.FutureTime(3.7d)));
+            _aoes.Add(new(circle, WPos.RotateAroundOrigin(45, D013Philia.ArenaCenter, caster.Position.Quantized()), default, WorldState.FutureTime(3.7d)));
         }
         if (NumCasts == 16)
             NumCasts = 0;

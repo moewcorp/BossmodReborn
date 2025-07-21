@@ -214,7 +214,7 @@ sealed class DeathlyRayFaces(BossModule module) : Components.GenericAOEs(module)
                 {
                     var f = faces[i];
                     var isFirstSet = f.Rotation == caster.Rotation;
-                    _aoes.Add(new(_rect, WPos.ClampToGrid(f.Position), f.Rotation, !isFirstSet ? WorldState.FutureTime(8.5d) : default, isFirstSet ? Colors.Danger : default, isFirstSet));
+                    _aoes.Add(new(_rect, f.Position.Quantized(), f.Rotation, !isFirstSet ? WorldState.FutureTime(8.5d) : default, isFirstSet ? Colors.Danger : default, isFirstSet));
                     _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
                 }
             }

@@ -42,7 +42,7 @@ sealed class Spikesicle(BossModule module) : Components.GenericAOEs(module)
             var odd = (index & 1) != 0;
             var x = index < 12 ? (odd ? -20 : +20) : (odd ? +17 : -17);
             var activationDelay = 11.3f + 0.2f * _aoes.Count;
-            _aoes.Add(new(shape, WPos.ClampToGrid(Module.PrimaryActor.Position + new WDir(x, 0)), default, WorldState.FutureTime(activationDelay)));
+            _aoes.Add(new(shape, (Module.PrimaryActor.Position + new WDir(x, default)).Quantized(), default, WorldState.FutureTime(activationDelay)));
         }
     }
 
@@ -81,7 +81,7 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module, (
     {
         if (actor.OID == (uint)OID.IceBoulder)
         {
-            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(6.5d)));
+            _aoes.Add(new(_shape, actor.Position.Quantized(), default, WorldState.FutureTime(6.5d)));
         }
     }
 

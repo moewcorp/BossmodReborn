@@ -107,7 +107,7 @@ sealed class NeedleStormSuperstorm(BossModule module) : Components.GenericAOEs(m
             _ => null
         };
         if (shape != null)
-            _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position)));
+            _aoes.Add(new(shape, actor.Position.Quantized()));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

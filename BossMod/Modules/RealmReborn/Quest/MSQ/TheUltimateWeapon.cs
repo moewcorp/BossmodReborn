@@ -67,7 +67,7 @@ class FireSphere(BossModule module) : Components.GenericAOEs(module, (uint)AID.B
             var count = spheres.Count;
             var aoes = new AOEInstance[count];
             for (var i = 0; i < count; ++i)
-                aoes[i] = new(circle, WPos.ClampToGrid(spheres[i].Position), default, dt);
+                aoes[i] = new(circle, spheres[i].Position.Quantized(), default, dt);
             return aoes;
         }
         return [];

@@ -142,7 +142,7 @@ sealed class CellShock(BossModule module) : Components.GenericAOEs(module)
                 0x10 => new(64.868f, 285.132f),
                 _ => default
             };
-            _aoe = new(circle, WPos.ClampToGrid(position), default, WorldState.FutureTime(8d));
+            _aoe = new(circle, position.Quantized(), default, WorldState.FutureTime(8d));
         }
     }
 

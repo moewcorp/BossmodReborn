@@ -126,7 +126,7 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.IceBoulder)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(8.4d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(8.4d)));
         }
     }
 

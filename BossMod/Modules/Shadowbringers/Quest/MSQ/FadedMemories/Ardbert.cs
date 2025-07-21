@@ -87,7 +87,7 @@ class SkyHighDrive(BossModule module) : Components.GenericRotatingAOE(module)
         if (_rotation.Count == 2 && _increment != default)
         {
             for (var i = 0; i < 2; ++i)
-                Sequences.Add(new(rect, WPos.ClampToGrid(source.Position), _rotation[i], _increment, _activation, 0.6f, 10, 4));
+                Sequences.Add(new(rect, source.Position.Quantized(), _rotation[i], _increment, _activation, 0.6f, 10, 4));
             _rotation.Clear();
             _increment = default;
         }

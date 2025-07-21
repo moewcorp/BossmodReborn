@@ -55,7 +55,7 @@ class Gurgle(BossModule module) : Components.GenericAOEs(module)
             var posX = index < 0x17 ? -20f : 20f;
             var posZ = posX == -20f ? -165 + (index - 0x13) * 10f : -165f + (index - 0x17) * 10f;
             var rot = posX == -20f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
-            _aoes.Add(new(rect, WPos.ClampToGrid(new(posX, posZ)), rot, WorldState.FutureTime(9d)));
+            _aoes.Add(new(rect, new WPos(posX, posZ).Quantized(), rot, WorldState.FutureTime(9d)));
         }
     }
 
@@ -149,7 +149,7 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Geyser)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(3.9d), actorID: actor.InstanceID));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(3.9d), actorID: actor.InstanceID));
         }
     }
 

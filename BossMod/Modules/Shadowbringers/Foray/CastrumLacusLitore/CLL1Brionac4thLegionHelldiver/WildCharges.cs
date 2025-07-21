@@ -24,7 +24,7 @@ sealed class WildCharges(BossModule module) : Components.GenericAOEs(module)
         if (halfWidth != default)
         {
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), halfWidth, InvertForbiddenZone: true), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), Colors.SafeFromAOE));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), halfWidth, InvertForbiddenZone: true), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), Colors.SafeFromAOE));
         }
     }
 

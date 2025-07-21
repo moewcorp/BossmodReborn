@@ -24,7 +24,7 @@ sealed class MalformedPrayer(BossModule module) : Components.GenericTowers(modul
         };
         if (pos is WPos origin)
         {
-            Towers.Add(new(WPos.ClampToGrid(origin), 4f, activation: WorldState.FutureTime(9d)));
+            Towers.Add(new(origin.Quantized(), 4f, activation: WorldState.FutureTime(9d)));
         }
     }
 

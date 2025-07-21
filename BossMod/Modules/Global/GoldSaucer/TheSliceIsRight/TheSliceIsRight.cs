@@ -50,7 +50,7 @@ sealed class BambooSplits(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID is (uint)OID.HelperCircle or (uint)OID.HelperDoubleRect or (uint)OID.HelperSingleRect)
         {
-            _aoes.Add(new(bamboospawn, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(2.7d)));
+            _aoes.Add(new(bamboospawn, actor.Position.Quantized(), default, WorldState.FutureTime(2.7d)));
         }
     }
 
@@ -58,7 +58,7 @@ sealed class BambooSplits(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00010002)
         {
-            void AddAOE(AOEShape shape, Angle offset) => _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation + offset, WorldState.FutureTime(7d)));
+            void AddAOE(AOEShape shape, Angle offset) => _aoes.Add(new(shape, actor.Position.Quantized(), actor.Rotation + offset, WorldState.FutureTime(7d)));
             switch (actor.OID)
             {
                 case (uint)OID.HelperCircle:
@@ -82,7 +82,7 @@ sealed class BambooSplits(BossModule module) : Components.GenericAOEs(module)
         {
             void RemoveAOE(AOEShape shape)
             {
-                var pos = WPos.ClampToGrid(caster.Position);
+                var pos = caster.Position.Quantized();
                 for (var i = 0; i < count; ++i)
                 {
                     var aoe = _aoes[i];

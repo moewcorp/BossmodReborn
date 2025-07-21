@@ -64,7 +64,7 @@ class SpringCrystalsSphere(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID is (uint)OID.NSpringCrystalSphere or (uint)OID.SSpringCrystalSphere)
         {
-            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(23.9d)));
+            _aoes.Add(new(_shape, actor.Position.Quantized(), default, WorldState.FutureTime(23.9d)));
         }
     }
 

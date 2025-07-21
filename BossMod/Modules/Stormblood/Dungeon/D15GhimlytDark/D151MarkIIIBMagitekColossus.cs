@@ -74,7 +74,7 @@ class MagitektSlashRotation(BossModule module) : Components.GenericRotatingAOE(m
     {
         if (_rotation != default && _increment != default)
         {
-            Sequences.Add(new(Cone, WPos.ClampToGrid(D151MarkIIIBMagitekColossus.ArenaCenter), _rotation, _increment, _activation, 1.1f, 6));
+            Sequences.Add(new(Cone, D151MarkIIIBMagitekColossus.ArenaCenter.Quantized(), _rotation, _increment, _activation, 1.1f, 6));
             _rotation = default;
             _increment = default;
         }

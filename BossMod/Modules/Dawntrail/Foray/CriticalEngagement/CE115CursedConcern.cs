@@ -380,7 +380,7 @@ sealed class CE115CursedConcernStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 45)]
-public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(72f, -545f)), new ArenaBoundsCircle(25f))
+public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(72f, -545f).Quantized(), new ArenaBoundsCircle(25f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }
