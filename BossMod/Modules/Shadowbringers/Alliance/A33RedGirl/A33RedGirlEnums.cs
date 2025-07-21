@@ -69,8 +69,8 @@ public enum AID : uint
     WaveBlack = 24974, // RedSphere->self, 8.0s cast, range 22 circle
     WaveWhite = 24973, // RedSphere->self, 8.0s cast, range 22 circle
 
-    ChildsPlay1 = 24612, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march north
-    ChildsPlay2 = 24613, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march east
+    ChildsPlay1 = 24612, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march north for players, pull towards tether target for rotations
+    ChildsPlay2 = 24613, // BossP2/RedGirl2->self, 10.0s cast, single-target, forced march east, pull left from tether target for rotations
     Explosion = 24614, // BlackPylonP2->self, 15.0s cast, range 9 circle
 
     WipeWhite = 24588, // Helper->self, 13.0s cast, range 75 circle

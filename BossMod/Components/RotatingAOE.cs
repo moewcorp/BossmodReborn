@@ -97,4 +97,20 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         }
         return false;
     }
+
+    public bool AdvanceSequence(WPos origin, Angle rotation, ulong instanceID, DateTime currentTime, bool removeWhenFinished = true)
+    {
+        var count = Sequences.Count;
+        var sequences = CollectionsMarshal.AsSpan(Sequences);
+        for (var i = 0; i < count; ++i)
+        {
+            ref readonly var s = ref sequences[i];
+            if (s.ActorID == instanceID && s.Origin.AlmostEqual(origin, 1f) && s.Rotation.AlmostEqual(rotation, 0.05f))
+            {
+                AdvanceSequence(i, currentTime, removeWhenFinished);
+                return true;
+            }
+        }
+        return false;
+    }
 }

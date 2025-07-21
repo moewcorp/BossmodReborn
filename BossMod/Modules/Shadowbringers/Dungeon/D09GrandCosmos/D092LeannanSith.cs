@@ -124,7 +124,7 @@ class GreenTiles(BossModule module) : Components.GenericAOEs(module)
             ++NumCasts;
         else if (spell.Action.ID == (uint)AID.IrefulWind)
         {
-            var knockbackDirection = new Angle(MathF.Round(spell.Rotation.Deg / 90f) * 90f) * Angle.DegToRad;
+            var knockbackDirection = spell.Rotation.Round(90f);
             var offset = 10f * knockbackDirection.ToDirection();
             var newTiles = new List<Square>(10);
             var pos = caster.Position;

@@ -4,7 +4,7 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
 {
     private static readonly AOEShapeCone cone = new(12f, 60f.Degrees());
     private readonly List<(Actor source, Actor target)> tethers = new(4);
-    private readonly Actor?[] sources = new Actor[2];
+    private readonly List<(Actor source, WDir direction)> sources = new(2);
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
@@ -36,7 +36,7 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
                     break;
                 }
             }
-            Sequences.Add(new(cone, actor.Position.Quantized(), actor.Rotation, increment, WorldState.FutureTime(5d), 2.7d, isTethered ? 2 : 6, actorID: targetID));
+            Sequences.Add(new(cone, actor.Position.Quantized(), actor.Rotation, increment, WorldState.FutureTime(5d), 2.7d, isTethered ? 2 : 6, actorID: actor.InstanceID));
 
             if (!isTethered)
             {
@@ -44,20 +44,15 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
             }
             // add moving rotations
             var t = tethers[index];
-            if (t.target == sources[0])
+            var countS = sources.Count;
+            for (var i = 0; i < countS; ++i)
             {
-                AddSequence(new(default, -16.9f));
-                return;
-            }
-            if (t.target == sources[1])
-            {
-                AddSequence(new(default, 16.9f));
-                return;
-            }
-            void AddSequence(WDir offset)
-            {
-                Sequences.Add(new(cone, (actor.Position + offset).Quantized(), actor.Rotation + 2f * increment, increment, WorldState.FutureTime(13.3d), 2.7d, 3));
-                tethers.RemoveAt(index);
+                var s = sources[i];
+                if (t.target == s.source)
+                {
+                    Sequences.Add(new(cone, (actor.Position + s.direction).Quantized(), actor.Rotation + 2f * increment, increment, WorldState.FutureTime(13.3d), 2.7d, 3, actorID: actor.InstanceID));
+                    tethers.RemoveAt(index);
+                }
             }
         }
     }
@@ -67,11 +62,19 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
         switch (spell.Action.ID)
         {
             case (uint)AID.ChildsPlay1:
-                sources[0] = caster;
+                sources.Add((caster, -16.9f * caster.Rotation.Round(90f).ToDirection()));
                 break;
             case (uint)AID.ChildsPlay2:
-                sources[1] = caster;
+                sources.Add((caster, 16.9f * (caster.Rotation.Round(90f) + 90f.Degrees()).ToDirection()));
                 break;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.ChildsPlay1 or (uint)AID.ChildsPlay2)
+        {
+            sources.Clear();
         }
     }
 
@@ -79,7 +82,7 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
     {
         if (spell.Action.ID is (uint)AID.DiffuseEnergyFirst or (uint)AID.DiffuseEnergyRest)
         {
-            AdvanceSequence(caster.Position, spell.Rotation, WorldState.CurrentTime);
+            AdvanceSequence(caster.Position, spell.Rotation, caster.InstanceID, WorldState.CurrentTime);
         }
     }
 }
