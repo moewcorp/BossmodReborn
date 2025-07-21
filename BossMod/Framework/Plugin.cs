@@ -8,6 +8,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace BossMod;
 
@@ -70,7 +71,7 @@ public sealed class Plugin : IDalamudPlugin
 
         Service.Config.Initialize();
         Service.Config.LoadFromFile(dalamud.ConfigFile);
-        Service.Config.Modified.Subscribe(() => Service.Config.SaveToFile(dalamud.ConfigFile));
+        Service.Config.Modified.Subscribe(() => Task.Run(() => .Config.SaveToFile(dalamud.ConfigFile)));
 
         CommandManager = commandManager;
         CommandManager.AddHandler("/bmr", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod settings UI" });
