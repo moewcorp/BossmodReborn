@@ -123,7 +123,7 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
             void AddAOE(WPos pos)
             {
                 var activation = WorldState.FutureTime(7.7d);
-                AOEs.Add(new(rect, WPos.ClampToGrid(pos), rotation, activation));
+                AOEs.Add(new(rect, pos.Quantized(), rotation, activation));
             }
         }
     }
@@ -182,7 +182,7 @@ class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
             void AddAOEs(int[] indices, double delay)
             {
                 for (var i = 0; i < 3; ++i)
-                    _aoes.Add(new(rect, WPos.ClampToGrid(coords[indices[i]]), rotation, WorldState.FutureTime(delay)));
+                    _aoes.Add(new(rect, coords[indices[i]].Quantized(), rotation, WorldState.FutureTime(delay)));
             }
         }
     }

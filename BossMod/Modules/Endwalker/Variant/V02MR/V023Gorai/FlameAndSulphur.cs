@@ -48,7 +48,7 @@ sealed class FlameAndSulphur(BossModule module) : Components.GenericAOEs(module)
                     AddAOE(shape, enemy.Position - offset, rot);
                 }
             }
-            void AddAOE(AOEShape shape, WPos origin, Angle rotation) => _aoes.Add(new(shape, WPos.ClampToGrid(origin), rotation, activation));
+            void AddAOE(AOEShape shape, WPos origin, Angle rotation) => _aoes.Add(new(shape, origin.Quantized(), rotation, activation));
         }
     }
 

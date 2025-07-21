@@ -47,7 +47,7 @@ class RadiantRhythm(BossModule module) : Components.GenericAOEs(module)
                 AddAOE(angle, act);
                 AddAOE(angle + 180f.Degrees(), act);
             }
-            void AddAOE(Angle rotation, DateTime activation) => _aoes.Add(new(_shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
+            void AddAOE(Angle rotation, DateTime activation) => _aoes.Add(new(_shape, Arena.Center.Quantized(), rotation, activation));
         }
     }
 

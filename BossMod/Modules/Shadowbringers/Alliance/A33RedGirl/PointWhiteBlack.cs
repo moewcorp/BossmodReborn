@@ -38,7 +38,7 @@ sealed class PointBlackWhite(BossModule module) : Components.GenericAOEs(module)
                         break;
                     }
                 }
-                _aoes.Add(new(isShort ? rectShort : rectLong, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(7.8d)));
+                _aoes.Add(new(isShort ? rectShort : rectLong, pos.Quantized(), rot, WorldState.FutureTime(7.8d)));
             }
         }
     }

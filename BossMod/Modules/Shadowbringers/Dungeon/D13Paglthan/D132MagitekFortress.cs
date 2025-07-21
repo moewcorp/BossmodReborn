@@ -59,7 +59,7 @@ sealed class StableCannon(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00200010u && index is >= 0x08 and <= 0x0A)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(new(-185f + 10f * (index - 0x08u), 28.3f)), Angle.AnglesCardinals[1], WorldState.FutureTime(12.1d)));
+            _aoes.Add(new(rect, new WPos(-185f + 10f * (index - 0x08u), 28.3f).Quantized(), Angle.AnglesCardinals[1], WorldState.FutureTime(12.1d)));
         }
         else if (index == 0x0Du && state == 0x00020001u)
         {

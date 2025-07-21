@@ -27,7 +27,7 @@ sealed class EnergyCompression(BossModule module) : Components.GenericTowers(mod
     {
         if (Towers.Count != 6 && actor.OID == (uint)OID.Towers1)
         {
-            Towers.Add(new(WPos.ClampToGrid(actor.Position), 5f, activation: WorldState.FutureTime(9.9d)));
+            Towers.Add(new(actor.Position.Quantized(), 5f, activation: WorldState.FutureTime(9.9d)));
         }
     }
 

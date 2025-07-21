@@ -128,7 +128,7 @@ sealed class GobfireShootypops(BossModule module) : Components.GenericRotatingAO
     {
         if (_rotation != default && _increment != default)
         {
-            Sequences.Add(new(_shape, WPos.ClampToGrid(source.Position), _rotation, _increment, _activation, 1d, 6));
+            Sequences.Add(new(_shape, source.Position.Quantized(), _rotation, _increment, _activation, 1d, 6));
             _rotation = default;
             _increment = default;
         }

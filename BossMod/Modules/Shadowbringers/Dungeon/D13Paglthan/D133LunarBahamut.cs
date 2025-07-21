@@ -121,7 +121,7 @@ sealed class KanRhaiAOE(BossModule module) : Components.GenericAOEs(module)
         }
         else if (spell.Action.ID == (uint)AID.KanRhaiVisual2)
         {
-            _aoes.Add(new(KanRhaiBait.Cross, WPos.ClampToGrid(caster.Position), Angle.AnglesCardinals[1]));
+            _aoes.Add(new(KanRhaiBait.Cross, caster.Position.Quantized(), Angle.AnglesCardinals[1]));
         }
     }
 }

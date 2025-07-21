@@ -63,7 +63,7 @@ sealed class Hotspot(BossModule module) : Components.GenericAOEs(module)
     {
         var songs = Module.Enemies(_songs);
         var count = songs.Count;
-        var pos = WPos.ClampToGrid(UnSuzaku.ArenaCenter);
+        var pos = UnSuzaku.ArenaCenter.Quantized();
 
         for (var i = 0; i < count; ++i)
         {

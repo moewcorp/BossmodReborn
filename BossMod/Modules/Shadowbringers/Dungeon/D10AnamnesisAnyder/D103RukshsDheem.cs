@@ -133,7 +133,7 @@ class Wavebreaker(BossModule module) : Components.GenericAOEs(module)
             activation = 9.8d;
             shape = rectWide;
         }
-        _aoes.Add(new(shape, WPos.ClampToGrid(caster.Position), caster.Rotation, WorldState.FutureTime(activation)));
+        _aoes.Add(new(shape, caster.Position.Quantized(), caster.Rotation, WorldState.FutureTime(activation)));
     }
 }
 

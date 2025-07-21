@@ -76,7 +76,7 @@ sealed class ShockAOE(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, WPos.ClampToGrid(caster.Position)));
+            _aoes.Add(new(shape, caster.Position.Quantized()));
             if (shape == ShockSpread.Donut)
                 ++donuts;
             else

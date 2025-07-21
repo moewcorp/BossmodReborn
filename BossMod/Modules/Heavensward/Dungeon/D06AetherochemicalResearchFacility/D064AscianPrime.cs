@@ -167,7 +167,7 @@ class Stars(BossModule module) : Components.GenericAOEs(module)
             AddAOE(donut, _donut, reverse);
             if (reverse)
                 _aoes.Reverse();
-            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, WPos.ClampToGrid(pos), default, WorldState.FutureTime(first ? 11.8d : 14.8d)));
+            void AddAOE(AOEShape shape, WPos pos, bool first) => _aoes.Add(new(shape, pos.Quantized(), default, WorldState.FutureTime(first ? 11.8d : 14.8d)));
         }
 
         if (actor.OID == (uint)OID.FrozenStar)

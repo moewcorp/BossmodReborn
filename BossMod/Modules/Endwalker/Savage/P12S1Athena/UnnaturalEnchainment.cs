@@ -12,6 +12,6 @@ sealed class UnnaturalEnchainment(BossModule module) : Components.GenericAOEs(mo
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.UnnaturalEnchainment)
-            _aoes.Add(new(_shape, WPos.ClampToGrid(source.Position), default, WorldState.FutureTime(8.2d)));
+            _aoes.Add(new(_shape, source.Position.Quantized(), default, WorldState.FutureTime(8.2d)));
     }
 }

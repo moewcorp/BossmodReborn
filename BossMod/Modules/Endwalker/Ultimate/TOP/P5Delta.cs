@@ -412,7 +412,7 @@ class P5DeltaHyperPulse(BossModule module) : Components.GenericAOEs(module)
             var aoes = new List<AOEInstance>(len);
             for (var i = 0; i < len; ++i)
             {
-                var pos = WPos.ClampToGrid(Arena.Center + _delta.ArmOffset(i));
+                var pos = (Arena.Center + _delta.ArmOffset(i)).Quantized();
                 if (Raid.WithoutSlot(false, true, true).Closest(pos) == actor)
                 {
                     var angle = Angle.FromDirection(actor.Position - pos);

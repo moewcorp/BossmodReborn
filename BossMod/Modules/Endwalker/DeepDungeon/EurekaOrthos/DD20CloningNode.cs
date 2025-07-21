@@ -59,11 +59,11 @@ sealed class FlameBreath(BossModule module) : Components.GenericAOEs(module)
 
             if ((caster.Position - Arena.Center).LengthSq() > 625f)
             {
-                _aoes.Add(new(cone, WPos.ClampToGrid(CalculatePosition(caster)), caster.Rotation, activation));
+                _aoes.Add(new(cone, CalculatePosition(caster).Quantized(), caster.Rotation, activation));
             }
             else
             {
-                _aoes.Add(new(cone, WPos.ClampToGrid(RoundPosition(caster.Position)), caster.Rotation, activation));
+                _aoes.Add(new(cone, RoundPosition(caster.Position).Quantized(), caster.Rotation, activation));
             }
         }
     }

@@ -12,7 +12,7 @@ sealed class Thundercall(BossModule module) : Components.GenericAOEs(module)
     {
         if (counter < 2 && actor.OID == (uint)OID.BallOfLevin)
         {
-            _aoes.Add(new(circleBig, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(10.8d)));
+            _aoes.Add(new(circleBig, actor.Position.Quantized(), default, WorldState.FutureTime(10.8d)));
             ++counter;
         }
     }
@@ -35,7 +35,7 @@ sealed class Thundercall(BossModule module) : Components.GenericAOEs(module)
                     AddAOE(circleBig, orb.Position);
                 }
             }
-            void AddAOE(AOEShape shape, WPos origin) => _aoes.Add(new(shape, WPos.ClampToGrid(origin), default, activation));
+            void AddAOE(AOEShape shape, WPos origin) => _aoes.Add(new(shape, origin.Quantized(), default, activation));
         }
     }
 

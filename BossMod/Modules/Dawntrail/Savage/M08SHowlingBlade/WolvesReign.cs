@@ -126,7 +126,7 @@ sealed class WolvesReignRect(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID is (uint)AID.RevolutionaryReign or (uint)AID.EminentReign)
         {
             var rot = spell.Rotation;
-            _aoe = new(rect, WPos.ClampToGrid(caster.Position - 4f * rot.ToDirection()), rot, Module.CastFinishAt(spell, 2.4d));
+            _aoe = new(rect, (caster.Position - 4f * rot.ToDirection()).Quantized(), rot, Module.CastFinishAt(spell, 2.4d));
         }
     }
 
@@ -214,7 +214,7 @@ sealed class RoaringWind(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.WolfOfWind4 && id == 0x11D2u)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(5.6d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(5.6d)));
         }
     }
 
@@ -231,14 +231,15 @@ sealed class WealOfStone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
     private static readonly AOEShapeRect rect = new(40f, 3f);
+    public bool Draw;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Draw ? CollectionsMarshal.AsSpan(_aoes) : [];
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (spell.Action.ID is (uint)AID.WealOfStone1 or (uint)AID.WealOfStone2)
+        if (id == 0x11D2u && actor.OID == (uint)OID.WolfOfStone3)
         {
-            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(5.6d)));
         }
     }
 

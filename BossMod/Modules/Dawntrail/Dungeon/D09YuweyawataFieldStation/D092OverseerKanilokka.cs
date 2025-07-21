@@ -53,7 +53,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             AddAOE(donutSmall);
         }
-        void AddAOE(AOEShape shape) => _aoe = new(shape, WPos.ClampToGrid(Arena.Center), default, Module.CastFinishAt(spell));
+        void AddAOE(AOEShape shape) => _aoe = new(shape, Arena.Center.Quantized(), default, Module.CastFinishAt(spell));
     }
 
     public override void OnEventEnvControl(byte index, uint state)

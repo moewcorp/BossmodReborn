@@ -86,7 +86,7 @@ sealed class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(modu
             }
         }
 
-        void AddAOE(AOEShape shape, DateTime activation, Angle rotation = default) => _aoes.Add(new(shape, WPos.ClampToGrid(Arena.Center), rotation, activation));
+        void AddAOE(AOEShape shape, DateTime activation, Angle rotation = default) => _aoes.Add(new(shape, Arena.Center.Quantized(), rotation, activation));
 
         void AddConeAOEs(Angle[] angles, DateTime activation)
         {

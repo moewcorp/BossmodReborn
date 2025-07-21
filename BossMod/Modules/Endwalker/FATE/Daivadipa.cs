@@ -98,7 +98,7 @@ class LitPath(BossModule module) : Components.GenericAOEs(module)
                 for (var i = 0; i < count; ++i)
                 {
                     var orb = orbs[i];
-                    AOEs.Add(new(rect, WPos.ClampToGrid(orb.Position), orb.Position.X < -632f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[2], act));
+                    AOEs.Add(new(rect, orb.Position.Quantized(), orb.Position.X < -632f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[2], act));
                 }
             }
         }
@@ -149,7 +149,7 @@ class Burn(BossModule module) : Components.GenericAOEs(module)
                 for (var i = 0; i < count; ++i)
                 {
                     var orb = orbs[i];
-                    _aoes.Add(new(circle, WPos.ClampToGrid(orb.Position), default, act));
+                    _aoes.Add(new(circle, orb.Position.Quantized(), default, act));
                 }
             }
         }

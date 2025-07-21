@@ -55,7 +55,7 @@ sealed class ToxinShowerCorrosiveVenom(BossModule module) : Components.GenericAO
 
         if (pos is WPos p)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(p), default, WorldState.FutureTime(10.5d)));
+            _aoes.Add(new(circle, p.Quantized(), default, WorldState.FutureTime(10.5d)));
         }
     }
 

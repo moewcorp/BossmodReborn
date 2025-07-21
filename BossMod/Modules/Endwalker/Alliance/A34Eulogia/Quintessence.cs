@@ -53,7 +53,7 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
             _ => default
         };
         _index = index;
-        position = WPos.ClampToGrid(Arena.Center + offset);
+        position = (Arena.Center + offset).Quantized();
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

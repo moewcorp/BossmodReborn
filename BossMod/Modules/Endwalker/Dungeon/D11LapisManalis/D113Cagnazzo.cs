@@ -153,7 +153,7 @@ class HydraulicRam(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.HydraulicRamTelegraph)
         {
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell, 5.7d)));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell, 5.7d)));
         }
     }
 

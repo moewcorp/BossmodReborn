@@ -40,7 +40,7 @@ sealed class UpperLaser(BossModule module) : Components.GenericAOEs(module)
             var angle = Angle.FromDirection(actor.Position - center);
             // the lasers are placed poorly for some reason and can be off by 1-2°
             angle = (MathF.Round(angle.Deg / 60f) * 60f).Degrees();
-            var loc = WPos.ClampToGrid(center);
+            var loc = center.Quantized();
             var act = WorldState.FutureTime(9.7d);
             for (var i = 0; i < 3; ++i)
             {
@@ -81,7 +81,7 @@ sealed class LowerLaser(BossModule module) : Components.GenericAOEs(module)
             var angle = Angle.FromDirection(actor.Position - center);
             // the lasers are placed poorly for some reason and can be off by 1-2°
             angle = (MathF.Round(angle.Deg / 60f) * 60f).Degrees();
-            AOEs.Add(new(cone, WPos.ClampToGrid(center), angle, WorldState.FutureTime(9.7d)));
+            AOEs.Add(new(cone, center.Quantized(), angle, WorldState.FutureTime(9.7d)));
         }
     }
 

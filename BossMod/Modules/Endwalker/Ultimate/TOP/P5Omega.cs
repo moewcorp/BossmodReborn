@@ -49,7 +49,7 @@ class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
     {
         if (id != 0x1E43)
             return;
-        void AddAOE(AOEShape shape, Angle offset = default) => AOEs.Add(new(shape, WPos.ClampToGrid(actor.Position), actor.Rotation + offset, WorldState.FutureTime(13.2d)));
+        void AddAOE(AOEShape shape, Angle offset = default) => AOEs.Add(new(shape, actor.Position.Quantized(), actor.Rotation + offset, WorldState.FutureTime(13.2d)));
         switch (actor.OID)
         {
             case (uint)OID.OmegaMP5:

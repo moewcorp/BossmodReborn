@@ -133,7 +133,7 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         else
         {
             var dir = activebirds[0].Position - Arena.Center;
-            AOEInstance[] bait = [new(new AOEShapeRect(dir.Length(), 4f), WPos.ClampToGrid(Arena.Center), Angle.FromDirection(dir), activation)];
+            AOEInstance[] bait = [new(new AOEShapeRect(dir.Length(), 4f), Arena.Center.Quantized(), Angle.FromDirection(dir), activation)];
             return bait;
         }
     }
@@ -182,11 +182,11 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         {
             var primaryPos = Module.PrimaryActor.Position;
             var birdPos = activebirds[0].Position;
-            var destination = WPos.ClampToGrid(birdPos - 6f * (birdPos - CE104NoiseComplaint.ArenaCenter).Normalized());
+            var destination = (birdPos - 6f * (birdPos - CE104NoiseComplaint.ArenaCenter).Normalized()).Quantized();
             var dir = destination - primaryPos;
             var angle = Angle.FromDirection(dir);
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), WPos.ClampToGrid(primaryPos), angle, WorldState.FutureTime(6.3d)));
-            _aoes.Add(new(LightningCrossingMammothBoltEpicenterShock.CircleBig, WPos.ClampToGrid(destination), default, WorldState.FutureTime(9.4d)));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4f), primaryPos.Quantized(), angle, WorldState.FutureTime(6.3d)));
+            _aoes.Add(new(LightningCrossingMammothBoltEpicenterShock.CircleBig, destination.Quantized(), default, WorldState.FutureTime(9.4d)));
             var act = WorldState.FutureTime(10.5d);
             var anglecone = angle + (lightningIsCardinal == true ? default : 45f).Degrees();
             for (var i = 0; i < 4; ++i)
@@ -264,7 +264,7 @@ sealed class CE104NoiseComplaintStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 44)]
-public sealed class CE104NoiseComplaint(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(ArenaCenter), new ArenaBoundsCircle(23f))
+public sealed class CE104NoiseComplaint(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter.Quantized(), new ArenaBoundsCircle(23f))
 {
     public static readonly WPos ArenaCenter = new(461f, -363f);
 

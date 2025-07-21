@@ -63,7 +63,7 @@ class PillarShatter2(BossModule module) : Components.GenericAOEs(module)
             {
                 var p = icicles[i];
                 if (p.ModelState.AnimState1 != 1)
-                    _aoes.Add(new(circle, WPos.ClampToGrid(p.Position), default, WorldState.FutureTime(4.5d)));
+                    _aoes.Add(new(circle, p.Position.Quantized(), default, WorldState.FutureTime(4.5d)));
             }
         }
         else if (spell.Action.ID == (uint)AID.PillarShatter2)

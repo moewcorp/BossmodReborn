@@ -10,7 +10,7 @@ sealed class IncandescentInterlude(BossModule module) : Components.GenericTowers
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Towers)
-            TowerCache.Add(new(WPos.ClampToGrid(actor.Position), 4f, activation: WorldState.FutureTime(9.7d))); // no use to draw towers before spread markers are out
+            TowerCache.Add(new(actor.Position.Quantized(), 4f, activation: WorldState.FutureTime(9.7d))); // no use to draw towers before spread markers are out
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

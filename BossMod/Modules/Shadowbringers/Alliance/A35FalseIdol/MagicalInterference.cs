@@ -48,7 +48,7 @@ sealed class MagicalInterference(BossModule module) : Components.GenericAOEs(mod
     {
         if (state == 0x00010002u && actor.OID == (uint)OID.MagicalInterference)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(8.1d), risky: false));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(8.1d), risky: false));
         }
     }
 

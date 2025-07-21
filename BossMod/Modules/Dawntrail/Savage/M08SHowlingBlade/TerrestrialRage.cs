@@ -67,7 +67,7 @@ sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
             AddAOE(180f.Degrees());
         }
         void AddAOE(Angle offset = default)
-        => _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation + offset, WorldState.FutureTime(6d)));
+        => _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation + offset, WorldState.FutureTime(6d)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -108,7 +108,7 @@ sealed class Shadowchase(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.HowlingBladeShadow && id == 0x11D1u)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(3.1d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(3.1d)));
         }
     }
 

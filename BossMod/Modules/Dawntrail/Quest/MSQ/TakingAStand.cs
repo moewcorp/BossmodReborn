@@ -100,7 +100,7 @@ sealed class MagickedStandard(BossModule module) : Components.GenericAOEs(module
 
     public override void OnActorCreated(Actor actor)
     {
-        void AddAOE(AOEShape shape) => AOEs.Add(new(shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.6d)));
+        void AddAOE(AOEShape shape) => AOEs.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(12.6d)));
         if (actor.OID == (uint)OID.MagickedStandardGreen)
         {
             AddAOE(donut);
@@ -218,11 +218,11 @@ sealed class Kickdown(BossModule module) : Components.GenericKnockback(module)
             var countO = standardsOrange.Count;
             for (var i = 0; i < countG; ++i)
             {
-                shapes.Add(new DonutV(WPos.ClampToGrid(standardsGreen[i].Position), 3f, 10f, 20));
+                shapes.Add(new DonutV(standardsGreen[i].Position.Quantized(), 3f, 10f, 20));
             }
             for (var i = 0; i < countO; ++i)
             {
-                shapes.Add(new Square(WPos.ClampToGrid(standardsOrange[i].Position), 10f));
+                shapes.Add(new Square(standardsOrange[i].Position.Quantized(), 10f));
             }
             AOEShapeCustom combine = new(shapes);
             poly = combine.GetCombinedPolygon(Arena.Center);

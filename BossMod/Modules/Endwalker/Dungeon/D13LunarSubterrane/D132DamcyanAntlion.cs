@@ -142,7 +142,7 @@ class AntlionMarch(BossModule module) : Components.GenericAOEs(module)
         {
             // actual charge is only 4 halfwidth, but the telegraphs and actual AOEs can be in different positions by upto 0.5y according to my logs
             var dir = spell.LocXZ - caster.Position;
-            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4.5f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell, 4.2d)));
+            _aoes.Add(new(new AOEShapeRect(dir.Length(), 4.5f), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell, 4.2d)));
         }
     }
 
@@ -182,7 +182,7 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
             var posX = index < 0x05u ? -20f : 20f;
             var posZ = posX == -20f ? 35f + index * 10f : -5f + index * 10f;
             var rot = posX == -20f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
-            _aoes.Add(new(rect, WPos.ClampToGrid(new(posX, posZ)), rot, WorldState.FutureTime(13d - _aoes.Count)));
+            _aoes.Add(new(rect, new WPos(posX, posZ).Quantized(), rot, WorldState.FutureTime(13d - _aoes.Count)));
         }
     }
 

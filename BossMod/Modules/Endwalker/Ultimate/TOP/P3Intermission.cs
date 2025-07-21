@@ -164,7 +164,7 @@ class P3ColossalBlow(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor.OID is (uint)OID.LeftArmUnit or (uint)OID.RightArmUnit && id is 0x1E43 or 0x1E44)
-            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(13.5d)));
+            AOEs.Add(new(_shape, actor.Position.Quantized(), default, WorldState.FutureTime(13.5d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

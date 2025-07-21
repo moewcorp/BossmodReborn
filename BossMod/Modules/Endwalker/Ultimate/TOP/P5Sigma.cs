@@ -376,7 +376,7 @@ class P5SigmaDoubleAOEs(BossModule module) : Components.GenericAOEs(module)
     {
         if (id != 0x1E43 || actor.OID != (uint)OID.BossP5)
             return;
-        var pos = WPos.ClampToGrid(actor.Position);
+        var pos = actor.Position.Quantized();
         var rot = actor.Rotation;
         var act = WorldState.FutureTime(15.1d);
         if (actor.ModelState.ModelState == 4)

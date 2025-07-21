@@ -112,7 +112,7 @@ sealed class SelfDestruct(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.LavaBomb)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(10d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(10d)));
         }
     }
 

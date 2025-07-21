@@ -108,7 +108,7 @@ sealed class ThermalGust(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Imaginifer)
-            _aoes.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(6.5d)));
+            _aoes.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.5d)));
 
     }
 

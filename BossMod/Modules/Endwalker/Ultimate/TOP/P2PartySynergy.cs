@@ -122,7 +122,7 @@ class P2PartySynergyDoubleAOEs(BossModule module) : Components.GenericAOEs(modul
     {
         if (id != 0x1E43)
             return;
-        var pos = WPos.ClampToGrid(actor.Position);
+        var pos = actor.Position.Quantized();
         var act = WorldState.FutureTime(5.1d);
         var rot = actor.Rotation;
         switch (actor.OID)
@@ -182,7 +182,7 @@ class P2PartySynergyOpticalLaser(BossModule module) : Components.GenericAOEs(mod
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_activation != default && _source != null)
-            return new AOEInstance[1] { new(_shape, WPos.ClampToGrid(_source.Position), _source.Rotation, _activation) };
+            return new AOEInstance[1] { new(_shape, _source.Position.Quantized(), _source.Rotation, _activation) };
         return [];
     }
 
@@ -247,7 +247,7 @@ class P2PartySynergyEfficientBladework : Components.GenericAOEs
             var count = _sources.Count;
             var aoes = new AOEInstance[count];
             for (var i = 0; i < count; ++i)
-                aoes[i] = new(_shape, WPos.ClampToGrid(_sources[i].Position), default, _activation);
+                aoes[i] = new(_shape, _sources[i].Position.Quantized(), default, _activation);
             return aoes;
         }
         return [];

@@ -13,7 +13,7 @@ sealed class TurretsTour(BossModule module) : Components.GenericAOEs(module)
         {
             var toTarget = spell.LocXZ - caster.Position;
             var act = Module.CastFinishAt(spell);
-            _aoes.Add(new(new AOEShapeRect(toTarget.Length(), 3f), WPos.ClampToGrid(caster.Position), Angle.FromDirection(toTarget), act, actorID: caster.InstanceID));
+            _aoes.Add(new(new AOEShapeRect(toTarget.Length(), 3f), caster.Position.Quantized(), Angle.FromDirection(toTarget), act, actorID: caster.InstanceID));
 
             var turrets = Module.Enemies((uint)OID.AutomaticTurret);
             var count = turrets.Count;

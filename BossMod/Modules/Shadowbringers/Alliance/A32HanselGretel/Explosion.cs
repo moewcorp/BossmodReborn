@@ -29,7 +29,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.MagicBullet)
         {
             var rot = actor.Rotation;
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position - 2f * rot.ToDirection()), rot, WorldState.FutureTime(9.8d), actorID: actor.InstanceID));
+            _aoes.Add(new(rect, (actor.Position - 2f * rot.ToDirection()).Quantized(), rot, WorldState.FutureTime(9.8d), actorID: actor.InstanceID));
         }
     }
 }

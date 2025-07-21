@@ -16,7 +16,7 @@ sealed class RelentlessSpiralTransfer(BossModule module) : Components.GenericAOE
     {
         if (tether.ID == (uint)TetherID.Transfer2)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(source.Position), default, WorldState.FutureTime(8.6d)));
+            _aoes.Add(new(circle, source.Position.Quantized(), default, WorldState.FutureTime(8.6d)));
         }
     }
 
@@ -107,7 +107,7 @@ sealed class PrimeBladeTransfer(BossModule module) : Components.GenericAOEs(modu
                     break;
                 }
             }
-            void AddAOE(AOEShape shape, WPos position, Angle rotation, DateTime activation) => _aoes.Add(new(shape, WPos.ClampToGrid(position), rotation, activation));
+            void AddAOE(AOEShape shape, WPos position, Angle rotation, DateTime activation) => _aoes.Add(new(shape, position.Quantized(), rotation, activation));
 
             void RemoveCasterAndTether(int casterIndex, int tetherIndex)
             {

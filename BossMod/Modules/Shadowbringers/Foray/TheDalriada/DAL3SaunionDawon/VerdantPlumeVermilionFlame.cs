@@ -18,7 +18,7 @@ sealed class VerdantPlumeVermilionFlame(BossModule module) : Components.GenericA
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(14.4d)));
+            _aoes.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(14.4d)));
         }
     }
 

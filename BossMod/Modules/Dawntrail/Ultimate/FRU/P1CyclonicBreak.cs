@@ -73,7 +73,7 @@ sealed class P1CyclonicBreakCone(BossModule module) : Components.GenericAOEs(mod
         switch (spell.Action.ID)
         {
             case (uint)AID.CyclonicBreakAOEFirst:
-                AOEs.Add(new(Shape, WPos.ClampToGrid(caster.Position), spell.Rotation, WorldState.FutureTime(2d)));
+                AOEs.Add(new(Shape, caster.Position.Quantized(), spell.Rotation, WorldState.FutureTime(2d)));
                 break;
             case (uint)AID.CyclonicBreakAOERest:
                 if (WorldState.CurrentTime > _currentBundle)

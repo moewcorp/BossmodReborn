@@ -188,7 +188,7 @@ class Hammerfall(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Hammer)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(12.6d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(12.6d)));
         }
     }
 

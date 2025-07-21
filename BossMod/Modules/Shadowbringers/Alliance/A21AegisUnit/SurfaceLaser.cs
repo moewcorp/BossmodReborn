@@ -31,7 +31,7 @@ sealed class SurfaceLaserAOE(BossModule module) : Components.GenericAOEs(module)
         var id = spell.Action.ID;
         if (id == (uint)AID.SurfaceLaserLock)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(caster.Position)));
+            _aoes.Add(new(circle, caster.Position.Quantized()));
         }
         else if (id == (uint)AID.SurfaceLaser && ++NumCasts == 10 * _aoes.Count)
         {

@@ -93,7 +93,7 @@ class Shock(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.BallOfLevin)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(13d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(13d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

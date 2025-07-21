@@ -14,7 +14,7 @@ sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(m
     {
         if (actor.OID == (uint)OID.BriarThorn && id == 0x11DBu)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(10.9d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(10.9d)));
         }
     }
 

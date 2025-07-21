@@ -51,7 +51,7 @@ class BloodyPuddle(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Hydrosphere)
-            AOEs.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(8.6d)));
+            AOEs.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(8.6d)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

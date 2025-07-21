@@ -55,7 +55,7 @@ sealed class PipingPour(BossModule module) : Components.GenericAOEs(module)
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.AreaOfInfluenceUp && status.Extra == 0x1u)
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position)));
+            _aoes.Add(new(circle, actor.Position.Quantized()));
     }
 }
 

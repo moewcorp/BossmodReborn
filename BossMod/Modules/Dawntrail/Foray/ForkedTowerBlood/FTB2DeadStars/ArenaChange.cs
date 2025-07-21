@@ -20,7 +20,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.Deathwall)
         {
             Arena.Bounds = FTB2DeadStars.DefaultArena;
-            Arena.Center = WPos.ClampToGrid(FTB2DeadStars.ArenaCenter);
+            Arena.Center = FTB2DeadStars.ArenaCenter.Quantized();
             _aoe = null;
         }
     }

@@ -49,7 +49,7 @@ sealed class HypothermalMinion(BossModule module) : Components.GenericAOEs(modul
     {
         if (actor.OID == (uint)OID.GiddyBomb)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(10d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(10d)));
         }
     }
 

@@ -85,7 +85,7 @@ sealed class RuinousPseudoomen(BossModule module) : Components.GenericAOEs(modul
             var act = Module.CastFinishAt(spell);
             AddAOE(ref pos, ref spell.Rotation, ref act);
         }
-        void AddAOE(ref readonly WPos position, ref readonly Angle rotation, ref readonly DateTime activation) => _aoes.Add(new(rect, WPos.ClampToGrid(position), rotation, activation));
+        void AddAOE(ref readonly WPos position, ref readonly Angle rotation, ref readonly DateTime activation) => _aoes.Add(new(rect, position.Quantized(), rotation, activation));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

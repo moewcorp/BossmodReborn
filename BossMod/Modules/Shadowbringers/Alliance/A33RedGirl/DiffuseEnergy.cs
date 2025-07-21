@@ -36,7 +36,7 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
                     break;
                 }
             }
-            Sequences.Add(new(cone, WPos.ClampToGrid(actor.Position), actor.Rotation, increment, WorldState.FutureTime(5d), 2.7d, isTethered ? 2 : 6, actorID: targetID));
+            Sequences.Add(new(cone, actor.Position.Quantized(), actor.Rotation, increment, WorldState.FutureTime(5d), 2.7d, isTethered ? 2 : 6, actorID: targetID));
 
             if (!isTethered)
             {
@@ -56,7 +56,7 @@ sealed class DiffuseEnergy(BossModule module) : Components.GenericRotatingAOE(mo
             }
             void AddSequence(WDir offset)
             {
-                Sequences.Add(new(cone, WPos.ClampToGrid(actor.Position + offset), actor.Rotation + 2f * increment, increment, WorldState.FutureTime(13.3d), 2.7d, 3));
+                Sequences.Add(new(cone, (actor.Position + offset).Quantized(), actor.Rotation + 2f * increment, increment, WorldState.FutureTime(13.3d), 2.7d, 3));
                 tethers.RemoveAt(index);
             }
         }

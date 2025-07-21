@@ -17,7 +17,7 @@ class P6WrothFlames : Components.GenericAOEs
         var cauterizeCaster = cauterizeCasters.Count != 0 ? cauterizeCasters[0] : null;
         if (cauterizeCaster != null)
         {
-            _aoes.Add(new(_shapeCauterize, WPos.ClampToGrid(cauterizeCaster.Position), cauterizeCaster.Rotation, WorldState.FutureTime(8.1d)));
+            _aoes.Add(new(_shapeCauterize, cauterizeCaster.Position.Quantized(), cauterizeCaster.Rotation, WorldState.FutureTime(8.1d)));
             _startingSpot = new(cauterizeCaster.Position.X < 95f ? 120f : 80f, _startingSpot.Z); // assume nidhogg is at 78, prefer uptime if possible
         }
     }
@@ -55,7 +55,7 @@ class P6WrothFlames : Components.GenericAOEs
                 < 7 => 9.7f,
                 _ => 6.9f
             };
-            _aoes.Add(new(_shapeBlast, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(delay)));
+            _aoes.Add(new(_shapeBlast, actor.Position.Quantized(), default, WorldState.FutureTime(delay)));
         }
     }
 

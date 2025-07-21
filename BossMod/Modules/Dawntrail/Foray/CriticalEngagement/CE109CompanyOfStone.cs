@@ -333,7 +333,7 @@ sealed class CE109CompanyOfStoneStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 40)]
-public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(680f, -280f)), new ArenaBoundsCircle(20f))
+public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(680f, -280f).Quantized(), new ArenaBoundsCircle(20f))
 {
     private Actor? _bossMegaloknight;
     public Actor? BossMegaloknight() => _bossMegaloknight;

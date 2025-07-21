@@ -155,7 +155,7 @@ sealed class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
     {
         if (id == 0x1E46u)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(8.5d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(8.5d)));
         }
     }
 

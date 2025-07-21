@@ -53,7 +53,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.Deathwall)
         {
             Arena.Bounds = CE34TrampledUnderHoof.DefaultArena;
-            Arena.Center = WPos.ClampToGrid(Arena.Center);
+            Arena.Center = Arena.Center.Quantized();
             _aoe = null;
         }
     }
@@ -74,7 +74,7 @@ sealed class GlimmerInTheDark(BossModule module) : Components.GenericAOEs(module
     {
         if (actor.OID == (uint)OID.DemonicEye2)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(4.9d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(4.9d)));
         }
     }
 
