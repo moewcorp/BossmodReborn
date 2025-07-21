@@ -4,12 +4,14 @@ sealed class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(
 {
     public static readonly AOEShapeCone Cone = new(40f, 105f.Degrees());
     public BitMask Bind;
+    private Actor? spreadTarget;
     private readonly M08SHowlingBlade bossmod = (M08SHowlingBlade)module;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.StalkingStoneWind && actor.Role == Role.Tank)
         {
+            spreadTarget = actor;
             var party = Raid.WithoutSlot(true, true, true);
             var len = party.Length;
             for (var i = 0; i < len; ++i)
@@ -18,6 +20,7 @@ sealed class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(
                 if (p.Role == Role.Tank && p != actor)
                 {
                     CurrentBaits.Add(new(bossmod.BossP2()!, p, Cone, WorldState.FutureTime(10.3d)));
+                    return;
                 }
             }
         }
@@ -46,6 +49,14 @@ sealed class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(
         if (status.ID == (uint)SID.Bind)
         {
             Bind.Set(Raid.FindSlot(actor.InstanceID));
+        }
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
+        if (actor.Role == Role.Tank && spreadTarget is Actor t && t != actor && bossmod.BossP2()!.TargetID != actor.InstanceID)
+        {
+            hints.Add("Provoke for tankbuster!");
         }
     }
 }

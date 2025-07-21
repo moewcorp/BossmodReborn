@@ -22,7 +22,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
                 0 => (0, 1),
                 _ => (1, 2) // should be 89
             };
-            var dir = -0.5f * (MathF.Round(rot.Deg / 90f) * 90f).Degrees().ToDirection();
+            var dir = -0.5f * rot.Round(90f).ToDirection();
             var center = Arena.Center;
             var adj = center + dir;
             for (var i = 0; i < count; ++i)

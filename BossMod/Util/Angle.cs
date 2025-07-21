@@ -41,6 +41,7 @@ public readonly struct Angle(float rad) : IEquatable<Angle>
     public readonly float Tan() => (float)Math.Tan(Rad);
     public static Angle Asin(float x) => new((float)Math.Asin(x));
     public static Angle Acos(float x) => new((float)Math.Acos(x));
+    public readonly Angle Round(float roundToNearestDeg) => (MathF.Round(Deg / roundToNearestDeg) * roundToNearestDeg).Degrees();
 
     public readonly Angle Normalized()
     {

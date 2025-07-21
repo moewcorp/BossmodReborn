@@ -49,6 +49,7 @@ public readonly struct WDir(float x, float z) : IEquatable<WDir>
     public readonly WDir Rounded() => new(MathF.Round(X), MathF.Round(Z));
     public readonly WDir Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public readonly WDir Floor() => new(MathF.Floor(X), MathF.Floor(Z));
+    public readonly Angle ToAngle() => new(MathF.Atan2(X, Z));
 
     public override readonly string ToString() => $"({X:f3}, {Z:f3})";
     public readonly bool Equals(WDir other) => X == other.X && Z == other.Z;
@@ -110,15 +111,11 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     public readonly WPos Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public static WPos Lerp(WPos from, WPos to, float progress) => new(from.ToVec2() * (1f - progress) + to.ToVec2() * progress);
 
-    public readonly WPos Quantized()  // AOEs are getting clamped to a grid, if spell.LocXZ can't be used, you can correct the position with this method
+    public readonly WPos Quantized()  // AOEs are getting clamped to the center of a grid cell, if spell.LocXZ can't be used, you can correct the position with this method
     {
         const float gridSize = 2000f / 65535f;
         const float gridSizeInv = 1f / gridSize;
-
-        var gridIndexX = (int)MathF.Round(X * gridSizeInv);
-        var gridIndexZ = (int)MathF.Round(Z * gridSizeInv);
-
-        return new((gridIndexX - 0.5f) * gridSize, (gridIndexZ - 0.5f) * gridSize);
+        return new(((int)MathF.Round(X * gridSizeInv) - 0.5f) * gridSize, ((int)MathF.Round(Z * gridSizeInv) - 0.5f) * gridSize);
     }
 
     public static WPos RotateAroundOrigin(float rotateByDegrees, WPos origin, WPos point)
