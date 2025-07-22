@@ -9,7 +9,7 @@ sealed class A35FalseIdolStates : StateMachineBuilder
             .ActivateOnEnter<LighterNoteBait>()
             .ActivateOnEnter<LighterNoteExaflare>()
             .ActivateOnEnter<MadeMagic>()
-            .ActivateOnEnter<ScreamingScore>()
+            .ActivateOnEnter<ScreamingScoreEminence>()
             .ActivateOnEnter<ScatteredMagic>()
             .ActivateOnEnter<DarkerNote>();
         TrivialPhase(1u)

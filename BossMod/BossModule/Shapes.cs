@@ -326,7 +326,7 @@ public sealed record class ConeV(WPos Center, float Radius, Angle CenterDir, Ang
                 var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
                 vertices[i] = new(radius * sin, radius * cos);
             }
-            vertices[Edges + 1] = Center - new WPos();
+            vertices[Edges + 1] = Center - (WPos)default;
             Points = vertices;
         }
         var len = Points.Length;
