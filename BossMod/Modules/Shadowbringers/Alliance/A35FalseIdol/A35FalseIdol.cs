@@ -44,7 +44,4 @@ public sealed class A35FalseIdol(WorldState ws, Actor primary) : BossModule(ws, 
         Arena.Actor(PrimaryActor);
         Arena.Actor(BossBossP2);
     }
-
-    // p2mid: 20 verts, 6 radius
-    // towers: 20 verts, 7 radius
 }
