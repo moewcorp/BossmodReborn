@@ -36,7 +36,9 @@ sealed class DragonBreathArenaChange(BossModule module) : BossComponent(module)
         if (actor.OID == (uint)OID.FireVoidzone)
         {
             if (state == 0x00010002u) // outer arena starts to turn unsafe
+            {
                 Arena.Bounds = A12Fafnir.FireArena;
+            }
             else if (state == 0x00040008u) // outer arena starts to turn safe again
             {
                 initialRot = actor.Rotation;

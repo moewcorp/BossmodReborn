@@ -26,7 +26,7 @@ sealed class WaltzOfTheRegaliaBait(BossModule module) : Components.GenericAOEs(m
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.QueenEternal3 && id == 0x11D7u)
+        if (id == 0x11D7 && actor.OID == (uint)OID.QueenEternal3)
         {
             _targets.Add((actor, WorldState.FutureTime(7d)));
         }

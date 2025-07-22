@@ -51,7 +51,7 @@ class Subduction(BossModule module) : Components.GenericAOEs(module)
                 ref var aoe = ref aoes[i];
                 if (aoe.Origin.AlmostEqual(pos, 0.1f))
                 {
-                    if (++aoe.ActorID == 3u)
+                    if (++aoe.ActorID == 3ul)
                     {
                         _aoes.RemoveAt(i);
                     }

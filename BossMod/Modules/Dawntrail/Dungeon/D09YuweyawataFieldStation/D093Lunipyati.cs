@@ -54,11 +54,11 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x19u && state == 0x00020001u)
+        if (index == 0x19 && state == 0x00020001u)
         {
             SetArena(D093Lunipyati.DefaultBounds);
         }
-        else if (index == 0x11u && state == 0x00800040u)
+        else if (index == 0x11 && state == 0x00800040u)
         {
             SetArena(D093Lunipyati.DonutBounds);
         }

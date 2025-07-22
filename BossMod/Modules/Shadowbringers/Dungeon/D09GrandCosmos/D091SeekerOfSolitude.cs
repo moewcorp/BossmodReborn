@@ -45,7 +45,7 @@ class Tribulation(BossModule module) : Components.VoidzoneAtCastTarget(module, 6
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
@@ -69,7 +69,7 @@ class MagickedBroom(BossModule module) : Components.Voidzone(module, 3.125f, Get
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.ModelState.AnimState1 == 1u)
+            if (z.ModelState.AnimState1 == 1)
                 voidzones[index++] = z;
         }
         return voidzones[..index];

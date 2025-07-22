@@ -27,11 +27,11 @@ sealed class Spiritflames(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Spiritflame)
         {
-            if (id == 0x1E46u)
+            if (id == 0x1E46)
             {
                 _flames.Add(actor);
             }
-            else if (id == 0x1E3Cu)
+            else if (id == 0x1E3C)
             {
                 _flames.Remove(actor);
             }

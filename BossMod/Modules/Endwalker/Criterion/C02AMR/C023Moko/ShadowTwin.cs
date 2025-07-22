@@ -11,7 +11,7 @@ sealed class Clearout(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E43u && actor.OID is (uint)OID.NOniClaw or (uint)OID.SOniClaw)
+        if (id == 0x1E43 && actor.OID is (uint)OID.NOniClaw or (uint)OID.SOniClaw)
         {
             AOEs.Add(new(_shape, actor.Position, actor.Rotation, WorldState.FutureTime(8.3d)));
         }

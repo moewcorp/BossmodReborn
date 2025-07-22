@@ -43,7 +43,7 @@ sealed class CreepingMiasma(BossModule module) : Components.GenericAOEs(module)
                 ref var aoe = ref aoes[i];
                 if (aoe.Origin == pos)
                 {
-                    if (++aoe.ActorID == 3u)
+                    if (++aoe.ActorID == 3ul)
                     {
                         _aoes.RemoveAt(i);
                         ++NumCasts;

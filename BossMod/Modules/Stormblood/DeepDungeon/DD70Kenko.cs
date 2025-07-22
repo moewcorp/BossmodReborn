@@ -94,7 +94,7 @@ sealed class InnerspaceVoidzone(BossModule module) : Components.GenericAOEs(modu
         if (_aoe != null)
         {
             var p = Module.Enemies((uint)OID.InnerspaceVoidzone);
-            if (p.Count != 0 && p[0].EventState == 7u)
+            if (p.Count != 0 && p[0].EventState == 7)
             {
                 _aoe = null;
             }

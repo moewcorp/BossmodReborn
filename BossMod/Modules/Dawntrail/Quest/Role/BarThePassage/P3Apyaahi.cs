@@ -67,7 +67,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;
         }
-        if (index == 0x06u)
+        if (index == 0x06)
         {
             if (state == 0x00020001u)
             {

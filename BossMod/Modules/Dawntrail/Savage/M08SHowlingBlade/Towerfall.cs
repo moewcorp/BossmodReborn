@@ -42,7 +42,7 @@ sealed class FangedCrossing(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.GleamingFang1 && id == 0x11D1u)
+        if (id == 0x11D1 && actor.OID == (uint)OID.GleamingFang1)
         {
             _aoes.Add(new(cross, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6d)));
         }

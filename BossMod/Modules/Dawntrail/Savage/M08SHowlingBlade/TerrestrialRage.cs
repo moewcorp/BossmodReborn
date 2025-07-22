@@ -61,7 +61,7 @@ sealed class FangedCharge(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.GleamingFang2 && id == 0x11D2u)
+        if (id == 0x11D2 && actor.OID == (uint)OID.GleamingFang2)
         {
             AddAOE();
             AddAOE(180f.Degrees());
@@ -106,7 +106,7 @@ sealed class Shadowchase(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.HowlingBladeShadow && id == 0x11D1u)
+        if (id == 0x11D1 && actor.OID == (uint)OID.HowlingBladeShadow)
         {
             _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(3.1d)));
         }

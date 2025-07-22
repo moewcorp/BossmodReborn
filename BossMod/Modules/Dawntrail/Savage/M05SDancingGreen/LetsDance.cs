@@ -134,8 +134,8 @@ sealed class LetsDanceRemix(BossModule module) : LetsDance(module)
         {
             var count = _aoes.Count;
             var act = count != 0 ? _aoes.Ref(0).Activation.AddSeconds(count * 1.5d) : WorldState.FutureTime(26d);
-            _aoes.Add(new(rect, Arena.Center.Quantized(), modelState == 5u ? Angle.AnglesCardinals[3] : modelState == 31u ? Angle.AnglesCardinals[1]
-            : modelState == 32u ? a180 : Angle.AnglesCardinals[0], act));
+            _aoes.Add(new(rect, Arena.Center.Quantized(), modelState == 5 ? Angle.AnglesCardinals[3] : modelState == 31 ? Angle.AnglesCardinals[1]
+            : modelState == 32 ? a180 : Angle.AnglesCardinals[0], act));
         }
     }
 

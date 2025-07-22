@@ -5,22 +5,30 @@ namespace BossMod.Components;
 // generic gaze/weakpoint component, allows customized 'eye' position
 public abstract class GenericGaze(BossModule module, uint aid = default) : CastCounter(module, aid)
 {
-    public record struct Eye(
-        WPos Position,
-        DateTime Activation = default,
-        Angle Forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
-        float Range = 10000f,
-        bool Inverted = false,
-        ulong ActorID = default);
+    public readonly struct Eye(
+        WPos position,
+        DateTime activation = default,
+        Angle forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
+        float range = 10000f,
+        bool inverted = false,
+        ulong actorID = default)
+    {
+        public readonly WPos Position = position;
+        public readonly DateTime Activation = activation;
+        public readonly Angle Forward = forward;
+        public readonly float Range = range;
+        public readonly bool Inverted = inverted;
+        public readonly ulong ActorID = actorID;
+    }
 
     private const float _eyeOuterH = 10f, _eyeOuterV = 6f, _eyeInnerR = 4f;
     private const float _eyeOuterR = (_eyeOuterH * _eyeOuterH + _eyeOuterV * _eyeOuterV) / (2f * _eyeOuterV);
     private const float _eyeOffsetV = _eyeOuterR - _eyeOuterV;
 
-    private static readonly float _eyeHalfAngle = (float)Math.Asin(_eyeOuterH / _eyeOuterR);
+    private const float _eyeHalfAngle = 1.080839f; // (float)Math.Asin(_eyeOuterH / _eyeOuterR);
     private static readonly Vector2 offset = new(default, _eyeOffsetV);
-    private static readonly float halfPIHalfAngleP = Angle.HalfPi + _eyeHalfAngle;
-    private static readonly float halfPIHalfAngleM = Angle.HalfPi - _eyeHalfAngle;
+    private const float halfPIHalfAngleP = Angle.HalfPi + _eyeHalfAngle;
+    private const float halfPIHalfAngleM = Angle.HalfPi - _eyeHalfAngle;
 
     public abstract ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor);
 
@@ -71,7 +79,7 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
             if (pc.Position.InCircle(eye.Position, eye.Range))
             {
                 var (min, max) = eye.Inverted ? (45f, 315f) : (-45f, 45f);
-                Arena.PathArcTo(pc.Position, 1, (pc.Rotation + eye.Forward + min.Degrees()).Rad, (pc.Rotation + eye.Forward + max.Degrees()).Rad);
+                Arena.PathArcTo(pc.Position, 1f, (pc.Rotation + eye.Forward + min.Degrees()).Rad, (pc.Rotation + eye.Forward + max.Degrees()).Rad);
                 MiniArena.PathStroke(false, Colors.Enemy);
             }
         }
@@ -224,7 +232,7 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
         }
 
         if (caster != null && _playerWeakpoints.TryGetValue(actor.InstanceID, out var angle))
-            return new Eye[1] { new(caster.Position, Module.CastFinishAt(caster.CastInfo), angle, Inverted: true) };
+            return new Eye[1] { new(caster.Position, Module.CastFinishAt(caster.CastInfo), angle, inverted: true) };
         return [];
     }
 

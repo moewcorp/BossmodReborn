@@ -62,12 +62,14 @@ sealed class DubiousTulidisasterArenaChange(BossModule module) : Components.Gene
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.DubiousTulidisaster && Arena.Bounds == D074GreatestSerpentOfTural.StartingBounds)
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 4.8f));
+        {
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 4.8d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x00u)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D074GreatestSerpentOfTural.DefaultBounds;
             _aoe = null;
@@ -127,8 +129,10 @@ sealed class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(modul
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x01u)
+        if (index != 0x01)
+        {
             return;
+        }
 
         void AddAOEs(int index)
         {
@@ -173,7 +177,7 @@ abstract class SludgeVoidzone(BossModule module, float radius, uint oid) : Compo
     private static Actor[] GetVoidzones(BossModule module, uint oid)
     {
         var enemies = module.Enemies(oid);
-        if (enemies.Count != 0 && enemies[0].EventState != 7u)
+        if (enemies.Count != 0 && enemies[0].EventState != 7)
             return [enemies[0]];
         return [];
     }

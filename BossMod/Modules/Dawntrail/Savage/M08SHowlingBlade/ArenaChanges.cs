@@ -33,7 +33,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x01u)
+        if (index == 0x01)
         {
             switch (state)
             {
@@ -53,7 +53,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             if (state is 0x00020001u or 0x00800040u)
             {
-                polygons.Add(pillarPolygons[index - 0x10u]);
+                polygons.Add(pillarPolygons[index - 0x10]);
                 if (polygons.Count == 2)
                 {
                     var arena = new ArenaBoundsComplex(M08SHowlingBlade.StartingArenaPolygon, [.. polygons]);
@@ -72,7 +72,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             if (state is 0x00010001u or 0x00020001u)
             {
-                var i = index - 0x16u;
+                var i = index - 0x16;
                 polygons.Add(EndArenaPlatforms[i]);
                 activePlatforms[i] = true;
                 if (polygons.Count == 5)
@@ -85,7 +85,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             }
             else if (state == 0x00080004u)
             {
-                var i = index - 0x16u;
+                var i = index - 0x16;
                 polygons.Remove(EndArenaPlatforms[i]);
                 activePlatforms[i] = false;
                 if (polygons.Count == 0)
@@ -158,7 +158,7 @@ class Teleporters(BossModule module) : BossComponent(module)
             if (state is 0x00020001u or 0x00200010u)
             {
                 var count = activeTeleporters.Count;
-                ref readonly var teleporter = ref teleporters[index - 0x02u];
+                ref readonly var teleporter = ref teleporters[index - 0x02];
                 for (var i = 0; i < count; ++i)
                 {
                     if (activeTeleporters[i] == teleporter) // prevent duplicates
@@ -168,7 +168,7 @@ class Teleporters(BossModule module) : BossComponent(module)
             }
             else if (state == 0x00080004u)
             {
-                activeTeleporters.Remove(teleporters[index - 0x02u]);
+                activeTeleporters.Remove(teleporters[index - 0x02]);
             }
         }
     }

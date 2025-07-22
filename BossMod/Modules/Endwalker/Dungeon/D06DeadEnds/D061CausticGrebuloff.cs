@@ -65,7 +65,7 @@ class NecroticFluidMist(BossModule module) : Components.Exaflare(module, 6f)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x2Bu)
+        if (index == 0x2B)
         {
             switch (state)
             {

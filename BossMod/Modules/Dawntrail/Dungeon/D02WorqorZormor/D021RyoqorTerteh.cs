@@ -45,12 +45,14 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FrostingFracas && Arena.Bounds == D021RyoqorTerteh.StartingBounds)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.6f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.6d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x17u)
+        if (index == 0x17 && state == 0x00020001u)
         {
             Arena.Bounds = D021RyoqorTerteh.DefaultBounds;
             _aoe = null;

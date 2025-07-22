@@ -17,11 +17,11 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x0Du)
+        if (index == 0x0D)
         {
             Arena.Bounds = A20HeavyArtilleryUnit.Arena3b;
         }
-        else if (index == 0x0Eu)
+        else if (index == 0x0E)
         {
             Arena.Bounds = A20HeavyArtilleryUnit.Arena3c;
         }

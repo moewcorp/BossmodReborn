@@ -17,7 +17,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x28u && state == 0x00020001u)
+        if (index == 0x28 && state == 0x00020001u)
         {
             Arena.Bounds = V025Enenra.DefaultBounds;
             _aoe = null;

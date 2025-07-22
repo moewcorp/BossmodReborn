@@ -36,7 +36,7 @@ class ShimmeringShot(BossModule module, double spawnToActivation) : TemperatureA
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_arrowsInited.Raw != 0x1Bu)
+        if (_arrowsInited.Raw != 0x1B)
             return [];
         var temp = Temperature(actor);
         var cell = Array.IndexOf(_slotTempAdjustments, -temp);

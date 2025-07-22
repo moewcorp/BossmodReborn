@@ -26,11 +26,11 @@ sealed class Energy(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Energy)
         {
-            if (id == 0x11D2u)
+            if (id == 0x11D2)
             {
                 _energy.Add(actor);
             }
-            else if (id == 0x11E7u)
+            else if (id == 0x11E7)
             {
                 _energy.Remove(actor);
             }

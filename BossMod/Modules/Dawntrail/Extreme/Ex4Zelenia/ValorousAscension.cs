@@ -12,7 +12,7 @@ sealed class ValorousAscensionRect(BossModule module) : Components.GenericAOEs(m
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.BriarThorn && id == 0x11DBu)
+        if (id == 0x11DB && actor.OID == (uint)OID.BriarThorn)
         {
             _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(10.9d)));
         }

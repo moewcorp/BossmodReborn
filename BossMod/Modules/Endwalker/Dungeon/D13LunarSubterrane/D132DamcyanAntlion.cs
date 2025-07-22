@@ -111,7 +111,7 @@ class QuicksandVoidzone(BossModule module) : Components.Voidzone(module, 10f, Ge
     private static Actor[] GetVoidzone(BossModule module)
     {
         var enemies = module.Enemies((uint)OID.QuicksandVoidzone);
-        if (enemies.Count != 0 && enemies[0].EventState != 7u)
+        if (enemies.Count != 0 && enemies[0].EventState != 7)
             return [.. enemies];
         return [];
     }
@@ -170,16 +170,16 @@ class Towerfall(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < count; ++i)
         {
             ref var aoe = ref aoes[i];
-            aoes[i].Risky = risky;
+            aoe.Risky = risky;
         }
         return aoes;
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index > 0x00u)
+        if (index > 0x00 && state == 0x00020001u)
         {
-            var posX = index < 0x05u ? -20f : 20f;
+            var posX = index < 0x05 ? -20f : 20f;
             var posZ = posX == -20f ? 35f + index * 10f : -5f + index * 10f;
             var rot = posX == -20f ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0];
             _aoes.Add(new(rect, new WPos(posX, posZ).Quantized(), rot, WorldState.FutureTime(13d - _aoes.Count)));

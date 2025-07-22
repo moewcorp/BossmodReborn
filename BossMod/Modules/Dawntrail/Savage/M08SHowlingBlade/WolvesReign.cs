@@ -212,7 +212,7 @@ sealed class RoaringWind(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.WolfOfWind4 && id == 0x11D2u)
+        if (id == 0x11D2 && actor.OID == (uint)OID.WolfOfWind4)
         {
             _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(5.6d)));
         }
@@ -237,7 +237,7 @@ sealed class WealOfStone(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x11D2u && actor.OID == (uint)OID.WolfOfStone3)
+        if (id == 0x11D2 && actor.OID == (uint)OID.WolfOfStone3)
         {
             _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(5.6d)));
         }

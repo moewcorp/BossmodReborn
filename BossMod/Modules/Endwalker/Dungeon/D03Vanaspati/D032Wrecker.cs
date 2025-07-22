@@ -33,12 +33,14 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.MeaninglessDestruction && Arena.Bounds == D032Wrecker.StartingArena)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x06u)
+        if (index == 0x06 && state == 0x00020001u)
         {
             Arena.Bounds = D032Wrecker.DefaultArena;
             Arena.Center = D032Wrecker.DefaultArena.Center;

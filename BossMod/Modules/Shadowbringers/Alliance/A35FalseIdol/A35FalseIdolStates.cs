@@ -6,22 +6,26 @@ sealed class A35FalseIdolStates : StateMachineBuilder
     {
         TrivialPhase(default)
             .ActivateOnEnter<MagicalInterference>()
+            .ActivateOnEnter<LighterNoteBait>()
+            .ActivateOnEnter<LighterNoteExaflare>()
             .ActivateOnEnter<MadeMagic>()
             .ActivateOnEnter<ScreamingScore>()
             .ActivateOnEnter<ScatteredMagic>()
             .ActivateOnEnter<DarkerNote>();
         TrivialPhase(1u)
-            .ActivateOnEnter<MagicalInterference>()
+            .OnEnter(() => module.Arena.Bounds = A35FalseIdol.ArenaP2)
+            .ActivateOnEnter<MagicalInterference>() // not keeping on phase change because mechanic gets cancelled by phase change
+            .ActivateOnEnter<LighterNoteBait>() // same as above
+            .ActivateOnEnter<LighterNoteExaflare>() // same as above
+            .ActivateOnEnter<ArenaChanges>()
+            .ActivateOnEnter<Distortion>()
             .ActivateOnEnter<UnevenFooting>()
             .ActivateOnEnter<Crash>()
-            .ActivateOnEnter<ScreamingScore>()
-            .ActivateOnEnter<DarkerNote>()
             .ActivateOnEnter<HeavyArms1>()
             .ActivateOnEnter<HeavyArms2>()
-            .ActivateOnEnter<PlaceOfPower>()
             .ActivateOnEnter<ShockwaveKB>()
-            .ActivateOnEnter<ShockwaveAOE>()
             .ActivateOnEnter<Towerfall>()
+            .ActivateOnEnter<Energy>()
             .Raw.Update = () => module.BossBossP2?.IsDeadOrDestroyed ?? true;
     }
 }

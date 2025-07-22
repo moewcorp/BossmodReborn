@@ -27,7 +27,7 @@ sealed class MoonbeamsBite(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.MoonlitShadow && modelState is 6 or 7)
         {
             var rot = actor.Rotation;
-            _aoes.Add(new(rect, (actor.Position + (modelState == 7u ? 1f : -1f) * 10f * (rot + 90f.Degrees()).ToDirection()).Quantized(), rot, WorldState.FutureTime(11.1d + 1d * _aoes.Count)));
+            _aoes.Add(new(rect, (actor.Position + (modelState == 7 ? 1f : -1f) * 10f * (rot + 90f.Degrees()).ToDirection()).Quantized(), rot, WorldState.FutureTime(11.1d + 1d * _aoes.Count)));
         }
     }
 

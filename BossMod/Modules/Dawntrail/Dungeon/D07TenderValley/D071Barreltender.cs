@@ -36,15 +36,18 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HeavyweightNeedlesVisual && Arena.Bounds == D071Barreltender.StartingBounds)
+        {
             _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x03u)
+        if (index == 0x03 && state == 0x00020001u)
         {
             Arena.Bounds = D071Barreltender.DefaultBounds;
             _aoe = null;
@@ -122,7 +125,7 @@ sealed class NeedleStormSuperstorm(BossModule module) : Components.GenericAOEs(m
             for (var i = 0; i < max; ++i)
             {
                 ref var aoe = ref aoes[i];
-                aoe.Activation = Module.CastFinishAt(spell, 13.7f);
+                aoe.Activation = Module.CastFinishAt(spell, 13.7d);
             }
         }
     }
@@ -147,7 +150,7 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (actor.OID == (uint)OID.CactusSmall && state == 0x00010002u)
+        if (state == 0x00010002u && actor.OID == (uint)OID.CactusSmall)
         {
             var add = actor.Position.X + actor.Position.Z;
             if (add == 400f) // new WPos(-55f, 455f)

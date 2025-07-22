@@ -36,15 +36,18 @@ sealed class HydroRing(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HydroRing)
+        {
             _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x13u)
+        if (index == 0x13)
         {
             if (state == 0x00020001u)
             {
@@ -70,7 +73,7 @@ sealed class AiryBubble(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count == 0)
             return [];
-        Span<AOEInstance> aoes = new AOEInstance[count];
+        var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
             var o = _aoes[i];
@@ -82,22 +85,32 @@ sealed class AiryBubble(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TroubleBubbles or (uint)AID.BlowingBubbles)
+        {
             active = true;
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TroubleBubbles or (uint)AID.BlowingBubbles)
+        {
             active = false;
+        }
     }
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor.HitboxRadius == Radius)
-            if (id == 0x1E46u)
+        {
+            if (id == 0x1E46)
+            {
                 _aoes.Add(actor);
-            else if (id == 0x1E3Cu)
+            }
+            else if (id == 0x1E3C)
+            {
                 _aoes.Remove(actor);
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -148,7 +161,7 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
             {
                 var b = bubbles[i];
                 if (b.HitboxRadius != 1.1f)
-                    _aoes.Add(new(circle, b.Position + new WDir(offset, default), default, Module.CastFinishAt(spell, 3.4f)));
+                    _aoes.Add(new(circle, b.Position + new WDir(offset, default), default, Module.CastFinishAt(spell, 3.4d)));
             }
         }
     }

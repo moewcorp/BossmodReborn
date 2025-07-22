@@ -9,7 +9,7 @@ sealed class TwofoldTempestVoidzone(BossModule module) : Components.GenericAOEs(
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if (_aoes.Count != 0 && state == 0x004u)
+        if (_aoes.Count != 0 && state == 0x004)
         {
             _aoes.RemoveAt(0);
         }

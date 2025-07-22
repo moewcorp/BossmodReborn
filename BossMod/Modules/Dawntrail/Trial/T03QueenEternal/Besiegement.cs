@@ -28,14 +28,17 @@ sealed class Besiegement(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x03u)
+        if (index != 0x03)
+        {
             return;
+        }
         States(state, NumCasts != 1);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (AOEs.Count != 0)
+        {
             switch (spell.Action.ID)
             {
                 case (uint)AID.Besiegement1:
@@ -46,5 +49,6 @@ sealed class Besiegement(BossModule module) : Components.GenericAOEs(module)
                     AOEs.Clear();
                     break;
             }
+        }
     }
 }

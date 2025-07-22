@@ -16,7 +16,7 @@ sealed class IncendiaryBombing(BossModule module) : Components.VoidzoneAtCastTar
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
             {
                 voidzones[index++] = z;
             }
@@ -41,7 +41,7 @@ sealed class IncendiaryBarrage(BossModule module) : Components.VoidzoneAtCastTar
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
             {
                 voidzones[index++] = z;
             }

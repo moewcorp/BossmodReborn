@@ -145,7 +145,7 @@ sealed class ChainCannonEscort(BossModule module) : Components.GenericAOEs(modul
                 ref var aoe = ref aoes[i];
                 if (aoe.Origin.AlmostEqual(pos, 0.1f))
                 {
-                    if (++aoe.ActorID == 6u)
+                    if (++aoe.ActorID == 6ul)
                     {
                         _aoes.RemoveAt(i);
                     }

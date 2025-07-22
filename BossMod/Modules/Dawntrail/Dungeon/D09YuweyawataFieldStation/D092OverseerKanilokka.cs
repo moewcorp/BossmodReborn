@@ -58,7 +58,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x07u)
+        if (index != 0x07)
         {
             return;
         }
@@ -158,7 +158,7 @@ sealed class LostHope(BossModule module) : Components.TemporaryMisdirection(modu
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x07u)
+        if (index != 0x07)
         {
             return;
         }

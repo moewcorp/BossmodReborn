@@ -79,12 +79,14 @@ sealed class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(m
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Disruption && Arena.Bounds == D063Eliminator.StartingBounds)
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+        {
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x28u)
+        if (index == 0x28 && state == 0x00020001u)
         {
             Arena.Bounds = D063Eliminator.DefaultBounds;
             _aoe = null;
@@ -146,7 +148,7 @@ sealed class LightOfDevotion(BossModule module) : Components.LineStack(module, a
 {
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x2Fu && state == 0x00080004u) // as soon as limit break phase ends the line stack gets cancelled
+        if (index == 0x2F && state == 0x00080004u) // as soon as limit break phase ends the line stack gets cancelled
             CurrentBaits.Clear();
     }
 }
@@ -170,7 +172,7 @@ sealed class LightOfSalvation(BossModule module) : Components.GenericBaitAway(mo
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x2F && state == 0x00080004) // as soon as limit break phase ends the line stack gets cancelled
+        if (index == 0x2F && state == 0x00080004u) // as soon as limit break phase ends the line stack gets cancelled
             CurrentBaits.Clear();
     }
 

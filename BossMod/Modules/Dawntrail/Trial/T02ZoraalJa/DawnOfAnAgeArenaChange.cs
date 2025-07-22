@@ -11,7 +11,7 @@ sealed class DawnOfAnAgeArenaChange(BossModule module) : Components.GenericAOEs(
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x20u)
+        if (index == 0x20)
         {
             switch (state)
             {
@@ -24,7 +24,9 @@ sealed class DawnOfAnAgeArenaChange(BossModule module) : Components.GenericAOEs(
                     break;
             }
         }
-        else if (index == 0x1Bu && state == 0x00080004u)
+        else if (index == 0x1B && state == 0x00080004u)
+        {
             Arena.Bounds = T02ZoraalJa.ZoraalJa.DefaultBounds;
+        }
     }
 }

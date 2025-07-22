@@ -30,15 +30,18 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.InflammableFumes && Arena.Bounds == D032Gyascutus.StartingBounds)
-            _aoe = new(donut, D032Gyascutus.ArenaCenter, default, Module.CastFinishAt(spell, 0.8f));
+        {
+            _aoe = new(donut, D032Gyascutus.ArenaCenter, default, Module.CastFinishAt(spell, 0.8d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x00u)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = defaultbounds;
             _aoe = null;

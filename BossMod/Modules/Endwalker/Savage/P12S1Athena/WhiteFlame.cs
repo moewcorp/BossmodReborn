@@ -42,7 +42,7 @@ sealed class WhiteFlame(BossModule module) : Components.GenericBaitAway(module)
         // note: technically we could determine location ~1.1s earlier by looking at TeleportAdd cast location
         // however, BaitAway component requires source actor, and teleporting actors don't move to target immediately
         // TODO: consider using 3F2E actor PATE 24E3 instead (it gets destroyed before resolve, guaranteeing that source doesn't move)
-        if (actor.OID == (uint)OID.Anthropos && id == 0x1E46u)
+        if (id == 0x1E46 && actor.OID == (uint)OID.Anthropos)
             _sources.Add(actor);
     }
 }
