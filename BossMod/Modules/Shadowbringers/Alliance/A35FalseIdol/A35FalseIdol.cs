@@ -1,7 +1,7 @@
 ﻿namespace BossMod.Shadowbringers.Alliance.A35FalseIdol;
 
 sealed class MadeMagic(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.MadeMagic1, (uint)AID.MadeMagic2], new AOEShapeRect(50f, 15f));
-sealed class ScreamingScore(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.ScreamingScoreP1, (uint)AID.ScreamingScoreP2])
+sealed class ScreamingScoreEminence(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.ScreamingScoreP1, (uint)AID.ScreamingScoreP2, (uint)AID.Eminence])
 {
     public override bool KeepOnPhaseChange => true;
 }

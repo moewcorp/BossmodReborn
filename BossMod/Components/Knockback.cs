@@ -202,7 +202,9 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, bo
             if (StopAtWall)
                 distance = Math.Min(distance, Arena.IntersectRayBounds(from, dir) - Math.Clamp(actor.HitboxRadius - approxHitBoxRadius, maxIntersectionError, actor.HitboxRadius - approxHitBoxRadius)); // hitbox radius can be != 0.5 if player is transformed/mounted, but normal arenas with walls should account for walkable arena in their shape already
             if (StopAfterWall)
+            {
                 distance = Math.Min(distance, Arena.IntersectRayBounds(from, dir) + maxIntersectionError);
+            }
 
             var walls = s.SafeWalls;
             var lenW = walls.Length;
