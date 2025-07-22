@@ -95,9 +95,9 @@ sealed class ManaExplosion(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00020001u)
         {
-            if (index == 0x0Du) // 0x0D, 0x02, 0x0C, 0x04, 0x0E, 0x03 activate at the same time
+            if (index == 0x0D) // 0x0D, 0x02, 0x0C, 0x04, 0x0E, 0x03 activate at the same time
                 currentPattern = Pattern.Pattern1;
-            else if (index == 0x09u) // 0x09, 0x06, 0x0B, 0x05, 0x0A, 0x07 activate at the same time
+            else if (index == 0x09) // 0x09, 0x06, 0x0B, 0x05, 0x0A, 0x07 activate at the same time
                 currentPattern = Pattern.Pattern2;
         }
     }
@@ -131,7 +131,7 @@ sealed class SpikeTraps(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x01u && state is 0x00400004u or 0x00800004u or 0x00080004u)
+        if (index == 0x01 && state is 0x00400004u or 0x00800004u or 0x00080004u)
         {
             _aoes.Clear();
         }

@@ -7,6 +7,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.NKenkiRelease or (uint)AID.SKenkiRelease && Arena.Bounds == C023Moko.StartingBounds)
@@ -17,7 +18,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x2Bu)
+        if (index == 0x2B && state == 0x00020001u)
         {
             Arena.Bounds = C023Moko.DefaultBounds;
             _aoe = null;

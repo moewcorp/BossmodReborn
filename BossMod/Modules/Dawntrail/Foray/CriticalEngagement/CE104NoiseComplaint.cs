@@ -142,7 +142,7 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
     {
         if (status.ID == (uint)SID.LightningCrossing)
         {
-            lightningIsCardinal = status.Extra == 0x350u;
+            lightningIsCardinal = status.Extra == 0x350;
             InitIfReady();
         }
     }

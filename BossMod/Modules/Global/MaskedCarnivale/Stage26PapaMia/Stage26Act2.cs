@@ -44,7 +44,7 @@ sealed class Thunderhead(BossModule module) : Components.Voidzone(module, 8f, Ge
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
             {
                 voidzones[index++] = z;
             }

@@ -193,7 +193,7 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
         switch (status.ID)
         {
             case (uint)SID.CaliburnusElement:
-                AddSwordAOE(status.Extra == 0x219u ? swordsFire : swordsIce);
+                AddSwordAOE(status.Extra == 0x219 ? swordsFire : swordsIce);
                 if (swordsFire.Count == 5 && swordsIce.Count == 5)
                 {
                     swordsFire.Sort((a, b) => a.Rotation.Rad.CompareTo(b.Rotation.Rad));
@@ -201,10 +201,10 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
                 }
                 break;
             case (uint)SID.SoulOfFire:
-                soulOfFire[Raid.FindSlot(actor.InstanceID)] = true;
+                soulOfFire.Set(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.SoulOfIce:
-                soulOfIce[Raid.FindSlot(actor.InstanceID)] = true;
+                soulOfIce.Set(Raid.FindSlot(actor.InstanceID));
                 break;
         }
         void AddSwordAOE(List<AOEInstance> swordAOEs)
@@ -227,10 +227,10 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
         switch (status.ID)
         {
             case (uint)SID.SoulOfFire:
-                soulOfFire[Raid.FindSlot(actor.InstanceID)] = false;
+                soulOfFire.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.SoulOfIce:
-                soulOfIce[Raid.FindSlot(actor.InstanceID)] = false;
+                soulOfIce.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }
@@ -325,10 +325,10 @@ sealed class ThermalDivideSides(BossModule module) : Components.GenericAOEs(modu
         switch (status.ID)
         {
             case (uint)SID.SoulOfFire:
-                soulOfFire[Raid.FindSlot(actor.InstanceID)] = true;
+                soulOfFire.Set(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.SoulOfIce:
-                soulOfIce[Raid.FindSlot(actor.InstanceID)] = true;
+                soulOfIce.Set(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }
@@ -338,10 +338,10 @@ sealed class ThermalDivideSides(BossModule module) : Components.GenericAOEs(modu
         switch (status.ID)
         {
             case (uint)SID.SoulOfFire:
-                soulOfFire[Raid.FindSlot(actor.InstanceID)] = false;
+                soulOfFire.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.SoulOfIce:
-                soulOfIce[Raid.FindSlot(actor.InstanceID)] = false;
+                soulOfIce.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }

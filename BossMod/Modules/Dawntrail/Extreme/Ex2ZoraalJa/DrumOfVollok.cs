@@ -6,8 +6,10 @@ sealed class DrumOfVollokPlatforms(BossModule module) : BossComponent(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x0Bu)
+        if (index != 0x0B)
+        {
             return;
+        }
 
         switch (state)
         {

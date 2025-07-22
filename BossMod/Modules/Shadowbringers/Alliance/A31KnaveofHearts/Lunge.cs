@@ -10,7 +10,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Lunge)
+        if (spell.Action.ID == WatchedAction)
         {
             List<SafeWall> safewalls = new(4);
             var count = _arena.Squares.Count;
@@ -37,7 +37,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Lunge)
+        if (spell.Action.ID == WatchedAction)
         {
             _kb = null;
         }

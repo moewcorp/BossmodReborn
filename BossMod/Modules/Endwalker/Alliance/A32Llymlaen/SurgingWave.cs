@@ -6,7 +6,7 @@ class SurgingWaveCorridor(BossModule module) : BossComponent(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x49u && state is 0x02000001u or 0x00200001u or 0x00800040u or 0x08000400u)
+        if (index == 0x49 && state is 0x02000001u or 0x00200001u or 0x00800040u or 0x08000400u)
         {
             CorridorDir = state switch
             {
@@ -53,7 +53,7 @@ public class SurgingWaveFrothingSea : Components.Exaflare
     {
         void AddLine(WPos first, Angle rot)
         => Lines.Add(new() { Next = first, Advance = 2.3f * rot.ToDirection(), NextExplosion = WorldState.FutureTime(30d), TimeToMove = 0.9f, ExplosionsLeft = 13, MaxShownExplosions = 2, Rotation = rot });
-        if (index == 0x49u)
+        if (index == 0x49)
         {
             if (state == 0x00800040u)
                 AddLine(new(-80f, -900f), 90f.Degrees());

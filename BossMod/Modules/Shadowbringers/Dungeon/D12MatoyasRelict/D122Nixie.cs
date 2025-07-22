@@ -136,7 +136,7 @@ class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x12u)
+        if (index == 0x12)
         {
             if (state == 0x00020001u)
                 active = true;

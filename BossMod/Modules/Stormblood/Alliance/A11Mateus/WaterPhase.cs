@@ -11,7 +11,7 @@ class Froth(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var status = actor.FindStatus((uint)SID.Breathless);
-        if (status is ActorStatus breathless && breathless.Extra >= 0x5u)
+        if (status is ActorStatus breathless && breathless.Extra >= 0x5)
             return CollectionsMarshal.AsSpan(_aoes);
         return [];
     }

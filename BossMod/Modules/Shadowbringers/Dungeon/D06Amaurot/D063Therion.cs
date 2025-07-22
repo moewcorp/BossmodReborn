@@ -226,7 +226,7 @@ sealed class DeathlyRayFaces(BossModule module) : Components.GenericAOEs(module)
                 ref var aoe = ref aoes[i];
                 if (aoe.Origin.AlmostEqual(pos, 0.1f))
                 {
-                    if (++aoe.ActorID == 5u)
+                    if (++aoe.ActorID == 5ul)
                     {
                         _aoes.RemoveAt(i);
                     }

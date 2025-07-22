@@ -90,7 +90,7 @@ sealed class GlimmerInTheDark(BossModule module) : Components.GenericAOEs(module
                 ref var aoe = ref aoes[i];
                 if (aoe.Origin.AlmostEqual(pos, 0.1f))
                 {
-                    if (++aoe.ActorID == 10u)
+                    if (++aoe.ActorID == 10ul)
                     {
                         _aoes.RemoveAt(i);
                     }
@@ -110,18 +110,20 @@ sealed class DemonEye(BossModule module) : Components.GenericGaze(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FalseDemonEye)
+        var id = spell.Action.ID;
+        if (id == (uint)AID.FalseDemonEye)
         {
-            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), Inverted: inverted));
+            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), inverted: inverted));
         }
-        else if (spell.Action.ID == (uint)AID.DemonEye)
+        else if (id == (uint)AID.DemonEye)
         {
             inverted = true; // depending on timing eyes can spawn after cast start
             var count = _eyes.Count;
             var eyes = CollectionsMarshal.AsSpan(_eyes);
             for (var i = 0; i < count; ++i)
             {
-                eyes[i].Inverted = true;
+                ref var eye = ref eyes[i];
+                eyes[i] = new(eye.Position, eye.Activation, inverted: true);
             }
         }
     }

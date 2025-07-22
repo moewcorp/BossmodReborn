@@ -54,7 +54,7 @@ sealed class Voidzone(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if (actor.OID == (uint)OID.Voidzone && state == 0x0004u)
+        if (state == 0x0004 && actor.OID == (uint)OID.Voidzone)
         {
             _aoe = null;
         }
@@ -107,10 +107,14 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E43u)
+        if (id == 0x1E43)
+        {
             _activeDrudges.Add(actor);
-        else if (id == 0x1E39u)
+        }
+        else if (id == 0x1E39)
+        {
             _activeDrudges.Remove(actor);
+        }
     }
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
@@ -129,12 +133,12 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
         var activationFirst = WorldState.FutureTime(7.1d);
         var activationSecond = WorldState.FutureTime(15d);
 
-        if (modelState == 4u)
+        if (modelState == 4)
         {
             AddConeAOEs(activationFirst, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
             AddConeAOEs(activationSecond, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
         }
-        else if (modelState == 5u)
+        else if (modelState == 5)
         {
             AddConeAOEs(activationFirst, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
             AddConeAOEs(activationSecond, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
@@ -145,9 +149,9 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     {
         var activation = WorldState.FutureTime(6.9d);
 
-        if (modelState == 4u)
+        if (modelState == 4)
             AddConeAOEs(activation, Angle.AnglesIntercardinals[2], Angle.AnglesIntercardinals[0]);
-        else if (modelState == 5u)
+        else if (modelState == 5)
             AddConeAOEs(activation, Angle.AnglesIntercardinals[3], Angle.AnglesIntercardinals[1]);
 
         var count = _activeDrudges.Count;
@@ -169,7 +173,7 @@ sealed class AssaultCannon(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.CannonOrder)
         {
-            var activation = status.Extra == 0x180u ? 6.9d : 15d;
+            var activation = status.Extra == 0x180 ? 6.9d : 15d;
             _aoesRects.Add(new(rectShort, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(activation)));
         }
     }

@@ -61,7 +61,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                     }
                     break;
                 default:
-                    ref var w = ref Walls[index - 0x1Du];
+                    ref var w = ref Walls[index - 0x1D];
                     w.isWhite = state == 0x00020001u ? false : state == 0x00800040u ? true : null;
                     var differenceShapes = new List<Shape>(17);
                     if (isDefaultArena)

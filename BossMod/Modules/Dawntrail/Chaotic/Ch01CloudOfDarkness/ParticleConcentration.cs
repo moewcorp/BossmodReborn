@@ -65,10 +65,10 @@ sealed class ParticleConcentration(BossModule module) : Components.GenericTowers
         switch (status.ID)
         {
             case (uint)SID.InnerDarkness:
-                _innerPlayers[Raid.FindSlot(actor.InstanceID)] = true;
+                _innerPlayers.Set(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.OuterDarkness:
-                _outerPlayers[Raid.FindSlot(actor.InstanceID)] = true;
+                _outerPlayers.Set(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }
@@ -78,10 +78,10 @@ sealed class ParticleConcentration(BossModule module) : Components.GenericTowers
         switch (status.ID)
         {
             case (uint)SID.InnerDarkness:
-                _innerPlayers[Raid.FindSlot(actor.InstanceID)] = false;
+                _innerPlayers.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.OuterDarkness:
-                _outerPlayers[Raid.FindSlot(actor.InstanceID)] = false;
+                _outerPlayers.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }

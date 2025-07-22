@@ -64,7 +64,7 @@ sealed class FireVoidzone(BossModule module) : Components.Voidzone(module, 6f, G
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];

@@ -50,10 +50,10 @@ sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(m
             switch (state)
             {
                 case 0x00400100u:
-                    activeTiles[index - 0x04u] = true;
+                    activeTiles[index - 0x04] = true;
                     break;
                 case 0x00040020u:
-                    activeTiles[index - 0x04u] = false;
+                    activeTiles[index - 0x04] = false;
                     break;
             }
         }
@@ -133,7 +133,7 @@ sealed class AlexandrianThunderIII(BossModule module) : Components.GenericAOEs(m
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E46u)
+        if (id == 0x1E46)
         {
             var rotRounded = (int)actor.Rotation.Deg;
             var index = -1;

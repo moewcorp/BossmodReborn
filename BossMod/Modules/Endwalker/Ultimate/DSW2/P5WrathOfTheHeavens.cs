@@ -200,7 +200,7 @@ class P5WrathOfTheHeavensEmptyDimension(BossModule module) : Components.SimpleAO
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.SerGrinnaux && id == 0x1E43u)
+        if (id == 0x1E43 && actor.OID == (uint)OID.SerGrinnaux)
             _predicted = actor.Position;
     }
 }

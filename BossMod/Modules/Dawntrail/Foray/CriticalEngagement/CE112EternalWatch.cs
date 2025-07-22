@@ -187,11 +187,11 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
         if (status.ID == (uint)SID.SphereStatus)
         {
             var extra = status.Extra;
-            if (extra == 0x224u)
+            if (extra == 0x224)
             {
                 UpdateList(spheresWind);
             }
-            else if (extra == 0x225u)
+            else if (extra == 0x225)
             {
                 UpdateList(spheresStone);
             }

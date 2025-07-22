@@ -70,9 +70,9 @@ sealed class SectorBisector(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.SoldierS0Clone)
         {
-            if (modelState == 5u)
+            if (modelState == 5)
                 direction = false;
-            else if (modelState == 6u)
+            else if (modelState == 6)
                 direction = true;
         }
     }

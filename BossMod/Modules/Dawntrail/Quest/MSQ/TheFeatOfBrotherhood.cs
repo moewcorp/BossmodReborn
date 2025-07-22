@@ -153,7 +153,7 @@ sealed class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E46u)
+        if (id == 0x1E46)
         {
             _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(8.5d)));
         }

@@ -44,10 +44,10 @@ sealed class WildCharges(BossModule module) : Components.GenericAOEs(module)
             var forbidden = new Func<WPos, float>[count];
             for (var i = 0; i < count; ++i)
             {
-                var aoe = _aoes[i];
+                ref var aoe = ref _aoes.Ref(i);
                 forbidden[i] = aoe.Shape.Distance(aoe.Origin, aoe.Rotation);
             }
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), _aoes[0].Activation);
+            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), _aoes.Ref(0).Activation);
         }
     }
 

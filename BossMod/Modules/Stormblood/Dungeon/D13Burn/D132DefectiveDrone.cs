@@ -51,7 +51,7 @@ class Throttle(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count; ++i)
             {
                 var e = enemies[i];
-                if (e.ModelState.AnimState1 != 1u)
+                if (e.ModelState.AnimState1 != 1)
                 {
                     _aoes.Add(new(rectSmall, e.Position.Quantized(), e.Rotation, activation));
                 }
@@ -88,7 +88,7 @@ class SludgeVoidzone(BossModule module) : Components.Voidzone(module, 2.5f, GetV
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];

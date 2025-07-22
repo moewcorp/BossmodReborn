@@ -168,7 +168,7 @@ sealed class Burn(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
-        if (actor.OID == (uint)OID.BallOfFire && animState1 == 1u)
+        if (actor.OID == (uint)OID.BallOfFire && animState1 == 1)
             _aoes.Add(new(_shape, actor.Position.Quantized(), default, WorldState.FutureTime(5d)));
     }
 

@@ -30,7 +30,7 @@ sealed class ArenaChange(BossModule module) : BossComponent(module)
 {
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x03u)
+        if (index == 0x03 && state == 0x00020001u)
         {
             Arena.Bounds = Trash2.Arena2;
             Arena.Center = Trash2.Arena2Center;

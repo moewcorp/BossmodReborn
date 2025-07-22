@@ -56,15 +56,18 @@ class TrismegistosArenaChange(BossModule module) : Components.GenericAOEs(module
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Trismegistos && Arena.Bounds == D043Hermes.StartingBounds)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.5f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.5d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x08u)
+        if (index == 0x08 && state == 0x00020001u)
         {
             Arena.Bounds = D043Hermes.DefaultBounds;
             _aoe = null;
@@ -85,7 +88,7 @@ class TrueAeroFirst(BossModule module) : Components.GenericBaitAway(module)
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.TrueAeroTarget)
-            CurrentBaits.Add(new(Module.PrimaryActor, WorldState.Actors.Find(spell.MainTargetID)!, rect, WorldState.FutureTime(5.7f)));
+            CurrentBaits.Add(new(Module.PrimaryActor, WorldState.Actors.Find(spell.MainTargetID)!, rect, WorldState.FutureTime(5.7d)));
         else if (spell.Action.ID == (uint)AID.TrueAeroFirst)
             CurrentBaits.Clear();
     }

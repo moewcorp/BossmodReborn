@@ -17,8 +17,10 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x01u)
+        if (index != 0x01)
+        {
             return;
+        }
         switch (state)
         {
             case 0x00020001u:
@@ -85,10 +87,10 @@ class FloorTiles(BossModule module) : BossComponent(module)
             switch (state)
             {
                 case 0x00400100u or 0x00800040u:
-                    InnerActiveTiles[index - 0x04u] = true;
+                    InnerActiveTiles[index - 0x04] = true;
                     break;
                 case 0x00040020u:
-                    InnerActiveTiles[index - 0x04u] = false;
+                    InnerActiveTiles[index - 0x04] = false;
                     break;
             }
         }
@@ -97,10 +99,10 @@ class FloorTiles(BossModule module) : BossComponent(module)
             switch (state)
             {
                 case 0x00400100u or 0x00800040u:
-                    OuterActiveTiles[index - 0x0Cu] = true;
+                    OuterActiveTiles[index - 0x0C] = true;
                     break;
                 case 0x00040020u:
-                    OuterActiveTiles[index - 0x0Cu] = false;
+                    OuterActiveTiles[index - 0x0C] = false;
                     break;
             }
         }

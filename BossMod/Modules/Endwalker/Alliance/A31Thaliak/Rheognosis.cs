@@ -28,9 +28,9 @@ public class RheognosisCrash : Components.Exaflare
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index <= 0x01u && state is 0x01000001u or 0x02000001u)
+        if (index <= 0x01 && state is 0x01000001u or 0x02000001u)
         {
-            var west = index == 0x00u;
+            var west = index == 0x00;
             var right = state == 0x01000001u;
             var south = west == right;
             var start = Arena.Center + new WDir(west ? -Arena.Bounds.Radius : +Arena.Bounds.Radius, (south ? +Arena.Bounds.Radius : -Arena.Bounds.Radius) * 0.5f);

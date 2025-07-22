@@ -15,6 +15,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Unenlightenment && Arena.Bounds == StartingBounds)
@@ -25,12 +26,12 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x16u && state == 0x00020001u)
+        if (index == 0x16 && state == 0x00020001u)
         {
             Arena.Bounds = DefaultBounds;
             _aoe = null;
         }
-        else if (index == 0x3Du)
+        else if (index == 0x3D)
         {
             if (state == 0x00020001u)
             {

@@ -94,7 +94,7 @@ sealed class HolyWater(BossModule module) : Components.VoidzoneAtCastTarget(modu
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];

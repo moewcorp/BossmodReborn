@@ -48,7 +48,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x00u && state == 0x00020001u)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D142Nero.DefaultBounds;
             Arena.Center = D142Nero.DefaultBounds.Center;

@@ -65,15 +65,18 @@ class StygianDelugeArenaChange(BossModule module) : Components.GenericAOEs(modul
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.StygianDeluge && Arena.Bounds == D113Cagnazzo.StartingBounds)
+        {
             _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x00u)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D113Cagnazzo.DefaultBounds;
             _aoe = null;

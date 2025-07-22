@@ -80,7 +80,7 @@ sealed class GleamingBeam(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x11D3u && actor.OID == (uint)OID.GleamingFangP21)
+        if (id == 0x11D3 && actor.OID == (uint)OID.GleamingFangP21)
         {
             _aoes.Add(new(Rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.1d)));
         }

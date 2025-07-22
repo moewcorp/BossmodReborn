@@ -22,7 +22,9 @@ public sealed record class Circle(WPos Center, float Radius) : Shape
         var result = new List<WDir>(len);
         var offset = Center - center;
         for (var i = 0; i < len; ++i)
+        {
             result.Add(Points[i] + offset);
+        }
         return result;
     }
 
@@ -38,7 +40,9 @@ public sealed record class PolygonCustom(IReadOnlyList<WPos> Vertices) : Shape
         var count = vertices.Count;
         var result = new List<WDir>(count);
         for (var i = 0; i < count; ++i)
+        {
             result.Add(vertices[i] - center);
+        }
         return result;
     }
 
@@ -137,7 +141,9 @@ public sealed record class Donut(WPos Center, float InnerRadius, float OuterRadi
         var result = new List<WDir>(len);
         var offset = Center - center;
         for (var i = 0; i < len; ++i)
+        {
             result.Add(Points[i] + offset);
+        }
         return result;
     }
     public override string ToString() => $"Donut:{Center.X},{Center.Z},{InnerRadius},{OuterRadius}";
@@ -212,7 +218,9 @@ public sealed record class Cross(WPos Center, float Length, float HalfWidth, Ang
         var offset = Center - center;
         var result = new List<WDir>(12);
         for (var i = 0; i < 12; ++i)
+        {
             result.Add(Points[i] + offset);
+        }
         return result;
     }
     public override string ToString() => $"Cross:{Center.X},{Center.Z},{Length},{HalfWidth},{Rotation}";
@@ -225,20 +233,25 @@ public sealed record class Polygon(WPos Center, float Radius, int Edges, Angle R
     {
         if (Points == null)
         {
-            var angleIncrement = Angle.DoublePI / Edges;
+            var edges = Edges;
+            var angleIncrement = Angle.DoublePI / edges;
             var initialRotation = Rotation.Rad;
-            var vertices = new WDir[Edges];
-            for (var i = 0; i < Edges; ++i)
+            var radius = Radius;
+            var vertices = new WDir[edges];
+            for (var i = 0; i < edges; ++i)
             {
                 var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement + initialRotation);
-                vertices[i] = new(Center.X + Radius * sin, Center.Z + Radius * cos);
+                vertices[i] = new(radius * sin, radius * cos);
             }
             Points = vertices;
         }
+        var offset = Center - center;
         var len = Points.Length;
         var result = new List<WDir>(len);
         for (var i = 0; i < len; ++i)
-            result.Add(Points[i] - center);
+        {
+            result.Add(Points[i] + offset);
+        }
         return result;
     }
     public override string ToString() => $"Polygon:{Center.X},{Center.Z},{Radius},{Edges},{Rotation}";
@@ -251,17 +264,22 @@ public record class Cone(WPos Center, float Radius, Angle StartAngle, Angle EndA
     {
         if (Points == null)
         {
-            var points = CurveApprox.CircleSector(Center, Radius, StartAngle, EndAngle, MaxApproxError);
+            var points = CurveApprox.CircleSector(Radius, StartAngle, EndAngle, MaxApproxError);
             var length = points.Length;
             var vertices = new WDir[length];
             for (var i = 0; i < length; ++i)
-                vertices[i] = points[i] - new WPos();
+            {
+                vertices[i] = points[i];
+            }
             Points = vertices;
         }
         var len = Points.Length;
+        var offset = Center - center;
         var result = new List<WDir>(len);
         for (var i = 0; i < len; ++i)
-            result.Add(Points[i] - center);
+        {
+            result.Add(Points[i] + offset);
+        }
         return result;
     }
     public override string ToString() => $"Cone:{Center.X},{Center.Z},{Radius},{StartAngle},{EndAngle}";
@@ -302,21 +320,22 @@ public sealed record class ConeV(WPos Center, float Radius, Angle CenterDir, Ang
             var angleIncrement = 2 * HalfAngle.Rad / Edges;
             var startAngle = CenterDir.Rad - HalfAngle.Rad;
             var vertices = new WDir[Edges + 2];
-            var centerX = Center.X;
-            var CenterZ = Center.Z;
             var radius = Radius;
             for (var i = 0; i < Edges + 1; ++i)
             {
                 var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
-                vertices[i] = new(centerX + radius * sin, CenterZ + radius * cos);
+                vertices[i] = new(radius * sin, radius * cos);
             }
             vertices[Edges + 1] = Center - new WPos();
             Points = vertices;
         }
         var len = Points.Length;
+        var offset = Center - center;
         var result = new List<WDir>(len);
         for (var i = 0; i < len; ++i)
-            result.Add(Points[i] - center);
+        {
+            result.Add(Points[i] + offset);
+        }
         return result;
     }
 
@@ -334,23 +353,24 @@ public sealed record class DonutSegmentV(WPos Center, float InnerRadius, float O
             var startAngle = CenterDir.Rad - HalfAngle.Rad;
             var n = Edges + 1;
             var vertices = new WDir[2 * n];
-            var centerX = Center.X;
-            var CenterZ = Center.Z;
             var innerRadius = InnerRadius;
             var outerRadius = OuterRadius;
             for (var i = 0; i < n; ++i)
             {
                 var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
-                vertices[i] = new(centerX + outerRadius * sin, CenterZ + outerRadius * cos);
-                vertices[2 * n - 1 - i] = new WDir(centerX + innerRadius * sin, CenterZ + innerRadius * cos);
+                vertices[i] = new(outerRadius * sin, outerRadius * cos);
+                vertices[2 * n - 1 - i] = new WDir(innerRadius * sin, innerRadius * cos);
             }
 
             Points = vertices;
         }
         var len = Points.Length;
+        var offset = Center - center;
         var result = new List<WDir>(len);
         for (var i = 0; i < len; ++i)
-            result.Add(Points[i] - center);
+        {
+            result.Add(Points[i] + offset);
+        }
         return result;
     }
 
@@ -367,23 +387,24 @@ public sealed record class DonutV(WPos Center, float InnerRadius, float OuterRad
             var angleIncrement = Angle.DoublePI / Edges;
             var n = Edges + 1;
             var vertices = new WDir[2 * n];
-            var centerX = Center.X;
-            var CenterZ = Center.Z;
             var innerRadius = InnerRadius;
             var outerRadius = OuterRadius;
             for (var i = 0; i < n; ++i)
             {
                 var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement);
-                vertices[i] = new(centerX + outerRadius * sin, CenterZ + outerRadius * cos);
-                vertices[2 * n - 1 - i] = new(centerX + innerRadius * sin, CenterZ + innerRadius * cos);
+                vertices[i] = new(outerRadius * sin, outerRadius * cos);
+                vertices[2 * n - 1 - i] = new(innerRadius * sin, innerRadius * cos);
             }
             Points = vertices;
         }
 
         var len = Points.Length;
+        var offset = Center - center;
         var result = new List<WDir>(len);
         for (var i = 0; i < len; ++i)
-            result.Add(Points[i] - center);
+        {
+            result.Add(Points[i] + offset);
+        }
         return result;
     }
 
@@ -460,8 +481,9 @@ public sealed record class Capsule(WPos Center, float HalfHeight, float HalfWidt
         var offset = Center - center;
         var result = new List<WDir>(Points.Length);
         for (var i = 0; i < Points.Length; ++i)
+        {
             result.Add(Points[i] + offset);
-
+        }
         return result;
     }
 

@@ -73,7 +73,7 @@ sealed class MorbolFruit(BossModule module) : BossComponent(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if (status.ID == (uint)SID.Burrs && status.Extra > 0x02u)
+        if (status.ID == (uint)SID.Burrs && status.Extra > 0x02)
         {
             burrs.Set(Raid.FindSlot(actor.InstanceID));
         }
@@ -81,7 +81,7 @@ sealed class MorbolFruit(BossModule module) : BossComponent(module)
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
-        if (status.ID == (uint)SID.Burrs && status.Extra > 0x02u)
+        if (status.ID == (uint)SID.Burrs && status.Extra > 0x02)
         {
             burrs.Clear(Raid.FindSlot(actor.InstanceID));
         }

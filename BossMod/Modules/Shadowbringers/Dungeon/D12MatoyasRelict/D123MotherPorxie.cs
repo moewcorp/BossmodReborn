@@ -139,8 +139,10 @@ class Barbeque(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x10u)
-            _aoe = new(rect, new(-19.5f, default), 89.999f.Degrees()); // activates 22.2s later, but should never be entered anyway, since you must go to the opposite of the arena
+        if (index == 0x10 && state == 0x00020001u)
+        {
+            _aoe = new(rect, new(-19.5f, default), Angle.AnglesCardinals[3]); // activates 22.2s later, but should never be entered anyway, since you must go to the opposite of the arena
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

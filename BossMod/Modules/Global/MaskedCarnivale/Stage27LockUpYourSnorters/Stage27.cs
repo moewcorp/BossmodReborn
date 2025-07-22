@@ -114,7 +114,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Bomb)
         {
-            if (animState1 == 1u)
+            if (animState1 == 1)
             {
                 _casters.Add(actor);
                 _activation = WorldState.FutureTime(6d);

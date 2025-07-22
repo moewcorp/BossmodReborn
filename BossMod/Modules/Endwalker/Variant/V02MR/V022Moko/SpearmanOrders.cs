@@ -4,7 +4,8 @@ sealed class SpearmanOrdersFast(BossModule module) : Components.Exaflare(module,
 {
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.AshigaruSoheiFast && id == 0x25E9u)
+        if (actor.OID == (uint)OID.AshigaruSoheiFast && id == 0x25E9)
+        {
             Lines.Add(new()
             {
                 Next = actor.Position,
@@ -14,6 +15,7 @@ sealed class SpearmanOrdersFast(BossModule module) : Components.Exaflare(module,
                 ExplosionsLeft = 12,
                 MaxShownExplosions = 4
             });
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -43,7 +45,8 @@ sealed class SpearmanOrdersSlow(BossModule module) : Components.Exaflare(module,
 {
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.AshigaruSoheiSlow && id == 0x25E9u)
+        if (actor.OID == (uint)OID.AshigaruSoheiSlow && id == 0x25E9)
+        {
             Lines.Add(new()
             {
                 Next = actor.Position,
@@ -53,6 +56,7 @@ sealed class SpearmanOrdersSlow(BossModule module) : Components.Exaflare(module,
                 ExplosionsLeft = 18,
                 MaxShownExplosions = 2
             });
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

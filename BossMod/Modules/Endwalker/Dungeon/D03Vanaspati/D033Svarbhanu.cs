@@ -36,12 +36,14 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FlamesOfDecay && Arena.Bounds != D033Svarbhanu.DefaultArena)
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 8.9f));
+        {
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 8.9d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x07u)
+        if (index == 0x07 && state == 0x00020001u)
         {
             Arena.Bounds = D033Svarbhanu.DefaultArena;
             _aoe = null;
@@ -68,7 +70,7 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
         // blue blue red red => 0x00020001, red (-142, -152), blue (-162, -172) 
         // blue red red blue => 0x00100008, red (-152, -162), blue (-172, -142)
         // red red blue blue => 0x01000080, red (-162, -172), blue (-152, -142)
-        if (index == 0x08u)
+        if (index == 0x08)
         {
             currentPattern = state switch
             {
