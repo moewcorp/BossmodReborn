@@ -297,14 +297,16 @@ public sealed record class ConeV(WPos Center, float Radius, Angle CenterDir, Ang
 {
     public override List<WDir> Contour(WPos center)
     {
-        var angleIncrement = 2 * HalfAngle.Rad / Edges;
+        var edges = Edges;
+        var angleIncrement = 2f * HalfAngle.Rad / edges;
         var startAngle = CenterDir.Rad - HalfAngle.Rad;
-        var vertices = new List<WDir>(Edges + 2);
+        var vertices = new List<WDir>(edges + 2);
         var radius = Radius;
         var offset = Center - center;
         var offsetX = offset.X;
         var offsetZ = offset.Z;
-        for (var i = 0; i < Edges + 1; ++i)
+        var e1 = edges + 1;
+        for (var i = 0; i < e1; ++i)
         {
             var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
             vertices.Add(new(radius * sin + offsetX, radius * cos + offsetZ));
@@ -321,20 +323,22 @@ public sealed record class DonutSegmentV(WPos Center, float InnerRadius, float O
 {
     public override List<WDir> Contour(WPos center)
     {
-        var angleIncrement = 2 * HalfAngle.Rad / Edges;
+        var edges = Edges;
+        var angleIncrement = 2f * HalfAngle.Rad / edges;
         var startAngle = CenterDir.Rad - HalfAngle.Rad;
         var n = Edges + 1;
-        var vertices = new WDir[2 * n];
+        var vertices = new WDir[2 * edges + 2];
         var innerRadius = InnerRadius;
         var outerRadius = OuterRadius;
         var offset = Center - center;
         var offsetX = offset.X;
         var offsetZ = offset.Z;
+        var indexInner = 2 * edges + 1;
         for (var i = 0; i < n; ++i)
         {
             var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
             vertices[i] = new(outerRadius * sin + offsetX, outerRadius * cos + offsetZ);
-            vertices[2 * n - 1 - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
+            vertices[indexInner - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
         }
 
         return [.. vertices];
@@ -348,29 +352,26 @@ public sealed record class DonutV(WPos Center, float InnerRadius, float OuterRad
 {
     public override List<WDir> Contour(WPos center)
     {
-        var angleIncrement = Angle.DoublePI / Edges;
-        var n = Edges + 1;
-        var vertices = new WDir[2 * n];
+        var edges = Edges;
+        var angleIncrement = Angle.DoublePI / edges;
+        var vertices = new WDir[2 * edges + 2];
         var initialRotation = Rotation.Rad;
         var innerRadius = InnerRadius;
         var outerRadius = OuterRadius;
         var offset = Center - center;
         var offsetX = offset.X;
         var offsetZ = offset.Z;
-        for (var i = 0; i < n; ++i)
+        var indexInner = 2 * edges + 1;
+        for (var i = 0; i < edges; ++i)
         {
             var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement + initialRotation);
-            if (MathF.Abs(sin) < 1e-6f) // prevent degenerate edges due to rounding errors
-            {
-                sin = 0f;
-            }
-            else if (MathF.Abs(cos) < 1e-6f)
-            {
-                cos = 0f;
-            }
+
             vertices[i] = new(outerRadius * sin + offsetX, outerRadius * cos + offsetZ);
-            vertices[2 * n - 1 - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
+            vertices[indexInner - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
         }
+        // ensure closed polygons, copy first vertices of each ring
+        vertices[edges] = vertices[0];
+        vertices[edges + 1] = vertices[indexInner];
         return [.. vertices];
     }
 

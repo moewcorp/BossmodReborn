@@ -252,13 +252,17 @@ sealed class AccelerationBomb(BossModule module) : Components.StayMove(module, 3
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID is (uint)SID.AccelerationBomb or (uint)SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        {
             PlayerStates[slot] = new(Requirement.Stay, status.ExpireAt);
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         if (status.ID is (uint)SID.AccelerationBomb or (uint)SID.AccelerationBombNPCs && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
+        {
             PlayerStates[slot] = default;
+        }
     }
 }
 

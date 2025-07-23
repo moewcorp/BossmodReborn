@@ -110,18 +110,15 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        switch (spell.Action.ID)
+        var increment = spell.Action.ID switch
         {
-            case (uint)AID.SpinningSiegeCW:
-                AddSequence(-a9);
-                break;
-            case (uint)AID.SpinningSiegeCCW:
-                AddSequence(a9);
-                break;
-        }
-        void AddSequence(Angle increment)
+            (uint)AID.SpinningSiegeCW => -9f.Degrees(),
+            (uint)AID.SpinningSiegeCCW => -9f.Degrees(),
+            _ => default
+        };
+        if (increment != default)
         {
-            Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 1.7f, 6));
+            Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 1.7d, 6));
             if (Sequences.Count == 4)
             {
                 var center = Arena.Center;
@@ -142,7 +139,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                     {
                         var aOrigin = a.Origin;
                         var bOrigin = b.Origin;
-                        midpoint = new((aOrigin.X + bOrigin.X) / 2, (aOrigin.Z + bOrigin.Z) / 2);
+                        midpoint = new((aOrigin.X + bOrigin.X) * 0.5f, (aOrigin.Z + bOrigin.Z) * 0.5f);
                         return;
                     }
                 }

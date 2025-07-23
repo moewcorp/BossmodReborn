@@ -16,7 +16,15 @@ sealed class NaturesBlood(BossModule module) : Components.Exaflare(module, 4f)
     {
         if (spell.Action.ID == (uint)AID.NaturesBloodFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 6f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 7, MaxShownExplosions = 3 });
+            Lines.Add(new()
+            {
+                Next = caster.Position,
+                Advance = 6f * spell.Rotation.ToDirection(),
+                NextExplosion = Module.CastFinishAt(spell),
+                TimeToMove = 1.1d,
+                ExplosionsLeft = 7,
+                MaxShownExplosions = 3
+            });
         }
     }
 
