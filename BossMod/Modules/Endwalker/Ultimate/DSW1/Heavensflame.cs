@@ -13,6 +13,10 @@ class HeavensflameKnockback(BossModule module) : Components.SimpleKnockbacks(mod
 
     public override void Update()
     {
+        if (Casters.Count == 0)
+        {
+            return;
+        }
         ref readonly var c = ref Casters.Ref(0);
         var origin = c.Origin;
         foreach (var (slot, player) in Raid.WithSlot(false, true, true))
@@ -66,13 +70,13 @@ class HeavensflameKnockback(BossModule module) : Components.SimpleKnockbacks(mod
         DrawKnockback(pc, _playerAdjustedPositions[pcSlot], Arena);
 
         foreach (var (slot, _) in Raid.WithSlot(false, true, true).Exclude(pc))
-            Arena.AddCircle(_playerAdjustedPositions[slot], _aoeRadius, Colors.Danger);
+            Arena.AddCircle(_playerAdjustedPositions[slot], _aoeRadius);
     }
 
     public override void OnUntethered(Actor source, ActorTetherInfo tether)
     {
-        _brokenTethers[Raid.FindSlot(source.InstanceID)] = true;
-        _brokenTethers[Raid.FindSlot(tether.Target)] = true;
+        _brokenTethers.Set(Raid.FindSlot(source.InstanceID));
+        _brokenTethers.Set(Raid.FindSlot(tether.Target));
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)

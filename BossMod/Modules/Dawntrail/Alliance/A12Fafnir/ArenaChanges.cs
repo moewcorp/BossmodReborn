@@ -10,12 +10,14 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.DarkMatterBlast && Arena.Bounds != A12Fafnir.DefaultBounds)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 1.1f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 1.1d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x22)
+        if (index == 0x22 && state == 0x00020001u)
         {
             Arena.Bounds = A12Fafnir.DefaultBounds;
             _aoe = null;

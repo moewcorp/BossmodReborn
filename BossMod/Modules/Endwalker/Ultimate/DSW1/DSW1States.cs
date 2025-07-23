@@ -11,11 +11,8 @@ class DSW1States : StateMachineBuilder
             .Raw.Update = () => ActorKilled(_module.SerAdelphel()) && ActorKilled(_module.SerGrinnaux());
         SimplePhase(1, PureHeartPhase, "Pure Heart")
             .Raw.Update = () => ActorKilled(_module.SerCharibert());
-    }
 
-    private bool ActorKilled(Actor? actor)
-    {
-        return actor == null || actor.IsDestroyed || actor.HPMP.CurHP < actor.HPMP.MaxHP && !actor.IsTargetable;
+        static bool ActorKilled(Actor? actor) => actor == null || actor.IsDestroyed || actor.HPMP.CurHP < actor.HPMP.MaxHP && !actor.IsTargetable;
     }
 
     private void MainPhase(uint id)

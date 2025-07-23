@@ -51,15 +51,18 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HeavingHaymaker && Arena.Bounds == D023Gurfurlur.StartingBounds)
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.6f));
+        {
+            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.6d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x18)
+        if (index == 0x18 && state == 0x00020001u)
         {
             Arena.Bounds = D023Gurfurlur.DefaultBounds;
             _aoe = null;
