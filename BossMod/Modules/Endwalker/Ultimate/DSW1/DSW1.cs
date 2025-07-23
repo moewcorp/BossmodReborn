@@ -19,19 +19,13 @@ public class DSW1(WorldState ws, Actor primary) : BossModule(ws, primary, new(10
         // the problem is that on wipe, any actor can be deleted and recreated in the same frame
         if (_grinnaux == null)
         {
-            if (StateMachine.ActivePhaseIndex == 1)
-            {
-                var b = Enemies((uint)OID.SerGrinnaux);
-                _grinnaux = b.Count != 0 ? b[0] : null;
-            }
+            var b = Enemies((uint)OID.SerGrinnaux);
+            _grinnaux = b.Count != 0 ? b[0] : null;
         }
         if (_charibert == null)
         {
-            if (StateMachine.ActivePhaseIndex == 2)
-            {
-                var b = Enemies((uint)OID.SerCharibert);
-                _charibert = b.Count != 0 ? b[0] : null;
-            }
+            var b = Enemies((uint)OID.SerCharibert);
+            _charibert = b.Count != 0 ? b[0] : null;
         }
     }
 

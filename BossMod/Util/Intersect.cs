@@ -99,13 +99,7 @@ public static class Intersect
         for (var i = 0; i < len; ++i)
         {
             ref readonly var edge = ref edges[i];
-            var e1 = edge.Item1;
-            var e2 = edge.Item2;
-            if ((e1 - e2).LengthSq() < 1e-8f)
-            {
-                continue; // skip degenerate edge
-            }
-            var result = RaySegment(rayOriginOffset, rayDir, e1, e2);
+            var result = RaySegment(rayOriginOffset, rayDir, edge.Item1, edge.Item2);
             if (result < minValue)
                 minValue = result;
         }

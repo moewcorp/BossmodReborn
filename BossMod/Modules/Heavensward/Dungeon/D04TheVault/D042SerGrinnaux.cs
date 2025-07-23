@@ -40,7 +40,7 @@ public enum AID : uint
 
 class HeavySwing(BossModule module) : Components.Cleave(module, (uint)AID.HeavySwing, new AOEShapeCone(6.5f, 45f.Degrees()), [(uint)OID.SerGrinnauxTheBull]);
 class Overpower(BossModule module) : Components.Cleave(module, (uint)AID.Overpower, new AOEShapeCone(10.2f, 45f.Degrees()));
-class DimensionalRip(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.DimensionalRip, GetVoidzones, 1.1f)
+class DimensionalRip(BossModule module) : Components.VoidzoneAtCastTarget(module, 5f, (uint)AID.DimensionalRip, GetVoidzones, 1.1d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
