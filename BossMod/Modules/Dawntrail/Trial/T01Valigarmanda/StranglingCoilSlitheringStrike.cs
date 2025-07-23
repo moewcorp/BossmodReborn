@@ -18,12 +18,16 @@ sealed class StranglingCoilSusurrantBreath(BossModule module) : Components.Gener
             _ => null
         };
         if (shape != null)
+        {
             _aoe = new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.StranglingCoil or (uint)AID.SusurrantBreath)
+        {
             _aoe = null;
+        }
     }
 }

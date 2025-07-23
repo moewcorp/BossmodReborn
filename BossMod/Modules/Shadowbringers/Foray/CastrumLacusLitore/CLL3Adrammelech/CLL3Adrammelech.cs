@@ -22,7 +22,7 @@ sealed class Shock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
 sealed class AeroIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.AeroIV1, (uint)AID.AeroIV2], new AOEShapeDonut(15f, 30f));
 sealed class ThunderIV(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ThunderIV1, (uint)AID.ThunderIV2], 18f);
 sealed class WarpedLight(BossModule module) : Components.SimpleChargeAOEGroups(module, [(uint)AID.WarpedLight1, (uint)AID.WarpedLight2,(uint)AID.WarpedLight3,
-(uint)AID.WarpedLight4, (uint)AID.WarpedLight5, (uint)AID.WarpedLight6], 1.5f, riskyWithSecondsLeft: 1f);
+(uint)AID.WarpedLight4, (uint)AID.WarpedLight5, (uint)AID.WarpedLight6], 1.5f, riskyWithSecondsLeft: 1d);
 
 sealed class Twister(BossModule module) : Components.Voidzone(module, 6.5f, GetTwister, 5f)
 {

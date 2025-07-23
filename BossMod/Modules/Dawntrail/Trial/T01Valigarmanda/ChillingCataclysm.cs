@@ -22,6 +22,8 @@ sealed class ChillingCataclysm(BossModule module) : Components.GenericAOEs(modul
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ChillingCataclysm)
+        {
             AOEs.Clear();
+        }
     }
 }
