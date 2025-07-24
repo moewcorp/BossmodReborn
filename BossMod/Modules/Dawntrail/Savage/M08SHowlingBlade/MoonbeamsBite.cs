@@ -4,6 +4,7 @@ sealed class MoonbeamsBite(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(40f, 10f);
     private readonly List<AOEInstance> _aoes = new(4);
+    private readonly List<Actor> casters = new(4);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -26,8 +27,22 @@ sealed class MoonbeamsBite(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.MoonlitShadow && modelState is 6 or 7)
         {
-            var rot = actor.Rotation;
-            _aoes.Add(new(rect, (actor.Position + (modelState == 7 ? 1f : -1f) * 10f * (rot + 90f.Degrees()).ToDirection()).Quantized(), rot, WorldState.FutureTime(11.1d + 1d * _aoes.Count)));
+            casters.Add(actor);
+        }
+    }
+
+    public override void Update()
+    {
+        var count = casters.Count - 1;
+        for (var i = count; i >= 0; --i)
+        {
+            var c = casters[i];
+            if (c.LastFrameMovementVec4 == default) // depending on server ticks or latency the actor can still be moving and/or rotate when the model state changes
+            {
+                var rot = c.Rotation;
+                _aoes.Add(new(rect, (c.Position + (c.ModelState.ModelState == 7 ? 1f : -1f) * 10f * (rot + 90f.Degrees()).ToDirection()).Quantized(), rot, WorldState.FutureTime(11.1d + 1d * _aoes.Count), actorID: c.InstanceID));
+                casters.RemoveAt(i);
+            }
         }
     }
 
@@ -38,14 +53,15 @@ sealed class MoonbeamsBite(BossModule module) : Components.GenericAOEs(module)
         {
             var count = _aoes.Count;
             var aoes = CollectionsMarshal.AsSpan(_aoes);
-            var pos = spell.LocXZ;
+            var id = caster.InstanceID;
             for (var i = 0; i < count; ++i)
             {
                 ref var aoe = ref aoes[i];
-                if (aoe.Origin.AlmostEqual(pos, 1f))
+                if (aoe.ActorID == id)
                 {
-                    aoe.Origin = pos;
+                    aoe.Origin = spell.LocXZ;
                     aoe.Rotation = spell.Rotation;
+                    aoe.Activation = Module.CastFinishAt(spell);
                     return;
                 }
             }

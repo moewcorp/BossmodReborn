@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Endwalker.Ultimate.DSW1;
 
-class HeavensflameAOE(BossModule module) : Components.CastCounter(module, (uint)AID.HeavensflameAOE);
+sealed class HeavensflameAOE(BossModule module) : Components.CastCounter(module, (uint)AID.HeavensflameAOE);
 
-class HeavensflameKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.FaithUnmoving, 16f)
+sealed class HeavensflameKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.FaithUnmoving, 16f)
 {
     private readonly WPos[] _playerAdjustedPositions = new WPos[PartyState.MaxPartySize];
     private readonly int[] _playerIcons = new int[PartyState.MaxPartySize]; // 0 = unassigned, 1 = circle/red, 2 = triangle/green, 3 = cross/blue, 4 = square/purple
@@ -57,7 +57,7 @@ class HeavensflameKnockback(BossModule module) : Components.SimpleKnockbacks(mod
 
         foreach (var hint in PositionHints(pcSlot))
         {
-            Arena.AddCircle(hint, 1, Colors.Safe);
+            Arena.AddCircle(hint, 1f, Colors.Safe);
             //var dir = Vector3.Normalize(pos.Value - _knockbackSource.Position);
             //var adjPos = Arena.ClampToBounds(_knockbackSource.Position + 50 * dir);
             //Arena.AddLine(Arena.Center, adjPos, Colors.Safe);
