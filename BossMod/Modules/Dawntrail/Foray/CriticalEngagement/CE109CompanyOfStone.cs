@@ -105,7 +105,6 @@ sealed class Moatmaker(BossModule module) : Components.SimpleAOEs(module, (uint)
 sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private static readonly AOEShapeCross cross = new(60f, 3f);
-    private static readonly Angle a9 = 9f.Degrees();
     private WPos midpoint;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -113,7 +112,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
         var increment = spell.Action.ID switch
         {
             (uint)AID.SpinningSiegeCW => -9f.Degrees(),
-            (uint)AID.SpinningSiegeCCW => -9f.Degrees(),
+            (uint)AID.SpinningSiegeCCW => 9f.Degrees(),
             _ => default
         };
         if (increment != default)
@@ -127,6 +126,8 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                 var centerZ = center.Z;
                 var centerX = center.X;
                 Sequences.Sort((a, b) => MathF.Atan2(a.Origin.Z - centerZ, a.Origin.X - centerX).CompareTo(MathF.Atan2(b.Origin.Z - centerZ, b.Origin.X - centerX)));
+
+                var a9 = 9f.Degrees();
 
                 // Find adjacent pair where left is CCW and right is CW
                 for (var i = 0; i < 4; ++i)
@@ -172,7 +173,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
         base.AddAIHints(slot, actor, assignment, hints);
         if (Sequences.Count == 4 && NumCasts < 20)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 5f), Sequences[0].NextActivation); // stay in safe area
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 5f), Sequences.Ref(0).NextActivation); // stay in safe area
         }
     }
 
@@ -200,7 +201,7 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
     {
         if (spell.Action.ID == (uint)AID.BlastKnucklesVisual)
         {
-            activation = Module.CastFinishAt(spell, 1f);
+            activation = Module.CastFinishAt(spell, 1d);
             _kb = new(spell.LocXZ, 15f, activation);
         }
     }
@@ -271,7 +272,15 @@ sealed class DualfistFlurry(BossModule module) : Components.Exaflare(module, 6f)
         if (spell.Action.ID == (uint)AID.DualfistFlurryFirst)
         {
             var pos = spell.LocXZ;
-            Lines.Add(new() { Next = new(MathF.Round(pos.X * 2f) / 2f, MathF.Round(pos.Z * 2f) / 2f), Advance = 7f * caster.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 6, MaxShownExplosions = 3 });
+            Lines.Add(new()
+            {
+                Next = new(MathF.Round(pos.X * 2f) * 0.5f, MathF.Round(pos.Z * 2f) * 0.5f),
+                Advance = 7f * caster.Rotation.ToDirection(),
+                NextExplosion = Module.CastFinishAt(spell),
+                TimeToMove = 1d,
+                ExplosionsLeft = 6,
+                MaxShownExplosions = 3
+            });
         }
     }
 
