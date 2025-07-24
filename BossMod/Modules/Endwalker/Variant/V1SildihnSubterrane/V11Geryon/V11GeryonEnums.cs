@@ -30,7 +30,7 @@ public enum AID : uint
 
     Intake = 29913, // Helper->self, no cast, range 40 width 10 rect
 
-    RunawayRunoff = 29911, // Helper->self, 9.0s cast, range 60 circle
+    RunawayRunoff = 29911, // Helper->self, 9.0s cast, range 60 circle, knockback 18, away from source
     GigantomillFirstCW = 29898, // Boss->self, 8.0s cast, range 72 width 10 cross
     GigantomillFirstCCW = 29897, // Boss->self, 8.0s cast, range 72 width 10 cross
     GigantomillRest = 29899, // Boss->self, no cast, range 72 width 10 cross

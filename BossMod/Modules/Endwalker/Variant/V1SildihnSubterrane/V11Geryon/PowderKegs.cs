@@ -2,16 +2,16 @@ namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V11Geryon;
 
 sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(5);
+    public readonly List<AOEInstance> AOEs = new(5);
     private static readonly AOEShapeCircle circle = new(15f);
-    private static readonly AOEShapeDonut donut = new(3f, 17f);
+    public static readonly AOEShapeDonut Donut = new(3f, 17f);
     public bool Draw = true;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Draw ? CollectionsMarshal.AsSpan(_aoes) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Draw ? CollectionsMarshal.AsSpan(AOEs) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (Draw || _aoes.Count == 0)
+        if (Draw || AOEs.Count == 0)
         {
             return;
         }
@@ -20,13 +20,15 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         {
             (uint)AID.ColossalSlam or (uint)AID.ColossalCharge1 or (uint)AID.ColossalCharge2 => 5.4d,
             (uint)AID.ColossalSwing => 5.6d,
+            (uint)AID.GigantomillFirstCW or (uint)AID.GigantomillFirstCCW => 5.6d,
             (uint)AID.ColossalLaunch => 6.7d,
+            (uint)AID.RunawayRunoff => 4.5d,
             _ => default
         };
         if (delay != default)
         {
             Draw = true;
-            var aoes = CollectionsMarshal.AsSpan(_aoes);
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             var len = aoes.Length;
             var act = Module.CastFinishAt(spell, delay);
             for (var i = 0; i < len; ++i)
@@ -63,7 +65,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
                 for (var i = 0; i < len; ++i)
                 {
                     ref var aoe = ref aoes[i];
-                    aoe.Shape = aoe.Shape == circle ? donut : circle;
+                    aoe.Shape = aoe.Shape == circle ? Donut : circle;
                 }
             }
         }
@@ -74,12 +76,12 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         AOEShape? shape = actor.OID switch
         {
             (uint)OID.PowderKegRed => circle,
-            (uint)OID.PowderKegBlue => donut,
+            (uint)OID.PowderKegBlue => Donut,
             _ => null
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, actor.Position, default, WorldState.FutureTime(14.3d)));
+            AOEs.Add(new(shape, actor.Position, default, WorldState.FutureTime(14.3d)));
         }
     }
 
@@ -87,7 +89,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.ExplosionDonut) // there is always at least one donut keg
         {
-            _aoes.Clear();
+            AOEs.Clear();
             Draw = false;
         }
     }

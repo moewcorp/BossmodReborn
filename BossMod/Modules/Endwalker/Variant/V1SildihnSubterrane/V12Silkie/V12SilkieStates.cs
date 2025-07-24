@@ -5,8 +5,10 @@ sealed class V12SilkieStates : StateMachineBuilder
     public V12SilkieStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<DustBlusterKnockback>()
-            .ActivateOnEnter<WashOutKnockback>()
+            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<DustBluster>()
+            .ActivateOnEnter<WashOut>()
+            .ActivateOnEnter<SilkenPuff>()
             .ActivateOnEnter<BracingDuster>()
             .ActivateOnEnter<ChillingDuster>()
             .ActivateOnEnter<SlipperySoap>()
@@ -16,6 +18,6 @@ sealed class V12SilkieStates : StateMachineBuilder
             .ActivateOnEnter<PuffAndTumble>()
             .ActivateOnEnter<CarpetBeater>()
             .ActivateOnEnter<EasternEwers>()
-            .ActivateOnEnter<TotalWash>();
+            .ActivateOnEnter<TotalWashDustBluster>();
     }
 }

@@ -70,7 +70,8 @@ sealed class NorthSouthwind(BossModule module) : Components.GenericKnockback(mod
                     var aoes = _aoe.ActiveAOEs(slot, actor);
                     if (aoes.Length != 0)
                     {
-                        var pos = aoes[0].Origin;
+                        ref readonly var aoe = ref aoes[0];
+                        var pos = aoe.Origin;
                         hints.AddForbiddenZone(p =>
                         {
                             var projected = p + dir;
@@ -100,6 +101,6 @@ sealed class NorthSouthwind(BossModule module) : Components.GenericKnockback(mod
             return true;
         }
         var aoes = _aoe.AOEs;
-        return aoes.Count != 0 && aoes[0].Check(pos) || !Module.InBounds(pos);
+        return aoes.Count != 0 && aoes.Ref(0).Check(pos) || !Module.InBounds(pos);
     }
 }
