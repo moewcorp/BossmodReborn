@@ -125,6 +125,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
     public WPos Position => new(PosRot.X, PosRot.Z);
     public WPos PrevPosition => new(PrevPosRot.X, PrevPosRot.Z);
     public WDir LastFrameMovement => Position - PrevPosition;
+    public Vector4 LastFrameMovementVec4 => PosRot - PrevPosRot;
     public Angle Rotation => PosRot.W.Radians();
     public bool Omnidirectional
     {
