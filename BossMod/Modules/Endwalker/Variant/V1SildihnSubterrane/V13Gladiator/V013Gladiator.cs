@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V013Gladiator;
 
-class SunderedRemains(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SunderedRemains, 10f);
+class SunderedRemains(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SunderedRemains, 10f, 8);
 class Landing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Landing, 20f);
 
 class GoldenFlame(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GoldenFlame, new AOEShapeRect(60f, 5f));
@@ -188,4 +188,4 @@ class SilverFlame(BossModule module) : Components.GenericRotatingAOE(module)
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", PrimaryActorOID = (uint)OID.Boss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11387)]
-public class V013Gladiator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-35f, -271f), new ArenaBoundsSquare(20f));
+public class V013Gladiator(WorldState ws, Actor primary) : BossModule(ws, primary, new(-35f, -271f), new ArenaBoundsSquare(19.5f));

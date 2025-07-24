@@ -2,12 +2,12 @@
 
 public enum OID : uint
 {
-    Boss = 0x39EF, // R6.000, x1
-    Helper = 0x233C, // R0.500, x15, 523 type
-    EasternEwer = 0x39F1, // R2.400, x5
-    SilkenPuff = 0x39F0, // R1.000, x15
-    Actor1e9230 = 0x1E9230, // R0.500, x0 (spawn during fight), EventObj type
-    Actor1eb76e = 0x1EB76E, // R0.500, x0 (spawn during fight), EventObj type // possibly route 3 brooms
+    Boss = 0x39EF, // R6.0
+    EasternEwer = 0x39F1, // R2.4
+    SilkenPuff = 0x39F0, // R1.0
+    WaterVoidzone = 0x1E9230, // R0.5
+    Cotton = 0x1EB76E, // R0.5
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -15,8 +15,8 @@ public enum AID : uint
     AutoAttack = 6497, // Boss->player, no cast, single-target
 
     CarpetBeater = 30507, // Boss->player, 5.0s cast, single-target, tankbuster
-    TotalWash = 30508, // Boss->self, 5.0s cast, range 60 circl, raidwide
-    DustBlusterKnockback = 30532, // Boss->location, 5.0s cast, range 60 circle, knockback
+    TotalWash = 30508, // Boss->self, 5.0s cast, range 60 circle, raidwide
+    DustBluster = 30532, // Boss->location, 5.0s cast, range 60 circle, knockback 16, away from source
 
     BracingSuds = 30517, // Boss->self, 5.0s cast, single-target, applies green status
     ChillingSuds = 30518, // Boss->self, 5.0s cast, single-target, applies blue status
@@ -48,17 +48,21 @@ public enum AID : uint
     SqueakyClean2W = 30515, // Helper->self, 7.7s cast, range 60 90-degree cone
     SqueakyClean3W = 30516, // Helper->self, 9.2s cast, range 60 225-degree cone
 
-    WashOutVisual = 30533, // Boss->self, 8.0s cast, single-target
-    WashOutKnockback = 30534, // Helper->self, 8.0s cast, range 60 width 60 rect
-
-    //route 2
+    // route 1
     EasternEwers = 30535, // Boss->self, 4.0s cast, single-target
     BrimOver = 30536, // EasternEwer->self, 3.0s cast, range 4 circle
     Rinse = 30537, // Helper->self, no cast, range 4 circle
 
-    //route 4
-    PuffAndTumbleRest = 30538, // SilkenPuff->location, 3.0s cast, single-target
-    PuffAndTumbleVisual = 30539, // SilkenPuff->location, no cast, single-target
-    PuffAndTumble1 = 30540, // Helper->location, 4.6s cast, range 4 circle
-    PuffAndTumble2 = 30656, // Helper->location, 1.6s cast, range 4 circle
+    // route 2
+    WashOutVisual = 30533, // Boss->self, 8.0s cast, single-target
+    WashOut = 30534, // Helper->self, 8.0s cast, range 60 width 60 rect, knockback 35, dir forward
+
+    // route 3
+    Sweep = 30541, // Helper->player, no cast, single-target, hit by broom, knockback 5 away from source
+
+    // route 4
+    PuffAndTumbleVisualFirst = 30538, // SilkenPuff->location, 3.0s cast, single-target
+    PuffAndTumbleVisualRest = 30539, // SilkenPuff->location, no cast, single-target
+    PuffAndTumbleFirst = 30540, // Helper->location, 4.6s cast, range 4 circle
+    PuffAndTumbleRest = 30656 // Helper->location, 1.6s cast, range 4 circle
 }

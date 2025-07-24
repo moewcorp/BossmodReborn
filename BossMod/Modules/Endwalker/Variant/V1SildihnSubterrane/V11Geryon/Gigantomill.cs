@@ -14,7 +14,7 @@ sealed class Gigantomill(BossModule module) : Components.GenericRotatingAOE(modu
         };
         if (increment != default)
         {
-            Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 1.7d, 5, 3));
+            Sequences.Add(new(cross, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 1.7d, 5, 2));
         }
     }
 

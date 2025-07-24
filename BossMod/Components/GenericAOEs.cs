@@ -139,16 +139,17 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
 }
 
 // 'charge at location' aoes that happen at the end of the cast
-public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, float riskyWithSecondsLeft = 0f, float extraLengthFront = 0f) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
+public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default, float extraLengthFront = default) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
 {
     public readonly float HalfWidth = halfWidth;
+    public readonly float ExtraLengthFront = extraLengthFront;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            Casters.Add(new(new AOEShapeRect(dir.Length() + ExtraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 }
