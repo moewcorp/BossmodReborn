@@ -61,7 +61,7 @@ sealed class P5FulgentBlade : Components.Exaflare
 
             var dir = spell.Rotation.ToDirection();
             var distanceToBorder = Intersect.RayCircle(caster.Position - Arena.Center, dir, 22f);
-            Lines.Add(new() { Next = caster.Position, Advance = 5f * dir, Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2, ExplosionsLeft = (int)(distanceToBorder / 5) + 1, MaxShownExplosions = 1 });
+            Lines.Add(new(caster.Position, 5f * dir, Module.CastFinishAt(spell), 2d, (int)(distanceToBorder / 5) + 1, 1, spell.Rotation));
         }
     }
 

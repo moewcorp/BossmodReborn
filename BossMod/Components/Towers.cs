@@ -238,11 +238,11 @@ public class GenericTowers(BossModule module, uint aid = default, bool prioritiz
             var fcount = forbidden.Count;
             if (fcount == 0 || inTower || missingSoakers && forbiddenInverted.Count != 0)
             {
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), towers[0].Activation);
+                hints.AddForbiddenZone(ShapeDistance.Intersection(forbiddenInverted), Towers.Ref(0).Activation);
             }
             else if (fcount != 0 && !inTower)
             {
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), towers[0].Activation);
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Towers.Ref(0).Activation);
             }
         }
         else
@@ -255,7 +255,7 @@ public class GenericTowers(BossModule module, uint aid = default, bool prioritiz
             var fcount = forbidden.Count;
             if (fcount != 0)
             {
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), towers[0].Activation);
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Towers.Ref(0).Activation);
             }
         }
         BitMask mask = default;
@@ -286,21 +286,25 @@ public class CastTowers(BossModule module, uint aid, float radius, int minSoaker
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
+        {
             Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell)));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
         {
+            var id = caster.InstanceID;
             var count = Towers.Count;
+            var towers = CollectionsMarshal.AsSpan(Towers);
             for (var i = 0; i < count; ++i)
             {
-                var tower = Towers[i];
-                if (tower.Position == spell.LocXZ)
+                ref var tower = ref towers[i];
+                if (tower.ActorID == id)
                 {
-                    Towers.Remove(tower);
-                    break;
+                    Towers.RemoveAt(i);
+                    return;
                 }
             }
         }
@@ -578,7 +582,9 @@ public class CastTowersOpenWorld(BossModule module, uint aid, float radius, int 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
+        {
             Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell), actorID: caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -587,13 +593,14 @@ public class CastTowersOpenWorld(BossModule module, uint aid, float radius, int 
         {
             var id = caster.InstanceID;
             var count = Towers.Count;
+            var towers = CollectionsMarshal.AsSpan(Towers);
             for (var i = 0; i < count; ++i)
             {
-                var tower = Towers[i];
+                ref var tower = ref towers[i];
                 if (tower.ActorID == id)
                 {
-                    Towers.Remove(tower);
-                    break;
+                    Towers.RemoveAt(i);
+                    return;
                 }
             }
         }

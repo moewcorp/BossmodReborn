@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V12Silkie;
+namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V12Silkie;
 
 sealed class SilkenPuff(BossModule module) : Components.GenericAOEs(module)
 {

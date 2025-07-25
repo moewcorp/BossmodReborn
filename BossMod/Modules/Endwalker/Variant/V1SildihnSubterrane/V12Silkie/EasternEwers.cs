@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V12Silkie;
+namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V12Silkie;
 
 sealed class EasternEwers(BossModule module) : Components.Exaflare(module, 4f)
 {
@@ -6,15 +6,7 @@ sealed class EasternEwers(BossModule module) : Components.Exaflare(module, 4f)
     {
         if (spell.Action.ID == (uint)AID.BrimOver)
         {
-            Lines.Add(new()
-            {
-                Next = caster.Position,
-                Advance = new(default, 3.38788f),
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = 0.8d,
-                ExplosionsLeft = 14,
-                MaxShownExplosions = 14
-            });
+            Lines.Add(new(caster.Position, new(default, 3.38788f), Module.CastFinishAt(spell), 0.8d, 14, 14));
         }
     }
 

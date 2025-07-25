@@ -331,12 +331,14 @@ public class CastStackSpread(BossModule module, uint stackAID, uint spreadAID, f
         {
             var count = Stacks.Count;
             var id = spell.TargetID;
+            var stacks = CollectionsMarshal.AsSpan(Stacks);
             for (var i = 0; i < count; ++i)
             {
-                if (Stacks[i].Target.InstanceID == id)
+                ref var stack = ref stacks[i];
+                if (stack.Target.InstanceID == id)
                 {
-                    Stacks.RemoveAt(i);
                     ++NumFinishedStacks;
+                    Stacks.RemoveAt(i);
                     return;
                 }
             }
@@ -345,12 +347,14 @@ public class CastStackSpread(BossModule module, uint stackAID, uint spreadAID, f
         {
             var count = Spreads.Count;
             var id = spell.TargetID;
+            var spreads = CollectionsMarshal.AsSpan(Spreads);
             for (var i = 0; i < count; ++i)
             {
-                if (Spreads[i].Target.InstanceID == id)
+                ref var spread = ref spreads[i];
+                if (spread.Target.InstanceID == id)
                 {
-                    Spreads.RemoveAt(i);
                     ++NumFinishedSpreads;
+                    Spreads.RemoveAt(i);
                     return;
                 }
             }
@@ -403,13 +407,15 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
             if (++CastCounter == MaxCasts)
             {
                 var count = Stacks.Count;
+                var stacks = CollectionsMarshal.AsSpan(Stacks);
                 for (var i = 0; i < count; ++i)
                 {
-                    if (Stacks[i].Target.InstanceID == id)
+                    ref var stack = ref stacks[i];
+                    if (stack.Target.InstanceID == id)
                     {
-                        Stacks.RemoveAt(i);
                         ++NumFinishedStacks;
                         CastCounter = 0;
+                        Stacks.RemoveAt(i);
                         return;
                     }
                 }
@@ -425,9 +431,11 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
         {
             var count = Spreads.Count;
             var id = spell.MainTargetID;
+            var spreads = CollectionsMarshal.AsSpan(Spreads);
             for (var i = 0; i < count; ++i)
             {
-                if (Spreads[i].Target.InstanceID == id)
+                ref var spread = ref spreads[i];
+                if (spread.Target.InstanceID == id)
                 {
                     Spreads.RemoveAt(i);
                     ++NumFinishedSpreads;
@@ -442,7 +450,8 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
         var count = Spreads.Count - 1;
         for (var i = count; i >= 0; --i)
         {
-            if (Spreads[i].Target.IsDead)
+            ref var spread = ref Spreads.Ref(i);
+            if (spread.Target.IsDead)
             {
                 Spreads.RemoveAt(i);
             }
@@ -483,9 +492,11 @@ UniformStackSpread(module, innerRadius / 3f, default, minStackSize, maxStackSize
         {
             var count = Stacks.Count;
             var t = spell.MainTargetID;
+            var stacks = CollectionsMarshal.AsSpan(Stacks);
             for (var i = 0; i < count; ++i)
             {
-                if (Stacks[i].Target.InstanceID == t)
+                ref var stack = ref stacks[i];
+                if (stack.Target.InstanceID == t)
                 {
                     Stacks.RemoveAt(i);
                     return;
@@ -500,7 +511,8 @@ UniformStackSpread(module, innerRadius / 3f, default, minStackSize, maxStackSize
         var count = Stacks.Count - 1;
         for (var i = count; i >= 0; --i)
         {
-            if (Stacks[i].Target.IsDead)
+            ref var stack = ref Stacks.Ref(i);
+            if (stack.Target.IsDead)
             {
                 Stacks.RemoveAt(i);
             }
@@ -807,9 +819,10 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, doubl
                 }
 
                 var count = CurrentBaits.Count;
+                var baits = CollectionsMarshal.AsSpan(CurrentBaits);
                 for (var i = 0; i < count; ++i)
                 {
-                    var b = CurrentBaits[i];
+                    ref var b = ref baits[i];
                     if (b.Target.InstanceID == tID && --CurrentBaits.Ref(i).MaxCasts == 0)
                     {
                         CurrentBaits.RemoveAt(i);
@@ -866,9 +879,11 @@ public class LineStack(BossModule module, uint aidMarker, uint aidResolve, doubl
                 if (++castCounter == MaxCasts)
                 {
                     var count = CurrentBaits.Count;
+                    var baits = CollectionsMarshal.AsSpan(CurrentBaits);
                     for (var i = 0; i < count; ++i)
                     {
-                        if (CurrentBaits[i].Target.InstanceID == tID)
+                        ref var b = ref baits[i];
+                        if (b.Target.InstanceID == tID)
                         {
                             CurrentBaits.RemoveAt(i);
                             castCounter = 0;

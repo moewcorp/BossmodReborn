@@ -126,9 +126,11 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
         {
             var count = Casters.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(Casters);
             for (var i = 0; i < count; ++i)
             {
-                if (Casters[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     Casters.RemoveAt(i);
                     return;
@@ -184,9 +186,11 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
         // we probably dont need to check for AIDs here since actorID should already be unique to any active spell
         var count = Casters.Count;
         var id = caster.InstanceID;
+        var aoes = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            if (Casters[i].ActorID == id)
+            ref var aoe = ref aoes[i];
+            if (aoe.ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;

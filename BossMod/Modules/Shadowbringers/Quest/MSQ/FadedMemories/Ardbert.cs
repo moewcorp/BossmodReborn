@@ -132,7 +132,7 @@ class GroundbreakerExaflares(BossModule module) : Components.Exaflare(module, 6f
     {
         if (spell.Action.ID == (uint)AID.GroundbreakerExaFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 6f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
+            Lines.Add(new(caster.Position, 6f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 1d, 8, 3));
         }
     }
 

@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V12Silkie;
+namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V12Silkie;
 
 sealed class WashOut(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.WashOut, 35f, kind: Kind.DirForward)
 {

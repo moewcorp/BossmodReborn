@@ -100,8 +100,7 @@ sealed class FloodInBlueRest(BossModule module) : Components.Exaflare(module, ne
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddLine(WPos first, WDir dir, Angle offset)
-        => Lines.Add(new() { Next = first, Advance = dir, Rotation = spell.Rotation + offset, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2f, ExplosionsLeft = 5, MaxShownExplosions = 2 });
+        void AddLine(WPos first, WDir dir, Angle offset) => Lines.Add(new(first, dir, Module.CastFinishAt(spell), 2d, 5, 2, spell.Rotation + offset));
         if (spell.Action.ID == (uint)AID.FloodInBlueFirst)
         {
             var advance = spell.Rotation.ToDirection().OrthoR();

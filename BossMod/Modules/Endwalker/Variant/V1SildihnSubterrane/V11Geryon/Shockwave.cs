@@ -67,28 +67,26 @@ sealed class Shockwave(BossModule module) : Components.GenericKnockback(module)
                 var vzs = voidzones;
                 var count = vzs.Count;
                 var centerX = center.X;
-                if (count != 0)
+
+                hints.AddForbiddenZone(p =>
                 {
-                    hints.AddForbiddenZone(p =>
+                    var projected1 = p + dir1;
+                    var projected2 = p + dir2;
+                    var pX = p.X;
+                    for (var i = 0; i < count; ++i)
                     {
-                        var projected1 = p + dir1;
-                        var projected2 = p + dir2;
-                        var pX = p.X;
-                        for (var i = 0; i < count; ++i)
+                        var pos = vzs[i];
+                        if (pX > centerX && projected1.InSquare(pos, 9f) || pX < centerX && projected2.InSquare(pos, 9f))
                         {
-                            var pos = vzs[i];
-                            if (pX > centerX && projected1.InSquare(pos, 9f) || pX < centerX && projected2.InSquare(pos, 9f))
-                            {
-                                return default;
-                            }
+                            return default;
                         }
-                        if (pX > centerX && projected1.InSquare(center, 19f) || pX < centerX && projected2.InSquare(center, 19f))
-                        {
-                            return 1f;
-                        }
-                        return default;
-                    }, act);
-                }
+                    }
+                    if (pX > centerX && projected1.InSquare(center, 19f) || pX < centerX && projected2.InSquare(center, 19f))
+                    {
+                        return 1f;
+                    }
+                    return default;
+                }, act);
             }
         }
     }

@@ -76,7 +76,7 @@ class HolyOrb(BossModule module) : Components.Exaflare(module, 6f)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HolyOrbFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = caster.Rotation.ToDirection() * 6.8f, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 5, MaxShownExplosions = 3 });
+            Lines.Add(new(caster.Position, 6.8f * caster.Rotation.ToDirection(), Module.CastFinishAt(spell), 1d, 5, 3));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

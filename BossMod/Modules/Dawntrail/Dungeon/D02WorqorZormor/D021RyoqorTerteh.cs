@@ -122,9 +122,11 @@ sealed class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(mo
         {
             var count = _aoes.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
             for (var i = 0; i < count; ++i)
             {
-                if (_aoes[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     _aoes.RemoveAt(i);
                     if (_aoes.Count == 0)

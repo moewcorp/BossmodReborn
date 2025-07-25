@@ -51,8 +51,7 @@ public class SurgingWaveFrothingSea : Components.Exaflare
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        void AddLine(WPos first, Angle rot)
-        => Lines.Add(new() { Next = first, Advance = 2.3f * rot.ToDirection(), NextExplosion = WorldState.FutureTime(30d), TimeToMove = 0.9f, ExplosionsLeft = 13, MaxShownExplosions = 2, Rotation = rot });
+        void AddLine(WPos first, Angle rot) => Lines.Add(new(first, 2.3f * rot.ToDirection(), WorldState.FutureTime(30d), 0.9d, 13, 2, rot));
         if (index == 0x49)
         {
             if (state == 0x00800040u)

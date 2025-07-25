@@ -128,7 +128,9 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
+        {
             Eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -137,12 +139,14 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
         {
             var count = Eyes.Count;
             var id = caster.InstanceID;
+            var eyes = CollectionsMarshal.AsSpan(Eyes);
             for (var i = 0; i < count; ++i)
             {
-                if (Eyes[i].ActorID == id)
+                ref var e = ref eyes[i];
+                if (e.ActorID == id)
                 {
                     Eyes.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }
@@ -176,9 +180,11 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
         // we probably dont need to check for AIDs here since actorID should already be unique to any active spell
         var count = Eyes.Count;
         var id = caster.InstanceID;
+        var eyes = CollectionsMarshal.AsSpan(Eyes);
         for (var i = 0; i < count; ++i)
         {
-            if (Eyes[i].ActorID == id)
+            ref var e = ref eyes[i];
+            if (e.ActorID == id)
             {
                 Eyes.RemoveAt(i);
                 return;

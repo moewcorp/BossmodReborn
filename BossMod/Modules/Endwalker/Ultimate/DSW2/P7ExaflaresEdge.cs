@@ -23,7 +23,7 @@ sealed class P7ExaflaresEdge : Components.Exaflare
             AddLine(advance.OrthoR());
 
             void AddLine(WDir dir)
-            => Lines.Add(new() { Next = caster.Position, Advance = dir, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.9d, ExplosionsLeft = 6, MaxShownExplosions = 1 });
+            => Lines.Add(new(caster.Position, dir, Module.CastFinishAt(spell), 1.9d, 6, 1));
         }
     }
 

@@ -161,15 +161,7 @@ sealed class EvilScheme(BossModule module) : Components.Exaflare(module, 4f)
     {
         if (spell.Action.ID == (uint)AID.EvilSchemeFirst)
         {
-            Lines.Add(new()
-            {
-                Next = caster.Position,
-                Advance = 4f * spell.Rotation.ToDirection(),
-                NextExplosion = Module.CastFinishAt(spell, 1.6d),
-                TimeToMove = 1.5d,
-                ExplosionsLeft = 5,
-                MaxShownExplosions = 5
-            });
+            Lines.Add(new(caster.Position, 4f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell, 1.6d), 1.5d, 5, 5));
         }
     }
 

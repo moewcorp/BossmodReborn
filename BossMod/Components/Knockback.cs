@@ -268,9 +268,11 @@ public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool 
         {
             var count = Casters.Count;
             var id = caster.InstanceID;
+            var kbs = CollectionsMarshal.AsSpan(Casters);
             for (var i = 0; i < count; ++i)
             {
-                if (Casters[i].ActorID == id)
+                ref var kb = ref kbs[i];
+                if (kb.ActorID == id)
                 {
                     Casters.RemoveAt(i);
                     return;
@@ -303,9 +305,11 @@ public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distanc
         // we probably dont need to check for AIDs here since actorID should already be unique to any active spell
         var count = Casters.Count;
         var id = caster.InstanceID;
+        var kbs = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            if (Casters[i].ActorID == id)
+            ref var kb = ref kbs[i];
+            if (kb.ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;
