@@ -33,9 +33,9 @@ public class RheognosisCrash : Components.Exaflare
             var west = index == 0x00;
             var right = state == 0x01000001u;
             var south = west == right;
-            var start = Arena.Center + new WDir(west ? -Arena.Bounds.Radius : +Arena.Bounds.Radius, (south ? +Arena.Bounds.Radius : -Arena.Bounds.Radius) * 0.5f);
+            var start = Arena.Center + new WDir(west ? -24f : 24f, (south ? 24f : -24f) * 0.5f);
             var dir = (west ? 90f : -90f).Degrees();
-            Lines.Add(new() { Next = start, Advance = 10f * dir.ToDirection(), Rotation = dir, NextExplosion = WorldState.FutureTime(4d), TimeToMove = 0.2f, ExplosionsLeft = 5, MaxShownExplosions = 5 });
+            Lines.Add(new(start, 10f * dir.ToDirection(), WorldState.FutureTime(4d), 0.2d, 5, 5, dir));
         }
     }
 

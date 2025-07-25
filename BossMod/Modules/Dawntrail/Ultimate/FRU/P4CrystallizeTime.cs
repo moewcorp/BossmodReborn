@@ -424,7 +424,7 @@ sealed class P4CrystallizeTimeTidalLight : Components.Exaflare
     {
         if (spell.Action.ID == (uint)AID.TidalLightAOEFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 10f * spell.Rotation.ToDirection(), Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 4, MaxShownExplosions = 1 });
+            Lines.Add(new(caster.Position, 10f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 2.1d, 4, 1, spell.Rotation));
             StartingPositions.Add((caster.Position, spell.Rotation));
             StartingOffsetSum += caster.Position - Arena.Center;
         }

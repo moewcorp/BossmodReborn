@@ -40,4 +40,19 @@ sealed class RunawayRunoff(BossModule module) : Components.SimpleKnockbacks(modu
             }
         }
     }
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Shape != Explosion.Donut && aoe.Check(pos)) // allow getting knocked into the donut since there is time to move after kb
+            {
+                return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }

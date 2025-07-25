@@ -5,7 +5,7 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
 {
     private readonly float MoveDistance = moveDistance;
 
-    public class Chaser(AOEShape shape, Actor target, WPos prevPos, float moveDist, int numRemaining, DateTime nextActivation, float secondsBetweenActivations)
+    public sealed class Chaser(AOEShape shape, Actor target, WPos prevPos, float moveDist, int numRemaining, DateTime nextActivation, float secondsBetweenActivations)
     {
         public AOEShape Shape = shape;
         public Actor Target = target;

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Endwalker.Ultimate.TOP;
 
-sealed class P6WaveCannonPuddle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.P6WaveCannonPuddle, 6);
+sealed class P6WaveCannonPuddle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.P6WaveCannonPuddle, 6f);
 
 sealed class P6WaveCannonExaflare(BossModule module) : Components.Exaflare(module, 8f)
 {
@@ -8,15 +8,7 @@ sealed class P6WaveCannonExaflare(BossModule module) : Components.Exaflare(modul
     {
         if (spell.Action.ID == (uint)AID.P6WaveCannonExaflareFirst)
         {
-            Lines.Add(new()
-            {
-                Next = caster.Position,
-                Advance = 8f * spell.Rotation.ToDirection(),
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = 1.1d,
-                ExplosionsLeft = 7,
-                MaxShownExplosions = 2
-            });
+            Lines.Add(new(caster.Position, 8f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 1.1d, 7, 2));
         }
     }
 

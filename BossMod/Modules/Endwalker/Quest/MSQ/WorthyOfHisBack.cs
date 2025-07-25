@@ -232,7 +232,7 @@ class Enomotos(BossModule module) : Components.Exaflare(module, 6f, (uint)AID.En
     {
         if (spell.Action.ID == WatchedAction)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1f, ExplosionsLeft = 9, MaxShownExplosions = 3 });
+            Lines.Add(new(caster.Position, 5f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 1d, 9, 3));
         }
     }
 

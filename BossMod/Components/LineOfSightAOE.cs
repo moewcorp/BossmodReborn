@@ -59,7 +59,9 @@ public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float m
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
+        {
             AddSafezone(Module.CastFinishAt(spell), spell.Rotation);
+        }
     }
 
     public void AddSafezone(DateTime activation, Angle rotation = default)
@@ -70,7 +72,8 @@ public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float m
         {
             if (!Rect)
             {
-                for (var i = 0; i < Visibility.Count; ++i)
+                var count = Visibility.Count;
+                for (var i = 0; i < count; ++i)
                 {
                     var v = Visibility[i];
                     unionShapes.Add(new DonutSegmentHA(Origin.Value, v.Distance + 0.2f, MaxRange, v.Dir, v.HalfWidth));
@@ -78,7 +81,8 @@ public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float m
             }
             else if (Rect)
             {
-                for (var i = 0; i < Blockers.Count; ++i)
+                var count = Blockers.Count;
+                for (var i = 0; i < count; ++i)
                 {
                     var b = Blockers[i];
                     var dir = rotation.ToDirection();
@@ -86,19 +90,27 @@ public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float m
                 }
             }
             if (BlockersImpassable || !SafeInsideHitbox)
-                for (var i = 0; i < Blockers.Count; ++i)
+            {
+                var count = Blockers.Count;
+                for (var i = 0; i < count; ++i)
                 {
                     var b = Blockers[i];
                     differenceShapes.Add(new Circle(b.Center, !SafeInsideHitbox ? b.Radius : b.Radius + 0.5f));
                 }
-            Safezones.Add(new(new AOEShapeCustom([.. unionShapes], [.. differenceShapes], InvertForbiddenZone: true), Arena.Center, default, activation, Colors.SafeFromAOE));
+            }
+            if (unionShapes.Count != 0)
+            {
+                Safezones.Add(new(new AOEShapeCustom([.. unionShapes], [.. differenceShapes], InvertForbiddenZone: true), Arena.Center, default, activation, Colors.SafeFromAOE));
+            }
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (Safezones.Count != 0 && spell.Action.ID == WatchedAction)
+        {
             Safezones.RemoveAt(0);
+        }
     }
 }
 
@@ -141,8 +153,8 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
         {
             Casters.Add(caster);
             Refresh();
+            AddSafezone(Module.CastFinishAt(spell), spell.Rotation);
         }
-        base.OnCastStarted(caster, spell);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -151,8 +163,11 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
         {
             Casters.Remove(caster);
             Refresh();
+            if (Safezones.Count != 0)
+            {
+                Safezones.RemoveAt(0);
+            }
         }
-        base.OnCastFinished(caster, spell);
     }
 
     public void Refresh()
@@ -231,9 +246,11 @@ public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, Rel
         {
             var count = AOEs.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     AOEs.RemoveAt(i);
                     return;

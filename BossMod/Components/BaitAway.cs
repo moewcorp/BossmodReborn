@@ -332,9 +332,10 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
             var eID = enemy.InstanceID;
             var pID = player.InstanceID;
             var count = CurrentBaits.Count;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                var b = CurrentBaits[i];
+                ref var b = ref baits[i];
                 if (b.Source.InstanceID == eID && b.Target.InstanceID == pID)
                 {
                     CurrentBaits.RemoveAt(i);
@@ -398,7 +399,8 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
         var count = CurrentBaits.Count - 1;
         for (var i = count; i >= 0; --i)
         {
-            if (CurrentBaits[i].Target.IsDead)
+            ref var b = ref CurrentBaits.Ref(i);
+            if (b.Target.IsDead)
             {
                 CurrentBaits.RemoveAt(i);
             }
@@ -428,9 +430,11 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -446,9 +450,11 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -477,9 +483,11 @@ public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : 
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -539,9 +547,11 @@ public class BaitAwayChargeTether(BossModule module, float halfWidth, float acti
             ++NumCasts;
             var count = CurrentBaits.Count;
             var id = spell.MainTargetID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Target.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Target.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;

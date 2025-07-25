@@ -163,15 +163,7 @@ sealed class Burst(BossModule module) : Components.Exaflare(module, 6f)
     {
         if (spell.Action.ID == (uint)AID.BurstFirst)
         {
-            Lines.Add(new()
-            {
-                Next = caster.Position,
-                Advance = 5f * spell.Rotation.ToDirection(),
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = 1.2d,
-                ExplosionsLeft = 9,
-                MaxShownExplosions = 4
-            });
+            Lines.Add(new(caster.Position, 5f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 1.2d, 9, 4));
         }
     }
 

@@ -5,13 +5,15 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
     public readonly List<AOEInstance> AOEs = new(5);
     private static readonly AOEShapeCircle circle = new(15f);
     public static readonly AOEShapeDonut Donut = new(3f, 17f);
-    public bool Draw = true;
+    private bool draw = true;
+    private bool intake;
+    private bool boulders;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Draw ? CollectionsMarshal.AsSpan(AOEs) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => draw ? CollectionsMarshal.AsSpan(AOEs) : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (Draw || AOEs.Count == 0)
+        if (draw || AOEs.Count == 0)
         {
             return;
         }
@@ -27,7 +29,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         };
         if (delay != default)
         {
-            Draw = true;
+            draw = true;
             var aoes = CollectionsMarshal.AsSpan(AOEs);
             var len = aoes.Length;
             var act = Module.CastFinishAt(spell, delay);
@@ -55,7 +57,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
                         // undo quantisation
                         var x = MathF.Round(origin.X);
                         var z = MathF.Round(origin.Z);
-                        aoe.Origin = (new WPos(x, z) + distance * (caster.Rotation.Round(90f) + 90f.Degrees()).ToDirection()).Quantized();
+                        aoe.Origin = (new WPos(x, z) + distance * dir.OrthoL()).Quantized();
                         return; // never seen more than one keg getting moved
                     }
                 }
@@ -81,16 +83,32 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            AOEs.Add(new(shape, actor.Position, default, WorldState.FutureTime(14.3d)));
+            AOEs.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(intake ? 11.3d : boulders ? 12.3d : 14.3d)));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.ExplosionDonut) // there is always at least one donut keg
+        if (spell.Action.ID is (uint)AID.ExplosionCircle or (uint)AID.ExplosionDonut)
         {
             AOEs.Clear();
-            Draw = false;
+            draw = false;
+            intake = false;
+            boulders = false;
+        }
+    }
+
+    public override void OnEventEnvControl(byte index, uint state)
+    {
+        if (index == 0x09 && state is 0x00200010u or 0x00020001u)
+        {
+            draw = true;
+            intake = true;
+        }
+        else if (index == 0x0A && state is 0x00020001u or 0x00200010u or 0x02000100u or 0x00800040u)
+        {
+            draw = true;
+            boulders = true;
         }
     }
 }

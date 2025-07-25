@@ -31,19 +31,24 @@ public readonly struct WDir(float x, float z) : IEquatable<WDir>
     public readonly WDir OrthoR() => new(-Z, X); // CW, same length
     public readonly WDir MirrorX() => new(-X, Z);
     public readonly WDir MirrorZ() => new(X, -Z);
-    public static float Dot(WDir a, WDir b) => a.X * b.X + a.Z * b.Z;
     public readonly float Dot(WDir a) => X * a.X + Z * a.Z;
-    public static float Cross(WDir a, WDir b) => a.X * b.Z - a.Z * b.X;
-    public readonly float Cross(WDir b) => Cross(this, b);
-    public readonly WDir Rotate(WDir dir) => new(X * dir.Z + Z * dir.X, Z * dir.Z - X * dir.X);
+    public readonly float Cross(WDir b) => X * b.Z - Z * b.X;
+    public readonly WDir Rotate(WDir dir)
+    {
+        var dirZ = dir.Z;
+        var dirX = dir.X;
+        return new(X * dirZ + Z * dirX, Z * dirZ - X * dirX);
+    }
     public readonly WDir Rotate(Angle dir) => Rotate(dir.ToDirection());
     public readonly float LengthSq() => X * X + Z * Z;
     public readonly float Length() => MathF.Sqrt(LengthSq());
-    public static WDir Normalize(WDir a, float zeroThreshold = 0) => a.Length() is var len && len > zeroThreshold ? a / len : default;
-    public readonly WDir Normalized(float zeroThreshold = 0) => Normalize(this, zeroThreshold);
+    public readonly WDir Normalized()
+    {
+        var length = MathF.Sqrt(X * X + Z * Z);
+        return length > 0f ? this / length : default;
+    }
     public static bool AlmostZero(WDir a, float eps) => Math.Abs(a.X) <= eps && Math.Abs(a.Z) <= eps;
     public readonly bool AlmostZero(float eps) => AlmostZero(this, eps);
-    public static bool AlmostEqual(WDir a, WDir b, float eps) => AlmostZero(a - b, eps);
     public readonly bool AlmostEqual(WDir b, float eps) => AlmostZero(this - b, eps);
     public readonly WDir Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WDir Rounded() => new(MathF.Round(X), MathF.Round(Z));

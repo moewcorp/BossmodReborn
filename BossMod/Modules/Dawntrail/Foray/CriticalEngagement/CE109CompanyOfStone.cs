@@ -272,15 +272,7 @@ sealed class DualfistFlurry(BossModule module) : Components.Exaflare(module, 6f)
         if (spell.Action.ID == (uint)AID.DualfistFlurryFirst)
         {
             var pos = spell.LocXZ;
-            Lines.Add(new()
-            {
-                Next = new(MathF.Round(pos.X * 2f) * 0.5f, MathF.Round(pos.Z * 2f) * 0.5f),
-                Advance = 7f * caster.Rotation.ToDirection(),
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = 1d,
-                ExplosionsLeft = 6,
-                MaxShownExplosions = 3
-            });
+            Lines.Add(new(new(MathF.Round(pos.X * 2f) * 0.5f, MathF.Round(pos.Z * 2f) * 0.5f), 7f * caster.Rotation.ToDirection(), Module.CastFinishAt(spell), 1d, 6, 3));
         }
     }
 

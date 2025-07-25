@@ -1,20 +1,21 @@
-﻿namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V013Gladiator;
+﻿namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V13Gladiator;
 
-class V013GladiatorStates : StateMachineBuilder
+sealed class V13GladiatorStates : StateMachineBuilder
 {
-    public V013GladiatorStates(BossModule module) : base(module)
+    public V13GladiatorStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<SunderedRemains>()
-            .ActivateOnEnter<BitingWindBad>()
+            .ActivateOnEnter<BitingWindSmall>()
+            .ActivateOnEnter<BitingWindUpdraft>()
+            .ActivateOnEnter<BitingWindUpdraftVoidzone>()
             .ActivateOnEnter<RingOfMight1>()
             .ActivateOnEnter<RingOfMight2>()
             .ActivateOnEnter<RingOfMight3>()
+            .ActivateOnEnter<RackAndRuin>()
             .ActivateOnEnter<RushOfMight>()
             .ActivateOnEnter<ShatteringSteelMeteor>()
-            .ActivateOnEnter<RackAndRuin>()
-            .ActivateOnEnter<FlashOfSteel1>()
-            .ActivateOnEnter<FlashOfSteel2>()
+            .ActivateOnEnter<FlashOfSteel>()
             .ActivateOnEnter<SculptorsPassion>()
             .ActivateOnEnter<GoldenFlame>()
             .ActivateOnEnter<SilverFlame>()

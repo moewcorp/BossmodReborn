@@ -302,7 +302,7 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
     public void AddLine(ref Actor caster, DateTime activation)
     {
         var adv = 2.5f * caster.Rotation.ToDirection();
-        Lines.Add(new() { Next = caster.Position, Advance = adv, NextExplosion = activation, TimeToMove = 1f, ExplosionsLeft = 7, MaxShownExplosions = 3 });
+        Lines.Add(new(caster.Position, adv, activation, 1d, 7, 3));
         ++NumCasts;
         if (_aoes.Count != 0 && NumCasts > 2)
             _aoes.RemoveAt(0);

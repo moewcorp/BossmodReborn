@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.VariantCriterion.V01SildihnSubterrane.V12Silkie;
+namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V12Silkie;
 
 sealed class CarpetBeater(BossModule module) : Components.SingleTargetCast(module, (uint)AID.CarpetBeater);
 sealed class TotalWashDustBluster(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.TotalWash, (uint)AID.DustBluster]);

@@ -63,16 +63,7 @@ sealed class UpwellRest(BossModule module) : Components.Exaflare(module, new AOE
             AddLine(pos + advance1, advance2, default, numExplosions2);
             AddLine(pos - advance1, -advance2, 180f.Degrees(), numExplosions1);
             void AddLine(WPos first, WDir dir, Angle offset, int explosions)
-            => Lines.Add(new()
-            {
-                Next = first,
-                Advance = dir,
-                Rotation = spell.Rotation + offset,
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = 2d,
-                ExplosionsLeft = explosions,
-                MaxShownExplosions = 2
-            });
+            => Lines.Add(new(first, dir, Module.CastFinishAt(spell), 2d, explosions, 2, spell.Rotation + offset));
         }
     }
 

@@ -137,15 +137,7 @@ sealed class LighterNoteExaflare(BossModule module) : Components.Exaflare(module
                     {
                         maxexplosions += 1;
                     }
-                    Lines.Add(new()
-                    {
-                        Next = cc.Position + (j == 0 ? default : 6f) * dirs[j],
-                        Advance = 6f * dirs[j],
-                        NextExplosion = j != 0 ? activation : activation.AddSeconds(1.1d),
-                        TimeToMove = 1.1d,
-                        ExplosionsLeft = maxexplosions,
-                        MaxShownExplosions = 9
-                    });
+                    Lines.Add(new(cc.Position + (j == 0 ? default : 6f) * dirs[j], 6f * dirs[j], j != 0 ? activation : activation.AddSeconds(1.1d), 1.1d, maxexplosions, 9));
                 }
                 casters.RemoveAt(i);
             }

@@ -48,7 +48,7 @@ sealed class ForeseenFlurry(BossModule module) : Components.Exaflare(module, 4f)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ForeseenFlurryFirst)
-            Lines.Add(new() { Next = caster.Position, Advance = 5f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 1.1f, ExplosionsLeft = 8, MaxShownExplosions = 3 });
+            Lines.Add(new(caster.Position, 5f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 1.1d, 8, 3));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

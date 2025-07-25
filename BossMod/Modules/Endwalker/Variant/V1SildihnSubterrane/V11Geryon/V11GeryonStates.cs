@@ -15,7 +15,8 @@ sealed class V11GeryonStates : StateMachineBuilder
             .ActivateOnEnter<ColossalSwing>()
             .ActivateOnEnter<RunawaySludge>()
             .ActivateOnEnter<Shockwave>()
-            .ActivateOnEnter<RunawayRunoff>()
-            .ActivateOnEnter<ColossalStrike>();
+            .ActivateOnEnter<Intake>()
+            .ActivateOnEnter<RollingBoulder>()
+            .ActivateOnEnter<RunawayRunoff>();
     }
 }

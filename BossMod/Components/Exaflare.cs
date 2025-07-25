@@ -3,15 +3,15 @@
 // generic 'exaflare' component - these mechanics are a bunch of moving aoes, with different lines either staggered or moving with different speed
 public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : GenericAOEs(module, aid, "GTFO from exaflare!")
 {
-    public sealed class Line
+    public sealed class Line(WPos next, WDir advance, DateTime nextExplosion, double timeToMove, int explosionsLeft, int maxShownExplosions, Angle rotation = default)
     {
-        public WPos Next;
-        public WDir Advance;
-        public Angle Rotation;
-        public DateTime NextExplosion;
-        public double TimeToMove;
-        public int ExplosionsLeft;
-        public int MaxShownExplosions;
+        public WPos Next = next;
+        public WDir Advance = advance;
+        public DateTime NextExplosion = nextExplosion;
+        public double TimeToMove = timeToMove;
+        public int ExplosionsLeft = explosionsLeft;
+        public int MaxShownExplosions = maxShownExplosions;
+        public Angle Rotation = rotation;
     }
 
     public readonly AOEShape Shape = shape;
@@ -91,7 +91,7 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
 }
 
 public class SimpleExaflare(BossModule module, AOEShape shape, uint aidFirst, uint aidRest, float distance, double timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false,
-bool locationBased = false) : Exaflare(module, shape)
+bool locationBased = false, Angle rotation = default) : Exaflare(module, shape)
 {
     private readonly uint AIDFirst = aidFirst;
     private readonly uint AIDRest = aidRest;
@@ -101,6 +101,7 @@ bool locationBased = false) : Exaflare(module, shape)
     private readonly int MaxShownExplosions = maxShownExplosions;
     private readonly bool CastEvent = castEvent; // if exaflare gets advanced by castevent instead of castfinished
     private readonly bool LocationBased = locationBased; // if cast is location based
+    private readonly Angle Rotation = rotation;
     public int NumLinesFinished;
 
     public SimpleExaflare(BossModule module, float radius, uint aidFirst, uint aidRest, float distance, double timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false, bool locationBased = false)
@@ -110,15 +111,7 @@ bool locationBased = false) : Exaflare(module, shape)
     {
         if (spell.Action.ID == AIDFirst)
         {
-            Lines.Add(new()
-            {
-                Next = LocationBased ? spell.LocXZ : caster.Position,
-                Advance = Distance * caster.Rotation.ToDirection(),
-                NextExplosion = Module.CastFinishAt(spell),
-                TimeToMove = TimeToMove,
-                ExplosionsLeft = ExplosionsLeft,
-                MaxShownExplosions = MaxShownExplosions
-            });
+            Lines.Add(new(LocationBased ? spell.LocXZ : caster.Position, Distance * caster.Rotation.ToDirection(), Module.CastFinishAt(spell), TimeToMove, ExplosionsLeft, MaxShownExplosions, Rotation));
         }
     }
 

@@ -139,7 +139,7 @@ class IntractableLand(BossModule module) : Components.Exaflare(module, 8f)
     {
         if (spell.Action.ID == (uint)AID.IntractableLandFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 8f * spell.Rotation.ToDirection(), NextExplosion = Module.CastFinishAt(spell), TimeToMove = 0.8f, ExplosionsLeft = 8, MaxShownExplosions = 4 });
+            Lines.Add(new(caster.Position, 8f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 0.8d, 8, 4));
         }
     }
 
