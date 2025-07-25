@@ -287,7 +287,7 @@ public class CastTowers(BossModule module, uint aid, float radius, int minSoaker
     {
         if (spell.Action.ID == WatchedAction)
         {
-            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell)));
+            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 

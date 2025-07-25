@@ -12,7 +12,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Focus target master")]
     public bool FocusTargetMaster = false;
 
-    [PropertyDisplay("Broadcast keypresses to other windows")]
+    [PropertyDisplay("Broadcast keypresses to other windows", tooltip: "Can cause hitching on some computers. Only enable it if it is actually needed! It is only useful for multiboxers.")]
     public bool BroadcastToSlaves = false;
 
     [PropertyDisplay("Follow party slot")]
