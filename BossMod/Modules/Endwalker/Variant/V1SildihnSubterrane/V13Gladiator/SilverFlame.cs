@@ -2,7 +2,7 @@ namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V13Gladiator;
 
 sealed class SilverFlame(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    private static readonly AOEShapeRect _shape = new(60f, 4f);
+    private static readonly AOEShapeRect rect = new(60f, 5f);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -14,7 +14,7 @@ sealed class SilverFlame(BossModule module) : Components.GenericRotatingAOE(modu
         };
         if (increment != default)
         {
-            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 2d, 5));
+            Sequences.Add(new(rect, spell.LocXZ, spell.Rotation, increment, Module.CastFinishAt(spell), 2d, 5, 5, actorID: caster.InstanceID));
         }
     }
 
@@ -22,7 +22,7 @@ sealed class SilverFlame(BossModule module) : Components.GenericRotatingAOE(modu
     {
         if (spell.Action.ID is (uint)AID.SilverFlameFirstCCW or (uint)AID.SilverFlameFirstCW or (uint)AID.SilverFlameRest)
         {
-            AdvanceSequence(caster.Position, spell.Rotation, WorldState.CurrentTime);
+            AdvanceSequence(caster.InstanceID, WorldState.CurrentTime);
         }
     }
 }
