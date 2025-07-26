@@ -50,7 +50,7 @@ sealed class TerminusEst(BossModule module) : Components.GenericAOEs(module)
                     var rot = c.Rotation;
                     if (rot == leastCommon)
                     {
-                        _aoes.Add(new(Rect, WPos.ClampToGrid(c.Position), rot, act));
+                        _aoes.Add(new(Rect, c.Position.Quantized(), rot, act));
                     }
                 }
             }

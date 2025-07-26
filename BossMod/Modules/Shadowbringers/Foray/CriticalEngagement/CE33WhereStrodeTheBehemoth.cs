@@ -42,7 +42,7 @@ sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(mo
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];
@@ -50,7 +50,7 @@ sealed class ZombieJuice(BossModule module) : Components.VoidzoneAtCastTarget(mo
 }
 
 sealed class WildBolt(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.WildBoltVisual, (uint)AID.WildBolt, 0.9d);
-sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true);
+sealed class WildHorn(BossModule module) : Components.BaitAwayCast(module, (uint)AID.WildHorn, new AOEShapeCone(18f, 60f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
 {
@@ -100,7 +100,7 @@ sealed class Thunderbolt(BossModule module) : Components.GenericAOEs(module)
                 _aoes.Clear();
                 break;
         }
-        void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(cone, WPos.ClampToGrid(pos), rot, WorldState.FutureTime(12.8d)));
+        void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(cone, pos.Quantized(), rot, WorldState.FutureTime(12.8d)));
     }
 }
 

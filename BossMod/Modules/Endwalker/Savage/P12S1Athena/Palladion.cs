@@ -90,7 +90,7 @@ sealed class PalladionShockwave(BossModule module) : Components.GenericAOEs(modu
     {
         if (_palladion != null && NumCasts < _palladion.JumpTargets.Length && _palladion.JumpTargets[NumCasts] is var target && target != null && actor != target && actor != _palladion.Partners[NumCasts])
         {
-            var toTarget = WPos.ClampToGrid(target.Position) - _origin;
+            var toTarget = target.Position.Quantized() - _origin;
             return new AOEInstance[1] { new(new AOEShapeRect(toTarget.Length(), 2f), _origin, Angle.FromDirection(toTarget), _activation) };
         }
         return [];
@@ -154,7 +154,7 @@ sealed class PalladionStack : Components.UniformStackSpread
     }
 }
 
-sealed class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.PalladionAOE, GetVoidzones, 0.9f)
+sealed class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, (uint)AID.PalladionAOE, GetVoidzones, 0.9d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -168,7 +168,7 @@ sealed class PalladionVoidzone(BossModule module) : Components.VoidzoneAtCastTar
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
                 voidzones[index++] = z;
         }
         return voidzones[..index];

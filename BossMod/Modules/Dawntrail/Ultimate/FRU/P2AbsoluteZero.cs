@@ -38,7 +38,7 @@ sealed class P2HiemalStorm(BossModule module) : Components.SimpleAOEs(module, (u
     }
 }
 
-sealed class P2HiemalRay(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.HiemalRay, GetVoidzones, 0.7f)
+sealed class P2HiemalRay(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.HiemalRay, GetVoidzones, 0.7d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -52,7 +52,7 @@ sealed class P2HiemalRay(BossModule module) : Components.VoidzoneAtCastTarget(mo
         for (var i = 0; i < count; ++i)
         {
             var z = enemies[i];
-            if (z.EventState != 7u)
+            if (z.EventState != 7)
             {
                 voidzones[index++] = z;
             }

@@ -244,7 +244,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
     {
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
-            AOEs.Add(new(_shape, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(13.2d)));
+            AOEs.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(13.2d)));
             AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
@@ -424,7 +424,7 @@ sealed class P4CrystallizeTimeTidalLight : Components.Exaflare
     {
         if (spell.Action.ID == (uint)AID.TidalLightAOEFirst)
         {
-            Lines.Add(new() { Next = caster.Position, Advance = 10f * spell.Rotation.ToDirection(), Rotation = spell.Rotation, NextExplosion = Module.CastFinishAt(spell), TimeToMove = 2.1f, ExplosionsLeft = 4, MaxShownExplosions = 1 });
+            Lines.Add(new(caster.Position, 10f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 2.1d, 4, 1, spell.Rotation));
             StartingPositions.Add((caster.Position, spell.Rotation));
             StartingOffsetSum += caster.Position - Arena.Center;
         }
@@ -494,9 +494,10 @@ sealed class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
                 var len = party.Length;
                 for (var i = 0; i < len; ++i)
                 {
-                    ref readonly var p = ref party[i];
-                    if (p.PendingKnockbacks.Count != 0)
+                    if (party[i].PendingKnockbacks.Count != 0)
+                    {
                         return; // don't even try moving until all knockbacks are resolved, that can fuck up others...
+                    }
                 }
             }
             if (hint.hint.HasFlag(Hint.SafespotRough))

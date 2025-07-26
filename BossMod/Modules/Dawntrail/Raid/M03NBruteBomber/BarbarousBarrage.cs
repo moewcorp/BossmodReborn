@@ -6,7 +6,7 @@ sealed class BarbarousBarrageTower(BossModule module) : Components.GenericTowers
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x01u && state == 0x00020004u)
+        if (index == 0x01 && state == 0x00020004u)
             for (var i = 0; i < 4; ++i)
                 Towers.Add(new(positions[i], 4f, 1, 1, default, WorldState.FutureTime(10d)));
     }

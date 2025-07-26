@@ -133,7 +133,7 @@ class Wavebreaker(BossModule module) : Components.GenericAOEs(module)
             activation = 9.8d;
             shape = rectWide;
         }
-        _aoes.Add(new(shape, WPos.ClampToGrid(caster.Position), caster.Rotation, WorldState.FutureTime(activation)));
+        _aoes.Add(new(shape, caster.Position.Quantized(), caster.Rotation, WorldState.FutureTime(activation)));
     }
 }
 
@@ -175,7 +175,7 @@ class Drains(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < countS; ++i)
         {
             var drain = solvedDrains[i];
-            aoes[index++] = new(square, drain, color: IsBlockingDrain(actor, drain) ? Colors.SafeFromAOE : 0, risky: false);
+            aoes[index++] = new(square, drain, color: IsBlockingDrain(actor, drain) ? Colors.SafeFromAOE : default, risky: false);
         }
         return aoes;
     }
@@ -190,7 +190,7 @@ class Drains(BossModule module) : Components.GenericAOEs(module)
         if (index is < 0x0F or > 0x16)
             return;
 
-        var positionIndex = index - 0x0Fu;
+        var positionIndex = index - 0x0F;
         var drainPosition = drainPositions[positionIndex];
 
         switch (state)

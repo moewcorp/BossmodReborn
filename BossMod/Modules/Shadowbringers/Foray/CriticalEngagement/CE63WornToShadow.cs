@@ -154,7 +154,7 @@ sealed class Foreshadowing(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count; ++i)
             {
                 var a = _addAOEs[i];
-                _aoes.Add(new(a.shape!, WPos.ClampToGrid(a.caster.Position), a.caster.Rotation, act, actorID: a.caster.InstanceID));
+                _aoes.Add(new(a.shape!, a.caster.Position.Quantized(), a.caster.Rotation, act, actorID: a.caster.InstanceID));
             }
         }
     }

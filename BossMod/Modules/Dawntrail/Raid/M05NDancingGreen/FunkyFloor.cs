@@ -34,7 +34,7 @@ sealed class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index != 0x03u || _activeSet != null)
+        if (index != 0x03 || _activeSet != null)
             return;
 
         var act = WorldState.FutureTime(3.2d);

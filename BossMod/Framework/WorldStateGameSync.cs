@@ -304,6 +304,7 @@ sealed class WorldStateGameSync : IDisposable
             inCombat = chr->InCombat;
         }
         var targetable = obj->GetIsTargetable();
+        var renderflags = obj->RenderFlags;
         var friendly = chr == null || ActionManager.ClassifyTarget(chr) != ActionManager.TargetCategory.Enemy;
         var isDead = obj->IsDead();
         var hasAggro = _playerEnmity.IndexOf(obj->EntityId) >= 0;
@@ -318,7 +319,7 @@ sealed class WorldStateGameSync : IDisposable
         if (act == null)
         {
             var type = (ActorType)(((int)obj->ObjectKind << 8) + obj->SubKind);
-            _ws.Execute(new ActorState.OpCreate(obj->EntityId, obj->BaseId, index, obj->LayoutId, name, nameID, type, classID, level, posRot, radius, hpmp, targetable, friendly, SanitizedObjectID(obj->OwnerId), obj->FateId));
+            _ws.Execute(new ActorState.OpCreate(obj->EntityId, obj->BaseId, index, obj->LayoutId, name, nameID, type, classID, level, posRot, radius, hpmp, targetable, friendly, SanitizedObjectID(obj->OwnerId), obj->FateId, renderflags));
             act = _actorsByIndex[index] = _ws.Actors.Find(obj->EntityId)!;
 
             // note: for now, we continue relying on network messages for tether changes, since sometimes multiple changes can happen in a single frame, and some components rely on seeing all of them...
@@ -343,6 +344,8 @@ sealed class WorldStateGameSync : IDisposable
                 _ws.Execute(new ActorState.OpTargetable(id, targetable));
             if (act.IsAlly != friendly)
                 _ws.Execute(new ActorState.OpAlly(id, friendly));
+            if (act.Renderflags != renderflags)
+                _ws.Execute(new ActorState.OpRenderflags(id, renderflags));
         }
         var instanceID = act.InstanceID;
         if (act.IsDead != isDead)

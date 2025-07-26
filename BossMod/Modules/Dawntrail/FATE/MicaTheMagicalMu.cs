@@ -236,7 +236,7 @@ sealed class RollingStarlight(BossModule module) : Components.GenericAOEs(module
 
 sealed class MagicalHat(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TwinkleToss, new AOEShapeRect(42f, 2.5f), 4);
 sealed class Shimmerstorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ShimmerstormAOE, 6f);
-sealed class Shimmerstrike(BossModule module) : Components.BaitAwayCast(module, (uint)AID.ShimmerstrikeAOE, 6f, tankbuster: true);
+sealed class Shimmerstrike(BossModule module) : Components.BaitAwayCast(module, (uint)AID.ShimmerstrikeAOE, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class SparkOfImagination(BossModule module) : Components.RaidwideCast(module, (uint)AID.SparkOfImaginationAOE);
 
 sealed class MicaTheMagicalMuStates : StateMachineBuilder

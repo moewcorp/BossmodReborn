@@ -10,8 +10,8 @@ sealed class RosebloodBloom(BossModule module) : Components.SimpleKnockbacks(mod
     {
         if (Casters.Count != 0)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(source.Position, 6f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 6f), c.Activation);
         }
     }
 }
@@ -26,7 +26,7 @@ sealed class ThunderSlash : Components.SimpleAOEs
 
 sealed class PerfumedQuietus(BossModule module) : Components.RaidwideCast(module, (uint)AID.RosebloodBloom); // using the knockback here, since after knockback player is stunned for a cutscene and can't heal up
 sealed class ThornedCatharsis(BossModule module) : Components.RaidwideCast(module, (uint)AID.ThornedCatharsis);
-sealed class SpecterOfTheLost(BossModule module) : Components.BaitAwayCast(module, (uint)AID.SpecterOfTheLost, new AOEShapeCone(50f, 22.5f.Degrees()), tankbuster: true);
+sealed class SpecterOfTheLost(BossModule module) : Components.BaitAwayCast(module, (uint)AID.SpecterOfTheLost, new AOEShapeCone(50f, 22.5f.Degrees()), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1030, NameID = 13861)]
 public sealed class T04Zelenia(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, DefaultArena)

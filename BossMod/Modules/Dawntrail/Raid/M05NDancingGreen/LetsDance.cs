@@ -27,7 +27,7 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
         {
             var count = _aoes.Count;
             var act = count != 0 ? _aoes[0].Activation.AddSeconds(count * 2d) : WorldState.FutureTime(18.2d);
-            _aoes.Add(new(rect, WPos.ClampToGrid(Arena.Center), modelState == 5u ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], act));
+            _aoes.Add(new(rect, Arena.Center.Quantized(), modelState == 5 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], act));
         }
     }
 

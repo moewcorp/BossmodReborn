@@ -12,7 +12,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("焦点目标敌人")]
     public bool FocusTargetMaster = false;
 
-    [PropertyDisplay("将按键广播到其他窗口")]
+    [PropertyDisplay("将按键广播到其他窗口", tooltip: "在某些电脑上可能会导致卡顿。仅在确实需要时启用！它仅适用于多开玩家。")]
     public bool BroadcastToSlaves = false;
 
     [PropertyDisplay("跟随第几位队友")]

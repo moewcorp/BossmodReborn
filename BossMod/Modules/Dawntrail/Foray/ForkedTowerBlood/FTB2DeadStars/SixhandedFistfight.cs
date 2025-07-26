@@ -47,9 +47,11 @@ sealed class CollateralDamage(BossModule module) : Components.GenericStackSpread
             ++NumCasts;
             var count = Spreads.Count;
             var id = spell.MainTargetID;
+            var spreads = CollectionsMarshal.AsSpan(Spreads);
             for (var i = 0; i < count; ++i)
             {
-                if (Spreads[i].Target.InstanceID == id)
+                ref var spread = ref spreads[i];
+                if (spread.Target.InstanceID == id)
                 {
                     Spreads.RemoveAt(i);
                     return;

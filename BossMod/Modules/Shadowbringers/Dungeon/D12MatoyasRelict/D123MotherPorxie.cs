@@ -77,7 +77,7 @@ class HuffAndPuff1(BossModule module) : Components.SimpleKnockbacks(module, (uin
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Casters[0].Position, 5f));
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Casters.Ref(0).Origin, 5f));
     }
 }
 
@@ -139,8 +139,10 @@ class Barbeque(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x10u)
-            _aoe = new(rect, new(-19.5f, default), 89.999f.Degrees()); // activates 22.2s later, but should never be entered anyway, since you must go to the opposite of the arena
+        if (index == 0x10 && state == 0x00020001u)
+        {
+            _aoe = new(rect, new(-19.5f, default), Angle.AnglesCardinals[3]); // activates 22.2s later, but should never be entered anyway, since you must go to the opposite of the arena
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

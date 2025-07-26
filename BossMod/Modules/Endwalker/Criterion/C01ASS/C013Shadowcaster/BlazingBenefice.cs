@@ -35,7 +35,7 @@ abstract class BlazingBenifice(BossModule module, uint aid, uint oid) : Componen
     {
         if (actor.OID == oid)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(21.7d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(21.7d)));
         }
     }
 

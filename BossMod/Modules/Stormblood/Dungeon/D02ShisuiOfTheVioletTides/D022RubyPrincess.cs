@@ -154,7 +154,7 @@ class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Seduce)
-            AOE = new(circle, WPos.ClampToGrid(D022RubyPrincess.ArenaCenter), default, Module.CastFinishAt(spell, 8f));
+            AOE = new(circle, D022RubyPrincess.ArenaCenter.Quantized(), default, Module.CastFinishAt(spell, 8f));
         else if (spell.Action.ID == (uint)AID.CoriolisKick)
             AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
     }

@@ -18,8 +18,7 @@ sealed class TheUnpotted(BossModule module) : Components.GenericBaitAway(module,
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
-                CurrentBaits.Add(new(source, p, cone, act));
+                CurrentBaits.Add(new(source, party[i], cone, act));
             }
         }
     }

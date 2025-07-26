@@ -48,8 +48,10 @@ sealed class ChocoBeak(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x11D1u && actor.OID == (uint)OID.BlackChocobo1)
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(9.1d), actorID: actor.InstanceID));
+        if (id == 0x11D1 && actor.OID == (uint)OID.BlackChocobo1)
+        {
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(9.1d), actorID: actor.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

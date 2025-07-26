@@ -74,18 +74,20 @@ class WaveOfTurmoil(BossModule module) : Components.SimpleKnockbacks(module, (ui
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var source = Casters.Count != 0 ? Casters[0] : null;
-        if (source != null)
+        if (Casters.Count != 0)
         {
             var count = _aoe.Casters.Count;
             var forbidden = new Func<WPos, float>[count];
+            var aoes = CollectionsMarshal.AsSpan(_aoe.Casters);
+            var center = Arena.Center;
             for (var i = 0; i < count; ++i)
             {
-                forbidden[i] = ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(_aoe.Casters[i].Origin - Arena.Center), cone);
+                ref readonly var aoe = ref aoes[i];
+                forbidden[i] = ShapeDistance.Cone(center, 20f, Angle.FromDirection(aoe.Origin - center), cone);
             }
             if (count != 0)
             {
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Module.CastFinishAt(source.CastInfo));
+                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Casters.Ref(0).Activation);
             }
         }
     }

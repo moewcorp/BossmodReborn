@@ -52,8 +52,8 @@ sealed class SlipperyScatterscourge(BossModule module) : Components.GenericAOEs(
     {
         if (spell.Action.ID == (uint)AID.SlipperyScatterscourge)
         {
-            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 0.2f)));
-            _aoes.Add(new(donut, WPos.ClampToGrid(caster.Position + 20f * spell.Rotation.ToDirection()), default, Module.CastFinishAt(spell, 2.8f)));
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 0.2d)));
+            _aoes.Add(new(donut, (caster.Position + 20f * spell.Rotation.ToDirection()).Quantized(), default, Module.CastFinishAt(spell, 2.8d)));
         }
     }
 

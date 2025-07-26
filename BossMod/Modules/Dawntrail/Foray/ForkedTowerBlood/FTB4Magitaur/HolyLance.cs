@@ -50,7 +50,7 @@ sealed class HolyLance(BossModule module) : Components.GenericAOEs(module)
                 var pos = FTB4Magitaur.SquarePositions[i];
                 if (a.InSquare(pos, 10f, FTB4Magitaur.SquareDirs[i]))
                 {
-                    _aoes.Add(new(FTB4Magitaur.Square, WPos.ClampToGrid(pos), FTB4Magitaur.SquareAngles[i], act));
+                    _aoes.Add(new(FTB4Magitaur.Square, pos.Quantized(), FTB4Magitaur.SquareAngles[i], act));
                     return;
                 }
             }

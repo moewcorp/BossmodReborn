@@ -22,7 +22,7 @@ sealed class ElementalImpact(BossModule module) : Components.GenericTowersOpenWo
     }
 }
 
-sealed class FireSpread(BossModule module) : Components.GenericBaitAway(module)
+sealed class FireSpread(BossModule module) : Components.GenericBaitAway(module, damageType: AIHints.PredictedDamageType.Raidwide)
 {
     private static readonly AOEShapeCone cone = new(60f, 60f.Degrees());
     private readonly List<(WPos, DateTime)> towerPositions = new(2);

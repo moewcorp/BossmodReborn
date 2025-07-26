@@ -17,7 +17,7 @@ sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.Gen
     {
         if (actor.OID == (uint)OID.Compound2P)
         {
-            _kb = new(WPos.ClampToGrid(Arena.Center), 10f, WorldState.FutureTime(3.8d));
+            _kb = new(Arena.Center.Quantized(), 10f, WorldState.FutureTime(3.8d));
         }
     }
 

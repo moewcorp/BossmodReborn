@@ -34,7 +34,7 @@ sealed class StampedingThunder(BossModule module) : Components.GenericAOEs(modul
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x00u && state is 0x00400004u or 0x00800004u)
+        if (index == 0x00 && state is 0x00400004u or 0x00800004u)
         {
             Arena.Bounds = M04SWickedThunder.P1DefaultBounds;
             Arena.Center = M04SWickedThunder.P1DefaultCenter;
@@ -138,7 +138,7 @@ sealed class ElectronStreamCurrent(BossModule module) : Components.GenericAOEs(m
         var len = party.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
+            var p = party[i];
             switch (_status[i])
             {
                 case (uint)SID.RemoteCurrent:

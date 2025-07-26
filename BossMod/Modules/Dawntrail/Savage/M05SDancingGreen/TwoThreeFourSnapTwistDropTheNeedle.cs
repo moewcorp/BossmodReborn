@@ -151,7 +151,7 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitAway(module
             var clipped = new List<Actor>(8);
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 if (ActiveShape.Check(p.Position, Module.PrimaryActor.Position, pcDir))
                 {
                     clipped.Add(p);

@@ -31,7 +31,7 @@ sealed class ShockAOE(BossModule module) : Components.GenericAOEs(module)
         var id = spell.Action.ID;
         if (id == (uint)AID.ShockLock)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(caster.Position)));
+            _aoes.Add(new(circle, caster.Position.Quantized()));
         }
         else if (id == (uint)AID.Shock6 && ++NumCasts == 2 * _aoes.Count)
         {

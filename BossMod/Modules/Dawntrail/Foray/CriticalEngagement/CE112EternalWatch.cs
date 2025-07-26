@@ -92,12 +92,15 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
         }
         var aoes = CollectionsMarshal.AsSpan(AOEs);
 
-        var act0 = aoes[0].Activation;
-        if (count > 3 && (aoes[3].Activation - act0).TotalSeconds > 0.5d)
+        ref var aoe0 = ref aoes[0];
+        var act0 = aoe0.Activation;
+
+        if (count > 3 && (AOEs.Ref(3).Activation - act0).TotalSeconds > 0.5d)
         {
             for (var i = 0; i < 2; ++i)
             {
-                aoes[i].Color = Colors.Danger;
+                ref var aoe = ref aoes[i];
+                aoe.Color = Colors.Danger;
             }
         }
         var deadline = act0.AddSeconds(2.4d);
@@ -139,7 +142,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 spheres.Clear();
                 break;
         }
-        void AddAOE(WPos position, ref readonly ulong instanceID, ref readonly DateTime activation, Angle rotation = default) => AOEs.Add(new(circle, WPos.ClampToGrid(position), rotation, activation, actorID: instanceID));
+        void AddAOE(WPos position, ref readonly ulong instanceID, ref readonly DateTime activation, Angle rotation = default) => AOEs.Add(new(circle, position.Quantized(), rotation, activation, actorID: instanceID));
         void AddAOEs(List<Actor> list)
         {
             var count = list.Count - 1;
@@ -184,11 +187,11 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
         if (status.ID == (uint)SID.SphereStatus)
         {
             var extra = status.Extra;
-            if (extra == 0x224u)
+            if (extra == 0x224)
             {
                 UpdateList(spheresWind);
             }
-            else if (extra == 0x225u)
+            else if (extra == 0x225)
             {
                 UpdateList(spheresStone);
             }
@@ -198,7 +201,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 for (var i = 0; i < 4; ++i)
                 {
                     var sphere = spheres[i];
-                    AOEs.Add(new(circle, WPos.ClampToGrid(sphere.Position), default, act, actorID: sphere.InstanceID));
+                    AOEs.Add(new(circle, sphere.Position.Quantized(), default, act, actorID: sphere.InstanceID));
                 }
                 spheres.Clear();
             }

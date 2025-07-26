@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL3SaunionDawon;
 
-sealed class HighPoweredMagitekRay(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HighPoweredMagitekRay, 5f, tankbuster: true)
+sealed class HighPoweredMagitekRay(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HighPoweredMagitekRay, 5f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public override bool KeepOnPhaseChange => true;
 }

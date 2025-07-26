@@ -10,7 +10,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Lunge)
+        if (spell.Action.ID == WatchedAction)
         {
             List<SafeWall> safewalls = new(4);
             var count = _arena.Squares.Count;
@@ -22,7 +22,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
                 0 => (0, 1),
                 _ => (1, 2) // should be 89
             };
-            var dir = -0.5f * (MathF.Round(rot.Deg / 90f) * 90f).Degrees().ToDirection();
+            var dir = -0.5f * rot.Round(90f).ToDirection();
             var center = Arena.Center;
             var adj = center + dir;
             for (var i = 0; i < count; ++i)
@@ -37,7 +37,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Lunge)
+        if (spell.Action.ID == WatchedAction)
         {
             _kb = null;
         }
@@ -66,11 +66,11 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
             var act = kb.Activation;
             if (!IsImmune(pcSlot, act))
             {
-                var walls = kb.SafeWalls!.ToArray();
-                var len = walls!.Length;
-                var count = _aoe.Casters.Count;
-                var color = Colors.SafeFromAOE;
+                var walls = kb.SafeWalls;
+                var len = walls.Length;
                 var aoesC = _aoe.Casters;
+                var count = aoesC.Count;
+                var color = Colors.SafeFromAOE;
                 for (var i = 0; i < len; ++i)
                 {
                     ref readonly var w = ref walls[i];
@@ -107,8 +107,8 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
             if (!IsImmune(slot, act))
             {
                 var dir = kb.Direction.ToDirection();
-                var walls = kb.SafeWalls!.ToArray();
-                var len = walls!.Length;
+                var walls = kb.SafeWalls;
+                var len = walls.Length;
                 var count = _aoe.Casters.Count;
                 if (count != 0)
                 {

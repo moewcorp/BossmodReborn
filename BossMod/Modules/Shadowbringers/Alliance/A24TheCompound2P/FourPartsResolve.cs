@@ -1,6 +1,6 @@
 namespace BossMod.Shadowbringers.Alliance.A24TheCompound2P;
 
-sealed class FourPartsResolveCircle(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+sealed class FourPartsResolveCircle(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     private static readonly AOEShapeCircle circle = new(6f);
     private readonly A24TheCompound2P bossmod = (A24TheCompound2P)module;
@@ -34,7 +34,7 @@ sealed class FourPartsResolveCircle(BossModule module) : Components.GenericBaitA
     }
 }
 
-sealed class FourPartsResolveRect(BossModule module) : Components.GenericBaitAway(module)
+sealed class FourPartsResolveRect(BossModule module) : Components.GenericBaitAway(module, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     private static readonly AOEShapeRect rect = new(85f, 6f);
     private readonly A24TheCompound2P bossmod = (A24TheCompound2P)module;

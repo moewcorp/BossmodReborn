@@ -96,7 +96,7 @@ sealed class Clawmarks(BossModule module) : Components.GenericAOEs(module)
             };
             if (activation != default)
             {
-                AOEs.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(activation), actorID: actor.InstanceID));
+                AOEs.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(activation), actorID: actor.InstanceID));
             }
         }
     }
@@ -139,7 +139,7 @@ sealed class ClawingShadow(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00100020u && actor.OID == (uint)OID.ClawsOnFloor)
         {
-            _aoes.Add(new(Cone, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(_aoes.Count < 3 ? 8.1d : 10.6d)));
+            _aoes.Add(new(Cone, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(_aoes.Count < 3 ? 8.1d : 10.6d)));
         }
     }
 

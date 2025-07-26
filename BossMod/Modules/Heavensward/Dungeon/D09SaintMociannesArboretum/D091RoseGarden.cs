@@ -114,7 +114,7 @@ class ExtremelyBadBreathRotation(BossModule module) : Components.GenericRotating
                 }
                 _aoes.Clear();
                 var inc = (rotDelta > 0 ? -1 : 1) * 11.6f.Degrees(); // last hit is only about 7.4°, but shouldnt matter for us, let's consider it extra safety margin
-                Sequences.Add(new(Cone, WPos.ClampToGrid(Module.PrimaryActor.Position), rot2, inc, WorldState.FutureTime(1d), 1f, (first ? 13 : 25) - correctSteps, 8));
+                Sequences.Add(new(Cone, Module.PrimaryActor.Position.Quantized(), rot2, inc, WorldState.FutureTime(1d), 1f, (first ? 13 : 25) - correctSteps, 8));
                 first = false;
             }
             else

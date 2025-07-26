@@ -126,9 +126,11 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
         {
             var count = Casters.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(Casters);
             for (var i = 0; i < count; ++i)
             {
-                if (Casters[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     Casters.RemoveAt(i);
                     return;
@@ -139,16 +141,17 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
 }
 
 // 'charge at location' aoes that happen at the end of the cast
-public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, float riskyWithSecondsLeft = 0f, float extraLengthFront = 0f) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
+public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default, float extraLengthFront = default) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
 {
     public readonly float HalfWidth = halfWidth;
+    public readonly float ExtraLengthFront = extraLengthFront;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            Casters.Add(new(new AOEShapeRect(dir.Length() + ExtraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
         }
     }
 }
@@ -183,9 +186,11 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
         // we probably dont need to check for AIDs here since actorID should already be unique to any active spell
         var count = Casters.Count;
         var id = caster.InstanceID;
+        var aoes = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            if (Casters[i].ActorID == id)
+            ref var aoe = ref aoes[i];
+            if (aoe.ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;
@@ -261,7 +266,7 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
             if (spell.Action.ID == AIDs[i])
             {
                 var dir = spell.LocXZ - caster.Position;
-                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), WPos.ClampToGrid(caster.Position), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
                 if (Casters.Count == ExpectedNumCasters)
                 {
                     Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));

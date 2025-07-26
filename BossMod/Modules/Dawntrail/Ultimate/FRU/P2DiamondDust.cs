@@ -82,7 +82,7 @@ sealed class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBa
 
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref party[i];
+            var p = party[i];
             var distSq = (p.Position - sourcePos).LengthSq();
             distances[i] = (p, distSq);
         }
@@ -254,7 +254,7 @@ sealed class P2HeavenlyStrike(BossModule module) : Components.GenericKnockback(m
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (_safeDirs[slot] != default)
-            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(Arena.Center + 6f * _safeDirs[slot], new(1, 0), Arena.Bounds.MapResolution, actor.Position, 0.25f), _activation);
+            hints.AddForbiddenZone(ShapeDistance.PrecisePosition(Arena.Center + 6f * _safeDirs[slot], new(1f, default), Arena.Bounds.MapResolution, actor.Position, 0.25f), _activation);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -270,7 +270,7 @@ sealed class P2HeavenlyStrike(BossModule module) : Components.GenericKnockback(m
         var icicle = module.FindComponent<P2IcicleImpact>();
         if (icicle?.AOEs.Count > 0)
         {
-            var safeDir = (icicle.AOEs[0].Origin - module.Center).Normalized();
+            var safeDir = (icicle.AOEs.Ref(0).Origin - module.Center).Normalized();
             if (safeDir.X > 0.5f || safeDir.Z > 0.8f)
                 safeDir = -safeDir; // G1
             foreach (var (slot, group) in Service.Config.Get<FRUConfig>().P2DiamondDustKnockbacks.Resolve(module.Raid))

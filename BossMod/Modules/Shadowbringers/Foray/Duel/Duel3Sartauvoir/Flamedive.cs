@@ -33,7 +33,7 @@ sealed class Flamedive(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Huma)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(9.9d), actorID: actor.InstanceID));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(9.9d), actorID: actor.InstanceID));
         }
     }
 

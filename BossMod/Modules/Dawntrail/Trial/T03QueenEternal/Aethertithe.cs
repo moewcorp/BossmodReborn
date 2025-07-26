@@ -19,7 +19,7 @@ sealed class Aethertithe(BossModule module) : Components.GenericAOEs(module)
             _ => null
         };
         if (angle is Angle rot)
-            _aoe = new(cone, WPos.ClampToGrid(Module.PrimaryActor.Position), rot, WorldState.FutureTime(5d));
+            _aoe = new(cone, Module.PrimaryActor.Position.Quantized(), rot, WorldState.FutureTime(5d));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

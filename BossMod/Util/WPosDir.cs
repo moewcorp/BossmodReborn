@@ -31,24 +31,30 @@ public readonly struct WDir(float x, float z) : IEquatable<WDir>
     public readonly WDir OrthoR() => new(-Z, X); // CW, same length
     public readonly WDir MirrorX() => new(-X, Z);
     public readonly WDir MirrorZ() => new(X, -Z);
-    public static float Dot(WDir a, WDir b) => a.X * b.X + a.Z * b.Z;
     public readonly float Dot(WDir a) => X * a.X + Z * a.Z;
-    public static float Cross(WDir a, WDir b) => a.X * b.Z - a.Z * b.X;
-    public readonly float Cross(WDir b) => Cross(this, b);
-    public readonly WDir Rotate(WDir dir) => new(X * dir.Z + Z * dir.X, Z * dir.Z - X * dir.X);
+    public readonly float Cross(WDir b) => X * b.Z - Z * b.X;
+    public readonly WDir Rotate(WDir dir)
+    {
+        var dirZ = dir.Z;
+        var dirX = dir.X;
+        return new(X * dirZ + Z * dirX, Z * dirZ - X * dirX);
+    }
     public readonly WDir Rotate(Angle dir) => Rotate(dir.ToDirection());
     public readonly float LengthSq() => X * X + Z * Z;
     public readonly float Length() => MathF.Sqrt(LengthSq());
-    public static WDir Normalize(WDir a, float zeroThreshold = 0) => a.Length() is var len && len > zeroThreshold ? a / len : default;
-    public readonly WDir Normalized(float zeroThreshold = 0) => Normalize(this, zeroThreshold);
+    public readonly WDir Normalized()
+    {
+        var length = MathF.Sqrt(X * X + Z * Z);
+        return length > 0f ? this / length : default;
+    }
     public static bool AlmostZero(WDir a, float eps) => Math.Abs(a.X) <= eps && Math.Abs(a.Z) <= eps;
     public readonly bool AlmostZero(float eps) => AlmostZero(this, eps);
-    public static bool AlmostEqual(WDir a, WDir b, float eps) => AlmostZero(a - b, eps);
     public readonly bool AlmostEqual(WDir b, float eps) => AlmostZero(this - b, eps);
     public readonly WDir Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WDir Rounded() => new(MathF.Round(X), MathF.Round(Z));
     public readonly WDir Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public readonly WDir Floor() => new(MathF.Floor(X), MathF.Floor(Z));
+    public readonly Angle ToAngle() => new(MathF.Atan2(X, Z));
 
     public override readonly string ToString() => $"({X:f3}, {Z:f3})";
     public readonly bool Equals(WDir other) => X == other.X && Z == other.Z;
@@ -110,13 +116,13 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     public readonly WPos Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
     public static WPos Lerp(WPos from, WPos to, float progress) => new(from.ToVec2() * (1f - progress) + to.ToVec2() * progress);
 
-    public static WPos ClampToGrid(WPos coord) // AOEs are getting clamped to a grid, if spell.LocXZ can't be used, you can correct the position with this method
+    public readonly WPos Quantized()  // AOEs are getting clamped to the center of a grid cell, if spell.LocXZ can't be used, you can correct the position with this method
     {
-        const float gridSize = (float)(2000.0d / 65535.0d);
-        const float gridSizeInv = (float)(1d / (2000.0d / 65535.0d));
-        int gridIndexX = (int)MathF.Round(coord.X * gridSizeInv), gridIndexZ = (int)MathF.Round(coord.Z * gridSizeInv);
-        return new((gridIndexX - 0.5f) * gridSize, (gridIndexZ - 0.5f) * gridSize);
+        const float gridSize = 2000f / 65535f;
+        const float gridSizeInv = 1f / gridSize;
+        return new(((int)MathF.Round(X * gridSizeInv) - 0.5f) * gridSize, ((int)MathF.Round(Z * gridSizeInv) - 0.5f) * gridSize);
     }
+
     public static WPos RotateAroundOrigin(float rotateByDegrees, WPos origin, WPos point)
     {
         var (sin, cos) = ((float, float))Math.SinCos(rotateByDegrees * Angle.DegToRad);
@@ -163,9 +169,10 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     {
         return InRect(origin, end - origin, halfWidth);
     }
-    public readonly bool InSquare(WPos origin, float halfWidth) => (this - origin).InRect(new(default, 1f), halfWidth, halfWidth, halfWidth);
+
     public readonly bool InSquare(WPos origin, float halfWidth, Angle rotation) => (this - origin).InRect(rotation.ToDirection(), halfWidth, halfWidth, halfWidth);
     public readonly bool InSquare(WPos origin, float halfWidth, WDir rotation) => (this - origin).InRect(rotation, halfWidth, halfWidth, halfWidth);
+    public readonly bool InSquare(WPos origin, float halfWidth) => Math.Abs(X - origin.X) <= halfWidth && Math.Abs(Z - origin.Z) <= halfWidth;
 
     public readonly bool InCross(WPos origin, Angle direction, float length, float halfWidth) => (this - origin).InCross(direction.ToDirection(), length, halfWidth);
     public readonly bool InCross(WPos origin, WDir direction, float length, float halfWidth) => (this - origin).InCross(direction, length, halfWidth);

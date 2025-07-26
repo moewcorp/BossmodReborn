@@ -5,7 +5,7 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
 {
     private readonly float MoveDistance = moveDistance;
 
-    public class Chaser(AOEShape shape, Actor target, WPos prevPos, float moveDist, int numRemaining, DateTime nextActivation, float secondsBetweenActivations)
+    public sealed class Chaser(AOEShape shape, Actor target, WPos prevPos, float moveDist, int numRemaining, DateTime nextActivation, float secondsBetweenActivations)
     {
         public AOEShape Shape = shape;
         public Actor Target = target;
@@ -20,7 +20,7 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
             var offset = Target.Position - PrevPos;
             var distance = offset.Length();
             var pos = distance > MoveDist ? PrevPos + MoveDist * offset / distance : Target.Position;
-            return WPos.ClampToGrid(pos);
+            return pos.Quantized();
         }
     }
 
@@ -163,7 +163,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         if (spell.Action.ID is var id && id == ActionFirst || id == ActionRest)
         {
             var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
-            Advance(WPos.ClampToGrid(pos), MoveDistance, WorldState.CurrentTime);
+            Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetExcludedTargets)
             {
                 ExcludedTargets = default;
@@ -221,7 +221,7 @@ public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, ui
         if (spell.Action.ID == ActionFirst || spell.Action.ID == ActionRest)
         {
             var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
-            Advance(WPos.ClampToGrid(pos), MoveDistance, WorldState.CurrentTime);
+            Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetExcludedTargets)
             {
                 ExcludedTargets.Clear();

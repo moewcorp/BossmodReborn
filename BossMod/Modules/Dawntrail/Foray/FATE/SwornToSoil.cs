@@ -37,9 +37,9 @@ sealed class Rupture(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
-        if (status.ID == (uint)SID.Growth && status.Extra == 0x02u)
+        if (status.ID == (uint)SID.Growth && status.Extra == 0x02)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(7.1d), actorID: actor.InstanceID));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(7.1d), actorID: actor.InstanceID));
         }
     }
 

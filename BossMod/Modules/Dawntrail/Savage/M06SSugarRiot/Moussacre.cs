@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
-sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module)
+sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module, damageType: AIHints.PredictedDamageType.Raidwide)
 {
     private DateTime _activation;
 
@@ -20,7 +20,7 @@ sealed class Moussacre(BossModule module) : Components.GenericBaitAway(module)
 
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 var distSq = (p.Position - sourcePos).LengthSq();
                 distances[i] = (p, distSq);
             }

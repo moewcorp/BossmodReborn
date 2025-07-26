@@ -133,6 +133,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ActorState.OpRename op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ActorState.OpIcon op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
             ActorState.OpTether op => FilterInterestingActor(op.InstanceID, op.Timestamp, true),
+            ActorState.OpRenderflags op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ClientState.OpActionRequest => false,
             ClientState.OpHateChange => false,
             ClientState.OpActionReject => false,
@@ -141,6 +142,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ClientState.OpCooldown => false,
             ClientState.OpForcedMovementDirectionChange => false,
             ClientState.OpProcTimersChange => false,
+            WorldState.OpRSVData => false,
             NetworkState.OpServerIPC => false,
             _ => true
         };
@@ -182,6 +184,8 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ActorState.OpEventObjectAnimation op => $"EObjAnim: {ActorString(op.InstanceID, op.Timestamp)} = {((uint)op.Param1 << 16) | op.Param2:X8}",
             ActorState.OpPlayActionTimelineEvent op => $"Play action timeline: {ActorString(op.InstanceID, op.Timestamp)} = {op.ActionTimelineID:X4}",
             ActorState.OpEventNpcYell op => $"Yell: {ActorString(op.InstanceID, op.Timestamp)} = {op.Message} '{Service.LuminaRow<Lumina.Excel.Sheets.NpcYell>(op.Message)?.Text}'",
+            ActorState.OpRenderflags op => $"Renderflag: {ActorString(op.InstanceID, op.Timestamp)} -> {op.Value}",
+            ActorState.OpModelState op => $"Model state: {ActorString(op.InstanceID, op.Timestamp)} -> {op.Value}",
             ClientState.OpDutyActionsChange op => $"Player duty actions change: {string.Join(", ", op.Slots)}",
             ClientState.OpBozjaHolsterChange op => $"Player bozja holster change: {string.Join(", ", op.Contents.Select(e => $"{e.count}x {e.entry}"))}",
             _ => DumpOp(o)

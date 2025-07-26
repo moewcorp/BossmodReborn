@@ -63,7 +63,7 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.SandSphere)
         {
-            _aoes.Add(new(circle, WPos.ClampToGrid(actor.Position), default, WorldState.FutureTime(7.9d)));
+            _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(7.9d)));
         }
     }
 

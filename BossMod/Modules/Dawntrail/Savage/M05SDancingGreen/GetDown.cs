@@ -42,7 +42,7 @@ sealed class GetDownOutIn(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module, damageType: AIHints.PredictedDamageType.Raidwide)
 {
     public static readonly AOEShapeCone Cone = new(40f, 22.5f.Degrees());
     public bool First = true;
@@ -55,8 +55,8 @@ sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module)
             var len = party.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
-                CurrentBaits.Add(new(Module.PrimaryActor, p, Cone, Module.CastFinishAt(spell, 0.3f)));
+                var p = party[i];
+                CurrentBaits.Add(new(Module.PrimaryActor, p, Cone, Module.CastFinishAt(spell, 0.3d)));
             }
         }
     }

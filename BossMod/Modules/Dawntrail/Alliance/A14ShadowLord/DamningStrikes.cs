@@ -18,9 +18,11 @@ sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module
 
             var count = Towers.Count;
             var id = caster.InstanceID;
+            var towers = CollectionsMarshal.AsSpan(Towers);
             for (var i = 0; i < count; ++i)
             {
-                if (Towers[i].ActorID == id)
+                ref var t = ref towers[i];
+                if (t.ActorID == id)
                 {
                     Towers.RemoveAt(i);
                     break;
@@ -45,7 +47,7 @@ sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module
                 }
             }
 
-            var towers = CollectionsMarshal.AsSpan(Towers);
+            towers = CollectionsMarshal.AsSpan(Towers);
             var len = towers.Length;
             for (var i = 0; i < len; ++i)
             {

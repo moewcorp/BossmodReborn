@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Alliance.A13ArkAngels;
 
-sealed class Cloudsplitter(BossModule module) : Components.BaitAwayCast(module, (uint)AID.CloudsplitterAOE, 6f, tankbuster: true);
+sealed class Cloudsplitter(BossModule module) : Components.BaitAwayCast(module, (uint)AID.CloudsplitterAOE, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class CriticalReaverRaidwide(BossModule module) : Components.CastCounter(module, (uint)AID.CriticalReaverRaidwide);
 sealed class CriticalReaverEnrage(BossModule module) : Components.CastInterruptHint(module, (uint)AID.CriticalReaverEnrage);
 sealed class Meteor(BossModule module) : Components.CastInterruptHint(module, (uint)AID.Meteor);

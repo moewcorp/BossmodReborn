@@ -70,7 +70,7 @@ sealed class Hellpounce(BossModule module) : Components.GenericAOEs(module)
     private void Activate(WPos source, WPos target, DateTime activation)
     {
         var toTarget = target - source;
-        _charge = new(new AOEShapeRect(toTarget.Length(), 5f), WPos.ClampToGrid(source), Angle.FromDirection(toTarget), activation);
+        _charge = new(new AOEShapeRect(toTarget.Length(), 5f), source.Quantized(), Angle.FromDirection(toTarget), activation);
     }
 }
 

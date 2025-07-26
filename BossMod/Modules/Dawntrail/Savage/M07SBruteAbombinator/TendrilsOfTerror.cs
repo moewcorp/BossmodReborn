@@ -87,7 +87,9 @@ sealed class TendrilsOfTerror(BossModule module) : Components.GenericAOEs(module
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TendrilsOfTerrorCross1 or (uint)AID.TendrilsOfTerrorCross2 or (uint)AID.TendrilsOfTerrorCross3)
+        {
             AOEs.Add(new(Cross, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), _config.EnableSeedPrediction ? Colors.Danger : default));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -114,12 +116,14 @@ sealed class Impact(BossModule module) : Components.GenericStackSpread(module, t
         {
             var party = Raid.WithoutSlot(true, true, true);
             var len = party.Length;
-            var act = Module.CastFinishAt(spell, 4.6f);
+            var act = Module.CastFinishAt(spell, 4.6d);
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var p = ref party[i];
+                var p = party[i];
                 if (p.Role == Role.Healer)
+                {
                     Stacks.Add(new(p, 6f, 4, 4, act));
+                }
             }
         }
     }

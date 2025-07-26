@@ -10,6 +10,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 6499, // Boss->player, no cast, single-target
+
     RawInstinct = 18604, // Boss->self, 3.0s cast, single-target
     BodyBlow = 18601, // Boss->player, 4.0s cast, single-target
     VoidThunderII = 18602, // Boss->location, 3.0s cast, range 4 circle
@@ -26,10 +27,10 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    BaitKnockback = 23, // player
+    BaitKnockback = 23 // player
 }
 
-class Thunderhead(BossModule module) : Components.Voidzone(module, 8f, GetVoidzones)
+sealed class Thunderhead(BossModule module) : Components.Voidzone(module, 8f, GetVoidzones)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -44,13 +45,15 @@ class Thunderhead(BossModule module) : Components.Voidzone(module, 8f, GetVoidzo
         {
             var z = enemies[i];
             if (z.EventState != 7)
+            {
                 voidzones[index++] = z;
+            }
         }
         return voidzones[..index];
     }
 }
 
-class DadJoke(BossModule module) : Components.GenericKnockback(module)
+sealed class DadJoke(BossModule module) : Components.GenericKnockback(module)
 {
     private DateTime _activation;
     private readonly Thunderhead _aoe = module.FindComponent<Thunderhead>()!;
@@ -65,13 +68,17 @@ class DadJoke(BossModule module) : Components.GenericKnockback(module)
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.BaitKnockback)
+        {
             _activation = WorldState.FutureTime(5d);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.DadJoke)
+        {
             _activation = default;
+        }
     }
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
@@ -90,12 +97,12 @@ class DadJoke(BossModule module) : Components.GenericKnockback(module)
     }
 }
 
-class VoidThunderII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidThunderII, 4);
-class RawInstinct(BossModule module) : Components.CastHint(module, (uint)AID.RawInstinct, "Prepare to dispel buff");
-class VoidThunderIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.VoidThunderIII, "Raidwide + Electrocution");
-class BodyBlow(BossModule module) : Components.SingleTargetCast(module, (uint)AID.BodyBlow, "Soft Tankbuster");
+sealed class VoidThunderII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidThunderII, 4);
+sealed class RawInstinct(BossModule module) : Components.CastHint(module, (uint)AID.RawInstinct, "Prepare to dispel buff");
+sealed class VoidThunderIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.VoidThunderIII, "Raidwide + Electrocution");
+sealed class BodyBlow(BossModule module) : Components.SingleTargetCast(module, (uint)AID.BodyBlow, "Soft Tankbuster");
 
-class Hints(BossModule module) : BossComponent(module)
+sealed class Hints(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
@@ -103,22 +110,26 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class Hints2(BossModule module) : BossComponent(module)
+sealed class Hints2(BossModule module) : BossComponent(module)
 {
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (Module.PrimaryActor.FindStatus((uint)SID.CriticalStrikes) != null)
+        {
             hints.Add($"Dispel {Module.PrimaryActor.Name} with Eerie Soundwave!");
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (actor.FindStatus((uint)SID.Electrocution) != null)
+        {
             hints.Add("Electrocution on you! Cleanse it with Exuviation.");
+        }
     }
 }
 
-class Stage26Act2States : StateMachineBuilder
+sealed class Stage26Act2States : StateMachineBuilder
 {
     public Stage26Act2States(BossModule module) : base(module)
     {
@@ -135,7 +146,7 @@ class Stage26Act2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9231, SortOrder = 2)]
-public class Stage26Act2 : BossModule
+public sealed class Stage26Act2 : BossModule
 {
     public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, Layouts.ArenaCenter, Layouts.CircleSmall)
     {

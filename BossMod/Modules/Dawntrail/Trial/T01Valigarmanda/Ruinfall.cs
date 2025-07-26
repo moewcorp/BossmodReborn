@@ -9,24 +9,28 @@ sealed class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module,
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count == 0)
+        {
             return;
+        }
         if (actor.Role != Role.Tank)
         {
-            var source = Casters[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new WDir(default, 1f), 1f, default, 20f), Module.CastFinishAt(source.CastInfo));
+            ref readonly var c = ref Casters.Ref(0);
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, new WDir(default, 1f), 1f, default, 20f), c.Activation);
             return;
         }
         var towers = _tower.Towers;
         var count = towers.Count;
         if (count == 0)
+        {
             return;
-        var t0 = towers[0];
+        }
+        ref var t0 = ref towers.Ref(0);
         var isDelayDeltaLow = (t0.Activation - WorldState.CurrentTime).TotalSeconds < 5d;
-        var isActorInsideTower = false;
-        if (t0.IsInside(actor))
-            isActorInsideTower = true;
-        if (isDelayDeltaLow && isActorInsideTower)
+
+        if (isDelayDeltaLow && t0.IsInside(actor))
+        {
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.ArmsLength), actor, ActionQueue.Priority.High);
+        }
     }
 }
 
@@ -34,10 +38,27 @@ sealed class RuinfallTower(BossModule module) : Components.CastTowers(module, (u
 {
     public override void Update()
     {
-        if (Towers.Count == 0)
+        var count = Towers.Count;
+        if (count == 0)
+        {
             return;
-        var forbidden = Raid.WithSlot(false, true, true).WhereActor(p => p.Role != Role.Tank).Mask();
-        foreach (ref var t in Towers.AsSpan())
+        }
+        var party = Module.Raid.WithSlot(true, true, true);
+        var len = party.Length;
+        BitMask forbidden = default;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var p = ref party[i];
+            if (p.Item2.Role != Role.Tank)
+            {
+                forbidden.Set(p.Item1);
+            }
+        }
+        var towers = CollectionsMarshal.AsSpan(Towers);
+        for (var i = 0; i < count; ++i)
+        {
+            ref var t = ref towers[i];
             t.ForbiddenSoakers = forbidden;
+        }
     }
 }

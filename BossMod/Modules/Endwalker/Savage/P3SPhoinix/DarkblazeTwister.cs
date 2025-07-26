@@ -34,34 +34,35 @@ class DarkTwister(BossModule module) : Components.SimpleKnockbacks(module, (uint
     private TwisterVoidzone? _aoe1 = module.FindComponent<TwisterVoidzone>();
     private BurningTwister? _aoe2 = module.FindComponent<BurningTwister>();
 
-    public List<Actor> BurningTwisters()
-    {
-        List<Actor> burningTwisters = [];
-        var twisters = Module.Enemies((uint)OID.DarkblazeTwister);
-        var count = twisters.Count;
-        for (var i = 0; i < count; ++i)
-        {
-            var twister = twisters[i];
-            if (twister.CastInfo != null && twister.CastInfo.IsSpell(AID.BurningTwister))
-                burningTwisters.Add(twister);
-        }
-        return burningTwisters;
-    }
-
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
         if (Casters.Count == 0)
             return;
-        var darkTwister = Casters[0];
+        ref readonly var darkTwister = ref Casters.Ref(0);
         foreach (var burningTwister in BurningTwisters())
         {
-            var dir = burningTwister.Position - darkTwister.Position;
+            var dir = burningTwister.Position - darkTwister.Origin;
             var len = dir.Length();
             dir /= len;
-            Arena.AddCircle(darkTwister.Position + dir * (len - safeOffset), safeRadius, Colors.Safe);
+            Arena.AddCircle(darkTwister.Origin + dir * (len - safeOffset), safeRadius, Colors.Safe);
+        }
+
+        List<Actor> BurningTwisters()
+        {
+            List<Actor> burningTwisters = [];
+            var twisters = Module.Enemies((uint)OID.DarkblazeTwister);
+            var count = twisters.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var twister = twisters[i];
+                if (twister.CastInfo != null && twister.CastInfo.IsSpell(AID.BurningTwister))
+                    burningTwisters.Add(twister);
+            }
+            return burningTwisters;
         }
     }
+
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
         _aoe1 ??= Module.FindComponent<TwisterVoidzone>();

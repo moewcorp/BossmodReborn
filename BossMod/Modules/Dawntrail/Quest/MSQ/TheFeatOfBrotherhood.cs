@@ -153,9 +153,9 @@ sealed class RoaringStarRect(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (id == 0x1E46u)
+        if (id == 0x1E46)
         {
-            _aoes.Add(new(rect, WPos.ClampToGrid(actor.Position), actor.Rotation, WorldState.FutureTime(8.5d)));
+            _aoes.Add(new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(8.5d)));
         }
     }
 
@@ -271,7 +271,7 @@ sealed class HeartOfTural : Components.SimpleAOEs
         {
             return;
         }
-        hints.Add("Wait in safe area!", !Casters[0].Check(actor.Position));
+        hints.Add("Wait in safe area!", !Casters.Ref(0).Check(actor.Position));
     }
 }
 

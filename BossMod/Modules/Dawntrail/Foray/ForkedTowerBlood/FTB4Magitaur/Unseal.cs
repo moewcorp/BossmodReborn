@@ -97,7 +97,7 @@ sealed class Unseal(BossModule module) : Components.GenericAOEs(module)
     {
         if (isClose == null && spell.Action.ID == (uint)AID.ForkedFury)
         {
-            isClose = Module.PrimaryActor.FindStatus((uint)SID.Unsealed) is ActorStatus status && status.Extra == 0x353u;
+            isClose = Module.PrimaryActor.FindStatus((uint)SID.Unsealed) is ActorStatus status && status.Extra == 0x353;
             activation = Module.CastFinishAt(spell, 6.2d);
             SetAOE();
         }

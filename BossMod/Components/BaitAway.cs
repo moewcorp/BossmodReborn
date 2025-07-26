@@ -173,8 +173,10 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         var baits = CollectionsMarshal.AsSpan(ActiveBaits);
         var count = baits.Length;
         if (count == 0)
+        {
             return;
-        var predictedDamage = new BitMask();
+        }
+        BitMask predictedDamage = default;
         for (var i = 0; i < count; ++i)
         {
             ref var bait = ref baits[i];
@@ -184,12 +186,17 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             }
             else
             {
-                predictedDamage[Raid.FindSlot(bait.Target.InstanceID)] = true;
                 AddTargetSpecificHints(ref actor, ref bait, ref hints);
+            }
+            if (DamageType != AIHints.PredictedDamageType.None)
+            {
+                predictedDamage.Set(Raid.FindSlot(bait.Target.InstanceID));
             }
         }
         if (predictedDamage != default)
-            hints.AddPredictedDamage(predictedDamage, baits[0].Activation, DamageType);
+        {
+            hints.AddPredictedDamage(predictedDamage, CurrentBaits.Ref(0).Activation, DamageType);
+        }
     }
 
     private void AddTargetSpecificHints(ref Actor actor, ref Bait bait, ref AIHints hints)
@@ -325,9 +332,10 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
             var eID = enemy.InstanceID;
             var pID = player.InstanceID;
             var count = CurrentBaits.Count;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                var b = CurrentBaits[i];
+                ref var b = ref baits[i];
                 if (b.Source.InstanceID == eID && b.Target.InstanceID == pID)
                 {
                     CurrentBaits.RemoveAt(i);
@@ -391,7 +399,8 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
         var count = CurrentBaits.Count - 1;
         for (var i = count; i >= 0; --i)
         {
-            if (CurrentBaits[i].Target.IsDead)
+            ref var b = ref CurrentBaits.Ref(i);
+            if (b.Target.IsDead)
             {
                 CurrentBaits.RemoveAt(i);
             }
@@ -400,9 +409,9 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
 }
 
 // component for mechanics requiring cast targets to gtfo from raid (aoe tankbusters etc)
-public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool centerAtTarget = false, bool endsOnCastEvent = false, bool tankbuster = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: AIHints.PredictedDamageType.Tankbuster)
+public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool centerAtTarget = false, bool endsOnCastEvent = false, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType)
 {
-    public BaitAwayCast(BossModule module, uint aid, float radius, bool centerAtTarget = true, bool endsOnCastEvent = false, bool tankbuster = false) : this(module, aid, new AOEShapeCircle(radius), centerAtTarget, endsOnCastEvent, tankbuster) { }
+    public BaitAwayCast(BossModule module, uint aid, float radius, bool centerAtTarget = true, bool endsOnCastEvent = false, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : this(module, aid, new AOEShapeCircle(radius), centerAtTarget, endsOnCastEvent, tankbuster, damageType: damageType) { }
 
     public AOEShape Shape = shape;
     public bool EndsOnCastEvent = endsOnCastEvent;
@@ -421,9 +430,11 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -439,9 +450,11 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -470,9 +483,11 @@ public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : 
         {
             var count = CurrentBaits.Count;
             var id = caster.InstanceID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Source.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Source.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;
@@ -532,9 +547,11 @@ public class BaitAwayChargeTether(BossModule module, float halfWidth, float acti
             ++NumCasts;
             var count = CurrentBaits.Count;
             var id = spell.MainTargetID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Target.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Target.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;

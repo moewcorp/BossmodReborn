@@ -79,12 +79,12 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
     {
         if (Casters.Count != 0)
         {
-            var castinfo = Casters[0].CastInfo!;
-            var act = Module.CastFinishAt(castinfo);
+            ref readonly var c = ref Casters.Ref(0);
+            var act = c.Activation;
             if (!IsImmune(slot, act))
             {
                 var center = Arena.Center;
-                var origin = castinfo.LocXZ;
+                var origin = c.Origin;
                 hints.AddForbiddenZone(p =>
                 {
                     if ((p + 30f * (p - origin).Normalized()).InCircle(center, 23f))
@@ -380,7 +380,7 @@ sealed class CE115CursedConcernStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 45)]
-public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, WPos.ClampToGrid(new(72f, -545f)), new ArenaBoundsCircle(25f))
+public sealed class CE115CursedConcern(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(72f, -545f).Quantized(), new ArenaBoundsCircle(25f))
 {
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }

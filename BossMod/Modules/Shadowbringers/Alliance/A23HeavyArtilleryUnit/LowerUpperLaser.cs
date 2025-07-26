@@ -37,10 +37,9 @@ sealed class UpperLaser(BossModule module) : Components.GenericAOEs(module)
         if (state == 0x00800100u && actor.OID == (uint)OID.ArenaFeatures)
         {
             var center = Arena.Center;
-            var angle = Angle.FromDirection(actor.Position - center);
-            // the lasers are placed poorly for some reason and can be off by 1-2°
-            angle = (MathF.Round(angle.Deg / 60f) * 60f).Degrees();
-            var loc = WPos.ClampToGrid(center);
+            // the lasers are placed poorly for some reason and can be off by 1-2°, so we need to round to nearest 60°
+            var angle = Angle.FromDirection(actor.Position - center).Round(60f);
+            var loc = center.Quantized();
             var act = WorldState.FutureTime(9.7d);
             for (var i = 0; i < 3; ++i)
             {
@@ -78,10 +77,8 @@ sealed class LowerLaser(BossModule module) : Components.GenericAOEs(module)
         if (state == 0x00100020u && actor.OID == (uint)OID.ArenaFeatures)
         {
             var center = Arena.Center;
-            var angle = Angle.FromDirection(actor.Position - center);
-            // the lasers are placed poorly for some reason and can be off by 1-2°
-            angle = (MathF.Round(angle.Deg / 60f) * 60f).Degrees();
-            AOEs.Add(new(cone, WPos.ClampToGrid(center), angle, WorldState.FutureTime(9.7d)));
+            // the lasers are placed poorly for some reason and can be off by 1-2°, so we need to round to nearest 60°
+            AOEs.Add(new(cone, center.Quantized(), Angle.FromDirection(actor.Position - center).Round(60f), WorldState.FutureTime(9.7d)));
         }
     }
 

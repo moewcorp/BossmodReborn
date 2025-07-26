@@ -109,11 +109,11 @@ class VacuumWave(BossModule module) : Components.SimpleKnockbacks(module, (uint)
     {
         if (Casters.Count == 0)
             return;
-        var c = Casters[0];
-        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Position, 13f), activation: Module.CastFinishAt(c.CastInfo));
+        ref readonly var c = ref Casters.Ref(0);
+        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(c.Origin, 13f), c.Activation);
     }
 }
-class VoidQuakeIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidQuakeIII, new AOEShapeCross(40, 5));
+class VoidQuakeIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidQuakeIII, new AOEShapeCross(40f, 5f));
 
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
@@ -132,7 +132,7 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (NumCasts == 0 && index == 0x01u && state == 0x00020001u)
+        if (NumCasts == 0 && index == 0x01 && state == 0x00020001u)
         {
             _aoe = null;
             ++NumCasts;
@@ -159,7 +159,7 @@ class Shield(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorEState(Actor actor, ushort state)
     {
-        if (actor.OID == (uint)OID.VarshahnShield && state == 0x0004u)
+        if (state == 0x0004 && actor.OID == (uint)OID.VarshahnShield)
         {
             _aoe = null;
         }

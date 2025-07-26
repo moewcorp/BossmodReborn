@@ -11,18 +11,18 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.DiabolicGateVisual)
         {
-            _aoe = new(donut, WPos.ClampToGrid(Arena.Center), default, Module.CastFinishAt(spell, 9.2d));
+            _aoe = new(donut, Arena.Center.Quantized(), default, Module.CastFinishAt(spell, 9.2d));
         }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x33u)
+        if (index == 0x33)
         {
             if (state == 0x00020001u)
             {
                 Arena.Bounds = DAL4DiabloArmament.SmallArena;
-                Arena.Center = WPos.ClampToGrid(Arena.Center);
+                Arena.Center = Arena.Center.Quantized();
                 _aoe = null;
             }
             else if (state == 0x00080004u)

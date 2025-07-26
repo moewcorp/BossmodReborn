@@ -201,6 +201,6 @@ class PalladianRayAOE(BossModule module) : Components.GenericAOEs(module, (uint)
     {
         base.OnEventCast(caster, spell);
         if (spell.Action.ID == (uint)AID.PalladianRayAOEFirst)
-            _aoes.Add(new(_shape, WPos.ClampToGrid(caster.Position), caster.Rotation));
+            _aoes.Add(new(_shape, caster.Position.Quantized(), caster.Rotation));
     }
 }

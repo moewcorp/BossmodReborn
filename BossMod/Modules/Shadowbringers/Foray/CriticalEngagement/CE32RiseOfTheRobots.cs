@@ -71,7 +71,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.Deathwall)
         {
             Arena.Bounds = CE32RiseOfTheRobots.DefaultArena;
-            Arena.Center = WPos.ClampToGrid(Arena.Center);
+            Arena.Center = Arena.Center.Quantized();
             _aoe = null;
         }
     }
@@ -179,7 +179,7 @@ sealed class OrderTowers(BossModule module) : Components.GenericAOEs(module)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (slot is < 0 or > 7 || AOEs[slot] == default) // no support for NPCs that might be around
+        if (slot > 7 || AOEs[slot] == default) // no support for NPCs that might be around
         {
             return [];
         }
@@ -252,10 +252,14 @@ sealed class OrderTowers(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        ref readonly var aoes = ref AOEs[slot];
-        if (aoes.Length != 0)
+        if (slot > 7)
         {
-            ref readonly var aoe = ref AOEs[slot][0];
+            return;
+        }
+        ref readonly var aoes = ref AOEs[slot];
+        if (aoes != default)
+        {
+            ref readonly var aoe = ref aoes[0];
             var isInside = aoe.Check(actor.Position);
             hints.Add(Numbers[slot][0] == default ? ("Avoid marked towers!", isInside) : ("Move into a marked tower!", !isInside));
         }

@@ -22,7 +22,7 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
     {
         if (status.ID == StatusID)
         {
-            Mask[Raid.FindSlot(actor.InstanceID)] = true;
+            Mask.Set(Raid.FindSlot(actor.InstanceID));
         }
     }
 
@@ -30,7 +30,7 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
     {
         if (status.ID == StatusID)
         {
-            Mask[Raid.FindSlot(actor.InstanceID)] = false;
+            Mask.Clear(Raid.FindSlot(actor.InstanceID));
         }
     }
 

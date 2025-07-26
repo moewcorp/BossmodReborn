@@ -42,15 +42,18 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private AOEInstance? _aoe;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FrostingFracas && Arena.Bounds == D021RyoqorTerteh.StartingBounds)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.6f));
+        {
+            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.6d));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001u && index == 0x17u)
+        if (index == 0x17 && state == 0x00020001u)
         {
             Arena.Bounds = D021RyoqorTerteh.DefaultBounds;
             _aoe = null;
@@ -119,9 +122,11 @@ sealed class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(mo
         {
             var count = _aoes.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
             for (var i = 0; i < count; ++i)
             {
-                if (_aoes[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     _aoes.RemoveAt(i);
                     if (_aoes.Count == 0)
