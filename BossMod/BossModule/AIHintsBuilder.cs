@@ -27,7 +27,7 @@ public sealed class AIHintsBuilder : IDisposable
         2413u, 2654u, 3012u, 3039u, 3052u, 3054u,
         4410u, 4175u
     ];
-    private static readonly HashSet<uint> ignore = [27503, 33626]; // action IDs that the AI should ignore
+    private static readonly HashSet<uint> ignore = [27503u, 33626u]; // action IDs that the AI should ignore
     private static readonly PartyRolesConfig _config = Service.Config.Get<PartyRolesConfig>();
     private static readonly Dictionary<uint, (byte, byte, byte, uint, string, string, string, int, bool, uint)> _spellCache = [];
 
@@ -144,7 +144,7 @@ public sealed class AIHintsBuilder : IDisposable
         if (inFate)
         {
             hints.PathfindMapCenter = new(_ws.Client.ActiveFate.Center.XZ());
-            hints.PathfindMapBounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius, resolution));
+            hints.PathfindMapBounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius, resolution, true));
             if (e != null && bitmap != null)
             {
                 var originCell = (hints.PathfindMapCenter - e.Origin) / resolution;

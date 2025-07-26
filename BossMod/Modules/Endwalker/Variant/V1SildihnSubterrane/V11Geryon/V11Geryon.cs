@@ -37,9 +37,11 @@ sealed class RunawaySludge(BossModule module) : Components.VoidzoneAtCastTarget(
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "The Combat Reborn Team", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11442, SortOrder = 1)]
-public sealed class V11Geryon(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -150f ? ArenaCenter1 : primary.Position.X > 100f ? new(-213f, 101f) : default,
-primary.Position.X < -150f ? new ArenaBoundsSquare(24.5f) : new ArenaBoundsSquare(19.5f))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11442, SortOrder = 1)]
+public sealed class V11Geryon(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X is var X && X < -150f ? arenaCenter1 : X > 100f ? ArenaCenter3 : default,
+X < -150f ? new ArenaBoundsSquare(24.5f) : new ArenaBoundsSquare(19.5f))
 {
-    public static readonly WPos ArenaCenter1 = new(-213f, 101f);
+    private static readonly WPos arenaCenter1 = new(-213f, 101f);
+    public static readonly WPos ArenaCenter3 = new(183f, 177f);
+    public static readonly AOEShapeCustom Square = new([new Square(arenaCenter1, 25f)], [new Square(arenaCenter1, 20f)]);
 }

@@ -91,7 +91,7 @@ public sealed class AutoFarm(RotationModuleManager manager, Actor player) : Rota
             if (allowFate && Utils.IsPlayerSyncedToFate(World))
                 foreach (var e in Hints.PotentialTargets.Where(t => t.Actor.FateID == World.Client.ActiveFate.ID))
                 {
-                    var isForlorn = e.Actor.NameID is 6737 or 6738;
+                    var isForlorn = e.Actor.NameID is 6737u or 6738u;
                     prioritize(e, isForlorn ? 2 : 1);
                 }
 
