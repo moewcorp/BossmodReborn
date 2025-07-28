@@ -13,7 +13,7 @@ sealed class ShatteringSteelMeteor(BossModule module) : Components.CastLineOfSig
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == WatchedAction && Module.Enemies((uint)OID.WhirlwindUpdraft).Count != 0) // depending on path this can cast can happen with other mechs
+        if (spell.Action.ID == WatchedAction && Module.Enemies((uint)OID.WhirlwindUpdraft).Count != 0) // depending on path Shattering Steel can be combined with other mechs
         {
             base.OnCastStarted(caster, spell);
         }

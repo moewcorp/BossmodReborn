@@ -5,7 +5,7 @@ sealed class V11GeryonStates : StateMachineBuilder
     public V11GeryonStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<ArenaChange>()
+            .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<Explosion>()
             .ActivateOnEnter<Gigantomill>()
             .ActivateOnEnter<SubterraneanShudderColossalLaunch>()
