@@ -11,14 +11,17 @@ sealed class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(modul
         if (count == 0)
             return [];
 
-        var midpoint = AOEs[0].Activation.AddSeconds(2d);
         int startIndex = 0, endIndex = count;
+        var aoes = CollectionsMarshal.AsSpan(AOEs);
+        ref var aoe0 = ref aoes[0];
+        var midpoint = aoe0.Activation.AddSeconds(2d);
 
         if (NumCasts == 0)
         {
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].Activation > midpoint)
+                ref var aoe = ref aoes[i];
+                if (aoe.Activation > midpoint)
                 {
                     endIndex = i;
                     break;
@@ -29,14 +32,15 @@ sealed class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(modul
         {
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].Activation > midpoint)
+                ref var aoe = ref aoes[i];
+                if (aoe.Activation > midpoint)
                 {
                     startIndex = i;
                     break;
                 }
             }
         }
-        return CollectionsMarshal.AsSpan(AOEs)[startIndex..endIndex];
+        return aoes[startIndex..endIndex];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -65,8 +69,8 @@ sealed class P5OmegaDoubleAOEs(BossModule module) : Components.GenericAOEs(modul
             case (uint)OID.OmegaFP5:
                 if (actor.ModelState.ModelState == 4)
                 {
-                    AddAOE(Shapes[0], 90f.Degrees());
-                    AddAOE(Shapes[0], -90f.Degrees());
+                    AddAOE(Shapes[2], 90f.Degrees());
+                    AddAOE(Shapes[2], -90f.Degrees());
                 }
                 else
                 {
@@ -262,7 +266,7 @@ sealed class P5OmegaBlaster : Components.BaitAwayTethers
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.QuickeningDynamis && status.Extra >= 3)
-            ForbiddenPlayers[Raid.FindSlot(actor.InstanceID)] = false;
+            ForbiddenPlayers.Clear(Raid.FindSlot(actor.InstanceID));
     }
 
     private List<WPos> SafeSpots(Actor actor)
@@ -271,7 +275,7 @@ sealed class P5OmegaBlaster : Components.BaitAwayTethers
             return [];
 
         var center = Arena.Center;
-        var toBoss = (CurrentBaits[0].Source.Position - center).Normalized();
+        var toBoss = (CurrentBaits.Ref(0).Source.Position - center).Normalized();
         var toBossOrthoL = toBoss.OrthoL();
         var toBossOrthoR = toBoss.OrthoR();
         if (actor == _ndw.NearWorld)

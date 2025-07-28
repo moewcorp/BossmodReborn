@@ -1,6 +1,6 @@
 namespace BossMod.Endwalker.VariantCriterion.V1SildihnSubterrane.V11Geryon;
 
-sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private readonly List<Square> squares = new(2);

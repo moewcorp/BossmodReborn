@@ -229,7 +229,8 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(Casters);
-        var deadline = aoes[0].Activation.AddSeconds(TimeWindowInSeconds);
+        ref var aoe0 = ref aoes[0];
+        var deadline = aoe0.Activation.AddSeconds(TimeWindowInSeconds);
 
         var index = 0;
         while (index < count)
