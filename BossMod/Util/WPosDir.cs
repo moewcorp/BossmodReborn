@@ -109,7 +109,7 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     public static WPos operator +(WDir a, WPos b) => new(a.X + b.X, a.Z + b.Z);
     public static WPos operator -(WPos a, WDir b) => new(a.X - b.X, a.Z - b.Z);
     public static WDir operator -(WPos a, WPos b) => new(a.X - b.X, a.Z - b.Z);
-    public static bool AlmostEqual(WPos a, WPos b, float eps) => (a - b).AlmostZero(eps);
+
     public readonly bool AlmostEqual(WPos b, float eps) => (this - b).AlmostZero(eps);
     public readonly WPos Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WPos Rounded() => new(MathF.Round(X), MathF.Round(Z));

@@ -65,7 +65,7 @@ sealed class GiddyBomb(BossModule module) : BossComponent(module)
             return;
         }
 
-        var nextBombSpot = BombSpawns[_index % 4];
+        var nextBombSpot = BombSpawns[_index & 3];
         hints.GoalZones.Add(hints.PullTargetToLocation(Module.PrimaryActor, nextBombSpot));
     }
 }

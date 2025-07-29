@@ -128,22 +128,22 @@ class FloorTiles(BossModule module) : BossComponent(module)
         var i2 = active[1];
 
         // Normalize for direction (ensure gap is in the clockwise direction)
-        var diff = (i2 - i1 + 8) % 8;
+        var diff = (i2 - i1 + 8) & 7;
 
         if (diff == 6)
             (i1, i2) = (i2, i1);  // Swap to ensure clockwise
 
-        midTile = (i1 + 1) % 8;
-        opp1 = (i1 + 4) % 8;
-        opp2 = (i2 + 4) % 8;
-        oppMid = (midTile + 4) % 8;
+        midTile = (i1 + 1) & 7;
+        opp1 = (i1 + 4) & 7;
+        opp2 = (i2 + 4) & 7;
+        oppMid = (midTile + 4) & 7;
     }
 
     public static bool Find4ConnectedInactiveTiles(bool[] inner, bool[] outer, out int[] innerTiles, out int[] outerTiles)
     {
         for (var i = 0; i < 8; ++i)
         {
-            var next = (i + 1) % 8;
+            var next = (i + 1) & 7;
             if (!inner[i] && !outer[i] && !inner[next] && !outer[next])
             {
                 innerTiles = [i, next];
@@ -206,11 +206,11 @@ class FloorTiles(BossModule module) : BossComponent(module)
                         stack[sp++] = (idx, 1 - r);
 
                     // Neighbors
-                    var prev = (idx + 7) % 8;
+                    var prev = (idx + 7) & 7;
                     if (!visited[prev, r] && (r == 0 ? inner[prev] : outer[prev]))
                         stack[sp++] = (prev, r);
 
-                    var next = (idx + 1) % 8;
+                    var next = (idx + 1) & 7;
                     if (!visited[next, r] && (r == 0 ? inner[next] : outer[next]))
                         stack[sp++] = (next, r);
                 }

@@ -80,13 +80,13 @@ public static class BossModuleRegistry
                 iidType = null;
             }
 
-            var primaryOID = infoAttr?.PrimaryActorOID ?? 0;
-            if (primaryOID == 0 && oidType != null)
+            var primaryOID = infoAttr?.PrimaryActorOID ?? default;
+            if (primaryOID == default && oidType != null)
             {
                 if (Enum.TryParse(oidType, "Boss", out var oid))
                     primaryOID = (uint)oid!;
             }
-            if (primaryOID == 0)
+            if (primaryOID == default)
             {
                 Service.Log($"[ModuleRegistry] Module {module.FullName} has no associated primary actor OID: either specify one explicitly or ensure OID enum has Boss entry");
                 return null;
@@ -119,7 +119,7 @@ public static class BossModuleRegistry
             var groupType = infoAttr?.GroupType ?? BossModuleInfo.GroupType.None;
             var groupID = infoAttr?.GroupID ?? 0;
             var nameID = infoAttr?.NameID ?? 0;
-            if (groupType == BossModuleInfo.GroupType.None && groupID == 0)
+            if (groupType == BossModuleInfo.GroupType.None && groupID == default)
             {
                 Service.Log($"[ModuleRegistry] Module {module.FullName} does not have group type/id assignments.");
             }

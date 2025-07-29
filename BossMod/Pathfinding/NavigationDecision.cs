@@ -421,6 +421,8 @@ public struct NavigationDecision
     private static (WPos? first, WPos? second) GetFirstWaypoints(ThetaStar pf, Map map, int cell, WPos startingPos)
     {
         ref var startingNode = ref pf.NodeByIndex(cell);
+        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
+        var maxIterations = map.Width * map.Height;
 
         if (startingNode.GScore == 0f && startingNode.PathMinG == float.MaxValue)
             return (null, null); // we're already in safe zone
@@ -429,7 +431,7 @@ public struct NavigationDecision
         do
         {
             ref var node = ref pf.NodeByIndex(cell);
-            if (pf.NodeByIndex(node.ParentIndex).GScore == 0f)
+            if (pf.NodeByIndex(node.ParentIndex).GScore == 0f || ++iterations == maxIterations)
             {
                 //var dest = pf.CellCenter(cell);
                 // if destination coord matches player coord, do not move along that coordinate, this is used for precise positioning

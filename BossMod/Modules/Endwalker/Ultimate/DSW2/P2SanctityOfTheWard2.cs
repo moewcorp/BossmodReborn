@@ -623,7 +623,7 @@ sealed class P2SanctityOfTheWard2Towers2(BossModule module) : Components.CastTow
     {
         var offset = tower - Arena.Center;
         var dir = Angle.FromDirection(offset);
-        return (4 - (int)MathF.Round(dir.Rad / MathF.PI * 4f)) % 8;
+        return (4 - (int)MathF.Round(dir.Rad / MathF.PI * 4f)) & 7;
     }
 
     private void InitNonPreyAssignments()

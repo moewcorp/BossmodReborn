@@ -6,8 +6,10 @@ sealed class HotCharge(BossModule module) : Components.ChargeAOEs(module, (uint)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (NumCasts % 2 == 0)
+        if (((++NumCasts) & 1) == 0)
+        {
             return;
+        }
         hints.GoalZones.Add(hints.GoalSingleTarget(Module.PrimaryActor.CastInfo?.LocXZ ?? Arena.Center, 6f, 5f)); // follow the charge
     }
 }

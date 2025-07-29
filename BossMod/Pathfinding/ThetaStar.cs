@@ -380,7 +380,7 @@ public sealed class ThetaStar
             if (LineOfSight(gx, gy, nodeX, nodeY, _nodes[grandParentIndex].GScore, out var losLeeway, out var losDist, out var losMinG))
             {
                 var losScore = CalculateScore(destPixG, losMinG, losLeeway, nodeIndex);
-                if (losScore > altNode.Score || losScore == altNode.Score && losLeeway >= (losScore > Score.SemiSafeAsStart ? 0 : altNode.PathLeeway))
+                if (losScore > altNode.Score || losScore == altNode.Score && losLeeway >= (losScore > Score.UltimatelyBetter ? 0 : altNode.PathLeeway))
                 {
                     parentIndex = grandParentIndex;
                     altNode.GScore = _nodes[parentIndex].GScore + _deltaGSide * losDist;

@@ -167,7 +167,7 @@ class IaiGiriBait : Components.GenericBaitAway
             var inst = Instances[i];
             if (inst.Target != null)
             {
-                inst.FakeSource.PosRot = (inst.Target.Position - _jumpOffset * (inst.Target.Position - inst.Source.Position).Normalized()).ToVec4();
+                inst.FakeSource.PosRot = inst.Target.PosRot - _jumpOffset * inst.Target.Rotation.ToDirection().ToVec4();
             }
         }
 
@@ -221,9 +221,9 @@ class IaiGiriBait : Components.GenericBaitAway
         }
     }
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID is (uint)AID.FleetingIaiGiri or (uint)AID.DoubleIaiGiri)
+        if (spell.Action.ID is (uint)AID.FleetingIaiGiriJump or (uint)AID.ShadowKasumiGiriJump)
             CurrentBaits.Clear(); // TODO: this is a hack, if we ever mark baits as dirty again, they will be recreated - but we need instances for resolve
     }
 
@@ -305,7 +305,7 @@ sealed class IaiGiriResolve(BossModule module) : Components.GenericAOEs(module)
                 var first = true;
                 foreach (ref var aoe in inst.AOEs.AsSpan())
                 {
-                    aoe.Origin = caster.Position;
+                    aoe.Origin = spell.LocXZ;
                     if (first)
                     {
                         first = false;
@@ -317,11 +317,11 @@ sealed class IaiGiriResolve(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         switch (spell.Action.ID)
         {
-            case (uint)AID.FleetingIaiGiri:
+            case (uint)AID.FleetingIaiGiriJump:
             case (uint)AID.DoubleIaiGiri:
                 var comp = Module.FindComponent<IaiGiriBait>();
                 var bait = comp?.Instances.Find(i => i.Source == caster);
@@ -342,6 +342,13 @@ sealed class IaiGiriResolve(BossModule module) : Components.GenericAOEs(module)
                 }
                 _instances.Add(inst);
                 break;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        switch (spell.Action.ID)
+        {
             case (uint)AID.NFleetingIaiGiriFront:
             case (uint)AID.NFleetingIaiGiriRight:
             case (uint)AID.NFleetingIaiGiriLeft:

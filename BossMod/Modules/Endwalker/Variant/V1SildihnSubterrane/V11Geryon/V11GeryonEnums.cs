@@ -36,6 +36,7 @@ public enum AID : uint
     GigantomillRest = 29899, // Boss->self, no cast, range 72 width 10 cross
 
     RollingBoulder = 29914, // Helper->self, no cast, range 10 width 10 rect
+    SuddenlySewage = 29912, // Helper->self, no cast, range 20 width 20 rect
 
     RunawaySludge = 29910, // Helper->self, 5.0s cast, range 9 circle
     Shockwave = 29902 // Boss->self, 5.0s cast, range 40 width 40 rect, knockback 15 dir left/right

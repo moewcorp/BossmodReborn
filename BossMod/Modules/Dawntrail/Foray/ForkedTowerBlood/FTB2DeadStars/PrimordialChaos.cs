@@ -90,7 +90,7 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
                     playerTemperatures[slot] += isBlue ? -1 : 1;
                 }
             }
-            if (++NumCasts % 4 == 0) // 2 casters for each AOE
+            if ((++NumCasts & 3) == 0) // 2 casters for each AOE
             {
                 Array.Clear(_aoesPerPlayer);
                 isInit = false;

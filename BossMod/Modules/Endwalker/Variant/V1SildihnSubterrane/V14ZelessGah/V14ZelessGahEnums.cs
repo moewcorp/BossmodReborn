@@ -48,18 +48,12 @@ public enum AID : uint
     BlazingBenifice = 29861, // ArcaneFont->self, 1.5s cast, range 100 width 10 rect
 
     // route 7
-    InfernWell1 = 29863, // Boss->self, 4.0s cast, single-target
-    UnknownAbility1 = 29864, // Helper->player, no cast, single-target
-    InfernWell2 = 29866, // Helper->self, 1.5s cast, range 8 circle
+    InfernWellVisual = 29863, // Boss->self, 4.0s cast, single-target
+    InfernWell = 29864, // Helper->player, no cast, single-target, pull 15 between hitboxes
+    InfernWellAOE = 29866 // Helper->self, 1.5s cast, range 8 circle
 }
 
 public enum SID : uint
 {
-    MechanicStatus = 2397, // none->InfernBrand1/InfernBrand2, extra=0x1CA/0x1C1/0x1F3 - 0x1CA = knockback, 0x1CE/0x1F3 = laser wall
-    ForbiddenPassage = 3278, // none->player, extra=0x0
-}
-
-public enum IconID : uint
-{
-    Icon230 = 230, // player
+    MechanicStatus = 2397 // none->InfernBrand1/InfernBrand2, extra=0x1CA/0x1CB/0x1C1/0x1F3 - 0x1CA = knockback, 0x1CB = pull, 0x1CE/0x1F3 = laser wall
 }
