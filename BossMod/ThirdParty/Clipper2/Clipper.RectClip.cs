@@ -125,14 +125,14 @@ namespace Clipper2Lib
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool HeadingClockwise(Location prev, Location curr)
     {
-      return ((int)prev + 1) % 4 == (int)curr;
+      return (((int)prev + 1) & 3) == (int)curr;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Location GetAdjacentLocation(Location loc, bool isClockwise)
     {
       int delta = (isClockwise) ? 1 : 3;
-      return (Location)(((int)loc + delta) % 4);
+      return (Location)(((int)loc + delta) & 3);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

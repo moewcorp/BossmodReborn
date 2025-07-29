@@ -23,7 +23,7 @@ sealed class P1UtopianSkyBlastingZone(BossModule module) : Components.GenericAOE
         {
             Activation = WorldState.FutureTime(9.1d);
             AOEs.Add(new(_shape, actor.Position, actor.Rotation, Activation));
-            DangerousSpots.Set((int)MathF.Round((-Angle.FromDirection(actor.Position - Arena.Center).Deg + 180f) / 45f) % 8);
+            DangerousSpots.Set((int)MathF.Round((-Angle.FromDirection(actor.Position - Arena.Center).Deg + 180f) / 45f) & 7);
         }
     }
 

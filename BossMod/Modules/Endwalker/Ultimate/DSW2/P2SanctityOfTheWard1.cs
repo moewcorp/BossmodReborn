@@ -21,7 +21,7 @@ sealed class P2SanctityOfTheWard1Sever(BossModule module) : Components.UniformSt
         if (Stacks.Count == 2 && Source != null)
         {
             Arena.Actor(Source, Colors.Enemy, true);
-            Arena.AddLine(Source.Position, Stacks[NumCasts % 2].Target.Position);
+            Arena.AddLine(Source.Position, Stacks[NumCasts & 1].Target.Position);
         }
     }
 

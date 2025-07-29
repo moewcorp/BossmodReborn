@@ -1,5 +1,5 @@
 ﻿using ImGuiNET;
-using System.Runtime.CompilerServices;
+
 namespace BossMod;
 
 // note on coordinate systems:

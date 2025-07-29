@@ -16,14 +16,16 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
             case (uint)OID.BallOfFire:
                 var portals = Module.Enemies((uint)OID.Portal);
                 var countP = portals.Count;
+                var position = actor.Position;
                 for (var i = 0; i < countP; ++i)
                 {
-                    if ((int)portals[i].Rotation.Deg is 0 or 180) // actors with 0 or 180 degrees rot get a rotation icon later
+                    var p = portals[i];
+                    if ((int)p.Rotation.Deg is 0 or 180 && (p.Position - position).LengthSq() < 105f) // aoe will be teleported later
                     {
                         return;
                     }
                 }
-                _aoes.Add(new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(countP == 0 ? 10.2d : 15.8f)));
+                _aoes.Add(new(circle, position.Quantized(), default, WorldState.FutureTime(countP == 0 ? 10.2d : 15.8f)));
                 break;
             case (uint)OID.Portal:
                 var rot = actor.Rotation.Round(90f);
@@ -38,7 +40,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
                     {
                         ref var aoe = ref aoes[i];
                         aoe.Activation = act;
-                        if (aoe.Origin.AlmostEqual(pos, 11f))
+                        if ((aoe.Origin - pos).LengthSq() < 105f)
                         {
                             aoe.Origin = new WPos(MathF.Round(aoe.Origin.X) == 284f ? 294f : 284f, pos.Z).Quantized();
                             found = true;
@@ -54,7 +56,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
                     for (var i = 0; i < count; ++i)
                     {
                         ref var aoe = ref aoes[i];
-                        if (aoe.Origin.AlmostEqual(pos, 11f))
+                        if ((aoe.Origin - pos).LengthSq() < 105f)
                         {
                             _aoes.RemoveAt(i); // aoe was already created and should be removed due to later teleportation
                             return;
@@ -65,7 +67,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void Update()
+    public override void Update() // fallback incase of portals spawning before aoe
     {
         var count = cachedPortals.Count;
         if (count == 0)
@@ -83,7 +85,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
             for (var j = 0; j < len; ++j)
             {
                 ref var aoe = ref aoes[j];
-                if (aoe.Origin.AlmostEqual(pos, 11f))
+                if ((aoe.Origin - pos).LengthSq() < 105f)
                 {
                     aoe.Origin = new WPos(MathF.Round(aoe.Origin.X) == 284f ? 294f : 284f, pos.Z).Quantized();
                     aoe.Activation = act;
@@ -99,7 +101,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
         switch (spell.Action.ID)
         {
             case (uint)AID.Burn:
-                if (++NumCasts % 4 == 0) // sometimes the activation of an aoe is delays multiple frames, so we wait until all are done
+                if ((++NumCasts & 3) == 0) // sometimes the activation of an aoe is delayed by multiple frames, so we wait until all are done
                 {
                     _aoes.Clear();
                 }
@@ -138,11 +140,17 @@ sealed class BallOfFire(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.InfernGaleVisual) // if knockback happens during the mechanic, the AOEs will activate later
+        var delay = spell.Action.ID switch
+        {
+            (uint)AID.InfernGaleVisual => 16.5d,
+            (uint)AID.InfernWellVisual => 18.7d,
+            _ => default
+        };
+        if (delay != default) // if knockback happens during these mechanics, the AOEs will activate later
         {
             var count = _aoes.Count;
             var aoes = CollectionsMarshal.AsSpan(_aoes);
-            var act = WorldState.FutureTime(16.5d);
+            var act = WorldState.FutureTime(delay);
             for (var i = 0; i < count; ++i)
             {
                 ref var aoe = ref aoes[i];

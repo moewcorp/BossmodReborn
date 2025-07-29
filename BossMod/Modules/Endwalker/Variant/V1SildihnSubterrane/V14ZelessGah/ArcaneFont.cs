@@ -21,19 +21,37 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
                 break;
             case (uint)OID.Portal:
                 var count = _aoes.Count;
-                var aoes = CollectionsMarshal.AsSpan(_aoes);
-                var pos = actor.Position;
-                var act = WorldState.FutureTime(12.5d);
-                var dir = actor.Rotation.Round(90f).ToDirection();
                 var found = false;
-                for (var i = 0; i < count; ++i)
+                if (count != 0)
                 {
-                    ref var aoe = ref aoes[i];
-                    aoe.Activation = act;
-                    if ((aoe.Origin + 50f * dir).AlmostEqual(pos, 11f))
+                    if (Module.Enemies((uint)OID.BallOfFire).Count != 0) // fonts wont be teleported if there are teleporting fireballs
                     {
-                        aoe.Origin = (pos - 50f * dir + (aoe.Origin.AlmostEqual(pos, 1f) ? 10f : -10f) * dir.OrthoR()).Quantized();
-                        found = true;
+                        cachedPortals.Clear();
+                        return;
+                    }
+                    var aoes = CollectionsMarshal.AsSpan(_aoes);
+                    var pos = actor.Position;
+                    var act = WorldState.FutureTime(12.5d);
+                    ref var aoe0 = ref aoes[0];
+                    var dir = aoe0.Rotation.Round(90f).ToDirection();
+
+                    for (var i = 0; i < count; ++i)
+                    {
+                        ref var aoe = ref aoes[i];
+                        if (aoe.ActorID != default) // aoe already got updated
+                        {
+                            continue;
+                        }
+                        aoe.Activation = act;
+                        var origin = aoe.Origin;
+                        var vecSQ = (origin - (pos - 50f * dir)).LengthSq();
+                        if (vecSQ is > 99f and < 105f or < 1f)
+                        {
+                            var o = vecSQ < 10f ? new WDir(default, 10f) : new WDir(default, -10f);
+                            aoe.Origin = (new WPos(MathF.Round(origin.X), MathF.Round(origin.Z)) + o).Quantized();
+                            ++aoe.ActorID;
+                            found = true;
+                        }
                     }
                 }
                 if (!found)
@@ -44,31 +62,48 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void Update()
+    public override void Update() // fallback incase of portals spawning before aoe
     {
         var count = cachedPortals.Count;
         if (count == 0)
         {
             return;
         }
+        if (Module.Enemies((uint)OID.BallOfFire).Count != 0) // fonts wont be teleported if there are teleporting fireballs
+        {
+            cachedPortals.Clear();
+            return;
+        }
+        var countA = _aoes.Count;
+        if (countA == 0)
+        {
+            return;
+        }
+
         var count2 = count - 1;
         var act = WorldState.FutureTime(12.5d);
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var len = aoes.Length;
-
         for (var i = count2; i >= 0; --i)
         {
             var p = cachedPortals[i];
-            var rot = p.Rotation;
             var pos = p.Position;
-            var dir = rot.Round(90f).ToDirection();
-            for (var j = 0; j < len; ++j)
+            ref var aoe0 = ref aoes[0];
+            var dir = aoe0.Rotation.Round(90f).ToDirection();
+            for (var j = 0; j < countA; ++j)
             {
                 ref var aoe = ref aoes[j];
-                if ((aoe.Origin + 50f * dir).AlmostEqual(pos, 11f))
+                if (aoe.ActorID != default) // aoe already got updated
                 {
-                    aoe.Origin = (pos + (aoe.Origin.AlmostEqual(pos, 1f) ? 10f : -10f) * dir.OrthoR()).Quantized();
-                    aoe.Activation = act;
+                    continue;
+                }
+                aoe.Activation = act;
+                var origin = aoe.Origin;
+                var vecSQ = (origin - (pos - 50f * dir)).LengthSq();
+                if (vecSQ is > 99f and < 105f or < 1f)
+                {
+                    var o = vecSQ < 10f ? new WDir(default, 10f) : new WDir(default, -10f);
+                    aoe.Origin = (new WPos(MathF.Round(origin.X), MathF.Round(origin.Z)) + o).Quantized();
+                    ++aoe.ActorID;
                     cachedPortals.RemoveAt(i);
                     break;
                 }
@@ -84,7 +119,7 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
                 cachedPortals.Clear();
                 break;
             case (uint)AID.BlazingBenifice:
-                if (++NumCasts == _aoes.Count) // sometimes the activation of an aoe is delays multiple frames, so we wait until all are done
+                if (++NumCasts == _aoes.Count) // sometimes the activation of an aoe is delayed by multiple frames, so we wait until all are done
                 {
                     NumCasts = 0;
                     _aoes.Clear();

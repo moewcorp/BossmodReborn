@@ -17,6 +17,7 @@ sealed class V11GeryonStates : StateMachineBuilder
             .ActivateOnEnter<Shockwave>()
             .ActivateOnEnter<Intake>()
             .ActivateOnEnter<RollingBoulder>()
+            .ActivateOnEnter<SuddenlySewage>()
             .ActivateOnEnter<RunawayRunoff>();
     }
 }

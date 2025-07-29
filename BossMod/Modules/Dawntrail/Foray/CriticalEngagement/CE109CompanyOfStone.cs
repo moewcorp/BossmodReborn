@@ -132,7 +132,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
                 // Find adjacent pair where left is CCW and right is CW
                 for (var i = 0; i < 4; ++i)
                 {
-                    var next = (i + 1) % 4;
+                    var next = (i + 1) & 3;
                     var a = Sequences[i];
                     var b = Sequences[next];
 
@@ -153,7 +153,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
         if (spell.Action.ID is (uint)AID.SpinningSiegeCCW or (uint)AID.SpinningSiegeCW or (uint)AID.SpinningSiegeRest)
         {
             AdvanceSequence(spell.LocXZ, spell.Rotation, WorldState.CurrentTime);
-            if (NumCasts % 4 == 0)
+            if ((NumCasts & 3) == 0)
             {
                 midpoint -= 3f * (midpoint - Arena.Center).Normalized();
             }

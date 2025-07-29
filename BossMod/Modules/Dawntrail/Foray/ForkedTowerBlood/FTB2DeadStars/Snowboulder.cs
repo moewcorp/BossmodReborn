@@ -17,7 +17,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
         {
             rectangles.Add(new(caster.Position, spell.LocXZ, 5f));
             activations.Add(Module.CastFinishAt(spell, 0.1d));
-            if (rectangles.Count % 2 == 0)
+            if ((rectangles.Count & 1) == 0)
             {
                 ComputeNonOverlappingArea();
             }
@@ -68,7 +68,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
                     Vulnerable[slot] = true;
                 }
             }
-            if (++NumCasts % 2 == 0 && NumCasts < 6)
+            if (((++NumCasts) & 1) == 0 && NumCasts < 6)
             {
                 Array.Clear(_aoesPerPlayer);
                 ComputeNonOverlappingArea();
