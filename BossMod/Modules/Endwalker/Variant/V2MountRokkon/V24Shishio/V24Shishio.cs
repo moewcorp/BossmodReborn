@@ -24,7 +24,7 @@ sealed class Vasoconstrictor(BossModule module) : Components.SimpleAOEs(module, 
 
 sealed class RightLeftSwipe(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RightSwipe, (uint)AID.LeftSwipe], new AOEShapeCone(40f, 90f.Degrees()));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12428, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Shishio, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12428, SortOrder = 6, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V24Shishio(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, NormalBounds)
 {
     public static readonly WPos ArenaCenter = new(-40f, -300f);

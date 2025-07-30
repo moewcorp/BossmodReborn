@@ -38,7 +38,7 @@ sealed class SqueakyCleanConeSmall(BossModule module) : Components.SimpleAOEGrou
 (uint)AID.SqueakyClean1W, (uint)AID.SqueakyClean2W], new AOEShapeCone(60f, 45f.Degrees()));
 sealed class SqueakyCleanConeBig(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SqueakyClean3E, (uint)AID.SqueakyClean3W], new AOEShapeCone(60f, 112.5f.Degrees()));
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Boss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11369, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Silkie, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11369, SortOrder = 3, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public class V12Silkie(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsSquare(29.5f))
 {
     public static readonly WPos ArenaCenter = new(-335f, -155f);

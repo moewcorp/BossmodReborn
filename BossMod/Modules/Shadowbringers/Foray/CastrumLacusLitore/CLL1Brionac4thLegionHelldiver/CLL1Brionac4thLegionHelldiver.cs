@@ -213,9 +213,10 @@ public sealed class CLL1Brionac4thLegionHelldiver : BossModule
         var center = Arena.Center;
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var e = ref potHints[i].Actor;
+            var h = potHints[i];
+            var e = h.Actor;
             ref var enemyPrio = ref potHints[i].Priority;
-            ref readonly var oid = ref e.OID;
+            var oid = e.OID;
             if (center == ArenaCenterTop)
             {
                 if (oid == (uint)OID.MagitekCore)

@@ -106,7 +106,7 @@ sealed class Witherwind(BossModule module) : Components.Voidzone(module, 3f, Get
     private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.AutumnalTempest);
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12325, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Yozakura, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12325, SortOrder = 2, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V21Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -700f ? ArenaCenter1 : primary.Position.X > 700f ? ArenaCenter2 : ArenaCenter3, primary.Position.X < -700f ? StartingBounds : primary.Position.X > 700f ? DefaultBounds2 : StartingBounds)
 {
     public static readonly WPos ArenaCenter1 = new(-775f, 16f);

@@ -2,15 +2,15 @@ namespace BossMod.Endwalker.VariantCriterion.V2MountRokkon.V20ShishuChochin;
 
 public enum OID : uint
 {
-    Boss = 0x3EFC, // R2.0
+    ShishuChochin = 0x3EFC, // R2.0
     Lantern = 0x3F18, // R1.0
 }
 
 public enum AID : uint
 {
-    AutoAttack = 6499, // 3EFC->player, no cast, single-target
+    AutoAttack = 6499, // ShishuChochin->player, no cast, single-target
 
-    Illume = 33618, // 3EFC->self, 3.0s cast, range 6 90-degree cone
+    Illume = 33618 // ShishuChochin->self, 3.0s cast, range 6 90-degree cone
 }
 
 sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
@@ -19,9 +19,24 @@ sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly Circle lantern1 = new(new(723.5f, 57.5f), 1f), lantern2 = new(new(690.5f, 57.5f), 1f), lantern3 = new(new(681.2f, 51.6f), 1f);
     private readonly List<Circle> lanterns = [lantern1, lantern2, lantern3];
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = new AOEInstance[1];
+    private bool aoeInit;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (!aoeInit)
+        {
+            InitAOE();
+        }
+        return _aoe;
+    }
+
+    private void InitAOE()
+    {
+        _aoe = [new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99d), Colors.SafeFromAOE)];
+        aoeInit = true;
+    }
+
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (state == 0x00020001u)
@@ -37,7 +52,7 @@ sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
             {
                 lanterns.Remove(circ);
             }
-            _aoe = new(new AOEShapeCustom([.. lanterns], InvertForbiddenZone: true), Arena.Center, default, WorldState.FutureTime(99d), Colors.SafeFromAOE);
+            InitAOE();
         }
     }
 
@@ -51,7 +66,7 @@ sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_config.P12LanternAI)
+        if (!_config.P12LanternAI || !aoeInit)
         {
             return;
         }
@@ -66,14 +81,15 @@ sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < countT; ++i)
         {
             var e = hints.PotentialTargets[i];
-            if (e.Actor.OID == (uint)OID.Boss)
+            if (e.Actor.OID == (uint)OID.ShishuChochin)
             {
-                var inAOE = _aoe != null && _aoe.Value.Check(actor.Position);
+                ref var aoe = ref _aoe[0];
+                var inAOE = aoe.Check(actor.Position);
                 if (lanternPriorityCount == 0 && inAOE && count)
                 {
                     Actor? closestBoss = null;
                     var closestDistance = float.MaxValue;
-                    var boss = Module.Enemies((uint)OID.Boss);
+                    var boss = Module.Enemies((uint)OID.ShishuChochin);
                     var countBoss = boss.Count;
                     for (var j = 0; j < countBoss; ++j)
                     {
@@ -128,7 +144,7 @@ sealed class V20ShishuChochinStates : StateMachineBuilder
             .ActivateOnEnter<Illume>()
             .Raw.Update = () =>
             {
-                var enemies = module.Enemies((uint)OID.Boss);
+                var enemies = module.Enemies((uint)OID.ShishuChochin);
                 var count = enemies.Count;
                 for (var i = 0; i < count; ++i)
                 {
@@ -140,7 +156,7 @@ sealed class V20ShishuChochinStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12396, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.ShishuChochin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12396, SortOrder = 1, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V20ShishuChochin(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(701.34f, -29.85f), new(701.24f, -19.5f), new(701.24f, 6.28f), new(701.24f, 6.79f), new(700.88f, 7.17f),
@@ -192,6 +208,6 @@ public sealed class V20ShishuChochin(WorldState ws, Actor primary) : BossModule(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies((uint)OID.Boss));
+        Arena.Actors(Enemies((uint)OID.ShishuChochin));
     }
 }

@@ -13,5 +13,5 @@ public abstract class VCZelessGah(WorldState ws, Actor primary) : BossModule(ws,
     public static readonly AOEShapeCustom Rect = new([new Rectangle(arenaCenter, 25f, 30f)], [new Rectangle(arenaCenter, 15f, 20f)]);
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Boss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11393, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.ZelessGah, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11393, SortOrder = 5, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V14ZelessGah(WorldState ws, Actor primary) : VCZelessGah(ws, primary);

@@ -23,7 +23,7 @@ sealed class InfirmSoul(BossModule module) : Components.BaitAwayCast(module, (ui
 
 sealed class SerpentDescending(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.SerpentDescending, 5f, 6f);
 sealed class YamaKagura(BossModule module) : Components.SimpleAOEs(module, (uint)AID.YamaKagura, new AOEShapeRect(60f, 3f));
-sealed class Handprint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Handprint2, new AOEShapeCone(40f, 90f.Degrees()));
+sealed class Handprint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Handprint, new AOEShapeCone(20f, 90f.Degrees()));
 
 sealed class ForceOfNature1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.ForceOfNature1, 10f)
 {
@@ -94,7 +94,7 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
         base.AddAIHints(slot, actor, assignment, hints);
         if (ActiveBaitsOn(actor).Count != 0)
         {
-            hints.AddForbiddenZone(Arena.Bounds == T09Seiryu.Phase2Bounds ? ShapeDistance.InvertedCircle(Arena.Center, 5f) : ShapeDistance.Circle(Arena.Center, 18.5f), WorldState.FutureTime(ActivationDelay));
+            hints.AddForbiddenZone(Arena.Bounds.Radius >= 20f ? ShapeDistance.InvertedCircle(Arena.Center, 5f) : ShapeDistance.Circle(Arena.Center, 18.5f), WorldState.FutureTime(ActivationDelay));
         }
     }
 }
@@ -106,17 +106,22 @@ sealed class ArenaChange(BossModule module) : BossComponent(module)
     {
         if (spell.Action.ID == (uint)AID.StrengthOfSpirit) // in phase 2 the arena no longer got a wall and we need to add back the player hitboxradius
         {
-            Arena.Bounds = T09Seiryu.Phase2Bounds;
+            Arena.Bounds = Seiryu.Phase2Bounds;
         }
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 637, NameID = 7922)]
-public sealed class T09Seiryu(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), Phase1Bounds)
+public abstract class Seiryu(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, phase1Bounds)
 {
-    public static readonly ArenaBounds Phase1Bounds = new ArenaBoundsCircle(19.5f);
-    public static readonly ArenaBounds Phase2Bounds = new ArenaBoundsCircle(20f);
+    private static readonly WPos arenaCenter = new(100f, 100f);
+    private static readonly ArenaBoundsComplex phase1Bounds = new([new Polygon(arenaCenter, 19.5f, 48)]);
+    public static readonly ArenaBoundsComplex Phase2Bounds = new([new Polygon(arenaCenter, 20f, 48)]);
+    public static readonly ArenaBoundsComplex Phase2WaterBounds = new([new Polygon(arenaCenter, 44.5f, 48)]);
+}
 
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Seiryu, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 637, NameID = 7922, Category = BossModuleInfo.Category.Extreme, Expansion = BossModuleInfo.Expansion.Stormblood)]
+public sealed class T09Seiryu(WorldState ws, Actor primary) : Seiryu(ws, primary)
+{
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
