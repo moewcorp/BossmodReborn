@@ -14,5 +14,5 @@ sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)
 sealed class ForeHonor(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ForeHonor, new AOEShapeCone(50f, 90f.Degrees()));
 sealed class Cogwheel(BossModule module) : Components.RaidwideCast(module, (uint)AID.Cogwheel);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Boss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11419, SortOrder = 5)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.ThorneKnight, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 868, NameID = 11419, SortOrder = 6, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V15ThorneKnight(WorldState ws, Actor primary) : BossModule(ws, primary, new(289f, -230f), new ArenaBoundsSquare(17.5f, 45f.Degrees()));

@@ -30,7 +30,7 @@ sealed class SuddenlySewage(BossModule module) : Components.GenericAOEs(module)
             };
             if (pos != default)
             {
-                _aoes.Add(new(square, (pos - 10f * new WDir(default, 1f)).Quantized(), default, WorldState.FutureTime(8d)));
+                _aoes.Add(new(square, (pos - 10f * new WDir(default, 1f)).Quantized(), Angle.AnglesCardinals[1], WorldState.FutureTime(8d)));
             }
         }
     }

@@ -23,7 +23,7 @@ public enum AID : uint
     ZombieJuiceRepeat = 20199 // Helper->location, no cast, range 6 circle
 }
 
-sealed class BlazingMeteor(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.BlazingMeteor, 30f)
+sealed class BlazingMeteor(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.BlazingMeteor, 30f, safeInsideHitbox: false)
 {
     public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.BestialCorpse));
 }

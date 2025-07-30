@@ -1,4 +1,4 @@
-﻿namespace BossMod.Stormblood.Trial.T09Seiryu;
+﻿namespace BossMod.Stormblood.Extreme.Ex8Seiryu;
 
 sealed class SerpentAscending(BossModule module) : Components.GenericTowers(module)
 {
@@ -14,7 +14,7 @@ sealed class SerpentAscending(BossModule module) : Components.GenericTowers(modu
     {
         if (spell.Action.ID is (uint)AID.SerpentsFang or (uint)AID.SerpentsJaws)
         {
-            Towers.Clear();
+            ++NumCasts;
         }
     }
 }
