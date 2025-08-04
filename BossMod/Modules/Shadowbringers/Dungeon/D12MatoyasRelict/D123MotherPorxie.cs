@@ -81,7 +81,7 @@ class HuffAndPuff1(BossModule module) : Components.SimpleKnockbacks(module, (uin
     }
 }
 
-class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true, stopAtWall: true)
+class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, stopAtWall: true)
 {
     private Knockback? _sourceCache;
     public Knockback? Source;
@@ -92,12 +92,12 @@ class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, igno
     {
         if (spell.Action.ID == (uint)AID.HuffAndPuffVisual)
         {
-            _sourceCache = new(spell.LocXZ, 15f, default, null, spell.Rotation, Kind.DirForward);
+            _sourceCache = new(spell.LocXZ, 15f, default, null, spell.Rotation, Kind.DirForward, ignoreImmunes: true);
         }
         else if (_sourceCache is Knockback knockback && spell.Action.ID == (uint)AID.NeerDoneWell)
         {
             ref readonly var kb = ref knockback;
-            Source = new(kb.Origin, 50f, WorldState.FutureTime(5.4d), null, kb.Direction, kb.Kind);
+            Source = new(kb.Origin, 50f, WorldState.FutureTime(5.4d), null, kb.Direction, kb.Kind, ignoreImmunes: true);
         }
     }
 
@@ -106,7 +106,7 @@ class HuffAndPuff2(BossModule module) : Components.GenericKnockback(module, igno
         if (_sourceCache is Knockback knockback && spell.Action.ID == (uint)AID.Explosion)
         {
             ref readonly var kb = ref knockback;
-            Source = new(kb.Origin, 15f, WorldState.FutureTime(10.9d), null, kb.Direction, kb.Kind);
+            Source = new(kb.Origin, 15f, WorldState.FutureTime(10.9d), null, kb.Direction, kb.Kind, ignoreImmunes: true);
         }
     }
 

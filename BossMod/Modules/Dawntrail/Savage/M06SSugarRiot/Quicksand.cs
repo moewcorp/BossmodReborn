@@ -77,7 +77,7 @@ sealed class QuicksandDoubleStylePaintBomb(BossModule module) : BossComponent(mo
     }
 }
 
-sealed class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.GenericKnockback(module, default, true, stopAfterWall: true)
+sealed class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.GenericKnockback(module, default, stopAfterWall: true)
 {
     public BitMask Targets;
     private Quicksand? _qs = module.FindComponent<Quicksand>();
@@ -85,7 +85,7 @@ sealed class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.Gene
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Targets[slot])
-            return new Knockback[1] { new(actor.Position, 16f, default, default, actor.Rotation, Kind.DirForward) };
+            return new Knockback[1] { new(actor.Position, 16f, default, default, actor.Rotation, Kind.DirForward, ignoreImmunes: true) };
         return [];
     }
 

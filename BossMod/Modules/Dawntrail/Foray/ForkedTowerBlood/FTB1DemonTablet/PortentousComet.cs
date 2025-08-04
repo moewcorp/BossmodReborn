@@ -35,7 +35,7 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
     {
         if (ActiveBaitsOn(actor).Count != 0 && meteor != null)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(meteor.Position, 1f), CurrentBaits[0].Activation);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(meteor.Position, 1f), CurrentBaits.Ref(0).Activation);
         }
     }
 
@@ -65,7 +65,7 @@ sealed class PortentousCometeorBait(BossModule module) : Components.GenericBaitA
     }
 }
 
-sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class PortentousCometKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private static readonly AOEShapeCircle circle = new(4f);
     private readonly List<(Actor target, Angle dir)> targets = new(4);
@@ -104,7 +104,7 @@ sealed class PortentousCometKnockback(BossModule module) : Components.GenericKno
                     distance = (center + 6f * dir - pos).Length();
                 }
                 // the knockback range for knockbacks away from meteor side does not seem very consistent. Theory: if the knockback ends up inside the demon tablet, it gets extended to land 3y behind the wall
-                knockback[0] = new Knockback(kb.target.Position, distance, activation, circle, kb.dir, kind: Kind.DirForward);
+                knockback[0] = new Knockback(kb.target.Position, distance, activation, circle, kb.dir, kind: Kind.DirForward, ignoreImmunes: true);
                 return knockback;
             }
         }
@@ -157,9 +157,11 @@ sealed class PortentousComet(BossModule module) : Components.GenericStackSpread(
         {
             var count = Stacks.Count;
             var id = spell.TargetID;
+            var stacks = CollectionsMarshal.AsSpan(Stacks);
             for (var i = 0; i < count; ++i)
             {
-                if (Stacks[i].Target.InstanceID == id)
+                ref var stack = ref stacks[i];
+                if (stack.Target.InstanceID == id)
                 {
                     Stacks.RemoveAt(i);
                     ++NumFinishedStacks;

@@ -51,7 +51,11 @@ public sealed record class ActorCastInfo
 // note: 'main' target could be completely different and unrelated to actual affected targets
 public sealed record class ActorCastEvent(ActionID Action, ulong MainTargetID, float AnimationLockTime, uint MaxTargets, Vector3 TargetPos, uint GlobalSequence, uint SourceSequence, Angle Rotation)
 {
-    public readonly record struct Target(ulong ID, ActionEffects Effects);
+    public readonly struct Target(ulong id, ActionEffects effects)
+    {
+        public readonly ulong ID = id;
+        public readonly ActionEffects Effects = effects;
+    }
 
     public readonly List<Target> Targets = [];
 

@@ -363,7 +363,7 @@ sealed class P3DarkestDanceBait(BossModule module) : Components.GenericBaitAway(
     }
 }
 
-sealed class P3DarkestDanceKnockback(BossModule module) : Components.GenericKnockback(module, (uint)AID.DarkestDanceKnockback, true)
+sealed class P3DarkestDanceKnockback(BossModule module) : Components.GenericKnockback(module, (uint)AID.DarkestDanceKnockback)
 {
     public Actor? Caster;
     public DateTime Activation;
@@ -371,7 +371,7 @@ sealed class P3DarkestDanceKnockback(BossModule module) : Components.GenericKnoc
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Caster != null)
-            return new Knockback[1] { new(Caster.Position, 21, Activation) };
+            return new Knockback[1] { new(Caster.Position, 21f, Activation, ignoreImmunes: true) };
         return [];
     }
 

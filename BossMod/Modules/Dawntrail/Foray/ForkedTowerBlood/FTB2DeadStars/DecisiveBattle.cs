@@ -9,7 +9,7 @@ sealed class DecisiveBattleStatus(BossModule module) : BossComponent(module)
     {
         if (AssignedBoss[slot] is var assignedSlot && assignedSlot != null && WorldState.Actors.Find(actor.TargetID) is Actor target)
         {
-            if (target != assignedSlot && target.OID is (uint)OID.Boss or (uint)OID.Phobos or (uint)OID.Nereid)
+            if (target != assignedSlot && target.OID is (uint)OID.Triton or (uint)OID.Phobos or (uint)OID.Nereid)
             {
                 hints.Add($"Target {assignedSlot?.Name}!");
             }

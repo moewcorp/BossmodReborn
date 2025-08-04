@@ -80,12 +80,13 @@ sealed class PrimordialChaos(BossModule module) : Components.GenericAOEs(module)
         var id = spell.Action.ID;
         if (id is (uint)AID.FrozenFalloutBlue or (uint)AID.FrozenFalloutRed)
         {
-            var targets = spell.Targets;
-            var count = targets.Count;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
             var isBlue = id == (uint)AID.FrozenFalloutBlue;
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < len; ++i)
             {
-                if (Raid.FindSlot(targets[i].ID) is var slot && slot >= 0)
+                ref readonly var targ = ref targets[i];
+                if (Raid.FindSlot(targ.ID) is var slot && slot >= 0)
                 {
                     playerTemperatures[slot] += isBlue ? -1 : 1;
                 }

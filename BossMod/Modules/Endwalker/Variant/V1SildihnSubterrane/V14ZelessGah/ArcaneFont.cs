@@ -5,6 +5,7 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeRect rect = new(100f, 5f);
     private readonly List<Actor> cachedPortals = new(4);
+    private readonly List<Actor> fireballs = new(4);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
@@ -17,14 +18,17 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
                 var portals = Module.Enemies((uint)OID.Portal);
                 var countP = portals.Count;
                 var rot = actor.Rotation;
-                _aoes.Add(new(rect, (actor.Position - 50f * rot.Round(90f).ToDirection()).Quantized(), rot, WorldState.FutureTime(countP == 0 ? 10.1d : 12.8f)));
+                _aoes.Add(new(rect, (actor.Position - 50f * rot.Round(90f).ToDirection()).Quantized(), rot, WorldState.FutureTime(countP == 0 ? 10.1d : 12.8d)));
+                break;
+            case (uint)OID.BallOfFire:
+                fireballs.Add(actor);
                 break;
             case (uint)OID.Portal:
                 var count = _aoes.Count;
                 var found = false;
                 if (count != 0)
                 {
-                    if (Module.Enemies((uint)OID.BallOfFire).Count != 0) // fonts wont be teleported if there are teleporting fireballs
+                    if (fireballs.Count != 0) // fonts wont be teleported if there are teleporting fireballs
                     {
                         cachedPortals.Clear();
                         return;
@@ -116,6 +120,7 @@ sealed class ArcaneFont(BossModule module) : Components.GenericAOEs(module)
         switch (spell.Action.ID)
         {
             case (uint)AID.Burn:
+                fireballs.Remove(caster);
                 cachedPortals.Clear();
                 break;
             case (uint)AID.BlazingBenifice:

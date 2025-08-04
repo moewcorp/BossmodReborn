@@ -95,10 +95,10 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         switch (status.ID)
         {
             case (uint)SID.PositiveCharge:
-                positiveCharge[Raid.FindSlot(actor.InstanceID)] = true;
+                positiveCharge.Set(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.NegativeCharge:
-                negativeCharge[Raid.FindSlot(actor.InstanceID)] = true;
+                negativeCharge.Set(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }
@@ -108,10 +108,10 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         switch (status.ID)
         {
             case (uint)SID.PositiveCharge:
-                positiveCharge[Raid.FindSlot(actor.InstanceID)] = false;
+                positiveCharge.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
             case (uint)SID.NegativeCharge:
-                negativeCharge[Raid.FindSlot(actor.InstanceID)] = false;
+                negativeCharge.Clear(Raid.FindSlot(actor.InstanceID));
                 break;
         }
     }

@@ -51,14 +51,14 @@ sealed class AetherialConversionTailThrust(BossModule module) : Components.Gener
     }
 }
 
-sealed class AetherialConversionSwitchOfTides(BossModule module) : Components.GenericKnockback(module, (uint)AID.SwitchOfTides, true)
+sealed class AetherialConversionSwitchOfTides(BossModule module) : Components.GenericKnockback(module, (uint)AID.SwitchOfTides)
 {
     private readonly AetherialConversion? _comp = module.FindComponent<AetherialConversion>();
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (_comp?.CurMechanic == AetherialConversion.Mechanic.Knockback && _comp.NumCasts < 2)
-            return new Knockback[1] { new(Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), 25f) };
+            return new Knockback[1] { new(Arena.Center + new WDir(_comp.NumCasts == 0 ? _comp.FirstOffsetX : -_comp.FirstOffsetX, 0), 25f, ignoreImmunes: true) };
         return [];
     }
 }

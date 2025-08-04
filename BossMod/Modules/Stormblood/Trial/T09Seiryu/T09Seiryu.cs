@@ -21,9 +21,9 @@ sealed class FortuneBladeSigil(BossModule module) : Components.SimpleAOEs(module
 
 sealed class InfirmSoul(BossModule module) : Components.BaitAwayCast(module, (uint)AID.InfirmSoul, 4f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
-sealed class SerpentDescending(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.SerpentDescending, 5f, 6f);
+sealed class SerpentDescending(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spreadmarker, (uint)AID.SerpentDescending, 5f, 6d);
 sealed class YamaKagura(BossModule module) : Components.SimpleAOEs(module, (uint)AID.YamaKagura, new AOEShapeRect(60f, 3f));
-sealed class Handprint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Handprint, new AOEShapeCone(20f, 90f.Degrees()));
+sealed class Handprint(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Handprint1, new AOEShapeCone(40f, 90f.Degrees()));
 
 sealed class ForceOfNature1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.ForceOfNature1, 10f)
 {
@@ -39,8 +39,10 @@ sealed class KanaboBait(BossModule module) : Components.BaitAwayTethers(module, 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Any(x => x.Target == actor))
+        if (ActiveBaitsOn(actor).Count != 0)
+        {
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 19f), WorldState.FutureTime(ActivationDelay));
+        }
     }
 }
 
@@ -57,7 +59,7 @@ sealed class BlueBolt(BossModule module) : Components.LineStack(module, aidMarke
 }
 
 sealed class ForbiddenArts(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.ForbiddenArtsMarker, (uint)AID.ForbiddenArtsSecond, 5.2f, 84.4f, 4); // this hits twice
-sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(82.6f, 2.5f), (uint)TetherID.BaitAway, (uint)AID.RedRush, (uint)OID.AkaNoShiki, 6f)
+sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(82.6f, 2.5f), (uint)TetherID.BaitAway, (uint)AID.RedRush, (uint)OID.AkaNoShiki, 6d)
 {
     private readonly BlueBolt _stack = module.FindComponent<BlueBolt>()!;
 
@@ -71,7 +73,7 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)
         {
-            _stack.ForbiddenPlayers[Raid.FindSlot(player.InstanceID)] = true;
+            _stack.ForbiddenPlayers.Set(Raid.FindSlot(player.InstanceID));
         }
     }
 
@@ -85,7 +87,7 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)
         {
-            _stack.ForbiddenPlayers[Raid.FindSlot(player.InstanceID)] = false;
+            _stack.ForbiddenPlayers.Clear(Raid.FindSlot(player.InstanceID));
         }
     }
 

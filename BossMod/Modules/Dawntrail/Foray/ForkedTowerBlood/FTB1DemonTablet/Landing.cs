@@ -6,7 +6,7 @@ sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(m
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        if (_aoe.Casters.Count != 0 && _aoe.Casters[0].Check(pos))
+        if (_aoe.Casters.Count != 0 && _aoe.Casters.Ref(0).Check(pos))
         {
             return true;
         }
@@ -23,7 +23,7 @@ sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(m
             }
             var activeKnockbacks = ActiveKnockbacks(slot, actor);
             var len = activeKnockbacks.Length;
-            ref readonly var c = ref Casters.Ref(0);
+            ref var c = ref Casters.Ref(0);
             var act = c.Activation;
             for (var i = 0; i < len; ++i)
             {

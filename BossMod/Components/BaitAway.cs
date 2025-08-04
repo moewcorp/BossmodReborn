@@ -299,6 +299,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
     public readonly uint EnemyOID = enemyOID;
     public bool DrawTethers = true;
     public double ActivationDelay = activationDelay;
+    protected DateTime activation;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -320,11 +321,24 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null && (EnemyOID == default || enemy.OID == EnemyOID))
         {
-            CurrentBaits.Add(new(enemy, player, Shape, WorldState.FutureTime(ActivationDelay)));
+            if (ActivationDelay == default)
+            {
+                activation = WorldState.FutureTime(ActivationDelay); // TODO: not optimal if tethers do not appear at the same time...
+            }
+            CurrentBaits.Add(new(enemy, player, Shape, activation));
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        base.OnEventCast(caster, spell);
+        if (spell.Action.ID == WatchedAction && CurrentBaits.Count == 0)
+        {
+            activation = default;
+        }
+    }
+
+    public override void OnUntethered(Actor source, ActorTetherInfo tether) // TODO: this is problematic because untethering can happen many frames before the actual cast event, maybe there is a better solution?
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)

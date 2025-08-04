@@ -56,13 +56,14 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.SnowBoulder)
         {
-            var targets = spell.Targets;
-            var count = targets.Count;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
             rectangles.RemoveAt(0);
             activations.RemoveAt(0);
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < len; ++i)
             {
-                var slot = Raid.FindSlot(targets[i].ID);
+                ref readonly var targ = ref targets[i];
+                var slot = Raid.FindSlot(targ.ID);
                 if (slot < PartyState.MaxPartySize)
                 {
                     Vulnerable[slot] = true;
@@ -169,10 +170,11 @@ sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockba
     {
         if (!_charge.Vulnerable[slot] && _kbs.Count != 0)
         {
-            var act = _kbs[0].Activation;
+            ref var kb = ref _kbs.Ref(0);
+            var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 20f), _kbs[0].Activation);
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 20f), kb.Activation);
             }
         }
     }

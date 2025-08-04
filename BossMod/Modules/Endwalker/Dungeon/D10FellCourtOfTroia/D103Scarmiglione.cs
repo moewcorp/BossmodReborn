@@ -193,7 +193,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             Arena.Bounds = arena;
             outOfBounds = true;
         }
-        else if (outOfBounds && (player - Arena.Center).LengthSq() < 399)
+        else if (outOfBounds && (player - Arena.Center).LengthSq() < 399f)
         {
             _aoe = null;
             ArenaBoundsComplex arena = new(defaultCircle, [.. SafeWalls]);
@@ -203,7 +203,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class VacuumWave(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class VacuumWave(BossModule module) : Components.GenericKnockback(module)
 {
     private Knockback? _source;
     public readonly List<SafeWall> safeWalls =
@@ -227,7 +227,7 @@ sealed class VacuumWave(BossModule module) : Components.GenericKnockback(module,
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.VacuumWave)
-            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), safeWalls: safeWalls);
+            _source = new(spell.LocXZ, 30f, Module.CastFinishAt(spell), safeWalls: safeWalls, ignoreImmunes: true);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

@@ -2,13 +2,13 @@
 
 sealed class P2AbsoluteZero(BossModule module) : Components.CastCounter(module, (uint)AID.AbsoluteZeroAOE);
 
-sealed class P2SwellingFrost(BossModule module) : Components.GenericKnockback(module, (uint)AID.SwellingFrost, true)
+sealed class P2SwellingFrost(BossModule module) : Components.GenericKnockback(module, (uint)AID.SwellingFrost)
 {
     private readonly DateTime _activation = module.WorldState.FutureTime(3.2d);
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
-        return new Knockback[1] { new(Arena.Center, 10f, _activation) };
+        return new Knockback[1] { new(Arena.Center, 10f, _activation, ignoreImmunes: true) };
     }
 }
 

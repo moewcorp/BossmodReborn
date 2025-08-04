@@ -30,10 +30,11 @@ public enum AID : uint
 
     KujiKiri = 14305, // Seiryu->self, 4.0s cast, single-target
 
-    SerpentDescending1 = 14301, // Helper->player, 6.0s cast, range 5 circle, spread
-    SerpentDescending2 = 14302, // Helper->location, 3.0s cast, range 5 circle, spread
+    SerpentDescendingSpread = 14301, // Helper->player, 6.0s cast, range 5 circle, spread
+    SerpentDescendingAOE = 14302, // Helper->location, 3.0s cast, range 5 circle
 
     FortuneBladeSigil = 14306, // Helper->self, 6.5s cast, range 50+R width 4 rect
+    CalamityBladeSigil = 14307, // Helper->self, 8.0s cast, range 50+R width 4 rect
 
     OnmyoSigilVisual = 14294, // Seiryu->self, no cast, single-target
     OnmyoSigil = 14849, // Helper->self, 3.0s cast, range 12 circle
@@ -71,15 +72,15 @@ public enum AID : uint
     DragonsWakeVisual = 14282, // Seiryu->self, no cast, single-target
     DragonsWake = 14283, // Helper->self, 24.0s cast, range 80 circle
 
-    GreatTyphoonCone = 14328, // Helper->self, 4.0s cast, range 45 30-degree cone
-    GreatTyphoon1 = 14329, // Helper->self, 3.0s cast, range 21-28 donut
-    GreatTyphoon2 = 14330, // Helper->self, 3.0s cast, range 28-34 donut
-    GreatTyphoon3 = 14331, // Helper->self, 3.0s cast, range 34-40 donut
+    GreatTyphoonCone = 14328, // Helper->self, 4.0s cast, range 20-45 30-degree donut segment
+    GreatTyphoon1 = 14329, // Helper->self, 3.0s cast, range 20-28 donut
+    GreatTyphoon2 = 14330, // Helper->self, 3.0s cast, range 26-34 donut
+    GreatTyphoon3 = 14331, // Helper->self, 3.0s cast, range 32-40 donut
 
     HandprintVisual1 = 14309, // YamaNoShiki->self, no cast, single-target
     HandprintVisual2 = 14310, // YamaNoShiki->self, no cast, single-target
-    HandprintVisual3 = 14312, // Helper->self, 4.5s cast, range 40 180-degree cone
-    Handprint = 14311, // Helper->self, 4.5s cast, range 20 180-degree cone
+    Handprint1 = 14312, // Helper->self, 4.5s cast, range 40 180-degree cone, inside water
+    Handprint2 = 14311, // Helper->self, 4.5s cast, range 20 180-degree cone, on land
 
     CoursingRiver1 = 14627, // BlueOrochi2->self, 5.0s cast, single-target
     CoursingRiver2 = 14325, // BlueOrochi3->self, 5.0s cast, single-target
@@ -99,7 +100,6 @@ public enum AID : uint
     ForbiddenArtsSecond2 = 15395, // Seiryu->self, no cast, range 80+R width 8 rect
 
     BlazingAramitama = 14308, // Seiryu->self, 5.0s cast, single-target
-    CalamityBladeSigil = 14307, // Helper->self, 8.0s cast, range 50+R width 4 rect
 
     SerpentAscending1 = 14300, // Seiryu->self, no cast, single-target
     SerpentAscending2 = 15397, // Seiryu->self, 4.0s cast, single-target
@@ -109,20 +109,14 @@ public enum AID : uint
     FifthElementEnrage = 15529, // Seiryu->self, 18.0s cast, range 100 circle
 }
 
-public enum SID : uint
-{
-    Cursekeeper = 1725, // Seiryu->player, extra=0x0
-    MagicVulnerabilityUp = 1138 // Seiryu->player, extra=0x0
-}
-
 public enum IconID : uint
 {
-    _Gen_Icon_target_ae_s6x = 169, // player->self
+    SerpentDescending = 169 // player->self
 }
 
 public enum TetherID : uint
 {
-    _Gen_Tether_chn_arrow01f = 57, // AoNoShiki->player
-    _Gen_Tether_chn_tergetfix1f = 17, // AkaNoShiki->player
-    _Gen_Tether_chn_teke01h = 84, // IwaNoShiki->player
+    BlueBolt = 57, // AoNoShiki->player
+    RedRush = 17, // AkaNoShiki->player
+    Kanabo = 84 // IwaNoShiki->player
 }

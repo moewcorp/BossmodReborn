@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB3MarbleDragon;
 
 public enum OID : uint
 {
-    Boss = 0x3974, // R7.6
+    MarbleDragon = 0x3974, // R7.6
     DeathwallHelper = 0x46D5, // R0.5
     Deathwall = 0x1EBD51, // R0.5
     Icewind = 0x3976, // R1.0
