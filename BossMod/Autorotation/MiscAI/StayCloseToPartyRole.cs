@@ -37,7 +37,7 @@ public sealed class StayCloseToPartyRole(RotationModuleManager manager, Actor pl
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         var role = strategy.Option(Tracks.Role).As<Role>();
         if (role != Role.None && role != Manager.Player?.Role)
