@@ -19,19 +19,20 @@ sealed class OnmyoSerpentEyeSigil(BossModule module) : Components.GenericAOEs(mo
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
         void AddAOE(AOEShape shape, bool first = true) => _aoes.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(first ? 5.6d : 8.7d)));
-        if (modelState == 32u)
+        switch (modelState)
         {
-            AddAOE(circle);
-        }
-        else if (modelState == 5u)
-        {
-            AddAOE(donut);
-            AddAOE(circle, false);
-        }
-        else if (modelState == 6u)
-        {
-            AddAOE(circle);
-            AddAOE(donut, false);
+            case 5:
+                AddAOE(donut);
+                AddAOE(circle, false);
+                break;
+            case 6:
+                AddAOE(circle);
+                AddAOE(donut, false);
+                break;
+            case 32:
+                AddAOE(circle);
+                break;
+
         }
     }
 
@@ -40,7 +41,10 @@ sealed class OnmyoSerpentEyeSigil(BossModule module) : Components.GenericAOEs(mo
         if (spell.Action.ID is (uint)AID.OnmyoSigil or (uint)AID.OnmyoSigilFirst or (uint)AID.OnmyoSigilSecond or (uint)AID.SerpentEyeSigilFirst or (uint)AID.SerpentEyeSigilSecond)
         {
             ++NumCasts;
-            _aoes.RemoveAt(0);
+            if (_aoes.Count > 1)
+            {
+                _aoes.RemoveAt(0);
+            }
         }
     }
 }

@@ -79,7 +79,7 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
     {
         if (Casters.Count != 0)
         {
-            ref readonly var c = ref Casters.Ref(0);
+            ref var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {
@@ -96,7 +96,7 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
     }
 }
 
-sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKnockback(module)
 {
     private DateTime activation;
     private BitMask affectedPlayers;
@@ -104,7 +104,7 @@ sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKno
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (affectedPlayers[slot])
-            return new Knockback[1] { new(actor.Position, 35f, activation, direction: actor.Rotation, kind: Kind.DirForward) };
+            return new Knockback[1] { new(actor.Position, 35f, activation, direction: actor.Rotation, kind: Kind.DirForward, ignoreImmunes: true) };
         return [];
     }
 

@@ -85,8 +85,8 @@ public enum AID : uint
 
     HandprintVisual1 = 14309, // YamaNoShiki->self, no cast, single-target
     HandprintVisual2 = 14310, // YamaNoShiki->self, no cast, single-target
-    HandprintVisual3 = 14344, // Helper->self, 4.5s cast, range 40 180-degree cone
-    Handprint = 14343, // Helper->self, 4.5s cast, range 20 180-degree cone
+    Handprint1 = 14344, // Helper->self, 4.5s cast, range 40 180-degree cone, inside water
+    Handprint2 = 14343, // Helper->self, 4.5s cast, range 20 180-degree cone, on land
 
     ForceOfNature1 = 14346, // Helper->self, 5.0s cast, range 21 circle, knockback 10 AwayFromOrigin
     ForceOfNature2 = 14345, // Helper->self, 5.0s cast, range 5 circle

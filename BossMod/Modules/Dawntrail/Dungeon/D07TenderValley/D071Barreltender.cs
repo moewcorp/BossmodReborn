@@ -96,7 +96,8 @@ sealed class NeedleStormSuperstorm(BossModule module) : Components.GenericAOEs(m
         var isKnockbackButImmune = isKnockback && isKnockbackImmune;
         for (var i = 0; i < max; ++i)
         {
-            aoes[i].Risky = !isKnockback || isKnockbackButImmune;
+            ref var aoe = ref aoes[i];
+            aoe.Risky = !isKnockback || isKnockbackButImmune;
         }
         return aoes[..max];
     }
@@ -164,7 +165,7 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (Casters.Count != 0)
         {
-            ref readonly var c = ref Casters.Ref(0);
+            ref var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {

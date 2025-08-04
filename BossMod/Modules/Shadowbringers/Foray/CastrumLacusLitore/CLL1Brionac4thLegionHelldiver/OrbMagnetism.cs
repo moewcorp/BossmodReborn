@@ -83,7 +83,7 @@ sealed class OrbsAOE(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
 {
     private readonly Knockback?[] _sources = new Knockback?[8];
     private readonly byte[] playerPoles = new byte[8];
@@ -95,7 +95,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
-        if (slot is < 0 or > 7) // we don't support the random allied NPCs
+        if (slot > 7) // we don't support the random allied NPCs
             return [];
         if (_sources[slot] is Knockback source)
         {
@@ -260,12 +260,12 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module, 
                 }
             }
         }
-        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin);
+        void AddSource(int slot, WPos position, bool isKnockback) => _sources[slot] = new(position, 30f, WorldState.FutureTime(8.2d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin, ignoreImmunes: true);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (slot is < 0 or > 7) // we don't support the random allied NPCs
+        if (slot > 7) // we don't support the random allied NPCs
             return;
         if (_sources[slot] is Knockback source)
         {

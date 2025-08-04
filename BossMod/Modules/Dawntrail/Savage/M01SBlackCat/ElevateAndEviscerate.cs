@@ -38,7 +38,7 @@ sealed class ElevateAndEviscerateShockwave(BossModule module) : Components.Gener
     }
 }
 
-sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true, stopAfterWall: true)
+sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockback(module, stopAfterWall: true)
 {
     private Actor? _nextTarget; // target selection icon appears before cast start
     public Actor? CurrentTarget; // for current mechanic
@@ -54,7 +54,7 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (CurrentTarget != null && actor == CurrentTarget && CurrentKnockbackDistance > 0)
-            return new Knockback[1] { new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, direction: actor.Rotation, kind: Kind.DirForward) };
+            return new Knockback[1] { new(Arena.Center, CurrentKnockbackDistance, CurrentDeadline, direction: actor.Rotation, kind: Kind.DirForward, ignoreImmunes: true) };
         return [];
     }
 

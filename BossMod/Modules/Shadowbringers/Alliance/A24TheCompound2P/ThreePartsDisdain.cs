@@ -31,7 +31,7 @@ sealed class ThreePartsDisdainStack(BossModule module) : Components.GenericStack
     }
 }
 
-sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private Actor? target;
     private readonly DateTime[] activation = new DateTime[3];
@@ -51,7 +51,7 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
             var knockback = new Knockback[count];
             for (var i = 0; i < count; ++i)
             {
-                knockback[i] = new Knockback(primaryPos, i != count - 1 ? 8f : 12f, activation[i]);
+                knockback[i] = new Knockback(primaryPos, i != count - 1 ? 8f : 12f, activation[i], ignoreImmunes: true);
             }
             return knockback;
         }
@@ -66,7 +66,7 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
             var act = Module.CastFinishAt(spell);
             for (var i = 0; i < 3; ++i)
             {
-                activation[i] = act.AddSeconds(i == 1 ? i * 1.2d : i == 2 ? 1.4d : 0);
+                activation[i] = act.AddSeconds(i == 1 ? i * 1.2d : i == 2 ? 1.4d : default);
             }
         }
     }

@@ -16,7 +16,13 @@ public enum AID : uint
     BurningCyclone = 30678 // ForgottenDrakemother/ForgottenDrakefather/ForgottenDrakeling/ForgottenDrakesister/ForgottenDrakebrother->self, 3.0s cast, range 8 120-degree cone
 }
 
-sealed class BurningCyclone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BurningCyclone, new AOEShapeCone(8f, 60f.Degrees()));
+sealed class BurningCyclone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BurningCyclone, new AOEShapeCone(8f, 60f.Degrees()))
+{
+    public override void AddGlobalHints(GlobalHints hints)
+    {
+        hints.Add("Order: Fater -> mother -> brother -> sister -> drakeling");
+    }
+}
 
 sealed class V10DrakesStates : StateMachineBuilder
 {

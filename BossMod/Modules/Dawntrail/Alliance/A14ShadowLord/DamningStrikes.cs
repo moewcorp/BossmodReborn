@@ -32,14 +32,15 @@ sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module
             var party = Raid.WithSlot(false, false, true);
             var lenP = party.Length;
             BitMask forbidden = default;
-            var targets = spell.Targets;
-            var countT = targets.Count;
-            for (var i = 0; i < countT; ++i)
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
+            for (var i = 0; i < len; ++i)
             {
+                ref readonly var targ = ref targets[i];
                 for (var j = 0; j < lenP; ++j)
                 {
                     ref readonly var p = ref party[j];
-                    if (targets[i].ID == p.Item2.InstanceID)
+                    if (targ.ID == p.Item2.InstanceID)
                     {
                         forbidden[p.Item1] = true;
                         break;
@@ -48,10 +49,11 @@ sealed class DamningStrikes(BossModule module) : Components.GenericTowers(module
             }
 
             towers = CollectionsMarshal.AsSpan(Towers);
-            var len = towers.Length;
-            for (var i = 0; i < len; ++i)
+            var len2 = towers.Length;
+            for (var i = 0; i < len2; ++i)
             {
-                towers[i].ForbiddenSoakers |= forbidden;
+                ref var t = ref towers[i];
+                t.ForbiddenSoakers |= forbidden;
             }
         }
     }

@@ -18,7 +18,7 @@ sealed class SerZephirin(BossModule module) : Components.Adds(module, (uint)OID.
 
 sealed class BossReappear(BossModule module) : Components.CastCounter(module, (uint)AID.BossReappear);
 
-sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(module, (uint)AID.LightOfAscalon, true)
+sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(module, (uint)AID.LightOfAscalon)
 {
     private readonly List<Knockback> _sources = new(7);
 
@@ -36,7 +36,7 @@ sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(mod
             var origin = new WPos(-0.822f, -16.314f); // knockback originates from a helper
             for (var i = 0d; i < 7d; ++i)
             {
-                _sources.Add(new(origin, 3f, WorldState.FutureTime(10.7d + i * 1.3d)));
+                _sources.Add(new(origin, 3f, WorldState.FutureTime(10.7d + i * 1.3d), ignoreImmunes: true));
             }
         }
     }

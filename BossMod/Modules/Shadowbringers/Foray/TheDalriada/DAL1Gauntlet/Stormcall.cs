@@ -26,11 +26,13 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
         {
             var count = AOEs.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
-                    AOEs[i] = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: id);
+                    aoe = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: id);
                     return;
                 }
             }

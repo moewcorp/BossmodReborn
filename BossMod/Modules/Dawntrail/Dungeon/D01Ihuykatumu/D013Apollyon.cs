@@ -60,7 +60,7 @@ sealed class HighWind(BossModule module) : Components.RaidwideCast(module, (uint
 sealed class RazorZephyrBladesOfFamine(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RazorZephyr, (uint)AID.BladesOfFamine], new AOEShapeRect(50f, 6f));
 
 sealed class Levinsickle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Levinsickle, 4f);
-sealed class LevinsickleSpark(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.LevinsickleSpark, GetVoidzones, 0.7f)
+sealed class LevinsickleSpark(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.LevinsickleSpark, GetVoidzones, 0.7d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {

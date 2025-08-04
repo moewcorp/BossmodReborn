@@ -43,7 +43,7 @@ class RhalgrBeaconShock(BossModule module) : Components.GenericAOEs(module, (uin
     }
 }
 
-class RhalgrBeaconKnockback(BossModule module) : Components.GenericKnockback(module, (uint)AID.RhalgrsBeaconKnockback, true, stopAfterWall: true)
+class RhalgrBeaconKnockback(BossModule module) : Components.GenericKnockback(module, (uint)AID.RhalgrsBeaconKnockback, stopAfterWall: true)
 {
     private Knockback? _kb;
     private static readonly List<SafeWall> safewalls = [new(new(9.09f, 293.91f), new(3.31f, 297.2f)), new(new(-6.23f, 304.72f), new(-13.9f, 303.98f)),
@@ -55,7 +55,7 @@ class RhalgrBeaconKnockback(BossModule module) : Components.GenericKnockback(mod
     {
         if (spell.Action.ID == WatchedAction)
         {
-            _kb = new(spell.LocXZ, 50f, Module.CastFinishAt(spell), safeWalls: safewalls);
+            _kb = new(spell.LocXZ, 50f, Module.CastFinishAt(spell), safeWalls: safewalls, ignoreImmunes: true);
         }
     }
 

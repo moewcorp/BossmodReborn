@@ -44,7 +44,7 @@ sealed class HiemalStormVoidzone(BossModule module) : Components.Voidzone(module
 sealed class SpiralPierce(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50f, 6f), (uint)TetherID.SpiralPierce, (uint)AID.SpiralPierce);
 sealed class DimensionalCollapse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DimensionalCollapseAOE, 9f);
 
-sealed class FaithUnmoving(BossModule module) : Components.GenericKnockback(module, (uint)AID.FaithUnmoving, true)
+sealed class FaithUnmoving(BossModule module) : Components.GenericKnockback(module, (uint)AID.FaithUnmoving)
 {
     private readonly DateTime activation = module.WorldState.FutureTime(4.5d);
     private readonly Knockback[] _kb = GetKnockback(module);
@@ -54,7 +54,7 @@ sealed class FaithUnmoving(BossModule module) : Components.GenericKnockback(modu
         var grinnauxs = module.Enemies((uint)OID.SerGrinnaux);
         var grinnaux = grinnauxs.Count != 0 ? grinnauxs[0] : null;
         if (grinnaux != default)
-            return [new(grinnaux.Position, 16f)];
+            return [new(grinnaux.Position, 16f, ignoreImmunes: true)];
         return [];
     }
 

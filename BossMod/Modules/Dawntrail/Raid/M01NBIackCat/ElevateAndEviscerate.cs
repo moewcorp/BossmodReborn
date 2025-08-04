@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Raid.M01NBlackCat;
 
-sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockback(module)
 {
     public DateTime Activation;
     public (Actor source, Actor target) Tether;
@@ -13,7 +13,7 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
         if (Tether != default && actor == Tether.target)
-            return new Knockback[1] { new(Tether.source.Position, 10f, Activation) };
+            return new Knockback[1] { new(Tether.source.Position, 10f, Activation, ignoreImmunes: true) };
         return [];
     }
 

@@ -107,7 +107,7 @@ public class StateMachineBuilder(BossModule module)
 
     // create a simple phase; buildState is called to fill out phase states, argument is seqID << 24
     // note that on exit, by default all components are removed (except those that opt out of this explicitly), since generally phase transition can happen at any time
-    public Phase SimplePhase(uint seqID, Action<uint> buildState, string name, float dur = -1)
+    public Phase SimplePhase(uint seqID, Action<uint> buildState, string name, float dur = -1f)
     {
         if (_curInitial != null)
             throw new InvalidOperationException($"Trying to create phase '{name}' while inside another phase");
@@ -125,7 +125,7 @@ public class StateMachineBuilder(BossModule module)
     public Phase DeathPhase(uint seqID, Action<uint> buildState)
     {
         var phase = SimplePhase(seqID, buildState, "Boss death");
-        phase.Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || Module.PrimaryActor.HPMP.CurHP == 0;
+        phase.Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || Module.PrimaryActor.HPMP.CurHP == default;
         return phase;
     }
 
@@ -230,7 +230,7 @@ public class StateMachineBuilder(BossModule module)
     }
 
     // create a state triggered by component condition (or timeout if it never happens); if component is not present, error is logged and transition is triggered immediately
-    public State ComponentCondition<T>(uint id, float expected, Func<T, bool> condition, string name = "", float maxOverdue = 1, float checkDelay = 0) where T : BossComponent
+    public State ComponentCondition<T>(uint id, float expected, Func<T, bool> condition, string name = "", float maxOverdue = 1f, float checkDelay = default) where T : BossComponent
     {
         var state = SimpleState(id, expected, name);
         state.Raw.Comment = $"Condition on {typeof(T).Name}";

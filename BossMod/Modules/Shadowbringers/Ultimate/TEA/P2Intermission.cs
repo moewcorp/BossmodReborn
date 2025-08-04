@@ -1,8 +1,8 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
-class P2IntermissionLimitCut(BossModule module) : LimitCut(module, 3.2f);
+sealed class P2IntermissionLimitCut(BossModule module) : LimitCut(module, 3.2d);
 
-class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(module, (uint)AID.HawkBlasterIntermission)
+sealed class P2IntermissionHawkBlaster(BossModule module) : Components.GenericAOEs(module, (uint)AID.HawkBlasterIntermission)
 {
     private Angle _blasterStartingDirection;
     private readonly TEAConfig _config = Service.Config.Get<TEAConfig>();

@@ -2,11 +2,9 @@ namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB4Magitaur;
 
 public enum OID : uint
 {
-    Boss = 0x46E3, // R7.0
+    Magitaur = 0x46E3, // R7.0
     AssassinsDagger = 0x46E6, // R1.0
     SagesStaff = 0x46E5, // R1.0
-    _Gen_Actor1ebd90 = 0x1EBD90, // R0.500, x1, EventObj type
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
     UniversalEmpowermentConduit = 0x46F9, // R4.0
     AxeEmpowermentConduit = 0x46EC, // R4.0
     LanceEmpowermentConduit = 0x46EB, // R4.0

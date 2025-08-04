@@ -8,7 +8,7 @@ sealed class Summon(BossModule module) : Components.SimpleAOEs(module, (uint)AID
 sealed class DarkDefenses(BossModule module) : Components.Dispel(module, (uint)SID.DarkDefenses);
 sealed class SummonedDemons(BossModule module) : Components.AddsMulti(module, [(uint)OID.SummonedArchDemon, (uint)OID.SummonedDemon], 1);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13760, PlanLevel = 100, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.DemonTablet, GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13760, PlanLevel = 100, SortOrder = 2, Category = BossModuleInfo.Category.Foray, Expansion = BossModuleInfo.Expansion.Dawntrail)]
 public sealed class FTB1DemonTablet(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, DefaultArena)
 {
     private static readonly WPos arenaCenter = new(700f, 379f);
