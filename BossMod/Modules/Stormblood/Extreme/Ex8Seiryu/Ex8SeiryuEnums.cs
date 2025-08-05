@@ -58,7 +58,7 @@ public enum AID : uint
 
     BlueBoltMarker = 14319, // Helper->player, no cast, single-target
     BlueBolt = 14320, // AoNoShiki->self, no cast, range 80+R width 5 rect
-    RedRush = 14321, // AkaNoShiki->self, no cast, range 80+R width 5 rect
+    RedRush = 14321, // AkaNoShiki->self, no cast, range 80+R width 5 rect, knockback 18, away from source
     HundredTonzeSwing = 14317, // IwaNoShiki->self, 4.0s cast, range 16 circle
     YamaKagura = 15393, // TenNoShiki->self, 5.0s cast, range 60+R width 6 rect
     KanaboVisual = 14356, // IwaNoShiki->self, 6.0s cast, single-target

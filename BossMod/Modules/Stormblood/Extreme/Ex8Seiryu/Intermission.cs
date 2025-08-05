@@ -6,39 +6,11 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if (source.OID != (uint)OID.AkaNoShiki)
+        if (source.OID == (uint)OID.AkaNoShiki)
         {
-            return;
+            _stack.ForbiddenPlayers.Set(Raid.FindSlot(tether.Target));
         }
         base.OnTethered(source, tether);
-        var (player, enemy) = DetermineTetherSides(source, tether);
-        if (player != null && enemy != null)
-        {
-            _stack.ForbiddenPlayers.Set(Raid.FindSlot(player.InstanceID));
-        }
-    }
-
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
-    {
-        if (source.OID != (uint)OID.AkaNoShiki)
-        {
-            return;
-        }
-        base.OnUntethered(source, tether);
-        var (player, enemy) = DetermineTetherSides(source, tether);
-        if (player != null && enemy != null)
-        {
-            _stack.ForbiddenPlayers.Clear(Raid.FindSlot(player.InstanceID));
-        }
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
-        {
-            hints.AddForbiddenZone(Arena.Bounds.Radius >= 20f ? ShapeDistance.InvertedCircle(Arena.Center, 5f) : ShapeDistance.Circle(Arena.Center, 18.5f), WorldState.FutureTime(ActivationDelay));
-        }
     }
 }
 
@@ -52,7 +24,46 @@ sealed class BlueBolt(BossModule module) : Components.LineStack(module, aidMarke
         }
     }
 }
+
 sealed class BlueBoltStretch(BossModule module) : Components.StretchTetherSingle(module, (uint)TetherID.BlueBolt, 25f, activationDelay: 5.9d);
+
+sealed class RedRushKnockback(BossModule module) : Components.GenericKnockback(module)
+{
+    private readonly Knockback[][] _kbs = new Knockback[8][];
+
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kbs[slot] ?? [];
+
+    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    {
+        if (source.OID == (uint)OID.AkaNoShiki && Raid.FindSlot(tether.Target) is var slot)
+        {
+            _kbs[slot] = [new(source.Position.Quantized(), 18f, WorldState.FutureTime(6d))];
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (_kbs[slot] != null)
+        {
+            ref readonly var kb = ref _kbs[slot][0];
+            var act = kb.Activation;
+            if (!IsImmune(slot, act))
+            {
+                var pos = kb.Origin;
+                var center = Arena.Center;
+                // circle intentionally slightly smaller to prevent sus knockback
+                hints.AddForbiddenZone(p =>
+                {
+                    if ((p + 18f * (p - pos).Normalized()).InCircle(center, 19f))
+                    {
+                        return 1f;
+                    }
+                    return default;
+                }, act);
+            }
+        }
+    }
+}
 
 sealed class Kanabo(BossModule module) : Components.TankbusterTether(module, (uint)AID.Kanabo, (uint)TetherID.Kanabo, new AOEShapeCone(45f, 30f.Degrees()), 6.2d)
 {
