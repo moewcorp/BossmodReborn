@@ -71,7 +71,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         var id = target.InstanceID;
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var bait = ref curBaits[i];
+            ref var bait = ref curBaits[i];
             if (!bait.Source.IsDead && bait.Target.InstanceID == id)
             {
                 activeBaitsOnTarget.Add(bait);
@@ -110,8 +110,8 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         List<Actor> result = new(len);
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var actor = ref actors[i];
-            ref readonly var id = ref actor.InstanceID;
+            var actor = actors[i];
+            var id = actor.InstanceID;
             if (id != bait.Target.InstanceID && bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation))
                 result.Add(actor);
         }
@@ -186,7 +186,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             }
             else
             {
-                AddTargetSpecificHints(ref actor, ref bait, ref hints);
+                AddTargetSpecificHints(actor, ref bait, hints);
             }
             if (DamageType != AIHints.PredictedDamageType.None)
             {
@@ -199,7 +199,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         }
     }
 
-    private void AddTargetSpecificHints(ref Actor actor, ref Bait bait, ref AIHints hints)
+    private void AddTargetSpecificHints(Actor actor, ref Bait bait, AIHints hints)
     {
         if (bait.Source == bait.Target) // TODO: think about how to handle source == target baits, eg. vomitting mechanics
             return;
@@ -241,7 +241,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         var pcID = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             if (!b.Source.IsDead && b.Target.InstanceID != pcID && (AlwaysDrawOtherBaits || IsClippedBy(pc, b)))
             {
                 b.Shape.Draw(Arena, BaitOrigin(b), b.Rotation);
@@ -256,7 +256,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         var pcID = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             if (!b.Source.IsDead && (OnlyShowOutlines || !OnlyShowOutlines && b.Target.InstanceID == pcID))
             {
                 b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation);
@@ -321,7 +321,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null && (EnemyOID == default || enemy.OID == EnemyOID))
         {
-            if (ActivationDelay == default)
+            if (activation == default)
             {
                 activation = WorldState.FutureTime(ActivationDelay); // TODO: not optimal if tethers do not appear at the same time...
             }

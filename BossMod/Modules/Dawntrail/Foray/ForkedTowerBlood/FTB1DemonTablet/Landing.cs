@@ -23,7 +23,7 @@ sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(m
             }
             var activeKnockbacks = ActiveKnockbacks(slot, actor);
             var len = activeKnockbacks.Length;
-            ref var c = ref Casters.Ref(0);
+            ref readonly var c = ref Casters.Ref(0);
             var act = c.Activation;
             for (var i = 0; i < len; ++i)
             {

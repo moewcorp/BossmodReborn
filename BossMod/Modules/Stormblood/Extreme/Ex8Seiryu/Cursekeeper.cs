@@ -10,8 +10,7 @@ sealed class Cursekeeper(BossModule module) : Components.GenericBaitAway(module,
         if (spell.Action.ID == (uint)AID.Cursekeeper)
         {
             prevTarget = spell.TargetID;
-            var target = WorldState.Actors.Find(prevTarget);
-            if (target is Actor t)
+            if (WorldState.Actors.Find(prevTarget) is Actor t)
             {
                 CurrentBaits.Add(new(Module.PrimaryActor, t, circle, Module.CastFinishAt(spell, 3.1d)));
             }
@@ -33,6 +32,15 @@ sealed class Cursekeeper(BossModule module) : Components.GenericBaitAway(module,
             hints.Add(prevTarget != actor.InstanceID ? "Provoke!" : "Pass aggro!");
         }
         base.AddHints(slot, actor, hints);
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (actor.Role == Role.Tank && actor.InstanceID is var id && prevTarget != id && Module.PrimaryActor.TargetID != id)
+        {
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Provoke), actor, ActionQueue.Priority.High);
+        }
+        base.AddAIHints(slot, actor, assignment, hints);
     }
 }
 

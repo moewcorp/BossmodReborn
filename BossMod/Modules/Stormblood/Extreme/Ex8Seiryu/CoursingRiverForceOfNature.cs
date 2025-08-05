@@ -36,11 +36,11 @@ sealed class CoursingRiverForceOfNature(BossModule module) : Components.GenericK
         var count = _kbs.Count;
         if (count != 0)
         {
-            ref var c = ref _kbs.Ref(0);
+            ref readonly var c = ref _kbs.Ref(0);
             var center = Arena.Center;
             if (count == 2)
             {
-                ref var c1 = ref _kbs.Ref(1);
+                ref readonly var c1 = ref _kbs.Ref(1);
                 var act = c.Activation;
                 var dir = 25f * c1.Direction.ToDirection();
                 if (!IsImmune(slot, act))

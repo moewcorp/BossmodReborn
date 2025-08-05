@@ -165,7 +165,7 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (Casters.Count != 0)
         {
-            ref var c = ref Casters.Ref(0);
+            ref readonly var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {

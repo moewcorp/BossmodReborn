@@ -5,7 +5,7 @@ sealed class Ex8SeiryuStates : StateMachineBuilder
     public Ex8SeiryuStates(BossModule module) : base(module)
     {
         SimplePhase(default, Phase1, "P1")
-            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed || (module.PrimaryActor.CastInfo?.IsSpell(AID.SummonShiki2) ?? false);
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed || !module.PrimaryActor.IsTargetable;
         DeathPhase(1u, Intermission)
             .OnExit(() => module.Arena.Bounds = Trial.T09Seiryu.Seiryu.Phase2WaterBounds)
             .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed || module.FindComponent<StrengthOfSpirit>() is StrengthOfSpirit raidwide && raidwide.NumCasts != 0;
@@ -20,6 +20,8 @@ sealed class Ex8SeiryuStates : StateMachineBuilder
         FifthElement(id, 8.1f);
         SerpentAscending1(id + 0x10000u, 9.1f);
         Cursekeeper1(id + 0x20000u, 5.1f);
+        SimpleState(id + 0x30000u, 11.2f, "Intermission (timing varies)")
+            .SetHint(StateMachine.StateHint.DowntimeStart);
     }
 
     private void Intermission(uint id)
@@ -134,6 +136,7 @@ sealed class Ex8SeiryuStates : StateMachineBuilder
             .DeactivateOnExit<YamaKagura>();
         ComponentCondition<Kanabo>(id + 0x60u, 3.1f, comp => comp.NumCasts == 2, "Tankbusters")
             .SetHint(StateMachine.StateHint.Tankbuster)
+            .SetHint(StateMachine.StateHint.DowntimeEnd)
             .DeactivateOnExit<Kanabo>();
     }
 
@@ -227,11 +230,13 @@ sealed class Ex8SeiryuStates : StateMachineBuilder
             .DeactivateOnExit<Kanabo>();
         ComponentCondition<BlueBolt>(id + 0x50u, 4f, comp => comp.CurrentBaits.Count != 0, "Line stack + baits appear")
             .ActivateOnEnter<BlueBolt>()
+            .ActivateOnEnter<RedRushKnockback>()
             .ActivateOnEnter<BlueBoltStretch>()
             .ActivateOnEnter<RedRush>();
         ComponentCondition<BlueBolt>(id + 0x60u, 6.1f, comp => comp.CurrentBaits.Count == 0, "Line stack + baits resolve")
             .DeactivateOnExit<BlueBolt>()
             .DeactivateOnExit<BlueBoltStretch>()
+            .DeactivateOnExit<RedRushKnockback>()
             .DeactivateOnExit<RedRush>();
         ComponentCondition<SerpentDescendingSpread>(id + 0x70u, 0.9f, comp => comp.Spreads.Count != 0, "Spreads appear")
             .ActivateOnEnter<SerpentDescendingSpread>();
