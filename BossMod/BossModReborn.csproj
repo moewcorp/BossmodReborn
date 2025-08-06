@@ -49,7 +49,6 @@
 
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="13.0.0" />
-    <PackageReference Include="PInvoke.User32" Version="0.7.124" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <ProjectReference Include="..\FFXIVClientStructs\FFXIVClientStructs\FFXIVClientStructs.csproj" />
 
@@ -88,10 +87,6 @@
     <Reference Include="SharpDX.Direct3D11">
       <HintPath>$(DalamudLibPath)SharpDX.Direct3D11.dll</HintPath>
       <Private>false</Private>
-    </Reference>
-    <Reference Include="PInvoke.User32">
-      <HintPath>$(DalamudLibPath)PInvoke.User32.dll</HintPath>
-      <Private>False</Private>
     </Reference>
   </ItemGroup>
 

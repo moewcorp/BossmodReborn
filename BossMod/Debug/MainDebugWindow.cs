@@ -1,5 +1,6 @@
 ﻿using BossMod.Autorotation;
 using BossMod.Autorotation.xan;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin;
@@ -7,7 +8,6 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Dalamud.Bindings.ImGui;
 
 namespace BossMod;
 
@@ -43,10 +43,8 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
         var player = Service.ClientState.LocalPlayer;
         ImGui.TextUnformatted($"Current zone: {ws.CurrentZone}, player=0x{(ulong)Utils.GameObjectInternal(player):X}, playerCID={playerCID:X}, pos = {Utils.Vec3String(player?.Position ?? new Vector3())}");
         // ImGui.TextUnformatted($"ID scramble: {Network.IDScramble.Delta} = {*Network.IDScramble.OffsetAdjusted} - {*Network.IDScramble.OffsetBaseFixed} - {*Network.IDScramble.OffsetBaseChanging}");
-        var str = $"Player mode: {(player == null ? "No player found" : Utils.CharacterInternal(player)->Mode)}";
-        Span<byte> utf8 = stackalloc byte[64];
-        var len = Encoding.UTF8.GetBytes(str, utf8);
-        ImGui.TextUnformatted(utf8[..len]);
+        ImGui.TextUnformatted($"Player mode: {(player is null ? "No player found" : Utils.CharacterInternal(player)->Mode.ToString())}");
+
         var eventFwk = FFXIVClientStructs.FFXIV.Client.Game.Event.EventFramework.Instance();
         var instanceDirector = eventFwk != null ? eventFwk->GetInstanceContentDirector() : null;
         ImGui.TextUnformatted($"Content time left: {(instanceDirector != null ? $"{instanceDirector->ContentDirector.ContentTimeLeft:f1}" : "n/a")}");
@@ -190,21 +188,26 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
 
     private unsafe void DrawStatuses()
     {
+        var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
+        if (player == null)
+            return;
+
         ImGui.TextUnformatted($"Forced movement direction: {MovementOverride.ForcedMovementDirection->Radians()}");
         ImGui.SameLine();
         if (ImGui.Button("Add misdirection"))
-        {
-            var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
-            if (player is not null)
-                player->GetStatusManager()->SetStatus(20, 3909, 20.0f, 100, (GameObjectId)0xE0000000, true);
-        }
+            player->GetStatusManager()->SetStatus(20, 3909, 20.0f, 100, (GameObjectId)0xE0000000, true);
         ImGui.SameLine();
         if (ImGui.Button("Add thin ice"))
-        {
-            var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
-            if (player is not null)
-                player->GetStatusManager()->SetStatus(20, 911, 20.0f, 50, (GameObjectId)0xE0000000, true); // param = distance * 10
-        }
+            player->GetStatusManager()->SetStatus(20, 911, 20.0f, 50, (GameObjectId)0xE0000000, true); // param = distance * 10
+        ImGui.SameLine();
+        if (ImGui.Button("Add spinning"))
+            player->GetStatusManager()->SetStatus(20, 2973, 20.0f, 7, (GameObjectId)0xE0000000, true);
+
+        if (ImGui.Button("Clear temp status"))
+            player->GetStatusManager()->RemoveStatus(20);
+
+        ImGui.SameLine();
+        ImGui.TextUnformatted($"Forced movement direction: {ws.Client.ForcedMovementDirection}");
 
         ImGui.TextUnformatted($"Player move speed: {ws.Client.MoveSpeed:f2}");
 

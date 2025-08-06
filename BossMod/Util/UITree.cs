@@ -98,7 +98,7 @@ public sealed class UITree
         }
         if (doubleClick != null && ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
             doubleClick();
-        if (contextMenu != null && ImGui.BeginPopupContextItem(text))
+        if (contextMenu != null && ImGui.BeginPopupContextItem($"###{text}popup"))
         {
             contextMenu();
             ImGui.EndPopup();
