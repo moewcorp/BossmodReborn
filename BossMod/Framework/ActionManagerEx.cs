@@ -541,7 +541,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         return res;
     }
 
-    private bool UseActionLocationDetour(ActionManager* self, CSActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam)
+    private bool UseActionLocationDetour(ActionManager* self, CSActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam1, byte extraParam2)
     {
         var targetSystem = TargetSystem.Instance();
         var player = GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
@@ -551,7 +551,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var preventAutos = _autoAutosTweak.ShouldPreventAutoActivation(ActionManager.GetSpellIdForAction(actionType, actionId));
         if (preventAutos)
             targetSystem->Target = null;
-        bool ret = _useActionLocationHook.Original(self, actionType, actionId, targetId, location, extraParam);
+        bool ret = _useActionLocationHook.Original(self, actionType, actionId, targetId, location, extraParam1, extraParam2);
         if (preventAutos)
             targetSystem->Target = hardTarget;
         var currSeq = _inst->LastUsedActionSequence;

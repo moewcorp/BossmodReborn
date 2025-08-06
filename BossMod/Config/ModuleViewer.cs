@@ -2,11 +2,10 @@
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Utility;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using System.Text.RegularExpressions;
 using Lumina.Text.ReadOnly;
-using System.Data;
 using System.Globalization;
 
 namespace BossMod;

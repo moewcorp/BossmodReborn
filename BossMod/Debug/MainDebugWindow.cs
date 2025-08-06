@@ -7,7 +7,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace BossMod;
 
@@ -43,8 +43,10 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
         var player = Service.ClientState.LocalPlayer;
         ImGui.TextUnformatted($"Current zone: {ws.CurrentZone}, player=0x{(ulong)Utils.GameObjectInternal(player):X}, playerCID={playerCID:X}, pos = {Utils.Vec3String(player?.Position ?? new Vector3())}");
         // ImGui.TextUnformatted($"ID scramble: {Network.IDScramble.Delta} = {*Network.IDScramble.OffsetAdjusted} - {*Network.IDScramble.OffsetBaseFixed} - {*Network.IDScramble.OffsetBaseChanging}");
-        ImGui.TextUnformatted($"Player mode: {(player is null ? "No player found" : Utils.CharacterInternal(player)->Mode)}");
-
+        var str = $"Player mode: {(player == null ? "No player found" : Utils.CharacterInternal(player)->Mode)}";
+        Span<byte> utf8 = stackalloc byte[64];
+        var len = Encoding.UTF8.GetBytes(str, utf8);
+        ImGui.TextUnformatted(utf8[..len]);
         var eventFwk = FFXIVClientStructs.FFXIV.Client.Game.Event.EventFramework.Instance();
         var instanceDirector = eventFwk != null ? eventFwk->GetInstanceContentDirector() : null;
         ImGui.TextUnformatted($"Content time left: {(instanceDirector != null ? $"{instanceDirector->ContentDirector.ContentTimeLeft:f1}" : "n/a")}");

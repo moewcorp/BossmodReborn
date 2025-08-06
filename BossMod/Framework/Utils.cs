@@ -3,7 +3,6 @@ using PInvoke;
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
 
 namespace BossMod;
 
