@@ -3,7 +3,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.ImGuiFileDialog;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using System.Diagnostics;
 using System.IO;
@@ -31,7 +31,7 @@ public sealed class ReplayManagementWindow : UIWindow
 
     private const string _windowID = "###Replay recorder";
 
-    public ReplayManagementWindow(WorldState ws, BossModuleManager bmm, RotationDatabase rotationDB, DirectoryInfo logDir) : base(_windowID, false, new(300, 200))
+    public ReplayManagementWindow(WorldState ws, BossModuleManager bmm, RotationDatabase rotationDB, DirectoryInfo logDir) : base(_windowID, false, new(300f, 200f))
     {
         _ws = ws;
         _logDir = logDir;
@@ -148,17 +148,17 @@ public sealed class ReplayManagementWindow : UIWindow
     {
         if (_config.ImportantDutyAlert && IsImportantDuty(cfcId) && !ShouldAutoRecord)
         {
-            _startLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(0, (id, str) =>
+            _startLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
             {
-                if (id == 0)
+                if (_startLinkPayload != null && id == _startLinkPayload.CommandId)
                 {
                     StartRecording("");
                     Service.ChatGui.Print("[BMR] Replay recording started");
                 }
             });
-            _disableAlertLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(2, (id, str) =>
+            _disableAlertLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
             {
-                if (id == 2)
+                if (_disableAlertLinkPayload != null && id == _disableAlertLinkPayload.CommandId)
                 {
                     _config.ImportantDutyAlert = false;
                     _config.Modified.Fire();
@@ -185,7 +185,7 @@ public sealed class ReplayManagementWindow : UIWindow
         if (!ShouldAutoRecord || _recordingManual)
             return false; // don't care
 
-        var isDuty = cfcId != 0;
+        var isDuty = cfcId != default;
         if (_recordingDuty == isDuty)
             return false; // don't care
         _recordingDuty = isDuty;
@@ -331,12 +331,12 @@ public sealed class ReplayManagementWindow : UIWindow
 
     public void StopRecording()
     {
-        if (_config.ImportantDutyAlert && IsImportantDuty(_recorder?.CFCID ?? 0))
+        if (_config.ImportantDutyAlert && IsImportantDuty(_recorder?.CFCID ?? default))
         {
             var path = _recorder?.LogPath;
-            _uploadLinkPayload ??= Service.PluginInterface.AddChatLinkHandler(1, (id, str) =>
+            _uploadLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
             {
-                if (id == 1)
+                if (_uploadLinkPayload != null && id == _uploadLinkPayload.CommandId)
                 {
                     Task.Run(() =>
                     {
@@ -398,7 +398,6 @@ public sealed class ReplayManagementWindow : UIWindow
 
             prefix += string.Join("_", shortenedParts);
         }
-
 
         var cf = FFXIVClientStructs.FFXIV.Client.Game.UI.ContentsFinder.Instance();
         if (cf->IsUnrestrictedParty)

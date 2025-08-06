@@ -1,5 +1,5 @@
-﻿using ImGuiNET;
-using Dalamud.Interface.Utility.Raii;
+﻿using Dalamud.Interface.Utility.Raii;
+using Dalamud.Bindings.ImGui;
 using System.Globalization;
 
 namespace BossMod.AI;
@@ -12,6 +12,12 @@ sealed class AIManagementWindow : UIWindow
     private const string _title = $"AI: off{_windowID}";
     private const string _windowID = "###AI debug window";
     private static readonly string[] positionals = Enum.GetNames<Positional>();
+    private readonly byte[] _maxDistanceToTargetBuffer = new byte[64];
+    private readonly byte[] _maxDistanceToSlotBuffer = new byte[64];
+    private readonly byte[] _minDistanceBuffer = new byte[64];
+    private readonly byte[] _preferredDistanceBuffer = new byte[64];
+    private readonly byte[] _moveDelayBuffer = new byte[64];
+    private bool _floatBuffersInitialized;
 
     public AIManagementWindow(AIManager manager) : base(_windowID, false, new(100f, 100f))
     {
@@ -42,6 +48,15 @@ sealed class AIManagementWindow : UIWindow
     public override void Draw()
     {
         var configModified = false;
+        if (!_floatBuffersInitialized)
+        {
+            SyncFloatBuffer(_config.MaxDistanceToTarget, _maxDistanceToTargetBuffer);
+            SyncFloatBuffer(_config.MaxDistanceToSlot, _maxDistanceToSlotBuffer);
+            SyncFloatBuffer(_config.MinDistance, _minDistanceBuffer);
+            SyncFloatBuffer(_config.PreferredDistance, _preferredDistanceBuffer);
+            SyncDoubleBuffer(_config.MoveDelay, _moveDelayBuffer);
+            _floatBuffersInitialized = true;
+        }
 
         ImGui.TextUnformatted($"Navi={_manager.Controller.NaviTargetPos}");
 
@@ -122,121 +137,79 @@ sealed class AIManagementWindow : UIWindow
             _config.DesiredPositional = (Positional)positionalIndex;
             configModified = true;
         }
-        ImGui.SameLine();
-        ImGui.Text("Max distance - to targets");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100);
-        var maxDistanceTargetStr = _config.MaxDistanceToTarget.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MaxDistanceToTarget", ref maxDistanceTargetStr, 64u))
+
+        bool DrawFloatInput(string label, ref float value, byte[] buffer, string tooltip)
         {
-            maxDistanceTargetStr = maxDistanceTargetStr.Replace(',', '.');
-            if (float.TryParse(maxDistanceTargetStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
+            var changed = false;
+            ImGui.SameLine();
+            ImGui.Text(label);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(100f);
+
+            if (ImGui.InputText($"##{label}", buffer))
             {
-                _config.MaxDistanceToTarget = maxDistance;
-                configModified = true;
+                var strVal = Encoding.UTF8.GetString(buffer).Trim('\0').Replace(',', '.');
+                if (float.TryParse(strVal, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    value = parsed;
+                    SyncFloatBuffer(value, buffer);
+                    changed = true;
+                }
             }
-        }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Maximum distance in yalms to keep away from targets.");
-            ImGui.EndTooltip();
-        }
-        ImGui.SameLine();
-        ImGui.Text("- to slots");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100f);
-        var maxDistanceSlotStr = _config.MaxDistanceToSlot.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MaxDistanceToSlot", ref maxDistanceSlotStr, 64u))
-        {
-            maxDistanceSlotStr = maxDistanceSlotStr.Replace(',', '.');
-            if (float.TryParse(maxDistanceSlotStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
+            if (ImGui.IsItemHovered())
             {
-                _config.MaxDistanceToSlot = maxDistance;
-                configModified = true;
+                ImGui.BeginTooltip();
+                ImGui.Text(tooltip);
+                ImGui.EndTooltip();
             }
+            return changed;
         }
-        if (ImGui.IsItemHovered())
+        bool DrawDoubleInput(string label, ref double value, byte[] buffer, string tooltip)
         {
-            ImGui.BeginTooltip();
-            ImGui.Text("Maximum distance in yalms to keep away from followed allies.");
-            ImGui.EndTooltip();
-        }
-        ImGui.Text("Minimum distance");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100f);
-        var minDistanceStr = _config.MinDistance.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MinDistance", ref minDistanceStr, 64u))
-        {
-            minDistanceStr = minDistanceStr.Replace(',', '.');
-            if (float.TryParse(minDistanceStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var minDistance))
+            var changed = false;
+            ImGui.SameLine();
+            ImGui.Text(label);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(100f);
+
+            if (ImGui.InputText($"##{label}", buffer))
             {
-                _config.MinDistance = minDistance;
-                configModified = true;
+                var strVal = Encoding.UTF8.GetString(buffer).Trim('\0').Replace(',', '.');
+                if (double.TryParse(strVal, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    value = parsed;
+                    SyncDoubleBuffer(value, buffer);
+                    changed = true;
+                }
             }
-        }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Distance in yalms to keep away from target hitbox.");
-            ImGui.EndTooltip();
-        }
-        ImGui.SameLine();
-        ImGui.Text("Pref distance to forbidden zones");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100f);
-        var prefDistanceStr = _config.PreferredDistance.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##PrefDistance", ref prefDistanceStr, 64u))
-        {
-            prefDistanceStr = prefDistanceStr.Replace(',', '.');
-            if (float.TryParse(prefDistanceStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var prefDistance))
+            if (ImGui.IsItemHovered())
             {
-                _config.PreferredDistance = prefDistance;
-                configModified = true;
+                ImGui.BeginTooltip();
+                ImGui.Text(tooltip);
+                ImGui.EndTooltip();
             }
+            return changed;
         }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Distance in yalms to keep away from forbidden zones.");
-            ImGui.EndTooltip();
-        }
-        ImGui.Text("Movement decision delay");
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(100f);
-        var movementDelayStr = _config.MoveDelay.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MovementDelay", ref movementDelayStr, 64u))
-        {
-            movementDelayStr = movementDelayStr.Replace(',', '.');
-            if (float.TryParse(movementDelayStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var delay))
-            {
-                _config.MoveDelay = delay;
-                configModified = true;
-            }
-        }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Minimum time to start moving after movement decision has been made.\nAvoid setting this too high depending on the content.");
-            ImGui.EndTooltip();
-        }
+        configModified |= DrawFloatInput("Max distance - to targets", ref _config.MaxDistanceToTarget, _maxDistanceToTargetBuffer, "Maximum distance in yalms to keep away from targets.");
+        configModified |= DrawFloatInput("- to slots", ref _config.MaxDistanceToSlot, _maxDistanceToSlotBuffer, "Maximum distance in yalms to keep away from followed allies.");
+        configModified |= DrawFloatInput("Minimum distance", ref _config.MinDistance, _minDistanceBuffer, "Distance in yalms to keep away from target hitbox.");
+        configModified |= DrawFloatInput("Pref distance to forbidden zones", ref _config.PreferredDistance, _preferredDistanceBuffer, "Distance in yalms to keep away from forbidden zones.");
+        configModified |= DrawDoubleInput("Movement decision delay", ref _config.MoveDelay, _moveDelayBuffer, "Minimum time to start moving after movement decision has been made.\nAvoid setting this too high depending on the content.");
         ImGui.SameLine();
         ImGui.Text("Autorotation AI preset");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(250f);
         ImGui.SetNextWindowSizeConstraints(default, new Vector2(float.MaxValue, ImGui.GetTextLineHeightWithSpacing() * 50f));
+
         var aipreset = _config.AIAutorotPresetName;
         var presets = _manager.Autorot.Database.Presets.VisiblePresets;
-
         var count = presets.Count;
         List<string> presetNames = new(count + 1);
         for (var i = 0; i < count; ++i)
-        {
             presetNames.Add(presets[i].Name);
-        }
-
         if (aipreset != null)
             presetNames.Add("Deactivate");
+
         var countnames = presetNames.Count;
         var selectedIndex = presetNames.IndexOf(aipreset ?? "");
 
@@ -255,6 +228,7 @@ sealed class AIManagementWindow : UIWindow
                 configModified = true;
             }
         }
+
         if (configModified)
             _config.Modified.Fire();
     }
@@ -268,5 +242,23 @@ sealed class AIManagementWindow : UIWindow
         var masterSlotNumber = masterSlot != -1 ? (masterSlot + 1).ToString() : "N/A";
 
         WindowName = $"AI: {(_manager?.Beh != null ? "on" : "off")}, master={masterName}[{masterSlotNumber}]{_windowID}";
+    }
+
+    private void SyncFloatBuffer(float value, byte[] buffer)
+    {
+        var str = value.ToString(CultureInfo.InvariantCulture);
+        Encoding.UTF8.GetBytes(str.AsSpan(), buffer);
+        var nullTerminator = Array.IndexOf(buffer, default);
+        if (nullTerminator >= 0)
+            Array.Clear(buffer, nullTerminator, buffer.Length - nullTerminator);
+    }
+
+    private void SyncDoubleBuffer(double value, byte[] buffer)
+    {
+        var str = value.ToString(CultureInfo.InvariantCulture);
+        Encoding.UTF8.GetBytes(str.AsSpan(), buffer);
+        var nullTerminator = Array.IndexOf(buffer, default);
+        if (nullTerminator >= 0)
+            Array.Clear(buffer, nullTerminator, buffer.Length - nullTerminator);
     }
 }
