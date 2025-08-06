@@ -45,7 +45,6 @@ public sealed class AutoPull(RotationModuleManager manager, Actor player) : Rota
 
         if (enabled)
         {
-            Hints.PrioritizeAll();
             Hints.PotentialTargets.Sort((b, a) => a.Priority.CompareTo(b.Priority));
             Hints.HighestPotentialTargetPriority = Math.Max(0, Hints.PotentialTargets[0].Priority);
 

@@ -14,6 +14,8 @@ public sealed class FRU(WorldState ws, Actor primary) : BossModule(ws, primary, 
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(100f, 100f), 20f, 64)]) { IsCircle = true };
     public static readonly ArenaBoundsSquare PathfindHugBorderBounds = new(20f); // this is a hack to allow precise positioning near border by some mechanics, TODO reconsider
 
+    public override bool ShouldPrioritizeAllEnemies => true;
+
     private Actor? _bossP2;
     private Actor? _iceVeil;
     private Actor? _bossP3;
