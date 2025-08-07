@@ -1,4 +1,4 @@
-namespace BossMod.Stormblood.Extreme.Ex8Seiryu;
+namespace BossMod.Dawntrail.Unreal.UnSeiryu;
 
 sealed class Cursekeeper(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {

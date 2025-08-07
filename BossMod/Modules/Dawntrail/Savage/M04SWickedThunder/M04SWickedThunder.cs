@@ -1,7 +1,7 @@
 namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
 sealed class BewitchingFlight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BewitchingFlightAOE, new AOEShapeRect(40, 2.5f));
-sealed class WickedJolt(BossModule module) : Components.TankSwap(module, (uint)AID.WickedJolt, (uint)AID.WickedJolt, (uint)AID.WickedJoltSecond, 3.2f, new AOEShapeRect(60f, 2.5f), false);
+sealed class WickedJolt(BossModule module) : Components.TankSwap(module, (uint)AID.WickedJolt, (uint)AID.WickedJolt, (uint)AID.WickedJoltSecond, 3.2d, new AOEShapeRect(60f, 2.5f), false);
 sealed class Soulshock(BossModule module) : Components.CastCounter(module, (uint)AID.Soulshock);
 sealed class Impact(BossModule module) : Components.CastCounter(module, (uint)AID.Impact);
 sealed class Cannonbolt(BossModule module) : Components.CastCounter(module, (uint)AID.Cannonbolt);
