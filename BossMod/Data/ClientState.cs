@@ -47,7 +47,7 @@ public sealed class ClientState
     public record struct Hate(ulong InstanceID, int Enmity);
 
     public const int NumCooldownGroups = 87;
-    public const int NumClassLevels = 32; // see ClassJob.ExpArrayIndex
+    public const int NumClassLevels = 35; // see ClassJob.ExpArrayIndex
     public const int NumBlueMageSpells = 24;
 
     public float? CountdownRemaining;
@@ -432,8 +432,9 @@ public sealed class ClientState
 
         protected override void Exec(WorldState ws)
         {
-            Array.Fill(ws.Client.ClassJobLevels, (short)0);
-            for (var i = 0; i < Values.Length; ++i)
+            Array.Fill(ws.Client.ClassJobLevels, default);
+            var len = Values.Length;
+            for (var i = 0; i < len; ++i)
                 ws.Client.ClassJobLevels[i] = Values[i];
             ws.Client.ClassJobLevelsChanged.Fire(this);
         }
