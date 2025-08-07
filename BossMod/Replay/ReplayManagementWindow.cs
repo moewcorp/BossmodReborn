@@ -148,17 +148,17 @@ public sealed class ReplayManagementWindow : UIWindow
     {
         if (_config.ImportantDutyAlert && IsImportantDuty(cfcId) && !ShouldAutoRecord)
         {
-            _startLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
+            _startLinkPayload ??= Service.ChatGui.AddChatLinkHandler(default, (id, str) =>
             {
-                if (_startLinkPayload != null && id == _startLinkPayload.CommandId)
+                if (id == default)
                 {
                     StartRecording("");
                     Service.ChatGui.Print("[BMR] Replay recording started");
                 }
             });
-            _disableAlertLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
+            _disableAlertLinkPayload ??= Service.ChatGui.AddChatLinkHandler(2u, (id, str) =>
             {
-                if (_disableAlertLinkPayload != null && id == _disableAlertLinkPayload.CommandId)
+                if (id == 2u)
                 {
                     _config.ImportantDutyAlert = false;
                     _config.Modified.Fire();
@@ -334,9 +334,9 @@ public sealed class ReplayManagementWindow : UIWindow
         if (_config.ImportantDutyAlert && IsImportantDuty(_recorder?.CFCID ?? default))
         {
             var path = _recorder?.LogPath;
-            _uploadLinkPayload ??= Service.ChatGui.AddChatLinkHandler((id, str) =>
+            _uploadLinkPayload ??= Service.ChatGui.AddChatLinkHandler(1u, (id, str) =>
             {
-                if (_uploadLinkPayload != null && id == _uploadLinkPayload.CommandId)
+                if (id == 1)
                 {
                     Task.Run(() =>
                     {
