@@ -83,6 +83,10 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
         {
             _debugParty.Draw(true);
         }
+        if (ImGui.CollapsingHeader("Action effects"))
+        {
+            DrawEffects();
+        }
         if (ImGui.CollapsingHeader("EnvControl"))
         {
             _debugEnvControl.Draw();
@@ -262,6 +266,29 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
             ImGui.TextUnformatted(elem.CastInfo.Rotation.ToString());
         }
         ImGui.EndTable();
+    }
+
+    private unsafe void DrawEffects()
+    {
+        var player = Service.ClientState.LocalPlayer;
+        if (player == null)
+            return;
+
+        var aeh = ((BattleChara*)player.Address)->GetActionEffectHandler();
+        if (aeh == null)
+            return;
+
+        foreach (var entry in aeh->IncomingEffects)
+        {
+            if (entry.ActionId == 0)
+                continue;
+            ImGui.TextUnformatted(new ActionID((ActionType)entry.ActionType, entry.ActionId).ToString());
+            foreach (var eff in entry.Effects.Effects)
+            {
+                if (eff.Type > 0)
+                    ImGui.TextUnformatted($"{(ActionEffectType)eff.Type} {eff.Param0:X2} {eff.Param1:X2} {eff.Param2:X2} {eff.Param3:X2} {eff.Param4:X2} {eff.Value}");
+            }
+        }
     }
 
     private readonly TrackPartyHealth _partyHealth = new(ws);
