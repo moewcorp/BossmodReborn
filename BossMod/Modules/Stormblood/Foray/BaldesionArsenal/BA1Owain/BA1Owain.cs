@@ -30,4 +30,6 @@ public sealed class BA1Owain(WorldState ws, Actor primary) : BossModule(ws, prim
             };
         }
     }
+
+    protected override bool CheckPull() => base.CheckPull() && (Center - Raid.Player()!.Position).LengthSq() < 1e4f;
 }

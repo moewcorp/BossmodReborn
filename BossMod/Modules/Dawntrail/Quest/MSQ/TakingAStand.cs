@@ -69,15 +69,16 @@ public enum AID : uint
 sealed class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 25f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = new AOEInstance[1];
+    private bool aoeInit;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Deathwall)
         {
-            _aoe = null;
+            aoeInit = false;
             Arena.Bounds = TakingAStand.DefaultArena;
         }
     }
@@ -86,28 +87,31 @@ sealed class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Roar1)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d))];
+            aoeInit = true;
         }
     }
 }
 
 sealed class MagickedStandard(BossModule module) : Components.GenericAOEs(module)
 {
-    public readonly List<AOEInstance> AOEs = [];
+    public readonly List<AOEInstance> AOEs = new(9);
     private static readonly AOEShapeCircle circle = new(10f);
     private static readonly AOEShapeDonut donut = new(3f, 10f);
+
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
     public override void OnActorCreated(Actor actor)
     {
-        void AddAOE(AOEShape shape) => AOEs.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(12.6d)));
-        if (actor.OID == (uint)OID.MagickedStandardGreen)
+        AOEShape? shape = actor.OID switch
         {
-            AddAOE(donut);
-        }
-        else if (actor.OID == (uint)OID.MagickedStandardOrange)
+            (uint)OID.MagickedStandardGreen => donut,
+            (uint)OID.MagickedStandardOrange => circle,
+            _ => null
+        };
+        if (shape != null)
         {
-            AddAOE(circle);
+            AOEs.Add(new(shape, actor.Position.Quantized(), default, WorldState.FutureTime(12.6d)));
         }
     }
 
@@ -123,15 +127,31 @@ sealed class MagickedStandard(BossModule module) : Components.GenericAOEs(module
 sealed class GreatLeap(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime activation;
+    private AOEInstance[] _aoe = new AOEInstance[1];
+    private Actor? source;
+    private bool aoeInit;
     private static readonly AOEShapeCircle circle = new(18);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (activation != default)
         {
-            var aoes = Module.Enemies((uint)OID.GrowingAOE);
-            var pos = aoes.Count != 0 ? aoes[0].Position : default;
-            return new AOEInstance[1] { new(circle, pos, default, activation) };
+            source ??= Module.Enemies((uint)OID.GrowingAOE) is var aoes && aoes.Count != 0 ? aoes[0] : null;
+            if (source != null)
+            {
+                var pos = source.Position;
+                if (!aoeInit)
+                {
+                    aoeInit = true;
+                    return _aoe = [new(circle, pos, default, activation)];
+                }
+                else
+                {
+                    ref var aoe = ref _aoe[0];
+                    aoe.Origin = pos;
+                    return _aoe;
+                }
+            }
         }
         return [];
     }
@@ -148,13 +168,15 @@ sealed class GreatLeap(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.GreatLeap)
         {
             activation = default;
+            source = null;
+            aoeInit = false;
         }
     }
 }
 
 sealed class SelfSacrifice(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeCircle circle = new(10f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
