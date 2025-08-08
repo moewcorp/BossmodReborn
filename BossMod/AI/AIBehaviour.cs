@@ -205,13 +205,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     autorot.Hints.GoalZones.Add(autorot.Hints.GoalDonut(target.Position, min, max, 2f));
                 }
             }
-            return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, forbiddenZoneCushion: _config.PreferredDistance)).ConfigureAwait(false);
+            return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, 6f, forbiddenZoneCushion: _config.PreferredDistance)).ConfigureAwait(false);
         }
 
         // TODO: remove this once all rotation modules are fixed
         if (autorot.Hints.GoalZones.Count == 0 && targeting.Target != null)
             autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(targeting.Target.Actor, targeting.PreferredPosition, targeting.PreferredRange));
-        return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, _config.PreferredDistance)).ConfigureAwait(false);
+        return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, 6f, _config.PreferredDistance)).ConfigureAwait(false);
     }
 
     private void FocusMaster(Actor master)
