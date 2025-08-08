@@ -63,30 +63,45 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
                 }
             }
             if (contains)
+            {
                 if (!(actor.Role == Role.Healer || actor.Class == Class.BRD))
+                {
                     hints.Add($"You were {Adjective}! Get cleansed fast.");
+                }
                 else
+                {
                     hints.Add($"Cleanse yourself! ({Noun}).");
+                }
+            }
             else if (actor.Role == Role.Healer || actor.Class == Class.BRD)
+            {
                 for (var i = 0; i < count; ++i)
+                {
                     hints.Add($"Cleanse {_affected[i].Name}! ({Noun})");
+                }
+            }
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = _affected.Count;
-        if (count != 0)
-            for (var i = 0; i < count; ++i)
+        for (var i = 0; i < count; ++i)
+        {
+            var c = _affected[i];
+            ActionID action = default;
+            if (actor.Role == Role.Healer)
             {
-                var c = _affected[i];
-                ActionID action = default;
-                if (actor.Role == Role.Healer)
-                    action = esuna;
-                else if (actor.Class == Class.BRD)
-                    action = wardensPaean;
-                if (action != default)
-                    hints.ActionsToExecute.Push(action, c, ActionQueue.Priority.High, castTime: action == esuna ? 1f : default);
+                action = esuna;
             }
+            else if (actor.Class == Class.BRD)
+            {
+                action = wardensPaean;
+            }
+            if (action != default)
+            {
+                hints.ActionsToExecute.Push(action, c, ActionQueue.Priority.High, castTime: action == esuna ? 1f : default);
+            }
+        }
     }
 }
