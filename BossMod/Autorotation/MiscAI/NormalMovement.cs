@@ -107,7 +107,7 @@ public sealed class NormalMovement : RotationModule
             }
         }
 
-        var speed = 6f;
+        var speed = World.Client.MoveSpeed;
         var destinationOpt = strategy.Option(Track.Destination);
         var destinationStrategy = destinationOpt.As<DestinationStrategy>();
         var cushionStrategy = strategy.Option(Track.ForbiddenZoneCushion).As<ForbiddenZoneCushionStrategy>();
