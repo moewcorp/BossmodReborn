@@ -124,7 +124,7 @@ class DarkBlizzardIII(BossModule module) : Components.SimpleAOEGroups(module, [(
 
 class DarkFireII(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.DarkFireII, 6f);
 class BurningChains(BossModule module) : Components.Chains(module, (uint)TetherID.BurningChains, (uint)AID.BurningChains);
-class EntropicFlame(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.EntropicFlameMarker, (uint)AID.EntropicFlame, 5.2f);
+class EntropicFlame(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.EntropicFlameMarker, (uint)AID.EntropicFlame, 5.2d);
 
 class Stars(BossModule module) : Components.GenericAOEs(module)
 {

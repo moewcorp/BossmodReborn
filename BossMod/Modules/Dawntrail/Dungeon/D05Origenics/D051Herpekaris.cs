@@ -39,11 +39,11 @@ public enum AID : uint
     ConvulsiveCrush = 36518, // Boss->player, 5.0s cast, single-target, tb
 }
 
-sealed class CollectiveAgony(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.CollectiveAgonyMarker, (uint)AID.CollectiveAgony, 5.6f);
+sealed class CollectiveAgony(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.CollectiveAgonyMarker, (uint)AID.CollectiveAgony, 5.6d);
 sealed class StridentShriek(BossModule module) : Components.RaidwideCast(module, (uint)AID.StridentShriek);
 sealed class ConvulsiveCrush(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.ConvulsiveCrush);
 sealed class PoisonHeartSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.PoisonHeartSpread, 5f);
-sealed class PoisonHeartVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 2f, (uint)AID.PoisonHeartVoidzone, GetVoidzones, 0.9f)
+sealed class PoisonHeartVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 2f, (uint)AID.PoisonHeartVoidzone, GetVoidzones, 0.9d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {

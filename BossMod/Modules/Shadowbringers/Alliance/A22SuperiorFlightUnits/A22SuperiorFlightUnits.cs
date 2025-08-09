@@ -11,7 +11,7 @@ sealed class StandardSurfaceMissile : Components.SimpleAOEGroups
 sealed class LethalRevolution(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LethalRevolution, 15f);
 sealed class GuidedMissile(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GuidedMissile, 4f);
 sealed class SurfaceMissileHighOrderExplosiveBlastCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SurfaceMissile, (uint)AID.HighOrderExplosiveBlastCircle], 6f);
-sealed class AntiPersonnelMissile(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AntiPersonnelMissile, 6);
+sealed class AntiPersonnelMissile(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AntiPersonnelMissile, 6f);
 sealed class PrecisionGuidedMissile(BossModule module) : Components.BaitAwayCast(module, (uint)AID.PrecisionGuidedMissile, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class ManeuverHighPoweredLaser(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.ManeuverHighPoweredLaserMarker, (uint)AID.ManeuverHighPoweredLaser, 5.3d, 80f, 7f, 8, 8);
 sealed class ManeuverMissileCommand(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.ManeuverMissileCommand, (uint)AID.BarrageImpact, 2.1d, "Raidwide x3");
