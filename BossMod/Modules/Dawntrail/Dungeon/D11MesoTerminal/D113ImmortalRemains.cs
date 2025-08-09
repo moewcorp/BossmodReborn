@@ -118,27 +118,32 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
         {
             var pos = c.Origin;
             var center = Arena.Center;
-            var aoes = _aoe.AOEs;
-            var count = aoes.Count;
+            var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
+            var len = aoes.Length;
+            var circles = new (WPos origin, float Radius)[len];
+            for (var i = 0; i < len; ++i)
+            {
+                ref var aoe = ref aoes[i];
+                circles[i] = (aoe.Origin, aoe.ActorID == default ? 4f : 15f);
+            }
             // square intentionally slightly smaller to prevent sus knockback
             hints.AddForbiddenZone(p =>
+        {
+            var projected = p + 11f * (p - pos).Normalized();
+            for (var i = 0; i < len; ++i)
             {
-                var projected = p + 11f * (p - pos).Normalized();
-                var aoeSpan = CollectionsMarshal.AsSpan(aoes);
-                for (var i = 0; i < count; ++i)
+                ref var aoe = ref circles[i];
+                if (projected.InCircle(aoe.origin, aoe.Radius))
                 {
-                    ref var aoe = ref aoeSpan[i];
-                    if (projected.InCircle(aoe.Origin, aoe.ActorID == default ? 4f : 15f))
-                    {
-                        return default;
-                    }
+                    return default;
                 }
-                if (projected.InSquare(center, 19f))
-                {
-                    return 1f;
-                }
-                return default;
-            }, act);
+            }
+            if (projected.InSquare(center, 19f))
+            {
+                return 1f;
+            }
+            return default;
+        }, act);
         }
     }
 
