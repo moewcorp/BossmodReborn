@@ -233,21 +233,21 @@ public sealed class ReplayManagementWindow : UIWindow
             }
         }
 
-        AddRange(map, 197, 199); // lord of verminion
-        AddRange(map, 481, 535); // chocobo races
-        AddRange(map, 552, 579); // lord of verminion
-        AddRange(map, 599, 608); // hidden gorge + leap of faith
-        AddRange(map, 640, 645); // air force one + mahjong
-        AddRange(map, 705, 713); // leap of faith
-        AddRange(map, 730, 734); // ocean fishing
-        AddRange(map, 766, 775); // mahjong + ocean fishing
-        AddRange(map, 835, 843); // crystalline conflict
-        AddRange(map, 847, 864); // crystalline conflict
-        AddRange(map, 912, 923); // crystalline conflict
-        AddRange(map, 927, 935); // leap of faith
-        AddRange(map, 952, 957); // ocean fishing
-        AddRange(map, 967, 978); // crystalline conflict
-        AddRange(map, 1012, 1014); // tutorial
+        AddRange(map, 197u, 199u); // lord of verminion
+        AddRange(map, 481u, 535u); // chocobo races
+        AddRange(map, 552u, 579u); // lord of verminion
+        AddRange(map, 599u, 608u); // hidden gorge + leap of faith
+        AddRange(map, 640u, 645u); // air force one + mahjong
+        AddRange(map, 705u, 713u); // leap of faith
+        AddRange(map, 730u, 734u); // ocean fishing
+        AddRange(map, 766u, 775u); // mahjong + ocean fishing
+        AddRange(map, 835u, 843u); // crystalline conflict
+        AddRange(map, 847u, 864u); // crystalline conflict
+        AddRange(map, 912u, 923u); // crystalline conflict
+        AddRange(map, 927u, 935u); // leap of faith
+        AddRange(map, 952u, 957u); // ocean fishing
+        AddRange(map, 967u, 978u); // crystalline conflict
+        AddRange(map, 1012u, 1014u); // tutorial
 
         // check modules for WIP and non existing
         foreach (var module in BossModuleRegistry.RegisteredModules.Values)
@@ -336,7 +336,7 @@ public sealed class ReplayManagementWindow : UIWindow
             var path = _recorder?.LogPath;
             _uploadLinkPayload ??= Service.ChatGui.AddChatLinkHandler(1u, (id, str) =>
             {
-                if (id == 1)
+                if (id == 1u)
                 {
                     Task.Run(() =>
                     {

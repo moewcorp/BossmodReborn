@@ -312,7 +312,7 @@ sealed class PealOfJudgment(BossModule module) : Components.Exaflare(module, new
             for (var i = 0; i < count; ++i)
             {
                 var line = Lines[i];
-                if (line.Next.AlmostEqual(pos, 0.1f))
+                if (line.Next.AlmostEqual(pos, 1f))
                 {
                     if (line.ExplosionsLeft == 50)
                     {
