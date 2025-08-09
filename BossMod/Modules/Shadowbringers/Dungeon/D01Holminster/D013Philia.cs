@@ -201,7 +201,7 @@ sealed class Knout(BossModule module) : Components.SimpleAOEGroups(module, [(uin
 
 sealed class Taphephobia(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Taphephobia, 6f);
 
-sealed class IntoTheLight(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.IntoTheLightMarker, (uint)AID.IntoTheLight, 5.3f);
+sealed class IntoTheLight(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.IntoTheLightMarker, (uint)AID.IntoTheLight, 5.3d);
 
 sealed class CatONineTails(BossModule module) : Components.GenericRotatingAOE(module)
 {
@@ -211,7 +211,7 @@ sealed class CatONineTails(BossModule module) : Components.GenericRotatingAOE(mo
     {
         if (spell.Action.ID == (uint)AID.FierceBeatingRotationVisual)
         {
-            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation + 180f.Degrees(), -45f.Degrees(), Module.CastFinishAt(spell), 2f, 8));
+            Sequences.Add(new(_shape, spell.LocXZ, spell.Rotation + 180f.Degrees(), -45f.Degrees(), Module.CastFinishAt(spell), 2d, 8));
         }
     }
 

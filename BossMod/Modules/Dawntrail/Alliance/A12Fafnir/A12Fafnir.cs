@@ -5,7 +5,7 @@ sealed class DarkMatterBlast(BossModule module) : Components.RaidwideCast(module
     public override bool KeepOnPhaseChange => true;
 }
 
-sealed class HurricaneWingRW(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.HurricaneWingRaidwide, (uint)AID.HurricaneWingRaidwideAOE1, 2.7f, "Raidwide x9")
+sealed class HurricaneWingRW(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.HurricaneWingRaidwide, (uint)AID.HurricaneWingRaidwideAOE1, 2.7d, "Raidwide x9")
 {
     public override bool KeepOnPhaseChange => true;
 }
@@ -36,12 +36,12 @@ sealed class WingedTerror(BossModule module) : Components.SimpleAOEs(module, (ui
     public override bool KeepOnPhaseChange => true;
 }
 
-sealed class BalefulBreath(BossModule module) : Components.LineStack(module, (uint)IconID.BalefulBreath, (uint)AID.BalefulBreathAOERest, 8.2f, 70f, 3f, PartyState.MaxAllianceSize, PartyState.MaxAllianceSize, 3, false)
+sealed class BalefulBreath(BossModule module) : Components.LineStack(module, (uint)IconID.BalefulBreath, (uint)AID.BalefulBreathAOERest, 8.2d, 70f, 3f, PartyState.MaxAllianceSize, PartyState.MaxAllianceSize, 3, false)
 {
     public override bool KeepOnPhaseChange => true;
 }
 
-sealed class SharpSpike(BossModule module) : Components.BaitAwayIcon(module, 4f, (uint)IconID.SharpSpike, (uint)AID.SharpSpikeAOE, 6.2f)
+sealed class SharpSpike(BossModule module) : Components.BaitAwayIcon(module, 4f, (uint)IconID.SharpSpike, (uint)AID.SharpSpikeAOE, 6.2d)
 {
     public override bool KeepOnPhaseChange => true;
 }

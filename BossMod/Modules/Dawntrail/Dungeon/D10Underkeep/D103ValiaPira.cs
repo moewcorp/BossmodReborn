@@ -44,10 +44,10 @@ public enum TetherID : uint
 sealed class EntropicSphere(BossModule module) : Components.RaidwideCast(module, (uint)AID.EntropicSphere);
 sealed class Electray(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Electray, new AOEShapeRect(40f, 4.5f));
 sealed class ConcurrentField(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ConcurrentField, new AOEShapeCone(26f, 25f.Degrees()));
-sealed class ElectricField(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(26f, 25f.Degrees()), (uint)IconID.ElectricField, (uint)AID.ElectricField, 7.4f);
+sealed class ElectricField(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(26f, 25f.Degrees()), (uint)IconID.ElectricField, (uint)AID.ElectricField, 7.4d);
 sealed class NeutralizeFrontLines(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NeutralizeFrontLines, new AOEShapeCone(30f, 90f.Degrees()));
 sealed class HyperchargedLight(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.HyperchargedLight, 5f);
-sealed class DeterrentPulse(BossModule module) : Components.LineStack(module, (uint)IconID.DeterrentPulse, (uint)AID.DeterrentPulse, 5.3f, 40f, 4f, 4, 4, 1, false);
+sealed class DeterrentPulse(BossModule module) : Components.LineStack(module, (uint)IconID.DeterrentPulse, (uint)AID.DeterrentPulse, 5.3d, 40f, 4f, 4, 4, 1, false);
 
 sealed class EnforcementRay(BossModule module) : Components.GenericAOEs(module)
 {

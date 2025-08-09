@@ -51,25 +51,34 @@ class Deracinator(BossModule module) : Components.SingleTargetInstant(module, (u
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
         if (actor.OID == (uint)OID.BloatedBulb && animState1 == 1 && Targets.Count == 0 && Module.Enemies((uint)OID.BloatedBulb).Count == 5)
+        {
             AddTankbuster(8.1d);
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FrondFatale)
+        {
             AddTankbuster(4.1d);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.Deracinator)
+        {
             Targets.Clear();
+        }
     }
 
     private void AddTankbuster(double delay)
     {
         var id = Module.PrimaryActor.TargetID;
-        Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id));
+        if (WorldState.Actors.Find(id) is Actor t)
+        {
+            Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id, Module.PrimaryActor, t));
+        }
     }
 }
 

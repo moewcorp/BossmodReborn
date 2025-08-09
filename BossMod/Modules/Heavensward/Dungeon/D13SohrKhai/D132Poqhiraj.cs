@@ -246,19 +246,26 @@ class RearHoof(BossModule module) : Components.SingleTargetInstant(module, (uint
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.DarkCloud)
+        {
             AddTankbuster(4d);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.RearHoof)
+        {
             Targets.Clear();
+        }
     }
 
     private void AddTankbuster(double delay)
     {
         var id = Module.PrimaryActor.TargetID;
-        Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id));
+        if (WorldState.Actors.Find(id) is Actor t)
+        {
+            Targets.Add((Raid.FindSlot(id), WorldState.FutureTime(delay), id, Module.PrimaryActor, t));
+        }
     }
 }
 

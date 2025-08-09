@@ -123,7 +123,7 @@ sealed class AuraSphere(BossModule module) : BossComponent(module)
     }
 }
 
-sealed class SledgeHammer(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.SledgeHammerMarker, (uint)AID.Sledgehammer3, 4.9f);
+sealed class SledgeHammer(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.SledgeHammerMarker, (uint)AID.Sledgehammer3, 4.9d);
 sealed class HeavingHaymaker(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeavingHaymaker);
 sealed class LithicImpact(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LithicImpact, new AOEShapeRect(4f, 2f));
 sealed class Whirlwind(BossModule module) : Components.Voidzone(module, 5f, GetVoidzones, 7f)

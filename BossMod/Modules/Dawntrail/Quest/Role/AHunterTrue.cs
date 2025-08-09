@@ -82,8 +82,8 @@ sealed class NinefoldCurse(BossModule module) : Components.RaidwideCastDelay(mod
 sealed class NinetyNinefoldCurse(BossModule module) : Components.RaidwideCast(module, (uint)AID.NinetyNinefoldCurse);
 sealed class Roar(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar);
 sealed class SonicStorm(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SonicStorm, 6f);
-sealed class RushBait(BossModule module) : Components.BaitAwayChargeTether(module, 4f, 8.3f, (uint)AID.RushBait, (uint)AID.RushBaitFail, (uint)TetherID.TetherBad, (uint)TetherID.TetherGood, (uint)OID.Dzo, 30f);
-sealed class RushLineStack(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.RushLineStackMarker, (uint)AID.RushLineStack, 4.9f, markerIsFinalTarget: false);
+sealed class RushBait(BossModule module) : Components.BaitAwayChargeTether(module, 4f, 8.3d, (uint)AID.RushBait, (uint)AID.RushBaitFail, (uint)TetherID.TetherBad, (uint)TetherID.TetherGood, (uint)OID.Dzo, 30f);
+sealed class RushLineStack(BossModule module) : Components.LineStack(module, aidMarker: (uint)AID.RushLineStackMarker, (uint)AID.RushLineStack, 4.9d, markerIsFinalTarget: false);
 sealed class Trample(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Trample, 15f);
 
 sealed class FallingDusk(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FallingDusk, 15f)
