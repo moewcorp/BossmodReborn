@@ -95,7 +95,6 @@
 
   <Target Name="CopyOnlyPInvoke" AfterTargets="Build" Condition=" '$(CopyLocalLockFileAssemblies)' != 'true' ">
     <ItemGroup>
-      <!-- Filters runtime-resolved items to only the PInvoke.User32 package -->
       <_PInvokeFromNuGet Include="@(RuntimeCopyLocalItems)"
                          Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'PInvoke.User32' 
                                    and $([System.String]::Copy('%(RuntimeCopyLocalItems.Extension)').ToLower()) == '.dll'" />
