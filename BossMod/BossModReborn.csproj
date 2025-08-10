@@ -49,6 +49,7 @@
 
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="13.0.0" />
+    <PackageReference Include="PInvoke.User32" Version="0.7.124" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <ProjectReference Include="..\FFXIVClientStructs\FFXIVClientStructs\FFXIVClientStructs.csproj" />
 
@@ -68,10 +69,6 @@
       <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImPlot.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Dalamud.Bindings.ImGuizmo">
-      <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImGuizmo.dll</HintPath>
-      <Private>False</Private>
-      </Reference>
     <Reference Include="ImGuiScene">
       <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
       <Private>false</Private>
@@ -82,10 +79,6 @@
     </Reference>
     <Reference Include="Lumina.Excel">
       <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11">
-      <HintPath>$(DalamudLibPath)SharpDX.Direct3D11.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -99,4 +92,17 @@
   <ItemGroup>
     <EmbeddedResource Include="Pathfinding\ObstacleMaps\*" />
   </ItemGroup>
+
+  <Target Name="CopyOnlyPInvoke" AfterTargets="Build" Condition=" '$(CopyLocalLockFileAssemblies)' != 'true' ">
+    <ItemGroup>
+      <!-- Filters runtime-resolved items to only the PInvoke.User32 package -->
+      <_PInvokeFromNuGet Include="@(RuntimeCopyLocalItems)"
+                         Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'PInvoke.User32' 
+                                   and $([System.String]::Copy('%(RuntimeCopyLocalItems.Extension)').ToLower()) == '.dll'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PInvokeFromNuGet)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true" />
+  </Target>
+  
 </Project>

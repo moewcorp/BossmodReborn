@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using PInvoke;
 
 namespace BossMod;
 
@@ -312,16 +313,16 @@ public static partial class Utils
     /// <returns>Whether the key is currently pressed</returns>
     public static bool IsKeyPressed(int key)
     {
-        // if (key == 0)
+        if (key == 0)
             return false;
-        // if (UseAsyncKeyCheck)
-        // {
-        //     return Bitmasks.IsBitSet(User32.GetKeyState(key), 15);
-        // }
-        // else
-        // {
-        //     return Bitmasks.IsBitSet(User32.GetAsyncKeyState(key), 15);
-        // }
+        if (UseAsyncKeyCheck)
+        {
+            return Bitmasks.IsBitSet(User32.GetKeyState(key), 15);
+        }
+        else
+        {
+            return Bitmasks.IsBitSet(User32.GetAsyncKeyState(key), 15);
+        }
     }
 
     /// <summary>

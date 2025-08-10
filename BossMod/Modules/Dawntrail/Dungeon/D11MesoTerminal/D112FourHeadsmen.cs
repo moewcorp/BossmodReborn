@@ -312,7 +312,7 @@ sealed class PealOfJudgment(BossModule module) : Components.Exaflare(module, new
             for (var i = 0; i < count; ++i)
             {
                 var line = Lines[i];
-                if (line.Next.AlmostEqual(pos, 1f))
+                if (line.Next.AlmostEqual(pos, 1f)) // 0.1 should suffice, but depending on the current server tick casts can be skipped since the time between steps is only 0.2s and an actor can't do more than one cast event per tick
                 {
                     if (line.ExplosionsLeft == 50)
                     {

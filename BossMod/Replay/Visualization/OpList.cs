@@ -36,6 +36,16 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
         }
     } = false;
 
+    public bool ShowCLMVEvents
+    {
+        get;
+        set
+        {
+            field = value;
+            _nodesUpToDate = false;
+        }
+    } = false;
+
     public void Draw(UITree tree, DateTime reference)
     {
         //foreach (var n in _tree.Node("Settings"))
@@ -143,6 +153,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ClientState.OpForcedMovementDirectionChange => false,
             ClientState.OpProcTimersChange => false,
             WorldState.OpRSVData => false,
+            ClientState.OpMoveSpeedChange => ShowCLMVEvents,
             NetworkState.OpServerIPC => false,
             _ => true
         };

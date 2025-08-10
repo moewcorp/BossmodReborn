@@ -61,6 +61,7 @@ public sealed class BossModuleManager : IDisposable
         var bestPriority = 0;
         BossModule? bestModule = null;
         var anyModuleActivated = false;
+
         for (var i = 0; i < LoadedModules.Count; ++i)
         {
             var m = LoadedModules[i];
@@ -167,6 +168,16 @@ public sealed class BossModuleManager : IDisposable
         var m = BossModuleRegistry.CreateModuleForActor(WorldState, actor, Config.MinMaturity);
         if (m != null)
         {
+            var count = LoadedModules.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var module = LoadedModules[i];
+                if (module.PrimaryActor.OID == actor.OID && module.PrimaryActor.InstanceID == actor.InstanceID) // module already exists, but actor reference was no longer valid (eg due to teleports at Necron)
+                {
+                    module.PrimaryActor = actor;
+                    return;
+                }
+            }
             LoadModule(m);
         }
     }
