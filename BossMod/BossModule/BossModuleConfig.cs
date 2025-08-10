@@ -58,15 +58,15 @@ public sealed class BossModuleConfig : ConfigNode
 
     [PropertyDisplay("Cardinal direction font size")]
     [PropertySlider(0.1f, 100, Speed = 1)]
-    public float CardinalsFontSize = 17;
+    public float CardinalsFontSize = 17f;
 
     [PropertyDisplay("Waymark font size")]
     [PropertySlider(0.1f, 100, Speed = 1)]
-    public float WaymarkFontSize = 22;
+    public float WaymarkFontSize = 22f;
 
     [PropertyDisplay("Actor triangle scale factor")]
     [PropertySlider(0.1f, 10, Speed = 0.1f)]
-    public float ActorScale = 1;
+    public float ActorScale = 1f;
 
     [PropertyDisplay("Show waymarks on radar")]
     public bool ShowWaymarks = false;
@@ -102,4 +102,8 @@ public sealed class BossModuleConfig : ConfigNode
 
     [PropertyDisplay("Show melee range indicator")]
     public bool ShowMeleeRangeIndicator = false;
+
+    [PropertyDisplay("Maximum load distance", tooltip: "Maximum load distance in yalms")]
+    [PropertySlider(0.1f, 500f, Speed = 0.1f, Logarithmic = true)]
+    public float MaxLoadDistance = 500f;
 }

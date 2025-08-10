@@ -8,6 +8,7 @@ public sealed class BossModuleManager : IDisposable
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();
     private readonly EventSubscriptions _subsciptions;
 
+    public readonly List<BossModule> PendingModules = [];
     public readonly List<BossModule> LoadedModules = [];
     public Event<BossModule> ModuleLoaded = new();
     public Event<BossModule> ModuleUnloaded = new();
@@ -62,6 +63,34 @@ public sealed class BossModuleManager : IDisposable
         BossModule? bestModule = null;
         var anyModuleActivated = false;
 
+        var maxDist = Config.MaxLoadDistance;
+        if (maxDist < 500f)
+        {
+            var countP = PendingModules.Count - 1;
+            var playerPos = Service.ClientState.LocalPlayer?.Position;
+            if (playerPos is Vector3 pPos)
+            {
+                for (var i = countP; i >= 0; --i)
+                {
+                    var m = PendingModules[i];
+                    var prim = m.PrimaryActor;
+                    if (prim.IsDestroyed)
+                    {
+                        PendingModules.RemoveAt(i);
+                        continue;
+                    }
+                    var primaryPos = prim.PosRot;
+                    var vec3 = new Vector3(primaryPos.X, primaryPos.Y, primaryPos.Z);
+                    if ((pPos - vec3).LengthSquared() <= maxDist * maxDist)
+                    {
+                        LoadedModules.Add(m);
+                        Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
+                        ModuleLoaded.Fire(m);
+                        PendingModules.RemoveAt(i);
+                    }
+                }
+            }
+        }
         for (var i = 0; i < LoadedModules.Count; ++i)
         {
             var m = LoadedModules[i];
@@ -129,9 +158,27 @@ public sealed class BossModuleManager : IDisposable
 
     private void LoadModule(BossModule m)
     {
-        LoadedModules.Add(m);
-        Service.Log($"[BMM] Boss module '{m.GetType()}' loaded for actor {m.PrimaryActor}");
-        ModuleLoaded.Fire(m);
+        var maxDist = Config.MaxLoadDistance;
+        if (maxDist < 500f)
+        {
+            var playerPos = Service.ClientState.LocalPlayer?.Position;
+            if (playerPos is Vector3 pPos)
+            {
+                var primaryPos = m.PrimaryActor.PosRot;
+                var vec3 = new Vector3(primaryPos.X, primaryPos.Y, primaryPos.Z);
+                if ((pPos - vec3).LengthSquared() <= maxDist * maxDist)
+                {
+                    LoadedModules.Add(m);
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' loaded for actor {m.PrimaryActor}");
+                    ModuleLoaded.Fire(m);
+                }
+                else
+                {
+                    PendingModules.Add(m);
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' loaded as pending for actor {m.PrimaryActor}");
+                }
+            }
+        }
     }
 
     private void UnloadModule(int index)
@@ -154,7 +201,7 @@ public sealed class BossModuleManager : IDisposable
             return 0;
         if (m.StateMachine.ActiveState != null)
             return 4;
-        if (m.PrimaryActor.InstanceID == 0)
+        if (m.PrimaryActor.InstanceID == default)
             return 2; // demo module
         if (!m.PrimaryActor.IsDestroyed && !m.PrimaryActor.IsDead && m.PrimaryActor.IsTargetable)
             return 3;

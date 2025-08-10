@@ -217,7 +217,12 @@ public static class BossModuleRegistry
 
     public static BossModule? CreateModuleForActor(WorldState ws, Actor primary, BossModuleInfo.Maturity minMaturity)
     {
-        var info = primary.Type is ActorType.Enemy or ActorType.EventObj ? FindByOID(primary.OID) : null;
+        if (primary.Type is not ActorType.Enemy and not ActorType.EventObj)
+        {
+            return null;
+        }
+
+        var info = FindByOID(primary.OID);
         return info?.Maturity >= minMaturity ? CreateModule(info, ws, primary) : null;
     }
 
