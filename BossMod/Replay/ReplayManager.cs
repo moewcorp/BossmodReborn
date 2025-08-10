@@ -164,7 +164,7 @@ public sealed class ReplayManager : IDisposable
             if (!e.Replay.IsCompleted)
             {
                 var prog = e.Progress;
-                ImGui.ProgressBar(prog, new(109f, 32f), $"{(prog * 100f).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}%");
+                ImGui.ProgressBar(prog, new(109f, 32f), $"{(prog * 100f).ToString("F0", System.Globalization.CultureInfo.InvariantCulture)}%");
             }
             else if (e.Replay.IsFaulted || e.Replay.Result.Ops.Count == 0)
             {

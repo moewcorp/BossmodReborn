@@ -295,6 +295,10 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
         {
             list.ShowActorSizeEvents = !list.ShowActorSizeEvents;
         }
+        if (ImGui.MenuItem("Show CLMV events", "", list.ShowCLMVEvents, true))
+        {
+            list.ShowCLMVEvents = !list.ShowCLMVEvents;
+        }
         if (ImGui.MenuItem("Pop out"))
         {
             var windowName = $"Raw ops: {r.Path}, {(list.Encounter != null ? $"{list.ModuleInfo?.ModuleType.Name}: {list.Encounter.InstanceID:X} @ {list.Encounter.Time.Start} + {list.Encounter.Time}" : "full")}";

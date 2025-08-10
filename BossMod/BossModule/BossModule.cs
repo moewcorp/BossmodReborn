@@ -8,7 +8,7 @@ namespace BossMod;
 public abstract class BossModule : IDisposable
 {
     public readonly WorldState WorldState;
-    public readonly Actor PrimaryActor;
+    public Actor PrimaryActor;
     public static readonly BossModuleConfig WindowConfig = Service.Config.Get<BossModuleConfig>();
     public readonly MiniArena Arena;
     public readonly BossModuleRegistry.Info? Info;

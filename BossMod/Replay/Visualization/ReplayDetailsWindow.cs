@@ -309,7 +309,7 @@ sealed class ReplayDetailsWindow : UIWindow
         ImGui.TableNextColumn();
         if (actor.HPMP.MaxHP > 0)
         {
-            float frac = Math.Min((float)(actor.HPMP.CurHP + actor.HPMP.Shield) / actor.HPMP.MaxHP, 1);
+            var frac = Math.Min((float)(actor.HPMP.CurHP + actor.HPMP.Shield) / actor.HPMP.MaxHP, 1f);
             ImGui.ProgressBar(frac, new(ImGui.GetColumnWidth(), 0), $"{frac:#0.#%} ({actor.HPMP.CurHP} + {actor.HPMP.Shield} / {actor.HPMP.MaxHP}) [{actor.PendingHPDifference} pending]");
         }
 
