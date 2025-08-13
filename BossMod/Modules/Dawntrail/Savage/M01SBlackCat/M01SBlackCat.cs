@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Savage.M01SBlackCat;
 
-sealed class BiscuitMaker(BossModule module) : Components.TankSwap(module, (uint)AID.BiscuitMaker, (uint)AID.BiscuitMaker, (uint)AID.BiscuitMakerSecond, 2d, null, true);
+sealed class BiscuitMaker(BossModule module) : Components.TankSwap(module, (uint)AID.BiscuitMaker, (uint)AID.BiscuitMaker, (uint)AID.BiscuitMakerSecond, default, 2d);
 sealed class QuadrupleSwipeBoss(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.QuadrupleSwipeBossAOE, 4f, 2, 2);
 sealed class DoubleSwipeBoss(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.DoubleSwipeBossAOE, 5f, 4, 4);
 sealed class QuadrupleSwipeShade(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.QuadrupleSwipeShadeAOE, 4f, 2, 2);

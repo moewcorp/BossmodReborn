@@ -4,7 +4,7 @@ sealed class MultidirectionalDivide(BossModule module) : Components.SimpleAOEs(m
 sealed class MultidirectionalDivideMain(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MultidirectionalDivideMain, new AOEShapeCross(30f, 4f));
 sealed class MultidirectionalDivideExtra(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MultidirectionalDivideExtra, new AOEShapeCross(40f, 2f));
 sealed class RegicidalRage(BossModule module) : Components.TankbusterTether(module, (uint)AID.RegicidalRageAOE, (uint)TetherID.RegicidalRage, 8f);
-sealed class BitterWhirlwind(BossModule module) : Components.TankSwap(module, (uint)AID.BitterWhirlwind, (uint)AID.BitterWhirlwindAOEFirst, (uint)AID.BitterWhirlwindAOERest, 3.1d, new AOEShapeCircle(5f), true);
+sealed class BitterWhirlwind(BossModule module) : Components.TankSwap(module, (uint)AID.BitterWhirlwind, (uint)AID.BitterWhirlwindAOEFirst, (uint)AID.BitterWhirlwindAOERest, default, 3.1d, 5f, true);
 sealed class BurningChains(BossModule module) : Components.Chains(module, (uint)TetherID.BurningChains, (uint)AID.BurningChainsAOE);
 sealed class HalfCircuitRect(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HalfCircuitAOERect, new AOEShapeRect(60f, 60f));
 sealed class HalfCircuitDonut(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HalfCircuitAOEDonut, new AOEShapeDonut(10f, 30f));

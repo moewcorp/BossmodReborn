@@ -476,6 +476,22 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
             }
         }
     }
+
+    public override void Update()
+    {
+        if (EndsOnCastEvent)
+        {
+            var count = CurrentBaits.Count - 1;
+            for (var i = count; i >= 0; --i)
+            {
+                ref var b = ref CurrentBaits.Ref(i);
+                if (b.Source.IsDeadOrDestroyed || b.Target.IsDead)
+                {
+                    CurrentBaits.RemoveAt(i);
+                }
+            }
+        }
+    }
 }
 
 // a variation of BaitAwayCast for charges that end at target

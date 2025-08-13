@@ -161,7 +161,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
         var player = (Character*)GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
         if (player != null)
         {
-            var position = player->Position.ToSystem() + direction.ToDirection().ToVec3();
+            var position = (Vector3)player->Position + direction.ToDirection().ToVec3();
             _inst->AutoFaceTargetPosition(&position);
 
             var pm = (PlayerMove*)player;
