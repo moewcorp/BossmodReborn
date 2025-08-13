@@ -553,8 +553,6 @@ UniformStackSpread(module, innerRadius / 3f, default, minStackSize, maxStackSize
     public override void DrawArenaForeground(int pcSlot, Actor pc) { }
 }
 
-// generic single hit "line stack" component, usually do not have an iconID, instead players get marked by cast event
-// usually these have 50 range and 4 halfWidth, but it can be modified
 public abstract class GenericBaitStack(BossModule module, uint aid = default, bool onlyShowOutlines = false) : GenericBaitAway(module, aid)
 {
     // TODO: add logic for min and max stack size

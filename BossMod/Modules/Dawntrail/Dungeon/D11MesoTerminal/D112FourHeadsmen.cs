@@ -226,6 +226,7 @@ sealed class Dismemberment(BossModule module) : Components.SimpleAOEGroupsByTime
 sealed class ExecutionWheel(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExecutionWheel, new AOEShapeDonut(4f, 9f));
 sealed class FlayingFlail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FlayingFlail, 5f);
 sealed class ChoppingBlock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ChoppingBlock, 6f);
+sealed class DeathPenalty(BossModule module) : Components.SingleTargetCast(module, (uint)AID.DeathPenalty, "Healerbuster");
 sealed class Doom(BossModule module) : Components.CleansableDebuff(module, (uint)SID.Doom);
 sealed class WillBreaker(BossModule module) : Components.CastInterruptHint(module, (uint)AID.WillBreaker, showNameInHint: true);
 sealed class RelentlessTorment(BossModule module) : Components.SingleTargetCastDelay(module, (uint)AID.RelentlessTormentVisual, (uint)AID.RelentlessTorment, 0.4d, "Tankbuster x3")
@@ -342,6 +343,7 @@ sealed class D112FourHeadsmenStates : StateMachineBuilder
             .ActivateOnEnter<ExecutionWheel>()
             .ActivateOnEnter<FlayingFlail>()
             .ActivateOnEnter<ChoppingBlock>()
+            .ActivateOnEnter<DeathPenalty>()
             .ActivateOnEnter<Doom>()
             .ActivateOnEnter<WillBreaker>()
             .ActivateOnEnter<RelentlessTorment>()

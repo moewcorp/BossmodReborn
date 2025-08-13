@@ -43,7 +43,8 @@ sealed class SphereShatter(BossModule module) : Components.GenericAOEs(module)
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        var deadline = aoes[0].Activation.AddSeconds(1d);
+        ref var aoe0 = ref aoes[0];
+        var deadline = aoe0.Activation.AddSeconds(1d);
 
         var index = 0;
         while (index < count)
