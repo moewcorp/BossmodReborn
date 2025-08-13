@@ -6,7 +6,16 @@ sealed class Invitation(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeRect rect = new(36f, 5f);
     public bool Show = true;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Show ? CollectionsMarshal.AsSpan(_aoes) : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = _aoes.Count;
+        if (!Show || count == 0)
+        {
+            return [];
+        }
+        var max = count > 2 ? 2 : count;
+        return CollectionsMarshal.AsSpan(_aoes)[..max];
+    }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {

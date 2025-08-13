@@ -32,7 +32,7 @@ sealed class M07SBruteAbombinatorStates : StateMachineBuilder
         Slaminator(id + 0x120000u, 6.7f);
         StoneRingerBrutalSmash(id + 0x130000u, 4.2f);
         BrutalImpact(id + 0x140000u, 4.1f, 7.7f, 8);
-        SimpleState(id + 0x150000u, 24.7f, "Enrage");
+        Targetable(id + 0x150000u, false, 19.7f, "Enrage");
     }
 
     private void BrutalImpact(uint id, float delay1, float delay2, int numcasts)
