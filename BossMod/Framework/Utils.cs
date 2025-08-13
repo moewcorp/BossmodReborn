@@ -312,7 +312,7 @@ public static partial class Utils
     public static void RotateList<T>(List<T> list, int startIndex)
     {
         var count = list.Count;
-        if (count == 0 || startIndex == 0 || startIndex % count == 0)
+        if (count <= 1 || startIndex == 0 || startIndex % count == 0)
         {
             return;
         }

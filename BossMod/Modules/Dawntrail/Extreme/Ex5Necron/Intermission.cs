@@ -1,5 +1,3 @@
-using BossMod.Dawntrail.Dungeon.D11MesoTerminal.D112FourHeadsmen;
-
 namespace BossMod.Dawntrail.Extreme.Ex5Necron;
 
 sealed class FearOfDeathAOE2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FearOfDeathAOE2, 3f);
@@ -116,7 +114,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
                 }
             }
         }
-        else if (Arena.Bounds.Radius < 18f)
+        else if (Arena.Bounds.Radius == 17.5f)
         {
             Arena.Bounds = new ArenaBoundsRect(18f, 15f);
             Arena.Center = Ex5Necron.ArenaCenter;

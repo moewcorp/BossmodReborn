@@ -64,7 +64,7 @@ sealed class Ex5NecronStates : StateMachineBuilder
         MementoMori(id + 0x70000u, 7.3f);
         ColdGripExistentialDread(id + 0x80000u, 4.7f);
         GrandCross(id + 0x90000u, 11.6f);
-        Targetable(id + 0xA0000u, true, 19.7f, "Enrage");
+        Targetable(id + 0xA0000u, false, 19.7f, "Enrage");
     }
 
     private void BlueShockwave(uint id, float delay)
