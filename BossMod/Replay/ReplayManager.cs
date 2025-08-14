@@ -163,7 +163,7 @@ public sealed class ReplayManager : IDisposable
             ImGui.TableNextColumn();
             if (!e.Replay.IsCompleted)
             {
-                ImGui.ProgressBar(e.Progress, new Vector2(100, 0));
+                ImGui.ProgressBar(e.Progress, new Vector2(100f, default));
             }
             else if (e.Replay.IsFaulted || e.Replay.Result.Ops.Count == 0)
             {
