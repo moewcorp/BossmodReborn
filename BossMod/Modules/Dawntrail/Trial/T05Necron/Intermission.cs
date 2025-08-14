@@ -80,10 +80,10 @@ sealed class Prisons(BossModule module) : BossComponent(module)
                 {
                     if (activeTeleporters[i])
                     {
-                        hints.GoalZones.Add(hints.GoalProximity(pos + new WDir(default, -7.4f), 2f, 9f));
-                        hints.GoalZones.Add(hints.GoalProximity(pos + new WDir(-2.5f, -20f), 2f, 9f));
-                        hints.GoalZones.Add(hints.GoalProximity(pos + new WDir(15f, -11.5f), 2f, 9f));
-                        hints.GoalZones.Add(hints.GoalProximity(pos + new WDir(20f, default), 2f, 9f));
+                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(default, -7.4f), 1f, 9f));
+                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(-2.5f, -20f), 1f, 9f));
+                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(15f, -11.5f), 1f, 9f));
+                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(20f, default), 1f, 9f));
                     }
                     return;
                 }
