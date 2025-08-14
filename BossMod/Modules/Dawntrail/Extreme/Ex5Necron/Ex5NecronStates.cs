@@ -151,22 +151,22 @@ sealed class Ex5NecronStates : StateMachineBuilder
 
     private void SoulReapingTwoFourfoldBlight1(uint id, float delay)
     {
-        ComponentCondition<AetherBlight>(id, delay, comp => comp.NumCasts != 0, "AOE resolves")
+        ComponentCondition<Aetherblight>(id, delay, comp => comp.NumCasts != 0, "AOE resolves")
             .ActivateOnEnter<Shockwave>()
-            .ExecOnExit<AetherBlight>(comp => comp.Show = false)
-            .ExecOnExit<AetherBlight>(comp => comp.NumCasts = 0)
-            .ActivateOnEnter<AetherBlight>();
+            .ExecOnExit<Aetherblight>(comp => comp.Show = false)
+            .ExecOnExit<Aetherblight>(comp => comp.NumCasts = 0)
+            .ActivateOnEnter<Aetherblight>();
         ComponentCondition<Shockwave>(id + 0x10u, 0.2f, comp => comp.NumCasts != 0, "Stacks resolve")
             .DeactivateOnExit<Shockwave>();
     }
 
     private void SoulReapingTwoFourfoldBlight2(uint id, float delay)
     {
-        ComponentCondition<AetherBlight>(id, delay, comp => comp.NumCasts != 0, "AOE resolves")
+        ComponentCondition<Aetherblight>(id, delay, comp => comp.NumCasts != 0, "AOE resolves")
             .ActivateOnEnter<Shockwave>()
-            .ExecOnEnter<AetherBlight>(comp => comp.Show = true)
-            .ExecOnEnter<AetherBlight>(comp => comp.UpdateAOEs(7.1d))
-            .DeactivateOnExit<AetherBlight>();
+            .ExecOnEnter<Aetherblight>(comp => comp.Show = true)
+            .ExecOnEnter<Aetherblight>(comp => comp.UpdateAOEs(7.1d))
+            .DeactivateOnExit<Aetherblight>();
         ComponentCondition<Shockwave>(id + 0x10u, 0.2f, comp => comp.NumCasts != 0, "Stacks resolve")
             .DeactivateOnExit<Shockwave>();
     }
@@ -201,9 +201,11 @@ sealed class Ex5NecronStates : StateMachineBuilder
             .DeactivateOnExit<Shock>();
         ComponentCondition<GrandCrossBait>(id + 0xD0u, 7.1f, comp => comp.NumCasts != 0, "Baited circle AOEs 3")
             .ActivateOnEnter<GrandCrossProx>()
+            .ActivateOnEnter<GrandCrossRW>()
             .ExecOnEnter<GrandCrossBait>(comp => comp.NumCasts = 0);
         ComponentCondition<GrandCrossProx>(id + 0xE0u, 1.6f, comp => comp.NumCasts != 0, "Proximity AOE")
             .SetHint(StateMachine.StateHint.Raidwide)
+            .DeactivateOnExit<GrandCrossRW>()
             .DeactivateOnExit<GrandCrossProx>();
         ComponentCondition<GrandCrossBait>(id + 0xF0u, 0.4f, comp => comp.NumCasts != 0, "Baited circle AOEs 4")
             .DeactivateOnExit<GrandCrossBait>()
@@ -281,17 +283,17 @@ sealed class Ex5NecronStates : StateMachineBuilder
             var desc = $"AOE resolve {i}";
             var casts = i;
             var hints = 4 - i;
-            var cond = ComponentCondition<AetherBlight>(offset, time, i == 1 ? comp => comp.NumCasts == casts : comp => comp.Hints.Count == hints, desc);
+            var cond = ComponentCondition<Aetherblight>(offset, time, i == 1 ? comp => comp.NumCasts == casts : comp => comp.Hints.Count == hints, desc);
             if (i == 1)
             {
                 cond
                     .ActivateOnEnter<Shockwave>()
-                    .ActivateOnEnter<AetherBlight>();
+                    .ActivateOnEnter<Aetherblight>();
             }
             else if (i == 4)
             {
                 cond
-                    .DeactivateOnExit<AetherBlight>();
+                    .DeactivateOnExit<Aetherblight>();
             }
         }
         ComponentCondition<Shockwave>(id + 0x40u, 0.2f, comp => comp.NumCasts != 0, "Stacks resolve")
@@ -309,8 +311,8 @@ sealed class Ex5NecronStates : StateMachineBuilder
             .ExecOnEnter<Invitation>(comp => comp.NextIsDanger = true);
         ComponentCondition<Invitation>(id + 0x20u, 2.7f, comp => comp.NumCasts != 0, "Line AOE (prison!)")
             .DeactivateOnExit<Invitation>()
-            .ActivateOnExit<AetherBlight>()
-            .ExecOnExit<AetherBlight>(comp => comp.Show = false);
+            .ActivateOnExit<Aetherblight>()
+            .ExecOnExit<Aetherblight>(comp => comp.Show = false);
         for (var i = 3; i <= 5; ++i)
         {
             var offset = id + 0x10u + (uint)((i - 1) * 0x10u);
@@ -322,12 +324,12 @@ sealed class Ex5NecronStates : StateMachineBuilder
             {
                 cond
                     .DeactivateOnExit<CircleOfLives>()
-                    .ExecOnExit<AetherBlight>(comp => comp.Show = true)
+                    .ExecOnExit<Aetherblight>(comp => comp.Show = true)
                     .ActivateOnExit<Shockwave>();
             }
         }
-        ComponentCondition<AetherBlight>(id + 0x60u, 6.6f, comp => comp.NumCasts != 0, "AOE resolves")
-            .DeactivateOnExit<AetherBlight>();
+        ComponentCondition<Aetherblight>(id + 0x60u, 6.6f, comp => comp.NumCasts != 0, "AOE resolves")
+            .DeactivateOnExit<Aetherblight>();
         ComponentCondition<Shockwave>(id + 0x70u, 0.2f, comp => comp.NumCasts != 0, "Stacks resolve")
             .DeactivateOnExit<Shockwave>();
     }

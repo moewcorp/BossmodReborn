@@ -22,7 +22,7 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 44615, // 49B2->player, no cast, single-target
+    AutoAttack = 44615, // NecronHelper2->player, no cast, single-target
 
     BlueShockwaveVisual1 = 44592, // Necron->self, 6.0+1,0s cast, single-target
     BlueShockwaveVisual2 = 44594, // Necron->self, no cast, single-target
@@ -105,7 +105,9 @@ public enum AID : uint
     ChillingFingers = 44589, // IcyHands6->self/player, 5.0s cast, range 24 width 6 rect
     ChokingGraspHealer = 44590, // IcyHands6->self/player, 4.0s cast, range 24 width 6 rect
 
-    DarknessOfEternityEnrage = 44613 // Necron->self, 10.0s cast, range 50 circle
+    DarknessOfEternityEnrage = 44613, // Necron->self, 10.0s cast, range 50 circle
+    DarknessOfEternityEnrageRepeat = 44582 // Helper->location, no cast, range 50 circle
+
 }
 
 public enum IconID : uint

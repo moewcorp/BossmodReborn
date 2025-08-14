@@ -1,7 +1,5 @@
-namespace BossMod.Dawntrail.Extreme.Ex5Necron;
+namespace BossMod.Dawntrail.Trial.T05Necron;
 
-sealed class GrandCross(BossModule module) : Components.RaidwideCast(module, (uint)AID.GrandCross);
-sealed class GrandCrossRW(BossModule module) : Components.RaidwideCast(module, (uint)AID.GrandCrossProximity);
 sealed class NeutronRing(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.NeutronRingVisual, (uint)AID.NeutronRing, 2.6d);
 
 sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(module)
@@ -9,6 +7,7 @@ sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(m
     private AOEInstance[] _aoe = new AOEInstance[1];
     private bool aoeInit;
     private static readonly AOEShapeDonut donut = new(9f, 60f);
+    private bool active;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
 
@@ -16,60 +15,46 @@ sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(m
     {
         if (spell.Action.ID == (uint)AID.ArenaChangeVisual)
         {
-            _aoe = [new(donut, Trial.T05Necron.Necron.ArenaCenter, default, Module.CastFinishAt(spell, 1.1d))];
+            _aoe = [new(donut, Necron.ArenaCenter, default, Module.CastFinishAt(spell, 1.1d))];
             aoeInit = true;
         }
     }
 
     public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
     {
-        if (updateID == 0x8000000D && param1 == 0x2u)
+        if (updateID == 0x8000000D)
         {
-            Arena.Bounds = Trial.T05Necron.Necron.CircleArena;
-            aoeInit = false;
+            if (param1 == 0x2u)
+            {
+                Arena.Bounds = Necron.CircleArena;
+                Arena.Center = Necron.ArenaCenter;
+                aoeInit = false;
+                active = true;
+            }
+            else if (param1 == 0x01u)
+            {
+                Arena.Bounds = new ArenaBoundsRect(18f, 15f);
+                Arena.Center = Necron.ArenaCenter;
+                active = false;
+            }
+        }
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        if (!active || pc.PosRot.Y < -100f)
+        {
+            return;
+        }
+        else if (Arena.Bounds.Radius != 9f)
+        {
+            Arena.Bounds = Necron.CircleArena;
+            Arena.Center = Necron.ArenaCenter;
         }
     }
 }
 
 sealed class GrandCrossBait(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GrandCrossBait, 3f);
-sealed class GrandCrossSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.GrandCrossSpread, 3f);
-
-sealed class Shock(BossModule module) : Components.GenericTowers(module)
-{
-    private BitMask forbidden;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.Shock)
-        {
-            Towers.Add(new(spell.LocXZ, 3f, forbiddenSoakers: forbidden, activation: Module.CastFinishAt(spell)));
-        }
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.Shock)
-        {
-            Towers.Clear();
-            forbidden = default;
-        }
-    }
-
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
-    {
-        if (iconID == (uint)IconID.GrandCross && Raid.FindSlot(actor.InstanceID) is var slot)
-        {
-            forbidden[slot] = true;
-            var count = Towers.Count;
-            var towers = CollectionsMarshal.AsSpan(Towers);
-            for (var i = 0; i < count; ++i)
-            {
-                ref var t = ref towers[i];
-                t.ForbiddenSoakers = forbidden;
-            }
-        }
-    }
-}
 
 sealed class GrandCrossRect(BossModule module) : Components.GenericAOEs(module)
 {

@@ -50,7 +50,7 @@ sealed class FieldOfScorn(BossModule module) : Components.RaidwideCast(module, (
 sealed class ThunderousSlash(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ThunderousSlash);
 sealed class OrderedFire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OrderedFire, new AOEShapeRect(55f, 4f));
 sealed class ElectricExcess(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.ElectricExcess, 6f);
-sealed class StaticForce(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60f, 15f.Degrees()), (uint)IconID.StaticForce, (uint)AID.StaticForce, 5.1f);
+sealed class StaticForce(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60f, 15f.Degrees()), (uint)IconID.StaticForce, (uint)AID.StaticForce, 5.1d);
 
 sealed class SectorBisector(BossModule module) : Components.GenericAOEs(module)
 {
