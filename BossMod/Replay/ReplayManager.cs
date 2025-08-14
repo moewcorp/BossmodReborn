@@ -1,7 +1,7 @@
 ﻿using BossMod.Autorotation;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Bindings.ImGui;
 using System.IO;
 using System.Threading;
 
@@ -163,8 +163,7 @@ public sealed class ReplayManager : IDisposable
             ImGui.TableNextColumn();
             if (!e.Replay.IsCompleted)
             {
-                var prog = e.Progress;
-                ImGui.ProgressBar(prog, new(109f, 32f), $"{(prog * 100f).ToString("F0", System.Globalization.CultureInfo.InvariantCulture)}%");
+                ImGui.ProgressBar(e.Progress, new Vector2(100, 0));
             }
             else if (e.Replay.IsFaulted || e.Replay.Result.Ops.Count == 0)
             {
