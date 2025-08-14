@@ -2,9 +2,10 @@ namespace BossMod.Dawntrail.Extreme.Ex5Necron;
 
 sealed class Invitation(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = new(2);
+    private readonly List<AOEInstance> _aoes = new(3);
     private static readonly AOEShapeRect rect = new(36f, 5f);
     public bool Show = true;
+    public bool NextIsDanger;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -36,8 +37,6 @@ sealed class Invitation(BossModule module) : Components.GenericAOEs(module)
             }
         }
     }
-
-    public bool NextIsDanger;
 
     public override void Update()
     {

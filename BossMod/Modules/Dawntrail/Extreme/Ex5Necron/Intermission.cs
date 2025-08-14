@@ -117,7 +117,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
         else if (Arena.Bounds.Radius == 17.5f)
         {
             Arena.Bounds = new ArenaBoundsRect(18f, 15f);
-            Arena.Center = Ex5Necron.ArenaCenter;
+            Arena.Center = Trial.T05Necron.Necron.ArenaCenter;
         }
     }
 

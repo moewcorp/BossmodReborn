@@ -31,7 +31,7 @@ sealed class MementoMori(BossModule module) : Components.GenericAOEs(module)
         {
             if (state == 0x00020001u)
             {
-                Arena.Bounds = Ex5Necron.SplitArena;
+                Arena.Bounds = Trial.T05Necron.Necron.SplitArena;
                 aoeInit = false;
             }
             else if (state == 0x00080004u)

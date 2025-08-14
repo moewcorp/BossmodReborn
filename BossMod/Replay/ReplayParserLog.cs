@@ -235,7 +235,18 @@ public sealed class ReplayParserLog : IDisposable
         public override bool ReadBool() => _input.ReadBoolean();
         public override sbyte ReadSByte() => _input.ReadSByte();
         public override short ReadShort() => _input.ReadInt16();
-        public override int ReadInt() => _input.ReadInt32();
+        public override int ReadInt()
+        {
+            try
+            {
+                return _input.ReadInt32();
+            }
+            catch (EndOfStreamException)
+            {
+                Service.Log("ReadInt: Reached the end of the file unexpectedly. Returning default value.");
+                return default;
+            }
+        }
         public override long ReadLong() => _input.ReadInt64();
         public override byte ReadByte(bool hex) => _input.ReadByte();
         public override ushort ReadUShort(bool hex) => _input.ReadUInt16();
@@ -263,14 +274,36 @@ public sealed class ReplayParserLog : IDisposable
                 return default;
             }
         }
-        public override byte[] ReadBytes() => _input.ReadBytes(_input.ReadInt32());
+        public override byte[] ReadBytes()
+        {
+            try
+            {
+                return _input.ReadBytes(_input.ReadInt32());
+            }
+            catch (EndOfStreamException)
+            {
+                Service.Log("ReadBytes: Reached the end of the file unexpectedly. Returning default value.");
+                return [];
+            }
+        }
         public override ActionID ReadAction() => new(_input.ReadUInt32());
         public override Class ReadClass() => (Class)_input.ReadByte();
-        public override ActorStatus ReadStatus() => new(_input.ReadUInt32(), _input.ReadUInt16(), new(_input.ReadInt64()), _input.ReadUInt64());
+        public override ActorStatus ReadStatus()
+        {
+            try
+            {
+                return new(_input.ReadUInt32(), _input.ReadUInt16(), new(_input.ReadInt64()), _input.ReadUInt64());
+            }
+            catch (EndOfStreamException)
+            {
+                Service.Log("ReadStatus: Reached the end of the file unexpectedly. Returning default value.");
+                return default;
+            }
+        }
         public override ActionEffects ReadActionEffects()
         {
             var effects = new ActionEffects();
-            for (int i = 0; i < ActionEffects.MaxCount; ++i)
+            for (var i = 0; i < ActionEffects.MaxCount; ++i)
                 effects[i] = ReadULong(true);
             return effects;
         }

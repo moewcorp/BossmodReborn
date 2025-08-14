@@ -36,9 +36,4 @@ sealed class ChokingGrasp(BossModule module) : Components.SimpleAOEGroups(module
 sealed class CircleOfLives(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CircleOfLives, new AOEShapeDonut(3f, 50f), 1);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Necron, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1062u, NameID = 14093u, PlanLevel = 100, Category = BossModuleInfo.Category.Extreme, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 1)]
-public sealed class Ex5Necron(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsRect(18f, 15f))
-{
-    public static readonly WPos ArenaCenter = new(100f, 100f);
-    public static readonly ArenaBoundsComplex CircleArena = new([new Polygon(ArenaCenter, 9f, 32)]);
-    public static readonly ArenaBoundsComplex SplitArena = new([new Rectangle(ArenaCenter, 18f, 15f)], [new Rectangle(ArenaCenter, 6f, 15f)]);
-}
+public sealed class Ex5Necron(WorldState ws, Actor primary) : Trial.T05Necron.Necron(ws, primary);

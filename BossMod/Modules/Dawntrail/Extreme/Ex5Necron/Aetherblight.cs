@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Extreme.Ex5Necron;
 
-sealed class AetherBlight(BossModule module) : Components.GenericAOEs(module)
+sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(5);
     private static readonly AOEShapeRect rect = new(100f, 6f);
@@ -198,6 +198,20 @@ sealed class AetherBlight(BossModule module) : Components.GenericAOEs(module)
                 }
                 rotated = true;
                 void AddAOE(AOEShape shape, WPos pos, int i) => _aoes.Add(new(shape, pos.Quantized(), rot, WorldState.FutureTime(12.4d + i * 2.8d)));
+            }
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        base.AddAIHints(slot, actor, assignment, hints);
+        if (Show && _aoes.Count > 1)
+        {
+            ref var aoe2 = ref _aoes.Ref(1);
+            if (aoe2.Shape == donut)
+            {
+                // make ai stay close to donut to ensure successfully dodging the combo
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe2.Origin, 21f), _aoes.Ref(0).Activation);
             }
         }
     }
