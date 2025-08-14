@@ -22,7 +22,7 @@ sealed class MassMacabre(BossModule module) : Components.GenericTowers(module, p
                 Towers.Add(new(pos.Quantized(), 3f, 4, 4, activation: WorldState.FutureTime(15d), actorID: index));
             }
         }
-        else if (state == 0x08000400u)
+        else if (state is 0x00080004u or 0x08000400u)
         {
             var count = Towers.Count;
             var towers = CollectionsMarshal.AsSpan(Towers);
