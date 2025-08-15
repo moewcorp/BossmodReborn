@@ -110,17 +110,18 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
-        if (actor.OID == (uint)OID.NaelDeusDarnus && id == 0x1E43)
+        var oid = actor.OID;
+        if (oid == (uint)OID.NaelDeusDarnus && id == 0x1E43)
         {
             _nael = actor;
             InitIfReady();
         }
-        else if (actor.OID == (uint)OID.Twintania && id == 0x1E44)
+        else if (oid == (uint)OID.Twintania && id == 0x1E44)
         {
             _twin = actor;
             InitIfReady();
         }
-        else if (actor.OID == (uint)OID.BahamutPrime && id == 0x1E43)
+        else if (oid == (uint)OID.BahamutPrime && id == 0x1E43)
         {
             _baha = actor;
             InitIfReady();
@@ -133,16 +134,24 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
             return;
 
         // at this point NextCasters should contain 5 drakes, order is not yet known
-        var dirToNael = Angle.FromDirection(_nael.Position - Arena.Center);
-        var dirToTwin = Angle.FromDirection(_twin.Position - Arena.Center);
-        var dirToBaha = Angle.FromDirection(_baha.Position - Arena.Center);
+        var center = Arena.Center;
+        var dirToNael = Angle.FromDirection(_nael.Position - center);
+        var dirToBaha = Angle.FromDirection(_baha.Position - center);
 
         // bahamut on cardinal => CCW dive order
         // bahamut on intercardinal => CW dive order
         var bahamutIntercardinal = ((int)MathF.Round(dirToBaha.Deg / 45f) & 1) != 0;
         _diveOrder = bahamutIntercardinal ? -1 : +1;
-        var orders = Casters.Select(c => _diveOrder * CCWDirection(Angle.FromDirection(c.Position - Arena.Center), dirToBaha)).ToList();
-        MemoryExtensions.Sort(orders.AsSpan(), Casters.AsSpan());
+
+        var count = Casters.Count;
+        var orders = new float[count];
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Casters[i];
+            orders[i] = _diveOrder * CCWDirection(Angle.FromDirection(c.Position - center), dirToBaha);
+        }
+
+        MemoryExtensions.Sort(orders, Casters.AsSpan());
         Casters.Insert(0, _nael);
         Casters.Add(_baha);
         Casters.Add(_twin);
@@ -151,14 +160,14 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         var dirToSafespot = dirToBaha + 180f.Degrees();
         if (dirToSafespot.AlmostEqual(dirToNael, 0.1f))
             dirToSafespot += _diveOrder * 45f.Degrees();
-        _initialSafespot = Arena.Center + 20f * dirToSafespot.ToDirection();
+        _initialSafespot = center + 20f * dirToSafespot.ToDirection();
     }
 
     private float CCWDirection(Angle direction, Angle reference)
     {
         var ccwDist = (direction - reference).Normalized().Deg;
         if (ccwDist < -5f)
-            ccwDist += 360;
+            ccwDist += 360f;
         return ccwDist;
     }
 
