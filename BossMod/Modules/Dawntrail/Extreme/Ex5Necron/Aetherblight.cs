@@ -74,10 +74,10 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
     {
         (var shape, var hint) = iconID switch
         {
-            (uint)IconID.AetherblightCircle => ((AOEShape)circle, "Circle"),
-            (uint)IconID.AetherblightDonut => (donut, "Donut"),
-            (uint)IconID.AetherblightRectSingle => (rect, "Middle"),
-            (uint)IconID.AetherblightRectDouble => (rect, "Sides"),
+            (uint)IconID.AetherblightCircle => ((AOEShape)circle, "Out"),
+            (uint)IconID.AetherblightDonut => (donut, "In"),
+            (uint)IconID.AetherblightRectSingle => (rect, "Sides"),
+            (uint)IconID.AetherblightRectDouble => (rect, "Center"),
             _ => default
         };
         if (shape != null)
@@ -146,7 +146,7 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
         var count = Hints.Count;
         if (count > 0)
         {
-            var sb = new StringBuilder("Stored: ", 8 + 4 * (count - 1) + count * 5);
+            var sb = new StringBuilder("Order: ", 7 + 4 * (count - 1) + count * 5);
             var ord = CollectionsMarshal.AsSpan(Hints);
             for (var i = 0; i < count; ++i)
             {
@@ -181,17 +181,17 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
                 {
                     switch (Hints[i])
                     {
-                        case "Sides":
+                        case "Center":
                             AddAOE(rect, new(88f, 85f), i);
                             AddAOE(rect, new(112f, 85f), i);
                             break;
-                        case "Circle":
+                        case "Out":
                             AddAOE(circle, loc, i);
                             break;
-                        case "Donut":
+                        case "In":
                             AddAOE(donut, loc, i);
                             break;
-                        case "Middle":
+                        case "Sides":
                             AddAOE(rect, loc, i);
                             break;
                     }
