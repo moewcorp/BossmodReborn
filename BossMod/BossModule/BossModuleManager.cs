@@ -66,33 +66,28 @@ public sealed class BossModuleManager : IDisposable
         var maxDist = Config.MaxLoadDistance;
         if (maxDist < 500f)
         {
-            Service.Framework.RunOnFrameworkThread(() =>
+            if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos)
             {
-                var playerPos = WorldState.Party[0]?.PosRot.AsVector3() ?? Service.ClientState.LocalPlayer?.Position;
-
-                if (playerPos is Vector3 pPos)
+                var countP = PendingModules.Count - 1;
+                var maxSq = maxDist * maxDist;
+                for (var i = countP; i >= 0; --i)
                 {
-                    var countP = PendingModules.Count - 1;
-                    var maxSq = maxDist * maxDist;
-                    for (var i = countP; i >= 0; --i)
+                    var m = PendingModules[i];
+                    var prim = m.PrimaryActor;
+                    if (prim.IsDestroyed)
                     {
-                        var m = PendingModules[i];
-                        var prim = m.PrimaryActor;
-                        if (prim.IsDestroyed)
-                        {
-                            PendingModules.RemoveAt(i);
-                            continue;
-                        }
-                        if ((pPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxSq)
-                        {
-                            LoadedModules.Add(m);
-                            Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
-                            ModuleLoaded.Fire(m);
-                            PendingModules.RemoveAt(i);
-                        }
+                        PendingModules.RemoveAt(i);
+                        continue;
+                    }
+                    if ((playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxSq)
+                    {
+                        LoadedModules.Add(m);
+                        Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
+                        ModuleLoaded.Fire(m);
+                        PendingModules.RemoveAt(i);
                     }
                 }
-            });
+            }
         }
         for (var i = 0; i < LoadedModules.Count; ++i)
         {
@@ -165,22 +160,17 @@ public sealed class BossModuleManager : IDisposable
         if (maxDist < 500f)
         {
             Service.Framework.RunOnFrameworkThread(() =>
-                       {
-                           var playerPos = WorldState.Party[0]?.PosRot.AsVector3() ?? Service.ClientState.LocalPlayer?.Position;
-
-                           if (playerPos is Vector3 pPos)
-                           {
-                               if ((pPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
-                               {
-                                   LoadModule();
-                               }
-                               else
-                               {
-                                   PendingModules.Add(m);
-                                   Service.Log($"[BMM] Boss module '{m.GetType()}' loaded as pending for actor {m.PrimaryActor}");
-                               }
-                           }
-                       });
+            {
+                if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
+                {
+                    LoadModule();
+                }
+                else
+                {
+                    PendingModules.Add(m);
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' loaded as pending for actor {m.PrimaryActor}");
+                }
+            });
         }
         else
         {
