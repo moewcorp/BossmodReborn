@@ -35,28 +35,29 @@ sealed class LightningStorm(BossModule module) : Components.SimpleAOEs(module, (
 
 sealed class Cacophony(BossModule module) : Components.GenericAOEs(module)
 {
-    private Actor? target;
+    private int target = -1;
     private Actor? source;
     private AOEInstance[] _aoe = [];
     private bool aoeInit;
     private static readonly AOEShapeCircle circle = new(6);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
+
+    public override void Update()
     {
         if (!aoeInit)
         {
-            return [];
+            return;
         }
         ref var aoe = ref _aoe[0];
         aoe.Origin = source!.Position.Quantized();
-        return _aoe;
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Cacophony)
         {
-            target = actor;
+            target = Raid.FindSlot(targetID);
         }
     }
 
@@ -64,8 +65,9 @@ sealed class Cacophony(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.ChaoticChorus)
         {
-            target = null;
+            target = -1;
             source = null;
+            _aoe = [];
             aoeInit = false;
         }
     }
@@ -82,7 +84,7 @@ sealed class Cacophony(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (aoeInit && source is Actor s)
+        if (slot == target && source is Actor s)
         {
             ref var aoe = ref _aoe[0];
             hints.AddForbiddenZone(ShapeDistance.Circle(s.Position, 10f), aoe.Activation);
@@ -91,7 +93,7 @@ sealed class Cacophony(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (actor == target)
+        if (slot == target)
         {
             hints.Add("Kite the orb!");
         }

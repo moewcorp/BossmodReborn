@@ -12,8 +12,8 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
     private readonly int[] _baitOrder = new int[PartyState.MaxPartySize];
     public int NumBaitsAssigned = 1; // reserve for lunar dive
 
-    private static readonly AOEShapeRect _shapeNaelTwin = new(60f, 4f);
-    private static readonly AOEShapeRect _shapeBahamut = new(60f, 6f);
+    private static readonly AOEShapeRect _shapeNaelTwin = new(63.96f, 4f);
+    private static readonly AOEShapeRect _shapeBahamut = new(64.2f, 6f);
     private static readonly AOEShapeRect _shapeDrake = new(52f, 10f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
@@ -35,7 +35,7 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
     {
         // draw safespot
         if (NumCasts == 0 && AOEs.Count <= 1 && _initialSafespot != default)
-            Arena.AddCircle(_initialSafespot, 1, Colors.Safe);
+            Arena.AddCircle(_initialSafespot, 1f, Colors.Safe);
 
         // draw bait
         var order = _baitOrder[pcSlot];
@@ -50,7 +50,9 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID is (uint)OID.Firehorn or (uint)OID.Iceclaw or (uint)OID.Thunderwing or (uint)OID.TailOfDarkness or (uint)OID.FangOfLight)
+        {
             Casters.Add(actor);
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -69,15 +71,17 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
         {
             var count = Casters.Count;
             var id = caster.InstanceID;
+            ++NumCasts;
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
-                    Casters.RemoveAt(i);
-                    break;
+                    AOEs.RemoveAt(i);
+                    return;
                 }
             }
-            ++NumCasts;
         }
     }
 
@@ -101,8 +105,12 @@ class P3GrandOctet(BossModule module) : Components.GenericAOEs(module)
                 {
                     var len = _baitOrder.Length;
                     for (var i = 0; i < len; ++i)
+                    {
                         if (_baitOrder[i] == 0)
+                        {
                             _baitOrder[i] = 8; // twintania bait
+                        }
+                    }
                 }
                 break;
         }

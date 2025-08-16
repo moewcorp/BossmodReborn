@@ -9,7 +9,7 @@ sealed class BitingWindSmall(BossModule module) : Components.VoidzoneAtCastTarge
 
 sealed class BitingWindUpdraftVoidzone(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance[] _aoe = new AOEInstance[1];
+    private AOEInstance[] _aoe = [];
     private bool active;
     private static readonly AOEShapeCircle circle = new(6f), circleInverted = new(6f, true);
     private DateTime activation = DateTime.MaxValue;

@@ -84,7 +84,7 @@ sealed class ShockingCrossXMarksTheShock(BossModule module) : Components.Generic
     private readonly SpinShock _rotation = module.FindComponent<SpinShock>()!;
     private bool currentShape; // false = intercards, true cardinal
     private static readonly AOEShapeCross _cross = new(50f, 5f);
-    private AOEInstance[] _aoe = new AOEInstance[1];
+    private AOEInstance[] _aoe = [];
     private bool aoeInit;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit && _rotation.Spins < 3 ? _aoe : [];

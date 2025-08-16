@@ -19,7 +19,7 @@ sealed class Lanterns(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly Circle lantern1 = new(new(723.5f, 57.5f), 1f), lantern2 = new(new(690.5f, 57.5f), 1f), lantern3 = new(new(681.2f, 51.6f), 1f);
     private readonly List<Circle> lanterns = [lantern1, lantern2, lantern3];
-    private AOEInstance[] _aoe = new AOEInstance[1];
+    private AOEInstance[] _aoe = [];
     private bool aoeInit;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
