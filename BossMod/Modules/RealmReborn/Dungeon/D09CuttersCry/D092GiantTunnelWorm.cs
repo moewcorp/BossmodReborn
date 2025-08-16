@@ -41,20 +41,17 @@ sealed class SandPillarEarthbreak(BossModule module) : Components.GenericAOEs(mo
         (new(-132.694f, 154.942f), -90f.Degrees()),
     ];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void Update()
     {
-        var count = _aoes.Count;
-        if (count == 0)
+        if (_aoes.Count <= 1)
         {
-            return [];
+            return;
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        if (count > 1)
-        {
-            ref var aoe = ref aoes[0];
-            aoe.Color = Colors.Danger;
-        }
-        return aoes;
+        ref var aoe = ref aoes[0];
+        aoe.Color = Colors.Danger;
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -87,10 +84,7 @@ sealed class SandPillarEarthbreak(BossModule module) : Components.GenericAOEs(mo
                 }
                 break;
             case (uint)AID.Earthbreak:
-                if (_aoes.Count != 0)
-                {
-                    _aoes.RemoveAt(0);
-                }
+                _aoes.Clear();
                 break;
             case (uint)AID.BottomlessDesert:
                 _aoes.Add(new(circleBig, caster.Position.Quantized(), default, WorldState.FutureTime(3.1d)));

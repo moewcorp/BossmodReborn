@@ -27,17 +27,15 @@ public enum SID : uint
 
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance[] _aoe = new AOEInstance[1];
-    private bool aoeInit;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.MedicineField && Arena.Bounds.Radius > 20f)
         {
             _aoe = [new(D111ChirurgeonGeneral.Square, Arena.Center, default, Module.CastFinishAt(spell, 0.8d))];
-            aoeInit = true;
         }
     }
 
@@ -46,7 +44,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x04 && state == 0x00020001u)
         {
             Arena.Bounds = new ArenaBoundsSquare(20f);
-            aoeInit = false;
+            _aoe = [];
         }
     }
 }

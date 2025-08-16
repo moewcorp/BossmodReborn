@@ -228,7 +228,7 @@ sealed class HolyIVHints(BossModule module) : Components.GenericAOEs(module)
                 {
                     var casts = _status.NumCasts;
                     var isOutsideStack = index == 1 && casts < 3 || index == 0 && casts is > 3 and < 7 || index == 2 && casts is > 7 and < 11;
-                    return new AOEInstance[1] { new(isOutsideStack ? FTB4Magitaur.StackOutsideSquare[index] : FTB4Magitaur.StackInsideSquare[index], Arena.Center, default, _status.Stacks[0].Activation) };
+                    return new AOEInstance[1] { new(isOutsideStack ? FTB4Magitaur.StackOutsideSquare[index] : FTB4Magitaur.StackInsideSquare[index], Arena.Center, default, _status.Stacks.Ref(0).Activation) };
                 }
             }
         }

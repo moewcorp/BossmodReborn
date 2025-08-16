@@ -11,7 +11,7 @@ sealed class Touchdown(BossModule module) : Components.SimpleAOEs(module, (uint)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        return Casters.Count != 0 && (Module.FindComponent<DragonBreath>()?.AOE == null || Arena.Bounds != A12Fafnir.FireArena) ? new AOEInstance[1] { Casters[0] } : [];
+        return Casters.Count != 0 && (Module.FindComponent<DragonBreath>()?.AOE == null || Arena.Bounds != A12Fafnir.FireArena) ? CollectionsMarshal.AsSpan(Casters) : [];
     }
 }
 

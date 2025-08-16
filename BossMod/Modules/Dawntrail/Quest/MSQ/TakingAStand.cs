@@ -69,16 +69,15 @@ public enum AID : uint
 sealed class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 25f);
-    private AOEInstance[] _aoe = new AOEInstance[1];
-    private bool aoeInit;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Deathwall)
         {
-            aoeInit = false;
+            _aoe = [];
             Arena.Bounds = TakingAStand.DefaultArena;
         }
     }
@@ -88,7 +87,6 @@ sealed class RoarArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.Roar1)
         {
             _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d))];
-            aoeInit = true;
         }
     }
 }
@@ -127,7 +125,7 @@ sealed class MagickedStandard(BossModule module) : Components.GenericAOEs(module
 sealed class GreatLeap(BossModule module) : Components.GenericAOEs(module)
 {
     private DateTime activation;
-    private AOEInstance[] _aoe = new AOEInstance[1];
+    private AOEInstance[] _aoe = [];
     private Actor? source;
     private bool aoeInit;
     private static readonly AOEShapeCircle circle = new(18);

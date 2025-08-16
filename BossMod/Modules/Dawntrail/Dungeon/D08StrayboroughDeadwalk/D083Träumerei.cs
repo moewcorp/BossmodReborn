@@ -118,7 +118,7 @@ sealed class GhostlyGuise(BossModule module) : Components.GenericAOEs(module)
         else if (_seek.ActiveBaits.Count != 0)
             shape = IsGhostly(actor) ? circlesAvoid : circlesInverted;
 
-        return new AOEInstance[1] { new(shape, Arena.Center, default, activation, shape == circlesInverted ? Colors.SafeFromAOE : 0) };
+        return new AOEInstance[1] { new(shape, Arena.Center, default, activation, shape == circlesInverted ? Colors.SafeFromAOE : default) };
     }
 
     public override void OnEventEnvControl(byte index, uint state)

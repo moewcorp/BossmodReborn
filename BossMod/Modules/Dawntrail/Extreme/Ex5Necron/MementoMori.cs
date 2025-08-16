@@ -2,18 +2,16 @@ namespace BossMod.Dawntrail.Extreme.Ex5Necron;
 
 sealed class MementoMori(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance[] _aoe = new AOEInstance[1];
-    private bool aoeInit;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(100f, 6f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.MementoMori1 or (uint)AID.MementoMori2)
         {
             _aoe = [new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
-            aoeInit = true;
         }
     }
 
@@ -32,7 +30,7 @@ sealed class MementoMori(BossModule module) : Components.GenericAOEs(module)
             if (state == 0x00020001u)
             {
                 Arena.Bounds = Trial.T05Necron.Necron.SplitArena;
-                aoeInit = false;
+                _aoe = [];
             }
             else if (state == 0x00080004u)
             {

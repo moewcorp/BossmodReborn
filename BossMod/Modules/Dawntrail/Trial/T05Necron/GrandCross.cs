@@ -4,19 +4,17 @@ sealed class NeutronRing(BossModule module) : Components.RaidwideCastDelay(modul
 
 sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance[] _aoe = new AOEInstance[1];
-    private bool aoeInit;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeDonut donut = new(9f, 60f);
     private bool active;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ArenaChangeVisual)
         {
             _aoe = [new(donut, Necron.ArenaCenter, default, Module.CastFinishAt(spell, 1.1d))];
-            aoeInit = true;
         }
     }
 
@@ -28,7 +26,7 @@ sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(m
             {
                 Arena.Bounds = Necron.CircleArena;
                 Arena.Center = Necron.ArenaCenter;
-                aoeInit = false;
+                _aoe = [];
                 active = true;
             }
             else if (param1 == 0x01u)

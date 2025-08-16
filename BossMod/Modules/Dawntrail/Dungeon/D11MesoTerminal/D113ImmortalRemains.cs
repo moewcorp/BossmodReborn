@@ -165,11 +165,10 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
 
 sealed class Turmoil(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance[] _aoe = new AOEInstance[1];
-    private bool aoeInit;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(40f, 10f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => aoeInit ? _aoe : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -183,11 +182,10 @@ sealed class Turmoil(BossModule module) : Components.GenericAOEs(module)
         if (offset != default)
         {
             _aoe = [new(rect, (caster.Position + offset * new WDir(10f, default)).Quantized(), default, WorldState.FutureTime(4.4d))];
-            aoeInit = true;
         }
         else if (id == (uint)AID.Turmoil)
         {
-            aoeInit = false;
+            _aoe = [];
         }
     }
 }

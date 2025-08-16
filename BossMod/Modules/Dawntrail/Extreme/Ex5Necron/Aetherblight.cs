@@ -29,30 +29,37 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
             ref var aoe2 = ref aoes[2];
             if (shape == rect)
             {
-                if (aoe1.Shape == rect && aoe2.Shape == rect)
+                if (aoe1.Shape == rect)
                 {
-                    return aoes[..1];
+                    if (aoe2.Shape == rect)
+                    {
+                        if (aoe0.Activation == aoe1.Activation)
+                        {
+                            return aoes[..2];
+                        }
+                        return aoes[..1];
+                    }
+                    return aoes[..3];
                 }
-                else
-                {
-                    return aoes[..2];
-                }
+                return aoes[..2];
             }
             if ((shape == circle || shape == donut) && aoe1.Shape == rect)
             {
                 if (aoe2.Shape == rect)
                 {
+                    if (count > 3)
+                    {
+                        ref var aoe3 = ref aoes[3];
+                        if (aoe3.Activation == aoe2.Activation)
+                        {
+                            return aoes[..2];
+                        }
+                    }
                     return aoes[..3];
                 }
-                else
-                {
-                    return aoes[..2];
-                }
+                return aoes[..2];
             }
-            else
-            {
-                return aoes[..1];
-            }
+            return aoes[..1];
         }
         else if (count == 2)
         {
@@ -62,10 +69,7 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
             {
                 return aoes;
             }
-            else
-            {
-                return aoes[..1];
-            }
+            return aoes[..1];
         }
         return aoes;
     }
@@ -77,7 +81,7 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
             (uint)IconID.AetherblightCircle => ((AOEShape)circle, "Out"),
             (uint)IconID.AetherblightDonut => (donut, "In"),
             (uint)IconID.AetherblightRectSingle => (rect, "Sides"),
-            (uint)IconID.AetherblightRectDouble => (rect, "Center"),
+            (uint)IconID.AetherblightRectDouble => (rect, "Middle"),
             _ => default
         };
         if (shape != null)
@@ -181,7 +185,7 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
                 {
                     switch (Hints[i])
                     {
-                        case "Center":
+                        case "Middle":
                             AddAOE(rect, new(88f, 85f), i);
                             AddAOE(rect, new(112f, 85f), i);
                             break;
