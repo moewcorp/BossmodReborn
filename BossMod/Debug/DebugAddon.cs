@@ -2,7 +2,6 @@
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.Interop;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Game.NativeWrapper;
 
 namespace BossMod;
 
