@@ -64,123 +64,116 @@ public sealed class BossModuleManager : IDisposable
         var anyModuleActivated = false;
 
         var maxDist = Config.MaxLoadDistance;
-        if (maxDist < 500f)
+        if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos)
         {
-            if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos)
+            var countP = PendingModules.Count - 1;
+            var maxSq = maxDist * maxDist;
+            for (var i = countP; i >= 0; --i)
             {
-                var countP = PendingModules.Count - 1;
-                var maxSq = maxDist * maxDist;
-                for (var i = countP; i >= 0; --i)
+                var m = PendingModules[i];
+                var prim = m.PrimaryActor;
+                if (prim.IsDestroyed)
                 {
-                    var m = PendingModules[i];
-                    var prim = m.PrimaryActor;
-                    if (prim.IsDestroyed)
-                    {
-                        PendingModules.RemoveAt(i);
-                        continue;
-                    }
-                    if ((playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxSq)
-                    {
-                        LoadedModules.Add(m);
-                        Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
-                        ModuleLoaded.Fire(m);
-                        PendingModules.RemoveAt(i);
-                    }
+                    PendingModules.RemoveAt(i);
+                    continue;
+                }
+                if ((playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxSq)
+                {
+                    LoadedModules.Add(m);
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
+                    ModuleLoaded.Fire(m);
+                    PendingModules.RemoveAt(i);
                 }
             }
-        }
-        for (var i = 0; i < LoadedModules.Count; ++i)
-        {
-            var m = LoadedModules[i];
-            var wasActive = m.StateMachine.ActiveState != null;
-            var allowUpdate = wasActive || !LoadedModules.Any(other => other.StateMachine.ActiveState != null && other.GetType() == m.GetType()); // hack: forbid activating multiple modules of the same type
-            bool isActive;
-            try
+
+            for (var i = 0; i < LoadedModules.Count; ++i)
             {
-                if (allowUpdate)
-                    m.Update();
-                isActive = m.StateMachine.ActiveState != null;
-            }
-            catch (Exception ex)
-            {
-                Service.Log($"Boss module {m.GetType()} crashed: {ex}");
-                wasActive = true; // force unload if exception happened before activation
-                isActive = false;
+                var m = LoadedModules[i];
+                var wasActive = m.StateMachine.ActiveState != null;
+                var allowUpdate = wasActive || !LoadedModules.Any(other => other.StateMachine.ActiveState != null && other.GetType() == m.GetType()); // hack: forbid activating multiple modules of the same type
+                bool isActive;
+                try
+                {
+                    if (allowUpdate)
+                        m.Update();
+                    isActive = m.StateMachine.ActiveState != null;
+                }
+                catch (Exception ex)
+                {
+                    Service.Log($"Boss module {m.GetType()} crashed: {ex}");
+                    wasActive = true; // force unload if exception happened before activation
+                    isActive = false;
+                }
+
+                // if module was activated or deactivated, notify listeners
+                if (isActive != wasActive)
+                    (isActive ? ModuleActivated : ModuleDeactivated).Fire(m);
+
+                // unload module because it is not active and player is out of desired range
+                if (!isActive && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() > maxSq && m.PrimaryActor.SpawnIndex != -99)
+                {
+                    UnloadModule(i--);
+                    PendingModules.Add(m);
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' moved to pending for actor {m.PrimaryActor}");
+                    continue;
+                }
+
+                // unload module either if it became deactivated or its primary actor disappeared without ever activating
+                if (!isActive && (wasActive || m.PrimaryActor.IsDestroyed))
+                {
+                    UnloadModule(i--);
+                    continue;
+                }
+
+                // if module is active and wants to be reset, oblige
+                if (isActive && m.CheckReset())
+                {
+                    ModuleDeactivated.Fire(m);
+                    var actor = m.PrimaryActor;
+                    UnloadModule(i--);
+                    if (!actor.IsDestroyed)
+                        ActorAdded(actor);
+                    continue;
+                }
+
+                // module remains loaded
+                var priority = ModuleDisplayPriority(m);
+                if (priority > bestPriority)
+                {
+                    bestPriority = priority;
+                    bestModule = m;
+                }
+
+                if (!wasActive && isActive)
+                {
+                    Service.Log($"[BMM] Boss module '{m.GetType()}' for actor {m.PrimaryActor.InstanceID:X} ({m.PrimaryActor.OID:X}) '{m.PrimaryActor.Name}' activated");
+                    anyModuleActivated |= true;
+                }
             }
 
-            // if module was activated or deactivated, notify listeners
-            if (isActive != wasActive)
-                (isActive ? ModuleActivated : ModuleDeactivated).Fire(m);
-
-            // unload module either if it became deactivated or its primary actor disappeared without ever activating
-            if (!isActive && (wasActive || m.PrimaryActor.IsDestroyed))
+            var curPriority = ModuleDisplayPriority(_activeModule);
+            if (bestPriority > curPriority && (anyModuleActivated || !_activeModuleOverridden))
             {
-                UnloadModule(i--);
-                continue;
+                Service.Log($"[BMM] Active module change: from {_activeModule?.GetType().FullName ?? "<n/a>"} (prio {curPriority}, manual-override={_activeModuleOverridden}) to {bestModule?.GetType().FullName ?? "<n/a>"} (prio {bestPriority})");
+                _activeModule = bestModule;
+                _activeModuleOverridden = false;
             }
-
-            // if module is active and wants to be reset, oblige
-            if (isActive && m.CheckReset())
-            {
-                ModuleDeactivated.Fire(m);
-                var actor = m.PrimaryActor;
-                UnloadModule(i--);
-                if (!actor.IsDestroyed)
-                    ActorAdded(actor);
-                continue;
-            }
-
-            // module remains loaded
-            var priority = ModuleDisplayPriority(m);
-            if (priority > bestPriority)
-            {
-                bestPriority = priority;
-                bestModule = m;
-            }
-
-            if (!wasActive && isActive)
-            {
-                Service.Log($"[BMM] Boss module '{m.GetType()}' for actor {m.PrimaryActor.InstanceID:X} ({m.PrimaryActor.OID:X}) '{m.PrimaryActor.Name}' activated");
-                anyModuleActivated |= true;
-            }
-        }
-
-        var curPriority = ModuleDisplayPriority(_activeModule);
-        if (bestPriority > curPriority && (anyModuleActivated || !_activeModuleOverridden))
-        {
-            Service.Log($"[BMM] Active module change: from {_activeModule?.GetType().FullName ?? "<n/a>"} (prio {curPriority}, manual-override={_activeModuleOverridden}) to {bestModule?.GetType().FullName ?? "<n/a>"} (prio {bestPriority})");
-            _activeModule = bestModule;
-            _activeModuleOverridden = false;
         }
     }
 
     private void LoadModule(BossModule m)
     {
         var maxDist = Config.MaxLoadDistance;
-        if (maxDist < 500f)
-        {
-            Service.Framework.RunOnFrameworkThread(() =>
-            {
-                if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
-                {
-                    LoadModule();
-                }
-                else
-                {
-                    PendingModules.Add(m);
-                    Service.Log($"[BMM] Boss module '{m.GetType()}' loaded as pending for actor {m.PrimaryActor}");
-                }
-            });
-        }
-        else
-        {
-            LoadModule();
-        }
-        void LoadModule()
+        if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
         {
             LoadedModules.Add(m);
             Service.Log($"[BMM] Boss module '{m.GetType()}' loaded for actor {m.PrimaryActor}");
             ModuleLoaded.Fire(m);
+        }
+        else
+        {
+            PendingModules.Add(m);
+            Service.Log($"[BMM] Boss module '{m.GetType()}' loaded as pending for actor {m.PrimaryActor}");
         }
     }
 
@@ -211,7 +204,7 @@ public sealed class BossModuleManager : IDisposable
         return 1;
     }
 
-    private DemoModule CreateDemoModule() => new(WorldState, new(0, 0, -1, 0, "", 0, ActorType.None, Class.None, 0, default));
+    private DemoModule CreateDemoModule() => new(WorldState, new(default, default, -99, default, default!, default, default, default, default, WorldState.Party[0]?.PosRot ?? default));
 
     private void ActorAdded(Actor actor)
     {
