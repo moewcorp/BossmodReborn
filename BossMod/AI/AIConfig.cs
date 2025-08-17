@@ -70,5 +70,8 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Idle while mounted")]
     public bool ForbidAIMovementMounted = false;
 
+    [PropertyDisplay("Echo slash commands to chat")]
+    public bool EchoToChat = true;
+
     public string? AIAutorotPresetName;
 }
