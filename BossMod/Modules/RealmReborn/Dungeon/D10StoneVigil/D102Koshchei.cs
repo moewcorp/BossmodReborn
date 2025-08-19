@@ -27,17 +27,19 @@ class Typhoon(BossModule module) : Components.Exaflare(module, 3f)
     public override void Update()
     {
         var count = _maelstroms.Count;
-        if (count == 0)
-            return;
-        for (var i = 0; i < count; ++i)
+        if (count != 0)
         {
-            var m = _maelstroms[i];
-            var line = FindLine(m.Position.Z);
-            if (m.IsDead && line != null)
-                Lines.Remove(line);
-            else if (!m.IsDead && line == null)
-                Lines.Add(new(m.Position, new(-1.745f, default), default, 0.6d, 4, 4));
+            for (var i = 0; i < count; ++i)
+            {
+                var m = _maelstroms[i];
+                var line = FindLine(m.Position.Z);
+                if (m.IsDead && line != null)
+                    Lines.Remove(line);
+                else if (!m.IsDead && line == null)
+                    Lines.Add(new(m.Position, new(-1.745f, default), default, 0.6d, 4, 4));
+            }
         }
+        base.Update();
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

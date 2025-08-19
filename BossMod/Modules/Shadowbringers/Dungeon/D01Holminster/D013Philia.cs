@@ -227,37 +227,41 @@ sealed class CatONineTails(BossModule module) : Components.GenericRotatingAOE(mo
 sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
 {
     private static readonly AOEShapeCircle circle = new(4f);
-    private readonly List<AOEInstance> _aoes = new(2);
+    private readonly List<AOEInstance> _predictions = new(2);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override void Update()
     {
         var linesCount = Lines.Count;
-        if (linesCount == 0)
-            return [];
-        var futureAOEs = FutureAOEs(linesCount);
-        var imminentAOEs = ImminentAOEs(linesCount);
-        var futureCount = futureAOEs.Count;
-        var imminentCount = imminentAOEs.Length;
-        var aoesCount = _aoes.Count;
-        var total = futureCount + imminentCount + aoesCount;
-        var index = 0;
-        var aoes = new AOEInstance[total];
-        for (var i = 0; i < futureCount; ++i)
+        if (lastCount != linesCount || currentVersion != lastVersion)
         {
-            var aoe = futureAOEs[i];
-            aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, FutureColor);
+            var futureAOEs = CollectionsMarshal.AsSpan(FutureAOEs(linesCount));
+            var imminentAOEs = ImminentAOEs(linesCount);
+            var futureLen = futureAOEs.Length;
+            var imminentLen = imminentAOEs.Length;
+            var predictionsCount = _predictions.Count;
+            var total = futureLen + imminentLen + predictionsCount;
+            var index = 0;
+            _aoes = new AOEInstance[total];
+            for (var i = 0; i < futureLen; ++i)
+            {
+                ref var aoe = ref futureAOEs[i];
+                _aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, FutureColor);
+            }
+            for (var i = 0; i < imminentLen; ++i)
+            {
+                ref var aoe = ref imminentAOEs[i];
+                _aoes[index++] = new(Shape, aoe.Item1, aoe.Item3, aoe.Item2, ImminentColor);
+            }
+            var predictions = CollectionsMarshal.AsSpan(_predictions);
+            for (var i = 0; i < predictionsCount; ++i)
+            {
+                ref var aoe = ref predictions[i];
+                _aoes[index++] = aoe;
+            }
+            lastCount = linesCount;
+            lastVersion = currentVersion;
+            _aoes = _aoes[..index];
         }
-        for (var i = 0; i < imminentCount; ++i)
-        {
-            var aoe = imminentAOEs[i];
-            aoes[index++] = new(Shape, aoe.Item1.Quantized(), aoe.Item3, aoe.Item2, ImminentColor);
-        }
-        for (var i = 0; i < aoesCount; ++i)
-        {
-            var aoe = _aoes[i];
-            aoes[index++] = aoe;
-        }
-        return aoes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -270,16 +274,21 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.FierceBeatingExaRestFirst)
+        var id = spell.Action.ID;
+        if (id == (uint)AID.FierceBeatingExaRestFirst)
         {
             AddLine(ref caster, WorldState.FutureTime(1d));
         }
         if (Lines.Count != 0)
         {
-            if (spell.Action.ID is (uint)AID.FierceBeatingExaFirst or (uint)AID.FierceBeatingExaRestFirst)
+            if (id is (uint)AID.FierceBeatingExaFirst or (uint)AID.FierceBeatingExaRestFirst)
+            {
                 Advance(caster.Position);
-            else if (spell.Action.ID == (uint)AID.FierceBeatingExaRestRest)
+            }
+            else if (id == (uint)AID.FierceBeatingExaRestRest)
+            {
                 Advance(spell.TargetXZ);
+            }
         }
 
         void Advance(WPos pos)
@@ -304,14 +313,20 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
         var adv = 2.5f * caster.Rotation.ToDirection();
         Lines.Add(new(caster.Position, adv, activation, 1d, 7, 3));
         ++NumCasts;
-        if (_aoes.Count != 0 && NumCasts > 2)
-            _aoes.RemoveAt(0);
+        if (_predictions.Count != 0 && NumCasts > 2)
+        {
+            _predictions.RemoveAt(0);
+            ++currentVersion;
+        }
         if (NumCasts <= 14)
         {
-            _aoes.Add(new(circle, WPos.RotateAroundOrigin(45, D013Philia.ArenaCenter, caster.Position.Quantized()), default, WorldState.FutureTime(3.7d)));
+            _predictions.Add(new(circle, WPos.RotateAroundOrigin(45f, D013Philia.ArenaCenter, caster.Position.Quantized()), default, WorldState.FutureTime(3.7d)));
+            ++currentVersion;
         }
         if (NumCasts == 16)
+        {
             NumCasts = 0;
+        }
     }
 }
 

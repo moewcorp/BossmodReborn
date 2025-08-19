@@ -35,7 +35,7 @@ class MijinGiri(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mij
 class Ugetsuzan(BossModule module) : Components.ConcentricAOEs(module, sectors)
 {
     private static readonly Angle a90 = 90f.Degrees();
-    private static readonly AOEShapeDonutSector[] sectors = [new(2, 7, a90), new(7, 12, a90), new(12, 17, a90), new(17, 22, a90)];
+    private static readonly AOEShapeDonutSector[] sectors = [new(2f, 7f, a90), new(7f, 12f, a90), new(12f, 17f, a90), new(17f, 22f, a90)];
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Ugetsuzan1)
@@ -52,7 +52,7 @@ class Ugetsuzan(BossModule module) : Components.ConcentricAOEs(module, sectors)
             (uint)AID.Ugetsuzan4 => 3,
             _ => -1
         };
-        AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.5f), spell.Rotation);
+        AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2.5d), spell.Rotation);
     }
 }
 

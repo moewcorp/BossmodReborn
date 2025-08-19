@@ -26,7 +26,7 @@ class SpreadingFire(BossModule module) : Components.ConcentricAOEs(module, _shap
                 (uint)AID.SpreadingFire4th => 3,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }

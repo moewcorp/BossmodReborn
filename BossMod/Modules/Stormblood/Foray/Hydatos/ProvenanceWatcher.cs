@@ -35,7 +35,7 @@ public enum AID : uint
 class TheScarletPrice(BossModule module) : Components.BaitAwayCast(module, (uint)AID.TheScarletPrice, 3f, true);
 class TheScarletWhisper(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TheScarletWhisper, new AOEShapeCone(22f, 60f.Degrees()));
 class EuhedralSwat(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EuhedralSwat, new AOEShapeRect(100f, 13f));
-class Touchdown(BossModule module) : Components.RaidwideInstant(module, (uint)AID.Touchdown, 3.1f)
+class Touchdown(BossModule module) : Components.RaidwideInstant(module, (uint)AID.Touchdown, 3.1d)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

@@ -137,7 +137,7 @@ class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _shapes)
                 (uint)AID.Tremblor2 => 1,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5f));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(1.5d));
         }
     }
 }
@@ -160,7 +160,7 @@ class HeavyStrike(BossModule module) : Components.ConcentricAOEs(module, _shapes
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HeavyStrike)
-            AddSequence(spell.LocXZ, Module.CastFinishAt(spell, 1), spell.Rotation);
+            AddSequence(spell.LocXZ, Module.CastFinishAt(spell, 1d), spell.Rotation);
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

@@ -11,13 +11,17 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
     private bool relentlessReaping;
     private bool rotated;
     private bool rectSidesRemoved;
+    private int index;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Show ? CollectionsMarshal.AsSpan(_aoes)[..index] : [];
+
+    public override void Update()
     {
         var count = _aoes.Count;
         if (!Show || count == 0)
         {
-            return [];
+            index = 0;
+            return;
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         ref var aoe0 = ref aoes[0];
@@ -35,13 +39,17 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
                     {
                         if (aoe0.Activation == aoe1.Activation)
                         {
-                            return aoes[..2];
+                            index = 2;
+                            goto end;
                         }
-                        return aoes[..1];
+                        index = 1;
+                        goto end;
                     }
-                    return aoes[..3];
+                    index = 3;
+                    goto end;
                 }
-                return aoes[..2];
+                index = 2;
+                goto end;
             }
             if ((shape == circle || shape == donut) && aoe1.Shape == rect)
             {
@@ -52,14 +60,18 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
                         ref var aoe3 = ref aoes[3];
                         if (aoe3.Activation == aoe2.Activation)
                         {
-                            return aoes[..2];
+                            index = 2;
+                            goto end;
                         }
                     }
-                    return aoes[..3];
+                    index = 3;
+                    goto end;
                 }
-                return aoes[..2];
+                index = 2;
+                goto end;
             }
-            return aoes[..1];
+            index = 1;
+            goto end;
         }
         else if (count == 2)
         {
@@ -67,11 +79,28 @@ sealed class Aetherblight(BossModule module) : Components.GenericAOEs(module)
             var aoe1shape = aoe1.Shape;
             if ((shape == circle || shape == donut) && aoe1shape == rect || (aoe1shape == rect || aoe1shape == circle || aoe1shape == donut) && shape == rect)
             {
-                return aoes;
+                index = 2;
+                goto end;
             }
-            return aoes[..1];
+            index = 1;
+            goto end;
         }
-        return aoes;
+        index = count;
+    end:
+        if (index > 1)
+        {
+            var color = Colors.Danger;
+            ref var aoe1 = ref aoes[1];
+            var compare = aoe0.Activation != aoe1.Activation;
+            if (compare || index > 2)
+            {
+                aoe0.Color = color;
+            }
+            if (!compare && index > 2)
+            {
+                aoe1.Color = color;
+            }
+        }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
