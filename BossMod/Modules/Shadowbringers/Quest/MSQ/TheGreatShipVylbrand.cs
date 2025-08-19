@@ -174,7 +174,7 @@ class Uplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShap
                 (uint)AID.Uplift3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }

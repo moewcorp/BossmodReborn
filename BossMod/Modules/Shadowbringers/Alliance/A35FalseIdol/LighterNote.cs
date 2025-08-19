@@ -142,6 +142,7 @@ sealed class LighterNoteExaflare(BossModule module) : Components.Exaflare(module
                 casters.RemoveAt(i);
             }
         }
+        base.Update();
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

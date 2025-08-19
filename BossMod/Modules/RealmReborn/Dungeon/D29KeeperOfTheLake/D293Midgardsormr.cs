@@ -92,7 +92,7 @@ class Antipathy(BossModule module) : Components.ConcentricAOEs(module, _shapes)
                 (uint)AID.Antipathy3 => 2,
                 _ => -1
             };
-            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2));
+            AdvanceSequence(order, spell.LocXZ, WorldState.FutureTime(2d));
         }
     }
 }

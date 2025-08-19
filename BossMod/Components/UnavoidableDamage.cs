@@ -180,13 +180,24 @@ public class SingleTargetInstant(BossModule module, uint aid, double delay = def
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (Targets.Count != 0 && Hint.Length != 0)
+        {
             hints.Add(Hint);
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var t in Targets)
+        var count = Targets.Count;
+        if (count == 0)
+        {
+            return;
+        }
+        var targets = CollectionsMarshal.AsSpan(Targets);
+        for (var i = 0; i < count; ++i)
+        {
+            ref var t = ref targets[i];
             hints.AddPredictedDamage(new BitMask().WithBit(t.slot), t.activation, damageType);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -194,7 +205,18 @@ public class SingleTargetInstant(BossModule module, uint aid, double delay = def
         if (spell.Action.ID == WatchedAction)
         {
             ++NumCasts;
-            Targets.RemoveAll(t => t.instanceID == spell.MainTargetID);
+            var targets = CollectionsMarshal.AsSpan(Targets);
+            var len = targets.Length;
+            var id = spell.MainTargetID;
+            for (var i = 0; i < len; ++i)
+            {
+                ref var t = ref targets[i];
+                if (t.instanceID == id)
+                {
+                    Targets.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }
@@ -269,7 +291,18 @@ public class SingleTargetDelayableCasts(BossModule module, uint[] aids, string h
             if (id == AIDs[i])
             {
                 ++NumCasts;
-                Targets.RemoveAll(t => t.instanceID == spell.MainTargetID);
+                var targets = CollectionsMarshal.AsSpan(Targets);
+                var lenT = targets.Length;
+                var tid = spell.MainTargetID;
+                for (var j = 0; j < lenT; ++j)
+                {
+                    ref var t = ref targets[j];
+                    if (t.instanceID == tid)
+                    {
+                        Targets.RemoveAt(j);
+                        return;
+                    }
+                }
             }
         }
     }

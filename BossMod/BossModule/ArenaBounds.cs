@@ -385,30 +385,30 @@ public sealed record class ArenaBoundsComplex : ArenaBoundsCustom
     public readonly WPos Center;
     public bool IsCircle; // can be used by gaze component for gazes outside of the arena
 
-    public ArenaBoundsComplex(Shape[] UnionShapes, Shape[]? DifferenceShapes = null, Shape[]? AdditionalShapes = null, float MapResolution = 0.5f, float ScaleFactor = 1f, bool AllowObstacleMap = false, float Offset = default)
-        : base(BuildBounds(UnionShapes, DifferenceShapes, AdditionalShapes, MapResolution, ScaleFactor, AllowObstacleMap, Offset, out var center, out var halfWidth, out var halfHeight))
+    public ArenaBoundsComplex(Shape[] UnionShapes, Shape[]? DifferenceShapes = null, Shape[]? AdditionalShapes = null, float MapResolution = 0.5f, float ScaleFactor = 1f, bool AllowObstacleMap = false, float Offset = default, bool AdjustForHitbox = false)
+        : base(BuildBounds(UnionShapes, DifferenceShapes, AdditionalShapes, MapResolution, ScaleFactor, AllowObstacleMap, Offset, AdjustForHitbox, out var center, out var halfWidth, out var halfHeight))
     {
         Center = center;
         HalfWidth = halfWidth + Offset;
         HalfHeight = halfHeight + Offset;
     }
 
-    private static ArenaBoundsCustom BuildBounds(Shape[] unionShapes, Shape[]? differenceShapes, Shape[]? additionalShapes, float mapResolution, float scalefactor, bool allowObstacleMap, float offset, out WPos center, out float halfWidth, out float halfHeight)
+    private static ArenaBoundsCustom BuildBounds(Shape[] unionShapes, Shape[]? differenceShapes, Shape[]? additionalShapes, float mapResolution, float scalefactor, bool allowObstacleMap, float offset, bool adjustForHitbox, out WPos center, out float halfWidth, out float halfHeight)
     {
-        var properties = CalculatePolygonProperties(unionShapes, differenceShapes ?? [], additionalShapes ?? []);
+        var properties = CalculatePolygonProperties(unionShapes, differenceShapes ?? [], additionalShapes ?? [], adjustForHitbox);
         center = properties.Center;
         halfWidth = properties.HalfWidth;
         halfHeight = properties.HalfHeight;
-        return new(scalefactor == 1 ? properties.Radius : properties.Radius / scalefactor, properties.Poly, mapResolution, scalefactor, allowObstacleMap, offset);
+        return new(scalefactor == 1f ? properties.Radius : properties.Radius / scalefactor, properties.Poly, mapResolution, scalefactor, allowObstacleMap, offset);
     }
 
-    private static (WPos Center, float HalfWidth, float HalfHeight, float Radius, RelSimplifiedComplexPolygon Poly) CalculatePolygonProperties(Shape[] unionShapes, Shape[] differenceShapes, Shape[] additionalShapes)
+    private static (WPos Center, float HalfWidth, float HalfHeight, float Radius, RelSimplifiedComplexPolygon Poly) CalculatePolygonProperties(Shape[] unionShapes, Shape[] differenceShapes, Shape[] additionalShapes, bool adjustForHitbox)
     {
         var unionPolygons = ParseShapes(unionShapes);
         var differencePolygons = ParseShapes(differenceShapes);
         var additionalPolygons = ParseShapes(additionalShapes);
-
-        var combinedPoly = CombinePolygons(unionPolygons, differencePolygons, additionalPolygons);
+        var combine = CombinePolygons(unionPolygons, differencePolygons, additionalPolygons);
+        var combinedPoly = adjustForHitbox ? combine.Offset(-0.5f, Clipper2Lib.JoinType.Round) : combine;
 
         float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;
         var combined = combinedPoly.Parts;
@@ -440,9 +440,20 @@ public sealed record class ArenaBoundsComplex : ArenaBoundsCustom
         var maxDistZ = Math.Max(Math.Abs(maxZ - centerZ), Math.Abs(minZ - centerZ));
         var halfWidth = (maxX - minX) * 0.5f;
         var halfHeight = (maxZ - minZ) * 0.5f;
+        var dir = center.ToWDir();
 
-        var combinedPolyCentered = CombinePolygons(ParseShapes(unionShapes, center), ParseShapes(differenceShapes, center), ParseShapes(additionalShapes, center));
-        return (center, halfWidth, halfHeight, Math.Max(maxDistX, maxDistZ), combinedPolyCentered);
+        for (var i = 0; i < countCombined; ++i)
+        {
+            var verts = CollectionsMarshal.AsSpan(combined[i].Vertices);
+            var len = verts.Length;
+            for (var j = 0; j < len; ++j)
+            {
+                ref var vert = ref verts[j];
+                vert -= dir;
+            }
+        }
+
+        return (center, halfWidth, halfHeight, Math.Max(maxDistX, maxDistZ), combinedPoly);
     }
 
     private static RelSimplifiedComplexPolygon CombinePolygons(RelSimplifiedComplexPolygon[] unionPolygons, RelSimplifiedComplexPolygon[] differencePolygons, RelSimplifiedComplexPolygon[] secondUnionPolygons)
@@ -469,13 +480,13 @@ public sealed record class ArenaBoundsComplex : ArenaBoundsCustom
         return combinedShape;
     }
 
-    private static RelSimplifiedComplexPolygon[] ParseShapes(Shape[] shapes, WPos center = default)
+    private static RelSimplifiedComplexPolygon[] ParseShapes(Shape[] shapes)
     {
         var lenght = shapes.Length;
         var polygons = new RelSimplifiedComplexPolygon[lenght];
         for (var i = 0; i < lenght; ++i)
         {
-            polygons[i] = shapes[i].ToPolygon(center);
+            polygons[i] = shapes[i].ToPolygon(default);
         }
         return polygons;
     }

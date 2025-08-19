@@ -48,7 +48,7 @@ public enum AID : uint
 class Voidblood(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Voidblood, 6f);
 class VoidSlash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidSlash, new AOEShapeCone(9.7f, 45f.Degrees()));
 class EvilMist(BossModule module) : Components.RaidwideCast(module, (uint)AID.EvilMist);
-class VoidEvocation(BossModule module) : Components.RaidwideInstant(module, (uint)AID.VoidEvocation, 5.1f)
+class VoidEvocation(BossModule module) : Components.RaidwideInstant(module, (uint)AID.VoidEvocation, 5.1d)
 {
     public override void OnActorCreated(Actor actor)
     {
