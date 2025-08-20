@@ -18,7 +18,7 @@ abstract class Firestrike(BossModule module, uint aidMarker, double delay) : Com
 sealed class Firestrike1(BossModule module) : Firestrike(module, (uint)AID.FirestrikeMarker1, 5.1d);
 sealed class Firestrike2(BossModule module) : Firestrike(module, (uint)AID.FirestrikeMarker2, 6.2d);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Triton, GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018, NameID = 13737, PlanLevel = 100, SortOrder = 3, Category = BossModuleInfo.Category.Foray, Expansion = BossModuleInfo.Expansion.Dawntrail)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Triton, GroupType = BossModuleInfo.GroupType.TheForkedTowerBlood, GroupID = 1018u, NameID = 13737u, PlanLevel = 100, SortOrder = 3, Category = BossModuleInfo.Category.Foray, Expansion = BossModuleInfo.Expansion.Dawntrail)]
 public sealed class FTB2DeadStars(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     public static readonly WPos ArenaCenter = new(-800f, 360f);

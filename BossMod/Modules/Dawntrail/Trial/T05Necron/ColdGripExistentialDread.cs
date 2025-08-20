@@ -45,11 +45,11 @@ sealed class ColdGripExistentialDread(BossModule module) : Components.GenericAOE
             if (count != 0)
             {
                 _aoes.RemoveAt(0);
-                offset = default;
                 if (count == 2) // update 3rd AOE to the actual position
                 {
                     ref var aoe = ref _aoes.Ref(0);
                     aoe.Origin = new WPos(100f + offset, 85f).Quantized();
+                    offset = default;
                 }
             }
         }
