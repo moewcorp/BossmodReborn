@@ -25,9 +25,16 @@ public class ConcentricAOEs(BossModule module, AOEShape[] shapes, bool showall =
         var count = Sequences.Count;
         if (lastCount != count || lastVersion != NumCasts)
         {
+            lastCount = count;
+            lastVersion = NumCasts;
+            _aoes.Clear();
+            if (count == 0)
+            {
+                return;
+            }
             var time = WorldState.CurrentTime;
             var sequences = CollectionsMarshal.AsSpan(Sequences);
-            _aoes.Clear();
+
             for (var i = 0; i < count; ++i)
             {
                 ref var s = ref sequences[i];
@@ -50,8 +57,6 @@ public class ConcentricAOEs(BossModule module, AOEShape[] shapes, bool showall =
                     }
                 }
             }
-            lastCount = count;
-            lastVersion = NumCasts;
         }
     }
 
