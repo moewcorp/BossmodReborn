@@ -189,7 +189,7 @@ public record class ArenaBoundsRect(float HalfWidth, float HalfHeight, Angle Rot
         var halfWidth = HalfWidth;
         var halfHeight = HalfHeight;
         var rotation = Rotation;
-        var map = new Pathfinding.Map(MapResolution, default, halfWidth, halfHeight, rotation);
+        var map = new Pathfinding.Map(MapResolution, default, halfWidth + 0.5f, halfHeight + 0.5f, rotation);
         map.BlockPixelsInside2(ShapeDistance.InvertedRect(default, rotation, halfHeight, halfHeight, halfWidth), -1f);
         return map;
     }

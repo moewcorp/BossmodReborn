@@ -9,6 +9,9 @@ sealed class QuakeSmall(BossModule module) : Components.SimpleAOEs(module, (uint
 sealed class QuakeBig(BossModule module) : Components.SimpleAOEs(module, (uint)AID.QuakeBig, 10f);
 sealed class VermilionFlight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VermilionFlight, new AOEShapeRect(60f, 10f));
 sealed class ArmOfPurgatory(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ArmOfPurgatory, 15f); // 3 + 12 from status effect
+sealed class WallArenaChange(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WallArenaChange, new AOEShapeRect(5f, 8f));
+sealed class GloamingGleam(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GloamingGleam, new AOEShapeRect(50f, 6f));
+sealed class RazorFang(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RazorFang, 20f);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.FaithboundKirin, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1058u, NameID = 14053u, Category = BossModuleInfo.Category.Alliance, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 1)]
 public sealed class A21FaithboundKirin(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, DefaultArena)
