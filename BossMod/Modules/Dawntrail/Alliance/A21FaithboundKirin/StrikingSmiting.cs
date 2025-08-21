@@ -24,6 +24,10 @@ sealed class StrikingSmiting(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
+        if (_aoes.Count == 2)
+        {
+            return;
+        }
         switch (spell.Action.ID)
         {
             case (uint)AID.StrikingLeft1:

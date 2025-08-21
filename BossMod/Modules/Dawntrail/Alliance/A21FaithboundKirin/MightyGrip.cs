@@ -1,34 +1,5 @@
 namespace BossMod.Dawntrail.Alliance.A21FaithboundKirin;
 
-sealed class MightyGripArenaChange(BossModule module) : Components.GenericAOEs(module)
-{
-    private AOEInstance[] _aoe = [];
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
-
-    public override void OnEventEnvControl(byte index, uint state)
-    {
-        if (index == 0x46)
-        {
-            switch (state)
-            {
-                case 0x00200010u:
-                    _aoe = [new(A21FaithboundKirin.RectArenaAOE, Arena.Center, default, WorldState.FutureTime(11.1d))];
-                    break;
-                case 0x00020001u:
-                    Arena.Bounds = new ArenaBoundsRect(12.5f, 15f);
-                    Arena.Center = A21FaithboundKirin.RectCenter;
-                    _aoe = [];
-                    break;
-                case 0x00080004u:
-                    Arena.Bounds = A21FaithboundKirin.DefaultArena;
-                    Arena.Center = A21FaithboundKirin.DefaultCenter;
-                    break;
-            }
-        }
-    }
-}
-
 sealed class DeadlyHold(BossModule module) : Components.GenericTowers(module, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public override void OnEventEnvControl(byte index, uint state)
