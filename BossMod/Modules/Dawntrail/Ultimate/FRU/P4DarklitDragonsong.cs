@@ -335,7 +335,7 @@ sealed class P4SomberDance(BossModule module) : Components.GenericBaitAway(modul
         if (assignment == (_config.P4SomberDanceOTBait ? PartyRolesConfig.Assignment.OT : PartyRolesConfig.Assignment.MT))
         {
             // go far east/west
-            var pos = Arena.Center + new WDir(actor.Position.X > Arena.Center.X ? 19f : -19f, default);
+            var pos = Arena.Center + new WDir(actor.PosRot.X > Arena.Center.X ? 19f : -19f, default);
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(pos, 1f), _activation);
         }
         else

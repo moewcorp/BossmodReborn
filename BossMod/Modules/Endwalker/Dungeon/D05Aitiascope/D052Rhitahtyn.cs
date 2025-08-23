@@ -153,7 +153,7 @@ class Shrapnel(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count1; ++i)
             {
                 var marker = marker1[i];
-                if (marker.Position.Z < 144f)
+                if (marker.PosRot.Z < 144f)
                 {
                     if (marker.Rotation >= 0.1f.Degrees())
                         AddAOEs(shrapnelPositionsSWNE);
@@ -167,12 +167,12 @@ class Shrapnel(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < count2; ++i)
             {
                 var marker = marker2[i];
-                if (marker.Position.X < 11f)
+                if (marker.PosRot.X < 11f)
                 {
                     AddAOEs(shrapnelPositionsW);
                     return;
                 }
-                else if (marker.Position.X > 11f)
+                else if (marker.PosRot.X > 11f)
                 {
                     AddAOEs(shrapnelPositionsE);
                     return;

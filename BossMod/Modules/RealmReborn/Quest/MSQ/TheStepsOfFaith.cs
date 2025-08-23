@@ -287,10 +287,10 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // force player to walk south to aggro vishap (status 1268 = In Event, not actionable)
-        if (Phase == 1 && !actor.InCombat && actor.FindStatus(1268) == null)
+        if (Phase == 1 && !actor.InCombat && actor.FindStatus(1268u) == null)
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 38f, 22f, 40f));
         // subsequent state transitions don't trigger until player moves into the area
-        else if (Phase == 3 && actor.Position.Z > 25f || Phase == 5 && actor.Position.Z > -135f)
+        else if (Phase == 3 && actor.PosRot.Z > 25f || Phase == 5 && actor.PosRot.Z > -135f)
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 40f, 22f, 38f));
     }
 
@@ -298,7 +298,7 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
     {
         if (WorldState.Party.Player() is not Actor p)
             return;
-        Arena.Center = new(0, Math.Clamp(p.Position.Z, ZBounds.Min + HalfHeight, ZBounds.Max - HalfHeight));
+        Arena.Center = new(0, Math.Clamp(p.PosRot.Z, ZBounds.Min + HalfHeight, ZBounds.Max - HalfHeight));
     }
 }
 

@@ -212,16 +212,15 @@ sealed class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway
         if (CurrentBaits.Count == 0)
             return;
         base.AddAIHints(slot, actor, assignment, hints);
-        var activeBaits = ActiveBaitsOn(actor);
-        foreach (var b in activeBaits)
+        var activeBaits = CollectionsMarshal.AsSpan(ActiveBaitsOn(actor));
+        if (activeBaits.Length != 0)
         {
+            ref var b = ref activeBaits[0];
             var party = Raid.WithoutSlot(false, true, true);
-            var len = party.Length;
-            for (var i = 0; i < len; ++i)
+            var lenP = party.Length;
+            for (var j = 0; j < lenP; ++j)
             {
-                var p = party[i];
-                var direction = Angle.FromDirection(p.Position - actor.Position);
-                hints.ForbiddenDirections.Add((direction, 15f.Degrees(), b.Activation));
+                hints.ForbiddenDirections.Add((Angle.FromDirection(party[j].Position - actor.Position), 15f.Degrees(), b.Activation));
             }
         }
     }

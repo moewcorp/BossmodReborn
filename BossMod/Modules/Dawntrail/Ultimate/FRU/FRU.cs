@@ -33,55 +33,20 @@ public sealed class FRU(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossP2 == null)
+        switch (StateMachine.ActivePhaseIndex)
         {
-            if (StateMachine.ActivePhaseIndex == 1)
-            {
-                var b = Enemies((uint)OID.BossP2);
-                _bossP2 = b.Count != 0 ? b[0] : null;
-            }
-        }
-        if (_iceVeil == null)
-        {
-            if (StateMachine.ActivePhaseIndex == 1)
-            {
-                var b = Enemies((uint)OID.IceVeil);
-                _iceVeil = b.Count != 0 ? b[0] : null;
-            }
-        }
-        if (_bossP3 == null)
-        {
-            if (StateMachine.ActivePhaseIndex == 2)
-            {
-                var b = Enemies((uint)OID.BossP3);
-                _bossP3 = b.Count != 0 ? b[0] : null;
-            }
-        }
-        if (_bossP4Usurper == null)
-        {
-            if (StateMachine.ActivePhaseIndex == 2)
-            {
-                var b = Enemies((uint)OID.UsurperOfFrostP4);
-                _bossP4Usurper = b.Count != 0 ? b[0] : null;
-            }
-        }
-        if (_bossP4Oracle == null)
-        {
-            if (StateMachine.ActivePhaseIndex == 2)
-            {
-                var b = Enemies((uint)OID.OracleOfDarknessP4);
-                _bossP4Oracle = b.Count != 0 ? b[0] : null;
-            }
-        }
-        if (_bossP5 == null)
-        {
-            if (StateMachine.ActivePhaseIndex == 3)
-            {
-                var b = Enemies((uint)OID.BossP5);
-                _bossP5 = b.Count != 0 ? b[0] : null;
-            }
+            case 1:
+                _bossP2 ??= GetActor((uint)OID.BossP2);
+                _iceVeil ??= GetActor((uint)OID.IceVeil);
+                break;
+            case 2:
+                _bossP3 ??= GetActor((uint)OID.BossP3);
+                _bossP4Usurper ??= GetActor((uint)OID.UsurperOfFrostP4);
+                _bossP4Oracle ??= GetActor((uint)OID.OracleOfDarknessP4);
+                break;
+            case 3:
+                _bossP5 ??= GetActor((uint)OID.BossP5);
+                break;
         }
     }
 

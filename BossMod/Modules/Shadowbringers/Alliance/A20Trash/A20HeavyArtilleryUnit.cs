@@ -115,7 +115,7 @@ sealed class A20HeavyArtilleryUnitStates : StateMachineBuilder
                     for (var i = 0; i < count; ++i)
                     {
                         var e = enemies[i];
-                        if (!e.IsDeadOrDestroyed && e.Position.Z > -262f)
+                        if (!e.IsDeadOrDestroyed && e.PosRot.Z > -262f)
                         {
                             return false;
                         }
@@ -126,7 +126,7 @@ sealed class A20HeavyArtilleryUnitStates : StateMachineBuilder
                     for (var i = 0; i < count; ++i)
                     {
                         var e = enemies[i];
-                        if (!e.IsDeadOrDestroyed && e.Position.Z > -362f)
+                        if (!e.IsDeadOrDestroyed && e.PosRot.Z > -362f)
                         {
                             return false;
                         }
@@ -152,8 +152,8 @@ sealed class A20HeavyArtilleryUnitStates : StateMachineBuilder
 public sealed class A20HeavyArtilleryUnit(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? new(200f, -216.25f) : IsArena2(primary) ? new(200f, -316.532f) : arena3a.Center,
 IsArena1(primary) ? Arena1 : IsArena2(primary) ? Arena2 : arena3a)
 {
-    public static bool IsArena1(Actor primary) => primary.Position.Z > -262f;
-    public static bool IsArena2(Actor primary) => primary.Position.Z > -362f;
+    public static bool IsArena1(Actor primary) => primary.PosRot.Z > -262f;
+    public static bool IsArena2(Actor primary) => primary.PosRot.Z > -362f;
 
     public static readonly ArenaBoundsRect Arena1 = new(11.5f, 44.25f);
     public static readonly ArenaBoundsRect Arena2 = new(11.5f, 44.468f);

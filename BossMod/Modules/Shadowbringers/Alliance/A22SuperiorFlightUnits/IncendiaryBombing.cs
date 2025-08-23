@@ -56,7 +56,7 @@ sealed class IncendiaryBombingBait : Components.GenericBaitAway
     private RelSimplifiedComplexPolygon polygon = new();
     private bool polygonInit;
 
-    public IncendiaryBombingBait(BossModule module) : base(module)
+    public IncendiaryBombingBait(BossModule module) : base(module, centerAtTarget: true)
     {
         IgnoreOtherBaits = true;
     }
@@ -65,7 +65,7 @@ sealed class IncendiaryBombingBait : Components.GenericBaitAway
     {
         if (iconID == (uint)IconID.IncendiaryBombing)
         {
-            CurrentBaits.Add(new(actor, actor, circle, WorldState.FutureTime(6.1d)));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle, WorldState.FutureTime(6.1d)));
         }
     }
 

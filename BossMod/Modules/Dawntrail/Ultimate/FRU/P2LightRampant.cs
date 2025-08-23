@@ -281,11 +281,12 @@ sealed class P2LightRampantAITowers(BossModule module) : BossComponent(module)
                 // - if actor and partner are north and south, stay on current side
                 // - if both are on the same side, the 'more clockwise' one (NE/SW) moves to the opposite side
                 // TODO: last rule is fuzzy in practice, see if we can adjust better
-                var north = actor.Position.Z < Arena.Center.Z;
-                if (north == (partner.Position.Z < Arena.Center.Z))
+                var z = Arena.Center.Z;
+                var north = actor.PosRot.Z < z;
+                if (north == (partner.PosRot.Z < z))
                 {
                     // same side, see if we need to swap
-                    var moreRight = actor.Position.X > partner.Position.X;
+                    var moreRight = actor.PosRot.X > partner.PosRot.X;
                     var moreCW = north == moreRight;
                     north ^= moreCW;
                 }
@@ -325,7 +326,7 @@ sealed class P2LightRampantAIStackPrepos(BossModule module) : BossComponent(modu
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var isPuddleBaiter = _puddles?.ActiveBaitsOn(actor).Count != 0;
-        var northCamp = isPuddleBaiter ? actor.Position.X < Arena.Center.X : actor.Position.Z < Arena.Center.Z; // this assumes CW movement for baiter
+        var northCamp = isPuddleBaiter ? actor.PosRot.X < Arena.Center.X : actor.PosRot.Z < Arena.Center.Z; // this assumes CW movement for baiter
         var dest = Arena.Center + new WDir(default, northCamp ? -18f : 18f);
         if (isPuddleBaiter)
         {
@@ -392,7 +393,7 @@ sealed class P2LightRampantAIStackResolve(BossModule module) : BossComponent(mod
         }
     }
 
-    private bool IsNorthCamp(Actor actor) => actor.Position.Z < Arena.Center.Z;
+    private bool IsNorthCamp(Actor actor) => actor.PosRot.Z < Arena.Center.Z;
 }
 
 // movement to dodge orbs after resolving stack

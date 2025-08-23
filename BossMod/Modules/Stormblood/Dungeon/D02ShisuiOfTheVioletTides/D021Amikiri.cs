@@ -31,14 +31,14 @@ public enum IconID : uint
 class DigestiveFluid(BossModule module) : Components.VoidzoneAtCastTarget(module, 5, (uint)AID.Digest, m => m.Enemies(OID.WaterVoidzone).Where(z => z.EventState != 7), 0.7f);
 class BindVoidzone(BossModule module) : Components.Voidzone(module, 3, m => m.Enemies(OID.BindVoidzone).Where(z => z.EventState != 7));
 
-class DigestiveFluidBait(BossModule module) : Components.GenericBaitAway(module)
+class DigestiveFluidBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(5f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DigestiveFluid)
-            CurrentBaits.Add(new(actor, actor, circle, WorldState.FutureTime(7.2d)));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle, WorldState.FutureTime(7.2d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -67,14 +67,14 @@ class DigestiveFluidBait(BossModule module) : Components.GenericBaitAway(module)
     }
 }
 
-class BindBait(BossModule module) : Components.GenericBaitAway(module)
+class BindBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(3f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Bind)
-            CurrentBaits.Add(new(actor, actor, circle));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle));
     }
 
     public override void OnActorCreated(Actor actor)

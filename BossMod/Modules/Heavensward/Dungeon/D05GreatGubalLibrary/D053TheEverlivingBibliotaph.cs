@@ -40,14 +40,14 @@ public enum IconID : uint
     VoidSpark = 23 // player
 }
 
-class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module)
+class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     public static readonly AOEShapeCircle Circle = new(8f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.VoidSpark)
-            CurrentBaits.Add(new(actor, actor, Circle, WorldState.FutureTime(5.1d)));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, Circle, WorldState.FutureTime(5.1d)));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -56,12 +56,14 @@ class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module)
         {
             var count = CurrentBaits.Count;
             var id = spell.MainTargetID;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Target.InstanceID == id)
+                ref var b = ref baits[i];
+                if (b.Target.InstanceID == id)
                 {
                     CurrentBaits.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }
@@ -70,13 +72,13 @@ class VoidSparkBait(BossModule module) : Components.GenericBaitAway(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+        if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
             hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 22.5f));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+        if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
             hints.Add("Bait away!");
     }
 }
@@ -118,16 +120,18 @@ class VoidCall(BossModule module) : Components.GenericTowers(module, prioritizeI
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00100020)
+        if (state == 0x00100020u)
         {
             var count = Towers.Count;
             var pos = actor.Position;
+            var towers = CollectionsMarshal.AsSpan(Towers);
             for (var i = 0; i < count; ++i)
             {
-                if (Towers[i].Position == pos)
+                ref var t = ref towers[i];
+                if (t.Position == pos)
                 {
                     Towers.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }
@@ -142,11 +146,18 @@ class VoidCall(BossModule module) : Components.GenericTowers(module, prioritizeI
     public override void Update()
     {
         if (Towers.Count == 0)
+        {
             return;
+        }
         var towerCount = Module.Enemies((uint)OID.Tower).Count;
         var soakers = towerCount == 2 ? 3 : towerCount == 3 ? 2 : 1;
-        for (var i = 0; i < Towers.Count; ++i)
-            Towers[i] = Towers[i] with { MinSoakers = soakers, MaxSoakers = soakers };
+        var count = Towers.Count;
+        var towers = CollectionsMarshal.AsSpan(Towers);
+        for (var i = 0; i < count; ++i)
+        {
+            ref var t = ref towers[i];
+            t.MinSoakers = t.MaxSoakers = soakers;
+        }
     }
 }
 

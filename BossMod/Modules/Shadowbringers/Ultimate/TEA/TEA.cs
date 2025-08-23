@@ -57,33 +57,11 @@ public sealed class TEA : BossModule
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (LiquidHand2 == null)
-        {
-            var b = Enemies((uint)OID.LiquidHand);
-            LiquidHand2 = b.Count != 0 ? b[0] : null;
-        }
-        if (_bruteJustice == null)
-        {
-            var b = Enemies((uint)OID.BruteJustice);
-            _bruteJustice = b.Count != 0 ? b[0] : null;
-        }
-        if (_cruiseChaser == null)
-        {
-            var b = Enemies((uint)OID.CruiseChaser);
-            _cruiseChaser = b.Count != 0 ? b[0] : null;
-        }
-        if (_alexPrime == null)
-        {
-            var b = Enemies((uint)OID.AlexanderPrime);
-            _alexPrime = b.Count != 0 ? b[0] : null;
-        }
-        if (_perfectAlex == null)
-        {
-            var b = Enemies((uint)OID.PerfectAlexander);
-            _perfectAlex = b.Count != 0 ? b[0] : null;
-        }
+        LiquidHand2 ??= GetActor((uint)OID.LiquidHand);
+        _bruteJustice ??= GetActor((uint)OID.BruteJustice);
+        _cruiseChaser ??= GetActor((uint)OID.CruiseChaser);
+        _alexPrime ??= GetActor((uint)OID.AlexanderPrime);
+        _perfectAlex ??= GetActor((uint)OID.PerfectAlexander);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

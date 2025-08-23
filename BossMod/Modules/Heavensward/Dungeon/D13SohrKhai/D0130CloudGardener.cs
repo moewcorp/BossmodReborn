@@ -57,7 +57,7 @@ class D130CloudGardenerStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 171, NameID = 4928, SortOrder = 1)]
 public class D130CloudGardener(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
-    private static bool IsArena1(Actor primary) => primary.Position.Z > 80f;
+    private static bool IsArena1(Actor primary) => primary.PosRot.Z > 80f;
     private static readonly WPos[] vertices1 = [new(-397.21f, 80.53f), new(-396.7f, 80.92f), new(-395.75f, 81.87f), new(-395.65f, 83.98f), new(-395.55f, 84.54f),
     new(-393.56f, 84.66f), new(-392.7f, 84.66f), new(-392.24f, 84.41f), new(-392.2f, 82.13f), new(-384.32f, 81.86f),
     new(-383.38f, 82.76f), new(-383.32f, 83.44f), new(-383.42f, 84.07f), new(-383.54f, 84.69f), new(-383.68f, 85.35f),

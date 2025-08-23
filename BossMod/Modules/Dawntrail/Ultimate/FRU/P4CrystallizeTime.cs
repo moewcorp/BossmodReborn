@@ -60,7 +60,7 @@ sealed class P4CrystallizeTime(BossModule module) : BossComponent(module)
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        if (tether.ID == (uint)TetherID.UltimateRelativitySlow && source.Position.Z < Arena.Center.Z)
+        if (tether.ID == (uint)TetherID.UltimateRelativitySlow && source.PosRot.Z < Arena.Center.Z)
             NorthSlowHourglass = source.Position - Arena.Center;
     }
 
@@ -175,11 +175,11 @@ sealed class P4CrystallizeTimeDragonHead(BossModule module) : BossComponent(modu
         switch (actor.OID)
         {
             case (uint)OID.DrachenWanderer:
-                Heads.Add((actor, actor.Position.X > Arena.Center.X ? 1 : -1));
+                Heads.Add((actor, actor.PosRot.X > Arena.Center.X ? 1 : -1));
                 break;
             case (uint)OID.DragonPuddle:
                 // TODO: this is very arbitrary
-                var mechanic = actor.Position.X < Arena.Center.X
+                var mechanic = actor.PosRot.X < Arena.Center.X
                     ? AssignPuddle(P4CrystallizeTime.Mechanic.FangEruption, P4CrystallizeTime.Mechanic.FangBlizzard)
                     : AssignPuddle(P4CrystallizeTime.Mechanic.FangDarkness, P4CrystallizeTime.Mechanic.FangWater);
                 _puddles.Add((actor, mechanic));
@@ -329,7 +329,7 @@ sealed class P4CrystallizeTimeDarkWater(BossModule module) : Components.UniformS
     }
 }
 
-sealed class P4CrystallizeTimeDarkEruption(BossModule module) : Components.GenericBaitAway(module, (uint)AID.DarkEruption)
+sealed class P4CrystallizeTimeDarkEruption(BossModule module) : Components.GenericBaitAway(module, (uint)AID.DarkEruption, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle _shape = new(6f);
 
@@ -339,7 +339,7 @@ sealed class P4CrystallizeTimeDarkEruption(BossModule module) : Components.Gener
     {
         if (status.ID == (uint)SID.SpellInWaitingDarkEruption)
         {
-            CurrentBaits.Add(new(actor, actor, _shape, status.ExpireAt));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, _shape, status.ExpireAt));
         }
     }
 }
@@ -682,9 +682,9 @@ sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnoc
         if (!RewindDone && _ct != null && _exalines != null && _ct.Cleansed[slot])
         {
             var players = Raid.WithoutSlot(false, true, true);
-            players.Sort((a, b) => a.Position.X.CompareTo(b.Position.X));
+            players.Sort((a, b) => a.PosRot.X.CompareTo(b.PosRot.X));
             var xOrder = Array.IndexOf(players, actor);
-            players.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
+            players.Sort((a, b) => a.PosRot.Z.CompareTo(b.PosRot.Z));
             var zOrder = Array.IndexOf(players, actor);
             if (xOrder >= 0 && zOrder >= 0)
             {

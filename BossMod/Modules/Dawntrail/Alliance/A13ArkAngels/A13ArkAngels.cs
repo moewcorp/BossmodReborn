@@ -29,33 +29,11 @@ public sealed class A13ArkAngels(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossHM == null)
-        {
-            var b = Enemies((uint)OID.BossHM);
-            _bossHM = b.Count != 0 ? b[0] : null;
-        }
-        if (_bossEV == null)
-        {
-            var b = Enemies((uint)OID.BossEV);
-            _bossEV = b.Count != 0 ? b[0] : null;
-        }
-        if (_bossMR == null)
-        {
-            var b = Enemies((uint)OID.BossMR);
-            _bossMR = b.Count != 0 ? b[0] : null;
-        }
-        if (_bossTT == null)
-        {
-            var b = Enemies((uint)OID.BossTT);
-            _bossTT = b.Count != 0 ? b[0] : null;
-        }
-        if (_shield == null)
-        {
-            var b = Enemies((uint)OID.ArkShield);
-            _shield = b.Count != 0 ? b[0] : null;
-        }
+        _bossHM ??= GetActor((uint)OID.BossHM);
+        _bossEV ??= GetActor((uint)OID.BossEV);
+        _bossMR ??= GetActor((uint)OID.BossMR);
+        _bossTT ??= GetActor((uint)OID.BossTT);
+        _shield ??= GetActor((uint)OID.ArkShield);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

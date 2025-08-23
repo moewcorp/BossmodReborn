@@ -31,6 +31,7 @@ public enum Sign : byte
 public sealed class WaymarkState
 {
     private BitMask _setMarkers;
+    public bool AnyWaymarks => _setMarkers != default;
     private readonly Vector3[] _positions = new Vector3[(int)Waymark.Count];
 
     private BitMask _setSigns;

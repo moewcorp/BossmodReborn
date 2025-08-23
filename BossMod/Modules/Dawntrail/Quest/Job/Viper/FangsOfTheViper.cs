@@ -42,7 +42,7 @@ sealed class FangsOfTheViperStates : StateMachineBuilder
             .ActivateOnEnter<BrowHorn>()
             .ActivateOnEnter<Firebreathe>()
             .ActivateOnEnter<Shockwave>()
-            .Raw.Update = () => (module.BossGowrow()?.IsDead ?? false) || module.PrimaryActor.IsDeadOrDestroyed;
+            .Raw.Update = () => (module.BossGowrow?.IsDead ?? false) || module.PrimaryActor.IsDeadOrDestroyed;
     }
 }
 
@@ -52,18 +52,11 @@ public sealed class FangsOfTheViper(WorldState ws, Actor primary) : BossModule(w
     private static readonly ArenaBoundsComplex arena = new([new Polygon(new(264f, 480f), 19.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.FawningWivre, (uint)OID.FawningPeiste, (uint)OID.FawningRaptor, (uint)OID.WanderingGowrow];
 
-    private Actor? _bossGowrow;
-    public Actor? BossGowrow() => _bossGowrow;
+    public Actor? BossGowrow;
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossGowrow == null)
-        {
-            var b = Enemies((uint)OID.WanderingGowrow);
-            _bossGowrow = b.Count != 0 ? b[0] : null;
-        }
+        BossGowrow ??= GetActor((uint)OID.WanderingGowrow);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

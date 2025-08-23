@@ -53,17 +53,10 @@ public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (RedSphere == null)
+        RedSphere ??= GetActor((uint)OID.RedSphere);
+        if (StateMachine.ActivePhaseIndex >= 1)
         {
-            var b = Enemies((uint)OID.RedSphere);
-            RedSphere = b.Count != 0 ? b[0] : null;
-        }
-        if (StateMachine.ActivePhaseIndex >= 1 && BossP2 == null)
-        {
-            var b = Enemies((uint)OID.BossP2);
-            BossP2 = b.Count != 0 ? b[0] : null;
+            BossP2 ??= GetActor((uint)OID.BossP2);
         }
     }
 

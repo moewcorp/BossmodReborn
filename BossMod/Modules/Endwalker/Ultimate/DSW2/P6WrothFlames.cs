@@ -18,7 +18,7 @@ sealed class P6WrothFlames : Components.GenericAOEs
         if (cauterizeCaster != null)
         {
             _aoes.Add(new(_shapeCauterize, cauterizeCaster.Position.Quantized(), cauterizeCaster.Rotation, WorldState.FutureTime(8.1d)));
-            _startingSpot = new(cauterizeCaster.Position.X < 95f ? 120f : 80f, _startingSpot.Z); // assume nidhogg is at 78, prefer uptime if possible
+            _startingSpot = new(cauterizeCaster.PosRot.X < 95f ? 120f : 80f, _startingSpot.Z); // assume nidhogg is at 78, prefer uptime if possible
         }
     }
 
@@ -46,7 +46,7 @@ sealed class P6WrothFlames : Components.GenericAOEs
         {
             if (_aoes.Count == 4)
             {
-                _startingSpot = new(_startingSpot.X, actor.Position.Z < Arena.Center.Z ? 120f : 80f);
+                _startingSpot = new(_startingSpot.X, actor.PosRot.Z < Arena.Center.Z ? 120f : 80f);
             }
 
             var delay = _aoes.Count switch
@@ -106,7 +106,7 @@ sealed class P6AkhMornVoidzone(BossModule module) : Components.Voidzone(module, 
 sealed class P6SpreadingEntangledFlames(BossModule module) : Components.UniformStackSpread(module, 4f, 5f, 2, alwaysShowSpreads: true)
 {
     private readonly P6HotWingTail? _wingTail = module.FindComponent<P6HotWingTail>();
-    private readonly bool _voidzonesNorth = module.Enemies((uint)OID.VoidzoneAhkMorn).Sum(z => z.Position.Z - module.Center.Z) < 0;
+    private readonly bool _voidzonesNorth = module.Enemies((uint)OID.VoidzoneAhkMorn).Sum(z => z.PosRot.Z - module.Center.Z) < 0;
 
     public override void AddMovementHints(int slot, Actor actor, MovementHints movementHints)
     {

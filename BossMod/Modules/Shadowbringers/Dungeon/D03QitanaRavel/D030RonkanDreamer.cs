@@ -88,7 +88,7 @@ class D030RonkanDreamerStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8639)]
-public class D030RonkanDreamer(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.Z > 550 ? arena1.Center : arena2.Center, primary.Position.Z > 550 ? arena1 : arena2)
+public class D030RonkanDreamer(WorldState ws, Actor primary) : BossModule(ws, primary, primary.PosRot.Z > 550f ? arena1.Center : arena2.Center, primary.PosRot.Z > 550f ? arena1 : arena2)
 {
     private static readonly WPos[] vertices1 = [new(-4.299f, 646.21f), new(-4.298f, 640.685f), new(-4.118f, 640.131f), new(-4.467f, 639.508f), new(-6.074f, 639.653f),
     new(-6.195f, 639.858f), new(-5.99f, 641.313f), new(-5.958f, 643.01f), new(-6.236f, 644.911f), new(-5.856f, 646.17f)];

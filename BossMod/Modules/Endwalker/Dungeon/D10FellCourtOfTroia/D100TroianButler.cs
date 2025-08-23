@@ -56,7 +56,7 @@ sealed class D100TroianButlerStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11367, SortOrder = 6)]
 public sealed class D100TroianButler(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
-    private static bool IsArena1(Actor primary) => primary.Position.Z > -138f;
+    private static bool IsArena1(Actor primary) => primary.PosRot.Z > -138f;
     private static readonly WPos[] vertices1 = [new(2.32f, -133.04f), new(2.68f, -132.67f), new(3.2f, -132.4f), new(3.84f, -132.15f), new(10.5f, -128.57f),
     new(11.08f, -128.13f), new(11.63f, -127.91f), new(12.22f, -127.75f), new(12.87f, -127.46f), new(14.47f, -125.46f),
     new(15.98f, -122.63f), new(16.17f, -122.01f), new(16.13f, -121.35f), new(16.2f, -120.76f), new(16.6f, -120.31f),

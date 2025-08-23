@@ -47,7 +47,7 @@ sealed class RuthlessRegalia(BossModule module) : Components.GenericAOEs(module)
         {
             var s = _source.Value.Item1;
             var t = _tethered.FirstOrDefault(x => x != actor);
-            hints.AddForbiddenZone(rect with { HalfWidth = 12 }, new(s.Position.X, t!.Position.Z), s.Rotation);
+            hints.AddForbiddenZone(rect with { HalfWidth = 12f }, new(s.PosRot.X, t!.PosRot.Z), s.Rotation);
         }
         else
             base.AddAIHints(slot, actor, assignment, hints);

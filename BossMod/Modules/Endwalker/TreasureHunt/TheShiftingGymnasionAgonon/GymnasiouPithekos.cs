@@ -46,37 +46,53 @@ class Spark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spark, 
 class SweepingGouge(BossModule module) : Components.SingleTargetCast(module, (uint)AID.SweepingGouge);
 class Thundercall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thundercall, 3f);
 
-class Thundercall2(BossModule module) : Components.GenericBaitAway(module)
+class Thundercall2(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(18f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Thundercall)
-            CurrentBaits.Add(new(actor, actor, circle));
+        {
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle, WorldState.FutureTime(6d)));
+        }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Thundercall)
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 17.5f));
+        if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
+        {
+            ref var b = ref CurrentBaits.Ref(0);
+            if (b.Target == actor)
+            {
+                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 17.5f), b.Activation);
+            }
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (CurrentBaits.Count == 0)
+        {
             return;
-        if (CurrentBaits[0].Target != actor)
+        }
+        if (CurrentBaits.Ref(0).Target != actor)
+        {
             base.AddHints(slot, actor, hints);
+        }
         else
+        {
             hints.Add("Bait levinorb away!");
+        }
     }
 }
 

@@ -366,23 +366,9 @@ public sealed class D112FourHeadsmen(WorldState ws, Actor primary) : BossModule(
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (BloodyHeadsman == null)
-        {
-            var b = Enemies((uint)OID.BloodyHeadsman);
-            BloodyHeadsman = b.Count != 0 ? b[0] : null;
-        }
-        if (RavenousHeadsman == null)
-        {
-            var b = Enemies((uint)OID.RavenousHeadsman);
-            RavenousHeadsman = b.Count != 0 ? b[0] : null;
-        }
-        if (PestilentHeadsman == null)
-        {
-            var b = Enemies((uint)OID.PestilentHeadsman);
-            PestilentHeadsman = b.Count != 0 ? b[0] : null;
-        }
+        BloodyHeadsman ??= GetActor((uint)OID.BloodyHeadsman);
+        RavenousHeadsman ??= GetActor((uint)OID.RavenousHeadsman);
+        PestilentHeadsman ??= GetActor((uint)OID.PestilentHeadsman);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

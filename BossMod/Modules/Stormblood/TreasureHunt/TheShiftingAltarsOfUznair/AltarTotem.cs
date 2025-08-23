@@ -58,14 +58,14 @@ class FlamesOfFury(BossModule module) : Components.VoidzoneAtCastTarget(module, 
     }
 }
 
-class FlamesOfFuryBait(BossModule module) : Components.GenericBaitAway(module)
+class FlamesOfFuryBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(10f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Baitaway)
-            CurrentBaits.Add(new(actor, actor, circle));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

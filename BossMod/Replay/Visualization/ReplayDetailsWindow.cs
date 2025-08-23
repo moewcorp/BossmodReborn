@@ -288,26 +288,28 @@ sealed class ReplayDetailsWindow : UIWindow
     private void DrawCommonColumns(Actor actor)
     {
         (WPos center, float radius) bounds = _mgr.ActiveModule == null ? (new(100, 100), 20) : (_mgr.ActiveModule.Center, _mgr.ActiveModule.Bounds.Radius);
-        var minx = bounds.center.X - bounds.radius;
-        var maxx = bounds.center.X + bounds.radius;
-        var minz = bounds.center.Z - bounds.radius;
-        var maxz = bounds.center.Z + bounds.radius;
-
-        var posX = actor.Position.X;
-        var posZ = actor.Position.Z;
+        var radius = bounds.radius;
+        var center = bounds.center;
+        var minx = center.X - radius;
+        var maxx = center.X + radius;
+        var minz = center.Z - radius;
+        var maxz = center.Z + radius;
+        var pos = actor.Position;
+        var posX = pos.X;
+        var posZ = pos.Z;
         var rot = actor.Rotation.Deg;
-        bool modified = false;
+        var modified = false;
         ImGui.TableNextColumn();
         modified |= ImGui.DragFloat("###X", ref posX, 0.25f, minx, maxx);
         ImGui.TableNextColumn();
         modified |= ImGui.DragFloat("###Z", ref posZ, 0.25f, minz, maxz);
         ImGui.TableNextColumn();
-        modified |= ImGui.DragFloat("###Rot", ref rot, 1, -180, 180);
+        modified |= ImGui.DragFloat("###Rot", ref rot, 1, -180f, 180f);
         if (modified)
             actor.PosRot = new(posX, actor.PosRot.Y, posZ, rot.Degrees().Rad);
 
         ImGui.TableNextColumn();
-        if (actor.HPMP.MaxHP > 0)
+        if (actor.HPMP.MaxHP > 0u)
         {
             var frac = Math.Min((float)(actor.HPMP.CurHP + actor.HPMP.Shield) / actor.HPMP.MaxHP, 1f);
             ImGui.ProgressBar(frac, new(ImGui.GetColumnWidth(), 0), $"{frac:#0.#%} ({actor.HPMP.CurHP} + {actor.HPMP.Shield} / {actor.HPMP.MaxHP}) [{actor.PendingHPDifference} pending]");

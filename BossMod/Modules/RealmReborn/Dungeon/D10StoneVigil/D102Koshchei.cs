@@ -32,7 +32,7 @@ class Typhoon(BossModule module) : Components.Exaflare(module, 3f)
             for (var i = 0; i < count; ++i)
             {
                 var m = _maelstroms[i];
-                var line = FindLine(m.Position.Z);
+                var line = FindLine(m.PosRot.Z);
                 if (m.IsDead && line != null)
                     Lines.Remove(line);
                 else if (!m.IsDead && line == null)
@@ -44,9 +44,9 @@ class Typhoon(BossModule module) : Components.Exaflare(module, 3f)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.TyphoonAOE && caster.Position.X < 56f)
+        if (spell.Action.ID == (uint)AID.TyphoonAOE && caster.PosRot.X < 56f)
         {
-            var line = FindLine(caster.Position.Z);
+            var line = FindLine(caster.PosRot.Z);
             if (line == null)
             {
                 ReportError($"Failed to find entry for {caster.InstanceID:X} @ {caster.Position}");

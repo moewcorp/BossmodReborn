@@ -42,13 +42,13 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnActorNpcYell(Actor actor, ushort id)
     {
-        if (_aoe == null && actor.Position.Z < -10f)
+        if (_aoe == null && actor.PosRot.Z < -10f)
             _aoe = new(poly1, Arena.Center, default, WorldState.FutureTime(4d));
     }
 
     public override void Update()
     {
-        if (_aoe == null && Module.PrimaryActor.Position.Z > -10f) // for some reason NPC yells that are exactly at the start of a module do not get recognized despite appearing in replay?
+        if (_aoe == null && Module.PrimaryActor.PosRot.Z > -10f) // for some reason NPC yells that are exactly at the start of a module do not get recognized despite appearing in replay?
             _aoe = new(poly2, Arena.Center, default, WorldState.FutureTime(4d));
     }
 }
@@ -86,7 +86,7 @@ class D150SiegeGobbueStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 182, NameID = 5254, SortOrder = 3)]
 public class D150SiegeGobbue(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
-    private static bool IsArena1(Actor primary) => primary.Position.Z < -10f;
+    private static bool IsArena1(Actor primary) => primary.PosRot.Z < -10f;
     private static readonly WPos[] vertices1 = [new(37.14f, -107.01f), new(38.84f, -105.21f), new(39.33f, -104.79f), new(41.89f, -104.55f), new(42.35f, -104.03f),
     new(42.82f, -103.73f), new(43.26f, -103.23f), new(43.91f, -102.16f), new(44.17f, -101.58f), new(44.63f, -100.24f),
     new(45.31f, -97.65f), new(45.54f, -97.07f), new(46.05f, -96.92f), new(47.88f, -96.82f), new(48.35f, -96.39f),

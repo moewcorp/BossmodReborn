@@ -57,8 +57,8 @@ sealed class KnuckleCrusher : Components.SimpleAOEs
         {
             // first aoe is always seems to be in center and irrelevant for the dodge spot
             var center = Arena.Center;
-            var dir = Casters[1].Origin - center;
-            var isCW = dir.OrthoR().Dot(Casters[2].Origin - center) > 0f;
+            var dir = Casters.Ref(1).Origin - center;
+            var isCW = dir.OrthoR().Dot(Casters.Ref(2).Origin - center) > 0f;
             midpoint = dir.Rotate((isCW ? 1f : -1f) * 55f.Degrees()) + center;
             midpoint += 6f * (midpoint - center).Normalized();
         }
@@ -323,9 +323,11 @@ sealed class CE109CompanyOfStoneStates : StateMachineBuilder
                 {
                     var enemy = enemies[i];
                     if (!enemy.IsDestroyed)
+                    {
                         return false;
+                    }
                 }
-                return module.BossMegaloknight()?.IsDeadOrDestroyed ?? true;
+                return module.BossMegaloknight?.IsDeadOrDestroyed ?? true;
             };
     }
 }
@@ -333,25 +335,18 @@ sealed class CE109CompanyOfStoneStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 40)]
 public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(680f, -280f).Quantized(), new ArenaBoundsCircle(20f))
 {
-    private Actor? _bossMegaloknight;
-    public Actor? BossMegaloknight() => _bossMegaloknight;
+    public Actor? BossMegaloknight;
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossMegaloknight == null)
-        {
-            var b = Enemies((uint)OID.Megaloknight);
-            _bossMegaloknight = b.Count != 0 ? b[0] : null;
-        }
+        BossMegaloknight ??= GetActor((uint)OID.Megaloknight);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actors(Enemies((uint)OID.Boss));
         Arena.Actors(Enemies((uint)OID.OccultKnight2));
-        Arena.Actor(_bossMegaloknight);
+        Arena.Actor(BossMegaloknight);
     }
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 25f);

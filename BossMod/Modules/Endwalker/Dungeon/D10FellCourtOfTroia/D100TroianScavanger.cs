@@ -49,7 +49,7 @@ sealed class D100TroianScavangerStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11358, SortOrder = 1)]
 public sealed class D100TroianScavanger(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? arena1.Center : arena2.Center, IsArena1(primary) ? arena1 : arena2)
 {
-    private static bool IsArena1(Actor primary) => primary.Position.Z > 170f;
+    private static bool IsArena1(Actor primary) => primary.PosRot.Z > 170f;
     private static readonly WPos[] vertices1 = [new(58.65f, 113.75f), new(59.33f, 113.92f), new(60.07f, 115.82f), new(60.42f, 116.25f), new(60.46f, 116.87f),
     new(60.72f, 117.46f), new(62.58f, 119.22f), new(63.19f, 119.03f), new(63.58f, 118.63f), new(63.96f, 118.98f),
     new(64.48f, 119.34f), new(65.69f, 119.96f), new(66.19f, 120.47f), new(70.77f, 125.4f), new(73.23f, 126.28f),

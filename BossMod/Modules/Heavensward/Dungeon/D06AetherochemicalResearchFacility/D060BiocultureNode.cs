@@ -104,7 +104,7 @@ class D060BiocultureNodeStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3830, SortOrder = 5)]
 public class D060BiocultureNode(WorldState ws, Actor primary) : BossModule(ws, primary, IsArena1(primary) ? Arena1.Center : arena2.Center, IsArena1(primary) ? Arena1 : arena2)
 {
-    public static bool IsArena1(Actor primary) => primary.Position.Z < 250f;
+    public static bool IsArena1(Actor primary) => primary.PosRot.Z < 250f;
 
     private static readonly WPos[] vertices1 = [new(26.19f, 163.9f), new(29.99f, 164.07f), new(30.59f, 164.12f), new(31.3f, 164.26f), new(31.59f, 164.85f),
     new(31.81f, 165.42f), new(32, 166.01f), new(32.24f, 166.6f), new(34.76f, 168.55f), new(34.99f, 169.17f),
