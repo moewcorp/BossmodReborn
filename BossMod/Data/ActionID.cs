@@ -41,6 +41,8 @@ public readonly struct ActionID(uint raw)
     public ActionID(ActionType type, uint id) : this(((uint)type << 24) | id) { }
 
     public static implicit operator bool(ActionID x) => x.Raw != default;
+    public static bool operator ==(ActionID left, ActionID right) => left.Raw == right.Raw;
+    public static bool operator !=(ActionID left, ActionID right) => left.Raw != right.Raw;
     public override readonly string ToString() => $"{Type} {ID} '{Name()}'";
     private static readonly Dictionary<uint, (float, string)> _spellCache = [];
 
@@ -101,4 +103,8 @@ public readonly struct ActionID(uint raw)
         data = (row!.Value.ExtraCastTime100ms * 0.1f, row.Value.Name.ToString());
         return _spellCache[actionID] = data!.Value;
     }
+
+    public readonly bool Equals(ActionID other) => this == other;
+    public override readonly bool Equals(object? obj) => obj is ActionID other && Equals(other);
+    public override readonly int GetHashCode() => Raw.GetHashCode();
 }
