@@ -56,8 +56,8 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, in
         public readonly bool ImmuneAt(DateTime time) => RoleBuffExpire > time || JobBuffExpire > time || DutyBuffExpire > time;
     }
 
-    public readonly bool StopAtWall = stopAtWall; // use if wall is solid rather than deadly
-    public readonly bool StopAfterWall = stopAfterWall; // use if the wall is a polygon where you need to check for intersections
+    public bool StopAtWall = stopAtWall; // use if wall is solid rather than deadly
+    public bool StopAfterWall = stopAfterWall; // use if the wall is a polygon where you need to check for intersections
     public readonly int MaxCasts = maxCasts; // use to limit number of drawn knockbacks
     private const float approxHitBoxRadius = 0.499f; // calculated because due to floating point errors this does not result in 0.001
     private const float maxIntersectionError = 0.5f - approxHitBoxRadius; // calculated because due to floating point errors this does not result in 0.001

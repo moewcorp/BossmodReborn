@@ -32,10 +32,11 @@ public enum ActionType : byte
 public enum Positional { Any, Flank, Rear, Front }
 
 // high byte is type, low 3 bytes is ID
-public readonly record struct ActionID(uint Raw)
+public readonly struct ActionID(uint raw)
 {
+    public readonly uint Raw = raw;
     public readonly ActionType Type => (ActionType)(Raw >> 24);
-    public readonly uint ID => Raw & 0x00FFFFFFu;
+    public readonly uint ID = raw & 0x00FFFFFFu;
 
     public ActionID(ActionType type, uint id) : this(((uint)type << 24) | id) { }
 

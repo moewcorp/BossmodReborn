@@ -109,12 +109,15 @@ public sealed class BossModuleManager : IDisposable
                 if (isActive != wasActive)
                     (isActive ? ModuleActivated : ModuleDeactivated).Fire(m);
 
+                var actor = m.PrimaryActor;
                 // unload module because it is not active and player is out of desired range
-                if (!isActive && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() > maxSq && m.PrimaryActor.SpawnIndex != -99)
+                if (!isActive && (playerPos - actor.PosRot.AsVector3()).LengthSquared() > maxSq && actor.SpawnIndex != -99)
                 {
                     UnloadModule(i--);
-                    PendingModules.Add(m);
-                    Service.Log($"[BMM] Boss module '{m.GetType()}' moved to pending for actor {m.PrimaryActor}");
+                    if (!actor.IsDestroyed)
+                    {
+                        ActorAdded(actor);
+                    }
                     continue;
                 }
 
@@ -129,7 +132,6 @@ public sealed class BossModuleManager : IDisposable
                 if (isActive && m.CheckReset())
                 {
                     ModuleDeactivated.Fire(m);
-                    var actor = m.PrimaryActor;
                     UnloadModule(i--);
                     if (!actor.IsDestroyed)
                         ActorAdded(actor);

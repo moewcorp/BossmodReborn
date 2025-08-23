@@ -49,8 +49,17 @@ public sealed record class ActorCastInfo
 }
 
 // note: 'main' target could be completely different and unrelated to actual affected targets
-public sealed record class ActorCastEvent(ActionID Action, ulong MainTargetID, float AnimationLockTime, uint MaxTargets, Vector3 TargetPos, uint GlobalSequence, uint SourceSequence, Angle Rotation)
+public sealed class ActorCastEvent(ActionID action, ulong mainTargetID, float animationLockTime, uint maxTargets, Vector3 targetPos, uint globalSequence, uint sourceSequence, Angle rotation)
 {
+    public readonly ActionID Action = action;
+    public readonly ulong MainTargetID = mainTargetID;
+    public readonly float AnimationLockTime = animationLockTime;
+    public readonly uint MaxTargets = maxTargets;
+    public readonly Vector3 TargetPos = targetPos;
+    public readonly uint GlobalSequence = globalSequence;
+    public readonly uint SourceSequence = sourceSequence;
+    public readonly Angle Rotation = rotation;
+
     public readonly struct Target(ulong id, ActionEffects effects)
     {
         public readonly ulong ID = id;
