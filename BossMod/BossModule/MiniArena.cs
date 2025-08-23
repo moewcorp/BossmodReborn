@@ -374,12 +374,14 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     public void ZoneCapsule(WPos start, WDir direction, float radius, float length, uint color)
         => Zone(_triCache[TriangulationCache.GetKeyHash(12, start, direction, radius, length)] ??= _bounds.ClipAndTriangulateCapsule(start - Center, direction, radius, length), color);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TextScreen(Vector2 center, string text, uint color, float fontSize = 17f)
     {
         var size = ImGui.CalcTextSize(text) * Config.ArenaScale;
         ImGui.GetWindowDrawList().AddText(ImGui.GetFont(), fontSize * Config.ArenaScale, center - size * 0.5f, color, text);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TextWorld(WPos center, string text, uint color, float fontSize = 17f)
     {
         TextScreen(WorldPositionToScreenPosition(center), text, color, fontSize);

@@ -593,8 +593,8 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
 
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
-            var origin = BaitOrigin(b);
+            ref var b = ref baits[i];
+            var origin = BaitOrigin(ref b);
             var angle = Angle.FromDirection(b.Target.Position - origin);
             if (b.Target != actor && !isBaitTarget)
             {
@@ -669,7 +669,7 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         var id = actor.InstanceID;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             if (!b.Forbidden[slot])
             {
                 allForbidden = false;
@@ -679,7 +679,7 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
                 isBaitTarget = true;
                 continue;
             }
-            if (b.Shape.Check(actor.Position, BaitOrigin(b), b.Rotation))
+            if (b.Shape.Check(actor.Position, BaitOrigin(ref b), b.Rotation))
             {
                 isInBaitShape = true;
                 if (b.Forbidden[slot])
@@ -691,10 +691,10 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         {
             for (var i = 0; i < len; ++i)
             {
-                ref readonly var b = ref baits[i];
+                ref var b = ref baits[i];
                 if (b.Target.InstanceID == id)
                     continue;
-                if (b.Shape.Check(actor.Position, BaitOrigin(b), b.Rotation))
+                if (b.Shape.Check(actor.Position, BaitOrigin(ref b), b.Rotation))
                 {
                     isBaitTargetAndInExtraStack = true;
                     break;
@@ -732,7 +732,7 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         var id = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             if (b.Target.InstanceID == id)
             {
                 isBaitTarget = true;
@@ -741,9 +741,9 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         }
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target.InstanceID == id || !isBaitTarget && b.Target.InstanceID != id) ? Colors.SafeFromAOE : default;
-            b.Shape.Draw(Arena, BaitOrigin(b), b.Rotation, color);
+            b.Shape.Draw(Arena, BaitOrigin(ref b), b.Rotation, color);
         }
     }
 
@@ -759,7 +759,7 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         var id = pc.InstanceID;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             if (b.Target.InstanceID == id)
             {
                 isBaitTarget = true;
@@ -768,9 +768,9 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
         }
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             var color = !b.Forbidden[pcSlot] && (isBaitTarget && b.Target.InstanceID == id || !isBaitTarget && b.Target.InstanceID != id) ? Colors.Safe : default;
-            b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation, color);
+            b.Shape.Outline(Arena, BaitOrigin(ref b), b.Rotation, color);
         }
     }
 }

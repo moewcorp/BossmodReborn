@@ -11,7 +11,7 @@ class BodySlamKB(BossModule module) : Components.GenericKnockback(module, stopAt
 
     public override void Update()
     {
-        var z = Module.PrimaryActor.Position.Z;
+        var z = Module.PrimaryActor.PosRot.Z;
         if (LeviathanZ == default)
             LeviathanZ = z;
         if (z != LeviathanZ && z != default)
@@ -64,10 +64,10 @@ class BodySlamAOE(BossModule module) : Components.GenericAOEs(module)
     public override void Update()
     {
         if (LeviathanZ == default)
-            LeviathanZ = Module.PrimaryActor.Position.Z;
-        if (Module.PrimaryActor.Position.Z != LeviathanZ && Module.PrimaryActor.Position.Z != 0)
+            LeviathanZ = Module.PrimaryActor.PosRot.Z;
+        if (Module.PrimaryActor.PosRot.Z != LeviathanZ && Module.PrimaryActor.PosRot.Z != default)
         {
-            LeviathanZ = Module.PrimaryActor.Position.Z;
+            LeviathanZ = Module.PrimaryActor.PosRot.Z;
             _aoe = new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, WorldState.FutureTime(2.6d));
         }
     }

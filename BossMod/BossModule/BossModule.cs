@@ -273,7 +273,7 @@ public abstract class BossModule : IDisposable
             Arena.Border(haveRisks && WindowConfig.ShowBorderRisk ? Colors.Enemy : Colors.Border);
         if (WindowConfig.ShowCardinals)
             Arena.CardinalNames();
-        if (WindowConfig.ShowWaymarks)
+        if (WindowConfig.ShowWaymarks && WorldState.Waymarks.AnyWaymarks)
             DrawWaymarks();
 
         // draw non-player alive party members
@@ -373,6 +373,14 @@ public abstract class BossModule : IDisposable
     public virtual bool ShouldPrioritizeAllEnemies => false;
 
     protected virtual void UpdateModule() { }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Actor? GetActor(uint enemy)
+    {
+        var b = Enemies(enemy);
+        return b.Count != 0 ? b[0] : null;
+    }
+
     protected virtual void DrawArenaBackground(int pcSlot, Actor pc) { } // before modules background
     protected virtual void DrawArenaForeground(int pcSlot, Actor pc) { } // after border, before modules foreground
     protected virtual void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
@@ -418,15 +426,19 @@ public abstract class BossModule : IDisposable
         DrawWaymark(WorldState.Waymarks[Waymark.N2], "2", Colors.Waymark2);
         DrawWaymark(WorldState.Waymarks[Waymark.N3], "3", Colors.Waymark3);
         DrawWaymark(WorldState.Waymarks[Waymark.N4], "4", Colors.Waymark4);
-    }
 
-    private void DrawWaymark(Vector3? pos, string text, uint color)
-    {
-        if (pos != null)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void DrawWaymark(Vector3? position, string text, uint color)
         {
-            if (WindowConfig.ShowOutlinesAndShadows)
-                Arena.TextWorld(new(pos.Value.XZ()), text, Colors.Shadows, WindowConfig.WaymarkFontSize + 3f);
-            Arena.TextWorld(new(pos.Value.XZ()), text, color, WindowConfig.WaymarkFontSize);
+            if (position?.XZ() is Vector2 vec2)
+            {
+                WPos pos = new(vec2);
+                if (WindowConfig.ShowOutlinesAndShadows)
+                {
+                    Arena.TextWorld(pos, text, Colors.Shadows, WindowConfig.WaymarkFontSize + 3f);
+                }
+                Arena.TextWorld(pos, text, color, WindowConfig.WaymarkFontSize);
+            }
         }
     }
 

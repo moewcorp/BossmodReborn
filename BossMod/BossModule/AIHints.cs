@@ -506,4 +506,21 @@ public sealed class AIHints
         }
         return _ => default;
     }
+
+    public Func<WPos, float> GoalRectangle(WPos center, WDir direction, float halfWidth, float halfHeight, float weight = 1f)
+    {
+        var fwd = direction.Normalized();
+        var right = fwd.OrthoR();
+        return p =>
+        {
+            var offset = p - center;
+            var localX = fwd.Dot(offset);
+            var localY = right.Dot(offset);
+            if (Math.Abs(localX) <= halfHeight && Math.Abs(localY) <= halfWidth)
+            {
+                return weight;
+            }
+            return default;
+        };
+    }
 }

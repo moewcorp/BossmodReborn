@@ -323,13 +323,7 @@ public sealed class CE23FiresOfWar(WorldState ws, Actor primary) : BossModule(ws
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossMater == null)
-        {
-            var b = Enemies((uint)OID.PyrobolusMater);
-            _bossMater = b.Count != 0 ? b[0] : null;
-        }
+        _bossMater ??= GetActor((uint)OID.PyrobolusMater);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

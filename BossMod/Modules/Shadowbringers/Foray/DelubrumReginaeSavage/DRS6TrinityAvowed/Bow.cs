@@ -113,7 +113,7 @@ class ShimmeringShot(BossModule module, double spawnToActivation) : TemperatureA
         if (arrow == null)
             return;
 
-        if ((arrow.Position.X < Arena.Center.X) != _pattern is Pattern.WENormal or Pattern.WEInverted)
+        if ((arrow.PosRot.X < Arena.Center.X) != _pattern is Pattern.WENormal or Pattern.WEInverted)
             ReportError("Unexpected arrow X coord");
         var srcRow = RowIndex(arrow.Position);
         var destRow = _remap[(int)_pattern, srcRow];

@@ -106,8 +106,8 @@ sealed class Witherwind(BossModule module) : Components.Voidzone(module, 3f, Get
     private static List<Actor> GetWhirlwind(BossModule module) => module.Enemies((uint)OID.AutumnalTempest);
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Yozakura, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12325, SortOrder = 2, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
-public sealed class V21Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -700f ? ArenaCenter1 : primary.Position.X > 700f ? ArenaCenter2 : ArenaCenter3, primary.Position.X < -700f ? StartingBounds : primary.Position.X > 700f ? DefaultBounds2 : StartingBounds)
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Yozakura, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945u, NameID = 12325u, SortOrder = 2, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
+public sealed class V21Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.PosRot.X is var X && X < -700f ? ArenaCenter1 : X > 700f ? ArenaCenter2 : ArenaCenter3, X < -700f ? StartingBounds : X > 700f ? DefaultBounds2 : StartingBounds)
 {
     public static readonly WPos ArenaCenter1 = new(-775f, 16f);
     public static readonly WPos ArenaCenter2 = new(737f, 220f);

@@ -37,18 +37,8 @@ public sealed class A22SuperiorFlightUnits(WorldState ws, Actor primary) : BossM
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (BossBeta == null)
-        {
-            var b = Enemies((uint)OID.FlightUnitBEta);
-            BossBeta = b.Count != 0 ? b[0] : null;
-        }
-        if (BossChi == null)
-        {
-            var b = Enemies((uint)OID.FlightUnitCHi);
-            BossChi = b.Count != 0 ? b[0] : null;
-        }
+        BossBeta ??= GetActor((uint)OID.FlightUnitBEta);
+        BossChi ??= GetActor((uint)OID.FlightUnitCHi);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

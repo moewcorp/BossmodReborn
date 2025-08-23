@@ -143,15 +143,6 @@ public class Grynewaht(WorldState ws, Actor primary) : BossModule(ws, primary, d
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_bossP2 == null)
-        {
-            if (StateMachine.ActivePhaseIndex > 0)
-            {
-                var b = Enemies((uint)OID.GrynewahtP2);
-                _bossP2 = b.Count != 0 ? b[0] : null;
-            }
-        }
+        _bossP2 ??= GetActor((uint)OID.GrynewahtP2);
     }
 }

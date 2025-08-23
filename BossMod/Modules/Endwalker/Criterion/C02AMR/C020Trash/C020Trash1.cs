@@ -269,9 +269,7 @@ public abstract class Trash1Arena(WorldState ws, Actor primary, bool savage) : B
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        _raiko ??= StateMachine.ActivePhaseIndex >= 0 ? Enemies(savage ? (uint)OID.SRaiko : (uint)OID.NRaiko)[0] : null;
-        _fuko ??= StateMachine.ActivePhaseIndex >= 0 ? Enemies(savage ? (uint)OID.SFuko : (uint)OID.NFuko)[0] : null;
+        _raiko ??= GetActor(savage ? (uint)OID.SRaiko : (uint)OID.NRaiko);
+        _fuko ??= GetActor(savage ? (uint)OID.SFuko : (uint)OID.NFuko);
     }
 }

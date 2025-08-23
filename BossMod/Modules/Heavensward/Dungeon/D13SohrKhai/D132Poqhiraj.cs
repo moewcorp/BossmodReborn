@@ -269,14 +269,14 @@ class RearHoof(BossModule module) : Components.SingleTargetInstant(module, (uint
     }
 }
 
-class CloudCall(BossModule module) : Components.GenericBaitAway(module)
+class CloudCall(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     public static readonly AOEShapeCircle Circle = new(8f);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.CloudCall)
-            CurrentBaits.Add(new(actor, actor, Circle, WorldState.FutureTime(4.9d)));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, Circle, WorldState.FutureTime(4.9d)));
     }
 
     public override void OnActorCreated(Actor actor)
@@ -288,7 +288,7 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == actor)
+        if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 19f, 19f, 5f));
     }
 
@@ -296,7 +296,7 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module)
     {
         if (CurrentBaits.Count == 0)
             return;
-        if (CurrentBaits[0].Target != actor)
+        if (CurrentBaits.Ref(0).Target != actor)
             base.AddHints(slot, actor, hints);
         else
             hints.Add("Bait cloud away, avoid intersecting wall hitboxes!");
@@ -305,10 +305,11 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module)
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        if (CurrentBaits.Count != 0 && CurrentBaits[0].Target == pc)
+        if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == pc)
         {
             var walls = Module.Enemies((uint)OID.PrayerWall);
-            for (var i = 0; i < walls.Count; ++i)
+            var count = walls.Count;
+            for (var i = 0; i < count; ++i)
             {
                 var a = walls[i];
                 Arena.AddCircle(a.Position, a.HitboxRadius);

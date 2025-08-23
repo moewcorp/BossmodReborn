@@ -123,7 +123,7 @@ sealed class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module
             }
             var currentbeasts = s.Beasts = [.. updatedBeasts];
             _aoes.Add(currentbeasts.Count == 0 ? new(rect, s.Position, Angle.AnglesCardinals[3])
-            : new(new AOEShapeRect((currentbeasts[0].Position - currentbeasts[^1].Position).Length() + 30f, 5f), new(currentbeasts[^1].Position.X, s.Position.Z), s.Rotation));
+            : new(new AOEShapeRect((currentbeasts[0].Position - currentbeasts[^1].Position).Length() + 30f, 5f), new(currentbeasts[^1].PosRot.X, s.Position.Z), s.Rotation));
         }
     }
 
@@ -132,11 +132,11 @@ sealed class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module
         if (spell.Action.ID == (uint)AID.WildlifeCrossing)
         {
             var len = _stampedes.Length;
-
+            var posZ = caster.PosRot.Z;
             for (var i = 0; i < len; ++i)
             {
                 ref var s = ref _stampedes[i];
-                if (Math.Abs(caster.Position.Z - s.Position.Z) < 1f)
+                if (Math.Abs(posZ - s.Position.Z) < 1f)
                 {
                     if (++s.Count == 30)
                     {

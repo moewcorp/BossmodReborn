@@ -57,7 +57,7 @@ sealed class LightningBolt(BossModule module) : Components.GenericBaitAway(modul
                 activation = WorldState.FutureTime(10.8d);
             }
 
-            CurrentBaits.Add(new(actor, actor, circle, activation));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle, activation));
             if (actor.OID == (uint)OID.LightningRod)
             {
                 freeRods.Remove(actor);
@@ -75,9 +75,11 @@ sealed class LightningBolt(BossModule module) : Components.GenericBaitAway(modul
             }
 
             var count = CurrentBaits.Count;
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
             for (var i = 0; i < count; ++i)
             {
-                if (CurrentBaits[i].Target == actor)
+                ref var b = ref baits[i];
+                if (b.Target == actor)
                 {
                     CurrentBaits.RemoveAt(i);
                     return;

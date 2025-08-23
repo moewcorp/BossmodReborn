@@ -129,7 +129,7 @@ class MortalFlame(BossModule module) : BossComponent(module)
     }
 }
 
-class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
+class BlackFlame(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(6f);
     private static readonly AOEShapeCross cross = new(10f, 2f);
@@ -139,8 +139,9 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
         if (iconID == (uint)IconID.BlackFlame)
         {
             var activation = WorldState.FutureTime(4d);
-            CurrentBaits.Add(new(actor, actor, circle, activation));
-            CurrentBaits.Add(new(actor, actor, cross, activation, default, Angle.AnglesCardinals[1]));
+            var primary = Module.PrimaryActor;
+            CurrentBaits.Add(new(primary, actor, circle, activation));
+            CurrentBaits.Add(new(primary, actor, cross, activation, default, Angle.AnglesCardinals[1]));
         }
     }
 
@@ -171,7 +172,7 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
             }
         }
         if (forbidden.Length != 0)
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), CurrentBaits[0].Activation);
+            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), CurrentBaits.Ref(0).Activation);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -198,9 +199,7 @@ class BlackFlame(BossModule module) : Components.GenericBaitAway(module)
 
 class OtherworldlyHeat(BossModule module) : Components.SimpleAOEs(module, (uint)AID.OtherworldlyHeat, new AOEShapeCross(10f, 2f));
 
-abstract class Scorching(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeCone(40f, 90f.Degrees()));
-class ScorchingLeft(BossModule module) : Scorching(module, (uint)AID.ScorchingLeft);
-class ScorchingRight(BossModule module) : Scorching(module, (uint)AID.ScorchingRight);
+sealed class Scorching(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ScorchingLeft, (uint)AID.ScorchingRight], new AOEShapeCone(40f, 90f.Degrees()));
 
 class CullingBlade(BossModule module) : Components.RaidwideCast(module, (uint)AID.CullingBlade);
 class CaptiveBolt(BossModule module) : Components.SingleTargetDelayableCast(module, (uint)AID.CaptiveBolt);
@@ -339,8 +338,7 @@ class D093LugusStates : StateMachineBuilder
             .ActivateOnEnter<FiresDomain>()
             .ActivateOnEnter<FiresIre>()
             .ActivateOnEnter<FiresIreBait>()
-            .ActivateOnEnter<ScorchingLeft>()
-            .ActivateOnEnter<ScorchingRight>()
+            .ActivateOnEnter<Scorching>()
             .ActivateOnEnter<OtherworldlyHeat>()
             .ActivateOnEnter<BlackFlame>()
             .ActivateOnEnter<CaptiveBolt>()

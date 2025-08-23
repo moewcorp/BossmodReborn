@@ -63,14 +63,14 @@ class Fireball(BossModule module) : Components.VoidzoneAtCastTarget(module, 6f, 
     }
 }
 
-class FireballBait(BossModule module) : Components.GenericBaitAway(module)
+class FireballBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private static readonly AOEShapeCircle circle = new(6);
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Baitaway)
-            CurrentBaits.Add(new(actor, actor, circle));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, circle));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

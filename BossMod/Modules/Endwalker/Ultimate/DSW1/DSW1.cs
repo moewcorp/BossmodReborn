@@ -15,18 +15,8 @@ public sealed class DSW1(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (_grinnaux == null)
-        {
-            var b = Enemies((uint)OID.SerGrinnaux);
-            _grinnaux = b.Count != 0 ? b[0] : null;
-        }
-        if (_charibert == null)
-        {
-            var b = Enemies((uint)OID.SerCharibert);
-            _charibert = b.Count != 0 ? b[0] : null;
-        }
+        _grinnaux ??= GetActor((uint)OID.SerGrinnaux);
+        _charibert ??= GetActor((uint)OID.SerCharibert);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

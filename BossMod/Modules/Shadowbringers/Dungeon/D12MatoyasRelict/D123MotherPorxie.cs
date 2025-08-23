@@ -166,7 +166,7 @@ class Barbeque(BossModule module) : Components.GenericAOEs(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (_aoe != null)
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(new(imminent ? 18.5f : actor.Position.X + 0.1f, default), new(19f, default), 20f));
+            hints.AddForbiddenZone(ShapeDistance.InvertedRect(new(imminent ? 18.5f : actor.PosRot.X + 0.1f, default), new(19f, default), 20f));
     }
 
     public override void AddGlobalHints(GlobalHints hints)

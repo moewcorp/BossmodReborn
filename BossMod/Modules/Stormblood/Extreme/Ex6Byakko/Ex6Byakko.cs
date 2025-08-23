@@ -21,9 +21,7 @@ public class Ex6Byakko(WorldState ws, Actor primary) : BossModule(ws, primary, d
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        _hakutei ??= StateMachine.ActivePhaseIndex >= 0 ? Enemies(OID.Hakutei).FirstOrDefault() : null;
+        _hakutei ??= GetActor((uint)OID.Hakutei);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

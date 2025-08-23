@@ -20,25 +20,11 @@ public sealed class DAL1Gauntlet(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (BossAugur == null)
-        {
-            var b = Enemies((uint)OID.ForthLegionAugur1);
-            BossAugur = b.Count != 0 ? b[0] : null;
-        }
+        BossAugur ??= GetActor((uint)OID.ForthLegionAugur1);
         if (StateMachine.ActivePhaseIndex >= 1)
         {
-            if (BossAlkonost == null)
-            {
-                var b = Enemies((uint)OID.TamedAlkonost);
-                BossAlkonost = b.Count != 0 ? b[0] : null;
-            }
-            if (BossCrow == null)
-            {
-                var b = Enemies((uint)OID.TamedCrow);
-                BossCrow = b.Count != 0 ? b[0] : null;
-            }
+            BossAlkonost ??= GetActor((uint)OID.TamedAlkonost);
+            BossCrow ??= GetActor((uint)OID.TamedCrow);
         }
     }
 

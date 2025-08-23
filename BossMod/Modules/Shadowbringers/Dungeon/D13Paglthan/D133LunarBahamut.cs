@@ -72,7 +72,7 @@ sealed class AkhMorn(BossModule module) : Components.UniformStackSpread(module, 
     }
 }
 
-sealed class KanRhaiBait(BossModule module) : Components.GenericBaitAway(module)
+sealed class KanRhaiBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     public static readonly AOEShapeCross Cross = new(15f, 3f);
 
@@ -80,7 +80,7 @@ sealed class KanRhaiBait(BossModule module) : Components.GenericBaitAway(module)
     {
         if (iconID == (uint)IconID.KanRhai)
         {
-            CurrentBaits.Add(new(actor, actor, Cross, WorldState.FutureTime(5.6d), default));
+            CurrentBaits.Add(new(Module.PrimaryActor, actor, Cross, WorldState.FutureTime(5.6d), default));
         }
     }
 

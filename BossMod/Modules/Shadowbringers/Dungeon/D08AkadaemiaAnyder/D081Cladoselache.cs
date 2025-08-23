@@ -74,13 +74,7 @@ public sealed class D081Cladoselache(WorldState ws, Actor primary) : BossModule(
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (Doliodus == null)
-        {
-            var b = Enemies((uint)OID.Doliodus);
-            Doliodus = b.Count != 0 ? b[0] : null;
-        }
+        Doliodus ??= GetActor((uint)OID.Doliodus);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

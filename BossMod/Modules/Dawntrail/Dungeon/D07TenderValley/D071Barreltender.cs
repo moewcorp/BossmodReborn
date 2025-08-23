@@ -153,7 +153,8 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (state == 0x00010002u && actor.OID == (uint)OID.CactusSmall)
         {
-            var add = actor.Position.X + actor.Position.Z;
+            var pos = actor.Position;
+            var add = pos.X + pos.Z;
             if (add == 400f) // new WPos(-55f, 455f)
                 CurrentPattern = Pattern.NESW;
             else if (add == 430f) // new WPos(-55f, 485f)

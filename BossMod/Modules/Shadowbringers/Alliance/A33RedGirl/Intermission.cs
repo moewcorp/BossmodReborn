@@ -13,7 +13,7 @@ sealed class IntermissionArena(BossModule module) : BossComponent(module)
             walls.Add(new Rectangle(actor.Position, 2.125f, 1.5f));
             if (walls.Count == 8)
             {
-                baseArena = bossmod.RedSphere!.Position.Z switch
+                baseArena = bossmod.RedSphere!.PosRot.Z switch
                 {
                     900f => A33RedGirl.VirusArena1,
                     400f => A33RedGirl.VirusArena2,

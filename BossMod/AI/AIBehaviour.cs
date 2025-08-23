@@ -149,7 +149,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
         // if target-of-target is player, don't try flanking, it's probably impossible... - unless target is currently casting (TODO: reconsider?)
         // skip if targeting a dummy, they don't rotate
-        if (targeting.Target.Actor.TargetID == player.InstanceID && targeting.Target.Actor.CastInfo == null && targeting.Target.Actor.NameID != 541)
+        if (targeting.Target.Actor.TargetID == player.InstanceID && targeting.Target.Actor.CastInfo == null && targeting.Target.Actor.NameID != 541u)
             targeting.PreferredPosition = Positional.Any;
     }
 
@@ -163,7 +163,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         {
             var randomO1 = random.NextSingle() * 2f - 1f;
             var randomO2 = random.NextSingle() * 2f - 1f;
-            autorot.Hints.ForcedMovement = new WPos(player.Position.X * randomO1, player.Position.Z * randomO2).ToVec3();
+            var pos = player.Position;
+            autorot.Hints.ForcedMovement = new WPos(pos.X * randomO1, pos.Z * randomO2).ToVec3();
             return new() { LeewaySeconds = float.MaxValue };
         }
 

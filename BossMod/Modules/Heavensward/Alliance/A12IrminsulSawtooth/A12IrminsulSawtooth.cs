@@ -39,9 +39,7 @@ public class A12IrminsulSawtooth(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        _sawtooth ??= StateMachine.ActivePhaseIndex == 0 ? Enemies((uint)OID.Sawtooth)[0] : null;
+        _sawtooth ??= GetActor((uint)OID.Sawtooth);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

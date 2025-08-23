@@ -151,4 +151,4 @@ sealed class GoblinMercenaryStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 599, NameID = 7906)]
-public sealed class GoblinMercenary(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, primary.Position.Z < 0f ? -124.5f : 144.5f), primary.Position.Z < 0f ? new ArenaBoundsSquare(16f) : new ArenaBoundsCircle(30f));
+public sealed class GoblinMercenary(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, primary.PosRot.Z < 0f ? -124.5f : 144.5f), primary.PosRot.Z < 0f ? new ArenaBoundsSquare(16f) : new ArenaBoundsCircle(30f));

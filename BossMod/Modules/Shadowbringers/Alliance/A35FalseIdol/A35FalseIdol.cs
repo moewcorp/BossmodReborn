@@ -30,13 +30,7 @@ public sealed class A35FalseIdol(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
-        if (BossBossP2 == null)
-        {
-            var b = Enemies((uint)OID.BossP2);
-            BossBossP2 = b.Count != 0 ? b[0] : null;
-        }
+        BossBossP2 ??= GetActor((uint)OID.BossP2);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

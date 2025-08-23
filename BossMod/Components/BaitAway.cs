@@ -5,7 +5,7 @@
 // otherwise we show own bait as as outline (and warn if player is clipping someone) and other baits as filled (and warn if player is being clipped)
 public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysDrawOtherBaits = true, bool centerAtTarget = false, bool tankbuster = false, bool onlyShowOutlines = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.None) : CastCounter(module, aid)
 {
-    public struct Bait(Actor source, Actor target, AOEShape shape, DateTime activation = default, BitMask forbidden = default, Angle? customRotation = null, int maxCasts = 1)
+    public struct Bait(Actor source, Actor target, AOEShape shape, DateTime activation = default, BitMask forbidden = default, Angle? customRotation = null, int maxCasts = 1, WDir offset = default)
     {
         public Angle? CustomRotation = customRotation;
         public AOEShape Shape = shape;
@@ -14,11 +14,12 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         public DateTime Activation = activation;
         public BitMask Forbidden = forbidden;
         public int MaxCasts = maxCasts;
+        public WDir Offset = offset;
 
         public readonly Angle Rotation => CustomRotation ?? (Source != Target ? Angle.FromDirection(Target.Position - Source.Position) : Source.Rotation);
 
-        public Bait(WPos source, Actor target, AOEShape shape, DateTime activation = default, Angle? customRotation = null, BitMask forbidden = default, int maxCasts = 1)
-            : this(new(default, default, default, default, default!, default, default, default, default, source.ToVec4()), target, shape, activation, forbidden, customRotation, maxCasts) { }
+        public Bait(WPos source, Actor target, AOEShape shape, DateTime activation = default, Angle? customRotation = null, BitMask forbidden = default, int maxCasts = 1, WDir offset = default)
+            : this(new(default, default, default, default, default!, default, default, default, default, source.ToVec4()), target, shape, activation, forbidden, customRotation, maxCasts, offset) { }
     }
 
     public readonly bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player
@@ -101,9 +102,9 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         return activeBaitsNotOnTarget;
     }
 
-    public WPos BaitOrigin(Bait bait) => (CenterAtTarget ? bait.Target : bait.Source).Position;
-    public bool IsClippedBy(Actor actor, Bait bait) => bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation);
-    public List<Actor> PlayersClippedBy(ref readonly Bait bait)
+    public WPos BaitOrigin(ref Bait bait) => (CenterAtTarget ? bait.Target : bait.Source).Position + bait.Offset;
+    public bool IsClippedBy(Actor actor, Bait bait) => bait.Shape.Check(actor.Position, BaitOrigin(ref bait), bait.Rotation);
+    public List<Actor> PlayersClippedBy(ref Bait bait)
     {
         var actors = Raid.WithoutSlot();
         var len = actors.Length;
@@ -112,7 +113,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         {
             var actor = actors[i];
             var id = actor.InstanceID;
-            if (id != bait.Target.InstanceID && bait.Shape.Check(actor.Position, BaitOrigin(bait), bait.Rotation))
+            if (id != bait.Target.InstanceID && bait.Shape.Check(actor.Position, BaitOrigin(ref bait), bait.Rotation))
                 result.Add(actor);
         }
 
@@ -182,7 +183,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             ref var bait = ref baits[i];
             if (bait.Target != actor)
             {
-                hints.AddForbiddenZone(bait.Shape, BaitOrigin(bait), bait.Rotation, bait.Activation);
+                hints.AddForbiddenZone(bait.Shape, BaitOrigin(ref bait), bait.Rotation, bait.Activation);
             }
             else
             {
@@ -202,19 +203,23 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
     private void AddTargetSpecificHints(Actor actor, ref Bait bait, AIHints hints)
     {
         if (bait.Source == bait.Target) // TODO: think about how to handle source == target baits, eg. vomitting mechanics
+        {
             return;
+        }
         var raid = Raid.WithoutSlot();
         var len = raid.Length;
         for (var i = 0; i < len; ++i)
         {
             var a = raid[i];
             if (a == actor)
+            {
                 continue;
+            }
             switch (bait.Shape)
             {
                 case AOEShapeDonut:
                 case AOEShapeCircle:
-                    hints.AddForbiddenZone(bait.Shape, a.Position, default, bait.Activation);
+                    hints.AddForbiddenZone(bait.Shape, a.Position - bait.Offset, default, bait.Activation);
                     break;
                 case AOEShapeCone cone:
                     hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
@@ -223,7 +228,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
                     hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
                     break;
                 case AOEShapeCross cross:
-                    hints.AddForbiddenZone(cross, a.Position, bait.Rotation, bait.Activation);
+                    hints.AddForbiddenZone(cross, a.Position - bait.Offset, bait.Rotation, bait.Activation);
                     break;
             }
         }
@@ -244,7 +249,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             ref var b = ref baits[i];
             if (!b.Source.IsDead && b.Target.InstanceID != pcID && (AlwaysDrawOtherBaits || IsClippedBy(pc, b)))
             {
-                b.Shape.Draw(Arena, BaitOrigin(b), b.Rotation);
+                b.Shape.Draw(Arena, BaitOrigin(ref b), b.Rotation);
             }
         }
     }
@@ -259,7 +264,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             ref var b = ref baits[i];
             if (!b.Source.IsDead && (OnlyShowOutlines || !OnlyShowOutlines && b.Target.InstanceID == pcID))
             {
-                b.Shape.Outline(Arena, BaitOrigin(b), b.Rotation);
+                b.Shape.Outline(Arena, BaitOrigin(ref b), b.Rotation);
             }
         }
     }

@@ -44,7 +44,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 switch (state)
                 {
                     case 0x00020001u:
-                        Arena.Bounds = new ArenaBoundsSquare(25f);
+                        Arena.Bounds = new ArenaBoundsSquare(20f);
                         break;
                     case 0x00080004u:
                         Arena.Bounds = A21FaithboundKirin.DefaultArena;

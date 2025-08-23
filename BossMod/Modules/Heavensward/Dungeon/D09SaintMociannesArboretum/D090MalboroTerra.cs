@@ -32,7 +32,7 @@ class WallRemoval(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        var pZ = Module.Raid.Player()!.Position.Z;
+        var pZ = Module.Raid.Player()!.PosRot.Z;
         if (Arena.Bounds == D090MalboroTerra.Arena1B && pZ < 16f)
             SetArena(D090MalboroTerra.Arena2);
         else if (Arena.Bounds == D090MalboroTerra.Arena2 && pZ > 16f)

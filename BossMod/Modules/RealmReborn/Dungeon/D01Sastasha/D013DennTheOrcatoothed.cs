@@ -37,7 +37,7 @@ class TrashSpawning(BossModule module) : BossComponent(module)
     private readonly Actor?[] _ripples = new Actor?[4];  // Stores ripple actors
     private readonly uint[] _rippleStates = new uint[4]; // Stores states for each ripple
 
-    private static readonly Vector2 _rippleOffset = new(0f, -3f);
+    private static readonly WDir _rippleOffset = new(0f, -3f);
     private static readonly Angle _rippleDirectionOffset = new(0); // No rotation, just offset
     private static readonly AOEShapeRect _rippleShape = new(6, 2, 0, _rippleDirectionOffset);
 
@@ -83,14 +83,11 @@ class TrashSpawning(BossModule module) : BossComponent(module)
         {
             if (ripple != null)
             {
-                // Convert the ripple's position (WPos) to Vector2
-                Vector2 ripplePosition = new(ripple.Position.X, ripple.Position.Z);
-
                 // Apply the offset
-                Vector2 offsetPosition = ripplePosition + _rippleOffset;
+                var offsetPosition = ripple.Position + _rippleOffset;
 
                 // Convert the offset position back to WPos
-                WPos finalPosition = new(offsetPosition.X, offsetPosition.Y);
+                WPos finalPosition = new(offsetPosition.X, offsetPosition.Z);
 
                 // Draw the ripple shape at the adjusted position
                 _rippleShape.Outline(Arena, finalPosition, _rippleDirectionOffset, Colors.PlayerInteresting);
