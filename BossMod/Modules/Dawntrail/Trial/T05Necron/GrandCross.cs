@@ -40,6 +40,7 @@ sealed class GrandCrossArenaChange(BossModule module) : Components.GenericAOEs(m
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
+        base.DrawArenaBackground(pcSlot, pc);
         if (!active || pc.PosRot.Y < -100f)
         {
             return;
