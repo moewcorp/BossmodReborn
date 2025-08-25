@@ -172,17 +172,18 @@ public sealed record class ArenaBoundsCircle(float Radius, float MapResolution =
 }
 
 // if rotation is 0, half-width is along X and half-height is along Z
-public record class ArenaBoundsRect(float HalfWidth, float HalfHeight, Angle Rotation = default, float MapResolution = 0.5f, bool AllowObstacleMap = false) : ArenaBounds(Math.Max(HalfWidth, HalfHeight), MapResolution, Rotation != default ? CalculateScaleFactor(Rotation) : 1, AllowObstacleMap)
+public record class ArenaBoundsRect(float HalfWidth, float HalfHeight, Angle Rotation = default, float MapResolution = 0.5f, bool AllowObstacleMap = false) : ArenaBounds(Math.Max(HalfWidth, HalfHeight), MapResolution, Rotation != default ? CalculateScaleFactor(Rotation) : 1f, AllowObstacleMap)
 {
     private Pathfinding.Map? _cachedMap;
     public readonly WDir Orientation = Rotation.ToDirection();
+
     private static float CalculateScaleFactor(Angle Rotation)
     {
         var (sin, cos) = MathF.SinCos(Rotation.Rad);
         return Math.Abs(cos) + Math.Abs(sin);
     }
 
-    protected override PolygonClipper.Operand BuildClipPoly() => new((ReadOnlySpan<WDir>)CurveApprox.Rect(Orientation, HalfWidth, HalfHeight));
+    protected override PolygonClipper.Operand BuildClipPoly() => new(CurveApprox.Rect(Orientation, HalfWidth, HalfHeight));
     public override void PathfindMap(Pathfinding.Map map, WPos center) => map.Init(_cachedMap ??= BuildMap(), center);
     private Pathfinding.Map BuildMap()
     {
@@ -218,6 +219,8 @@ public sealed record class ArenaBoundsSquare(float Radius, Angle Rotation = defa
 // for creating complex bounds by using arrays of shapes
 // first array contains platforms that will be united, second optional array contains shapes that will be subtracted
 // for convenience third array will optionally perform additional unions at the end
+// offset shrinks the pathfinding map only, for example if the edges of the arena are deadly and floating point errors cause the AI to fall of the map or problems like that
+// AdjustForHitbox adjusts both the visible map and the pathfinding map
 public sealed record class ArenaBoundsCustom : ArenaBounds
 {
     private Pathfinding.Map? _cachedMap;
@@ -315,6 +318,17 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
         }
 
         return (center, halfWidth, halfHeight, Math.Max(maxDistX, maxDistZ), combinedPoly);
+
+        static RelSimplifiedComplexPolygon[] ParseShapes(Shape[] shapes)
+        {
+            var lenght = shapes.Length;
+            var polygons = new RelSimplifiedComplexPolygon[lenght];
+            for (var i = 0; i < lenght; ++i)
+            {
+                polygons[i] = shapes[i].ToPolygon(default);
+            }
+            return polygons;
+        }
     }
 
     protected override PolygonClipper.Operand BuildClipPoly() => new(Polygon);
@@ -368,34 +382,6 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
     private Pathfinding.Map BuildMap()
     {
         var polygon = offset != default ? Polygon.Offset(offset) : Polygon;
-        if (HalfHeight == default) // calculate bounding box if not already done by ArenaBoundsCustom to reduce amount of point in polygon tests
-        {
-            float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;
-            var parts = polygon.Parts;
-            var count = parts.Count;
-            for (var i = 0; i < count; ++i)
-            {
-                var part = parts[i];
-                var exterior = part.Exterior;
-                var len = exterior.Length;
-                for (var j = 0; j < len; ++j)
-                {
-                    var vertex = exterior[j];
-                    var vertexX = vertex.X;
-                    var vertexZ = vertex.Z;
-                    if (vertex.X < minX)
-                        minX = vertexX;
-                    if (vertex.X > maxX)
-                        maxX = vertexX;
-                    if (vertex.Z < minZ)
-                        minZ = vertexZ;
-                    if (vertex.Z > maxZ)
-                        maxZ = vertexZ;
-                }
-            }
-            HalfWidth = (maxX - minX) * 0.5f;
-            HalfHeight = (maxZ - minZ) * 0.5f;
-        }
         var map = new Pathfinding.Map(MapResolution, default, HalfWidth, HalfHeight);
         var pixels = map.PixelMaxG;
         var width = map.Width;
@@ -409,10 +395,10 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
 
         WDir[] sampleOffsets =
         [
-        new(-halfSample, -halfSample),
-        new(-halfSample,  halfSample),
-        new(halfSample, -halfSample),
-        new(halfSample, halfSample)
+            new(-halfSample, -halfSample),
+            new(-halfSample,  halfSample),
+            new(halfSample, -halfSample),
+            new(halfSample, halfSample)
         ];
 
         var dx = new WDir(resolution, default);
@@ -425,9 +411,12 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
             var posY = startPos + y * dy;
             for (var x = 0; x < width; ++x)
             {
-                ref var pixel = ref pixels[rowOffset + x];
-                if (pixel == -1f)
+                var offset = rowOffset + x;
+
+                if (pixels[offset] == -1f)
+                {
                     continue;
+                }
                 var pos = posY + x * dx;
 
                 var relativeCenter = new WDir(pos.X, pos.Z);
@@ -441,7 +430,7 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
                         break;
                     }
                 }
-                pixel = allInside ? float.MaxValue : -1f;
+                pixels[offset] = allInside ? float.MaxValue : -1f;
             }
         });
 
@@ -457,29 +446,26 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
 
         var unionLen = unionPolygons.Length;
         for (var i = 0; i < unionLen; ++i)
+        {
             operandUnion.AddPolygon(unionPolygons[i]);
+        }
         var differenceLen = differencePolygons.Length;
         for (var i = 0; i < differenceLen; ++i)
+        {
             operandDifference.AddPolygon(differencePolygons[i]);
+        }
         var secUnionLen = secondUnionPolygons.Length;
         for (var i = 0; i < secUnionLen; ++i)
+        {
             operandSecondUnion.AddPolygon(secondUnionPolygons[i]);
+        }
 
         var combinedShape = clipper.Difference(operandUnion, operandDifference);
         if (secUnionLen != 0)
+        {
             combinedShape = clipper.Union(new PolygonClipper.Operand(combinedShape), operandSecondUnion);
+        }
 
         return combinedShape;
-    }
-
-    private static RelSimplifiedComplexPolygon[] ParseShapes(Shape[] shapes)
-    {
-        var lenght = shapes.Length;
-        var polygons = new RelSimplifiedComplexPolygon[lenght];
-        for (var i = 0; i < lenght; ++i)
-        {
-            polygons[i] = shapes[i].ToPolygon(default);
-        }
-        return polygons;
     }
 }

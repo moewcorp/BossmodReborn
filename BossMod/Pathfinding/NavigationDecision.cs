@@ -68,8 +68,8 @@ public struct NavigationDecision
         for (var i = 0; i < len; ++i)
         {
             ref readonly var p = ref pixels[i];
-            ref readonly var px = ref p.x;
-            ref readonly var py = ref p.y;
+            var px = p.x;
+            var py = p.y;
             var cellIndex = map.GridToIndex(px, py);
             if (map.PixelMaxG[cellIndex] == float.MaxValue)
             {
@@ -199,14 +199,14 @@ public struct NavigationDecision
                 var jCell = columnStart + y * width;
                 // top corner from pass #1
                 var topG = scratch[jCell];
-                ref var pixelMaxG = ref map.PixelMaxG[jCell];
-                var cellG = Math.Min(Math.Min(topG, bottomG), pixelMaxG);
 
-                pixelMaxG = cellG;
+                var cellG = Math.Min(Math.Min(topG, bottomG), map.PixelMaxG[jCell]);
+
+                map.PixelMaxG[jCell] = cellG;
                 if (cellG != float.MaxValue)
                 {
                     map.PixelPriority[jCell] = float.MinValue;
-                    localBlocked++;
+                    ++localBlocked;
                 }
                 bottomG = topG;
             }
@@ -252,7 +252,7 @@ public struct NavigationDecision
             Parallel.For(0, lenPixelMaxG, () => float.MinValue,
                 (i, loopState, localMax) =>
                 {
-                    ref var val = ref map.PixelMaxG[i];
+                    var val = map.PixelMaxG[i];
                     return (val > localMax) ? val : localMax;
                 },
                 localMax =>
@@ -272,10 +272,9 @@ public struct NavigationDecision
             // 4b) free pixels that match that max
             Parallel.For(0, lenPixelMaxG, i =>
             {
-                ref var pixelMaxG = ref map.PixelMaxG[i];
-                if (pixelMaxG == realMaxG)
+                if (map.PixelMaxG[i] == realMaxG)
                 {
-                    pixelMaxG = float.MaxValue;
+                    map.PixelMaxG[i] = float.MaxValue;
                     map.PixelPriority[i] = 0f;
                 }
             });

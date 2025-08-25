@@ -48,9 +48,13 @@ sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
                 }
             }
             if (first && _aoes.Count == 6)
+            {
                 _aoes.RemoveRange(0, 3);
+            }
             else if (!first)
+            {
                 _aoes.Clear();
+            }
             active = false;
         }
         else if (_aoes.Count == 0 && id == 0x11DC)
@@ -58,20 +62,30 @@ sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
             WPos[] positions = [];
             var position = actor.Position;
             if (position == new WPos(112.5f, 87.5f))
+            {
                 positions = threeSpotlights;
+            }
             else if (position == new WPos(87.5f, 112.5f))
+            {
                 positions = threeSpotlights.ReverseArray();
+            }
             else if (position == new WPos(95f, 87.5f))
+            {
                 positions = fourSpotlights1;
+            }
             else if (position == new WPos(95f, 112.5f))
+            {
                 positions = fourSpotlights2;
+            }
 
             var len = positions.Length;
             if (len != 0)
             {
                 var col = Colors.SafeFromAOE;
                 for (var i = 0; i < len; ++i)
+                {
                     _aoes.Add(new(circle, positions[i], risky: false, color: col));
+                }
             }
         }
     }
@@ -96,14 +110,17 @@ sealed class Spotlight(BossModule module) : Components.GenericAOEs(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (!active)
+        {
             return;
+        }
         var aoes = ActiveAOEs(slot, actor);
         var len = aoes.Length;
         var isInside = false;
         var pos = actor.Position;
         for (var i = 0; i < len; ++i)
         {
-            if (aoes[i].Check(pos))
+            ref readonly var aoe = ref aoes[i];
+            if (aoe.Check(pos))
             {
                 isInside = true;
                 break;
