@@ -14,7 +14,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly PolygonCustom removeNorthBridge = new([new(103.923f, 93.843f), new(104.574f, 88.886f), new(98.459f, 88.081f), new(97.804f, 93.038f)]);
     private static readonly PolygonCustom[] combinedLava = [removeEastBridge, removeNorthBridge, removeWestBridge];
     public static readonly AOEShapeCustom LavaAOE = new(combinedLava);
-    public static readonly ArenaBoundsComplex LavaArena = new(DefaultSquare, [.. CombinedRiver, .. combinedLava]);
+    public static readonly ArenaBoundsCustom LavaArena = new(DefaultSquare, [.. CombinedRiver, .. combinedLava]);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
@@ -55,7 +55,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         }
         void AddAOE(AOEShapeCustom shape)
         => _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(7.1d));
-        void SetArena(ArenaBoundsComplex bounds)
+        void SetArena(ArenaBoundsCustom bounds)
         {
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;

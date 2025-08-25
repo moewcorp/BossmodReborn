@@ -115,5 +115,5 @@ class D041LyssaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10396)]
 public class D041Lyssa(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Polygon(new(-144f, 49f), 19.5f, 32)], [new Rectangle(new(-144f, 28.852f), 20f, 1.25f), new Rectangle(new(-144f, 69.197f), 20f, 1.25f)]);
+    public static readonly ArenaBoundsCustom arena = new([new Polygon(new(-144f, 49f), 19.5f, 32)], [new Rectangle(new(-144f, 28.852f), 20f, 1.25f), new Rectangle(new(-144f, 69.197f), 20f, 1.25f)]);
 }

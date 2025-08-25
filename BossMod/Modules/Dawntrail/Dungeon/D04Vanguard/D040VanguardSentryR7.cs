@@ -70,7 +70,7 @@ public sealed class D040VanguardSentryR7(WorldState ws, Actor primary) : BossMod
     new(-110.81f, 294.6f), new(-110.9f, 287.95f), new(-111.2f, 287.52f), new(-118.89f, 287.52f), new(-118.86f, 272.73f),
     new(-118.67f, 273.19f), new(-118.12f, 273.45f), new(-111.03f, 273.48f), new(-110.41f, 273.75f), new(-109.86f, 273.6f),
     new(-109.54f, 273.09f), new(-109.52f, 263.18f), new(-109.01f, 263.02f), new(-107.66f, 262.88f), new(-93.53f, 262.87f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SentryR7];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

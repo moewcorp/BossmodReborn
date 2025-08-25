@@ -55,7 +55,7 @@ sealed class CitadelSiege(BossModule module) : Components.GenericAOEs(module)
         }
         void GenerateArenaBounds(int stage)
         {
-            var arena = new ArenaBoundsComplex([new Rectangle(A22UltimaOmega.ArenaCenter1, 20f, 23.5f), new Rectangle(A22UltimaOmega.ArenaCenter2, 20f, 23.5f)],
+            var arena = new ArenaBoundsCustom([new Rectangle(A22UltimaOmega.ArenaCenter1, 20f, 23.5f), new Rectangle(A22UltimaOmega.ArenaCenter2, 20f, 23.5f)],
             stage == 0 ? null : [new Rectangle(A22UltimaOmega.ArenaCenter1 + new WDir(20f, default), stage * 10f, 23.5f)]);
             Arena.Bounds = arena;
             Arena.Center = arena.Center;

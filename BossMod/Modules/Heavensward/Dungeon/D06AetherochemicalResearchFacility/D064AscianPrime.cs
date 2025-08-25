@@ -218,7 +218,7 @@ class D064AscianPrimeStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3823, SortOrder = 11)]
 public class D064AscianPrime(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Polygon(new(230f, 79f), 20.26f, 24)], [new Rectangle(new(230f, 98f), 5, 1.5f)], [new Rectangle(new(228.95f, 97f), 6.55f, 1.7f)]);
+    public static readonly ArenaBoundsCustom arena = new([new Polygon(new(230f, 79f), 20.26f, 24)], [new Rectangle(new(230f, 98f), 5, 1.5f)], [new Rectangle(new(228.95f, 97f), 6.55f, 1.7f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

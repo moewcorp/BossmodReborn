@@ -82,7 +82,7 @@ public class D080ClockworkDreadnaught(WorldState ws, Actor primary) : BossModule
     new(228.18f, 90.47f), new(228.05f, 89.88f), new(227.72f, 89.32f), new(227.29f, 88.85f), new(228.05f, 80.15f),
     new(227.09f, 68.84f), new(225.69f, 63.23f), new(226.12f, 62.65f), new(226.17f, 62.11f), new(226.08f, 61.45f),
     new(225.86f, 60.92f), new(225.44f, 60.29f), new(225.86f, 59.98f), new(232.5f, 57.45f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ImmortalizedClockworkSoldier, (uint)OID.ImmortalizedClockworkKnight];
 
     protected override bool CheckPull()

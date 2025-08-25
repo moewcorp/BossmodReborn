@@ -19,5 +19,5 @@ public sealed class A14ShadowLord(WorldState ws, Actor primary) : BossModule(ws,
     private static readonly RectangleSE[] rects = [new(Circles[1].Center, Circles[2].Center, HalfWidth), new(Circles[1].Center, Circles[3].Center, HalfWidth),
     new(Circles[3].Center, Circles[0].Center, HalfWidth), new(Circles[0].Center, Circles[2].Center, HalfWidth)];
     public static readonly Shape[] Combined = [.. Circles, .. rects];
-    public static readonly ArenaBoundsComplex ComplexBounds = new(Combined);
+    public static readonly ArenaBoundsCustom ComplexBounds = new(Combined);
 }

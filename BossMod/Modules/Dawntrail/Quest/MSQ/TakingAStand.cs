@@ -382,8 +382,8 @@ sealed class TakingAStandStates : StateMachineBuilder
 public sealed class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, startingArena)
 {
     private static readonly WPos arenaCenter = new(500f, -175f);
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(arenaCenter, 24.5f, 20)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(arenaCenter, 20f, 20)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(arenaCenter, 24.5f, 20)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(arenaCenter, 20f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.HiredThug1, (uint)OID.HiredThug2, (uint)OID.HiredThug3, (uint)OID.HiredThug3, (uint)OID.HoobigoGuardian,
     (uint)OID.HoobigoLancer, (uint)OID.DopproIllusionist];
     protected override void DrawEnemies(int pcSlot, Actor pc)

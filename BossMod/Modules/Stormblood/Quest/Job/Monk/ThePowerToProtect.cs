@@ -67,7 +67,7 @@ class IoStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67966, NameID = 5667)]
 public class Io(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(101.93f, -666.63f), new(94.49f, -639.63f), new(50.64f, -652.38f), new(57.58f, -679.32f)])]);
+    public static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(101.93f, -666.63f), new(94.49f, -639.63f), new(50.64f, -652.38f), new(57.58f, -679.32f)])]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly));
 }

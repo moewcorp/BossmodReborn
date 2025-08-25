@@ -181,7 +181,7 @@ class D063LahabreaIgeyorhmStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 2143, SortOrder = 10)]
 public class D063LahabreaIgeyorhm(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Polygon(new(230f, -181f), 20.26f, 24)], [new Rectangle(new(230f, -160f), 20f, 1.94f)]);
+    public static readonly ArenaBoundsCustom arena = new([new Polygon(new(230f, -181f), 20.26f, 24)], [new Rectangle(new(230f, -160f), 20f, 1.94f)]);
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);

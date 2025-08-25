@@ -73,7 +73,7 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, (uint)AID
             {
                 rects[i] = new(start + new WDir(LineOffset[i] * 10f, 10f * i), 15f, 5f);
             }
-            var arena = new ArenaBoundsComplex(rects);
+            var arena = new ArenaBoundsCustom(rects);
             Arena.Bounds = arena;
             Arena.Center = arena.Center;
         }

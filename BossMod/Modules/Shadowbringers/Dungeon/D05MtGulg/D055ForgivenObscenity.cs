@@ -238,7 +238,7 @@ public class D055ForgivenObscenity(WorldState ws, Actor primary) : BossModule(ws
 {
     private static readonly WPos arenaCenter = new(-240f, 237f);
     public static readonly ArenaBoundsRect ArenaRect = new(14.5f, 19.5f);
-    public static readonly ArenaBoundsComplex ArenaCircle = new([new Polygon(arenaCenter, 15f, 64)])
+    public static readonly ArenaBoundsCustom ArenaCircle = new([new Polygon(arenaCenter, 15f, 64)])
 ;
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

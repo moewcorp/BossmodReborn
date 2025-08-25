@@ -217,7 +217,7 @@ public class D032HunterOfBardam(WorldState ws, Actor primary) : BossModule(ws, p
     new(-47.57f, -13), new(-47.66f, -13.55f), new(-48.09f, -15.17f), new(-48.1f, -15.76f), new(-48.07f, -16.97f),
     new(-47.21f, -19.5f), new(-46.98f, -20.07f), new(-44.27f, -25.31f), new(-42.1f, -27.62f), new(-41.09f, -28.98f),
     new(-40.7f, -29.32f), new(-36.5f, -31.89f), new(-36.03f, -32.14f), new(-32.68f, -32.83f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

@@ -110,5 +110,5 @@ sealed class D061MagitekScorpionStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 247, NameID = 6037)]
 public sealed class D061MagitekScorpion(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-191f, 72f), 19.75f, 64)], [new Rectangle(new(-210.21941f, 72f), 20f, 1.25f, 89.98f.Degrees()), new Rectangle(new(-172f, 72f), 20f, 1.25f, 89.98f.Degrees())]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-191f, 72f), 19.75f, 64)], [new Rectangle(new(-210.21941f, 72f), 20f, 1.25f, 89.98f.Degrees()), new Rectangle(new(-172f, 72f), 20f, 1.25f, 89.98f.Degrees())]);
 }

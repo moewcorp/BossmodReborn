@@ -101,6 +101,6 @@ sealed class UltimatePseudoterror(BossModule module) : Components.SimpleAOEs(mod
 public sealed class DAL4DiabloArmament(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, DefaultArena)
 {
     public static readonly WPos ArenaCenter = new(-720f, -760f);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 29.5f, 48)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(ArenaCenter, 29.5f, 48)]);
     public static readonly ArenaBoundsCircle SmallArena = new(17f); // this is a pulsing donut aoe
 }

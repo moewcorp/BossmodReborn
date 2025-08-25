@@ -4,8 +4,8 @@ sealed class RadicalShift(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Rotation { None, Left, Right }
 
-    private ArenaBoundsComplex? _left;
-    private ArenaBoundsComplex? _right;
+    private ArenaBoundsCustom? _left;
+    private ArenaBoundsCustom? _right;
     private Rotation _nextRotation;
     private AOEInstance? _aoe;
     private static readonly Square[] defaultSquare = [new(Ex3QueenEternal.ArenaCenter, 20f)];
@@ -60,14 +60,14 @@ sealed class RadicalShift(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    private ArenaBoundsComplex? NextPlatform => _nextRotation switch
+    private ArenaBoundsCustom? NextPlatform => _nextRotation switch
     {
         Rotation.Left => _left,
         Rotation.Right => _right,
         _ => null
     };
 
-    private void UpdateAOE(ArenaBoundsComplex? platform)
+    private void UpdateAOE(ArenaBoundsCustom? platform)
     {
         AOEShapeCustom? aoe = null;
         var center = Arena.Center;

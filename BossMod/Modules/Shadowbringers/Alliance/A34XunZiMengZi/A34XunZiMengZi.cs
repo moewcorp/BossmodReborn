@@ -9,7 +9,7 @@ public sealed class A34XunZiMengZi(WorldState ws, Actor primary) : BossModule(ws
 {
     // the small squares are actually dodecagons (12-gon) with a radius of 4.4, but only one edge affects the arena so we approximate it with a square
     private static readonly Square squareSmall = new(new(773.00928f, 826.94116f), 4.75f, 45f.Degrees());
-    private static readonly ArenaBoundsComplex arena = new([new Square(new(800f, 800f), 24.5f)], [squareSmall,
+    private static readonly ArenaBoundsCustom arena = new([new Square(new(800f, 800f), 24.5f)], [squareSmall,
     squareSmall with { Center = new(772.99066f, 773.00934f) }, squareSmall with { Center = new(826.99066f, 772.99066f) }, squareSmall with { Center = new(827.00928f, 826.92249f) }]);
     public Actor? BossMengZi;
 

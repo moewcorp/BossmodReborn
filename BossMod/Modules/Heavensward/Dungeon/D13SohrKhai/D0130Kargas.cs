@@ -95,7 +95,7 @@ public class D130Kargas(WorldState ws, Actor primary) : BossModule(ws, primary, 
     new(391.29f, 172.28f), new(391.91f, 172.36f), new(392.53f, 172.34f), new(393.13f, 172.24f), new(393.43f, 161.97f),
     new(393.78f, 161.59f), new(394.38f, 161.24f), new(394.7f, 158.34f), new(394.91f, 157.69f), new(395.26f, 157.12f),
     new(395.73f, 156.65f), new(396.27f, 156.3f), new(396.89f, 156.08f), new(397.56f, 156), new(402.46f, 156)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SohrKhaiAnzu, (uint)OID.SohrKhaiCockerel, (uint)OID.SanctuaryTsanahale];
 

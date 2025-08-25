@@ -97,7 +97,7 @@ public class D021VoidSoulcounter(WorldState ws, Actor primary) : BossModule(ws, 
     new(-122.13f, -9.96f), new(-122.55f, -10.35f), new(-123.56f, -11.09f), new(-124.11f, -11.69f), new(-122.27f, -12.03f),
     new(-120.90f, -11.97f), new(-117.18f, -13.23f), new(-116.51f, -13.11f)];
 
-    public static readonly ArenaBoundsComplex FirstArena = new([new PolygonCustom(first)]);
-    public static readonly ArenaBoundsComplex SecondArena = new([new PolygonCustom(second)]);
-    public static readonly ArenaBoundsComplex ThirdArena = new([new PolygonCustom(third)]);
+    public static readonly ArenaBoundsCustom FirstArena = new([new PolygonCustom(first)]);
+    public static readonly ArenaBoundsCustom SecondArena = new([new PolygonCustom(second)]);
+    public static readonly ArenaBoundsCustom ThirdArena = new([new PolygonCustom(third)]);
 }

@@ -296,5 +296,5 @@ public class D113SpectralBerserker(WorldState ws, Actor primary) : BossModule(ws
     public static readonly WPos ArenaCenter = new(750f, 482f);
     public static readonly ArenaBoundsSquare StartingBounds = new(22.5f);
     public static readonly Cross[] Cross = [new Cross(ArenaCenter, 20f, 10f)];
-    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsComplex(Cross);
+    public static readonly ArenaBounds DefaultBounds = new ArenaBoundsCustom(Cross);
 }

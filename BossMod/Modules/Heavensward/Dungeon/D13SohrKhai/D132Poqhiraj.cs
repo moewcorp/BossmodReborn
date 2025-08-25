@@ -79,7 +79,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
         var adjustment = wallIndex is 0 or 4 ? offset : wallIndex is 3 or 7 ? -offset : default;
         removedWalls.Add(new(wallPos + adjustment, 0.25f, adjustment != default ? 4.875f : 5f));
         _kb.safeWalls.RemoveAll(x => x.Vertex1 == new WPos(GallopKB.xPositions[wallIndex / 4], wallPos.Z - 5f));
-        ArenaBoundsComplex arena = new([.. baseArena, .. removedWalls]);
+        ArenaBoundsCustom arena = new([.. baseArena, .. removedWalls]);
         Arena.Bounds = arena;
         Arena.Center = arena.Center;
     }

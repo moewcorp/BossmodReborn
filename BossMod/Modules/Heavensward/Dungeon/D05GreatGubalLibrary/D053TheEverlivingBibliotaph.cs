@@ -180,7 +180,7 @@ class D053EverlivingBibliotaphStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 31, NameID = 3930)]
 public class D053EverlivingBibliotaph(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(377.8f, -59.7f), 24.5f, 80)], [new Rectangle(new(353.541f, -59.553f), 1.25f, 20f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(377.8f, -59.7f), 24.5f, 80)], [new Rectangle(new(353.541f, -59.553f), 1.25f, 20f)]);
     private static readonly uint[] adds = [(uint)OID.Bibliophile, (uint)OID.Biblioklept, (uint)OID.Bibliomancer];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

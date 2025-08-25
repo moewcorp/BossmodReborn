@@ -143,11 +143,11 @@ public class D033AencThon(WorldState ws, Actor primary) : BossModule(ws, primary
 {
     private static readonly Polygon[] union = [new(new(-128.5f, -244f), 19.7f, 40)];
     private static readonly Rectangle[] difference = [new(new(-128.5f, -224f), 20f, 1.5f)];
-    public static readonly ArenaBoundsComplex ArenaBounds = new(union, difference);
+    public static readonly ArenaBoundsCustom ArenaBounds = new(union, difference);
     private static readonly PolygonCustom[] union2 = [new([new(-142.32f, -234f), new(-140.533f, -245.712f), new(-129.976f, -241.934f), new(-113.76f, -243.889f),
     new(-113.87f, -244.775f), new(-125.28f, -249.556f), new(-123.83f, -254f), new(-124.66f, -254f), new(-126.205f, -249.744f), new(-126.421f, -249.072f),
     new(-115.56f, -244.512f), new(-129.954f, -242.795f), new(-141.178f, -246.795f), new(-143.12f, -234f)])];
-    public static readonly ArenaBoundsComplex ChasmArena = new(union, [.. difference, new Rectangle(new(-128.5f, -244f), 20f, 10f)], union2, 0.25f);
+    public static readonly ArenaBoundsCustom ChasmArena = new(union, [.. difference, new Rectangle(new(-128.5f, -244f), 20f, 10f)], union2, 0.25f);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

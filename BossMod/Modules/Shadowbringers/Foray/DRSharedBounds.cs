@@ -19,20 +19,20 @@ public abstract class TrinitySeeker(WorldState ws, Actor primary) : BossModule(w
         return barricades;
     }
 
-    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(ArenaCenter, 30f, 48)], [.. barricades, new Rectangle(new(default, 248f), 7.5f, 0.75f), new Rectangle(new(default, 307.85f), 7.5f, 0.75f)], AdjustForHitbox: true);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 25.5f, 48)], barricades, AdjustForHitbox: true);
+    public static readonly ArenaBoundsCustom StartingArena = new([new Polygon(ArenaCenter, 30f, 48)], [.. barricades, new Rectangle(new(default, 248f), 7.5f, 0.75f), new Rectangle(new(default, 307.85f), 7.5f, 0.75f)], AdjustForHitbox: true);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(ArenaCenter, 25.5f, 48)], barricades, AdjustForHitbox: true);
 }
 
 public abstract class Dahu(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(82f, 138f), 29.5f, 48)], [new Rectangle(new(82f, 108.233f), 20f, 1.25f), new Rectangle(new(82f, 167.738f), 20f, 1.25f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(82f, 138f), 29.5f, 48)], [new Rectangle(new(82f, 108.233f), 20f, 1.25f), new Rectangle(new(82f, 167.738f), 20f, 1.25f)]);
 }
 
 public abstract class QueensGuard(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly WPos center = new(244f, -162f);
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(center, 29.5f, 48)], [new Rectangle(new(244f, -132.145f), 20f, 1.25f), new Rectangle(new(244f, -192.063f), 20f, 1.25f)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(center, 25f, 48)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(center, 29.5f, 48)], [new Rectangle(new(244f, -132.145f), 20f, 1.25f), new Rectangle(new(244f, -192.063f), 20f, 1.25f)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(center, 25f, 48)]);
 }
 
 public abstract class Phantom(WorldState ws, Actor primary) : BossModule(ws, primary, startArenaCenter, StartingArena)
@@ -61,6 +61,6 @@ public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, prima
     public static readonly WPos ArenaCenter = new(-272f, -415f);
     public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
     public static readonly ArenaBoundsSquare SquareArena = new(25f);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(ArenaCenter, 25f, 48)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(ArenaCenter, 25f, 48)]);
     public static readonly AOEShapeDonut ArenaChange = new(25f, 43f);
 }

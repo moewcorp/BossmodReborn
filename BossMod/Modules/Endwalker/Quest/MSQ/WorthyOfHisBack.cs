@@ -258,7 +258,7 @@ class Enomotos(BossModule module) : Components.Exaflare(module, 6f, (uint)AID.En
 }
 
 class Windage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Windage, 5f);
-class AfflatusAzem(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(5f), (uint)AID.AfflatusAzemFirst, (uint)AID.AfflatusAzemChase, 5f, 2.1f, 5, true);
+class AfflatusAzem(BossModule module) : Components.StandardChasingAOEs(module, 5f, (uint)AID.AfflatusAzemFirst, (uint)AID.AfflatusAzemChase, 5f, 2.1f, 5, true);
 class WindageSlow(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WindageSlow, 5f);
 class TrueHoly(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TrueHoly, 20f)
 {
@@ -266,7 +266,7 @@ class TrueHoly(BossModule module) : Components.SimpleKnockbacks(module, (uint)AI
     {
         if (Casters.Count != 0)
         {
-            var action = actor.Class.GetClassCategory() is ClassCategory.Healer or ClassCategory.Caster ? ActionID.MakeSpell(ClassShared.AID.Surecast) : ActionID.MakeSpell(ClassShared.AID.ArmsLength);
+            var action = actor.Class.GetClassCategory() is ClassCategory.Healer or ClassCategory.Caster ? ActionDefinitions.Surecast : ActionDefinitions.Armslength;
             hints.ActionsToExecute.Push(action, actor, ActionQueue.Priority.High);
         }
     }
@@ -308,6 +308,6 @@ public class WorthyOfHisBackStates : StateMachineBuilder
 public class WorthyOfHisBack(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos arenaCenter = new(-630f, 72f);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(arenaCenter, 20f, 20)]);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(arenaCenter, 24.5f, 20)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(arenaCenter, 20f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(arenaCenter, 24.5f, 20)]);
 }

@@ -29,7 +29,7 @@ sealed class DownburstKB(BossModule module) : Components.SimpleKnockbacks(module
             {
                 if (!polygonInit)
                 {
-                    polygon = T03QueenEternal.XArena.poly.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
+                    polygon = T03QueenEternal.XArena.Polygon.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
                     polygonInit = true;
                 }
                 var origin = c.Origin;

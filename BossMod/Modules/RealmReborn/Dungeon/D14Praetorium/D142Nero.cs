@@ -104,8 +104,8 @@ public class D142Nero(WorldState ws, Actor primary) : BossModule(ws, primary, st
     new(-175.97f, -27.03f), new(-174.56f, -27.62f), new(-174.07f, -27.83f), new(-172.59f, -28.32f), new(-171.11f, -28.73f),
     new(-166.99f, -29.45f), new(-165.38f, -29.56f)];
 
-    private static readonly ArenaBoundsComplex startingBounds = new([new PolygonCustom(vertices)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(new(-164f, default), 20f, 48)]);
+    private static readonly ArenaBoundsCustom startingBounds = new([new PolygonCustom(vertices)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(new(-164f, default), 20f, 48)]);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

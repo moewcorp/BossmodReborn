@@ -49,7 +49,7 @@ public sealed class D050OrigenicsAerostat(WorldState ws, Actor primary) : BossMo
 {
     private static readonly Angle a30 = 30f.Degrees();
     private static readonly WPos node1Center = new(-60f, -80f), node2Center = new(-116f, -80f), node3Center = new(-172f, -80f);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(node1Center, 16f, 6, a30), new Rectangle(new(-88f, -80f), 20f, 6f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(node1Center, 16f, 6, a30), new Rectangle(new(-88f, -80f), 20f, 6f),
     new Polygon(node2Center, 16f, 6, a30), new Polygon(node3Center, 16f, 6, a30), new Rectangle(new(-144f, -80f), 20f, 6f),
     new Rectangle(node3Center, 39f, 6f), new Rectangle(node3Center, 6f, 19.6f), new Rectangle(node2Center, 6f, 19.6f), new Rectangle(node1Center, 6f, 19.6f)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Aerostat2, (uint)OID.OrigenicsSentryS9, (uint)OID.OrigenicsSentryS92, (uint)OID.OrigenicsSentryG10];

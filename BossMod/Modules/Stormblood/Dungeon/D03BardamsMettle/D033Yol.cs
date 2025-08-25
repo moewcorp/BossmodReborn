@@ -99,7 +99,7 @@ public class D033Yol(WorldState ws, Actor primary) : BossModule(ws, primary, are
     new(11.14f, -489.57f), new(12.51f, -490.54f), new(13.31f, -491.39f), new(13.76f, -491.83f), new(14.34f, -491.8f),
     new(14.83f, -491.96f), new(15.35f, -492.1f), new(17.65f, -493.47f), new(18.15f, -493.73f), new(20.83f, -494.52f),
     new(21.4f, -494.52f), new(22.55f, -494.49f), new(23.63f, -494.68f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     private static readonly uint[] adds = [(uint)OID.LeftWing, (uint)OID.RightWing, (uint)OID.CorpsecleanerEagle];
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

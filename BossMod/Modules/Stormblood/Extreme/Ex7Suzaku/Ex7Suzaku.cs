@@ -11,8 +11,8 @@ sealed class PhantomFlurryAOE(BossModule module) : Components.SimpleAOEs(module,
 public sealed class Ex7Suzaku(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, Phase1Bounds)
 {
     public static readonly WPos ArenaCenter = new(100f, 100f);
-    public static readonly ArenaBoundsComplex Phase1Bounds = new([new Polygon(ArenaCenter, 19.5f, 80)]);
-    public static readonly ArenaBoundsComplex Phase2Bounds = new([new DonutV(ArenaCenter, 3.5f, 20f, 80)]);
+    public static readonly ArenaBoundsCustom Phase1Bounds = new([new Polygon(ArenaCenter, 19.5f, 80)]);
+    public static readonly ArenaBoundsCustom Phase2Bounds = new([new DonutV(ArenaCenter, 3.5f, 20f, 80)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

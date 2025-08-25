@@ -27,9 +27,9 @@ public sealed class M04SWickedThunder(WorldState ws, Actor primary) : BossModule
     public static readonly ArenaBoundsSquare P1DefaultBounds = new(20f);
     public static readonly ArenaBoundsRect IonClusterBounds = new(5f, 20f);
     public static readonly ArenaBoundsRect P2DefaultBounds = new(20f, 15f);
-    public static readonly ArenaBoundsComplex TransitionBounds = new([new Square(P1DefaultCenter, 20f), new Rectangle(P2Center, 20f, 15f)]);
-    public static readonly ArenaBoundsComplex P2CircleBounds = new([new Polygon(P2Center, 15f, 50, 3.6f.Degrees())]);
-    public static readonly ArenaBoundsComplex P2TowersBounds = new([new Rectangle(new(115f, 100f), 5f, 15f), new Rectangle(new(85f, 100f), 5f, 15f)]);
+    public static readonly ArenaBoundsCustom TransitionBounds = new([new Square(P1DefaultCenter, 20f), new Rectangle(P2Center, 20f, 15f)]);
+    public static readonly ArenaBoundsCustom P2CircleBounds = new([new Polygon(P2Center, 15f, 50, 3.6f.Degrees())]);
+    public static readonly ArenaBoundsCustom P2TowersBounds = new([new Rectangle(new(115f, 100f), 5f, 15f), new Rectangle(new(85f, 100f), 5f, 15f)]);
 
     public Actor? BossP1() => PrimaryActor.IsDestroyed ? null : PrimaryActor;
     public Actor? BossP2() => _bossP2;

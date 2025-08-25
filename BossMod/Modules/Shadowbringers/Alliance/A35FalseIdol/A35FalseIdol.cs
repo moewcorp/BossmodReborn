@@ -24,9 +24,9 @@ public sealed class A35FalseIdol(WorldState ws, Actor primary) : BossModule(ws, 
     public static readonly Square[] BaseSquare = [new(ArenaCenter, 25f)];
     private static readonly Polygon distortion = new(ArenaCenter, 6f, 20);
     private static readonly Rectangle redgirls = new(new(-700f, -723.5f), 25f, 1.5f);
-    public static readonly ArenaBoundsComplex DistortionArena = new(BaseSquare, [distortion]);
-    public static readonly ArenaBoundsComplex RedGirlsArena = new(BaseSquare, [redgirls]);
-    public static readonly ArenaBoundsComplex RedGirlsDistortionArena = new(BaseSquare, [redgirls, distortion]);
+    public static readonly ArenaBoundsCustom DistortionArena = new(BaseSquare, [distortion]);
+    public static readonly ArenaBoundsCustom RedGirlsArena = new(BaseSquare, [redgirls]);
+    public static readonly ArenaBoundsCustom RedGirlsDistortionArena = new(BaseSquare, [redgirls, distortion]);
 
     protected override void UpdateModule()
     {

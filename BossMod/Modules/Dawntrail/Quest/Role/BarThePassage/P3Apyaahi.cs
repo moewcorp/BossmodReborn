@@ -62,7 +62,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        void SetArena(ArenaBoundsComplex bounds)
+        void SetArena(ArenaBoundsCustom bounds)
         {
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;
@@ -212,8 +212,8 @@ sealed class ApyaahiTheArchitectStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1016, NameID = 13669)]
 public sealed class ApyaahiTheArchitect(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
 {
-    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(new(default, 379.27f), 24.5f, 20)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(new(default, 379.241f), 20f, 64)]);
+    public static readonly ArenaBoundsCustom StartingArena = new([new Polygon(new(default, 379.27f), 24.5f, 20)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(new(default, 379.241f), 20f, 64)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -62,7 +62,7 @@ sealed class DragonBreathArenaChange(BossModule module) : BossComponent(module)
                 Arena.Center = A12Fafnir.ArenaCenter;
                 return;
             }
-            ArenaBoundsComplex refresh = new([circle, new Cone(A12Fafnir.ArenaCenter, 30f, angle, initialRot)]);
+            ArenaBoundsCustom refresh = new([circle, new Cone(A12Fafnir.ArenaCenter, 30f, angle, initialRot)]);
             Arena.Bounds = refresh;
             Arena.Center = refresh.Center;
         }

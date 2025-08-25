@@ -9,7 +9,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     private static readonly Square[] defaultSquare = [new Square(ArenaCenter, 20f)];
     private static readonly AOEShapeCustom square = new([new Square(ArenaCenter, 23f)], defaultSquare);
     private static readonly Angle rotation = 22.5f.Degrees();
-    private static readonly ArenaBoundsComplex octagonTrap = new(defaultSquare, [new Polygon(octagonCenter, 8.5f, 8, rotation)],
+    private static readonly ArenaBoundsCustom octagonTrap = new(defaultSquare, [new Polygon(octagonCenter, 8.5f, 8, rotation)],
     [new Polygon(octagonCenter, 7.5f, 8, rotation)]);
 
     private AOEInstance? _aoe;

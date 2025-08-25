@@ -190,7 +190,7 @@ sealed class CE107UnbridledStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 35)]
 public sealed class CE107Unbridled(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(620f, 800f), 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(new(620f, 800f), 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);

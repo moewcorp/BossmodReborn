@@ -245,5 +245,5 @@ public sealed class D031FeatherRay(WorldState ws, Actor primary) : BossModule(ws
 {
     private static readonly WPos arenaCenter = new(-105f, -160f);
     public static readonly ArenaBoundsSquare NormalBounds = new(15.5f);
-    public static readonly ArenaBoundsComplex CircleBounds = new([new Polygon(arenaCenter, 12f, 48)]);
+    public static readonly ArenaBoundsCustom CircleBounds = new([new Polygon(arenaCenter, 12f, 48)]);
 }

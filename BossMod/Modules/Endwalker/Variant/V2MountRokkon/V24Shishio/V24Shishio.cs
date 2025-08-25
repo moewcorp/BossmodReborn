@@ -29,6 +29,6 @@ public sealed class V24Shishio(WorldState ws, Actor primary) : BossModule(ws, pr
 {
     public static readonly WPos ArenaCenter = new(-40f, -300f);
     public static readonly ArenaBoundsSquare NormalBounds = new(19.5f);
-    public static readonly ArenaBoundsComplex CircleBounds = new([new Circle(ArenaCenter, 20f)], [new Rectangle(ArenaCenter + new WDir(-20f, default), 0.5f, 20f),
+    public static readonly ArenaBoundsCustom CircleBounds = new([new Circle(ArenaCenter, 20f)], [new Rectangle(ArenaCenter + new WDir(-20f, default), 0.5f, 20f),
     new Rectangle(ArenaCenter + new WDir(20f, default), 0.5f, 20f), new Rectangle(ArenaCenter + new WDir(default, 20f), 20f, 0.5f), new Rectangle(ArenaCenter + new WDir(default, -20f), 20f, 0.5f)]);
 }

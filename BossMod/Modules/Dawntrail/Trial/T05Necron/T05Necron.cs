@@ -36,8 +36,8 @@ sealed class BlueShockwave(BossModule module) : Components.BaitAwayIcon(module, 
 public abstract class Necron(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsRect(18f, 15f))
 {
     public static readonly WPos ArenaCenter = new(100f, 100f);
-    public static readonly ArenaBoundsComplex CircleArena = new([new Polygon(ArenaCenter, 9f, 32)]);
-    public static readonly ArenaBoundsComplex SplitArena = new([new Rectangle(ArenaCenter, 18f, 15f)], [new Rectangle(ArenaCenter, 6f, 15f)]);
+    public static readonly ArenaBoundsCustom CircleArena = new([new Polygon(ArenaCenter, 9f, 32)]);
+    public static readonly ArenaBoundsCustom SplitArena = new([new Rectangle(ArenaCenter, 18f, 15f)], [new Rectangle(ArenaCenter, 6f, 15f)]);
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Necron, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1061u, NameID = 14093u, Category = BossModuleInfo.Category.Trial, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 1)]

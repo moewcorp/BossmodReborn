@@ -101,7 +101,7 @@ public sealed class C010STrash2(WorldState ws, Actor primary) : Trash2Arena(ws, 
 
 public abstract class Trash2Arena(WorldState ws, Actor primary, bool savage) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Rectangle(new(-34.937f, -198.475f), 33.89f, 21.428f), new Rectangle(new(-35f, -219.2f), 5.261f, 1.122f)], [new Rectangle(new(-35.5f, -207f), 3f, 4.19f),
+    private static readonly ArenaBoundsCustom arena = new([new Rectangle(new(-34.937f, -198.475f), 33.89f, 21.428f), new Rectangle(new(-35f, -219.2f), 5.261f, 1.122f)], [new Rectangle(new(-35.5f, -207f), 3f, 4.19f),
     new Rectangle(new(-35.5f, -189.9f), 3f, 4.19f), new Rectangle(new(-17.51f, -198.5f), 4.98f, 13f), new Rectangle(new(-52.5f, -198.5f), 4.98f, 13f),
     new Square(new(-69.3f, -185.3f), 1.5f), new Square(new(-69.3f, -211.801f), 1.5f), new Square(new(-52.5f, -220.201f), 1.5f), new Square(new(-17.4f, -220.201f), 1.5f),
     new Square(new(-0.8f, -211.777f), 1.5f), new Square(new(-0.791f, -185.378f), 1.5f), new Square(new(-17.5f, -176.801f), 1.5f), new Square(new(-35f, -176.801f), 1.5f),

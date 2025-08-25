@@ -123,8 +123,8 @@ public class D150SiegeGobbue(WorldState ws, Actor primary) : BossModule(ws, prim
     new(192.03f, 2.15f), new(184.37f, 9.81f), new(182.97f, 10.14f), new(182.41f, 9.79f), new(178.41f, 5.79f),
     new(177.9f, 5.66f), new(173.72f, 9.83f), new(173.06f, 10.15f), new(172.22f, 10.15f), new(171.69f, 9.74f),
     new(163.7f, 1.69f), new(163.72f, -10.19f), new(171.84f, -18.26f), new(174.94f, -18.6f), new(177.66f, -18.69f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.XelphatolWhirltalon, (uint)OID.XelphatolStrongbeak, (uint)OID.XelphatolBravewing];
 
     protected override bool CheckPull()

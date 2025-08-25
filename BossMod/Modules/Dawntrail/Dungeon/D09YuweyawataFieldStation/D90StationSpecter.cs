@@ -86,7 +86,7 @@ public sealed class D90StationSpecter(WorldState ws, Actor primary) : BossModule
     new(111.26f, -15.73f), new(110.8f, -15.94f), new(110.21f, -16.29f), new(109.99f, -16.97f), new(109.99f, -17.66f),
     new(110.65f, -18.55f), new(110.54f, -19.18f), new(110.07f, -19.71f), new(109.97f, -23.91f), new(110.22f, -24.35f),
     new(110.66f, -24.76f), new(111.26f, -25.17f), new(111.95f, -25.35f), new(117.43f, -25.65f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.RottenResearcher1, (uint)OID.RottenResearcher2, (uint)OID.RottenResearcher3,
     (uint)OID.GiantCorse, (uint)OID.StationSpecter];
 

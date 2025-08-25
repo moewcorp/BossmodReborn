@@ -49,7 +49,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeCustom square = new([new Square(ArenaCenter, 25f)], defaultSquare);
     private const float XWest2 = -187.5f, XEast2 = -156.5f;
     private const float XWest1 = -192f, XEast1 = -152f, ZRow1 = -127f, ZRow2 = -137f, ZRow3 = -147f, ZRow4 = -157f;
-    public static readonly Dictionary<byte, ArenaBoundsComplex> ArenaBoundsMap = InitializeArenaBounds();
+    public static readonly Dictionary<byte, ArenaBoundsCustom> ArenaBoundsMap = InitializeArenaBounds();
     private static RectangleSE[] CreateRows(float x1, float x2)
     => [
         new(new(x1, ZRow4), new(x2, ZRow4), HalfWidth),
@@ -57,12 +57,12 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         new(new(x1, ZRow2), new(x2, ZRow2), HalfWidth),
         new(new(x1, ZRow1), new(x2, ZRow1), HalfWidth),
     ];
-    private static Dictionary<byte, ArenaBoundsComplex> InitializeArenaBounds()
+    private static Dictionary<byte, ArenaBoundsCustom> InitializeArenaBounds()
     {
         var westRows = CreateRows(XWest1, XWest2);
         var eastRows = CreateRows(XEast1, XEast2);
 
-        return new Dictionary<byte, ArenaBoundsComplex>
+        return new Dictionary<byte, ArenaBoundsCustom>
         {
             { 0x2A, new(defaultSquare, [westRows[1], westRows[3]]) },
             { 0x1B, new(defaultSquare, [westRows[1], westRows[3], eastRows[0], eastRows[2]]) },

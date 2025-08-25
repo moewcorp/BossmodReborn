@@ -378,7 +378,7 @@ public sealed class D093Lunipyati(WorldState ws, Actor primary) : BossModule(ws,
     new(13.37f, -725.1f), new(13, -725.68f), new(13.04f, -726.39f), new(12.92f, -727.82f), new(13.56f, -728.87f),
     new(15.96f, -732.29f), new(18.22f, -733.88f), new(20.71f, -735.26f), new(24.26f, -737.13f), new(25.6f, -737.63f),
     new(26.83f, -737.85f), new(28.9f, -737.89f), new(31.82f, -738.23f), new(32.55f, -738.24f), new(33.9f, -738.37f)];
-    private static readonly ArenaBoundsComplex startingBounds = new([new PolygonCustom(vertices)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 15, Edges)]);
-    public static readonly ArenaBoundsComplex DonutBounds = new([new DonutV(ArenaCenter, 11, 15, Edges)]);
+    private static readonly ArenaBoundsCustom startingBounds = new([new PolygonCustom(vertices)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(ArenaCenter, 15, Edges)]);
+    public static readonly ArenaBoundsCustom DonutBounds = new([new DonutV(ArenaCenter, 11, 15, Edges)]);
 }

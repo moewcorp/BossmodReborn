@@ -56,7 +56,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 polygons.Add(pillarPolygons[index - 0x10]);
                 if (polygons.Count == 2)
                 {
-                    var arena = new ArenaBoundsComplex(M08SHowlingBlade.StartingArenaPolygon, [.. polygons]);
+                    var arena = new ArenaBoundsCustom(M08SHowlingBlade.StartingArenaPolygon, [.. polygons]);
                     Arena.Bounds = arena;
                     Arena.Center = arena.Center;
                 }
@@ -77,7 +77,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 activePlatforms[i] = true;
                 if (polygons.Count == 5)
                 {
-                    var arena = new ArenaBoundsComplex([.. polygons]);
+                    var arena = new ArenaBoundsCustom([.. polygons]);
                     Arena.Bounds = arena;
                     Arena.Center = arena.Center;
                     active = true;
@@ -93,7 +93,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                     Arena.Bounds = M08SHowlingBlade.StartingArena;
                     return;
                 }
-                var arena = new ArenaBoundsComplex([.. polygons]);
+                var arena = new ArenaBoundsCustom([.. polygons]);
                 Arena.Bounds = arena;
                 Arena.Center = arena.Center;
             }

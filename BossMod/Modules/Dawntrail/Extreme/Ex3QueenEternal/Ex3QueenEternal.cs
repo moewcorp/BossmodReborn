@@ -10,11 +10,11 @@ public sealed class Ex3QueenEternal(WorldState ws, Actor primary) : BossModule(w
     public static readonly WPos ArenaCenter = Trial.T03QueenEternal.T03QueenEternal.ArenaCenter, HalfBoundsCenter = new(100, 110);
     public static readonly ArenaBoundsSquare NormalBounds = Trial.T03QueenEternal.T03QueenEternal.DefaultBounds;
     public static readonly ArenaBoundsRect HalfBounds = new(20f, 10f);
-    public static readonly ArenaBoundsComplex WindBounds = Trial.T03QueenEternal.T03QueenEternal.XArena;
-    public static readonly ArenaBoundsComplex EarthBounds = Trial.T03QueenEternal.T03QueenEternal.SplitArena;
+    public static readonly ArenaBoundsCustom WindBounds = Trial.T03QueenEternal.T03QueenEternal.XArena;
+    public static readonly ArenaBoundsCustom EarthBounds = Trial.T03QueenEternal.T03QueenEternal.SplitArena;
     private static readonly Rectangle[] iceRects = [new(new(112f, 95f), 4f, 15f), new(new(88f, 95f), 4f, 15f), new(ArenaCenter, 2f, 10f)];
     public static readonly Rectangle[] IceRectsAll = [.. iceRects, new(new(100f, 96f), 8f, 2f), new(new(100f, 104f), 8f, 2f)];
-    public static readonly ArenaBoundsComplex IceBounds = new(iceRects);
+    public static readonly ArenaBoundsCustom IceBounds = new(iceRects);
 
     private Actor? _bossP2;
     public Actor? BossP1() => PrimaryActor;

@@ -105,5 +105,5 @@ class OrcusStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69614, NameID = 10581)]
 public class Orcus(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-69.569f, -388), 19.5f, 64)], [new Rectangle(new(-69, -368), 20, 0.94f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-69.569f, -388), 19.5f, 64)], [new Rectangle(new(-69, -368), 20, 0.94f)]);
 }

@@ -19,7 +19,7 @@ sealed class IntermissionArena(BossModule module) : BossComponent(module)
                     400f => A33RedGirl.VirusArena2,
                     _ => A33RedGirl.VirusArena3
                 };
-                ArenaBoundsComplex arena = new(baseArena, [.. walls]);
+                ArenaBoundsCustom arena = new(baseArena, [.. walls]);
                 Arena.Bounds = arena;
                 Arena.Center = arena.Center;
             }
@@ -40,7 +40,7 @@ sealed class IntermissionArena(BossModule module) : BossComponent(module)
                     break;
                 }
             }
-            Arena.Bounds = new ArenaBoundsComplex(baseArena, [.. walls]);
+            Arena.Bounds = new ArenaBoundsCustom(baseArena, [.. walls]);
         }
     }
 }

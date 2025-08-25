@@ -116,9 +116,9 @@ sealed class ArenaChange(BossModule module) : BossComponent(module)
 public abstract class Seiryu(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, phase1Bounds)
 {
     private static readonly WPos arenaCenter = new(100f, 100f);
-    private static readonly ArenaBoundsComplex phase1Bounds = new([new Polygon(arenaCenter, 19.5f, 48)]);
-    public static readonly ArenaBoundsComplex Phase2Bounds = new([new Polygon(arenaCenter, 20f, 48)]);
-    public static readonly ArenaBoundsComplex Phase2WaterBounds = new([new Polygon(arenaCenter, 44.5f, 48)]);
+    private static readonly ArenaBoundsCustom phase1Bounds = new([new Polygon(arenaCenter, 19.5f, 48)]);
+    public static readonly ArenaBoundsCustom Phase2Bounds = new([new Polygon(arenaCenter, 20f, 48)]);
+    public static readonly ArenaBoundsCustom Phase2WaterBounds = new([new Polygon(arenaCenter, 44.5f, 48)]);
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Seiryu, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 637u, NameID = 7922u, Category = BossModuleInfo.Category.Trial, Expansion = BossModuleInfo.Expansion.Stormblood)]

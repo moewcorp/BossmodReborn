@@ -92,7 +92,7 @@ sealed class CE108CalamityBoundStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 37)]
 public sealed class CE108CalamityBound(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-340f, 800f), 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-340f, 800f), 29.5f, 32)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

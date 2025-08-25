@@ -90,7 +90,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
     private bool FilterInterestingActor(ulong instanceID, DateTime timestamp, bool allowPlayers)
     {
         var p = replay.FindParticipant(instanceID, timestamp)!;
-        if ((p.OwnerID & 0xFF000000) == 0x10000000 && p.Type != ActorType.Buddy)
+        if ((p.OwnerID & 0xFF000000) == 0x10000000ul && p.Type != ActorType.Buddy)
             return false; // player's pet/area
         return (p.Type is not ActorType.Player and not ActorType.Buddy and not ActorType.Pet || allowPlayers) && !_filteredOIDs.Contains(p.OID) && !BoringOIDs.Contains(p.OID);
     }
@@ -137,6 +137,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ActorState.OpIncomingEffect => false,
             PartyState.OpLimitBreakChange => false,
             PartyState.OpModify => false,
+            ActorState.OpModelState op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ActorState.OpEventNpcYell op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ActorState.OpEventObjectStateChange op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
             ActorState.OpEventObjectAnimation op => FilterInterestingActor(op.InstanceID, op.Timestamp, false),
@@ -219,14 +220,14 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
         {
             foreach (var t in tree.Nodes(action.Targets, t => new(ReplayUtils.ActionTargetString(t, op.Timestamp))))
             {
-                tree.LeafNodes(t.Effects, ReplayUtils.ActionEffectString);
+                tree.LeafNodes(t.Effects.ValidEffects(), ReplayUtils.ActionEffectString);
             }
         }
         else
         {
             foreach (var t in tree.Nodes(op.Value.Targets, t => new(ActorString(t.ID, op.Timestamp))))
             {
-                tree.LeafNodes(t.Effects, ReplayUtils.ActionEffectString);
+                tree.LeafNodes(t.Effects.ValidEffects(), ReplayUtils.ActionEffectString);
             }
         }
     }

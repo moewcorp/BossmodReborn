@@ -337,7 +337,8 @@ sealed class ReplayDetailsWindow : UIWindow
             if (tooltip)
             {
                 string fromString(string prefix, ulong instanceId) => instanceId == 0 ? "" : $", {prefix} {_player.WorldState.Actors.Find(instanceId)?.ToString() ?? instanceId.ToString("X")}";
-                for (var i = 0; i < actor.Statuses.Length; ++i)
+                var lenS = actor.Statuses.Length;
+                for (var i = 0; i < lenS; ++i)
                 {
                     ref var s = ref actor.Statuses[i];
                     if (s.ID != 0)
@@ -347,18 +348,19 @@ sealed class ReplayDetailsWindow : UIWindow
                 }
                 foreach (ref var s in actor.PendingStatuses.AsSpan())
                 {
-                    ImGui.TextUnformatted($"[pending] {Utils.StatusString(s.StatusId)} ({s.ExtraLo}){fromString("from", s.Effect.SourceInstanceId)}");
+                    ImGui.TextUnformatted($"[pending] {Utils.StatusString(s.StatusId)} ({s.ExtraLo}){fromString("from", s.Effect.SourceInstanceID)}");
                 }
                 foreach (ref var s in actor.PendingDispels.AsSpan())
                 {
-                    ImGui.TextUnformatted($"[dispel] {Utils.StatusString(s.StatusId)}{fromString("by", s.Effect.SourceInstanceId)}");
+                    ImGui.TextUnformatted($"[dispel] {Utils.StatusString(s.StatusId)}{fromString("by", s.Effect.SourceInstanceID)}");
                 }
-                for (var i = 0; i < actor.IncomingEffects.Length; ++i)
+                var lenE = actor.IncomingEffects.Length;
+                for (var i = 0; i < lenE; ++i)
                 {
                     ref var inc = ref actor.IncomingEffects[i];
                     if (inc.GlobalSequence != 0)
                     {
-                        ImGui.TextUnformatted($"[incoming {i}] {inc.GlobalSequence}/{inc.TargetIndex} {inc.Action}{fromString("from", inc.SourceInstanceId)}");
+                        ImGui.TextUnformatted($"[incoming {i}] {inc.GlobalSequence}/{inc.TargetIndex} {inc.Action}{fromString("from", inc.SourceInstanceID)}");
                     }
                 }
             }

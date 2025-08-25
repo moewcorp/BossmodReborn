@@ -173,7 +173,7 @@ sealed class AHunterTrueStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70371, NameID = 12846)]
 public sealed class AHunterTrue(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(4, 248), 19.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(4, 248), 19.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.Garula, (uint)OID.Dzo, (uint)OID.SteppeEagle, (uint)OID.BallOfNaught];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

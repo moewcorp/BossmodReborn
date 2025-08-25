@@ -68,8 +68,8 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 91, NameID = 3632, PlanLevel = 60)]
 public sealed class Ex3Thordan(WorldState ws, Actor primary) : BossModule(ws, primary, default, startingArena)
 {
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(default, 23.5f, 48)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(default, 21.052f, 40)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(default, 23.5f, 48)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(default, 21.052f, 40)]);
     private Actor? _bossAdelphel;
     public Actor? BossAdelphel() => _bossAdelphel;
     private Actor? _bossJanlenoux;

@@ -88,7 +88,7 @@ public sealed class D90SprightlyClayGolem(WorldState ws, Actor primary) : BossMo
     new(95.69f, -410.22f), new(95.63f, -410.92f), new(95.41f, -411.42f), new(94.93f, -411.9f), new(94.39f, -412.23f),
     new(93.72f, -413.32f), new(93.46f, -413.92f), new(93, -414.4f), new(93.22f, -414.95f), new(106.99f, -419.44f),
     new(107.5f, -419.32f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SprightlyStone1, (uint)OID.SprightlyStone2, (uint)OID.SprightlyDhara];
 
     protected override bool CheckPull()

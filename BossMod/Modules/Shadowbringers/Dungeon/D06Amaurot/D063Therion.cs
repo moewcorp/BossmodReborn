@@ -50,7 +50,7 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
     private static readonly Rectangle[] rect = [new(new(default, -45f), 10f, 30f)];
     public readonly List<Shape> UnionRefresh = Union();
     private readonly List<Shape> difference = new(8);
-    public static readonly ArenaBoundsComplex DefaultArena = new([.. Union()], Offset: -1f);
+    public static readonly ArenaBoundsCustom DefaultArena = new([.. Union()], Offset: -1f);
 
     private static Square[] Squares()
     {
@@ -104,7 +104,7 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
                             difference.Add(differences[0]);
                         else if (UnionRefresh.Count == 5)
                             difference.Add(differences[1]);
-                        ArenaBoundsComplex arena = new([.. UnionRefresh], [.. difference], Offset: -1f);
+                        ArenaBoundsCustom arena = new([.. UnionRefresh], [.. difference], Offset: -1f);
                         Arena.Bounds = arena;
                         Arena.Center = arena.Center;
                     }

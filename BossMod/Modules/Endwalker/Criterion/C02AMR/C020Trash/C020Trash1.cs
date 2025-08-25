@@ -236,7 +236,7 @@ public class C020STrash1(WorldState ws, Actor primary) : Trash1Arena(ws, primary
 
 public abstract class Trash1Arena(WorldState ws, Actor primary, bool savage) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Square(default, 19.5f), new Rectangle(new(default, -20f), 4.5f, 9.5f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Square(default, 19.5f), new Rectangle(new(default, -20f), 4.5f, 9.5f)]);
     public static readonly uint[] TrashNormal = [(uint)OID.NYuki, (uint)OID.NFuko, (uint)OID.NFurutsubaki, (uint)OID.NRaiko, (uint)OID.NPenghou];
     public static readonly uint[] TrashSavage = [(uint)OID.SYuki, (uint)OID.SFuko, (uint)OID.SFurutsubaki, (uint)OID.SRaiko, (uint)OID.SPenghou];
 

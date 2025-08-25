@@ -74,7 +74,7 @@ public sealed class D90ForestBat(WorldState ws, Actor primary) : BossModule(ws, 
     new(-35.43f, 488.71f), new(-35.31f, 488.11f), new(-35.47f, 486.77f), new(-35.28f, 483.61f), new(-35.49f, 483.01f),
     new(-35.64f, 482.3f), new(-35.43f, 481.68f), new(-35.42f, 479.49f), new(-34.93f, 471.44f), new(-34.95f, 470.74f),
     new(-34.79f, 470.06f), new(-34.9f, 469.45f), new(-35.73f, 468.5f), new(-16.78f, 468.11f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Electrogolem1, (uint)OID.Electrogolem1, (uint)OID.ForestWoolback];
 
     protected override bool CheckPull()

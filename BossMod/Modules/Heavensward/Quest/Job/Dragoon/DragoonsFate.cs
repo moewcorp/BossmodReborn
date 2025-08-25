@@ -89,5 +89,5 @@ class GraoullyStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67231, NameID = 4190)]
 public class Graoully(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(-483.91f, -299.22f), new(-519.70f, -272.85f), new(-546.66f, -309.50f), new(-510.38f, -336.53f)])]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(-483.91f, -299.22f), new(-519.70f, -272.85f), new(-546.66f, -309.50f), new(-510.38f, -336.53f)])]);
 }

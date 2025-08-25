@@ -220,6 +220,6 @@ class D122ArkasStates : StateMachineBuilder
 public class D122Arkas(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
     public static readonly WPos ArenaCenter = new(425f, -440f);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 14.5f, 48)], [new Rectangle(new(425f, -424f), 20, 2.4f), new Rectangle(new(425f, -455f), 10, 1.25f)]);
-    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(ArenaCenter, 10f, 48)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(ArenaCenter, 14.5f, 48)], [new Rectangle(new(425f, -424f), 20, 2.4f), new Rectangle(new(425f, -455f), 10, 1.25f)]);
+    public static readonly ArenaBoundsCustom SmallerBounds = new([new Polygon(ArenaCenter, 10f, 48)]);
 }

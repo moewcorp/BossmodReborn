@@ -18,9 +18,9 @@ public sealed class A21FaithboundKirin(WorldState ws, Actor primary) : BossModul
 {
     public static readonly WPos DefaultCenter = new(-850f, 780f);
     public static readonly WPos RectCenter = new(-850f, 785f);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(DefaultCenter, 29.5f, 60)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(DefaultCenter, 29.5f, 60)]);
     public static readonly AOEShapeCustom RectArenaAOE = new([new Square(DefaultCenter, 29.5f)], [new Rectangle(RectCenter, 12.5f, 15f)]); // we can use a square as base here because it gets clipped with arena bounds anyway
-    public static readonly ArenaBoundsComplex ByakkoArena = new([new Polygon(DefaultCenter, 30f, 60)], [new Rectangle(new(-850f, 752.5f), 5f, 2.5f),
+    public static readonly ArenaBoundsCustom ByakkoArena = new([new Polygon(DefaultCenter, 30f, 60)], [new Rectangle(new(-850f, 752.5f), 5f, 2.5f),
     new Rectangle(new(-830.55426f, 760.55426f), 5f, 2.5f, -45f.Degrees()),
     new Rectangle(new(-822.5f, 780f), 5f, 2.5f, -89.98f.Degrees()), new Rectangle(new(-830.55426f, 799.44574f), 2.5f, 5f, -45f.Degrees()),
     new Rectangle(new(-850f, 807.5f), 5f, 2.5f), new Rectangle(new(-869.44574f, 799.44574f), 2.5f, 5f, 45f.Degrees()), new Rectangle(new(-877.5f, 780f), 5f, 2.5f, 89.98f.Degrees()),

@@ -314,7 +314,7 @@ sealed class CE23FiresOfWarStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 735, NameID = 9)]
 public sealed class CE23FiresOfWar(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(83f, 563f), 19.5f, 32)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(83f, 563f), 19.5f, 32)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ImperialPyromancer1, (uint)OID.ImperialPyromancer2, (uint)OID.PyrobolusFrater];
     private Actor? _bossMater;
     public Actor? BossMater() => _bossMater;

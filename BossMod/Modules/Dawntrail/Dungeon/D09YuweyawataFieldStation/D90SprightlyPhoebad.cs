@@ -68,7 +68,7 @@ public sealed class D90SprightlyPhoebad(WorldState ws, Actor primary) : BossModu
     new(105.71f, -284.13f), new(106, -284.66f), new(106.49f, -285.86f), new(107.56f, -287.51f), new(108.05f, -288.7f),
     new(108.36f, -289.32f), new(108.72f, -289.86f), new(108.89f, -290.36f), new(110.23f, -292.79f), new(110.57f, -293.24f),
     new(110.83f, -293.82f), new(111.77f, -295.5f), new(112.26f, -296.71f), new(113.35f, -298.45f), new(113.98f, -298.78f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SprightlyMole, (uint)OID.SprightlyStone, (uint)OID.SprightlyLoamkeep];
 
     protected override bool CheckPull()

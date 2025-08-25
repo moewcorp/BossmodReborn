@@ -298,7 +298,7 @@ public class D103RukshsDheem(WorldState ws, Actor primary) : BossModule(ws, prim
     private const float Z = 19.5f;
     public static readonly ArenaBoundsRect DefaultBounds = new(X, Z);
     public static readonly ArenaBoundsRect NarrowBounds = new(X - 7.5f, Z);
-    public static readonly ArenaBoundsComplex SplitBounds = new([new Rectangle(ArenaCenter, X, Z)], [new Rectangle(ArenaCenter, X, 4f)]);
+    public static readonly ArenaBoundsCustom SplitBounds = new([new Rectangle(ArenaCenter, X, Z)], [new Rectangle(ArenaCenter, X, 4f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

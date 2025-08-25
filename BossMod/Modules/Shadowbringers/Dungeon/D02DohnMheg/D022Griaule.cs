@@ -73,7 +73,7 @@ class D022GriauleStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8143)]
 public class D022Griaule(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(7.156f, -339.132f), 24.5f * CosPI.Pi32th, 32)], [new Rectangle(new(7f, -363.5f), 20f, 1.1f), new Rectangle(new(7f, -315), 20f, 0.75f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(7.156f, -339.132f), 24.5f * CosPI.Pi32th, 32)], [new Rectangle(new(7f, -363.5f), 20f, 1.1f), new Rectangle(new(7f, -315), 20f, 0.75f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

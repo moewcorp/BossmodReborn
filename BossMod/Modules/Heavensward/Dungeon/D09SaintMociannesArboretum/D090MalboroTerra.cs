@@ -39,7 +39,7 @@ class WallRemoval(BossModule module) : BossComponent(module)
             SetArena(D090MalboroTerra.Arena1B);
     }
 
-    private void SetArena(ArenaBoundsComplex bounds)
+    private void SetArena(ArenaBoundsCustom bounds)
     {
         Arena.Bounds = bounds;
         Arena.Center = bounds.Center;
@@ -172,9 +172,9 @@ public class D090MalboroTerra(WorldState ws, Actor primary) : BossModule(ws, pri
     new(73.45f, -70.47f), new(73.85f, -71.04f), new(75.67f, -73.84f), new(76.11f, -74.35f), new(76.61f, -74.82f),
     new(77.13f, -75.21f), new(77.71f, -75.56f), new(78.3f, -75.84f), new(78.92f, -76.05f), new(79.55f, -76.18f),
     new(80.21f, -76.25f)];
-    public static readonly ArenaBoundsComplex Arena1 = new([new PolygonCustom(vertices1)]);
-    public static readonly ArenaBoundsComplex Arena1B = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
-    public static readonly ArenaBoundsComplex Arena2 = new([new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
+    public static readonly ArenaBoundsCustom Arena1 = new([new PolygonCustom(vertices1)]);
+    public static readonly ArenaBoundsCustom Arena1B = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
+    public static readonly ArenaBoundsCustom Arena2 = new([new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.BloomingOchu, (uint)OID.SouthernSeasColibri, (uint)OID.Korpokkur];
 
     protected override bool CheckPull()

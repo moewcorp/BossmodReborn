@@ -142,7 +142,7 @@ public class D062Peacekeeper(WorldState ws, Actor primary) : BossModule(ws, prim
 {
     public static readonly WPos ArenaCenter = new(-105f, -210f);
     private static readonly Angle offset = 5.625f.Degrees();
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi32th, 32, offset)], [new Rectangle(new(-105f, -229f), 20, 0.78f),
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi32th, 32, offset)], [new Rectangle(new(-105f, -229f), 20, 0.78f),
     new Rectangle(new(-105f, -190f), 20f, 1.1f)]);
-    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(ArenaCenter, 16f, 32, offset)]);
+    public static readonly ArenaBoundsCustom SmallerBounds = new([new Polygon(ArenaCenter, 16f, 32, offset)]);
 }

@@ -165,8 +165,8 @@ public class D130CloudGardener(WorldState ws, Actor primary) : BossModule(ws, pr
     new(-416.1f, -77.74f), new(-407.93f, -78.13f), new(-407.75f, -75.56f), new(-406, -75.33f), new(-405.44f, -75.17f),
     new(-404.84f, -75.31f), new(-404.37f, -75.59f), new(-404.33f, -78.08f), new(-402.92f, -79.49f), new(-397.01f, -79.49f)];
 
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.EnchantedFan, (uint)OID.GardenCloudtrap, (uint)OID.SanctuarySkipper, (uint)OID.GardenSankchinni, (uint)OID.GardenMelia];
 
     protected override bool CheckPull() => InBounds(Raid.Player()!.Position);

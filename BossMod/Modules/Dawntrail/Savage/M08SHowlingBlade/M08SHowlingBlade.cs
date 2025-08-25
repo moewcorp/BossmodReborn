@@ -31,6 +31,6 @@ public sealed class M08SHowlingBlade(WorldState ws, Actor primary) : BossModule(
 
     public static readonly WPos ArenaCenter = new(100f, 100f);
     public static readonly Polygon[] StartingArenaPolygon = [new(ArenaCenter, 12f, 40)];
-    public static readonly ArenaBoundsComplex StartingArena = new(StartingArenaPolygon, MapResolution: 0.25f);
-    public static readonly ArenaBoundsComplex DonutArena = new(StartingArenaPolygon, [new Polygon(ArenaCenter, 8f, 40)]);
+    public static readonly ArenaBoundsCustom StartingArena = new(StartingArenaPolygon, MapResolution: 0.25f);
+    public static readonly ArenaBoundsCustom DonutArena = new(StartingArenaPolygon, [new Polygon(ArenaCenter, 8f, 40)]);
 }

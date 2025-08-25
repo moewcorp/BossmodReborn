@@ -92,7 +92,7 @@ sealed class D101EvilDreamersStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 869, NameID = 11382, SortOrder = 2)]
 public sealed class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(168, 89.999f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(168f, 110.25f), 20f, 1.25f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(168, 89.999f), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(168f, 110.25f), 20f, 1.25f),
     new Rectangle(new(188.34f, 90.007f), 1.25f, 20f)]);
     private static readonly uint[] dreamers = [(uint)OID.Boss, (uint)OID.EvilDreamer1, (uint)OID.EvilDreamer2, (uint)OID.EvilDreamer3];
 

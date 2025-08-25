@@ -44,7 +44,7 @@ sealed class VirtualShiftIce(BossModule module) : Components.GenericAOEs(module,
         }
 
         void RemoveUnsafeBridges() => _unsafeBridges.RemoveAll(s => s.Origin == center);
-        void UpdateArena() => Arena.Bounds = new ArenaBoundsComplex(Ex3QueenEternal.IceRectsAll, [.. _destroyedBridges]);
+        void UpdateArena() => Arena.Bounds = new ArenaBoundsCustom(Ex3QueenEternal.IceRectsAll, [.. _destroyedBridges]);
     }
 }
 

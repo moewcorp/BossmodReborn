@@ -106,7 +106,7 @@ sealed class D092GiantTunnelWormStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.GiantTunnelWorm, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12u, NameID = 1589u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.RealmReborn, SortOrder = 2)]
 public sealed class D092GiantTunnelWorm(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(-152.42f, 127.49f), new(-152.01f, 127.81f),
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(-152.42f, 127.49f), new(-152.01f, 127.81f),
     new(-151.04f, 128.76f), new(-150.49f, 128.97f), new(-150.04f, 129.24f),
     new(-149.53f, 129.72f), new(-148.43f, 130.37f), new(-147.83f, 130.49f), new(-147.34f, 130.23f), new(-146.91f, 129.77f),
     new(-145.89f, 128.91f), new(-145.29f, 128.62f), new(-144.64f, 128.5f), new(-143.06f, 128.46f), new(-142.42f, 128.59f),

@@ -142,7 +142,7 @@ public class D152Prometheus(WorldState ws, Actor primary) : BossModule(ws, prima
     new(100.64f, -51.95f), new(102.58f, -55.52f), new(102.96f, -56.02f), new(106.95f, -60.07f), new(107.37f, -60.38f),
     new(107.86f, -60.7f), new(113.62f, -65.44f), new(113.96f, -65.87f), new(114.52f, -66.88f), new(115.01f, -67.22f),
     new(119.29f, -69.57f), new(119.76f, -69.79f), new(126.44f, -71.78f)];
-    public static readonly ArenaBoundsComplex StartingArena = new([new PolygonCustom(vertices)]);
+    public static readonly ArenaBoundsCustom StartingArena = new([new PolygonCustom(vertices)]);
     public static readonly Polygon[] Polygon = [new(ArenaCenter, 20f, 24)];
-    public static readonly ArenaBoundsComplex DefaultArena = new(Polygon);
+    public static readonly ArenaBoundsCustom DefaultArena = new(Polygon);
 }

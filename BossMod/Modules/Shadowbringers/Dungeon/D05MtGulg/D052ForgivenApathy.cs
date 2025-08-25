@@ -49,8 +49,8 @@ public class D052ForgivenApathy(WorldState ws, Actor primary) : BossModule(ws, p
     new(-205.3f, -114.3f), new(-205.2f, -112.4f), new(-205.5f, -111.9f), new(-206.6f, -111f), new(-207f, -110.6f), new(-198.8f, -98.4f), new(-190, -103.5f), new(-190, -104.5f),
     new(-187.1f, -106.1f), new(-186.3f, -105.7f), new(-177.1f, -111.1f), new(-177.2f, -111.7f), new(-174, -113.6f), new(-173.3f, -113.2f), new(-164.1f, -118.5f)];
 
-    public static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    public static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    public static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    public static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     private static readonly uint[] trash = [(uint)OID.ForgivenPrejudice, (uint)OID.ForgivenExtortion, (uint)OID.ForgivenConformity];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

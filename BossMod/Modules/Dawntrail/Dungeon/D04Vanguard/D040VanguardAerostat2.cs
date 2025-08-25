@@ -81,7 +81,7 @@ public sealed class D040VanguardAerostat2(WorldState ws, Actor primary) : BossMo
     new(61.52f, -328.58f), new(61.6f, -329.2f), new(77.89f, -329.41f), new(78.4f, -329.07f), new(79.09f, -328.99f),
     new(79.64f, -329.19f), new(81.05f, -329.4f), new(81.55f, -329.7f), new(81.51f, -330.3f), new(81.03f, -331),
     new(92.36f, -331.66f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.SentryR7, (uint)OID.SentryS7, (uint)OID.Turret];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

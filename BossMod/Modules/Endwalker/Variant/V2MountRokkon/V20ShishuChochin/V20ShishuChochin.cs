@@ -204,7 +204,7 @@ public sealed class V20ShishuChochin(WorldState ws, Actor primary) : BossModule(
     new(680.97f, 15.39f), new(681.5f, 15.39f), new(681.85f, 14.94f), new(681.94f, 14.41f), new(681.94f, 13.85f),
     new(681.87f, 12.77f), new(681.44f, 12.46f), new(680.85f, 12.46f), new(680.45f, 7.79f), new(684.94f, 7.54f),
     new(685.23f, 7.08f), new(685.23f, 5.67f), new(685.02f, 1.02f), new(685.09f, -29.98f), new(701.27f, -30.04f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

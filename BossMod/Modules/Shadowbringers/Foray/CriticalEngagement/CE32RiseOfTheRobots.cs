@@ -321,7 +321,7 @@ sealed class CE32RiseOfTheRobotsStates : StateMachineBuilder
 public sealed class CE32RiseOfTheRobots(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, startingArena)
 {
     public static readonly WPos ArenaCenter = new(104f, 237f);
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(ArenaCenter, 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(ArenaCenter, 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);

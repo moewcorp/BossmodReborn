@@ -176,6 +176,6 @@ class D043HermesStates : StateMachineBuilder
 public class D043Hermes(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
     private static readonly WPos ArenaCenter = new(default, -50f);
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 21.5f, 64)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 20f, 64)]);
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Polygon(ArenaCenter, 21.5f, 64)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(ArenaCenter, 20f, 64)]);
 }

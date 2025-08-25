@@ -69,7 +69,7 @@ public class D150XelphatolSkycaller(WorldState ws, Actor primary) : BossModule(w
     new(352.53f, -406.46f), new(353.12f, -406.38f), new(353.53f, -406.74f), new(353.48f, -407.25f), new(353.19f, -407.79f),
     new(352.69f, -408.28f), new(352.36f, -408.67f), new(351.78f, -408.87f), new(351.05f, -409.21f), new(351.78f, -410.13f),
     new(353.19f, -411.45f), new(356.06f, -413.34f), new(357.81f, -414.06f), new(359.74f, -414.53f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.AbalathianHornbill];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

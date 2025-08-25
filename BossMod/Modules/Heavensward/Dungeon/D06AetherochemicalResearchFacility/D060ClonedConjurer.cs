@@ -50,7 +50,7 @@ public class D060ClonedConjurer(WorldState ws, Actor primary) : BossModule(ws, p
     new(274.76f, 249.41f), new(272.08f, 247.86f), new(271.92f, 243.95f), new(271.62f, 243.54f), new(271.12f, 243.7f),
     new(266.63f, 246.27f), new(266.12f, 246.35f), new(261.58f, 243.76f), new(261.12f, 243.54f), new(260.64f, 243.34f),
     new(258.42f, 242.05f), new(258.01f, 238.19f), new(258.08f, 237.6f), new(258.1f, 232.2f), new(266.15f, 227.56f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
 
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ClonedThaumaturge];
 

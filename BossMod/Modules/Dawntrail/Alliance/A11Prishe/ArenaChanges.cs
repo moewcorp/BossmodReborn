@@ -9,12 +9,12 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (u
     private static readonly Shape[] differenceENVC00020001 = [.. MiddleENVC00020001, new Rectangle(new(810f, 430f), 15f, 5f),
     new Rectangle(new(830f, 420f), 5f, 15f), new Rectangle(new(790f, 370f), 15f, 5f), new Rectangle(new(770f, 380f), 5f, 15f)];
     private static readonly AOEShapeCustom arenaChangeENVC00020001 = new(defaultSquare, differenceENVC00020001);
-    public static readonly ArenaBoundsComplex ArenaENVC00020001 = new(differenceENVC00020001);
+    public static readonly ArenaBoundsCustom ArenaENVC00020001 = new(differenceENVC00020001);
     public static readonly Square[] MiddleENVC02000100 = [new(new(795f, 395f), 10f), new(new(805f, 405f), 10f)];
     private static readonly Shape[] differenceENVC02000100 = [.. MiddleENVC02000100, new Rectangle(new(820f, 370f), 15f, 5f),
     new Rectangle(new(830f, 390f), 5f, 15f), new Rectangle(new(780f, 430f), 15f, 5f), new Rectangle(new(770f, 410f), 5f, 15f)];
     private static readonly AOEShapeCustom arenaChangeENVC02000100 = new(defaultSquare, differenceENVC02000100);
-    public static readonly ArenaBoundsComplex ArenaENVC02000100 = new(differenceENVC02000100);
+    public static readonly ArenaBoundsCustom ArenaENVC02000100 = new(differenceENVC02000100);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
 
@@ -43,7 +43,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (u
         }
     }
 
-    private void SetArena(ArenaBoundsComplex bounds)
+    private void SetArena(ArenaBoundsCustom bounds)
     {
         Arena.Bounds = bounds;
         Arena.Center = bounds.Center;

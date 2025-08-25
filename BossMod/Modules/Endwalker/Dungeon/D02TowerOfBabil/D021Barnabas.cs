@@ -203,6 +203,6 @@ sealed class D021BarnabasStates : StateMachineBuilder
 public sealed class D021Barnabas(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, StartingBounds)
 {
     private static readonly WPos arenaCenter = new(-300f, 71f);
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(arenaCenter, 19.5f, 48)], [new Rectangle(new(-300f, 91f), 20f, 1.25f), new Rectangle(new(-300f, 51f), 20f, 1.25f)]);
-    public static readonly ArenaBoundsComplex SmallerBounds = new([new Polygon(arenaCenter, 15f, 48)]);
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Polygon(arenaCenter, 19.5f, 48)], [new Rectangle(new(-300f, 91f), 20f, 1.25f), new Rectangle(new(-300f, 51f), 20f, 1.25f)]);
+    public static readonly ArenaBoundsCustom SmallerBounds = new([new Polygon(arenaCenter, 15f, 48)]);
 }

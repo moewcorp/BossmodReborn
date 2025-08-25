@@ -93,7 +93,7 @@ sealed class D081TeratotaurStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, Chuggalo", PrimaryActorOID = (uint)OID.Teratotaur, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9u, NameID = 1567u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.RealmReborn, SortOrder = 1)]
 public sealed class D081Teratotaur(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(-94.9f, -59f), new(-70.2f, -46.1f), new(-55.3f, -46.6f),
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(-94.9f, -59f), new(-70.2f, -46.1f), new(-55.3f, -46.6f),
     new(-55.7f, -55.6f), new(-51.1f, -60.9f), new(-51.2f, -65), new(-58.1f, -67.7f),
     new(-64.7f, -70.6f), new(-88.4f, -72.2f), new(-89, -66.2f), new(-94.9f, -65.5f)])]);
 

@@ -115,7 +115,7 @@ class LuckyFaceStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 819, NameID = 10831)]
 public class LuckyFace(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(default, -460f), 19.5f, 32)], [new Rectangle(new(default, -440f), 20f, 1f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(default, -460f), 19.5f, 32)], [new Rectangle(new(default, -440f), 20f, 1f)]);
     private static readonly uint[] bonusAdds = [(uint)OID.ExcitingEgg, (uint)OID.ExcitingQueen, (uint)OID.ExcitingOnion, (uint)OID.ExcitingTomato,
     (uint)OID.ExcitingGarlic];
     public static readonly uint[] All = [(uint)OID.Boss, .. bonusAdds];

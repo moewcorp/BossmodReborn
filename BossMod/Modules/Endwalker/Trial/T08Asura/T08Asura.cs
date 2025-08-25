@@ -49,6 +49,6 @@ class T08AsuraStates : StateMachineBuilder
 public class T08Asura(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, StartingArena)
 {
     private static readonly WPos arenaCenter = new(100, 100);
-    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(arenaCenter, 19.5f * CosPI.Pi32th, 32)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(arenaCenter, 19.165f, 32)]);
+    public static readonly ArenaBoundsCustom StartingArena = new([new Polygon(arenaCenter, 19.5f * CosPI.Pi32th, 32)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(arenaCenter, 19.165f, 32)]);
 }

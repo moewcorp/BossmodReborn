@@ -1,7 +1,5 @@
 ﻿using BossMod.Network.ServerIPC;
 using Dalamud.Memory;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace BossMod.Network;
 

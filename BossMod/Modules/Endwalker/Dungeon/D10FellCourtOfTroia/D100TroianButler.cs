@@ -125,8 +125,8 @@ public sealed class D100TroianButler(WorldState ws, Actor primary) : BossModule(
     new(-88.21f, -175.25f), new(-87.9f, -178.52f), new(-87.53f, -179.71f), new(-87.06f, -180.21f), new(-86.7f, -180.68f),
     new(-86.59f, -181.95f), new(-85.96f, -183.13f), new(-85.6f, -183.67f), new(-83.93f, -185.66f), new(-81.95f, -187.28f),
     new(-80.28f, -188.19f), new(-79.06f, -188.43f), new(-78.61f, -188.88f), new(-76.67f, -189.47f), new(-74.11f, -189.73f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)], [new Polygon(new(default, -116f), 6.778f, 32)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)], [new Polygon(new(default, -116f), 6.778f, 32)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.TroianEquerry, (uint)OID.TroianTrapper, (uint)OID.TroianSteward];
 
     protected override bool CheckPull()

@@ -40,7 +40,7 @@ sealed class D091MyrmidonPrincessStates : StateMachineBuilder
 public sealed class D091MyrmidonPrincess(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly uint[] trash = [(uint)OID.MyrmidonMarshal, (uint)OID.MyrmidonSoldier, (uint)OID.MyrmidonGuard];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(-29.24f, 177.93f), new(-11.23f, 190.65f),
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(-29.24f, 177.93f), new(-11.23f, 190.65f),
     new(-10.72f, 190.55f), new(-10.20f, 190.18f), new(-9.60f, 189.97f),
     new(-8.97f, 189.85f), new(-7.67f, 190.15f), new(-7.09f, 190.56f), new(-4.98f, 197.15f), new(-4.77f, 197.73f),
     new(-4.16f, 198.93f), new(-3.91f, 200.31f), new(-3.93f, 203.00f), new(-4.25f, 204.28f), new(-5.73f, 206.57f),

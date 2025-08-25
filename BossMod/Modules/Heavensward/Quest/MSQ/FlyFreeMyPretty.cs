@@ -127,8 +127,8 @@ class GrynewahtStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67894, NameID = 5576)]
 public class Grynewaht(WorldState ws, Actor primary) : BossModule(ws, primary, default, hexBounds)
 {
-    private static readonly ArenaBoundsComplex hexBounds = new([new Polygon(default, 10.675f, 6, 30f.Degrees())]);
-    public static readonly ArenaBoundsComplex CircleBounds = new([new Polygon(new(-0.092f, 0.101f), 19.5f, 20)]);
+    private static readonly ArenaBoundsCustom hexBounds = new([new Polygon(default, 10.675f, 6, 30f.Degrees())]);
+    public static readonly ArenaBoundsCustom CircleBounds = new([new Polygon(new(-0.092f, 0.101f), 19.5f, 20)]);
 
     private Actor? _bossP2;
     public Actor? BossP2() => _bossP2;

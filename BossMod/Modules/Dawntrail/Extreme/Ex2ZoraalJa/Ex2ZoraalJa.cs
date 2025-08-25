@@ -18,6 +18,6 @@ public sealed class Ex2ZoraalJa(WorldState ws, Actor primary) : Trial.T02ZoraalJ
     private static readonly WDir dir135 = 15f * a135.ToDirection();
     private static readonly WDir dirM135 = 15f * (-a135).ToDirection();
 
-    public static readonly ArenaBoundsComplex NWPlatformBounds = new([new Square(ArenaCenter - dir135, 10f, a135), new Square(ArenaCenter + dir135, 10f, a135)], ScaleFactor: 1.24f);
-    public static readonly ArenaBoundsComplex NEPlatformBounds = new([new Square(ArenaCenter - dirM135, 10f, -a135), new Square(ArenaCenter + dirM135, 10f, -a135)], ScaleFactor: 1.24f);
+    public static readonly ArenaBoundsCustom NWPlatformBounds = new([new Square(ArenaCenter - dir135, 10f, a135), new Square(ArenaCenter + dir135, 10f, a135)], ScaleFactor: 1.24f);
+    public static readonly ArenaBoundsCustom NEPlatformBounds = new([new Square(ArenaCenter - dirM135, 10f, -a135), new Square(ArenaCenter + dirM135, 10f, -a135)], ScaleFactor: 1.24f);
 }

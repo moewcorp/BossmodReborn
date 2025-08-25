@@ -29,7 +29,7 @@ sealed class RuinfallKB(BossModule module) : Components.SimpleKnockbacks(module,
 
         if (isDelayDeltaLow && t0.IsInside(actor))
         {
-            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.ArmsLength), actor, ActionQueue.Priority.High);
+            hints.ActionsToExecute.Push(ActionDefinitions.Armslength, actor, ActionQueue.Priority.High);
         }
     }
 }

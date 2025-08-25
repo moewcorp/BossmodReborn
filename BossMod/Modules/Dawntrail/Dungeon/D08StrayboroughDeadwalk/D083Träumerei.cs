@@ -197,5 +197,5 @@ public sealed class D083Träumerei(WorldState ws, Actor primary) : BossModule(ws
 {
     public static readonly WPos ArenaCenter = new(148f, -433f);
     public static readonly ArenaBoundsSquare DefaultBounds = new(19.5f);
-    public static readonly ArenaBoundsComplex CrossBounds = new([new Square(ArenaCenter, 19.5f)], [new Cross(ArenaCenter, 20f, 1.5f)]); // for some reason the obstacle cross is smaller than the AOE
+    public static readonly ArenaBoundsCustom CrossBounds = new([new Square(ArenaCenter, 19.5f)], [new Cross(ArenaCenter, 20f, 1.5f)]); // for some reason the obstacle cross is smaller than the AOE
 }
