@@ -274,6 +274,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
     // if expirationForPredicted is not null, search pending first, and return one if found; in that case only low byte of extra will be set
     public ActorStatus? FindStatus(uint sid, DateTime? expirationForPending = null)
     {
+        var sid_ = sid;
         if (expirationForPending != null)
         {
             var statusesP = CollectionsMarshal.AsSpan(PendingStatuses);
@@ -281,7 +282,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
             for (var i = 0; i < lenP; ++i)
             {
                 ref var s = ref statusesP[i];
-                if (s.StatusId == sid)
+                if (s.StatusId == sid_)
                 {
                     return new(sid, s.ExtraLo, expirationForPending.Value, s.Effect.SourceInstanceID);
                 }
@@ -291,7 +292,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
         for (var i = 0; i < len; ++i)
         {
             ref var s = ref Statuses[i];
-            if (s.ID == sid)
+            if (s.ID == sid_)
             {
                 return s;
             }
@@ -301,6 +302,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
 
     public ActorStatus? FindStatus(uint sid, ulong source, DateTime? expirationForPending = null)
     {
+        var sid_ = sid;
         if (expirationForPending != null)
         {
             var statusesP = CollectionsMarshal.AsSpan(PendingStatuses);
@@ -308,9 +310,9 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
             for (var i = 0; i < lenP; ++i)
             {
                 ref var s = ref statusesP[i];
-                if (s.StatusId == sid && s.Effect.SourceInstanceID == source)
+                if (s.StatusId == sid_ && s.Effect.SourceInstanceID == source)
                 {
-                    return new(sid, s.ExtraLo, expirationForPending.Value, s.Effect.SourceInstanceID);
+                    return new(sid_, s.ExtraLo, expirationForPending.Value, s.Effect.SourceInstanceID);
                 }
             }
         }
@@ -318,7 +320,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, uint layou
         for (var i = 0; i < len; ++i)
         {
             ref var s = ref Statuses[i];
-            if (s.ID == sid && s.SourceID == source)
+            if (s.ID == sid_ && s.SourceID == source)
             {
                 return s;
             }

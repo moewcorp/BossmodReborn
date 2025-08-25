@@ -122,6 +122,9 @@ public sealed class Map
         var dx = dir.OrthoL() * resolution;
         var dy = dir * resolution;
         var startPos = Center - ((width >> 1) - 0.5f) * dx - ((height >> 1) - 0.5f) * dy;
+        var maxG_ = maxG;
+        var threshold_ = threshold;
+        var shape_ = shape;
 
         Parallel.For(0, height, y =>
         {
@@ -130,22 +133,15 @@ public sealed class Map
             for (var x = 0; x < width; ++x)
             {
                 var pos = posY + x * dx;
-                if (shape(pos) <= threshold)
+                if (shape_(pos) <= threshold_)
                 {
-                    ref var pixelMaxG = ref PixelMaxG[rowBaseIndex + x];
-                    pixelMaxG = pixelMaxG < maxG ? pixelMaxG : maxG;
+                    var index = rowBaseIndex + x;
+                    var pixelMaxG = PixelMaxG[index];
+                    PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
                 }
             }
         });
     }
-
-    private static readonly (float, float)[] offsets =
-            [
-                (Epsilon, Epsilon),
-                (Epsilon, 1f - Epsilon),
-                (1f - Epsilon, Epsilon),
-                (1f - Epsilon, 1f - Epsilon)
-            ];
 
     // for testing 4 points per pixel for increased accuracy to rasterize circle and rectangle arena bounds
     public void BlockPixelsInside2(Func<WPos, float> shape, float maxG)
@@ -158,6 +154,11 @@ public sealed class Map
         var dx = dir.OrthoL() * resolution;
         var dy = dir * resolution;
         var startPos = Center - (width >> 1) * dx - (height >> 1) * dy;
+        var maxG_ = maxG;
+        var shape_ = shape;
+
+        float[] offsetsX = [Epsilon, Epsilon, 1f - Epsilon, 1f - Epsilon];
+        float[] offsetsZ = [Epsilon, 1f - Epsilon, Epsilon, 1f - Epsilon];
 
         Parallel.For(0, height, y =>
         {
@@ -170,10 +171,9 @@ public sealed class Map
                 var isBlocked = false;
                 for (var i = 0; i < 4; ++i)
                 {
-                    ref var points = ref offsets[i];
-                    var pos = posBase + points.Item1 * dx + points.Item2 * dy;
+                    var pos = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
 
-                    if (shape(pos) <= 0)
+                    if (shape_(pos) <= 0f)
                     {
                         isBlocked = true;
                         break;
@@ -181,8 +181,9 @@ public sealed class Map
                 }
                 if (isBlocked)
                 {
-                    ref var pixelMaxG = ref PixelMaxG[rowBaseIndex + x];
-                    pixelMaxG = pixelMaxG < maxG ? pixelMaxG : maxG;
+                    var index = rowBaseIndex + x;
+                    var pixelMaxG = PixelMaxG[index];
+                    PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
                 }
             }
         });

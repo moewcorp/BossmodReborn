@@ -398,7 +398,9 @@ sealed class WorldStateGameSync : IDisposable
                     var dur = Math.Min(Math.Abs(s.RemainingTime), 100000);
                     ActorStatus curStatus = new(s.StatusId, s.Param, _ws.CurrentTime.AddSeconds(dur), SanitizedObjectID(s.SourceObject));
                     UpdateActorStatus(act, i, ref curStatus);
+                    continue;
                 }
+                _ws.Execute(new ActorState.OpStatus(instanceID, i, default));
             }
         }
 

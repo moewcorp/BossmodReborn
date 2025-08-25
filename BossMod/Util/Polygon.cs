@@ -57,11 +57,11 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
     public bool Triangulate(List<RelTriangle> result)
     {
         var vertexCount = Vertices.Count;
-        Span<double> pts = vertexCount <= 256 ? stackalloc double[vertexCount * 2] : new double[vertexCount * 2];
+        var pts = vertexCount <= 256 ? stackalloc double[vertexCount * 2] : new double[vertexCount * 2];
         var verticesSpan = CollectionsMarshal.AsSpan(Vertices);
         for (int i = 0, j = 0; i < vertexCount; ++i, j += 2)
         {
-            ref readonly var v = ref verticesSpan[i];
+            var v = verticesSpan[i];
             pts[j] = v.X;
             pts[j + 1] = v.Z;
         }
@@ -95,8 +95,7 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
     // point-in-polygon test; point is defined as offset from shape center
     public bool Contains(WDir p)
     {
-        ref var edgeBuckets = ref _edgeBuckets;
-        if (edgeBuckets == null)
+        if (_edgeBuckets == null)
         {
             var holecount = HoleStarts.Count;
             ContourEdgeBuckets[] holeEdgeBuckets;
@@ -122,15 +121,15 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
             var newEdgeBuckets = new EdgeBuckets(exterior, holeEdgeBuckets);
             var original = Interlocked.CompareExchange(ref _edgeBuckets, newEdgeBuckets, null);
 
-            edgeBuckets = original ?? newEdgeBuckets;
+            _edgeBuckets = original ?? newEdgeBuckets;
         }
 
-        if (!InSimplePolygon(p, edgeBuckets.ExteriorEdgeBuckets))
+        if (!InSimplePolygon(p, _edgeBuckets.ExteriorEdgeBuckets))
             return false;
-        var len = edgeBuckets.HoleEdgeBuckets.Length;
+        var len = _edgeBuckets.HoleEdgeBuckets.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (InSimplePolygon(p, edgeBuckets.HoleEdgeBuckets[i]))
+            if (InSimplePolygon(p, _edgeBuckets.HoleEdgeBuckets[i]))
                 return false;
         }
         return true;
@@ -142,7 +141,7 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
         var bucketIndex = (int)((y - buckets.MinY) * buckets.InvBucketHeight);
         if ((uint)bucketIndex >= BucketCount)
             return false;
-        ref readonly var edges = ref buckets.EdgeBuckets[bucketIndex];
+        var edges = buckets.EdgeBuckets[bucketIndex];
         var inside = false;
         var len = edges.Length;
         for (var i = 0; i < len; ++i)
@@ -327,17 +326,6 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
         }
         return path;
     }
-
-    public RelSimplifiedComplexPolygon RemoveAllHoles()
-    {
-        var count = Parts.Count;
-        var result = new List<RelPolygonWithHoles>(count);
-        for (var i = 0; i < count; ++i)
-        {
-            result.Add(new([.. Parts[i].Exterior]));
-        }
-        return new(result);
-    }
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
@@ -351,7 +339,6 @@ public sealed class PolygonClipper
     {
         public Operand() { }
         public Operand(ReadOnlySpan<WDir> contour, bool isOpen = false) => AddContour(contour, isOpen);
-        public Operand(IEnumerable<WDir> contour, bool isOpen = false) => AddContour(contour, isOpen);
         public Operand(RelPolygonWithHoles polygon) => AddPolygon(polygon);
         public Operand(RelSimplifiedComplexPolygon polygon) => AddPolygon(polygon);
 
@@ -364,11 +351,11 @@ public sealed class PolygonClipper
             var count = contour.Length;
             Path64 path = new(count);
             for (var i = 0; i < count; ++i)
+            {
                 path.Add(ConvertPoint(contour[i]));
+            }
             AddContour(path, isOpen);
         }
-
-        public void AddContour(IEnumerable<WDir> contour, bool isOpen = false) => AddContour([.. contour.Select(ConvertPoint)], isOpen);
 
         public void AddPolygon(RelPolygonWithHoles polygon)
         {
@@ -376,7 +363,9 @@ public sealed class PolygonClipper
             var holes = polygon.Holes;
             var len = holes.Length;
             for (var i = 0; i < len; ++i)
+            {
                 AddContour(polygon.Interior(holes[i]));
+            }
         }
 
         public void AddPolygon(RelSimplifiedComplexPolygon polygon) => polygon.Parts.ForEach(AddPolygon);
@@ -384,63 +373,6 @@ public sealed class PolygonClipper
         public void Assign(Clipper64 clipper, PathType role) => clipper.AddReuseableData(_data, role);
 
         private void AddContour(Path64 contour, bool isOpen) => _data.AddPaths([contour], PathType.Subject, isOpen);
-
-        // Compute Minkowski Sum of two polygons, useful to get the area where shape B will intersect shape A
-        public static RelSimplifiedComplexPolygon MinkowskiSum(List<WDir> shapeA, List<WDir> shapeB, bool isClosed = true, bool removeHoles = true)
-        {
-            var pathA = ToPath64(shapeA);
-            var pathB = ToPath64(shapeB);
-
-            var result = Clipper.MinkowskiSum(pathA, pathB, isClosed);
-            var simplified = new RelSimplifiedComplexPolygon();
-            simplified.BuildResultFromPaths(simplified, result);
-            if (removeHoles)
-            {
-                simplified = simplified.RemoveAllHoles();
-            }
-            return simplified;
-        }
-
-        public static RelSimplifiedComplexPolygon MinkowskiSum(RelSimplifiedComplexPolygon shapeA, List<WDir> shapeB, bool isClosed = true, bool removeHoles = true)
-        {
-            var pathB = ToPath64(shapeB);
-            var count = shapeA.Parts.Count;
-            var resultPaths = new Paths64(count);
-            for (var i = 0; i < count; ++i)
-            {
-                var part = shapeA.Parts[i];
-                var exterior = part.Exterior;
-                var len = exterior.Length;
-                Path64 subjectPath = new(len);
-                for (var j = 0; j < len; ++j)
-                {
-                    ref readonly var p = ref exterior[j];
-                    subjectPath.Add(new Point64(p.X * Scale, p.Z * Scale));
-                }
-                var minkowski = Clipper.MinkowskiSum(subjectPath, pathB, isClosed);
-                resultPaths.AddRange(minkowski);
-            }
-
-            var simplified = new RelSimplifiedComplexPolygon();
-            simplified.BuildResultFromPaths(simplified, resultPaths);
-            if (removeHoles)
-            {
-                simplified = simplified.RemoveAllHoles();
-            }
-            return simplified;
-        }
-
-        private static Path64 ToPath64(List<WDir> vertices)
-        {
-            var count = vertices.Count;
-            var path = new Path64(count);
-            for (var i = 0; i < count; ++i)
-            {
-                var vertex = vertices[i];
-                path.Add(new(vertex.X * Scale, vertex.Z * Scale));
-            }
-            return path;
-        }
     }
 
     private readonly Clipper64 _clipper = new() { PreserveCollinear = false };
@@ -526,7 +458,7 @@ public static class PolygonUtil
 
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var contourI = ref contour[i];
+            var contourI = contour[i];
             result[i] = (prev, contourI);
             prev = contourI;
         }
@@ -692,7 +624,7 @@ public readonly struct PolygonWithHolesDistanceFunction
 
             for (var i = 0; i < count; ++i)
             {
-                ref readonly var curr = ref vertices[i];
+                var curr = vertices[i];
                 var prevX = prev.X;
                 var prevZ = prev.Z;
                 edges[i] = new(originX + prevX, originZ + prevZ, curr.X - prevX, curr.Z - prevZ);
@@ -888,7 +820,7 @@ public static class Visibility
         var t1 = (dx3 * dy2 - dy3 * dx2) * invDet;
         var t2 = (dx3 * dy1 - dy3 * dx1) * invDet;
 
-        if (t1 >= 0 && t2 >= 0 && t2 <= 1)
+        if (t1 >= 0f && t2 >= 0f && t2 <= 1f)
         {
             tRay = t1;
             intersection = o + t1 * d;
