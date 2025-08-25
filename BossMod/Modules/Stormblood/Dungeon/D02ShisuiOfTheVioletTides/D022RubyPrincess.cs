@@ -221,5 +221,5 @@ class D022RubyPrincessStates : StateMachineBuilder
 public class D022RubyPrincess(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(-0.046f, -208.362f);
-    private static readonly ArenaBoundsComplex arena = new([new Circle(ArenaCenter, 20)], [new Rectangle(new(-0.4f, -187.4f), 20, 2.5f), new Rectangle(new(-20, -208), 1.5f, 20f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Circle(ArenaCenter, 20)], [new Rectangle(new(-0.4f, -187.4f), 20, 2.5f), new Rectangle(new(-20, -208), 1.5f, 20f)]);
 }

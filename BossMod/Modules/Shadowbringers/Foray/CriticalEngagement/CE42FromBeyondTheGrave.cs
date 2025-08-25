@@ -229,7 +229,7 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 778, NameID = 20)] // bnpcname=9931
 public class CE42FromBeyondTheGrave(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(new(-60f, 800f), 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(new(-60f, 800f), 29.5f, 32)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

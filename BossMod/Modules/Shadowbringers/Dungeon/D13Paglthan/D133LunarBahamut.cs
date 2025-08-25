@@ -150,5 +150,5 @@ sealed class D133LunarBahamutStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 777, NameID = 10077)]
 public sealed class D133LunarBahamut(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(796.65f, -97.55f), 19.5f * CosPI.Pi40th, 40)], [new Rectangle(new(775.84613f, -97.50571f), 9.5f, 1.775f, -89.5f.Degrees())]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(796.65f, -97.55f), 19.5f * CosPI.Pi40th, 40)], [new Rectangle(new(775.84613f, -97.50571f), 9.5f, 1.775f, -89.5f.Degrees())]);
 }

@@ -83,7 +83,7 @@ public sealed class D90ForestWoolback(WorldState ws, Actor primary) : BossModule
     new(42.98f, 361.41f), new(43.55f, 361.2f), new(44.23f, 361.17f), new(44.88f, 361.2f), new(46.74f, 360.92f),
     new(51.35f, 360.61f), new(51.7f, 360.07f), new(51.99f, 359.46f), new(52.32f, 359.07f), new(52.99f, 358.92f),
     new(53.49f, 358.63f), new(53.9f, 358.33f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ForestAxeBeak, (uint)OID.ForestWoolback, (uint)OID.Electrogolem];
 
     protected override bool CheckPull()

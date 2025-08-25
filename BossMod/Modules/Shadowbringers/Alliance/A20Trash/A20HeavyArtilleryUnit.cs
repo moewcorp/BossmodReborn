@@ -161,8 +161,8 @@ IsArena1(primary) ? Arena1 : IsArena2(primary) ? Arena2 : arena3a)
     private static readonly Rectangle[] rectarena3 = [new(arena3center, 11.5f, 44.5f)];
     private static readonly Rectangle barrier1 = new(new(200f, -405f), 11.5f, 1f);
     private static readonly Rectangle barrier2 = new(new(200f, -435f), 11.5f, 1f);
-    private static readonly ArenaBoundsComplex arena3a = new(rectarena3, [barrier1, barrier2]);
-    public static readonly ArenaBoundsComplex Arena3b = new(rectarena3, [barrier2]);
+    private static readonly ArenaBoundsCustom arena3a = new(rectarena3, [barrier1, barrier2]);
+    public static readonly ArenaBoundsCustom Arena3b = new(rectarena3, [barrier2]);
     public static readonly ArenaBoundsRect Arena3c = new(11.5f, 44.468f);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

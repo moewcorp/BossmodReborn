@@ -124,5 +124,5 @@ class RanaaMihgoStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68786, NameID = 8489)]
 public class RanaaMihgo(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    public static readonly ArenaBoundsComplex arena = new([new Ellipse(new(520.47f, 124.99f), 17.5f, 16, 50)]);
+    public static readonly ArenaBoundsCustom arena = new([new Ellipse(new(520.47f, 124.99f), 17.5f, 16, 50)]);
 }

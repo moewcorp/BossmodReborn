@@ -83,5 +83,5 @@ class D032GyascutusStates : StateMachineBuilder
 public class D032Gyascutus(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
     public static readonly WPos ArenaCenter = new(11.978f, 67.979f);
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Circle(ArenaCenter, 26.5f)], [new Rectangle(new(38.805f, 66.371f), 20f, 0.8f, -86.104f.Degrees()), new Rectangle(new(-11.441f, 56.27f), 20f, 0.9f, 64.554f.Degrees()), new Circle(new(-16.5f, 66.1f), 2.5f)]);
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Circle(ArenaCenter, 26.5f)], [new Rectangle(new(38.805f, 66.371f), 20f, 0.8f, -86.104f.Degrees()), new Rectangle(new(-11.441f, 56.27f), 20f, 0.9f, 64.554f.Degrees()), new Circle(new(-16.5f, 66.1f), 2.5f)]);
 }

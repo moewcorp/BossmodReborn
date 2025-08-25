@@ -18,7 +18,7 @@ public sealed class PartyState
     public const int MaxAllianceSize = 24;
     public const int MaxAllies = 64;
 
-    public struct Member(ulong contentId, ulong instanceId, bool inCutscene, string name) : IEquatable<Member>
+    public struct Member(ulong contentId, ulong instanceId, bool inCutscene, string name)
     {
         public readonly ulong ContentId = contentId;
         public readonly ulong InstanceId = instanceId;
@@ -181,14 +181,18 @@ public sealed class PartyState
 
     // implementation of operations
     public Event<OpModify> Modified = new();
-    public sealed record class OpModify(int Slot, Member Member) : WorldState.Operation
+    public sealed class OpModify(int slot, Member member) : WorldState.Operation
     {
+        public readonly int Slot = slot;
+        public readonly Member Member = member;
+
         protected override void Exec(WorldState ws)
         {
             if (Slot >= 0 && Slot < ws.Party.Members.Length)
             {
-                ws.Party.Members[Slot] = Member;
-                ws.Party._actors[Slot] = ws.Actors.Find(Member.InstanceId);
+                ref readonly var m = ref Member;
+                ws.Party.Members[Slot] = m;
+                ws.Party._actors[Slot] = ws.Actors.Find(m.InstanceId);
                 ws.Party.Modified.Fire(this);
             }
             else
@@ -196,12 +200,19 @@ public sealed class PartyState
                 Service.Log($"[PartyState] Out-of-bounds slot {Slot}");
             }
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PAR "u8).Emit(Slot).Emit(Member.ContentId, "X").Emit(Member.InstanceId, "X8").Emit(Member.InCutscene).Emit(Member.Name);
+        public override void Write(ReplayRecorder.Output output)
+        {
+            ref readonly var m = ref Member;
+            output.EmitFourCC("PAR "u8).Emit(Slot).Emit(m.ContentId, "X").Emit(m.InstanceId, "X8").Emit(m.InCutscene).Emit(m.Name);
+        }
     }
 
     public Event<OpLimitBreakChange> LimitBreakChanged = new();
-    public sealed record class OpLimitBreakChange(int Cur, int Max) : WorldState.Operation
+    public sealed class OpLimitBreakChange(int cur, int max) : WorldState.Operation
     {
+        public readonly int Cur = cur;
+        public readonly int Max = max;
+
         protected override void Exec(WorldState ws)
         {
             ws.Party.LimitBreakCur = Cur;

@@ -242,6 +242,6 @@ public class D152DotoliCiloc(WorldState ws, Actor primary) : BossModule(ws, prim
     private static readonly WPos[] verticesS = WPos.GenerateRotatedVertices(ArenaCenter, verticesW, 270f);
     private static readonly PolygonCustomO[] difference = [new PolygonCustomO(verticesW, offset), new PolygonCustomO(verticesN, offset),
     new PolygonCustomO(verticesE, offset), new PolygonCustomO(verticesS, offset)];
-    public static readonly ArenaBoundsComplex StartingBounds = new(StartingBoundsP, difference);
-    public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultBoundsP, difference);
+    public static readonly ArenaBoundsCustom StartingBounds = new(StartingBoundsP, difference);
+    public static readonly ArenaBoundsCustom DefaultBounds = new(DefaultBoundsP, difference);
 }

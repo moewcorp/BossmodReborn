@@ -84,5 +84,5 @@ public class D103Isgebind(WorldState ws, Actor primary) : BossModule(ws, primary
     new Circle(new(19.5f, -267.6f), 3), new Circle(new(-21.3f, -243.6f), 1.5f), new Circle(new(-21.3f, -252.4f), 1.5f), new Square(new(-23, -243.4f), 0.7f),
     new Square(new(-23, -252.6f), 0.7f), new Circle(new(21.3f, -243.6f), 1.5f), new Circle(new(21.3f, -252.4f), 1.5f), new Square(new(23, -243.4f), 0.7f),
     new Square(new(23, -252.6f), 0.7f)];
-    public static readonly ArenaBoundsComplex arena = new(union, difference, union2);
+    public static readonly ArenaBoundsCustom arena = new(union, difference, union2);
 }

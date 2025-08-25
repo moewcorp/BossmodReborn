@@ -198,7 +198,7 @@ class CE41WithDiremiteAndMainStates : StateMachineBuilder
 public class CE41WithDiremiteAndMain(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly uint[] Crystals = [(uint)OID.DimCrystal, (uint)OID.CorruptedCrystal];
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-220f, 530f), 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-220f, 530f), 29.5f, 32)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

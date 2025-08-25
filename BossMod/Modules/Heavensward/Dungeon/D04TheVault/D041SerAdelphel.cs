@@ -190,7 +190,7 @@ public class D041SerAdelphel(WorldState ws, Actor primary) : BossModule(ws, prim
         return base.CheckPull();
     }
 
-    public static readonly ArenaBounds arena = new ArenaBoundsComplex([new Circle(new(default, -100f), 19.5f)], [new Rectangle(new(default, -120), 20f, 1.75f), new Rectangle(new(-21f, -100f), 1.75f, 20f)]);
+    public static readonly ArenaBounds arena = new ArenaBoundsCustom([new Circle(new(default, -100f), 19.5f)], [new Rectangle(new(default, -120), 20f, 1.75f), new Rectangle(new(-21f, -100f), 1.75f, 20f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -90,7 +90,7 @@ public class D151NuzalHueloc(WorldState ws, Actor primary) : BossModule(ws, prim
     new(-79.79f, -49.43f), new(-90.22f, -55.45f), new(-92.52f, -57.81f), new(-95.38f, -64.42f), new(-96.08f, -70.82f),
     new(-96.01f, -71.49f), new(-94.72f, -77.66f), new(-91.42f, -83.42f), new(-86.42f, -88.01f), new(-80.32f, -90.77f),
     new(-73.80f, -91.52f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     private static readonly uint[] opponents = [(uint)OID.Boss, (uint)OID.IxaliStitcher, (uint)OID.FloatingTurret, (uint)OID.Airstone];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

@@ -105,7 +105,7 @@ public class D292MagitekGunship(WorldState ws, Actor primary) : BossModule(ws, p
     new(-7.35f, -138.62f), new(-9.99f, -143.81f), new(-10.12f, -144.36f), new(-10.94f, -149.51f), new(-11.00f, -150.06f),
     new(-10.07f, -155.93f), new(-9.85f, -156.45f), new(-7.45f, -161.16f), new(-7.17f, -161.58f), new(-3.28f, -165.47f),
     new(-2.84f, -165.86f), new(1.22f, -167.76f), new(15.79f, -167.88f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     private static readonly uint[] trash = [(uint)OID.SixthCohortEques, (uint)OID.SixthCohortLaquearius, (uint)OID.SixthCohortSecutor, (uint)OID.SixthCohortSignifer, (uint)OID.SixthCohortVanguard];
 

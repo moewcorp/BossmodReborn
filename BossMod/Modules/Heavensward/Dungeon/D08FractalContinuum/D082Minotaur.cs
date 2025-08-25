@@ -127,7 +127,7 @@ class D082MinotaurStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 35, NameID = 3429, SortOrder = 5)]
 public class D082Minotaur(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-160.632f, 91.323f), 19.5f, 24)],
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-160.632f, 91.323f), 19.5f, 24)],
     [new Rectangle(new(-180.138f, 96.181f), 20f, 1.25f, -74.089f.Degrees()), new Rectangle(new(-141.271f, 85.777f), 20f, 1.25f, -74.205f.Degrees())]);
 
     private static readonly uint[] adds = [(uint)OID.FlawedShabti, (uint)OID.ContinuumConservator, (uint)OID.Urstrix, (uint)OID.FlawedNaga];

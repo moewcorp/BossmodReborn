@@ -137,7 +137,7 @@ public sealed class A10Despot(WorldState ws, Actor primary) : BossModule(ws, pri
     new(-583.31f, -633.17f), new(-583.26f, -633.79f), new(-583.79f, -634.2f), new(-585.11f, -634.48f), new(-585.79f, -634.7f),
     new(-586.45f, -635.02f), new(-587.01f, -635.5f), new(-587.48f, -636.06f), new(-587.43f, -636.72f), new(-586.1f, -639.84f),
     new(-585.55f, -640.25f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Flamingo1, (uint)OID.Flamingo2];
 
     protected override bool CheckPull()

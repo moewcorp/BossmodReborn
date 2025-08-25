@@ -146,7 +146,7 @@ abstract class DreamsOfANewDayStates : StateMachineBuilder
 
 public abstract class DreamsOfANewDay(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-757f, -719f), 19.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-757f, -719f), 19.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.UnboundRaider1, (uint)OID.UnboundRaider2, (uint)OID.UnboundRaider3, (uint)OID.UnboundRaider4,
     (uint)OID.UnboundRavager1, (uint)OID.UnboundRavager4, (uint)OID.UnboundRavager6, (uint)OID.UnboundRavager7, (uint)OID.UnboundRavager8, (uint)OID.BossP2];
 

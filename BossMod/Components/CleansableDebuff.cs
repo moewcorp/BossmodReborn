@@ -7,8 +7,6 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
     private readonly uint StatusID = statusID;
     private readonly string Noun = noun;
     private readonly string Adjective = adjective;
-    private static readonly ActionID esuna = ActionID.MakeSpell(ClassShared.AID.Esuna);
-    private static readonly ActionID wardensPaean = ActionID.MakeSpell(BRD.AID.WardensPaean);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
@@ -89,19 +87,17 @@ public abstract class CleansableDebuff(BossModule module, uint statusID, string 
         for (var i = 0; i < count; ++i)
         {
             var c = _affected[i];
-            ActionID action = default;
+
             if (actor.Role == Role.Healer)
             {
-                action = esuna;
+                PressAction(ActionDefinitions.Esuna, c, 1f);
             }
             else if (actor.Class == Class.BRD)
             {
-                action = wardensPaean;
-            }
-            if (action != default)
-            {
-                hints.ActionsToExecute.Push(action, c, ActionQueue.Priority.High, castTime: action == esuna ? 1f : default);
+                PressAction(ActionDefinitions.WardensPaean, c);
             }
         }
+        void PressAction(in ActionID action, Actor target, float castTime = default)
+        => hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High, castTime);
     }
 }

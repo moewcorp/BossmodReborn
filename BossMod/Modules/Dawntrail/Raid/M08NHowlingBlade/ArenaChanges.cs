@@ -50,7 +50,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 pillars.Add(pillarPolygons[index - 0x08]);
                 if (pillars.Count == 3)
                 {
-                    var arena = new ArenaBoundsComplex(M08NHowlingBlade.EndArenaPolygon, [.. pillars]);
+                    var arena = new ArenaBoundsCustom(M08NHowlingBlade.EndArenaPolygon, [.. pillars]);
                     Arena.Bounds = arena;
                     Arena.Center = arena.Center;
                 }

@@ -28,9 +28,9 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
             if (bounds != Arena.Bounds)
             {
                 bounds = Arena.Bounds;
-                if (bounds is ArenaBoundsComplex arena)
+                if (bounds is ArenaBoundsCustom arena)
                 {
-                    poly = arena.poly.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
+                    poly = arena.Polygon.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
                 }
             }
         }

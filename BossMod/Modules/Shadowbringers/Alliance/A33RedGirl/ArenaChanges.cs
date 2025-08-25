@@ -81,7 +81,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
                     _wipe ??= Module.FindComponent<WipeBlackWhite>();
                     _wipe?.UpdateAOE();
-                    Arena.Bounds = new ArenaBoundsComplex(isDefaultArena ? A33RedGirl.DefaultSquare : A33RedGirl.BigSquare, [.. differenceShapes]);
+                    Arena.Bounds = new ArenaBoundsCustom(isDefaultArena ? A33RedGirl.DefaultSquare : A33RedGirl.BigSquare, [.. differenceShapes]);
                     break;
             }
         }

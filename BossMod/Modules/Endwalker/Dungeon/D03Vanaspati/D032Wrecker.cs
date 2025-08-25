@@ -177,7 +177,7 @@ class D032WreckerStates : StateMachineBuilder
 public class D032Wrecker(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
 {
     private static readonly WPos arenaCenter = new(-295f, -354f);
-    public static readonly ArenaBoundsComplex StartingArena = new([new Polygon(arenaCenter, 24.5f, 36)],
+    public static readonly ArenaBoundsCustom StartingArena = new([new Polygon(arenaCenter, 24.5f, 36)],
     [new Rectangle(new(-295f, -328f), 20f, 2.5f), new Rectangle(new(-295f, -379f), 20f, 1.32f)]);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Polygon(arenaCenter, 20, 36)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(arenaCenter, 20, 36)]);
 }

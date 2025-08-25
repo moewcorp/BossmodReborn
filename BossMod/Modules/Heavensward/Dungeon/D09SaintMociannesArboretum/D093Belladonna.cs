@@ -116,7 +116,7 @@ class D093BelladonnaStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 41, NameID = 4658, SortOrder = 6)]
 public class D093Belladonna(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(default, 19.5f * CosPI.Pi64th, 64)], [new Rectangle(new(-16.441f, -11.753f), 20f, 1.25f, 55.859f.Degrees())]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(default, 19.5f * CosPI.Pi64th, 64)], [new Rectangle(new(-16.441f, -11.753f), 20f, 1.25f, 55.859f.Degrees())]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

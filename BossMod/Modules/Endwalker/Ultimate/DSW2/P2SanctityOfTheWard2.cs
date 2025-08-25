@@ -13,7 +13,7 @@ sealed class P2SanctityOfTheWard2Knockback(BossModule module) : Components.Simpl
     {
         if (_config.P2Sanctity2AutomaticAntiKB && Casters.Count > 0 && !actor.Position.InCircle(Arena.Center, 12f))
         {
-            var action = actor.Class.GetClassCategory() is ClassCategory.Healer or ClassCategory.Caster ? ActionID.MakeSpell(ClassShared.AID.Surecast) : ActionID.MakeSpell(ClassShared.AID.ArmsLength);
+            var action = actor.Class.GetClassCategory() is ClassCategory.Healer or ClassCategory.Caster ? ActionDefinitions.Surecast : ActionDefinitions.Armslength;
             hints.ActionsToExecute.Push(action, actor, ActionQueue.Priority.High, WorldState.Actors.Find(Casters.Ref(0).ActorID)?.CastInfo?.NPCRemainingTime ?? default);
         }
     }

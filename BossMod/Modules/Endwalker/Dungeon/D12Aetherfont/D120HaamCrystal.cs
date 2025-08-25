@@ -63,7 +63,7 @@ public class D120HaamCrystal(WorldState ws, Actor primary) : BossModule(ws, prim
     new(368.58f, -148.79f), new(370.45f, -150.68f), new(370.88f, -151.01f), new(374.69f, -152.67f), new(375.14f, -152.94f),
     new(378.38f, -156.37f), new(380.83f, -158.27f), new(381.28f, -158.55f), new(381.69f, -158.87f), new(382.20f, -158.91f),
     new(383.75f, -158.84f), new(385.77f, -159.32f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.HaamGolem, (uint)OID.HaamAuk];
 
     protected override bool CheckPull() => Enemies(Trash).Any(x => x.InCombat && x.Position.AlmostEqual(Arena.Center, Bounds.Radius));

@@ -214,7 +214,7 @@ sealed class TturuhhetsoStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70785, NameID = 13593)]
 public sealed class Tturuhhetso(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(395.735f, -45.365f), 19.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(395.735f, -45.365f), 19.5f, 20)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

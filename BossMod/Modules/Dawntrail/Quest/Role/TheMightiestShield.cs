@@ -242,7 +242,7 @@ sealed class TheMightiestShieldStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70377, NameID = 12923)]
 public sealed class TheMightiestShield(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-191f, 72f), 14.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-191f, 72f), 14.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.CravenFollower1, (uint)OID.CravenFollower2, (uint)OID.CravenFollower3, (uint)OID.CravenFollower4,
     (uint)OID.CravenFollower5, (uint)OID.CravenFollower6, (uint)OID.CravenFollower7, (uint)OID.CravenFollower8, (uint)OID.MagitekMissile, (uint)OID.UnyieldingMettle2,
     (uint)OID.UnyieldingMettle3]; // except CrackedMettle1/2 since the Parry component is drawing them

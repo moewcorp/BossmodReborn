@@ -172,7 +172,7 @@ sealed class AnAntidoteForAnarchyStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70365, NameID = 12743)]
 public sealed class AnAntidoteForAnarchy(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-5.65f, -84.73f), 14.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-5.65f, -84.73f), 14.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.Boss, (uint)OID.KAModelMammet, (uint)OID.KRModelMammet, (uint)OID.SuffocatingCloud, (uint)OID.PoisonCloud];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

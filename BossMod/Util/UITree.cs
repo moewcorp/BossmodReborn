@@ -77,6 +77,19 @@ public sealed class UITree
         }
     }
 
+    public void LeafNodes<T>(ReadOnlySpan<T> collection, Func<T, string> map, Action<T>? contextMenu = null, Action<T>? doubleClick = null, Action<T>? select = null)
+    {
+        var col = collection;
+        var len = collection.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            var t = col[i];
+            if (RawNode(map(t), true, Colors.TextColor1, contextMenu != null ? () => contextMenu(t) : null, doubleClick != null ? () => doubleClick(t) : null, select != null ? () => select(t) : null))
+                ImGui.TreePop();
+            ImGui.PopID();
+        }
+    }
+
     // handle selection & id scopes
     private bool RawNode(string text, bool leaf, uint color, Action? contextMenu, Action? doubleClick, Action? select)
     {

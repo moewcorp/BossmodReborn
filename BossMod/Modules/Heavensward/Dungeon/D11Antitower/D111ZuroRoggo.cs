@@ -121,7 +121,7 @@ class D111ZuroRoggoStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 141, NameID = 4805)]
 public class D111ZuroRoggo(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-365, -250), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(-365, -230), 20, 2.01f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-365, -250), 19.5f * CosPI.Pi32th, 32)], [new Rectangle(new(-365, -230), 20, 2.01f),
     new Rectangle(new(-365, -270), 20, 1.75f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

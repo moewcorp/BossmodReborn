@@ -142,7 +142,7 @@ class D293MidgardsormrStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 32, NameID = 3374)]
 public class D293Midgardsormr(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Circle(new(-40.8f, -78.2f), 18.8f)], [new Rectangle(new(-40.787f, -59.416f), 20, 1.25f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Circle(new(-40.8f, -78.2f), 18.8f)], [new Rectangle(new(-40.787f, -59.416f), 20, 1.25f)]);
     private static readonly uint[] dragons = [(uint)OID.MirageDragon3, (uint)OID.MirageDragon4];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

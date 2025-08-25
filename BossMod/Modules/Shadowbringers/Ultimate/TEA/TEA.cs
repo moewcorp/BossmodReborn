@@ -46,7 +46,7 @@ public sealed class TEA : BossModule
     private Actor? _perfectAlex;
     public Actor? PerfectAlex() => _perfectAlex;
 
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(100f, 100f), 20f, 48)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(100f, 100f), 20f, 48)]);
 
     public TEA(WorldState ws, Actor primary) : base(ws, primary, arena.Center, arena)
     {

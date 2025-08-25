@@ -139,7 +139,7 @@ public sealed class D082MorbolMarquis(WorldState ws, Actor primary) : BossModule
     new DonutSegmentV(arenaCenter, OuterRadius, Radius, a45, a45, Edges), new DonutSegmentV(arenaCenter, OuterRadius, Radius, -a135, a45, Edges)];
     private static readonly Shape[] yellowBlossom = [new ConeV(arenaCenter, InnerRadius, -a45, a45, Edges), new ConeV(arenaCenter, InnerRadius, a135, a45, Edges),
     new DonutSegmentV(arenaCenter, OuterRadius, Radius, -a45, a45, Edges), new DonutSegmentV(arenaCenter, OuterRadius, Radius, a135, a45, Edges)];
-    public static readonly ArenaBoundsComplex DefaultBounds = new(defaultCircle, defaultDifference);
-    public static readonly ArenaBoundsComplex BlueBlossomBounds = new(defaultCircle, [.. defaultDifference, .. blueBlossom]);
-    public static readonly ArenaBoundsComplex YellowBlossomBounds = new(defaultCircle, [.. defaultDifference, .. yellowBlossom]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new(defaultCircle, defaultDifference);
+    public static readonly ArenaBoundsCustom BlueBlossomBounds = new(defaultCircle, [.. defaultDifference, .. blueBlossom]);
+    public static readonly ArenaBoundsCustom YellowBlossomBounds = new(defaultCircle, [.. defaultDifference, .. yellowBlossom]);
 }

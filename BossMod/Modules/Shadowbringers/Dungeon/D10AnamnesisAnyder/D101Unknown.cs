@@ -108,7 +108,7 @@ public sealed class D101Unknown(WorldState ws, Actor primary) : BossModule(ws, p
 {
     public Actor? Unknown2;
 
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-40f, 290f), 19.5f, 40)], [new Rectangle(new(-40f, 310.534f), 20f, 1.2f), new Rectangle(new(-40f, 269.5f), 20f, 2f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-40f, 290f), 19.5f, 40)], [new Rectangle(new(-40f, 310.534f), 20f, 1.2f), new Rectangle(new(-40f, 269.5f), 20f, 2f)]);
 
     protected override void UpdateModule()
     {

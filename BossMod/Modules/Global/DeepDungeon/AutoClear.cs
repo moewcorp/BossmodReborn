@@ -161,8 +161,8 @@ public abstract class AutoClear : ZoneModule
                     _playerImmunes[slot2].JobBuffExpire = status.ExpireAt;
                 break;
             // Knockback Penalty floor effect
-            case 1096:
-            case 1512:
+            case 1096u:
+            case 1512u:
                 var slot3 = World.Party.FindSlot(actor.InstanceID);
                 if (slot3 >= 0)
                     _playerImmunes[slot3].KnockbackPenalty = true;
@@ -186,19 +186,19 @@ public abstract class AutoClear : ZoneModule
 
     private void OnSystemLogMessage(WorldState.OpSystemLogMessage op)
     {
-        switch (op.MessageId)
+        switch (op.MessageID)
         {
-            case 7222: // pomander overcap
+            case 7222u: // pomander overcap
                 _lastChestContentsGold = (PomanderID)op.Args[0];
                 break;
-            case 7248: // transference initiated
+            case 7248u: // transference initiated
                 ClearState();
                 break;
-            case 7255: // safety used
-            case 7256: // sight used
+            case 7255u: // safety used
+            case 7256u: // sight used
                 _trapsHidden = false;
                 break;
-            case 10287: // demiclone overcap
+            case 10287u: // demiclone overcap
                 _lastChestMagicite = true;
                 break;
         }

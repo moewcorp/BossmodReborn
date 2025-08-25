@@ -130,7 +130,7 @@ public sealed class D100TroianBishop(WorldState ws, Actor primary) : BossModule(
     new(-12.2f, -88.55f), new(-12.29f, -87.81f), new(-12.24f, -87.09f), new(-12f, -86.56f), new(-10.91f, -86.51f),
     new(-10.33f, -86.31f), new(-8.92f, -86.52f), new(-8.59f, -86.94f), new(-8.59f, -88.23f), new(-7.98f, -88.42f),
     new(-7.46f, -88.27f), new(-6.29f, -88.55f), new(-6.02f, -90.98f), new(-6.31f, -91.49f), new(6.22f, -91.79f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.TroianKnight, (uint)OID.TroianHound];
 
     protected override bool CheckPull()

@@ -178,8 +178,8 @@ sealed class D043ZanderStates : StateMachineBuilder
 public sealed class D043Zander(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
     private static readonly WPos ArenaCenter = new(90f, -430f);
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(ArenaCenter, 19.5f, 40)], [new Rectangle(new(90f, -410f), 20f, 0.85f)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ArenaCenter, 17f, 40)]);
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Polygon(ArenaCenter, 19.5f, 40)], [new Rectangle(new(90f, -410f), 20f, 0.85f)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(ArenaCenter, 17f, 40)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

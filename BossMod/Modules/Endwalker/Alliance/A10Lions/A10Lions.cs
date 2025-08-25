@@ -17,7 +17,7 @@ class A10LionsStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Lion, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 866u, NameID = 11294u, SortOrder = 4)]
 public class A10Lions(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-677.256f, -606.256f), 24.5f * CosPI.Pi148th, 148)], [new Rectangle(new(-677f, -581f), 20f, 1.5f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-677.256f, -606.256f), 24.5f * CosPI.Pi148th, 148)], [new Rectangle(new(-677f, -581f), 20f, 1.5f),
     new Rectangle(new(-677f, -631f), 20f, 1f)]);
     public Actor? Lioness;
 

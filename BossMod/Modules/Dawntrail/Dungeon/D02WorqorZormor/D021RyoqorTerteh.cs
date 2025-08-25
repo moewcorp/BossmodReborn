@@ -162,7 +162,7 @@ sealed class D021RyoqorTertehStates : StateMachineBuilder
 public sealed class D021RyoqorTerteh(WorldState ws, Actor primary) : BossModule(ws, primary, StartingBounds.Center, StartingBounds)
 {
     private static readonly WPos arenaCenter = new(-108f, 119f);
-    public static readonly ArenaBoundsComplex StartingBounds = new([new Polygon(arenaCenter, 22.5f, 52)], [new Rectangle(new(-108f, 141.95f), 20f, 1.25f),
+    public static readonly ArenaBoundsCustom StartingBounds = new([new Polygon(arenaCenter, 22.5f, 52)], [new Rectangle(new(-108f, 141.95f), 20f, 1.25f),
     new Rectangle(new(-108f, 96.25f), 20f, 1.25f)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(arenaCenter, 20f, 52)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(arenaCenter, 20f, 52)]);
 }

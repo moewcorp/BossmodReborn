@@ -95,7 +95,7 @@ public class D0150ScholaMarkIIColossus(WorldState ws, Actor primary) : BossModul
     new(355.28f, -154.19f), new(355.64f, -154.63f), new(356.02f, -155.06f), new(356.41f, -155.49f), new(358.53f, -157.45f),
     new(359.01f, -157.79f), new(359.53f, -158.04f), new(360.06f, -158.21f), new(361.13f, -158.48f), new(371.63f, -161.31f),
     new(373.18f, -161.7f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

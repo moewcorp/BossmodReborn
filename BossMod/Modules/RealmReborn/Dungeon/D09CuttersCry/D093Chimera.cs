@@ -117,7 +117,7 @@ sealed class D093ChimeraStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Chimera, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 12u, NameID = 1590u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.RealmReborn, SortOrder = 3)]
 public sealed class D093Chimera(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom([new(-183f, -234.78f), new(-180.96f, -234.61f),
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(-183f, -234.78f), new(-180.96f, -234.61f),
     new(-175.02f, -233.03f), new(-172.75f, -232.73f), new(-172.08f, -232.76f),
     new(-170.81f, -232.7f), new(-170.16f, -232.61f), new(-169.5f, -232.44f), new(-152.87f, -219.83f), new(-152.69f, -219.2f),
     new(-152.36f, -217.28f), new(-152.34f, -216.62f), new(-152.49f, -215.99f), new(-153.9f, -213.96f), new(-154.04f, -213.04f),

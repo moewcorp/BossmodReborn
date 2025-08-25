@@ -43,7 +43,7 @@ class Octagons(BossModule module) : Components.GenericAOEs(module)
                 break;
         }
         if (update)
-            Arena.Bounds = new ArenaBoundsComplex(baseArena, [.. octagonsOuter], [.. octagonsInner]);
+            Arena.Bounds = new ArenaBoundsCustom(baseArena, [.. octagonsOuter], [.. octagonsInner]);
     }
 
     private void RemoveOctagons(byte index)

@@ -354,7 +354,7 @@ sealed class D013PhiliaStates : StateMachineBuilder
 public sealed class D013Philia(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(134f, -465f); // slightly different from calculated center due to difference operation
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi64th, 64)], [new Rectangle(new(134f, -445.277f), 20f, 1.25f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(ArenaCenter, 19.5f * CosPI.Pi64th, 64)], [new Rectangle(new(134f, -445.277f), 20f, 1.25f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

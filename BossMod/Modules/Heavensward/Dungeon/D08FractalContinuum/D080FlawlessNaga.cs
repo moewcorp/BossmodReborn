@@ -161,7 +161,7 @@ public class D080FlawlessNaga(WorldState ws, Actor primary) : BossModule(ws, pri
     new(-328.99f, 72.06f), new(-328.42f, 71.82f), new(-328.09f, 71.33f), new(-327.84f, 70.72f), new(-327.9f, 70.09f),
     new(-327.47f, 69.51f), new(-325.8f, 68.32f), new(-325.35f, 68.54f), new(-324.76f, 68.56f), new(-324.26f, 68.11f),
     new(-324.42f, 67.56f), new(-324.13f, 66.97f), new(-314.35f, 59.47f), new(-313.74f, 59.12f), new(-299.91f, 53.4f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.Iksalion, (uint)OID.FlawlessEmpuse, (uint)OID.Shabti, (uint)OID.FlawlessChimera];
 
     protected override bool CheckPull()

@@ -200,7 +200,7 @@ class D131ChieftainMoglinStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 171, NameID = 4943, SortOrder = 2)]
 public class D131ChieftainMoglin(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-400f, -158.04f), 19.5f * CosPI.Pi60th, 64)], [new Rectangle(new(-400f, -138f), 20f, 1.05f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-400f, -158.04f), 19.5f * CosPI.Pi60th, 64)], [new Rectangle(new(-400f, -138f), 20f, 1.05f),
     new Rectangle(new(-400f, -178f), 20f, 0.8f)]);
 
     public static readonly uint[] SmallMoogles = [(uint)OID.CaptainMogsun, (uint)OID.PomguardPomfluffer, (uint)OID.PomguardPomfryer, (uint)OID.PomguardPompincher,

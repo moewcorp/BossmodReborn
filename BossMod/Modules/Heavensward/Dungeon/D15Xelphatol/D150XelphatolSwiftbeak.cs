@@ -208,9 +208,9 @@ IsArena1(primary) ? arena1 : IsArena2(primary) ? arena3 : arena2)
     new(410.21f, -276.01f), new(411.4f, -276.57f), new(411.93f, -276.89f), new(412.75f, -278.54f), new(413.24f, -278.36f),
     new(414.29f, -277.67f), new(418.52f, -278.64f), new(418.68f, -279.2f), new(418.61f, -279.82f), new(418.67f, -280.5f),
     new(419.3f, -280.72f), new(419.95f, -280.81f), new(421.2f, -280.81f), new(423.68f, -281.65f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
-    private static readonly ArenaBoundsComplex arena3 = new([new PolygonCustom(vertices3)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena3 = new([new PolygonCustom(vertices3)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.XelphatolWindtalon, (uint)OID.XelphatolWhirltalon, (uint)OID.XelphatolWatchwolf, (uint)OID.XelphatolFogcaller,
     (uint)OID.XelphatolBravewing, (uint)OID.XelphatolFatecaller, (uint)OID.XelphatolStrongbeak, (uint)OID.AbalathianHornbill];
     public static readonly uint[] Keys = [(uint)OID.BoneKey, (uint)OID.Airstone1, (uint)OID.Airstone2];

@@ -46,7 +46,7 @@ public sealed class ReplayParserLog : IDisposable
 
     sealed class TextInput(Stream stream) : Input
     {
-        public DateTime Timestamp { get; private set; }
+        public DateTime Timestamp;
         private readonly StreamReader _input = new(stream);
         private string[] _line = [];
         private int _nextPayload;
@@ -81,7 +81,7 @@ public sealed class ReplayParserLog : IDisposable
         }
 
         public override bool CanRead() => _nextPayload < _line.Length;
-        public override void ReadVoid() => _nextPayload++;
+        public override void ReadVoid() => ++_nextPayload;
         public override string ReadString() => _line[_nextPayload++];
         public override float ReadFloat() => float.Parse(ReadString());
         public override double ReadDouble() => double.Parse(ReadString());
@@ -788,29 +788,24 @@ public sealed class ReplayParserLog : IDisposable
 
     private ClientState.OpActionRequest ParseClientActionRequest()
     {
-        var req = new ClientActionRequest()
-        {
-            Action = _input.ReadAction(),
-            TargetID = _input.ReadActorID(),
-            TargetPos = _input.ReadVec3(),
-            SourceSequence = _input.ReadUInt(false),
-            InitialAnimationLock = _input.ReadFloat(),
-        };
-        (req.InitialCastTimeElapsed, req.InitialCastTimeTotal) = _input.ReadFloatPair();
-        (req.InitialRecastElapsed, req.InitialRecastTotal) = _input.ReadFloatPair();
-        return new(req);
+        var action = _input.ReadAction();
+        var targetId = _input.ReadActorID();
+        var targetPos = _input.ReadVec3();
+        var sequence = _input.ReadUInt(false);
+        var animLock = _input.ReadFloat();
+        var (castElapsed, castTotal) = _input.ReadFloatPair();
+        var (recastElapsed, recastTotal) = _input.ReadFloatPair();
+
+        return new(new(action, targetId, targetPos, sequence, animLock, castElapsed, castTotal, recastElapsed, recastTotal));
     }
 
     private ClientState.OpActionReject ParseClientActionReject()
     {
-        var rej = new ClientActionReject()
-        {
-            Action = _input.ReadAction(),
-            SourceSequence = _input.ReadUInt(false),
-        };
-        (rej.RecastElapsed, rej.RecastTotal) = _input.ReadFloatPair();
-        rej.LogMessageID = _input.ReadUInt(false);
-        return new(rej);
+        var action = _input.ReadAction();
+        var sourceSequence = _input.ReadUInt(false);
+        var (recastElapsed, recastTotal) = _input.ReadFloatPair();
+        var logMessageID = _input.ReadUInt(false);
+        return new(new(action, sourceSequence, recastElapsed, recastTotal, logMessageID));
     }
 
     private ClientState.OpCountdownChange ParseClientCountdown(bool start) => new(start ? _input.ReadFloat() : null);

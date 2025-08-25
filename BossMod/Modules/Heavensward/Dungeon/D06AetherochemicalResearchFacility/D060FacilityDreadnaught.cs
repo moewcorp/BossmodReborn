@@ -44,7 +44,7 @@ class D060FacilityDreadnaughtStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 38, NameID = 3836, SortOrder = 7)]
 public class D060FacilityDreadnaught(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-360f, -250f), 9f, 6)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-360f, -250f), 9f, 6)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.MonitoringDrone];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

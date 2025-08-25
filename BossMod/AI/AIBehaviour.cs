@@ -4,7 +4,13 @@ using System.Threading;
 
 namespace BossMod.AI;
 
-public record struct Targeting(AIHints.Enemy Target, float PreferredRange = 2.6f, Positional PreferredPosition = Positional.Any, bool PreferTanking = false);
+public struct Targeting(AIHints.Enemy target, float preferredRange = 2.6f, Positional preferredPosition = Positional.Any, bool preferTanking = false)
+{
+    public AIHints.Enemy Target = target;
+    public readonly float PreferredRange = preferredRange;
+    public Positional PreferredPosition = preferredPosition;
+    public readonly bool PreferTanking = preferTanking;
+}
 
 // constantly follow master
 sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Preset? aiPreset) : IDisposable
@@ -95,7 +101,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 {
                     autorot.Preset = target.Target != null ? AIPreset : null;
                 }
-                UpdateMovement(player, master, target, gazeImminent || pyreticImminent, misdirectionMode ? autorot.Hints.MisdirectionThreshold : default, !forbidTargeting ? autorot.Hints.ActionsToExecute : null);
+                UpdateMovement(player, master, gazeImminent || pyreticImminent, misdirectionMode ? autorot.Hints.MisdirectionThreshold : default, !forbidTargeting ? autorot.Hints.ActionsToExecute : null);
             }
             finally
             {
@@ -247,7 +253,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         return masterIsMoving;
     }
 
-    private void UpdateMovement(Actor player, Actor master, Targeting target, bool gazeOrPyreticImminent, Angle misdirectionAngle, ActionQueue? queueForSprint)
+    private void UpdateMovement(Actor player, Actor master, bool gazeOrPyreticImminent, Angle misdirectionAngle, ActionQueue? queueForSprint)
     {
         if (gazeOrPyreticImminent)
         {

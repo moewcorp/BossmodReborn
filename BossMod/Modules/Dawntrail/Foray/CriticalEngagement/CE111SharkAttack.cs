@@ -168,7 +168,7 @@ sealed class CE111SharkAttackStates : StateMachineBuilder
 public sealed class CE111SharkAttack(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     public static readonly WPos ArenaCenter = new(-117f, -850f);
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 19.5f, 64)], [new Rectangle(new(-117f, -827.25f), 5f, 4f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(ArenaCenter, 19.5f, 64)], [new Rectangle(new(-117f, -827.25f), 5f, 4f)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

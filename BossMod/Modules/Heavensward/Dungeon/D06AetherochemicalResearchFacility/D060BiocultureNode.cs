@@ -170,10 +170,10 @@ public class D060BiocultureNode(WorldState ws, Actor primary) : BossModule(ws, p
     new(99.38f, 257.43f), new(99.83f, 256.97f), new(100.31f, 256.55f), new(100.76f, 256.12f), new(101.19f, 255.7f),
     new(101.16f, 255.18f), new(100.78f, 254.71f), new(98.07f, 252), new(98.2f, 251.49f), new(98.72f, 250.97f),
     new(99.2f, 250.46f), new(103.7f, 245.95f), new(103.85f, 228.55f), new(119.47f, 228.45f)];
-    public static readonly ArenaBoundsComplex Arena1 = new([new PolygonCustom(vertices1)], [new Polygon(new(28.122f, 220.05f), 2.5f, 16)]);
-    public static readonly ArenaBoundsComplex Arena1b = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)], [new Polygon(new(111.925f, 271.931f), 2.5f, 16)]);
-    public static readonly ArenaBoundsComplex Arena2b = new([new PolygonCustom(vertices2)]);
+    public static readonly ArenaBoundsCustom Arena1 = new([new PolygonCustom(vertices1)], [new Polygon(new(28.122f, 220.05f), 2.5f, 16)]);
+    public static readonly ArenaBoundsCustom Arena1b = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)], [new Polygon(new(111.925f, 271.931f), 2.5f, 16)]);
+    public static readonly ArenaBoundsCustom Arena2b = new([new PolygonCustom(vertices2)]);
 
     public static readonly uint[] Trash1 = [(uint)OID.Boss, (uint)OID.PreculturedBiomass, (uint)OID.CulturedCobra, (uint)OID.CulturedNaga,
     (uint)OID.CulturedBowyer, (uint)OID.CulturedEmpuse, (uint)OID.CulturedDancer];

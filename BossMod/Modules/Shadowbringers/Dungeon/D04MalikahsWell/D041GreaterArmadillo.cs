@@ -72,7 +72,7 @@ class D041GreaterArmadilloStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8252)]
 public class D041GreaterArmadillo(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(278f, 204f), 19.5f, 40)], [new Rectangle(new(278f, 223.594f), 20f, 1f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(278f, 204f), 19.5f, 40)], [new Rectangle(new(278f, 223.594f), 20f, 1f)]);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

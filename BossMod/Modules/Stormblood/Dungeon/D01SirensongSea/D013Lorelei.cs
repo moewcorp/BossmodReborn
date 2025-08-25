@@ -132,5 +132,5 @@ class D013LoreleiStates : StateMachineBuilder
 public class D013Lorelei(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultArena.Center, DefaultArena)
 {
     public static readonly WPos ArenaCenter = new(-44.5f, 465);
-    public static readonly ArenaBoundsComplex DefaultArena = new([new Circle(ArenaCenter, 21.6f)], [new Rectangle(new(-44.5f, 443), 20, 1)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Circle(ArenaCenter, 21.6f)], [new Rectangle(new(-44.5f, 443), 20, 1)]);
 }

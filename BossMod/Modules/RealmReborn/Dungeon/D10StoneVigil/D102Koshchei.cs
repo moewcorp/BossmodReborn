@@ -82,5 +82,5 @@ public class D102Koshchei(WorldState ws, Actor primary) : BossModule(ws, primary
 {
     private static readonly Shape[] union = [new Rectangle(new(44f, -80f), 13.5f, 10.5f), new Rectangle(new(30.1f, -80), 0.4f, 4.5f),
     new Square(new(30.4f, -75.4f), 0.2f), new Square(new(30.4f, -84.6f), 0.2f)];
-    public static readonly ArenaBoundsComplex arena = new(union);
+    public static readonly ArenaBoundsCustom arena = new(union);
 }

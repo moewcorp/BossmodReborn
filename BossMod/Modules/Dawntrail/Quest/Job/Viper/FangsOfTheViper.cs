@@ -49,7 +49,7 @@ sealed class FangsOfTheViperStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70385, NameID = 12825)]
 public sealed class FangsOfTheViper(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(264f, 480f), 19.5f, 20)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(264f, 480f), 19.5f, 20)]);
     private static readonly uint[] all = [(uint)OID.FawningWivre, (uint)OID.FawningPeiste, (uint)OID.FawningRaptor, (uint)OID.WanderingGowrow];
 
     public Actor? BossGowrow;

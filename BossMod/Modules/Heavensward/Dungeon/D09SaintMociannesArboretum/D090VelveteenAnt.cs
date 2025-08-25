@@ -60,7 +60,7 @@ class WallRemoval(BossModule module) : BossComponent(module)
         }
     }
 
-    private void SetArena(ArenaBoundsComplex bounds)
+    private void SetArena(ArenaBoundsCustom bounds)
     {
         Arena.Bounds = bounds;
         Arena.Center = bounds.Center;
@@ -269,10 +269,10 @@ public class D090VelveteenAnt(WorldState ws, Actor primary) : BossModule(ws, pri
     new(-236.7f, -182.51f), new(-236.49f, -182.99f), new(-238.86f, -186.15f), new(-239.33f, -186.53f), new(-239.95f, -186.72f),
     new(-240.28f, -187.27f), new(-239.66f, -187.44f), new(-239.15f, -187.85f), new(-238.55f, -188.12f), new(-237.92f, -188.25f),
     new(-237.28f, -188.29f)];
-    public static readonly ArenaBoundsComplex Arena1 = new([new PolygonCustom(vertices1)]);
-    public static readonly ArenaBoundsComplex Arena1B = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
-    public static readonly ArenaBoundsComplex Arena2 = new([new PolygonCustom(vertices2)]);
-    public static readonly ArenaBoundsComplex Arena2B = new([new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
+    public static readonly ArenaBoundsCustom Arena1 = new([new PolygonCustom(vertices1)]);
+    public static readonly ArenaBoundsCustom Arena1B = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
+    public static readonly ArenaBoundsCustom Arena2 = new([new PolygonCustom(vertices2)]);
+    public static readonly ArenaBoundsCustom Arena2B = new([new PolygonCustom(vertices2), new PolygonCustom(vertices3)]);
 
     private static readonly uint[] trash = [(uint)OID.Boss, (uint)OID.GardenBeeCloud, (uint)OID.WorkerHawk, (uint)OID.ArboretumCrawler,
     (uint)OID.SoldierHawk, (uint)OID.ThavnairianTortoise, (uint)OID.OrnHornet];

@@ -95,7 +95,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
         }
     }
 
-    private void UpdateArena() => Arena.Bounds = borders.Count == 0 ? D112FourHeadsmen.DefaultBounds : new ArenaBoundsComplex(D112FourHeadsmen.DefaultRect, [.. D112FourHeadsmen.Differences, .. borders]);
+    private void UpdateArena() => Arena.Bounds = borders.Count == 0 ? D112FourHeadsmen.DefaultBounds : new ArenaBoundsCustom(D112FourHeadsmen.DefaultRect, [.. D112FourHeadsmen.Differences, .. borders]);
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
@@ -362,7 +362,7 @@ public sealed class D112FourHeadsmen(WorldState ws, Actor primary) : BossModule(
 
     public static readonly Rectangle[] Differences = [new(new(60f, -235.2f), 8f, 1.25f), new(new(29.3f, -258f), 8f, 1.25f, 89.98f.Degrees())];
     public static readonly Rectangle[] DefaultRect = [new Rectangle(new(60f, -258f), 29.5f, 22f)];
-    public static readonly ArenaBoundsComplex DefaultBounds = new(DefaultRect, Differences);
+    public static readonly ArenaBoundsCustom DefaultBounds = new(DefaultRect, Differences);
 
     protected override void UpdateModule()
     {

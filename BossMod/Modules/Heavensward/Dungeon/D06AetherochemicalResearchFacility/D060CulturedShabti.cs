@@ -77,7 +77,7 @@ public class D060CulturedShabti(WorldState ws, Actor primary) : BossModule(ws, p
     new(221.57f, 210.53f), new(221.6f, 210.01f), new(221.83f, 209.54f), new(222.16f, 209.14f), new(222.55f, 208.2f),
     new(223.03f, 207.97f), new(223.55f, 207.95f), new(224.44f, 207.4f), new(224.89f, 207.17f), new(225.39f, 207.07f),
     new(225.91f, 206.95f), new(226.4f, 206.86f), new(226.71f, 206.46f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)], [new PolygonCustom(vertices1h1), new PolygonCustom(vertices1h2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)], [new PolygonCustom(vertices1h1), new PolygonCustom(vertices1h2)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

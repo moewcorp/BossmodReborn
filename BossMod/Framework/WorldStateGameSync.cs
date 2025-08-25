@@ -387,21 +387,18 @@ sealed class WorldStateGameSync : IDisposable
         var sm = chr != null ? chr->GetStatusManager() : null;
         if (sm != null)
         {
-            for (var i = 0; i < sm->NumValidStatuses; ++i)
+            var count = sm->NumValidStatuses;
+            for (var i = 0; i < count; ++i)
             {
                 // note: sometimes (Ocean Fishing) remaining-time is weird (I assume too large?) and causes exception in AddSeconds - so we just clamp it to some reasonable range
                 // note: self-cast buffs with duration X will have duration -X until EffectResult (~0.6s later); see autorotation for more details
-                ActorStatus curStatus = new();
                 ref var s = ref sm->Status[i];
-                if (s.StatusId != 0)
+                if (s.StatusId != default)
                 {
                     var dur = Math.Min(Math.Abs(s.RemainingTime), 100000);
-                    curStatus.ID = s.StatusId;
-                    curStatus.SourceID = SanitizedObjectID(s.SourceObject);
-                    curStatus.Extra = s.Param;
-                    curStatus.ExpireAt = _ws.CurrentTime.AddSeconds(dur);
+                    ActorStatus curStatus = new(s.StatusId, s.Param, _ws.CurrentTime.AddSeconds(dur), SanitizedObjectID(s.SourceObject));
+                    UpdateActorStatus(act, i, ref curStatus);
                 }
-                UpdateActorStatus(act, i, ref curStatus);
             }
         }
 
@@ -447,7 +444,7 @@ sealed class WorldStateGameSync : IDisposable
         // note: some statuses have non-zero remaining time but never tick down (e.g. FC buffs); currently we ignore that fact, to avoid log spam...
         // note: RemainingTime is not monotonously decreasing (I assume because it is really calculated by game and frametime fluctuates...), we ignore 'slight' duration increases (<1 sec)
         var prev = act.Statuses[index];
-        if (prev.ID == value.ID && prev.SourceID == value.SourceID && prev.Extra == value.Extra && (value.ExpireAt - prev.ExpireAt).TotalSeconds <= 1)
+        if (prev.ID == value.ID && prev.SourceID == value.SourceID && prev.Extra == value.Extra && (value.ExpireAt - prev.ExpireAt).TotalSeconds <= 1d)
         {
             act.Statuses[index].ExpireAt = value.ExpireAt;
             return;
@@ -705,31 +702,46 @@ sealed class WorldStateGameSync : IDisposable
         bozjaHolster.Clear();
         var bozjaState = PublicContentBozja.GetState();
         if (bozjaState != null)
-            foreach (var action in bozjaState->HolsterActions)
-                if (action != 0)
-                    ++bozjaHolster[action];
+        {
+            var actions = bozjaState->HolsterActions;
+            var len = actions.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                var action = actions[i];
+                {
+                    if (action != 0)
+                    {
+                        ++bozjaHolster[action];
+                    }
+                }
+            }
+        }
         if (!MemoryExtensions.SequenceEqual(_ws.Client.BozjaHolster.AsSpan(), bozjaHolster))
+        {
             _ws.Execute(new ClientState.OpBozjaHolsterChange(CalcBozjaHolster(bozjaHolster)));
-
+        }
         if (!MemoryExtensions.SequenceEqual(_ws.Client.BlueMageSpells.AsSpan(), actionManager->BlueMageActions))
+        {
             _ws.Execute(new ClientState.OpBlueMageSpellsChange([.. actionManager->BlueMageActions]));
-
+        }
         var levels = uiState->PlayerState.ClassJobLevels;
         if (!MemoryExtensions.SequenceEqual(_ws.Client.ClassJobLevels.AsSpan(), levels))
+        {
             _ws.Execute(new ClientState.OpClassJobLevelsChange([.. levels]));
+        }
 
         var curFate = FateManager.Instance()->CurrentFate;
         ClientState.Fate activeFate = curFate != null ? new(curFate->FateId, curFate->Location, curFate->Radius) : default;
         if (_ws.Client.ActiveFate != activeFate)
             _ws.Execute(new ClientState.OpActiveFateChange(activeFate));
 
-        var petinfo = uiState->Buddy.PetInfo;
+        ref var petinfo = ref uiState->Buddy.PetInfo;
         var pet = new ClientState.Pet(petinfo.Pet->EntityId, petinfo.Order, petinfo.Stance);
         if (_ws.Client.ActivePet != pet)
             _ws.Execute(new ClientState.OpActivePetChange(pet));
 
-        var focusTarget = TargetSystem.Instance()->FocusTarget;
-        var focusTargetId = focusTarget != null ? SanitizedObjectID(focusTarget->GetGameObjectId()) : 0;
+        ref var focusTarget = ref TargetSystem.Instance()->FocusTarget;
+        var focusTargetId = focusTarget != null ? SanitizedObjectID(focusTarget->GetGameObjectId()) : default;
         if (_ws.Client.FocusTargetId != focusTargetId)
             _ws.Execute(new ClientState.OpFocusTargetChange(focusTargetId));
 

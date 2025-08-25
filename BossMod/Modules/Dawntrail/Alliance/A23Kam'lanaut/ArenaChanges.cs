@@ -76,7 +76,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 }
                 break;
         }
-        void SetArena(ArenaBoundsComplex arena)
+        void SetArena(ArenaBoundsCustom arena)
         {
             Arena.Bounds = arena;
             Arena.Center = arena.Center;

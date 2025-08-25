@@ -12,16 +12,9 @@ class DeepDiveHardWater(BossModule module) : Components.StackWithCastTargets(mod
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, LTS", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 962, NameID = 11299, SortOrder = 3, PlanLevel = 90)]
 public class A32Llymlaen(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, DefaultBounds)
 {
-    public const float CorridorHalfLength = 40f;
     public static readonly WPos DefaultCenter = new(default, -900f);
     public static readonly ArenaBoundsRect DefaultBounds = new(19f, 29f);
-    public static readonly ArenaBoundsCustom EastCorridorBounds = BuildCorridorBounds(+1);
-    public static readonly ArenaBoundsCustom WestCorridorBounds = BuildCorridorBounds(-1);
-
-    public static ArenaBoundsCustom BuildCorridorBounds(float dx)
-    {
-        var corridor = new PolygonClipper.Operand(CurveApprox.Rect(DefaultBounds.Orientation, CorridorHalfLength, 10));
-        var standard = new PolygonClipper.Operand(CurveApprox.Rect(DefaultBounds.Orientation, DefaultBounds.HalfWidth, DefaultBounds.HalfHeight).Select(o => new WDir(o.X - dx * CorridorHalfLength, o.Z)));
-        return new(CorridorHalfLength, DefaultBounds.Clipper.Union(corridor, standard));
-    }
+    private static readonly Rectangle defaultRect = new(DefaultCenter, 19f, 29f);
+    public static readonly ArenaBoundsCustom EastCorridorBounds = new([defaultRect, new Rectangle(DefaultCenter + new WDir(39f, default), 40f, 10f)], ScaleFactor: 1.5f);
+    public static readonly ArenaBoundsCustom WestCorridorBounds = new([defaultRect, new Rectangle(DefaultCenter + new WDir(-39f, default), 40f, 10f)], ScaleFactor: 1.5f);
 }

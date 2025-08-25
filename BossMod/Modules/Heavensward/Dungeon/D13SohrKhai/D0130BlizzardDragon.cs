@@ -137,8 +137,8 @@ public class D130BlizzardDragon(WorldState ws, Actor primary) : BossModule(ws, p
     new(356.95f, -236.86f), new(357.03f, -236.33f), new(357.50f, -236.59f), new(357.92f, -239.24f), new(357.99f, -241.23f),
     new(358.05f, -241.89f), new(358.23f, -242.52f), new(358.58f, -243.12f), new(359.06f, -243.62f), new(359.62f, -243.98f),
     new(360.28f, -244.20f), new(360.96f, -244.29f), new(365.73f, -244.29f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    public static readonly ArenaBoundsComplex Arena2 = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    public static readonly ArenaBoundsCustom Arena2 = new([new PolygonCustom(vertices1), new PolygonCustom(vertices2)]);
 
     public static readonly uint[] Trash = [(uint)OID.HolyWyvern, (uint)OID.BlizzardDragon1];
 

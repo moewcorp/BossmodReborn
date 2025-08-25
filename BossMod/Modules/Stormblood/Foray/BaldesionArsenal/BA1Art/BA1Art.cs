@@ -53,7 +53,7 @@ sealed class PiercingDark(BossModule module) : Components.SpreadFromCastTargets(
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.BaldesionArsenal, GroupID = 639, NameID = 7968, PlanLevel = 70, SortOrder = 1)]
 public sealed class BA1Art(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-128.98f, 748f), 29.5f, 64)], [new Rectangle(new(-129f, 718f), 20, 1.15f), new Rectangle(new(-129f, 778f), 20f, 1.48f),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-128.98f, 748f), 29.5f, 64)], [new Rectangle(new(-129f, 718f), 20, 1.15f), new Rectangle(new(-129f, 778f), 20f, 1.48f),
     new Polygon(new(-123.5f, 778f), 1.7f, 8), new Polygon(new(-134.5f, 778f), 1.7f, 8), new Polygon(new(-123.5f, 718f), 1.5f, 8), new Polygon(new(-134.5f, 718f), 1.5f, 8)]);
 
     protected override bool CheckPull() => base.CheckPull() && (Center - Raid.Player()!.Position).LengthSq() < 1e4f;

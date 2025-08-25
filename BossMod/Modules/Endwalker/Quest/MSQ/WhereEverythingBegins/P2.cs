@@ -202,7 +202,7 @@ public class ScarmiglioneP2States : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70130, NameID = 11407)]
 public class ScarmiglioneP2(WorldState ws, Actor primary) : BossModule(ws, primary, ScarmiglioneP1.ArenaBounds.Center, ScarmiglioneP1.ArenaBounds)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(ScarmiglioneP1.ArenaCenter, 18f, 36)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(ScarmiglioneP1.ArenaCenter, 18f, 36)]);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

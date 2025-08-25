@@ -104,21 +104,21 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     private static readonly Shape[] union01000080Shapes = GetShapesForUnion([0, 1, 2, 3, 4, 5], [0, 1, 7, 9, 5, 6, 13, 20, 17, 18, 11, 14]);
     private static readonly AOEShapeCustom electricFences01000080AOE = new(union01000080Shapes);
-    private static readonly ArenaBoundsComplex electricFences01000080Arena = new(defaultRect, union01000080Shapes);
+    private static readonly ArenaBoundsCustom electricFences01000080Arena = new(defaultRect, union01000080Shapes);
 
     private static readonly Shape[] union08000400Shapes = GetShapesForUnion([6, 7, 8, 9, 10, 11], [21, 20, 14, 15, 12, 17, 1, 10, 3, 7, 6, 8]);
     private static readonly AOEShapeCustom electricFences08000400AOE = new(union08000400Shapes);
-    private static readonly ArenaBoundsComplex electricFences08000400Arena = new(defaultRect, union08000400Shapes);
+    private static readonly ArenaBoundsCustom electricFences08000400Arena = new(defaultRect, union08000400Shapes);
 
     private static readonly Shape[] union00020001Shapes = GetShapesForUnion([12, 13, 14, 15, 16, 17, 18, 19], [2, 8, 11, 10, 13, 16]);
     private static readonly AOEShapeCustom electricFences00020001AOE = new(union00020001Shapes);
-    private static readonly ArenaBoundsComplex electricFences00020001Arena = new(defaultRect, union00020001Shapes);
+    private static readonly ArenaBoundsCustom electricFences00020001Arena = new(defaultRect, union00020001Shapes);
 
     private static readonly Shape[] union00200010Shapes = GetShapesForUnion([20, 21, 22, 23, 24, 25, 26, 27], [4, 8, 11, 19, 13, 10]);
     private static readonly AOEShapeCustom electricFences00200010AOE = new(union00200010Shapes);
-    private static readonly ArenaBoundsComplex electricFences00200010Arena = new(defaultRect, union00200010Shapes);
+    private static readonly ArenaBoundsCustom electricFences00200010Arena = new(defaultRect, union00200010Shapes);
 
-    private static readonly (AOEShapeCustom AOE, ArenaBoundsComplex Bounds)[] arenaMap =
+    private static readonly (AOEShapeCustom AOE, ArenaBoundsCustom Bounds)[] arenaMap =
     [
         (electricFences01000080AOE, electricFences01000080Arena),
         (electricFences08000400AOE, electricFences08000400Arena),

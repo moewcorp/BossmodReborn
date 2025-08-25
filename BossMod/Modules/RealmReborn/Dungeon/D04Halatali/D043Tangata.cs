@@ -105,7 +105,7 @@ public class D043Tangata(WorldState ws, Actor primary) : BossModule(ws, primary,
     new(-267.79f, -9.9f), new(-267.2f, -10.25f), new(-265.97f, -10.74f), new(-265.42f, -10.91f), new(-263.31f, -10.91f),
     new(-262.64f, -10.97f), new(-261.51f, -10.56f), new(-260.84f, -10.62f), new(-260.51f, -11.12f), new(-259.92f, -11.35f),
     new(-259.34f, -11.48f), new(-258.44f, -12.46f), new(-257.83f, -12.85f)];
-    public static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    public static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

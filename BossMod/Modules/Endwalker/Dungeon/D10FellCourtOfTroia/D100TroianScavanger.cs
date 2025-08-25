@@ -172,8 +172,8 @@ public sealed class D100TroianScavanger(WorldState ws, Actor primary) : BossModu
     new(151.02f, 153.5f), new(154.92f, 153.5f), new(155.45f, 153.98f), new(156.08f, 154.14f), new(156.61f, 153.94f),
     new(157.05f, 153.51f), new(160.9f, 153.51f), new(161.42f, 153.95f), new(162.02f, 154.14f), new(162.64f, 153.94f),
     new(163.9f, 153.9f), new(164.26f, 153.37f), new(164.46f, 152.72f), new(164.94f, 152.18f), new(169.07f, 152.18f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.TroianSentry, (uint)OID.TroianPawn];
 
     protected override bool CheckPull()

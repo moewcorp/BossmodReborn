@@ -40,10 +40,10 @@ public sealed class A23Kamlanaut(WorldState ws, Actor primary) : BossModule(ws, 
     private static readonly Polygon[] p1Circle = [new(ArenaCenter, 29.5f, 128)]; // arena circle actually got 512 vertices, but 128 is a good enough approximation for this use case
     private static readonly Polygon[] p2Circle = [new(ArenaCenter, 20f, 128)];
     private static readonly Polygon[] voidzone = [new(ArenaCenter, 5f, 64)];
-    public static readonly ArenaBoundsComplex P1Arena = new(p1Circle);
-    public static readonly ArenaBoundsComplex P2Arena = new(p2Circle);
-    public static readonly ArenaBoundsComplex P1ArenaDonut = new(p1Circle, voidzone);
-    public static readonly ArenaBoundsComplex P2ArenaDonut = new(p2Circle, voidzone);
+    public static readonly ArenaBoundsCustom P1Arena = new(p1Circle);
+    public static readonly ArenaBoundsCustom P2Arena = new(p2Circle);
+    public static readonly ArenaBoundsCustom P1ArenaDonut = new(p1Circle, voidzone);
+    public static readonly ArenaBoundsCustom P2ArenaDonut = new(p2Circle, voidzone);
     private static readonly Rectangle[] bridges = GenerateBridges();
     private static Rectangle[] GenerateBridges()
     {
@@ -59,7 +59,7 @@ public sealed class A23Kamlanaut(WorldState ws, Actor primary) : BossModule(ws, 
     }
 
     private static readonly Shape[] p2ArenaShapes = [.. p2Circle, .. bridges];
-    public static readonly ArenaBoundsComplex P2ArenaWithBridges = new(p2ArenaShapes, ScaleFactor: 1.15f);
+    public static readonly ArenaBoundsCustom P2ArenaWithBridges = new(p2ArenaShapes, ScaleFactor: 1.15f);
     public static readonly AOEShapeCustom P1p2transition = new(p1Circle, p2ArenaShapes);
-    public static readonly ArenaBoundsComplex P2ArenaWithBridgesDonut = new(p2ArenaShapes, voidzone, ScaleFactor: 1.15f);
+    public static readonly ArenaBoundsCustom P2ArenaWithBridgesDonut = new(p2ArenaShapes, voidzone, ScaleFactor: 1.15f);
 }

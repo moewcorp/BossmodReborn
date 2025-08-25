@@ -125,7 +125,7 @@ sealed class CE103WithExtremePrejudiceStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 43)]
 public sealed class CE103WithExtremePrejudice(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(-352f, -608f), 19.5f, 32)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-352f, -608f), 19.5f, 32)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

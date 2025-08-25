@@ -218,7 +218,7 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
         {
             foreach (var t in _tree.Nodes(a.Targets, t => new(ReplayUtils.ActionTargetString(t, a.Timestamp))))
             {
-                _tree.LeafNodes(t.Effects, ReplayUtils.ActionEffectString);
+                _tree.LeafNodes(t.Effects.ValidEffects(), ReplayUtils.ActionEffectString);
             }
         }
     }

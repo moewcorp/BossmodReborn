@@ -23,7 +23,7 @@ class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly Polygon[] triangle = [new(A13Azeyma.NormalCenter, 13.279f, 3, 180f.Degrees())];
     private static readonly AOEShapeCustom triangleCutOut = new([new Square(A13Azeyma.NormalCenter, 29.5f)], triangle);
-    private static readonly ArenaBoundsComplex triangleBounds = new(triangle);
+    private static readonly ArenaBoundsCustom triangleBounds = new(triangle);
 
     private AOEInstance? _aoe;
 

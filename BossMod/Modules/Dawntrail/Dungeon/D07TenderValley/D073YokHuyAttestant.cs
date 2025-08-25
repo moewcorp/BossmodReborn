@@ -91,7 +91,7 @@ public sealed class D073YokHuyAttestant(WorldState ws, Actor primary) : BossModu
     new(-134.361f, -489.473f), new(-135.919f, -489.514f), new(-135.919f, -483.988f), new(-136.099f, -483.434f), new(-135.750f, -482.812f)];
     private static readonly WPos[] vertices2 = [new(-125.309f, -474.651f), new(-125.429f, -474.446f), new(-125.308f, -472.991f), new(-125.276f, -471.294f), new(-125.366f, -469.136f),
     new(-125.173f, -468.134f), new(-123.615f, -468.094f), new(-123.615f, -473.619f), new(-123.436f, -474.173f), new(-123.784f, -474.795f)];
-    private static readonly ArenaBoundsComplex arena = new([new Rectangle(new(-130f, -475f), 17.4f, 22f)], [new PolygonCustomO(vertices1, 0.5f), new PolygonCustomO(vertices2, 0.5f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Rectangle(new(-130f, -475f), 17.4f, 22f)], [new PolygonCustomO(vertices1, 0.5f), new PolygonCustomO(vertices2, 0.5f)]);
 
     private static readonly uint[] Trash = [(uint)OID.YokHuyAltar, (uint)OID.YokHuyAltar2, (uint)OID.YokHuyOrb];
     protected override void DrawEnemies(int pcSlot, Actor pc)

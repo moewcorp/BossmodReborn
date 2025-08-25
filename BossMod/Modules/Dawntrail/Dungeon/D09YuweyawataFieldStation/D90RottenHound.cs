@@ -87,7 +87,7 @@ public sealed class D90RottenResearcher(WorldState ws, Actor primary) : BossModu
     new(46.83f, 87.61f), new(46.15f, 87.77f), new(45.81f, 86.05f), new(45.81f, 61.62f), new(46.28f, 61.37f),
     new(46.76f, 60.97f), new(46.88f, 60.43f), new(47.34f, 60.15f), new(50.18f, 60.28f), new(50.73f, 59.9f),
     new(54.67f, 59.58f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.RottenResearcher1, (uint)OID.RottenResearcher2, (uint)OID.RottenResearcher3,
     (uint)OID.RottenHound1, (uint)OID.RottenHound2];
 

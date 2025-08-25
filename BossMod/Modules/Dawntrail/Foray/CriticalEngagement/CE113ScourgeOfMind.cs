@@ -179,7 +179,7 @@ sealed class CE113ScourgeOfMindStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 33)]
 public sealed class CE113ScourgeOfMind(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(300f, 730f), 29.5f, 32)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(300f, 730f), 29.5f, 32)]);
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }

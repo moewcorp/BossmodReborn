@@ -48,10 +48,10 @@ public sealed class FTB2DeadStars(WorldState ws, Actor primary) : BossModule(ws,
         DeathWall ??= GetActor((uint)OID.Deathwall);
     }
 
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(ArenaCenter, 39.5f * CosPI.Pi48th, 48)], [new Rectangle(new(-800f, 400f), 7.5f, 1.25f),
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(ArenaCenter, 39.5f * CosPI.Pi48th, 48)], [new Rectangle(new(-800f, 400f), 7.5f, 1.25f),
     new Rectangle(new(-800f, 320f), 7.5f, 1.25f)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(30f);
-    public static readonly ArenaBoundsComplex FistFightArena = new([new DonutV(ArenaCenter.Quantized(), 12f, 30f, 64)]);
+    public static readonly ArenaBoundsCustom FistFightArena = new([new DonutV(ArenaCenter.Quantized(), 12f, 30f, 64)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

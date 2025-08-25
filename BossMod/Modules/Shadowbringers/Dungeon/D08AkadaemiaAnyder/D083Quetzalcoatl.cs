@@ -168,5 +168,5 @@ sealed class D083QuetzalcoatlStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Quetzalcoatl, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 661u, NameID = 8273u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.Shadowbringers, SortOrder = 3)]
 public sealed class D083Quetzalcoatl(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(default, -379f), 19.5f * CosPI.Pi48th, 48)], [new Rectangle(new(default, -359f), 20f, 1.1f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(default, -379f), 19.5f * CosPI.Pi48th, 48)], [new Rectangle(new(default, -359f), 20f, 1.1f)]);
 }

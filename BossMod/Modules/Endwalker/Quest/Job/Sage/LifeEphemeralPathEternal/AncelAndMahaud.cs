@@ -86,7 +86,7 @@ class AncelAndMahaudStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69608, NameID = 10732)]
 public class AncelAndMahaud(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaBounds.Center, ArenaBounds)
 {
-    public static readonly ArenaBoundsComplex ArenaBounds = new([new Polygon(new(224.8f, -855.8f), 19.5f, 20)]);
+    public static readonly ArenaBoundsCustom ArenaBounds = new([new Polygon(new(224.8f, -855.8f), 19.5f, 20)]);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

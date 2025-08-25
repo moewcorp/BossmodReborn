@@ -18,7 +18,7 @@ sealed class GelidGaol(BossModule module) : Components.Adds(module, (uint)OID.Ge
 public sealed class FTB3MarbleDragon(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     public static readonly WPos ArenaCenter = new(-337f, 157f);
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(ArenaCenter, 39.5f, 48)], [new Rectangle(new(-337f, 116.853f), 11f, 1.25f),
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(ArenaCenter, 39.5f, 48)], [new Rectangle(new(-337f, 116.853f), 11f, 1.25f),
     new Rectangle(new(-337f, 197.413f), 11f, 1.25f)]);
     public static readonly ArenaBoundsCircle DefaultArena = new(30f);
 

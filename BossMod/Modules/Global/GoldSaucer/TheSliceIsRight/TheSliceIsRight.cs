@@ -125,6 +125,6 @@ sealed class TheSliceIsRightStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.GoldSaucer, GroupID = 181, NameID = 9066)]
 public sealed class TheSliceIsRight(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(new(70.5f, -36f), 15f * CosPI.Pi28th, 28)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(new(70.5f, -36f), 15f * CosPI.Pi28th, 28)]);
     protected override bool CheckPull() => InBounds(Raid.Player()!.Position); // only activate module if player is taking part in the event
 }

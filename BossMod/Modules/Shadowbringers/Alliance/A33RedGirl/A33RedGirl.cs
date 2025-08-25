@@ -21,7 +21,7 @@ public sealed class A33RedGirl(WorldState ws, Actor primary) : BossModule(ws, pr
     public static readonly Square[] BigSquare = [new(ArenaCenter, 24.5f)];
     public static readonly Square[] DefaultSquare = [new(ArenaCenter, 20f)];
     public static readonly AOEShapeCustom ArenaTransition = new(BigSquare, DefaultSquare, [InnerSquare]);
-    public static readonly ArenaBoundsComplex DefaultArena = new(DefaultSquare, [InnerSquare]);
+    public static readonly ArenaBoundsCustom DefaultArena = new(DefaultSquare, [InnerSquare]);
     public static readonly PolygonCustomO[] VirusArena1 = [new([new(6f, 856f), new(-6f, 856f), new(-6f, 868f), new(-1.5f, 868f), new(-1.5f, 880f),
     new(-8f, 880f), new(-8f, 882f), new(-12f, 882f), new(-12f, 884f), new(-14f, 884f),
     new(-14f, 886f), new(-16f, 886f), new(-16f, 888f), new(-18f, 888f), new(-18f, 892f),

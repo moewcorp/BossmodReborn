@@ -93,7 +93,7 @@ public sealed class D040VanguardLeptocyon(WorldState ws, Actor primary) : BossMo
     new(-14.49f, 371.12f), new(-14.18f, 370.58f), new(-13.96f, 369.89f), new(-13.05f, 368.19f), new(-12.92f, 367.58f),
     new(-12.47f, 367.33f), new(-11.43f, 366.51f), new(-11.03f, 366.02f), new(-9.76f, 363.78f), new(-9.67f, 363.18f),
     new(-9.76f, 361.18f), new(-9.84f, 360.58f), new(-10.64f, 358.79f), new(-10.75f, 358), new(0.34f, 358)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.VanguardSentryS7, (uint)OID.VanguardSentryG7, (uint)OID.VanguardLeptocyon];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

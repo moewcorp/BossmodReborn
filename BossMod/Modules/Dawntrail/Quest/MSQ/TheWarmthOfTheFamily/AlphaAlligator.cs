@@ -99,7 +99,7 @@ public sealed class AlphaAlligator(WorldState ws, Actor primary) : BossModule(ws
     new(405.71f, -121.94f), new(405.65f, -122.46f), new(405.73f, -123.2f), new(406.51f, -124.25f), new(406.71f, -124.75f),
     new(406.61f, -125.40f), new(407.32f, -126.66f), new(407.47f, -127.25f), new(407.42f, -127.82f), new(406.67f, -128.79f),
     new(406.44f, -129.39f), new(407.78f, -134.79f), new(408.15f, -135.35f), new(420.82f, -140.11f), new(423.33f, -140.59f)];
-    private static readonly ArenaBoundsComplex arena = new([new PolygonCustom(vertices)]);
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] All = [(uint)OID.Yeheheceyaa, (uint)OID.AlphaAlligator, (uint)OID.HornedLizard, (uint)OID.Ceratoraptor, (uint)OID.Alligator];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

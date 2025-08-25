@@ -231,7 +231,7 @@ public class SecondOrderRocksplitterStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69551)]
 public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(ws, primary, default, arena)
 {
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(default, 26.5f, 24)]);
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(default, 26.5f, 24)]);
     private static readonly uint[] opponents = [(uint)OID.Grenade1, (uint)OID.Grenade2, (uint)OID.SecondOrderRoundsman, (uint)OID.SecondOrderRocksplitter, (uint)OID.SecondOrderPickman,
     (uint)OID.SecondOrderAlchemist, (uint)OID.Bomb, (uint)OID.Construct2, (uint)OID.OghomoroGolem];
 

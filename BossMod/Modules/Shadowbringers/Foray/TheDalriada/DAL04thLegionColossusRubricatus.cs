@@ -72,5 +72,5 @@ sealed class DAL04thLegionColossusRubricatusStates : StateMachineBuilder
 public sealed class DAL04thLegionColossusRubricatus(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos rect = new(650f, -556f);
-    private static readonly ArenaBoundsComplex arena = new([new Rectangle(new(650f, -546.1f), 18.81f, 18.51f), new Rectangle(rect, 2.85f, 17.6f), new Rectangle(rect, 2.6f, 18.56f)]);
+    private static readonly ArenaBoundsCustom arena = new([new Rectangle(new(650f, -546.1f), 18.81f, 18.51f), new Rectangle(rect, 2.85f, 17.6f), new Rectangle(rect, 2.6f, 18.56f)]);
 }

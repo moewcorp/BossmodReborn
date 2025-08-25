@@ -77,7 +77,7 @@ public class D051DemonTome(WorldState ws, Actor primary) : BossModule(ws, primar
     private static readonly Rectangle entranceRect = new(new(-20.486f, 0.109f), 1.25f, 8f);
     private static readonly Rectangle exitRect = new(new(20.388f, -0.18f), 1.25f, 8f);
     private static readonly Rectangle[] baseArena = [new Rectangle(default, 19.5f, 9.5f)];
-    public static readonly ArenaBoundsComplex DefaultArena = new(baseArena, [entranceRect, exitRect, midRect, new Rectangle(new(-0.166f, 8.588f), 3.487f, 5f),
+    public static readonly ArenaBoundsCustom DefaultArena = new(baseArena, [entranceRect, exitRect, midRect, new Rectangle(new(-0.166f, 8.588f), 3.487f, 5f),
      new Rectangle(new(-0.185f, -8.554f), 3.475f, 5f)]);
-    public static readonly ArenaBoundsComplex SpinArena = new(baseArena, [entranceRect, exitRect, midRect]);
+    public static readonly ArenaBoundsCustom SpinArena = new(baseArena, [entranceRect, exitRect, midRect]);
 }

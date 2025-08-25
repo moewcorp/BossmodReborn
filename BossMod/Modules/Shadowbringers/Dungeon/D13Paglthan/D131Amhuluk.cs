@@ -240,6 +240,6 @@ public sealed class D131Amhuluk(WorldState ws, Actor primary) : BossModule(ws, p
         }
         return polygons;
     }
-    private static readonly ArenaBoundsComplex arena = new([new Polygon(ArenaCenter, 19.5f, 48)], [.. GenerateLightningRods(), new Rectangle(new(-540f, 145.0004f), 8.75f, 1.25f, 89.98f.Degrees()),
+    private static readonly ArenaBoundsCustom arena = new([new Polygon(ArenaCenter, 19.5f, 48)], [.. GenerateLightningRods(), new Rectangle(new(-540f, 145.0004f), 8.75f, 1.25f, 89.98f.Degrees()),
     new Rectangle(new(-500f, 145f), 1.25f, 20)]);
 }

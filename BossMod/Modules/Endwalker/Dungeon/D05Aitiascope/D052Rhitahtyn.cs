@@ -81,7 +81,7 @@ class ArenaChanges(BossModule module) : BossComponent(module)
 
     private void UpdateArena()
     {
-        Arena.Bounds = new ArenaBoundsComplex([.. rect, .. union]);
+        Arena.Bounds = new ArenaBoundsCustom([.. rect, .. union]);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

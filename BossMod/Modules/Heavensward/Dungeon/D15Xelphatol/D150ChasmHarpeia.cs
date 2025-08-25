@@ -201,8 +201,8 @@ public class D150ChasmHarpeia(WorldState ws, Actor primary) : BossModule(ws, pri
     new(-114.19f, -35.23f), new(-113.74f, -35.63f), new(-112.28f, -38.55f), new(-110.93f, -38.84f), new(-110.23f, -38.88f),
     new(-108.96f, -38.56f), new(-108.4f, -38.55f), new(-106.51f, -39.25f), new(-105.83f, -39.25f), new(-104.69f, -38.66f),
     new(-101.53f, -39.13f), new(-99.03f, -40.18f), new(-98.54f, -40.58f), new(-93.73f, -46.65f), new(-93.18f, -47.1f)];
-    private static readonly ArenaBoundsComplex arena1 = new([new PolygonCustom(vertices1)]);
-    private static readonly ArenaBoundsComplex arena2 = new([new PolygonCustom(vertices2)]);
+    private static readonly ArenaBoundsCustom arena1 = new([new PolygonCustom(vertices1)]);
+    private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ChasmCobra, (uint)OID.VelodynaToad, (uint)OID.AbalathianSlug, (uint)OID.SwiftwaterHakulaq];
 
     protected override bool CheckPull()

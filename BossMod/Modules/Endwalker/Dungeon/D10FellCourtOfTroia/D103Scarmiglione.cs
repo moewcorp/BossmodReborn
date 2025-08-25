@@ -77,7 +77,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 PendingSafeWalls.Remove(D103Scarmiglione.SafeWalls[index]);
                 SafeWalls.Remove(D103Scarmiglione.SafeWalls[index]);
 
-                ArenaBoundsComplex arena = new(defaultCircle, [.. SafeWalls]);
+                ArenaBoundsCustom arena = new(defaultCircle, [.. SafeWalls]);
                 Arena.Bounds = arena;
                 Arena.Center = arena.Center;
             }
@@ -189,14 +189,14 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         if (_aoe == null && defaultArena && !Module.InBounds(player))
         {
             _aoe = new(donut, Arena.Center);
-            ArenaBoundsComplex arena = new(D103Scarmiglione.StartingCircle, [.. SafeWalls]);
+            ArenaBoundsCustom arena = new(D103Scarmiglione.StartingCircle, [.. SafeWalls]);
             Arena.Bounds = arena;
             outOfBounds = true;
         }
         else if (outOfBounds && (player - Arena.Center).LengthSq() < 399f)
         {
             _aoe = null;
-            ArenaBoundsComplex arena = new(defaultCircle, [.. SafeWalls]);
+            ArenaBoundsCustom arena = new(defaultCircle, [.. SafeWalls]);
             Arena.Bounds = arena;
             outOfBounds = false;
         }
@@ -389,7 +389,7 @@ public sealed class D103Scarmiglione(WorldState ws, Actor primary) : BossModule(
         new(new(-28.489f, -279.09f), HalfWidth, HalfHeight, 19f.Degrees()), // ENVC 0A
     ];
     public static readonly Polygon[] StartingCircle = [new Polygon(ArenaCenter, 24.5f * CosPI.Pi64th, 64)];
-    public static readonly ArenaBoundsComplex StartingArena = new(StartingCircle, SafeWalls);
+    public static readonly ArenaBoundsCustom StartingArena = new(StartingCircle, SafeWalls);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
