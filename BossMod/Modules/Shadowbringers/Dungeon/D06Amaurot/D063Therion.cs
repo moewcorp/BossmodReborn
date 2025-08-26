@@ -125,16 +125,18 @@ sealed class Border(BossModule module) : Components.GenericAOEs(module, warningT
 
 sealed class Apokalypsis(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect _rect = new(76f, 10f);
     private readonly Border _arena = module.FindComponent<Border>()!;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.ApokalypsisFirst && (_arena.UnionRefresh.Count - _arena.BreakingPlatforms.Count) > 1)
-            _aoe = new(_rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        if (spell.Action.ID == (uint)AID.ApokalypsisFirst && (_arena.UnionRefresh.Count - _arena.BreakingPlatforms.Count) >= 1)
+        {
+            _aoe = [new(_rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -143,7 +145,7 @@ sealed class Apokalypsis(BossModule module) : Components.GenericAOEs(module)
         {
             if (++NumCasts == 4)
             {
-                _aoe = null;
+                _aoe = [];
                 NumCasts = 0;
             }
         }
@@ -152,15 +154,17 @@ sealed class Apokalypsis(BossModule module) : Components.GenericAOEs(module)
 
 sealed class DeathlyRayThereion(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(60f, 3f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.DeathlyRayVisualThereion1)
-            _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        {
+            _aoe = [new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -169,7 +173,7 @@ sealed class DeathlyRayThereion(BossModule module) : Components.GenericAOEs(modu
         {
             if (++NumCasts == 4)
             {
-                _aoe = null;
+                _aoe = [];
                 NumCasts = 0;
             }
         }
@@ -187,9 +191,10 @@ sealed class DeathlyRayFaces(BossModule module) : Components.GenericAOEs(module)
         if (count == 0)
             return [];
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        if (!aoes[0].Risky)
+        ref var aoe0 = ref aoes[0];
+        if (!aoe0.Risky)
         {
-            var deadline = aoes[0].Activation.AddSeconds(1d);
+            var deadline = aoe0.Activation.AddSeconds(1d);
             for (var i = 0; i < count; ++i)
             {
                 ref var aoe = ref aoes[i];

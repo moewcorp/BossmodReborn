@@ -147,22 +147,29 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
 class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(13f);
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Seduce)
-            AOE = new(circle, D022RubyPrincess.ArenaCenter.Quantized(), default, Module.CastFinishAt(spell, 8f));
-        else if (spell.Action.ID == (uint)AID.CoriolisKick)
-            AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell));
+        var id = spell.Action.ID;
+        if (id == (uint)AID.Seduce)
+        {
+            AOE = [new(circle, D022RubyPrincess.ArenaCenter.Quantized(), default, Module.CastFinishAt(spell, 8d))];
+        }
+        else if (id == (uint)AID.CoriolisKick)
+        {
+            AOE = [new(circle, spell.LocXZ, default, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.CoriolisKick)
-            AOE = null;
+        {
+            AOE = [];
+        }
     }
 }
 

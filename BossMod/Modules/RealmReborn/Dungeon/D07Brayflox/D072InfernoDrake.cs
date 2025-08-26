@@ -80,6 +80,6 @@ public class D072InfernoDrake(WorldState ws, Actor primary) : BossModule(ws, pri
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.TemplestBiast));
+        Arena.Actors(Enemies((uint)OID.TemplestBiast));
     }
 }

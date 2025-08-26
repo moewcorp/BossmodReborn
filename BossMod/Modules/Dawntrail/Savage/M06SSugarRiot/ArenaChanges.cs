@@ -5,7 +5,7 @@ namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _risky = true;
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private bool active;
     public bool DangerousRiver => Arena.Bounds == RiverArena;
     public bool DangerousLava => Arena.Bounds == LavaArena;
@@ -16,7 +16,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     public static readonly AOEShapeCustom LavaAOE = new(combinedLava);
     public static readonly ArenaBoundsCustom LavaArena = new(DefaultSquare, [.. CombinedRiver, .. combinedLava]);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -54,45 +54,47 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             }
         }
         void AddAOE(AOEShapeCustom shape)
-        => _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(7.1d));
+        => _aoe = [new(shape, Arena.Center, default, WorldState.FutureTime(7.1d))];
         void SetArena(ArenaBoundsCustom bounds)
         {
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;
-            _aoe = null;
+            _aoe = [];
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.DoubleStyle3)
+        var id = spell.Action.ID;
+        if (id == (uint)AID.DoubleStyle3)
         {
             AddAOE(RiverAOE with { InvertForbiddenZone = true }, Colors.SafeFromAOE);
             _risky = false;
         }
-        else if (spell.Action.ID == (uint)AID.DoubleStyle5)
+        else if (id == (uint)AID.DoubleStyle5)
         {
             AddAOE(RiverAOE);
         }
         void AddAOE(AOEShapeCustom shape, uint color = default)
-        => _aoe = new(shape, Arena.Center, default, Module.CastFinishAt(spell, 4.2d), color);
+        => _aoe = [new(shape, Arena.Center, default, Module.CastFinishAt(spell, 4.2d), color)];
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.TasteOfFire or (uint)AID.TasteOfThunderSpread)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!active)
+        if (!active || _aoe.Length == 0)
+        {
             return;
-        if (_aoe == null)
-            return;
-        var isInside = _aoe.Value.Check(actor.Position);
+        }
+        ref var aoe = ref _aoe[0];
+        var isInside = aoe.Check(actor.Position);
         if (!_risky)
         {
             hints.Add("Be inside river!", !isInside);
@@ -106,7 +108,9 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (!active)
+        {
             return;
+        }
         var pos = actor.Position;
         if (actor.PrevPosition != pos)
         {

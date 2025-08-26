@@ -46,14 +46,18 @@ class FunambulistsFantasia(BossModule module) : BossComponent(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FunambulistsFantasia)
+        {
             Arena.Bounds = D033AencThon.ChasmArena;
+        }
         else if (spell.Action.ID == (uint)AID.Finale)
+        {
             Arena.Bounds = D033AencThon.ArenaBounds;
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Arena.Bounds == D033AencThon.ChasmArena && Module.Enemies(OID.LiarsLyre) is var lyre && lyre.Count != 0)
+        if (Arena.Bounds == D033AencThon.ChasmArena && Module.Enemies((uint)OID.LiarsLyre) is var lyre && lyre.Count != 0)
         {
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
             hints.GoalZones.Add(hints.GoalSingleTarget(lyre[0], 1f, 5f));
@@ -65,15 +69,17 @@ class Finale(BossModule module) : Components.CastHint(module, (uint)AID.Finale, 
 
 class CorrosiveBile(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCone cone = new(24.875f, 45f.Degrees());
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.CorrosiveBileFirst)
-            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        {
+            _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -84,7 +90,7 @@ class CorrosiveBile(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.CorrosiveBileRest:
                 if (++NumCasts == 6)
                 {
-                    _aoe = null;
+                    _aoe = [];
                     NumCasts = 0;
                 }
                 break;
@@ -94,15 +100,17 @@ class CorrosiveBile(BossModule module) : Components.GenericAOEs(module)
 
 class FlailingTentacles(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCross cross = new(38.875f, 3.5f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FlailingTentaclesVisual)
-            _aoe = new(cross, spell.LocXZ, Module.PrimaryActor.Rotation + 45f.Degrees(), Module.CastFinishAt(spell, 1f));
+        {
+            _aoe = [new(cross, spell.LocXZ, Module.PrimaryActor.Rotation + 45f.Degrees(), Module.CastFinishAt(spell, 1d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -113,7 +121,7 @@ class FlailingTentacles(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.FlailingTentacles:
                 if (++NumCasts == 5)
                 {
-                    _aoe = null;
+                    _aoe = [];
                     NumCasts = 0;
                 }
                 break;

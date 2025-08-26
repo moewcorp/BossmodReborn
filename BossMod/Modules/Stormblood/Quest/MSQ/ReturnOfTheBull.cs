@@ -48,7 +48,7 @@ class FordolaShield(BossModule module) : BossComponent(module)
 
 class Deflect(BossModule module) : BossComponent(module)
 {
-    public IEnumerable<Actor> Spheres => Module.Enemies(OID.Aether).Where(x => !x.IsDeadOrDestroyed);
+    public IEnumerable<Actor> Spheres => Module.Enemies((uint)OID.Aether).Where(x => !x.IsDeadOrDestroyed);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {

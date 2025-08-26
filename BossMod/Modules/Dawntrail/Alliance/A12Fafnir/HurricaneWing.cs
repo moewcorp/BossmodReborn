@@ -16,7 +16,7 @@ sealed class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        var shape = ShapeForAction(spell.Action);
+        var shape = ShapeForAction(spell.Action.ID);
         if (shape != null)
         {
             NumCasts = 0;
@@ -30,7 +30,7 @@ sealed class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        var shape = ShapeForAction(spell.Action);
+        var shape = ShapeForAction(spell.Action.ID);
         if (shape != null)
         {
             ++NumCasts;
@@ -49,7 +49,7 @@ sealed class HurricaneWingAOE(BossModule module) : Components.GenericAOEs(module
         }
     }
 
-    private static AOEShape? ShapeForAction(ActionID aid) => aid.ID switch
+    private static AOEShape? ShapeForAction(uint aid) => aid switch
     {
         (uint)AID.HurricaneWingLongExpanding1 or (uint)AID.HurricaneWingShortExpanding1 or (uint)AID.HurricaneWingLongShrinking4 or (uint)AID.HurricaneWingShortShrinking4 => _shapes[0],
         (uint)AID.HurricaneWingLongExpanding2 or (uint)AID.HurricaneWingShortExpanding2 or (uint)AID.HurricaneWingLongShrinking3 or (uint)AID.HurricaneWingShortShrinking3 => _shapes[1],

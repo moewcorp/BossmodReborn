@@ -2,20 +2,20 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL1Gauntlet;
 
 sealed class NorthSouthwind(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private readonly Stormcall _aoe = module.FindComponent<Stormcall>()!;
     private readonly List<Shape> shapes = new(4);
     private RelSimplifiedComplexPolygon poly = new();
     private bool polyInit;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         switch (spell.Action.ID)
         {
             case (uint)AID.WindVisual:
-                _kb = new(spell.LocXZ, 40f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward);
+                _kb = [new(spell.LocXZ, 40f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward)];
                 break;
             case (uint)AID.PainStormShadow:
                 shapes.Add(new ConeV(spell.LocXZ, 35f, spell.Rotation, 65f.Degrees(), 32));
@@ -40,16 +40,17 @@ sealed class NorthSouthwind(BossModule module) : Components.GenericKnockback(mod
     {
         if (spell.Action.ID is (uint)AID.NorthWind or (uint)AID.SouthWind)
         {
-            _kb = null;
+            _kb = [];
             polyInit = false;
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
             // square intentionally slightly smaller to prevent sus knockback
+            ref var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {

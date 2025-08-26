@@ -3,10 +3,10 @@
 sealed class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 90f.Degrees());
-    private readonly AOEInstance?[] _aoes = new AOEInstance?[PartyState.MaxAllianceSize];
+    private readonly AOEInstance[][] _aoes = new AOEInstance[PartyState.MaxAllianceSize][];
     private readonly PlayerTemperatures _temps = module.FindComponent<PlayerTemperatures>()!;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => slot is < 0 or > 23 ? [] : Utils.ZeroOrOne(ref _aoes[slot]);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => slot is < 0 or > 23 ? [] : _aoes[slot];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -31,7 +31,7 @@ sealed class BladeOfEntropy(BossModule module) : Components.GenericAOEs(module)
                     color = Colors.SafeFromAOE;
                     shape = cone with { InvertForbiddenZone = true };
                 }
-                _aoes[i] = new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), color);
+                _aoes[i] = [new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), color)];
             }
         }
     }

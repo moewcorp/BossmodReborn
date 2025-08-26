@@ -140,15 +140,17 @@ class BodySlam(BossModule module) : Components.SimpleKnockbacks(module, (uint)AI
 
 class FlameBreath(BossModule module) : Components.GenericAOEs(module, (uint)AID.FlameBreathChannel)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(500f, 10f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FlameBreath1)
-            _aoe = new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(spell).AddSeconds(1));
+        {
+            _aoe = [new(rect, Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(spell, 1d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -156,7 +158,7 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module, (uint)AID.
         base.OnEventCast(caster, spell);
         if (NumCasts >= 35)
         {
-            _aoe = null;
+            _aoe = [];
             NumCasts = 0;
         }
     }
@@ -164,17 +166,17 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module, (uint)AID.
 
 class FlameBreath2(BossModule module) : Components.GenericAOEs(module, (uint)AID.FlameBreathChannel)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(60f, 10f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FlameBreath2)
         {
             NumCasts = 0;
-            _aoe = new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+            _aoe = [new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
         }
     }
 
@@ -183,7 +185,7 @@ class FlameBreath2(BossModule module) : Components.GenericAOEs(module, (uint)AID
         base.OnEventCast(caster, spell);
         if (NumCasts >= 14)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -227,7 +229,9 @@ class ScorchingBreath(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ScorchingBreath)
+        {
             ++NumCasts;
+        }
     }
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -251,7 +255,7 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001)
+        if (state == 0x00020001u)
         {
             if (index == 0x03)
             {
@@ -269,7 +273,7 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
                 Phase = 6;
             }
         }
-        else if (state == 0x00800040)
+        else if (state == 0x00800040u)
         {
             if (index == 0x00)
             {

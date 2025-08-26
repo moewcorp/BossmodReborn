@@ -2,20 +2,20 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL1Gauntlet;
 
 sealed class Turbine(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private readonly List<Square> squares = new(6);
     private readonly FlamingCyclone _aoe = module.FindComponent<FlamingCyclone>()!;
     private RelSimplifiedComplexPolygon poly = new();
     private bool polyInit;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         switch (spell.Action.ID)
         {
             case (uint)AID.Turbine:
-                _kb = new(spell.LocXZ, 15f, Module.CastFinishAt(spell));
+                _kb = [new(spell.LocXZ, 15f, Module.CastFinishAt(spell))];
                 break;
             case (uint)AID.FlamingCyclone:
                 squares.Add(new Square(spell.LocXZ, 10f)); // assume circles are squares for cheap PiP test
@@ -34,16 +34,17 @@ sealed class Turbine(BossModule module) : Components.GenericKnockback(module)
     {
         if (spell.Action.ID == (uint)AID.Turbine)
         {
-            _kb = null;
+            _kb = [];
             polyInit = false;
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb && polyInit)
+        if (_kb.Length != 0 && polyInit)
         {
             // square intentionally slightly smaller to prevent sus knockback
+            ref var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {

@@ -189,20 +189,20 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
 
 sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private readonly LineOfFireSpiritSlingCageOfFire _aoe = module.FindComponent<LineOfFireSpiritSlingCageOfFire>()!;
     private DateTime activation;
     private RelSimplifiedComplexPolygon poly = new();
     private bool polyInit;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BlastKnucklesVisual)
         {
             activation = Module.CastFinishAt(spell, 1d);
-            _kb = new(spell.LocXZ, 15f, activation);
+            _kb = [new(spell.LocXZ, 15f, activation)];
         }
     }
 
@@ -210,13 +210,13 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
     {
         if (spell.Action.ID == (uint)AID.BlastKnuckles)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
             if (!IsImmune(slot, activation))
             {

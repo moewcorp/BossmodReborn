@@ -54,15 +54,15 @@ public enum SID : uint
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(25f, 30f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BootCampMode)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 4.3d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 4.3d))];
         }
     }
 
@@ -70,9 +70,9 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Deathwall)
         {
-            Arena.Bounds = CE32RiseOfTheRobots.DefaultArena;
+            Arena.Bounds = new ArenaBoundsCircle(25f); // default arena got no extra collision, just a donut aoe
             Arena.Center = Arena.Center.Quantized();
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -322,7 +322,6 @@ public sealed class CE32RiseOfTheRobots(WorldState ws, Actor primary) : BossModu
 {
     public static readonly WPos ArenaCenter = new(104f, 237f);
     private static readonly ArenaBoundsCustom startingArena = new([new Polygon(ArenaCenter, 29.5f, 32)]);
-    public static readonly ArenaBoundsCircle DefaultArena = new(25f); // default arena got no extra collision, just a donut aoe
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
 }

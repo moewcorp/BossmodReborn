@@ -30,7 +30,9 @@ class AugmentedSuffering(BossModule module) : Components.SimpleKnockbacks(module
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
+        {
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 8f), Casters.Ref(0).Activation);
+        }
     }
 }
 
@@ -41,10 +43,10 @@ class WheelOfSuffering(BossModule module) : Components.SimpleAOEs(module, (uint)
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 35f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private bool begin;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -52,15 +54,17 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = D142Nero.DefaultBounds;
             Arena.Center = D142Nero.DefaultBounds.Center;
-            _aoe = null;
+            _aoe = [];
             begin = true;
         }
     }
 
     public override void Update()
     {
-        if (!begin && _aoe == null)
-            _aoe = new(donut, Arena.Center, default, WorldState.FutureTime(3.6d));
+        if (!begin && _aoe.Length == 0)
+        {
+            _aoe = [new(donut, Arena.Center, default, WorldState.FutureTime(3.6d))];
+        }
     }
 }
 

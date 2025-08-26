@@ -56,14 +56,15 @@ public enum IconID : uint
 sealed class DubiousTulidisasterArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D074GreatestSerpentOfTural.ArenaCenter, 15f)], [new Square(D074GreatestSerpentOfTural.ArenaCenter, 12f)]);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
+
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.DubiousTulidisaster && Arena.Bounds == D074GreatestSerpentOfTural.StartingBounds)
+        if (spell.Action.ID == (uint)AID.DubiousTulidisaster && Arena.Bounds.Radius > 12f)
         {
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 4.8d));
+            _aoe = [new(square, Arena.Center, default, Module.CastFinishAt(spell, 4.8d))];
         }
     }
 
@@ -72,7 +73,7 @@ sealed class DubiousTulidisasterArenaChange(BossModule module) : Components.Gene
         if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D074GreatestSerpentOfTural.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

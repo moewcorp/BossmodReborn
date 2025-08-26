@@ -39,13 +39,13 @@ class Ex3TitanAI(BossModule module) : BossComponent(module)
 
     public override void Update()
     {
-        if (KillNextBomb && Module.Enemies(OID.BombBoulder).Count == 0)
+        if (KillNextBomb && Module.Enemies((uint)OID.BombBoulder).Count == 0)
             KillNextBomb = false;
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        bool haveGaolers = Module.Enemies(OID.GraniteGaoler).Any(a => a.IsTargetable && !a.IsDead);
+        bool haveGaolers = Module.Enemies((uint)OID.GraniteGaoler).Any(a => a.IsTargetable && !a.IsDead);
         foreach (var e in hints.PotentialTargets)
         {
             e.StayAtLongRange = true;

@@ -75,15 +75,15 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         };
     }
 
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == StartingBounds)
         {
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+            _aoe = [new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d))];
         }
     }
 
@@ -92,11 +92,13 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         if (state == 0x00020001u)
         {
             if (ArenaBoundsMap.TryGetValue(index, out var value))
+            {
                 Arena.Bounds = value;
+            }
             else if (index == 0x12)
             {
                 Arena.Bounds = defaultBounds;
-                _aoe = null;
+                _aoe = [];
             }
         }
         else if (state == 0x00080004u)
@@ -136,8 +138,8 @@ sealed class Surge(BossModule module) : Components.GenericKnockback(module)
         if (spell.Action.ID == (uint)AID.Surge)
         {
             var safewalls = GetActiveSafeWalls();
-            AddSource(90.Degrees(), safewalls);
-            AddSource(-90.Degrees(), safewalls);
+            AddSource(90f.Degrees(), safewalls);
+            AddSource(-90f.Degrees(), safewalls);
         }
     }
 
@@ -163,7 +165,9 @@ sealed class Surge(BossModule module) : Components.GenericKnockback(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Surge)
+        {
             SourcesList.Clear();
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -218,9 +222,11 @@ sealed class SurgeHint(BossModule module) : Components.GenericAOEs(module)
         if (count != 0)
         {
             var isPositionSafe = false;
+            var hintz = CollectionsMarshal.AsSpan(_hints);
             for (var i = 0; i < count; ++i)
             {
-                if (_hints[i].Check(actor.Position))
+                ref var hint = ref hintz[i];
+                if (hint.Check(actor.Position))
                 {
                     isPositionSafe = true;
                     break;

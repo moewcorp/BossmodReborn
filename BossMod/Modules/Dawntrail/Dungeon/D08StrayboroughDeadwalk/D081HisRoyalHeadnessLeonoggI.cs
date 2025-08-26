@@ -48,15 +48,15 @@ public enum IconID : uint
 sealed class MaliciousMistArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(14f, 20f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.MaliciousMist && Arena.Bounds == D081HisRoyalHeadnessLeonoggI.StartingBounds)
+        if (spell.Action.ID == (uint)AID.MaliciousMist && Arena.Bounds.Radius > 14f)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d))];
         }
     }
 
@@ -65,7 +65,7 @@ sealed class MaliciousMistArenaChange(BossModule module) : Components.GenericAOE
         if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D081HisRoyalHeadnessLeonoggI.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

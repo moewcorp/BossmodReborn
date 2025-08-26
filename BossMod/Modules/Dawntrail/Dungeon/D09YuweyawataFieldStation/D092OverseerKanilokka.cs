@@ -38,9 +38,9 @@ public enum AID : uint
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donutSmall = new(5f, 15f), donutBig = new(15f, 20f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -53,7 +53,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             AddAOE(donutSmall);
         }
-        void AddAOE(AOEShape shape) => _aoe = new(shape, Arena.Center.Quantized(), default, Module.CastFinishAt(spell));
+        void AddAOE(AOEShape shape) => _aoe = [new(shape, Arena.Center.Quantized(), default, Module.CastFinishAt(spell))];
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -85,7 +85,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

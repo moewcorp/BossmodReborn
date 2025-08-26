@@ -51,21 +51,25 @@ class Thunderstorm(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
 
 class IceAndLevin(BossModule module) : Components.GenericAOEs(module, (uint)AID.Chillstorm)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeDonut donut = new(11f, 40f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.IceAndLevin)
-            _aoe = new(donut, spell.LocXZ, default, Module.CastFinishAt(spell, 1f));
+        {
+            _aoe = [new(donut, spell.LocXZ, default, Module.CastFinishAt(spell, 1d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == WatchedAction)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 class Charybdis(BossModule module) : Components.GenericAOEs(module)
@@ -120,17 +124,20 @@ class HotTail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HotTa
 class HotTailSecond(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(77f, 8f, 77f);
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
-    private AOEInstance? _aoe;
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.HotTailFirst)
-            _aoe = new(rect, caster.Position, spell.Rotation, WorldState.FutureTime(3.1d));
-
+        {
+            _aoe = [new(rect, caster.Position, spell.Rotation, WorldState.FutureTime(3.1d))];
+        }
         else if (spell.Action.ID == (uint)AID.HotTailSecond)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

@@ -40,15 +40,15 @@ public enum AID : uint
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(25f, 30f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.BoilOverVisual && Arena.Bounds != CE107Unbridled.DefaultArena)
+        if (spell.Action.ID == (uint)AID.BoilOverVisual && Arena.Bounds.Radius > 25f)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 1d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 1d))];
         }
     }
 
@@ -58,14 +58,14 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = CE107Unbridled.DefaultArena;
             Arena.Center = Arena.Center.Quantized();
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
 
 sealed class BoilOverChanneledHeightenedRage(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.BoilOver, (uint)AID.ChanneledRage, (uint)AID.HeightenedRage]);
 sealed class WhiteHotRage(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WhiteHotRage, 6f);
-sealed class HeatedOutburst(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.HeatedOutburst], 13f, riskyWithSecondsLeft: 4);
+sealed class HeatedOutburst(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.HeatedOutburst], 13f, riskyWithSecondsLeft: 4d);
 sealed class ScathingSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ScathingSweep, new AOEShapeRect(60f, 30f));
 
 sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
@@ -165,11 +165,15 @@ sealed class HoppingMad(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         if (_aoes.Count < 2)
             return;
-        var aoe = _aoes[0];
+        ref var aoe = ref _aoes.Ref(0);
         if (aoe.Shape is AOEShapeCircle circle)
+        {
             hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe.Origin, circle.Radius + 2f), aoe.Activation); // stay close to border of circle to move into donut fast
+        }
         else if (aoe.Shape is AOEShapeDonut donut)
+        {
             hints.AddForbiddenZone(ShapeDistance.Circle(aoe.Origin, donut.InnerRadius - 2f), aoe.Activation); // stay close to border of donut to move to next circle fast
+        }
     }
 }
 

@@ -38,22 +38,23 @@ public enum IconID : uint
 class BeastlyFuryArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom cross = new([new Square(D113SpectralBerserker.ArenaCenter, 23)], D113SpectralBerserker.Cross);
+    private AOEInstance[] _aoe = [];
 
-    private AOEInstance? _aoe;
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BeastlyFury && Arena.Bounds == D113SpectralBerserker.StartingBounds)
-            _aoe = new(cross, Arena.Center, default, Module.CastFinishAt(spell, 1.1d));
+        {
+            _aoe = [new(cross, Arena.Center, default, Module.CastFinishAt(spell, 1.1d))];
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (state == 0x00020001 && index == 0x0B)
+        if (index == 0x0B && state == 0x00020001u)
         {
             Arena.Bounds = D113SpectralBerserker.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -65,9 +66,11 @@ class FallingRock(BossModule module) : Components.SpreadFromIcon(module, (uint)I
         if (Spreads.Count != 0)
         {
             var count = Spreads.Count;
+            var spreads = CollectionsMarshal.AsSpan(Spreads);
             for (var i = 0; i < count; ++i)
             {
-                if (Spreads[i].Target.IsDead)
+                ref var spread = ref spreads[i];
+                if (spread.Target.IsDead)
                 {
                     Spreads.RemoveAt(i);
                     return;
@@ -216,14 +219,14 @@ class CratersWildRampage(BossModule module) : Components.GenericAOEs(module)
     {
         if (_aoe is AOEShapeCustom aoe)
         {
-            return new AOEInstance[1] { new(aoe with { InvertForbiddenZone = invert }, Arena.Center, default, activation, invert ? Colors.SafeFromAOE : 0) };
+            return new AOEInstance[1] { new(aoe with { InvertForbiddenZone = invert }, Arena.Center, default, activation, invert ? Colors.SafeFromAOE : default) };
         }
         return [];
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00010002 && actor.OID == (uint)OID.Crater)
+        if (state == 0x00010002u && actor.OID == (uint)OID.Crater)
         {
             if (actor.Position == pos1 && !Circles.Any(x => x.Center == pos1))
                 Circles.Add(circle1);

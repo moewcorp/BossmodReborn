@@ -64,8 +64,6 @@ public abstract class BossModule : IDisposable
         return relevantEnemies;
     }
 
-    public List<Actor> Enemies<OID>(OID oid) where OID : Enum => Enemies((uint)(object)oid);
-
     // component management: at most one component of any given type can be active at any time
     public readonly List<BossComponent> Components = [];
 

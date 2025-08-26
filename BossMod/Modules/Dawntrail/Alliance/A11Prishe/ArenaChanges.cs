@@ -2,8 +2,8 @@ namespace BossMod.Dawntrail.Alliance.A11Prishe;
 
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (uint)AID.Thornbite)
 {
-    public bool Active => _aoe != null || Arena.Bounds != A11Prishe.DefaultBounds;
-    private AOEInstance? _aoe;
+    public bool Active => _aoe.Length != 0 || Arena.Bounds != A11Prishe.DefaultBounds;
+    private AOEInstance[] _aoe = [];
     private static readonly Square[] defaultSquare = [new(A11Prishe.ArenaCenter, 35f)];
     public static readonly Square[] MiddleENVC00020001 = [new(new(795f, 405f), 10f), new(new(805f, 395f), 10f)];
     private static readonly Shape[] differenceENVC00020001 = [.. MiddleENVC00020001, new Rectangle(new(810f, 430f), 15f, 5f),
@@ -16,12 +16,14 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (u
     private static readonly AOEShapeCustom arenaChangeENVC02000100 = new(defaultSquare, differenceENVC02000100);
     public static readonly ArenaBoundsCustom ArenaENVC02000100 = new(differenceENVC02000100);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index != 0x01)
+        {
             return;
+        }
         switch (state)
         {
             case 0x00020001u:
@@ -41,18 +43,15 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (u
                 Arena.Center = A11Prishe.ArenaCenter;
                 break;
         }
-    }
 
-    private void SetArena(ArenaBoundsCustom bounds)
-    {
-        Arena.Bounds = bounds;
-        Arena.Center = bounds.Center;
-        _aoe = null;
-    }
+        void SetArena(ArenaBoundsCustom bounds)
+        {
+            Arena.Bounds = bounds;
+            Arena.Center = bounds.Center;
+            _aoe = [];
+        }
 
-    private void SetAOE(AOEShapeCustom shape)
-    {
-        _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(5d));
+        void SetAOE(AOEShapeCustom shape) => _aoe = [new(shape, Arena.Center, default, WorldState.FutureTime(5d))];
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // no need to generate a hint here, we generate a special hint in CrystallineThornsHint
@@ -61,16 +60,18 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module, (u
 
 sealed class CrystallineThornsHint(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCustom hintENVC00020001 = new(ArenaChanges.MiddleENVC00020001, InvertForbiddenZone: true);
     private static readonly AOEShapeCustom hintENVC02000100 = new(ArenaChanges.MiddleENVC02000100, InvertForbiddenZone: true);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index != 0x01)
+        {
             return;
+        }
         switch (state)
         {
             case 0x00020001u:
@@ -81,19 +82,22 @@ sealed class CrystallineThornsHint(BossModule module) : Components.GenericAOEs(m
                 break;
             case 0x00200010u:
             case 0x08000400u:
-                _aoe = null;
+                _aoe = [];
                 break;
         }
-    }
-
-    private void SetAOE(AOEShapeCustom shape)
-    {
-        _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(5d), Colors.SafeFromAOE);
+        void SetAOE(AOEShapeCustom shape) => _aoe = [new(shape, Arena.Center, default, WorldState.FutureTime(5d), Colors.SafeFromAOE)];
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe != null && !_aoe.Value.Check(actor.Position))
+        if (_aoe.Length == 0)
+        {
+            return;
+        }
+        ref var aoe = ref _aoe[0];
+        if (!aoe.Check(actor.Position))
+        {
             hints.Add("Go into middle to prepare for knockback!");
+        }
     }
 }

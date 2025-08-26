@@ -44,7 +44,7 @@ class Slipstream(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Sl
 
 class MistralSongP1(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.MistralSongP1, 31.7f, true)
 {
-    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies(OID.Monolith));
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(Module.Enemies((uint)OID.Monolith));
 }
 
 // actual casts happen every ~6s after aerial blast cast

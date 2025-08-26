@@ -39,8 +39,8 @@ class P3Divebomb(BossModule module) : Components.GenericAOEs(module)
 
 class P3Adds(BossModule module) : BossComponent(module)
 {
-    private readonly List<Actor> _hygieia = module.Enemies(OID.Hygieia);
-    public readonly List<Actor> Asclepius = module.Enemies(OID.Asclepius);
+    private readonly List<Actor> _hygieia = module.Enemies((uint)OID.Hygieia);
+    public readonly List<Actor> Asclepius = module.Enemies((uint)OID.Asclepius);
     public IEnumerable<Actor> ActiveHygieia => _hygieia.Where(a => !a.IsDead);
 
     private const float _explosionRadius = 8;

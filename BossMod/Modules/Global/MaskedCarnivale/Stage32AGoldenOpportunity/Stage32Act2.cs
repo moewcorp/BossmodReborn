@@ -53,17 +53,19 @@ sealed class GoldenCross(BossModule module) : Components.SimpleAOEs(module, (uin
 sealed class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 60f.Degrees());
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private readonly List<ConeV> cones = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.GoldenBeam)
         {
             if (Module.Enemies((uint)OID.GildedMarionette).Count == 1)
-                _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+            {
+                _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+            }
             else
             {
                 cones.Add(new(spell.LocXZ, cone.Radius, spell.Rotation, cone.HalfAngle, 2));
@@ -80,7 +82,8 @@ sealed class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
                     var clipper = new PolygonClipper();
                     var combinedShapes = clipper.Union(new PolygonClipper.Operand(intersect.GetCombinedPolygon(Arena.Center)),
                     new PolygonClipper.Operand(xor.GetCombinedPolygon(Arena.Center)));
-                    _aoe = new(intersect with { Polygon = combinedShapes }, Arena.Center, default, Module.CastFinishAt(spell));
+                    intersect.Polygon = combinedShapes;
+                    _aoe = [new(intersect, Arena.Center, default, Module.CastFinishAt(spell))];
                 }
             }
         }
@@ -90,7 +93,7 @@ sealed class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.GoldenBeam)
         {
-            _aoe = null;
+            _aoe = [];
             cones.Clear();
         }
     }
@@ -98,8 +101,10 @@ sealed class GoldenBeam(BossModule module) : Components.GenericAOEs(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (_aoe != null && Module.Enemies((uint)OID.GildedMarionette).Count > 1)
+        if (_aoe.Length != 0 && Module.Enemies((uint)OID.GildedMarionette).Count > 1)
+        {
             hints.Add("Use Diamondback outside of marked area!");
+        }
     }
 }
 

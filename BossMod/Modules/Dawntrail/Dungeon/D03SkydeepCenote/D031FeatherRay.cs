@@ -33,15 +33,15 @@ public enum AID : uint
 sealed class HydroRing(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(12f, 24f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HydroRing)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell))];
         }
     }
 
@@ -52,10 +52,12 @@ sealed class HydroRing(BossModule module) : Components.GenericAOEs(module)
             if (state == 0x00020001u)
             {
                 Arena.Bounds = D031FeatherRay.CircleBounds;
-                _aoe = null;
+                _aoe = [];
             }
             else if (state == 0x00080004u)
+            {
                 Arena.Bounds = D031FeatherRay.NormalBounds;
+            }
         }
     }
 }
@@ -72,7 +74,9 @@ sealed class AiryBubble(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i)
         {
@@ -169,7 +173,9 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Burst)
+        {
             _aoes.Clear();
+        }
     }
 }
 
@@ -197,20 +203,26 @@ sealed class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.WorrisomeWave2)
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
         if (ActiveBaitsOn(actor).Count != 0)
+        {
             hints.Add("Bait away!");
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (CurrentBaits.Count == 0)
+        {
             return;
+        }
         base.AddAIHints(slot, actor, assignment, hints);
         var activeBaits = CollectionsMarshal.AsSpan(ActiveBaitsOn(actor));
         if (activeBaits.Length != 0)

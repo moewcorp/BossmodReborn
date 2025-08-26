@@ -68,25 +68,27 @@ public enum TetherID : uint
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 35f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private bool begin;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00040008 && (OID)actor.OID == OID.ArenaVoidzone)
+        if (state == 0x00040008u && actor.OID == (uint)OID.ArenaVoidzone)
         {
             Arena.Bounds = D063ZenosYaeGalvus.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
             begin = true;
         }
     }
 
     public override void Update()
     {
-        if (!begin && _aoe == null)
-            _aoe = new(donut, Arena.Center, default, WorldState.FutureTime(10));
+        if (!begin && _aoe.Length == 0)
+        {
+            _aoe = [new(donut, Arena.Center, default, WorldState.FutureTime(10d))];
+        }
     }
 }
 
@@ -181,7 +183,7 @@ class LightlessSparkBaitaway(BossModule module) : Components.BaitAwayTethers(mod
         var baits = ActiveBaitsOn(actor);
         if (baits.Count != 0)
         {
-            var bait = baits[0].Source;
+            ref var bait = ref baits.Ref(0).Source;
             hints.AddForbiddenZone(ShapeDistance.InvertedCone(bait.Position, 10f, Angle.FromDirection(bait.Position - Arena.Center), 45f.Degrees()), WorldState.FutureTime(ActivationDelay));
         }
     }
@@ -214,7 +216,7 @@ class D063ZenosYaeGalvusStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 247, NameID = 6039)]
-public class D063ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(250, -353), new ArenaBoundsSquare(22.5f))
+public class D063ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(250f, -353f), new ArenaBoundsSquare(22.5f))
 {
     public static readonly ArenaBoundsCircle DefaultBounds = new(20f);
     private static readonly uint[] swords = [(uint)OID.TheStorm, (uint)OID.TheSwell, (uint)OID.AmeNoHabakiri];

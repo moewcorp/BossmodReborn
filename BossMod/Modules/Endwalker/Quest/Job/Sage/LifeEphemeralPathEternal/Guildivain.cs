@@ -109,7 +109,7 @@ public class Guildivain(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(OID.EnhancedNoulith));
+        Arena.Actors(Enemies((uint)OID.EnhancedNoulith));
         Arena.Actor(PrimaryActor);
     }
 }

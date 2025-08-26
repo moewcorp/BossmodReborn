@@ -18,8 +18,8 @@ public class Ex4Ifrit : BossModule
 
     public Ex4Ifrit(WorldState ws, Actor primary) : base(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
     {
-        SmallNails = Enemies(OID.InfernalNailSmall);
-        LargeNails = Enemies(OID.InfernalNailLarge);
+        SmallNails = Enemies((uint)OID.InfernalNailSmall);
+        LargeNails = Enemies((uint)OID.InfernalNailLarge);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

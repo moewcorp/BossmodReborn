@@ -27,16 +27,16 @@ sealed class Doom(BossModule module) : Components.CleansableDebuff(module, (uint
 
 sealed class Cryptcall(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCone cone = new(35f, 60f.Degrees());
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.TartareanThunder)
         {
-            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 3d));
+            _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 3d))];
         }
     }
 
@@ -44,7 +44,7 @@ sealed class Cryptcall(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Cryptcall)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

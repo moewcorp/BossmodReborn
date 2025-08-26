@@ -125,12 +125,11 @@ class GallopKB(BossModule module) : Components.GenericKnockback(module)
 class GallopKBHint(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly GallopKB _kb = module.FindComponent<GallopKB>()!;
-    private const string Hint = "Walk into safespot for knockback!";
 
     private static readonly Angle[] angles = [-89.982f.Degrees(), 89.977f.Degrees()];
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -148,24 +147,24 @@ class GallopKBHint(BossModule module) : Components.GenericAOEs(module)
                 rects.Add(new(pos + dir, pos - 3.5f * dir, 5f));
             }
             AOEShapeCustom aoe = new([.. rects], InvertForbiddenZone: true);
-            _aoe = new(aoe, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE, true);
+            _aoe = [new(aoe, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE, true)];
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.GallopKB)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe is AOEInstance aoe)
+        if (_aoe.Length != 0)
         {
-            var check = true;
-            if (aoe.Check(actor.Position))
-                check = false;
-            hints.Add(Hint, check);
+            ref var aoe = ref _aoe[0];
+            hints.Add("Walk into safespot for knockback!", !aoe.Check(actor.Position));
         }
     }
 }
@@ -192,11 +191,17 @@ class BurningBright(BossModule module) : Components.BaitAwayCast(module, (uint)A
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (CurrentBaits.Count == 0)
+        {
             return;
-        if (CurrentBaits[0].Target != actor)
+        }
+        if (CurrentBaits.Ref(0).Target != actor)
+        {
             base.AddHints(slot, actor, hints);
+        }
         else
+        {
             hints.Add("Bait away, avoid intersecting wall hitboxes!");
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -276,30 +281,42 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module, centerAt
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.CloudCall)
+        {
             CurrentBaits.Add(new(Module.PrimaryActor, actor, Circle, WorldState.FutureTime(4.9d)));
+        }
     }
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.DarkCloud)
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
+        {
             hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 19f, 19f, 5f));
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (CurrentBaits.Count == 0)
+        {
             return;
+        }
         if (CurrentBaits.Ref(0).Target != actor)
+        {
             base.AddHints(slot, actor, hints);
+        }
         else
+        {
             hints.Add("Bait cloud away, avoid intersecting wall hitboxes!");
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -320,20 +337,23 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module, centerAt
 
 class LightningBolt(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    private AOEInstance[] _aoe = [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.DarkCloud)
-            _aoe = new(CloudCall.Circle, actor.Position, default, WorldState.FutureTime(7.8d));
+        {
+            _aoe = [new(CloudCall.Circle, actor.Position, default, WorldState.FutureTime(7.8d))];
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.LightningBolt)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

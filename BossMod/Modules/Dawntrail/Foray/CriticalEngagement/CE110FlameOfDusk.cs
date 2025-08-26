@@ -170,25 +170,26 @@ sealed class MoltAOEs(BossModule module) : Components.GenericAOEs(module)
 
 sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private MoltAOEs? _aoe;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
-    public void AddKnockback(WPos position, DateTime activation) => _kb = new(position, 20f, activation);
+    public void AddKnockback(WPos position, DateTime activation) => _kb = [new(position, 20f, activation)];
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Blowout)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
+            ref var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
@@ -197,7 +198,9 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
                 hints.AddForbiddenZone(p =>
                 {
                     if ((p + 20f * (p - origin).Normalized()).InCircle(center, 18f))
+                    {
                         return 1f;
+                    }
                     return default;
                 }, act);
             }
@@ -206,15 +209,23 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
 
     public override void AddGlobalHints(GlobalHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
             _aoe ??= Module.FindComponent<MoltAOEs>();
             if (_aoe!.AOEs.Count == 0)
+            {
                 return;
-            if (_aoe.AOEs[0].Activation > kb.Activation)
+            }
+            ref var aoe = ref _aoe.AOEs.Ref(0);
+            ref var kb = ref _kb[0];
+            if (aoe.Activation > kb.Activation)
+            {
                 hints.Add("Order: Knockback -> AOE");
+            }
             else
+            {
                 hints.Add("Order: AOE -> Knockback");
+            }
         }
     }
 }

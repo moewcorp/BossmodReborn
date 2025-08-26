@@ -36,7 +36,7 @@ public enum AID : uint
 }
 
 class VoidMortar(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidMortar1, 13);
-class FocusInferi(BossModule module) : Components.VoidzoneAtCastTarget(module, 6, (uint)AID.FocusInferi, m => m.Enemies(OID.Voidzone).Where(x => x.EventState != 7), 0);
+class FocusInferi(BossModule module) : Components.VoidzoneAtCastTarget(module, 6, (uint)AID.FocusInferi, m => m.Enemies((uint)OID.Voidzone).Where(x => x.EventState != 7), 0);
 class CarnemLevareCross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CarnemLevare1, new AOEShapeCross(40, 4));
 
 class CarnemLevareDonut(BossModule module) : Components.GenericAOEs(module)

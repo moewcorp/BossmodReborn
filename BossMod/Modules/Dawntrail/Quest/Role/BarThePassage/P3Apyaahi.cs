@@ -44,19 +44,23 @@ public enum AID : uint
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 25f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(double delay) => _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, delay));
-        if (Arena.Bounds != ApyaahiTheArchitect.StartingArena)
+        void AddAOE(double delay) => _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, delay))];
+        if (Arena.Bounds.Radius != 20f)
         {
             if (spell.Action.ID == (uint)AID.FlamesOfTheFallingOrder)
+            {
                 AddAOE(0.5d);
+            }
             else if (spell.Action.ID == (uint)AID.FleshBoilingPunishmentLake)
+            {
                 AddAOE(2d);
+            }
         }
     }
 
@@ -72,7 +76,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             if (state == 0x00020001u)
             {
                 SetArena(ApyaahiTheArchitect.DefaultArena);
-                _aoe = null;
+                _aoe = [];
             }
             else if (state == 0x0008004u)
                 SetArena(ApyaahiTheArchitect.StartingArena);

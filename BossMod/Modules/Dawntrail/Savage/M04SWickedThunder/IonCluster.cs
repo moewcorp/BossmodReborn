@@ -2,31 +2,31 @@ namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
 sealed class StampedingThunder(BossModule module) : Components.GenericAOEs(module)
 {
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
     public bool SmallArena;
 
     private static readonly AOEShapeRect _shape = new(40f, 15f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         switch (spell.Action.ID)
         {
             case (uint)AID.IonClusterVisualR:
-                AOE = new(_shape, caster.Position - new WDir(5f, default), caster.Rotation, WorldState.FutureTime(2.4d));
+                AOE = [new(_shape, caster.Position - new WDir(5f, default), caster.Rotation, WorldState.FutureTime(2.4d))];
                 break;
             case (uint)AID.IonClusterVisualL:
-                AOE = new(_shape, caster.Position + new WDir(5f, default), caster.Rotation, WorldState.FutureTime(2.4d));
+                AOE = [new(_shape, caster.Position + new WDir(5f, default), caster.Rotation, WorldState.FutureTime(2.4d))];
                 break;
             case (uint)AID.StampedingThunderAOE:
                 ++NumCasts;
                 break;
             case (uint)AID.StampedingThunderFinish:
                 ++NumCasts;
-                AOE = null;
+                AOE = [];
                 Arena.Bounds = M04SWickedThunder.IonClusterBounds;
-                Arena.Center = new(M04SWickedThunder.P1DefaultCenter.X + 3 * (M04SWickedThunder.P1DefaultCenter.X - caster.PosRot.X), M04SWickedThunder.P1DefaultCenter.Z);
+                Arena.Center = new(M04SWickedThunder.P1DefaultCenter.X + 3f * (M04SWickedThunder.P1DefaultCenter.X - caster.PosRot.X), M04SWickedThunder.P1DefaultCenter.Z);
                 SmallArena = true;
                 break;
         }

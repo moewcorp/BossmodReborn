@@ -398,9 +398,12 @@ sealed class WorldStateGameSync : IDisposable
                     var dur = Math.Min(Math.Abs(s.RemainingTime), 100000);
                     ActorStatus curStatus = new(s.StatusId, s.Param, _ws.CurrentTime.AddSeconds(dur), SanitizedObjectID(s.SourceObject));
                     UpdateActorStatus(act, i, ref curStatus);
-                    continue;
                 }
-                _ws.Execute(new ActorState.OpStatus(instanceID, i, default));
+                else
+                {
+                    ActorStatus curStatus = default;
+                    UpdateActorStatus(act, i, ref curStatus);
+                }
             }
         }
 
@@ -445,7 +448,7 @@ sealed class WorldStateGameSync : IDisposable
     {
         // note: some statuses have non-zero remaining time but never tick down (e.g. FC buffs); currently we ignore that fact, to avoid log spam...
         // note: RemainingTime is not monotonously decreasing (I assume because it is really calculated by game and frametime fluctuates...), we ignore 'slight' duration increases (<1 sec)
-        var prev = act.Statuses[index];
+        ref readonly var prev = ref act.Statuses[index];
         if (prev.ID == value.ID && prev.SourceID == value.SourceID && prev.Extra == value.Extra && (value.ExpireAt - prev.ExpireAt).TotalSeconds <= 1d)
         {
             act.Statuses[index].ExpireAt = value.ExpireAt;

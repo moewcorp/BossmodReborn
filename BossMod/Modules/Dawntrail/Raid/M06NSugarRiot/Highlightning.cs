@@ -3,19 +3,19 @@ namespace BossMod.Dawntrail.Raid.M06NSugarRiot;
 sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(21f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private WPos lastPosition;
     private bool active;
     private DateTime nextActivation;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.TempestPiece)
         {
             active = true;
-            _aoe = new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(6.5d));
+            _aoe = [new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(6.5d))];
         }
     }
 
@@ -23,7 +23,7 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Highlightning)
         {
-            _aoe = null;
+            _aoe = [];
             if (++NumCasts == 3)
             {
                 active = false;
@@ -53,6 +53,8 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
             _ => default
         };
         if (next != default)
-            _aoe = new(circle, next, default, nextActivation);
+        {
+            _aoe = [new(circle, next, default, nextActivation)];
+        }
     }
 }

@@ -40,15 +40,15 @@ public enum AID : uint
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(15f, 35f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.LeporineLoaf)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.9d))];
         }
     }
 
@@ -67,7 +67,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = bounds;
             Arena.Center = D093Lunipyati.ArenaCenter;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -76,16 +76,16 @@ sealed class CraterCarve(BossModule module) : Components.SimpleAOEs(module, (uin
 
 sealed class RagingClaw(BossModule module) : Components.GenericAOEs(module)
 {
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
     private static readonly AOEShapeCone cone = new(45f, 90f.Degrees());
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.RagingClawFirst)
         {
-            AOE = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+            AOE = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
         }
     }
 
@@ -97,7 +97,7 @@ sealed class RagingClaw(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.RagingClawRepeat:
                 if (++NumCasts == 6)
                 {
-                    AOE = null;
+                    AOE = [];
                     NumCasts = 0;
                 }
                 break;
@@ -143,7 +143,7 @@ sealed class JaggedEdge(BossModule module) : Components.SpreadFromCastTargets(mo
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.AOE != null && Spreads.Count != 0 && !IsSpreadTarget(actor))
+        if (_aoe.AOE.Length != 0 && Spreads.Count != 0 && !IsSpreadTarget(actor))
         {
             hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, default, 1f, 50f), Spreads.Ref(0).Activation);
             return;

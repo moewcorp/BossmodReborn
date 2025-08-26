@@ -2,11 +2,11 @@ namespace BossMod.Shadowbringers.Alliance.A31KnaveofHearts;
 
 sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uint)AID.Lunge)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
     private readonly ColossalImpact _aoe = module.FindComponent<ColossalImpact>()!;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -31,7 +31,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
                 safewalls.Add(new(s[vertex1] + adj, s[vertex2] + adj)); // get the edge that intersects the current knockback, adjusted by hitbox radius
             }
             _arena.Squares.Clear();
-            _kb = new(spell.LocXZ, 60f, Module.CastFinishAt(spell), null, rot, Kind.DirForward, safeWalls: safewalls);
+            _kb = [new(spell.LocXZ, 60f, Module.CastFinishAt(spell), null, rot, Kind.DirForward, safeWalls: safewalls)];
         }
     }
 
@@ -39,7 +39,7 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
     {
         if (spell.Action.ID == WatchedAction)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
@@ -60,9 +60,9 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        if (_kb is Knockback knockback)
+        if (_kb.Length != 0)
         {
-            ref readonly var kb = ref knockback;
+            ref readonly var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(pcSlot, act))
             {
@@ -74,8 +74,8 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
                 for (var i = 0; i < len; ++i)
                 {
                     ref readonly var w = ref walls[i];
-                    ref readonly var v1 = ref w.Vertex1;
-                    ref readonly var v2 = ref w.Vertex2;
+                    var v1 = w.Vertex1;
+                    var v2 = w.Vertex2;
                     var midpoint = new WPos((v1.X + v2.X) * 0.5f, (v1.Z + v2.Z) * 0.5f);
                     var aoes = CollectionsMarshal.AsSpan(aoesC);
                     var blocked = false;
@@ -100,9 +100,9 @@ sealed class Lunge(BossModule module) : Components.GenericKnockback(module, (uin
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback knockback)
+        if (_kb.Length != 0)
         {
-            ref readonly var kb = ref knockback;
+            ref readonly var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {

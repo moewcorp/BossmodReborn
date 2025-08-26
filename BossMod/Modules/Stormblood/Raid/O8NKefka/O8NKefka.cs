@@ -92,23 +92,29 @@ class IndolentWill(BossModule module) : Components.CastGaze(module, (uint)AID.In
 
 class RevoltingRuin(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCone cone = new(102.7f, 60f.Degrees());
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.TimelyTeleportVisual2 && !caster.Position.AlmostEqual(Module.PrimaryActor.Position, 1))
-            _aoe = new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 3.1f));
+        if (spell.Action.ID == (uint)AID.TimelyTeleportVisual2 && !caster.Position.AlmostEqual(Module.PrimaryActor.Position, 1f))
+        {
+            _aoe = [new(cone, caster.Position, spell.Rotation, Module.CastFinishAt(spell, 3.1d))];
+        }
         else if (spell.Action.ID == (uint)AID.AeroAssault) // sometimes it does AeroAssault directly and skipping Revolting Ruin
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.RevoltingRuin)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

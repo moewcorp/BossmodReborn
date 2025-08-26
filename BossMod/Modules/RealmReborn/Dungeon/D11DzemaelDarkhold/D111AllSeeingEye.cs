@@ -40,7 +40,7 @@ class Positioning(BossModule module) : BossComponent(module)
     {
         if (Module.PrimaryActor.CastInfo == null) // do not restrict zone while boss is casting, to allow avoiding aoe, even if it means temporarily leaving crystal veil
         {
-            var closestCrystal = Module.Enemies(OID.Crystal).Closest(Module.PrimaryActor.Position);
+            var closestCrystal = Module.Enemies((uint)OID.Crystal).Closest(Module.PrimaryActor.Position);
             if (closestCrystal != null)
                 hints.AddForbiddenZone(ShapeDistance.InvertedCircle(closestCrystal.Position, 8)); // TODO: verify range
         }

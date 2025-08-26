@@ -43,15 +43,15 @@ public enum TetherID : uint
     Magnetism = 38
 }
 
-class Magnetism(BossModule module) : Components.GenericKnockback(module)
+sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
 {
-    private readonly Knockback?[] _sources = new Knockback?[4];
+    private readonly Knockback[][] _kbs = new Knockback[4][];
     private readonly NerveGasRingAndAutoCannons _aoe1 = module.FindComponent<NerveGasRingAndAutoCannons>()!;
     private readonly Barofield _aoe2 = module.FindComponent<Barofield>()!;
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
-        if (_sources[slot] is Knockback source)
+        if (_kbs[slot].Length != 0)
         {
             var count = _aoe1.AOEs.Count;
             var aoes = CollectionsMarshal.AsSpan(_aoe1.AOEs);
@@ -60,7 +60,7 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module)
                 ref var aoe = ref aoes[i];
                 if (aoe.Shape == NerveGasRingAndAutoCannons.donut)
                 {
-                    return new Span<Knockback>([source]);
+                    return _kbs[slot];
                 }
             }
         }
@@ -79,29 +79,37 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module)
                 return true;
             }
         }
-
-        return _aoe2.AOE != null && _aoe2.AOE.Value.Check(pos) || !Module.InBounds(pos);
+        if (_aoe2.AOE.Length != 0)
+        {
+            ref var aoe = ref _aoe2.AOE[0];
+            return aoe.Check(pos);
+        }
+        return !Module.InBounds(pos);
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)
     {
-        bool IsPull(ref Actor target)
+        bool IsPull(Actor target)
         => source.FindStatus((uint)SID.NegativeChargeDrone) != null && target.FindStatus((uint)SID.PositiveChargePlayer) != null ||
         source.FindStatus((uint)SID.PositiveChargeDrone) != null && target.FindStatus((uint)SID.NegativeChargePlayer) != null;
 
-        bool IsKnockback(ref Actor target)
+        bool IsKnockback(Actor target)
         => source.FindStatus((uint)SID.NegativeChargeDrone) != null && target.FindStatus((uint)SID.NegativeChargePlayer) != null ||
         source.FindStatus((uint)SID.PositiveChargeDrone) != null && target.FindStatus((uint)SID.PositiveChargePlayer) != null;
 
         if (tether.ID == (uint)TetherID.Magnetism)
         {
             var target = WorldState.Actors.Find(tether.Target)!;
-            if (IsPull(ref target))
+            if (IsPull(target))
+            {
                 AddSource(false);
-            else if (IsKnockback(ref target))
+            }
+            else if (IsKnockback(target))
+            {
                 AddSource(true);
+            }
 
-            void AddSource(bool isKnockback) => _sources[Raid.FindSlot(target.InstanceID)] = new(source.Position, 10f, WorldState.FutureTime(10d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin, ignoreImmunes: true);
+            void AddSource(bool isKnockback) => _kbs[Raid.FindSlot(target.InstanceID)] = [new(source.Position, 10f, WorldState.FutureTime(10d), kind: isKnockback ? Kind.AwayFromOrigin : Kind.TowardsOrigin, ignoreImmunes: true)];
         }
     }
 
@@ -109,16 +117,16 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module)
     {
         if (tether.ID == (uint)TetherID.Magnetism)
         {
-            var target = WorldState.Actors.Find(tether.Target)!;
-            _sources[Raid.FindSlot(target.InstanceID)] = null;
+            _kbs[Raid.FindSlot(tether.Target)] = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_sources[slot] is Knockback source)
+        if (_kbs[slot].Length != 0)
         {
-            var attract = source.Kind == Kind.TowardsOrigin;
+            ref var kb = ref _kbs[slot][0];
+            var attract = kb.Kind == Kind.TowardsOrigin;
             var pos = Module.PrimaryActor.Position;
             var barofield = ShapeDistance.Circle(pos, 5f);
             var arena = ShapeDistance.InvertedCircle(pos, 8f);
@@ -131,43 +139,49 @@ class Magnetism(BossModule module) : Components.GenericKnockback(module)
                 forbiddenRects[i] = ShapeDistance.Rect(c.Position, c.Rotation, 43f, default, 2.5f);
             }
             var all = ShapeDistance.Union((Func<WPos, float>[])[barofield, arena, .. forbiddenRects]);
+            var origin = kb.Origin;
 
             hints.AddForbiddenZone(p =>
             {
-                var dir = (p - source.Origin).Normalized();
+                var dir = (p - origin).Normalized();
                 var kb = attract ? -dir : dir;
 
                 // prevent KB through death zone in center
                 if (Intersect.RayCircle(p, kb, pos, 5f) < 99f)
-                    return 0f;
-
+                {
+                    return default;
+                }
                 return all(p + kb * 10f);
-            }, source.Activation);
+            }, kb.Activation);
         }
     }
 }
 
-class Barofield(BossModule module) : Components.GenericAOEs(module)
+sealed class Barofield(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(5f);
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (AOE == null && spell.Action.ID is (uint)AID.Barofield or (uint)AID.NanosporeJet)
-            AOE = new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 0.7f));
+        if (AOE.Length != 0 && spell.Action.ID is (uint)AID.Barofield or (uint)AID.NanosporeJet)
+        {
+            AOE = [new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 0.7d))];
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.Barofield)
-            AOE = null;
+        {
+            AOE = [];
+        }
     }
 }
 
-class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(module)
+sealed class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(2);
     private static readonly AOEShapeCross cross = new(20f, 2.5f);
@@ -188,12 +202,14 @@ class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(mod
         {
             AddAOE(rect);
             var count = AOEs.Count;
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].Shape == cross)
+                ref var aoe = ref aoes[i];
+                if (aoe.Shape == cross)
                 {
                     AOEs.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }
@@ -205,21 +221,23 @@ class NerveGasRingAndAutoCannons(BossModule module) : Components.GenericAOEs(mod
         {
             var count = AOEs.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                if (AOEs[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     AOEs.RemoveAt(i);
-                    break;
+                    return;
                 }
             }
         }
     }
 }
 
-class NerveGas(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.LeftwardNerveGas, (uint)AID.RightwardNerveGas], new AOEShapeCone(25.5f, 90f.Degrees()));
+sealed class NerveGas(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.LeftwardNerveGas, (uint)AID.RightwardNerveGas], new AOEShapeCone(25.5f, 90f.Degrees()));
 
-class CentralizedNerveGas(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CentralizedNerveGas, new AOEShapeCone(25.5f, 60f.Degrees()));
+sealed class CentralizedNerveGas(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CentralizedNerveGas, new AOEShapeCone(25.5f, 60f.Degrees()));
 
 class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAttack, new AOEShapeCone(11f, 45f.Degrees()))
 {
@@ -227,20 +245,24 @@ class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAt
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_aoe.AOE == null)
+        if (_aoe.AOE.Length == 0)
+        {
             base.AddAIHints(slot, actor, assignment, hints);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (_aoe.AOE == null)
+        if (_aoe.AOE.Length == 0)
+        {
             base.DrawArenaForeground(pcSlot, pc);
+        }
     }
 }
 
-class Resonance(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Resonance, new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
+sealed class Resonance(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Resonance, new AOEShapeCone(12f, 45f.Degrees()), endsOnCastEvent: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
-class DD80ProtoKaliyaStates : StateMachineBuilder
+sealed class DD80ProtoKaliyaStates : StateMachineBuilder
 {
     public DD80ProtoKaliyaStates(BossModule module) : base(module)
     {
@@ -256,4 +278,4 @@ class DD80ProtoKaliyaStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus, legendoficeman", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 904, NameID = 12247)]
-public class DD80ProtoKaliya(WorldState ws, Actor primary) : BossModule(ws, primary, new(-600f, -300f), new ArenaBoundsCircle(20f));
+public sealed class DD80ProtoKaliya(WorldState ws, Actor primary) : BossModule(ws, primary, new(-600f, -300f), new ArenaBoundsCircle(20f));

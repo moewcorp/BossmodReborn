@@ -26,7 +26,6 @@ public static partial class Utils
     public static Vector2 XZ(this Vector3 v) => new(v.X, v.Z);
 
     public static bool AlmostEqual(float a, float b, float eps) => Math.Abs(a - b) <= eps;
-    public static bool AlmostEqual(Vector3 a, Vector3 b, float eps) => (a - b).LengthSquared() <= eps * eps;
 
     public static string Vec3String(Vector3 pos) => $"[{pos.X:f3}, {pos.Y:f3}, {pos.Z:f3}]";
     public static string QuatString(Quaternion q) => $"[{q.X:f3}, {q.Y:f3}, {q.Z:f3}, {q.W:f3}]";
@@ -202,13 +201,6 @@ public static partial class Utils
         return first;
     }
 
-    // get read only span of zero or one elements, depending on whether argument is null
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<T> ZeroOrOne<T>(ref readonly T? value) where T : struct
-    {
-        return value != null ? new T[1] { value.Value } : [];
-    }
-
     // swap two values
     public static void Swap<T>(ref T l, ref T r) => (r, l) = (l, r);
 
@@ -294,8 +286,6 @@ public static partial class Utils
             yield return (key, v);
         }
     }
-
-    public static IEnumerable<(string, T)> DedupKeys<T>(Dictionary<string, T> items) => DedupKeys(items.Select(i => (i.Key, i.Value)));
 
     public static Func<TIn, TOut> Memoize<TIn, TOut>(this Func<TIn, TOut> func) where TIn : notnull
     {

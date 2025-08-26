@@ -35,11 +35,10 @@ public abstract class QueensGuard(WorldState ws, Actor primary) : BossModule(ws,
     public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(center, 25f, 48)]);
 }
 
-public abstract class Phantom(WorldState ws, Actor primary) : BossModule(ws, primary, startArenaCenter, StartingArena)
+public abstract class Phantom(WorldState ws, Actor primary) : BossModule(ws, primary, startArenaCenter, new ArenaBoundsRect(23.5f, 29.5f))
 {
     private static readonly WPos startArenaCenter = new(202f, -374f);
     public static readonly WPos DefaultCenter = new(202f, -370f);
-    public static readonly ArenaBoundsRect StartingArena = new(23.5f, 29.5f);
     public static readonly ArenaBoundsRect DefaultArena = new(23.5f, 24f);
     public static readonly AOEShapeCustom ArenaChange = new([new Rectangle(startArenaCenter, 24f, 30f)], [new Rectangle(DefaultCenter, 24f, 24f)]);
 }
@@ -56,11 +55,9 @@ public abstract class TrinityAvowed(WorldState ws, Actor primary) : BossModule(w
     public static readonly ArenaBoundsRect ShimmeringShotArena = new(5f, 25f);
 }
 
-public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingArena)
+public abstract class Queen(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsSquare(29.5f))
 {
     public static readonly WPos ArenaCenter = new(-272f, -415f);
-    public static readonly ArenaBoundsSquare StartingArena = new(29.5f);
-    public static readonly ArenaBoundsSquare SquareArena = new(25f);
     public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(ArenaCenter, 25f, 48)]);
     public static readonly AOEShapeDonut ArenaChange = new(25f, 43f);
 }

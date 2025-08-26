@@ -29,15 +29,15 @@ public enum AID : uint
 class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D033Svarbhanu.ArenaCenter, 25f)], [new Square(D033Svarbhanu.ArenaCenter, 20f)]);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FlamesOfDecay && Arena.Bounds != D033Svarbhanu.DefaultArena)
+        if (spell.Action.ID == (uint)AID.FlamesOfDecay && Arena.Bounds.Radius > 20f)
         {
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 8.9d));
+            _aoe = [new(square, Arena.Center, default, Module.CastFinishAt(spell, 8.9d))];
         }
     }
 
@@ -45,13 +45,13 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (index == 0x07 && state == 0x00020001u)
         {
-            Arena.Bounds = D033Svarbhanu.DefaultArena;
-            _aoe = null;
+            Arena.Bounds = new ArenaBoundsSquare(20f);
+            _aoe = [];
         }
     }
 }
 
-class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
+sealed class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
 {
     public enum Pattern { None, BBRR, RRBB, BRRB, RBBR }
     public Pattern currentPattern;
@@ -143,10 +143,10 @@ class ChaoticUndercurrent(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class CosmicKissSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.CosmicKissSpread, 6f);
-class CosmicKissCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CosmicKissCircle, 6f);
+sealed class CosmicKissSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.CosmicKissSpread, 6f);
+sealed class CosmicKissCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CosmicKissCircle, 6f);
 
-class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
+sealed class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(9);
     private static readonly AOEShapeRect rect = new(50f, 5f);
@@ -196,9 +196,9 @@ class CosmicKissRect(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class CosmicKissRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.CosmicKiss);
+sealed class CosmicKissRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.CosmicKiss);
 
-class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.CosmicKiss, 13f)
+sealed class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.CosmicKiss, 13f)
 {
     private static readonly Angle a90 = 90f.Degrees(), a45 = 45f.Degrees(), a180 = 180f.Degrees();
     private readonly ChaoticUndercurrent _aoe = module.FindComponent<ChaoticUndercurrent>()!;
@@ -275,10 +275,10 @@ class CosmicKissKnockback(BossModule module) : Components.SimpleKnockbacks(modul
     }
 }
 
-class FlamesOfDecay(BossModule module) : Components.RaidwideCast(module, (uint)AID.FlamesOfDecay);
-class GnashingOfTeeth(BossModule module) : Components.SingleTargetCast(module, (uint)AID.GnashingOfTeeth);
+sealed class FlamesOfDecay(BossModule module) : Components.RaidwideCast(module, (uint)AID.FlamesOfDecay);
+sealed class GnashingOfTeeth(BossModule module) : Components.SingleTargetCast(module, (uint)AID.GnashingOfTeeth);
 
-class D033SvarbhanuStates : StateMachineBuilder
+sealed class D033SvarbhanuStates : StateMachineBuilder
 {
     public D033SvarbhanuStates(BossModule module) : base(module)
     {
@@ -295,9 +295,8 @@ class D033SvarbhanuStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 789, NameID = 10719)]
-public class D033Svarbhanu(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsSquare(24.5f))
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 789u, NameID = 10719u)]
+public sealed class D033Svarbhanu(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsSquare(24.5f))
 {
     public static readonly WPos ArenaCenter = new(300f, -157f);
-    public static readonly ArenaBoundsSquare DefaultArena = new(20f);
 }

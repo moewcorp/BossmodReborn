@@ -35,20 +35,24 @@ class BridgeCreation(BossModule module) : BossComponent(module)
 class Touchdown(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(10f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Cauterize)
-            _aoe = new(circle, new(364.523f, -225.727f), default, Module.CastFinishAt(spell, 6.7f));
+        {
+            _aoe = [new(circle, new(364.523f, -225.727f), default, Module.CastFinishAt(spell, 6.7d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.Touchdown)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 
@@ -81,7 +85,7 @@ class D130BlizzardDragonStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 171, NameID = 4942, SortOrder = 5)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 171u, NameID = 4942u, SortOrder = 5)]
 public class D130BlizzardDragon(WorldState ws, Actor primary) : BossModule(ws, primary, arena1.Center, arena1)
 {
     private static readonly WPos[] vertices1 = [new(442.92f, -223.66f), new(443.59f, -223.55f), new(444.20f, -223.30f), new(448.14f, -221.02f), new(448.67f, -220.68f),
@@ -164,6 +168,8 @@ public class D130BlizzardDragon(WorldState ws, Actor primary) : BossModule(ws, p
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

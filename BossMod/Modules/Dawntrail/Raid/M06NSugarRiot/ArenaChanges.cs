@@ -5,10 +5,10 @@ namespace BossMod.Dawntrail.Raid.M06NSugarRiot;
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private bool _risky = true;
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private bool active;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -20,14 +20,14 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 active = true;
                 break;
             case 0x00800040u:
-                _aoe = new(RiverAOE, Arena.Center, default, WorldState.FutureTime(7d));
+                _aoe = [new(RiverAOE, Arena.Center, default, WorldState.FutureTime(7d))];
                 _risky = true;
                 break;
             case 0x00200010u:
                 Arena.Bounds = RiverArena;
                 Arena.Center = RiverArena.Center;
                 active = false;
-                _aoe = null;
+                _aoe = [];
                 break;
             case 0x08000004u:
                 Arena.Bounds = DefaultArena;
@@ -42,12 +42,12 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
             return;
         if (spell.Action.ID == (uint)AID.TasteOfFire)
         {
-            _aoe = new(RiverAOE with { InvertForbiddenZone = true }, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE);
+            _aoe = [new(RiverAOE with { InvertForbiddenZone = true }, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE)];
             _risky = false;
         }
         else if (spell.Action.ID == (uint)AID.TasteOfThunder)
         {
-            _aoe = new(RiverAOE, Arena.Center, default, Module.CastFinishAt(spell));
+            _aoe = [new(RiverAOE, Arena.Center, default, Module.CastFinishAt(spell))];
         }
     }
 
@@ -55,18 +55,20 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.TasteOfFire or (uint)AID.TasteOfThunder)
         {
-            _aoe = null;
+            _aoe = [];
             _risky = true;
         }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!active)
+        if (!active || _aoe.Length == 0)
+        {
             return;
-        if (_aoe == null)
-            return;
-        var isInside = _aoe.Value.Check(actor.Position);
+        }
+
+        ref var aoe = ref _aoe[0];
+        var isInside = aoe.Check(actor.Position);
         if (!_risky)
         {
             hints.Add("Be inside river!", !isInside);

@@ -23,7 +23,7 @@ class AethericBoom(BossModule module) : Components.CastHint(module, (uint)AID.Ae
 
         if (_waitingForOrbs)
         {
-            var orbs = Module.Enemies(OID.Ultimaplasm);
+            var orbs = Module.Enemies((uint)OID.Ultimaplasm);
             if (orbs.Count == 2 * (NumCasts + 1)) // 4/6/8 orbs should spawn after 1/2/3 casts
             {
                 _activeOrbs.AddRange(orbs);

@@ -61,7 +61,7 @@ public class SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, primary,
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actors(Enemies(Bosses));
-        Arena.Actors(Enemies(OID.IshgardianSteelChain), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.IshgardianSteelChain), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

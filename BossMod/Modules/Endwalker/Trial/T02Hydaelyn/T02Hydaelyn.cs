@@ -45,6 +45,6 @@ public class T02Hydaelyn(WorldState ws, Actor primary) : BossModule(ws, primary,
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.CrystalOfLight), Colors.Object);
+        Arena.Actors(Enemies((uint)OID.CrystalOfLight), Colors.Object);
     }
 }

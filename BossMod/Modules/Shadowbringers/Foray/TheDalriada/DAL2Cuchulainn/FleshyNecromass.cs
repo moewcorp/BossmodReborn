@@ -5,7 +5,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
     private static readonly WPos[] positions = [new(637.27f, -174.667f), new(662.71f, -174.667f), new(662.71f, -200.133f), new(637.27f, -200.133f)];
     public static readonly AOEShapeCustom Circles = VoidzoneShape();
     private AOEInstance[] _voidzone = [];
-    private AOEInstance? _invertedvoidzone;
+    private AOEInstance[] _invertedvoidzone = [];
     private BitMask gelatinous;
     private bool active;
 
@@ -24,7 +24,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
     {
         if (active && !gelatinous[slot])
         {
-            return Utils.ZeroOrOne(ref _invertedvoidzone);
+            return _invertedvoidzone;
         }
         else
         {
@@ -36,7 +36,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.Gelatinous)
         {
-            gelatinous[Raid.FindSlot(actor.InstanceID)] = true;
+            gelatinous.Set(Raid.FindSlot(actor.InstanceID));
         }
     }
 
@@ -44,7 +44,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.Gelatinous)
         {
-            gelatinous[Raid.FindSlot(actor.InstanceID)] = false;
+            gelatinous.Clear(Raid.FindSlot(actor.InstanceID));
         }
     }
 
@@ -58,7 +58,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
         else if (id == (uint)AID.FleshyNecromassVisual)
         {
             active = true;
-            _invertedvoidzone = new(Circles with { InvertForbiddenZone = true }, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE);
+            _invertedvoidzone = [new(Circles with { InvertForbiddenZone = true }, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE)];
         }
     }
 
@@ -89,10 +89,10 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
 
 sealed class FleshNecromassJumps(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCircle circle = new(12f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
@@ -100,11 +100,11 @@ sealed class FleshNecromassJumps(BossModule module) : Components.GenericAOEs(mod
         if (id is (uint)AID.FleshyNecromassJump1 or (uint)AID.FleshyNecromassJump2)
         {
             // unfortunately the jump locations seem to be RNG, so there is only about 1s time to do a tiny position correction
-            _aoe = new(circle, spell.TargetXZ, default, WorldState.FutureTime(1d));
+            _aoe = [new(circle, spell.TargetXZ, default, WorldState.FutureTime(1d))];
         }
         else if (id == (uint)AID.FleshyNecromass1)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

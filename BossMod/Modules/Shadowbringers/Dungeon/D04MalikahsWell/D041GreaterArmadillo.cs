@@ -32,9 +32,9 @@ class Rehydration(BossModule module) : Components.CastInterruptHint(module, (uin
 
 class RightRound(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -43,14 +43,16 @@ class RightRound(BossModule module) : Components.GenericAOEs(module)
             // approximation of the mechanic with a capsule since the jump seems to behave quite unpredictable for long distances to the morning star
             var len = (spell.LocXZ - caster.Position).Length();
             var maxLen = len > 10f ? 10f : len;
-            _aoe = new(new AOEShapeCapsule(9f, maxLen), spell.LocXZ, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 0.9f));
+            _aoe = [new(new AOEShapeCapsule(9f, maxLen), spell.LocXZ, spell.Rotation + 180f.Degrees(), Module.CastFinishAt(spell, 0.9d))];
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.RightRound)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

@@ -2,8 +2,8 @@
 
 sealed class P2SanctityOfTheWard2HeavensStakeCircles(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeavensStakeAOE, 7f);
 sealed class P2SanctityOfTheWard2HeavensStakeDonut(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeavensStakeDonut, new AOEShapeDonut(15f, 30f));
-sealed class P2SanctityOfTheWard2VoidzoneFire(BossModule module) : Components.Voidzone(module, 7f, m => m.Enemies(OID.VoidzoneFire).Where(z => z.EventState != 7));
-sealed class P2SanctityOfTheWard2VoidzoneIce(BossModule module) : Components.Voidzone(module, 7f, m => m.Enemies(OID.VoidzoneIce).Where(z => z.EventState != 7));
+sealed class P2SanctityOfTheWard2VoidzoneFire(BossModule module) : Components.Voidzone(module, 7f, m => m.Enemies((uint)OID.VoidzoneFire).Where(z => z.EventState != 7));
+sealed class P2SanctityOfTheWard2VoidzoneIce(BossModule module) : Components.Voidzone(module, 7f, m => m.Enemies((uint)OID.VoidzoneIce).Where(z => z.EventState != 7));
 
 sealed class P2SanctityOfTheWard2Knockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.FaithUnmoving, 16f)
 {
