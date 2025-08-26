@@ -3,19 +3,19 @@ namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(21f);
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
     private WPos lastPosition;
     private bool active;
     private DateTime nextActivation;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.TempestPiece)
         {
             active = true;
-            AOE = new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(6.7d));
+            AOE = [new(circle, actor.Position.Quantized(), default, WorldState.FutureTime(6.7d))];
         }
     }
 
@@ -23,9 +23,11 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Highlightning)
         {
-            AOE = null;
+            AOE = [];
             if (++NumCasts == 5)
+            {
                 active = false;
+            }
             nextActivation = WorldState.FutureTime(10.6d);
             lastPosition = caster.Position;
         }
@@ -33,12 +35,14 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
 
     public override void Update()
     {
-        if (!active || AOE != null)
+        if (!active || AOE.Length != 0)
             return;
         var tempest = Module.Enemies((uint)OID.TempestPiece)[0];
         var angle = (int)Angle.FromDirection(tempest.Position - lastPosition).Deg;
         if (angle == 0)
+        {
             return; // cloud didn't start moving yet
+        }
 
         WPos next = angle switch
         {
@@ -48,7 +52,9 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
             _ => default
         };
         if (next != default)
-            AOE = new(circle, next, default, nextActivation);
+        {
+            AOE = [new(circle, next, default, nextActivation)];
+        }
 
         Module.FindComponent<LightningStormHint>()?.UpdateAOE();
     }

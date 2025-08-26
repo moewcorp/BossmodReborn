@@ -69,6 +69,6 @@ public class D071GreatYellowPelican(WorldState ws, Actor primary) : BossModule(w
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.VioletBack));
+        Arena.Actors(Enemies((uint)OID.VioletBack));
     }
 }

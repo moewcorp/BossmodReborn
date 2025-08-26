@@ -54,9 +54,9 @@ sealed class LuminousRay(BossModule module) : Components.SimpleAOEGroups(module,
 sealed class Reflection(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(40f, 22.5f.Degrees());
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -69,7 +69,7 @@ sealed class Reflection(BossModule module) : Components.GenericAOEs(module)
         };
         if (angle != default)
         {
-            _aoe = new(cone, actor.Position.Quantized(), angle, WorldState.FutureTime(14.4d));
+            _aoe = [new(cone, actor.Position.Quantized(), angle, WorldState.FutureTime(14.4d))];
         }
     }
 
@@ -77,7 +77,7 @@ sealed class Reflection(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Reflection)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

@@ -132,7 +132,7 @@ sealed class Esuna(BossModule module) : BossComponent(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var loashkanaL = Module.Enemies(OID.LoashkanaTheLeal);
+        var loashkanaL = Module.Enemies((uint)OID.LoashkanaTheLeal);
         var loashkana = loashkanaL.Count != 0 ? loashkanaL[0] : null;
         if (_affected.Contains(actor))
             hints.Add("Use Esuna on yourself.");

@@ -34,24 +34,26 @@ public enum AID : uint
 class DecimationArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(16f, 20f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x17 && state == 0x00020001)
+        if (index == 0x17 && state == 0x00020001u)
         {
             Arena.Bounds = D062Peacekeeper.SmallerBounds;
             Arena.Center = D062Peacekeeper.ArenaCenter;
-            _aoe = null;
+            _aoe = [];
         }
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Decimation && Arena.Bounds == D062Peacekeeper.StartingBounds)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.4f));
+        if (spell.Action.ID == (uint)AID.Decimation && Arena.Bounds.Radius > 16f)
+        {
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.4d))];
+        }
     }
 }
 

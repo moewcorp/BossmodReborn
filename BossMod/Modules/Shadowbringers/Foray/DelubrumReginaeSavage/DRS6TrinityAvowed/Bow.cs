@@ -3,21 +3,25 @@
 // aoe starts at cast and ends with envcontrol; it's not considered 'risky' when paired with quick march
 class FlamesOfBozja(BossModule module, bool risky) : Components.GenericAOEs(module, (uint)AID.FlamesOfBozjaAOE)
 {
-    public AOEInstance? AOE;
+    public AOEInstance[] AOE = [];
     private readonly bool _risky = risky;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref AOE);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOE;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            AOE = new(TrinityAvowed.ArenaChange2, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: _risky);
+        {
+            AOE = [new(TrinityAvowed.ArenaChange2, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: _risky)];
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
-            AOE = null;
+        {
+            AOE = [];
+        }
     }
 }
 
@@ -129,7 +133,15 @@ sealed class QuickMarchBow1(BossModule module) : QuickMarch(module)
 {
     private readonly FlamesOfBozja1? _flames = module.FindComponent<FlamesOfBozja1>();
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !Module.InBounds(pos) || (_flames?.AOE?.Shape.Check(pos, _flames.AOE.Value.Origin, _flames.AOE.Value.Rotation) ?? false);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        if (_flames != null && _flames.AOE.Length != 0)
+        {
+            ref var aoe = ref _flames.AOE[0];
+            return aoe.Check(pos);
+        }
+        return !Module.InBounds(pos);
+    }
 }
 
 sealed class ShimmeringShot1(BossModule module) : ShimmeringShot(module, 12.8d)

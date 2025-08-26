@@ -194,7 +194,7 @@ class Ex4IfritAINails : Ex4IfritAINormal
         MinNailsForCWSearingWinds = minNailsForCWSearingWinds;
         OTTankAtIncinerateCounts = new(otTankAtIncinerateCounts);
 
-        var smallNails = module.Enemies(OID.InfernalNailSmall);
+        var smallNails = module.Enemies((uint)OID.InfernalNailSmall);
         var startingNail = smallNails.Closest(Arena.Center + new WDir(15, 0));
         if (startingNail != null)
         {
@@ -202,7 +202,7 @@ class Ex4IfritAINails : Ex4IfritAINormal
             var startingDir = Angle.FromDirection(startingNail.Position - Arena.Center);
             NailKillOrder.AddRange(smallNails.Exclude(startingNail).Select(n => (n, NailDirDist(n.Position - Arena.Center, startingDir))).OrderBy(t => t.Item2.Item1).ThenBy(t => t.Item2.Item2).Select(t => t.n));
         }
-        NailKillOrder.AddRange(module.Enemies(OID.InfernalNailLarge));
+        NailKillOrder.AddRange(module.Enemies((uint)OID.InfernalNailLarge));
     }
 
     public override void Update()

@@ -48,15 +48,15 @@ public enum AID : uint
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D023Gurfurlur.ArenaCenter, 25f)], [new Square(D023Gurfurlur.ArenaCenter, 20f)]);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.HeavingHaymaker && Arena.Bounds == D023Gurfurlur.StartingBounds)
+        if (spell.Action.ID == (uint)AID.HeavingHaymaker && Arena.Bounds.Radius > 20f)
         {
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.6d));
+            _aoe = [new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.6d))];
         }
     }
 
@@ -65,7 +65,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x18 && state == 0x00020001u)
         {
             Arena.Bounds = D023Gurfurlur.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -108,7 +108,7 @@ sealed class AuraSphere(BossModule module) : BossComponent(module)
             for (var i = 0; i < count; ++i)
             {
                 var o = orbs[i];
-                orbz[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
+                orbz[i] = ShapeDistance.InvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(default, 1f), 0.5f, 0.5f, 0.5f);
             }
             hints.AddForbiddenZone(ShapeDistance.Intersection(orbz), DateTime.MaxValue);
         }
@@ -206,7 +206,9 @@ sealed class Allfire(BossModule module) : Components.GenericAOEs(module)
         {
             AOEs.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (AOEs.Count == 16)
+            {
                 AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+            }
         }
         else if (!first && spell.Action.ID == (uint)AID.GreatFlood)
         {
@@ -220,21 +222,26 @@ sealed class Allfire(BossModule module) : Components.GenericAOEs(module)
         {
             AOEs.RemoveAt(0);
             if (AOEs.Count == 0)
+            {
                 first = false;
+            }
         }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (AOEs.Count == 0)
+        {
             return;
+        }
 
         if (first)
         {
             base.AddHints(slot, actor, hints);
             return;
         }
-        hints.Add("Wait inside safespot for knockback!", !AOEs[0].Check(actor.Position));
+        ref var aoe = ref AOEs.Ref(0);
+        hints.Add("Wait inside safespot for knockback!", !aoe.Check(actor.Position));
     }
 }
 

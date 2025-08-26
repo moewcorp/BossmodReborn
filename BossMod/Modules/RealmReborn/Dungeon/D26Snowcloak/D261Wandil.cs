@@ -24,9 +24,9 @@ public enum AID : uint
 sealed class TundraArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom donut = new([new Circle(D261Wandil.ArenaCenter, 20f)], D261Wandil.Polygon);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -34,7 +34,7 @@ sealed class TundraArenaChange(BossModule module) : Components.GenericAOEs(modul
         {
             Arena.Bounds = D261Wandil.SmallArena;
             Arena.Center = D261Wandil.ArenaCenter;
-            _aoe = null;
+            _aoe = [];
         }
     }
 
@@ -42,7 +42,7 @@ sealed class TundraArenaChange(BossModule module) : Components.GenericAOEs(modul
     {
         if (spell.Action.ID == (uint)AID.Tundra)
         {
-            _aoe = new(donut, D261Wandil.ArenaCenter, default, Module.CastFinishAt(spell, 2d));
+            _aoe = [new(donut, D261Wandil.ArenaCenter, default, Module.CastFinishAt(spell, 2d))];
         }
     }
 }

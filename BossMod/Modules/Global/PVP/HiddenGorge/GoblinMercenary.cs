@@ -29,9 +29,9 @@ sealed class GobspinSwipe(BossModule module) : Components.GenericAOEs(module)
 {
     public static readonly AOEShapeCircle Circle = new(8f);
     public static readonly AOEShapeDonut Donut = new(5f, 30f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -44,23 +44,23 @@ sealed class GobspinSwipe(BossModule module) : Components.GenericAOEs(module)
         {
             AddAOE(Donut);
         }
-        void AddAOE(AOEShape shape) => _aoe = new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, 4d));
+        void AddAOE(AOEShape shape) => _aoe = [new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, 4d))];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.GobspinWhooshdrops or (uint)AID.GobswipeConklops)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
 
 sealed class Knockbacks(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _knockback;
+    private Knockback[] _kb = [];
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _knockback);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -73,14 +73,14 @@ sealed class Knockbacks(BossModule module) : Components.GenericKnockback(module)
         {
             AddKnockback(GobspinSwipe.Donut);
         }
-        void AddKnockback(AOEShape shape) => _knockback = new(spell.LocXZ, 15f, Module.CastFinishAt(spell, 4d), shape);
+        void AddKnockback(AOEShape shape) => _kb = [new(spell.LocXZ, 15f, Module.CastFinishAt(spell, 4d), shape)];
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID is (uint)AID.GobspinWhooshdrops or (uint)AID.GobswipeConklops)
         {
-            _knockback = null;
+            _kb = [];
         }
     }
 }

@@ -68,6 +68,6 @@ public class D063LadyAmandine(WorldState ws, Actor primary) : BossModule(ws, pri
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Handmaiden));
+        Arena.Actors(Enemies((uint)OID.Handmaiden));
     }
 }

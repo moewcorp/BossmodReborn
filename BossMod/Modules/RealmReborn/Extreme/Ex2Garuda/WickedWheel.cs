@@ -30,7 +30,7 @@ class WickedWheel(BossModule module) : Components.CastCounter(module, (uint)AID.
         if (spell.Action.ID == WatchedAction)
         {
             // not sure about this ...
-            _expectedNext = Module.Enemies(OID.Suparna).Any(a => a.IsTargetable && !a.IsDead) ? WorldState.FutureTime(25d) : default;
+            _expectedNext = Module.Enemies((uint)OID.Suparna).Any(a => a.IsTargetable && !a.IsDead) ? WorldState.FutureTime(25d) : default;
         }
     }
 }

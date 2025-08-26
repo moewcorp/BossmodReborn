@@ -30,17 +30,17 @@ class Disclosure(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Di
 
 class DisclosureSpin(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCircle circle = new(12.5f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Disclosure)
         {
             Arena.Bounds = D051DemonTome.SpinArena;
-            _aoe = new(circle, Module.PrimaryActor.Position.Quantized(), default, Module.CastFinishAt(spell, 2.4f));
+            _aoe = [new(circle, Module.PrimaryActor.Position.Quantized(), default, Module.CastFinishAt(spell, 2.4d))];
         }
     }
 
@@ -48,7 +48,7 @@ class DisclosureSpin(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.DisclosureSpin)
         {
-            _aoe = null;
+            _aoe = [];
             Arena.Bounds = D051DemonTome.DefaultArena;
         }
     }

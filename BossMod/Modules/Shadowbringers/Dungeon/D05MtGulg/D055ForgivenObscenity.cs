@@ -164,42 +164,40 @@ class GoldChaser(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class SacramentSforzando(BossModule module) : Components.SingleTargetCastDelay(module, (uint)AID.SacramentSforzando, (uint)AID.SacramentSforzando2, 0.8f);
-class OrisonFortissimo(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.OrisonFortissimo, (uint)AID.OrisonFortissimo2, 0.8f);
+class SacramentSforzando(BossModule module) : Components.SingleTargetCastDelay(module, (uint)AID.SacramentSforzando, (uint)AID.SacramentSforzando2, 0.8d);
+class OrisonFortissimo(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.OrisonFortissimo, (uint)AID.OrisonFortissimo2, 0.8d);
 
-abstract class DivineDiminuendoCircle(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, 8f);
-class DivineDiminuendoCircle1(BossModule module) : DivineDiminuendoCircle(module, (uint)AID.DivineDiminuendoCircle1);
-class DivineDiminuendoCircle2(BossModule module) : DivineDiminuendoCircle(module, (uint)AID.DivineDiminuendoCircle2);
-class DivineDiminuendoCircle3(BossModule module) : DivineDiminuendoCircle(module, (uint)AID.DivineDiminuendoCircle3);
+sealed class DivineDiminuendoCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DivineDiminuendoCircle1, (uint)AID.DivineDiminuendoCircle2,
+(uint)AID.DivineDiminuendoCircle3], 8f);
 
 class DivineDiminuendoDonut1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DivineDiminuendoDonut1, new AOEShapeDonut(10f, 16f));
 class DivineDiminuendoDonut2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DivineDiminuendoDonut2, new AOEShapeDonut(18f, 32f));
 
-abstract class ConvictionMarcato(BossModule module, uint aid) : Components.SimpleAOEs(module, aid, new AOEShapeRect(40f, 2.5f));
-class ConvictionMarcato1(BossModule module) : ConvictionMarcato(module, (uint)AID.ConvictionMarcato1);
-class ConvictionMarcato2(BossModule module) : ConvictionMarcato(module, (uint)AID.ConvictionMarcato2);
-class ConvictionMarcato3(BossModule module) : ConvictionMarcato(module, (uint)AID.ConvictionMarcato3);
+sealed class ConvictionMarcato(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.ConvictionMarcato1, (uint)AID.ConvictionMarcato2,
+(uint)AID.ConvictionMarcato3], new AOEShapeRect(40f, 2.5f));
 
 class PenancePianissimo(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeDonut donut = new(14.5f, 30f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.PenancePianissimo)
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7f));
+        {
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7d))];
+        }
     }
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (state == 0x00040008)
+        if (state == 0x00040008u)
             Arena.Bounds = D055ForgivenObscenity.ArenaRect;
-        else if (state == 0x00010002)
+        else if (state == 0x00010002u)
         {
-            _aoe = null;
+            _aoe = [];
             Arena.Bounds = D055ForgivenObscenity.ArenaCircle;
         }
     }
@@ -218,14 +216,10 @@ class D055ForgivenObscenityStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<SacramentSforzando>()
-            .ActivateOnEnter<DivineDiminuendoCircle1>()
-            .ActivateOnEnter<DivineDiminuendoCircle2>()
-            .ActivateOnEnter<DivineDiminuendoCircle3>()
+            .ActivateOnEnter<DivineDiminuendoCircle>()
             .ActivateOnEnter<DivineDiminuendoDonut1>()
             .ActivateOnEnter<DivineDiminuendoDonut2>()
-            .ActivateOnEnter<ConvictionMarcato1>()
-            .ActivateOnEnter<ConvictionMarcato2>()
-            .ActivateOnEnter<ConvictionMarcato3>()
+            .ActivateOnEnter<ConvictionMarcato>()
             .ActivateOnEnter<OrisonFortissimo>()
             .ActivateOnEnter<GoldChaser>()
             .ActivateOnEnter<Orbs>()

@@ -4,7 +4,7 @@ sealed class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(modu
 {
     public readonly List<AOEInstance> AOEs = new(2);
     private readonly Actor?[] _tetherSource = new Actor?[PartyState.MaxPartySize];
-    private readonly AOEInstance?[] _safespot = new AOEInstance?[PartyState.MaxPartySize];
+    private readonly AOEInstance[][] _safespot = new AOEInstance[PartyState.MaxPartySize][];
     private const string Hint = "Go to correct spot!";
     private static readonly AOEShapeRect rect = new(70f, 17f);
     private ConeHA? cone;
@@ -17,15 +17,15 @@ sealed class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(modu
         if (_tetherSource[slot] != null)
         {
             ref var aoe = ref _safespot[slot];
-            if (aoe == null)
+            if (aoe.Length == 0)
             {
                 var (safeShapes, dangerShapes) = GetShapesForAOEs(slot);
                 ConeHA[] coneShapes = cone != null ? [cone] : [];
 
-                aoe = new(new AOEShapeCustom(safeShapes, dangerShapes, coneShapes, true, cone != null ? OperandType.Intersection : OperandType.Union),
-                    Arena.Center, default, AOEs[0].Activation, Colors.SafeFromAOE);
+                aoe = [new(new AOEShapeCustom(safeShapes, dangerShapes, coneShapes, true, cone != null ? OperandType.Intersection : OperandType.Union),
+                    Arena.Center, default, AOEs[0].Activation, Colors.SafeFromAOE)];
             }
-            return Utils.ZeroOrOne(ref aoe);
+            return aoe;
         }
         else
             return CollectionsMarshal.AsSpan(AOEs);
@@ -55,11 +55,15 @@ sealed class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(modu
         var count = AOEs.Count;
         if (count == 0)
             return;
-        ref readonly var aoe = ref _safespot[slot];
+        ref readonly var aoe = ref _safespot[slot][0];
         if (_tetherSource[slot] == null)
+        {
             base.AddHints(slot, actor, hints);
-        else if (aoe != null)
-            hints.Add(Hint, !aoe.Value.Check(actor.Position));
+        }
+        else if (_safespot[slot].Length != 0)
+        {
+            hints.Add(Hint, !aoe.Check(actor.Position));
+        }
     }
 
     public override void OnTethered(Actor source, ActorTetherInfo tether)

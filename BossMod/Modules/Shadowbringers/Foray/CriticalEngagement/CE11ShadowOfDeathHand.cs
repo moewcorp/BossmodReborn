@@ -52,15 +52,15 @@ public enum AID : uint
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 30f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BlindsideBarrageAOE)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.8d))];
         }
     }
 
@@ -68,9 +68,9 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (actor.OID == (uint)OID.Deathwall)
         {
-            Arena.Bounds = CE11ShadowOfDeathHand.DefaultArena;
+            Arena.Bounds = new ArenaBoundsCircle(25f); // default arena got no extra collision, just a donut aoe
             Arena.Center = Arena.Center.Quantized();
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -89,14 +89,16 @@ sealed class Whirlwind(BossModule module) : Components.Voidzone(module, 4f, GetW
 
 sealed class Wind(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.WindVisual)
-            _kb = new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward);
+        {
+            _kb = [new(spell.LocXZ, 30f, Module.CastFinishAt(spell, 0.1d), direction: spell.Rotation, kind: Kind.DirForward)];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -107,15 +109,16 @@ sealed class Wind(BossModule module) : Components.GenericKnockback(module)
             case (uint)AID.EastWindAOE:
             case (uint)AID.NorthWindAOE:
             case (uint)AID.SouthWindAOE:
-                _kb = null;
+                _kb = [];
                 break;
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
+            ref readonly var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
@@ -151,7 +154,6 @@ sealed class CE11ShadowOfDeathHandStates : StateMachineBuilder
 public sealed class CE11ShadowOfDeathHand(WorldState ws, Actor primary) : BossModule(ws, primary, startingArena.Center, startingArena)
 {
     private static readonly ArenaBoundsCustom startingArena = new([new Polygon(new(825f, 640f), 29.5f, 32)]);
-    public static readonly ArenaBoundsCircle DefaultArena = new(20f); // default arena got no extra collision, just a donut aoe
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

@@ -9,15 +9,15 @@ sealed class IncongruousSpin(BossModule module) : Components.SimpleAOEs(module, 
 
 sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Compound2P)
         {
-            _kb = new(Arena.Center.Quantized(), 10f, WorldState.FutureTime(3.8d), ignoreImmunes: true);
+            _kb = [new(Arena.Center.Quantized(), 10f, WorldState.FutureTime(3.8d), ignoreImmunes: true)];
         }
     }
 
@@ -25,14 +25,15 @@ sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.Gen
     {
         if (spell.Action.ID == (uint)AID.MechanicalLacerationPhaseChange)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
+            ref readonly var kb = ref _kb[0];
             var center = Arena.Center;
             // square intentionally slightly smaller to prevent sus knockback
             hints.AddForbiddenZone(p =>

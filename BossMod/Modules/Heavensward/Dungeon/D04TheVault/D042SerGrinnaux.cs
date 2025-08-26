@@ -123,7 +123,7 @@ class D042SerGrinnauxStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS), Xyzzy", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 34, NameID = 3639)]
 public class D042SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies(OID.SerGrinnauxTheBull).Any(e => e.InCombat);
+    protected override bool CheckPull() => PrimaryActor.IsTargetable && PrimaryActor.InCombat || Enemies((uint)OID.SerGrinnauxTheBull).Any(e => e.InCombat);
 
     public static readonly ArenaBoundsCustom arena = new([new Circle(new(0, 72), 19.7f)], [new Rectangle(new(19.5f, 72), 1.75f, 7.75f),
     new Rectangle(new(0, 51), 7.75f, 2), new Rectangle(new(-20.8f, 72), 1.75f, 5f)]);
@@ -131,6 +131,6 @@ public class D042SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, prim
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.SerGrinnauxTheBull));
+        Arena.Actors(Enemies((uint)OID.SerGrinnauxTheBull));
     }
 }

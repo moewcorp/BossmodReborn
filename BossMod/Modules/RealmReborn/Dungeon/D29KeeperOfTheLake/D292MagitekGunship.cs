@@ -56,14 +56,16 @@ class Overcharge(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ov
 class Flamethrower(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(18f, 60f.Degrees());
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.FlameThrowerFirst)
-            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        {
+            _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -74,7 +76,7 @@ class Flamethrower(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.FlameThrowerRest:
                 if (++NumCasts == 6)
                 {
-                    _aoe = default;
+                    _aoe = [];
                     NumCasts = 0;
                 }
                 break;

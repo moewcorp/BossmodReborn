@@ -24,9 +24,9 @@ public enum AID : uint
 class NitrospinArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom donut = new([new Circle(D152Prometheus.ArenaCenter, 50)], D152Prometheus.Polygon);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEState(Actor actor, ushort state)
     {
@@ -34,7 +34,7 @@ class NitrospinArenaChange(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = D152Prometheus.DefaultArena;
             Arena.Center = D152Prometheus.ArenaCenter;
-            _aoe = null;
+            _aoe = [];
         }
     }
 
@@ -42,7 +42,7 @@ class NitrospinArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Nitrospin && Arena.Bounds == D152Prometheus.StartingArena)
         {
-            _aoe = new(donut, D152Prometheus.ArenaCenter, default, Module.CastFinishAt(spell, 0.8d));
+            _aoe = [new(donut, D152Prometheus.ArenaCenter, default, Module.CastFinishAt(spell, 0.8d))];
         }
     }
 }
@@ -63,9 +63,9 @@ class Heat(BossModule module) : Components.GenericAOEs(module)
         {-68f.Degrees(), (new(188.498f, -57.598f), -67.482f.Degrees())},
     };
 
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
@@ -74,7 +74,7 @@ class Heat(BossModule module) : Components.GenericAOEs(module)
             foreach (var r in aoeSources.Keys)
                 if (actor.Rotation.AlmostEqual(r, Angle.DegToRad))
                 {
-                    _aoe = new(rect, aoeSources[r].origin, aoeSources[r].rotation, WorldState.FutureTime(6.7d));
+                    _aoe = [new(rect, aoeSources[r].origin, aoeSources[r].rotation, WorldState.FutureTime(6.7d))];
                     break;
                 }
         }
@@ -86,7 +86,7 @@ class Heat(BossModule module) : Components.GenericAOEs(module)
         {
             if (++NumCasts == 5)
             {
-                _aoe = null;
+                _aoe = [];
                 NumCasts = 0;
             }
         }

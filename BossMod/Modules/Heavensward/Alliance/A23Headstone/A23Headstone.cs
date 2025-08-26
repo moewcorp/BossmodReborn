@@ -11,7 +11,7 @@ class A23Headstone(WorldState ws, Actor primary) : BossModule(ws, primary, arena
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Parthenope));
-        Arena.Actors(Enemies(OID.VoidFire));
+        Arena.Actors(Enemies((uint)OID.Parthenope));
+        Arena.Actors(Enemies((uint)OID.VoidFire));
     }
 }

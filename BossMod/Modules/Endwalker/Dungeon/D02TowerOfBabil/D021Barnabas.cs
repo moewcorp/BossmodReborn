@@ -34,25 +34,22 @@ public enum AID : uint
 public enum IconID : uint
 {
     Plus = 162, // player
-    Minus = 163, // player
-    BossMinus = 290, // Boss
-    BossPlus = 291, // Boss
-    Stackmarker = 62 // player
+    Minus = 163 // player
 }
 
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(15f, 19.5f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventEnvControl(byte index, uint state)
     {
-        if (index == 0x00 && state == 0x00020001)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = D021Barnabas.SmallerBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 
@@ -60,7 +57,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID is (uint)AID.GroundAndPound1 or (uint)AID.GroundAndPound2 && Arena.Bounds.Radius > 15f)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 6.1d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 6.1d))];
         }
     }
 }
@@ -110,11 +107,11 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         switch (iconID)
         {
             case (uint)IconID.Plus:
-                positiveCharge[Raid.FindSlot(actor.InstanceID)] = true;
+                positiveCharge.Set(Raid.FindSlot(actor.InstanceID));
                 activation = WorldState.FutureTime(8.1d);
                 break;
             case (uint)IconID.Minus:
-                negativeCharge[Raid.FindSlot(actor.InstanceID)] = true;
+                negativeCharge.Set(Raid.FindSlot(actor.InstanceID));
                 activation = WorldState.FutureTime(8.1d);
                 break;
         }

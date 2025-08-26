@@ -126,6 +126,6 @@ public class D120Hellbender(WorldState ws, Actor primary) : BossModule(ws, prima
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(OID.Aiatar));
+        Arena.Actors(Enemies((uint)OID.Aiatar));
     }
 }

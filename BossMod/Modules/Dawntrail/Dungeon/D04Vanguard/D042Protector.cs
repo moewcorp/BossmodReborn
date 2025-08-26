@@ -126,9 +126,9 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         (electricFences00200010AOE, electricFences00200010Arena)
     ];
 
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     private static Shape[] GetShapesForUnion(int[] rectIndices, int[] circleIndices)
     {
@@ -138,21 +138,32 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         var position = 0;
 
         for (var i = 0; i < rectLen; ++i)
+        {
             shapes[position++] = rectangles[rectIndices[i]];
+        }
         for (var i = 0; i < circleLen; ++i)
+        {
             shapes[position++] = circles[circleIndices[i]];
+        }
         return shapes;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.Electrowave && Arena.Bounds == StartingBounds)
-            _aoe = new(rectArenaChange, Arena.Center, default, Module.CastFinishAt(spell, 0.4f));
+        {
+            _aoe = [new(rectArenaChange, Arena.Center, default, Module.CastFinishAt(spell, 0.4d))];
+        }
     }
 
     public override void Update()
     {
-        if (_aoe is AOEInstance aoe && aoe.Activation <= WorldState.CurrentTime)
+        if (_aoe.Length == 0)
+        {
+            return;
+        }
+        ref var aoe = ref _aoe[0];
+        if (aoe.Activation <= WorldState.CurrentTime)
         {
             for (var i = 0; i < 4; ++i)
             {
@@ -160,7 +171,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                 if (aoe.Shape == aoeCheck.AOE)
                 {
                     Arena.Bounds = aoeCheck.Bounds;
-                    _aoe = null;
+                    _aoe = [];
                     return;
                 }
             }
@@ -172,11 +183,11 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x0C && state == 0x00020001u)
         {
             Arena.Bounds = defaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
         else if (index == 0x0D)
         {
-            void AddAOE(AOEShapeCustom shape) => _aoe = new(shape, Arena.Center, default, WorldState.FutureTime(3d));
+            void AddAOE(AOEShapeCustom shape) => _aoe = [new(shape, Arena.Center, default, WorldState.FutureTime(3d))];
             switch (state)
             {
                 case 0x08000400u:
@@ -286,5 +297,5 @@ sealed class D042ProtectorStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831, NameID = 12757, SortOrder = 5)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 831u, NameID = 12757u, SortOrder = 5)]
 public sealed class D042Protector(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChanges.ArenaCenter, ArenaChanges.StartingBounds);

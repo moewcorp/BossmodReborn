@@ -22,20 +22,24 @@ class Levinfang(BossModule module) : Components.SingleTargetCast(module, (uint)A
 class Electrify(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Electrify, 6f);
 class HydroelectricShock(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HydroelectricShock)
-            _aoe = new(D042ThunderclapGuivre.Shock, Arena.Center, default, Module.CastFinishAt(spell));
+        {
+            _aoe = [new(D042ThunderclapGuivre.Shock, Arena.Center, default, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.HydroelectricShock)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

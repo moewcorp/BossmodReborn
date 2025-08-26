@@ -19,7 +19,7 @@ class Aetheroplasm(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var orb in Module.Enemies(OID.Aetheroplasm).Where(a => !_explodedOrbs.Contains(a.InstanceID)))
+        foreach (var orb in Module.Enemies((uint)OID.Aetheroplasm).Where(a => !_explodedOrbs.Contains(a.InstanceID)))
         {
             // TODO: + line to kiter
             hints.AddForbiddenZone(ShapeDistance.Circle(orb.Position, _explosionRadius + 1));
@@ -34,7 +34,7 @@ class Aetheroplasm(BossModule module) : BossComponent(module)
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        foreach (var orb in Module.Enemies(OID.Aetheroplasm).Where(a => !_explodedOrbs.Contains(a.InstanceID)))
+        foreach (var orb in Module.Enemies((uint)OID.Aetheroplasm).Where(a => !_explodedOrbs.Contains(a.InstanceID)))
         {
             Arena.Actor(orb, Colors.Object, true);
             Arena.AddCircle(orb.Position, _explosionRadius, Colors.Danger);

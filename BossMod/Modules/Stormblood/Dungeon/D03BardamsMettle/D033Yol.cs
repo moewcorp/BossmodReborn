@@ -42,21 +42,25 @@ class FlutterfallSpread(BossModule module) : Components.SpreadFromIcon(module, (
 
 class FeatherSquall(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(42.8f, 3f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (id == 0x1E43 && actor == Module.PrimaryActor && !actor.Position.AlmostEqual(new(24f, -475.5f), 1f))
-            _aoe = new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.7d));
+        {
+            _aoe = [new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.7d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.FeatherSquall)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

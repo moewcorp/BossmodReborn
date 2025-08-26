@@ -4,17 +4,17 @@ sealed class Burst(BossModule module) : Components.CastTowers(module, (uint)AID.
 
 sealed class EnhancedMobility(BossModule module) : Components.GenericKnockback(module, (uint)AID.EnhancedMobility)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
     private WPos tower;
     private readonly MagitekCannonVoidzone _aoe = module.FindComponent<MagitekCannonVoidzone>()!;
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == WatchedAction)
         {
-            _kb = new(caster.Position, 12f, Module.CastFinishAt(spell));
+            _kb = [new(caster.Position, 12f, Module.CastFinishAt(spell))];
         }
         else if (spell.Action.ID == (uint)AID.Burst)
         {
@@ -26,14 +26,15 @@ sealed class EnhancedMobility(BossModule module) : Components.GenericKnockback(m
     {
         if (spell.Action.ID == WatchedAction)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
+            ref readonly var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {

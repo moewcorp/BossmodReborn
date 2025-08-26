@@ -28,25 +28,31 @@ class SelfDetonate(BossModule module) : Components.CastHint(module, (uint)AID.Se
 
 class UnbreakableCermetBlade(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
-    private const string Hint = "Go under shield!";
-
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCircle circle = new(4.5f, true);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.ElementalBlessing)
-            _aoe = new(circle, caster.Position, default, default, Colors.SafeFromAOE);
-        else if (spell.Action.ID == (uint)AID.UnbreakableCermetBlade)
-            _aoe = null;
+        var id = spell.Action.ID;
+        if (id == (uint)AID.ElementalBlessing)
+        {
+            _aoe = [new(circle, caster.Position, default, default, Colors.SafeFromAOE)];
+        }
+        else if (id == (uint)AID.UnbreakableCermetBlade)
+        {
+            _aoe = [];
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe is AOEInstance aoe)
-            hints.Add(Hint, !aoe.Check(actor.Position));
+        if (_aoe.Length != 0)
+        {
+            ref var aoe = ref _aoe[0];
+            hints.Add("Go under shield!", !aoe.Check(actor.Position));
+        }
     }
 }
 

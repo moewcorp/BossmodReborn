@@ -45,20 +45,24 @@ public enum SID : uint
 class PomBom(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCross cross = new(40.5f, 2f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.DemoniacalMogcane)
-            _aoe = new(cross, actor.Position.Quantized(), default, WorldState.FutureTime(6.3d));
+        {
+            _aoe = [new(cross, actor.Position.Quantized(), default, WorldState.FutureTime(6.3d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.PomBom)
-            _aoe = null;
+        {
+            _aoe = [];
+        }
     }
 }
 

@@ -31,15 +31,15 @@ class Cauterize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Cau
 class Touchdown(BossModule module) : Components.GenericAOEs(module, (uint)AID.Touchdown)
 {
     private readonly AOEShapeCircle _shape = new(5f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (id == 0x008E && actor.OID == (uint)OID.Boss)
         {
-            _aoe = new(_shape, D103Isgebind.ArenaCenter.Quantized(), default, WorldState.FutureTime(7.8d));
+            _aoe = [new(_shape, D103Isgebind.ArenaCenter.Quantized(), default, WorldState.FutureTime(7.8d))];
         }
     }
 
@@ -47,7 +47,7 @@ class Touchdown(BossModule module) : Components.GenericAOEs(module, (uint)AID.To
     {
         if (spell.Action.ID == (uint)AID.Touchdown)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

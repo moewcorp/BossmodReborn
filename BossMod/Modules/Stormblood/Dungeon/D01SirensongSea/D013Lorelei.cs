@@ -22,9 +22,9 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly ArenaBoundsCircle smallerBounds = new(15.75f);
     private static readonly AOEShapeDonut donut = new(15.75f, 22);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorEState(Actor actor, ushort state)
     {
@@ -35,7 +35,7 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
         }
         else if (state == 0x002)
         {
-            _aoe = null;
+            _aoe = [];
             Arena.Bounds = smallerBounds;
             Arena.Center = D013Lorelei.ArenaCenter;
         }
@@ -46,7 +46,9 @@ class VirginTearsArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.VirginTears && Arena.Bounds == D013Lorelei.DefaultArena)
         {
             if (++NumCasts > 3)
-                _aoe = new(donut, D013Lorelei.ArenaCenter, default, Module.CastFinishAt(spell, 0.7f));
+            {
+                _aoe = [new(donut, D013Lorelei.ArenaCenter, default, Module.CastFinishAt(spell, 0.7d))];
+            }
         }
     }
 }

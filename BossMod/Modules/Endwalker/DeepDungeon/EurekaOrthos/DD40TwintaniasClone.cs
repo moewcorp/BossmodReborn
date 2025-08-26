@@ -55,20 +55,24 @@ class DiveTwister(BossModule module) : Components.CastTwister(module, 1.5f, (uin
 
 class TwistingDive(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeRect rect = new(50f, 7.5f);
     private bool preparing;
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
     {
         if (actor == Module.PrimaryActor)
         {
             if (id == 0x1E3A)
+            {
                 preparing = true;
+            }
             else if (preparing && id == 0x1E43)
-                _aoe = new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.9d));
+            {
+                _aoe = [new(rect, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(6.9d))];
+            }
         }
     }
 
@@ -76,7 +80,7 @@ class TwistingDive(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.TwistingDive)
         {
-            _aoe = null;
+            _aoe = [];
             preparing = false;
         }
     }

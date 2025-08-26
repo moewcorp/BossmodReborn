@@ -23,18 +23,18 @@ public enum AID : uint
     Withdraw = 27847 // 3731->player, 1.0s cast, single-target, pull 30 between centers
 }
 
-class ArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(20f, 30f);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.MeaninglessDestruction && Arena.Bounds == D032Wrecker.StartingArena)
+        if (spell.Action.ID == (uint)AID.MeaninglessDestruction && Arena.Bounds.Radius > 20f)
         {
-            _aoe = new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+            _aoe = [new(donut, Arena.Center, default, Module.CastFinishAt(spell, 0.7d))];
         }
     }
 
@@ -44,12 +44,12 @@ class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = D032Wrecker.DefaultArena;
             Arena.Center = D032Wrecker.DefaultArena.Center;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
 
-class QueerBubble(BossModule module) : Components.GenericAOEs(module)
+sealed class QueerBubble(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly AetherSprayFire _aoe = module.FindComponent<AetherSprayFire>()!;
     public readonly List<Actor> AOEs = [];
@@ -108,13 +108,13 @@ class QueerBubble(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class MeaninglessDestruction(BossModule module) : Components.RaidwideCast(module, (uint)AID.MeaninglessDestruction);
-class PoisonHeartStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PoisonHeartStack, 6f, 4, 4);
-class TotalWreck(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TotalWreck);
-class AetherSprayWater(BossModule module) : Components.RaidwideCast(module, (uint)AID.AetherSprayWater);
-class AetherSprayFire(BossModule module) : Components.RaidwideCast(module, (uint)AID.AetherSprayFire, "Go into a bubble! (Raidwide)");
+sealed class MeaninglessDestruction(BossModule module) : Components.RaidwideCast(module, (uint)AID.MeaninglessDestruction);
+sealed class PoisonHeartStack(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.PoisonHeartStack, 6f, 4, 4);
+sealed class TotalWreck(BossModule module) : Components.SingleTargetCast(module, (uint)AID.TotalWreck);
+sealed class AetherSprayWater(BossModule module) : Components.RaidwideCast(module, (uint)AID.AetherSprayWater);
+sealed class AetherSprayFire(BossModule module) : Components.RaidwideCast(module, (uint)AID.AetherSprayFire, "Go into a bubble! (Raidwide)");
 
-class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AetherSprayWater, 13f)
+sealed class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AetherSprayWater, 13f)
 {
     private readonly QueerBubble _aoe = module.FindComponent<QueerBubble>()!;
 
@@ -157,7 +157,7 @@ class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks(module
     }
 }
 
-class D032WreckerStates : StateMachineBuilder
+sealed class D032WreckerStates : StateMachineBuilder
 {
     public D032WreckerStates(BossModule module) : base(module)
     {
@@ -173,11 +173,11 @@ class D032WreckerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 789, NameID = 10718)]
-public class D032Wrecker(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 789u, NameID = 10718u)]
+public sealed class D032Wrecker(WorldState ws, Actor primary) : BossModule(ws, primary, StartingArena.Center, StartingArena)
 {
     private static readonly WPos arenaCenter = new(-295f, -354f);
     public static readonly ArenaBoundsCustom StartingArena = new([new Polygon(arenaCenter, 24.5f, 36)],
     [new Rectangle(new(-295f, -328f), 20f, 2.5f), new Rectangle(new(-295f, -379f), 20f, 1.32f)]);
-    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(arenaCenter, 20, 36)]);
+    public static readonly ArenaBoundsCustom DefaultArena = new([new Polygon(arenaCenter, 20f, 36)]);
 }

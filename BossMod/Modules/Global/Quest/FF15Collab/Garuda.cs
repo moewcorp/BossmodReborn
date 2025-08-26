@@ -64,7 +64,7 @@ class Microburst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mi
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (casting)
-            hints.Add($"Keep using duty action on the {Module.Enemies(OID.Monolith)[0].Name}s to stay out of the AOE!");
+            hints.Add($"Keep using duty action on the {Module.Enemies((uint)OID.Monolith)[0].Name}s to stay out of the AOE!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -98,7 +98,7 @@ class MistralShriek(BossModule module) : Components.SimpleAOEs(module, (uint)AID
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (casting)
-            hints.Add($"Use duty action to teleport to the {Module.Enemies(OID.Monolith)[0].Name} at the opposite side of Garuda!");
+            hints.Add($"Use duty action to teleport to the {Module.Enemies((uint)OID.Monolith)[0].Name} at the opposite side of Garuda!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

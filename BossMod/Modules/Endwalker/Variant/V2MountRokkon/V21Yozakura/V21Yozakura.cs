@@ -107,14 +107,11 @@ sealed class Witherwind(BossModule module) : Components.Voidzone(module, 3f, Get
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Yozakura, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945u, NameID = 12325u, SortOrder = 2, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
-public sealed class V21Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.PosRot.X is var X && X < -700f ? ArenaCenter1 : X > 700f ? ArenaCenter2 : ArenaCenter3, X < -700f ? StartingBounds : X > 700f ? DefaultBounds2 : StartingBounds)
+public sealed class V21Yozakura(WorldState ws, Actor primary) : BossModule(ws, primary, primary.PosRot.X is var X && X < -700f ? ArenaCenter1 : X > 700f ? ArenaCenter2 : ArenaCenter3, X < -700f ? new ArenaBoundsSquare(22.5f) : X > 700f ? new ArenaBoundsSquare(19.5f) : new ArenaBoundsSquare(22.5f))
 {
     public static readonly WPos ArenaCenter1 = new(-775f, 16f);
     public static readonly WPos ArenaCenter2 = new(737f, 220f);
     public static readonly WPos ArenaCenter3 = new(47f, 93f);
-    public static readonly ArenaBoundsSquare StartingBounds = new(22.5f);
-    public static readonly ArenaBoundsSquare DefaultBounds1 = new(20f);
-    public static readonly ArenaBoundsSquare DefaultBounds2 = new(19.5f);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

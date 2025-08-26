@@ -73,14 +73,15 @@ public enum AID : uint
 sealed class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(D063Eliminator.ArenaCenter, 16f)], [new Square(D063Eliminator.ArenaCenter, 15f)]);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.Disruption && Arena.Bounds == D063Eliminator.StartingBounds)
+        if (spell.Action.ID == (uint)AID.Disruption && Arena.Bounds.Radius > 15f)
         {
-            _aoe = new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d));
+            _aoe = [new(square, Arena.Center, default, Module.CastFinishAt(spell, 0.7d))];
         }
     }
 
@@ -89,7 +90,7 @@ sealed class DisruptionArenaChange(BossModule module) : Components.GenericAOEs(m
         if (index == 0x28 && state == 0x00020001u)
         {
             Arena.Bounds = D063Eliminator.DefaultBounds;
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
@@ -112,8 +113,10 @@ sealed class Electray(BossModule module) : Components.SpreadFromCastTargets(modu
         else
         {
             base.AddAIHints(slot, actor, assignment, hints);
-            if (ActiveSpreads.Count != 0)
-                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center - new WDir(default, 15f), 15f), ActiveSpreads[0].Activation);
+            if (Spreads.Count != 0)
+            {
+                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center - new WDir(default, 15f), 15f), Spreads.Ref(0).Activation);
+            }
         }
     }
 }
@@ -161,19 +164,25 @@ sealed class LightOfSalvation(BossModule module) : Components.GenericBaitAway(mo
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.LightOfSalvationMarker)
-            CurrentBaits.Add(new(caster, WorldState.Actors.Find(spell.TargetID)!, rect, Module.CastFinishAt(spell, 0.2f)));
+        {
+            CurrentBaits.Add(new(caster, WorldState.Actors.Find(spell.TargetID)!, rect, Module.CastFinishAt(spell, 0.2d)));
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.LightOfSalvation)
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
         if (index == 0x2F && state == 0x00080004u) // as soon as limit break phase ends the line stack gets cancelled
+        {
             CurrentBaits.Clear();
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -181,7 +190,9 @@ sealed class LightOfSalvation(BossModule module) : Components.GenericBaitAway(mo
         if (_kb.Casters.Count != 0)
         { }
         else
+        {
             base.AddAIHints(slot, actor, assignment, hints);
+        }
     }
 }
 

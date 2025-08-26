@@ -38,7 +38,7 @@ sealed class FireScourgeOfFire(BossModule module) : Components.UniformStackSprea
     }
 }
 
-sealed class FireScourgeOfFireVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 5, (uint)AID.FireScourgeOfFire, module => module.Enemies(OID.ScourgeOfFireVoidzone).Where(z => z.EventState != 7), 0.9f);
+sealed class FireScourgeOfFireVoidzone(BossModule module) : Components.VoidzoneAtCastTarget(module, 5, (uint)AID.FireScourgeOfFire, module => module.Enemies((uint)OID.ScourgeOfFireVoidzone).Where(z => z.EventState != 7), 0.9f);
 
 sealed class FireScourgeOfIce(BossModule module) : Components.StayMove(module)
 {

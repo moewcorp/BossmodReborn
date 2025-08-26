@@ -5,7 +5,7 @@ class T01AI(BossModule module) : BossComponent(module)
     private readonly Platforms? _platforms = module.FindComponent<Platforms>();
     private readonly HoodSwing? _hoodSwing = module.FindComponent<HoodSwing>();
     private readonly CloneMerge? _clone = module.FindComponent<CloneMerge>();
-    private readonly List<Actor> _slimes = module.Enemies(OID.DarkMatterSlime);
+    private readonly List<Actor> _slimes = module.Enemies((uint)OID.DarkMatterSlime);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
