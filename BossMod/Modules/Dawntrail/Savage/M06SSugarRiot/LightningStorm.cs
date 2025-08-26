@@ -29,7 +29,7 @@ sealed class LightningStormHint(BossModule module) : Components.GenericAOEs(modu
         if (iconID == (uint)IconID.LightningStorm)
         {
             targets[Raid.FindSlot(actor.InstanceID)] = true;
-            if (_aoeRisk == null)
+            if (_aoeRisk.Length == 0)
             {
                 UpdateAOE();
             }
