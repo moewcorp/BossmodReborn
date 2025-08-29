@@ -145,14 +145,13 @@ sealed class MagitekMissile(BossModule module) : Components.GenericAOEs(module)
 sealed class CorePlatform(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCircle circle = new(2, true);
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe is AOEInstance aoe && Arena.Bounds == D132MagitekFortress.DefaultBounds)
+        if (Arena.Bounds.Radius == 14.5f)
         {
-            ref var a = ref aoe;
-            return new AOEInstance[1] { a };
+            return _aoe;
         }
         return [];
     }
@@ -163,11 +162,11 @@ sealed class CorePlatform(BossModule module) : Components.GenericAOEs(module)
         {
             if (state == 0x00020001u)
             {
-                _aoe = new(circle, new(-175f, 30f), default, DateTime.MaxValue, Colors.SafeFromAOE);
+                _aoe = [new(circle, new(-175f, 30f), default, DateTime.MaxValue, Colors.SafeFromAOE)];
             }
             else if (state == 0x00080004u)
             {
-                _aoe = null;
+                _aoe = [];
             }
         }
     }
@@ -175,14 +174,15 @@ sealed class CorePlatform(BossModule module) : Components.GenericAOEs(module)
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         base.DrawArenaBackground(pcSlot, pc);
-
-        if (D132MagitekFortress.CoreBounds.Contains(pc.Position - D132MagitekFortress.CoreCenter))
+        var r = Arena.Bounds.Radius;
+        var inCoreBounds = pc.Position.InSquare(D132MagitekFortress.CoreCenter, 7f);
+        if (r == 14.5f && inCoreBounds)
         {
-            SetArena(D132MagitekFortress.CoreBounds, D132MagitekFortress.CoreCenter);
+            SetArena(new ArenaBoundsSquare(7f), D132MagitekFortress.CoreCenter);
         }
-        else
+        else if (r == 7f && !inCoreBounds)
         {
-            SetArena(D132MagitekFortress.DefaultBounds, D132MagitekFortress.DefaultCenter);
+            SetArena(new ArenaBoundsSquare(14.5f), D132MagitekFortress.DefaultCenter);
         }
 
         void SetArena(ArenaBounds bounds, WPos center)
@@ -194,9 +194,9 @@ sealed class CorePlatform(BossModule module) : Components.GenericAOEs(module)
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (_aoe is AOEInstance aoe && Arena.Bounds == D132MagitekFortress.DefaultBounds)
+        if (_aoe.Length != 0 && Arena.Bounds.Radius == 14.5f)
         {
-            ref var a = ref aoe;
+            ref var a = ref _aoe[0];
             if (!a.Check(actor.Position))
             {
                 hints.Add("Walk into the glowing circle!");
@@ -221,11 +221,10 @@ sealed class D132MagitekFortressStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 777, NameID = 10067)]
-public sealed class D132MagitekFortress(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, DefaultBounds)
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 777u, NameID = 10067u)]
+public sealed class D132MagitekFortress(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultCenter, new ArenaBoundsSquare(14.5f))
 {
     public static readonly WPos DefaultCenter = new(-175f, 43f), CoreCenter = new(-175f, 8.5f);
-    public static readonly ArenaBoundsSquare DefaultBounds = new(14.5f), CoreBounds = new(7f);
     private static readonly uint[] trash = [(uint)OID.TelotekPredator, (uint)OID.TemperedImperial, (uint)OID.TelotekSkyArmor, (uint)OID.MarkIITelotekColossus, (uint)OID.MagitekCore];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)

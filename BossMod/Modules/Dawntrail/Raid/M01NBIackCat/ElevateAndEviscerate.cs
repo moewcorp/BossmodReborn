@@ -166,7 +166,7 @@ sealed class ElevateAndEviscerateHint(BossModule module) : Components.GenericAOE
 sealed class ElevateAndEviscerateImpact(BossModule module) : Components.GenericAOEs(module, default, "GTFO from impact!")
 {
     private readonly ElevateAndEviscerate _kb = module.FindComponent<ElevateAndEviscerate>()!;
-    private AOEInstance? aoe;
+    private AOEInstance[] _aoe = [];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -175,9 +175,9 @@ sealed class ElevateAndEviscerateImpact(BossModule module) : Components.GenericA
         {
             aoes.Add(new(ElevateAndEviscerateHint.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, _kb.Activation.AddSeconds(3.6d)));
         }
-        if (aoe != null)
+        if (_aoe.Length != 0)
         {
-            aoes.Add(aoe.Value);
+            aoes.Add(_aoe[0]);
         }
         return CollectionsMarshal.AsSpan(aoes);
     }
@@ -186,7 +186,7 @@ sealed class ElevateAndEviscerateImpact(BossModule module) : Components.GenericA
     {
         if (spell.Action.ID == (uint)AID.ElevateAndEviscerate && Module.InBounds(_kb.Cache))
         {
-            aoe = new(ElevateAndEviscerateHint.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, Module.CastFinishAt(spell, 3.6f));
+            _aoe = [new(ElevateAndEviscerateHint.Rect, ArenaChanges.CellCenter(ArenaChanges.CellIndex(_kb.Cache)), default, Module.CastFinishAt(spell, 3.6d))];
         }
     }
 
@@ -194,15 +194,15 @@ sealed class ElevateAndEviscerateImpact(BossModule module) : Components.GenericA
     {
         if (spell.Action.ID == (uint)AID.Impact)
         {
-            aoe = null;
+            _aoe = [];
         }
     }
 
     public override void Update()
     {
-        if (aoe != null && _kb.Tether != default && _kb.Tether.target.IsDead) // impact doesn't happen if player dies between ElevateAndEviscerate and Impact
+        if (_aoe.Length != 0 && _kb.Tether != default && _kb.Tether.target.IsDead) // impact doesn't happen if player dies between ElevateAndEviscerate and Impact
         {
-            aoe = null;
+            _aoe = [];
         }
     }
 }

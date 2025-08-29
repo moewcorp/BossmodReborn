@@ -4,7 +4,7 @@ sealed class ElementalBladeWide(BossModule module) : Components.SimpleAOEGroups(
 (uint)AID.EarthBladeWide, (uint)AID.WaterBladeWide, (uint)AID.WindBladeWide], new AOEShapeRect(80f, 10f), riskyWithSecondsLeft: 3d);
 sealed class ElementalBladeNarrow(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.IceBladeNarrow, (uint)AID.LightningBladeNarrow, (uint)AID.FireBladeNarrow,
 (uint)AID.EarthBladeNarrow, (uint)AID.WaterBladeNarrow, (uint)AID.WindBladeNarrow], new AOEShapeRect(80f, 2.5f), riskyWithSecondsLeft: 3d);
-sealed class ElementalResonance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElementalResonance, 18f);
+sealed class ElementalResonance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElementalResonance, 18f, riskyWithSecondsLeft: 5d);
 sealed class SublimeElementsWide(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SublimeIceWide, (uint)AID.SublimeLightningWide, (uint)AID.SublimeFireWide,
 (uint)AID.SublimeEarthWide, (uint)AID.SublimeWaterWide, (uint)AID.SublimeWindWide], new AOEShapeCone(40f, 50f.Degrees()), riskyWithSecondsLeft: 3d);
 sealed class SublimeElementsNarrow(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SublimeIceNarrow, (uint)AID.SublimeLightningNarrow, (uint)AID.SublimeFireNarrow,
