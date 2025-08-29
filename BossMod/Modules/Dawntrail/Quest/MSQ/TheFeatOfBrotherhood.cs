@@ -203,16 +203,16 @@ sealed class SublimeHeat(BossModule module) : Components.GenericAOEs(module)
 
 sealed class NobleTrail(BossModule module) : Components.GenericAOEs(module)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe != null && Module.PrimaryActor.IsTargetable ? new AOEInstance[1] { _aoe.Value } : [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.PrimaryActor.IsTargetable ? _aoe : [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.NobleTrail)
         {
             var dir = spell.LocXZ - caster.Position;
-            _aoe = new(new AOEShapeRect(dir.Length(), 10f), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell));
+            _aoe = [new(new AOEShapeRect(dir.Length(), 10f), caster.Position, Angle.FromDirection(dir), Module.CastFinishAt(spell))];
         }
     }
 
@@ -220,7 +220,7 @@ sealed class NobleTrail(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.NobleTrail)
         {
-            _aoe = null;
+            _aoe = [];
         }
     }
 }

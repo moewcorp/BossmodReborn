@@ -39,33 +39,36 @@ abstract class Leash(BossModule module, uint aid) : Components.SingleTargetEvent
 sealed class LeashSapShower(BossModule module) : Leash(module, (uint)AID.SapShowerVisual);
 sealed class LeashPutridBreath(BossModule module) : Leash(module, (uint)AID.PutridBreath);
 
-sealed class SapShower(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SapShower, 8);
+sealed class SapShower(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.SapShower, 8f);
 
 sealed class ExtensibleTendrilsPutridBreath(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCross cross = new(25f, 3f);
-    private static readonly Angle a45 = 45f.Degrees();
-    private static readonly AOEShapeCone cone = new(25f, a45);
-    private AOEInstance? _aoe;
+    private static readonly AOEShapeCone cone = new(25f, 45f.Degrees());
+    private AOEInstance[] _aoe = [];
     private DateTime activation;
     private int remainingCasts;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe is AOEInstance aoe)
+        if (_aoe.Length != 0)
         {
-            return new AOEInstance[1] { aoe };
+            return _aoe;
         }
         var aoes = new List<AOEInstance>(2);
         if (remainingCasts > 0)
         {
             var delay1 = activation.AddSeconds((5d - remainingCasts) * 6.1d);
             if ((delay1 - WorldState.CurrentTime).TotalSeconds <= 2.5d)
-                aoes.Add(new(cross, Module.PrimaryActor.Position.Quantized(), Module.PrimaryActor.Rotation + a45, delay1));
+            {
+                aoes.Add(new(cross, Module.PrimaryActor.Position.Quantized(), Module.PrimaryActor.Rotation + 45f.Degrees(), delay1));
+            }
         }
         var delay2 = activation.AddSeconds(27.1d);
         if (activation != default && (delay2 - WorldState.CurrentTime).TotalSeconds <= 4.9d)
+        {
             aoes.Add(new(cone, Module.PrimaryActor.Position.Quantized(), Module.PrimaryActor.Rotation, delay2));
+        }
         return CollectionsMarshal.AsSpan(aoes);
     }
 
@@ -75,7 +78,7 @@ sealed class ExtensibleTendrilsPutridBreath(BossModule module) : Components.Gene
         {
             remainingCasts = 5;
             activation = Module.CastFinishAt(spell);
-            _aoe = new(cross, spell.LocXZ, spell.Rotation, activation);
+            _aoe = [new(cross, spell.LocXZ, spell.Rotation, activation)];
         }
     }
 
@@ -85,7 +88,7 @@ sealed class ExtensibleTendrilsPutridBreath(BossModule module) : Components.Gene
         {
             case (uint)AID.ExtensibleTendrilsFirst:
             case (uint)AID.ExtensibleTendrilsRest:
-                _aoe = null;
+                _aoe = [];
                 --remainingCasts;
                 break;
 

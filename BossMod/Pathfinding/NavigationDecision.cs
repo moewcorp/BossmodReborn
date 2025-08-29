@@ -155,12 +155,12 @@ public struct NavigationDecision
             var rowCorner = topLeft + y * dy;
 
             var leftPos = rowCorner;
-            var leftG = CalculateMaxG(ref zonesFixed, leftPos);
+            var leftG = CalculateMaxG(zonesFixed, leftPos);
 
             for (var x = 0; x < width; ++x)
             {
                 var rightPos = leftPos + dx;
-                var rightG = CalculateMaxG(ref zonesFixed, rightPos);
+                var rightG = CalculateMaxG(zonesFixed, rightPos);
                 scratch[rowStart + x] = Math.Min(leftG, rightG);
                 leftPos = rightPos;
                 leftG = rightG;
@@ -188,10 +188,10 @@ public struct NavigationDecision
             // The bottom row's corner is topLeft + height*dy + x*dx
             // because at the end of pass #1, 'cy' was top-left + (height)*dy.
             var cyBottom = topLeft + height * dy + x * dx;
-            var bleftG = CalculateMaxG(ref zonesFixed, cyBottom);
+            var bleftG = CalculateMaxG(zonesFixed, cyBottom);
 
             var columnStart = x;
-            var localBlocked = 0; // local aggregator
+            var localBlocked = 0;
 
             var bottomG = bleftG;
             for (var y = height - 1; y >= 0; y--)
@@ -224,7 +224,7 @@ public struct NavigationDecision
             var (px, py) = map.IndexToGrid(idx);
             var centerPos = map.GridToWorld(px, py, 0.5f, 0.5f);
 
-            var centerG = CalculateMaxG(ref zonesFixed, centerPos, cushion);
+            var centerG = CalculateMaxG(zonesFixed, centerPos, cushion);
             var oldVal = map.PixelMaxG[idx];
             if (centerG < oldVal)
             {
@@ -404,7 +404,7 @@ public struct NavigationDecision
     }
     private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
 
-    private static float CalculateMaxG(ref (Func<WPos, float> shapeDistance, float g)[] zones, WPos p, float cushion = 0f)
+    private static float CalculateMaxG((Func<WPos, float> shapeDistance, float g)[] zones, WPos p, float cushion = default)
     {
         var len = zones.Length;
         var threshold = cushion;
@@ -412,7 +412,9 @@ public struct NavigationDecision
         {
             ref var z = ref zones[i];
             if (z.shapeDistance(p) < threshold)
+            {
                 return z.g;
+            }
         }
         return float.MaxValue;
     }

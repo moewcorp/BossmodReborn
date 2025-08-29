@@ -423,6 +423,7 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
                 if (count != 0)
                 {
                     ++NumFinishedStacks;
+                    CastCounter = 0;
                     Stacks.RemoveAt(0);
                 }
             }
@@ -441,6 +442,12 @@ public class IconStackSpread(BossModule module, uint stackIcon, uint spreadIcon,
                     ++NumFinishedSpreads;
                     return;
                 }
+            }
+            // spread not found, probably due to being self targeted
+            if (count != 0)
+            {
+                ++NumFinishedSpreads;
+                Spreads.RemoveAt(0);
             }
         }
     }

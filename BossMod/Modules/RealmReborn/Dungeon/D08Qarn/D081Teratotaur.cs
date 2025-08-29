@@ -78,6 +78,8 @@ sealed class MortalRay(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
+sealed class MortalRayStun(BossModule module) : Components.CastInterruptHint(module, (uint)AID.MortalRay, false, true, showNameInHint: true);
+
 sealed class D081TeratotaurStates : StateMachineBuilder
 {
     public D081TeratotaurStates(BossModule module) : base(module)
@@ -86,6 +88,7 @@ sealed class D081TeratotaurStates : StateMachineBuilder
             .ActivateOnEnter<Triclip>()
             .ActivateOnEnter<Mow>()
             .ActivateOnEnter<FrightfulRoar>()
+            .ActivateOnEnter<MortalRayStun>()
             .ActivateOnEnter<MortalRay>();
     }
 }

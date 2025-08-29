@@ -90,7 +90,7 @@ sealed class PortalsWave(BossModule module) : BossComponent(module)
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
-        if (actor.OID == (uint)OID.Portal && state == 0x00100020)
+        if (actor.OID == (uint)OID.Portal && state == 0x00100020u)
         {
             Done = true;
             return;

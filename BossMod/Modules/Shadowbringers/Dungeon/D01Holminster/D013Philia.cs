@@ -141,25 +141,26 @@ sealed class Fetters(BossModule module) : BossComponent(module)
 sealed class Aethersup(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCone cone = new(24f, 60f.Degrees());
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (_aoe is AOEInstance aoe)
+        if (_aoe.Length != 0)
         {
             var chain = Module.Enemies((uint)OID.IronChain);
             var count = chain.Count;
+            ref var aoe = ref _aoe[0];
             aoe.Risky = count == 0 || count != 0 && chain[0].IsDead;
-            return new AOEInstance[1] { aoe };
         }
-        else
-            return [];
+        return _aoe;
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.AethersupFirst)
-            _aoe = new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell));
+        {
+            _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -170,7 +171,7 @@ sealed class Aethersup(BossModule module) : Components.GenericAOEs(module)
             case (uint)AID.AethersupRest:
                 if (++NumCasts == 4)
                 {
-                    _aoe = default;
+                    _aoe = [];
                     NumCasts = 0;
                 }
                 break;
@@ -178,7 +179,7 @@ sealed class Aethersup(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, 20f, (uint)IconID.SpreadFlare, (uint)AID.PendulumAOE1, 5.1f)
+sealed class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, 20f, (uint)IconID.SpreadFlare, (uint)AID.PendulumAOE1, 5.1d)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -260,7 +261,6 @@ sealed class FierceBeating(BossModule module) : Components.Exaflare(module, 4f)
             }
             lastCount = linesCount;
             lastVersion = currentVersion;
-            _aoes = _aoes[..index];
         }
     }
 

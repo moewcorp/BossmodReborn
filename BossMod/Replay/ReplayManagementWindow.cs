@@ -299,13 +299,14 @@ public sealed class ReplayManagementWindow : UIWindow
         if (IsRecording())
             return; // already recording
 
+        _logDir.Create();
+
         // if there are too many replays, delete oldest
         if (_config.MaxReplays > 0)
         {
             try
             {
-                var replayFolder = new DirectoryInfo(_config.ReplayFolder);
-                var replays = replayFolder.GetFiles();
+                var replays = _logDir.GetFiles();
                 replays.Sort((a, b) => a.LastWriteTime.CompareTo(b.LastWriteTime));
                 foreach (var f in replays.Take(replays.Length - _config.MaxReplays))
                     f.Delete();
@@ -318,8 +319,7 @@ public sealed class ReplayManagementWindow : UIWindow
 
         try
         {
-            var replayFolder = string.IsNullOrEmpty(_config.ReplayFolder) ? _logDir : new DirectoryInfo(_config.ReplayFolder);
-            _recorder = new(_ws, _config.WorldLogFormat, true, replayFolder, prefix + GetPrefix());
+            _recorder = new(_ws, _config.WorldLogFormat, true, _logDir, prefix + GetPrefix());
         }
         catch (Exception ex)
         {

@@ -116,8 +116,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 {
                     ref var s = ref span[dst];
                     s = item;
+                    ++dst;
                 }
-                ++dst;
             }
 
             if (dst < len)
@@ -137,8 +137,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 {
                     ref var s = ref span[dst];
                     s = item;
+                    ++dst;
                 }
-                ++dst;
             }
 
             if (dst < len)
@@ -158,8 +158,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 {
                     ref var s = ref span2[dst];
                     s = item;
+                    ++dst;
                 }
-                ++dst;
             }
 
             if (dst < len)
@@ -179,8 +179,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 {
                     ref var s = ref span3[dst];
                     s = item;
+                    ++dst;
                 }
-                ++dst;
             }
 
             if (dst < len)
@@ -199,8 +199,8 @@ public sealed class ActorState : IEnumerable<Actor>
                 {
                     ref var s = ref span4[dst];
                     s = e;
+                    ++dst;
                 }
-                ++dst;
             }
 
             if (dst < len)

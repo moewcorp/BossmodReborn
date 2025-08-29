@@ -60,7 +60,8 @@ public sealed class AIHints
     private static readonly AI.AIConfig _config = Service.Config.Get<AI.AIConfig>();
 
     // list of potential targets
-    public readonly Enemy?[] Enemies = new Enemy?[100];
+    public const int NumEnemies = 100;
+    public readonly Enemy?[] Enemies = new Enemy?[NumEnemies];
     public Enemy? FindEnemy(Actor? actor) => Enemies.BoundSafeAt(actor?.CharacterSpawnIndex ?? -1);
 
     // enemies in priority order

@@ -80,10 +80,10 @@ public sealed class AIHintsBuilder : IDisposable
         hints.Normalize();
         if (_rsr != null)
         {
-            var soon = _ws.CurrentTime.AddSeconds(0.5);
+            var soon = _ws.CurrentTime.AddSeconds(0.5d);
             var hasForbiddenDirection = hints.ForbiddenDirections.Count > 0;
 
-            if (!isRSRpaused && (hasForbiddenDirection && hints.ForbiddenDirections[0].activation < soon || hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && hints.ImminentSpecialMode.activation < soon) && _rsr.IsInstalled)
+            if (!isRSRpaused && (hasForbiddenDirection && hints.ForbiddenDirections.Ref(0).activation < soon || hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && hints.ImminentSpecialMode.activation < soon) && _rsr.IsInstalled)
             {
                 _rsr.PauseRSR();
                 isRSRpaused = true;
@@ -92,7 +92,7 @@ public sealed class AIHintsBuilder : IDisposable
                     hints.ForceCancelCast = true;
                 }
             }
-            else if (isRSRpaused && (!hasForbiddenDirection || hints.ForbiddenDirections[0].activation > soon) && (hints.ImminentSpecialMode.mode != AIHints.SpecialMode.Pyretic || hints.ImminentSpecialMode.activation > soon) && _rsr.IsInstalled)
+            else if (isRSRpaused && (!hasForbiddenDirection || hints.ForbiddenDirections.Ref(0).activation > soon) && (hints.ImminentSpecialMode.mode != AIHints.SpecialMode.Pyretic || hints.ImminentSpecialMode.activation > soon) && _rsr.IsInstalled)
             {
                 _rsr.UnPauseRSR();
                 isRSRpaused = false;
@@ -110,11 +110,11 @@ public sealed class AIHintsBuilder : IDisposable
             if (!actor.IsTargetable || actor.IsAlly || actor.IsDead)
                 continue;
             var index = actor.CharacterSpawnIndex;
-            if (index < 0 || index >= hints.Enemies.Length)
+            if (index is < 0 or >= AIHints.NumEnemies)
                 continue;
 
             int priority;
-            if (actor.FateID != 0)
+            if (actor.FateID != default)
             {
                 if (actor.FateID != allowedFateID)
                     priority = AIHints.Enemy.PriorityInvincible;  // fate mob in fate we are NOT a part of can't be damaged at all

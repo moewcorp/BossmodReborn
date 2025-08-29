@@ -800,7 +800,7 @@ public static class Visibility
             var any = false;
 
             var tA = ((a.X - ox) * dx1 + (a.Z - oz) * dy1) * invdd;
-            if (tA >= 0)
+            if (tA >= 0f)
             {
                 any = true;
                 tRay = tA;
