@@ -43,7 +43,7 @@ public sealed class A23Kamlanaut(WorldState ws, Actor primary) : BossModule(ws, 
     public static readonly ArenaBoundsCustom P1Arena = new(p1Circle);
     public static readonly ArenaBoundsCustom P2Arena = new(p2Circle);
     public static readonly ArenaBoundsCustom P1ArenaDonut = new(p1Circle, voidzone);
-    public static readonly ArenaBoundsCustom P2ArenaDonut = new(p2Circle, voidzone);
+
     private static readonly Rectangle[] bridges = GenerateBridges();
     private static Rectangle[] GenerateBridges()
     {

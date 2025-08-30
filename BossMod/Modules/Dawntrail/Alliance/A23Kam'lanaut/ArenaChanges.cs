@@ -21,13 +21,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.ProvingGroundVoidzone)
         {
             _aoe = [];
-            var radius = Arena.Bounds.Radius;
-            Arena.Bounds = radius switch
-            {
-                29.5f => A23Kamlanaut.P1ArenaDonut,
-                20f => A23Kamlanaut.P2ArenaDonut,
-                _ => A23Kamlanaut.P2ArenaWithBridgesDonut,
-            };
+            Arena.Bounds = Arena.Bounds.Radius == 29.5f ? A23Kamlanaut.P1ArenaDonut : A23Kamlanaut.P2ArenaWithBridgesDonut;
         }
     }
 
@@ -35,13 +29,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     {
         if (renderflags == 256 && actor.OID == (uint)OID.ProvingGroundVoidzone)
         {
-            var radius = Arena.Bounds.Radius;
-            Arena.Bounds = radius switch
-            {
-                29.5f => A23Kamlanaut.P1Arena,
-                20f => A23Kamlanaut.P2Arena,
-                _ => A23Kamlanaut.P2ArenaWithBridges,
-            };
+            Arena.Bounds = Arena.Bounds.Radius == 29.5f ? A23Kamlanaut.P1Arena : A23Kamlanaut.P2ArenaWithBridges;
         }
     }
 
@@ -67,7 +55,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
                         _aoe = [new(donut, A23Kamlanaut.ArenaCenter, default, WorldState.FutureTime(4.3d))];
                         break;
                     case 0x00020001u:
-                        SetArena(A23Kamlanaut.P2ArenaDonut);
+                        SetArena(A23Kamlanaut.P2Arena);
                         _aoe = [];
                         break;
                     case 0x00080004u:
