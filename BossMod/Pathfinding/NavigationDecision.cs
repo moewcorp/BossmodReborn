@@ -410,7 +410,7 @@ public struct NavigationDecision
         var threshold = cushion;
         for (var i = 0; i < len; ++i)
         {
-            ref var z = ref zones[i];
+            var z = zones[i];
             if (z.shapeDistance(p) < threshold)
             {
                 return z.g;

@@ -154,7 +154,7 @@ sealed class P6WyrmsbreathCone(BossModule module) : Components.GenericAOEs(modul
     {
         if (_main?.Glows.Raw is 1 or 2)
         {
-            var source = _main.Dragons[_main.Glows.Raw == 1 ? 0 : 1];
+            var source = _main.Dragons[_main.Glows.Raw == 1ul ? 0 : 1];
             if (source != null)
                 return new AOEInstance[1] { new(_shape, source.Position, source.Rotation) }; // TODO: activation
         }

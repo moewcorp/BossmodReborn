@@ -17,7 +17,9 @@ sealed class P6HallowedWings(BossModule module) : Components.GenericAOEs(module)
             _ => 0
         };
         if (offset == 0)
+        {
             return;
+        }
         var origin = caster.Position + offset * spell.Rotation.ToDirection().OrthoL();
         AOE = [new(_shape, origin.Quantized(), spell.Rotation, Module.CastFinishAt(spell, 0.8d))];
     }
@@ -144,7 +146,7 @@ sealed class P6HallowedPlume1(BossModule module) : P6HallowedPlume(module)
         var safeSpotCenterX = safeSpotCenter.X;
         var safeSpotCenterZ = safeSpotCenter.Z;
         ref var aoe1 = ref _wings!.AOE[0];
-        ref var aoe2 = ref _wings!.AOE[0];
+        ref var aoe2 = ref _cauterize!.AOE[0];
         safeSpotCenterZ -= aoe1.Origin.Z - safeSpotCenterZ;
         safeSpotCenterX -= aoe2.Origin.X - safeSpotCenterX;
         safeSpotCenter = new(safeSpotCenterX, safeSpotCenterZ);
