@@ -348,14 +348,15 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
 
     public override WDir ClampToBounds(WDir offset)
     {
+        if (offset.AlmostEqual(default, 1f) || Math.Abs(offset.X) < 0.1f) // if actor is almost in the center of the arena, do nothing (eg donut arena or wall boss)
+        {
+            return offset;
+        }
+
         var cacheKey = (Polygon, offset);
         if (Cache.TryGetValue(cacheKey, out var cachedResult))
             return (WDir)cachedResult;
-        if (Contains(offset) || offset.AlmostEqual(default, 1f) || Math.Abs(offset.X) < 0.1f) // if actor is almost in the center of the arena, do nothing (eg donut arena)
-        {
-            Cache[(Polygon, offset)] = offset;
-            return offset;
-        }
+
         var minDistance = float.MaxValue;
         var nearestPoint = offset;
         var len = edges.Length;

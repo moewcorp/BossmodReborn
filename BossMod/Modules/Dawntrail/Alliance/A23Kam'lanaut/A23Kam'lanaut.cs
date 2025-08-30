@@ -33,7 +33,7 @@ sealed class LightBladeIllumedEstoc(BossModule module) : Components.SimpleAOEGro
 sealed class TranscendentUnion(BossModule module) : Components.RaidwideCastDelay(module, (uint)AID.TranscendentUnionVisual, (uint)AID.TranscendentUnion, 6.6d, "Raidwide x7");
 sealed class EnspiritedSwordplayShockwave(BossModule module) : Components.RaidwideCasts(module, [(uint)AID.EnspiritedSwordplay, (uint)AID.Shockwave]);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Kamlanaut, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1058u, NameID = 14043u, Category = BossModuleInfo.Category.Alliance, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Kamlanaut, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1058u, NameID = 14043u, Category = BossModuleInfo.Category.Alliance, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 6)]
 public sealed class A23Kamlanaut(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, P1Arena)
 {
     public static readonly WPos ArenaCenter = new(-200f, 150f);

@@ -51,17 +51,7 @@ public sealed class A10AquariusStates : StateMachineBuilder
             .ActivateOnEnter<SpiderWeb>()
             .ActivateOnEnter<HundredFists>()
             .ActivateOnEnter<Agaricus>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(A10Aquarius.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(A10Aquarius.Trash);
     }
 }
 

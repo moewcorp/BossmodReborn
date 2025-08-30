@@ -5,7 +5,7 @@ sealed class SolarRayF(BossModule module) : Components.BaitAwayCast(module, (uin
 sealed class P4BlueScreen(BossModule module) : Components.CastCounter(module, (uint)AID.BlueScreenAOE);
 sealed class P5BlindFaith(BossModule module) : Components.CastHint(module, (uint)AID.BlindFaithSuccess, "Intermission");
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 908, PlanLevel = 90)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 908u, NameID = 12256u, PlanLevel = 90)]
 public sealed class TOP(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f))
 {
     private Actor? _opticalUnit;

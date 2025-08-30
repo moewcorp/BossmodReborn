@@ -155,17 +155,7 @@ class DaenOseTheAvariciousTyphonStates : StateMachineBuilder
             .ActivateOnEnter<Snortsault>()
             .ActivateOnEnter<SnortsaultKB>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(DaenOseTheAvariciousTyphon.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(DaenOseTheAvariciousTyphon.All);
     }
 }
 

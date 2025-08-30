@@ -97,17 +97,7 @@ class GymnasiouMegakanthaStates : StateMachineBuilder
             .ActivateOnEnter<AcidMist>()
             .ActivateOnEnter<HeavySmash>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(GymnasiouMegakantha.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(GymnasiouMegakantha.All);
     }
 }
 

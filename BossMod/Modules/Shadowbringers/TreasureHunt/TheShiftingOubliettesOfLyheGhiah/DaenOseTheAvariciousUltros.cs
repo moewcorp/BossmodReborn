@@ -111,17 +111,7 @@ class DaenOseTheAvariciousUltrosStates : StateMachineBuilder
             .ActivateOnEnter<ThunderIII>()
             .ActivateOnEnter<WaveOfTurmoil>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(DaenOseTheAvariciousUltros.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(DaenOseTheAvariciousUltros.All);
     }
 }
 

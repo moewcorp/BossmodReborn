@@ -119,17 +119,7 @@ class GymnasiouPithekosStates : StateMachineBuilder
             .ActivateOnEnter<ThunderIV>()
             .ActivateOnEnter<HeavySmash>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(GymnasiouPithekos.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(GymnasiouPithekos.All);
     }
 }
 

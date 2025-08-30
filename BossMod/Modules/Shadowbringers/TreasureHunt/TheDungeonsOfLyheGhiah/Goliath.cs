@@ -64,17 +64,7 @@ class GoliathStates : StateMachineBuilder
             .ActivateOnEnter<Incinerate>()
             .ActivateOnEnter<MechanicalBlow>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Goliath.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Goliath.All);
     }
 }
 

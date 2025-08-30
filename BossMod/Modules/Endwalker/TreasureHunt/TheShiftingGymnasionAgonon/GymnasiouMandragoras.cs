@@ -44,17 +44,7 @@ class GymnasiouMandragorasStates : StateMachineBuilder
             .ActivateOnEnter<SaibaiMandragora>()
             .ActivateOnEnter<LeafDagger>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(GymnasiouMandragoras.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(GymnasiouMandragoras.All);
     }
 }
 

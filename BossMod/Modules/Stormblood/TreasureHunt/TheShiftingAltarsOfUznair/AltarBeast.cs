@@ -67,17 +67,7 @@ class AltarBeastStates : StateMachineBuilder
             .ActivateOnEnter<RaucousScritch>()
             .ActivateOnEnter<Hurl>()
             .ActivateOnEnter<Spin>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(AltarBeast.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(AltarBeast.All);
     }
 }
 

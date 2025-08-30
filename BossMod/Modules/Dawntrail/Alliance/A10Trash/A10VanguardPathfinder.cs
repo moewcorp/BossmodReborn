@@ -28,17 +28,7 @@ public sealed class A10VanguardPathfinderStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Seismostomp>()
             .ActivateOnEnter<BombToss>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(A10VanguardPathfinder.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(A10VanguardPathfinder.Trash);
     }
 }
 

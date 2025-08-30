@@ -26,17 +26,7 @@ public sealed class A10GroundskeeperStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<IsleDrop>()
             .ActivateOnEnter<MysteriousLight>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(A10Groundskeeper.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(A10Groundskeeper.Trash);
     }
 }
 

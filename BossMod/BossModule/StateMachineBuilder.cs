@@ -383,4 +383,34 @@ public class StateMachineBuilder(BossModule module)
     public State Targetable(uint id, bool targetable, float delay, string name = "", float checkDelay = 0)
         => ActorTargetable(id, () => Module.PrimaryActor, targetable, delay, name, checkDelay)
             .SetHint(targetable ? StateMachine.StateHint.DowntimeEnd : StateMachine.StateHint.DowntimeStart);
+
+    protected bool AllDeadOrDestroyed(uint[] enemies)
+    {
+        var enemies_ = Module.Enemies(enemies);
+        var count = enemies_.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies_[i];
+            if (!enemy.IsDeadOrDestroyed)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected bool AllDestroyed(uint[] enemies)
+    {
+        var enemies_ = Module.Enemies(enemies);
+        var count = enemies_.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = enemies_[i];
+            if (!enemy.IsDestroyed)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }

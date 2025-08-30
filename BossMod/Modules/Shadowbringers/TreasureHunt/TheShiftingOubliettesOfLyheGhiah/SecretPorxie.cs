@@ -98,17 +98,7 @@ class SecretPorxieStates : StateMachineBuilder
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(SecretPorxie.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(SecretPorxie.All);
     }
 }
 

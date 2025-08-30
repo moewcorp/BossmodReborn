@@ -53,17 +53,7 @@ class HatiStates : StateMachineBuilder
             .ActivateOnEnter<BrainFreeze>()
             .ActivateOnEnter<GlassyNova>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Hati.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Hati.All);
     }
 }
 
