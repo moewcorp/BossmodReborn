@@ -47,17 +47,7 @@ class SecretKorriganStates : StateMachineBuilder
             .ActivateOnEnter<SaibaiMandragora>()
             .ActivateOnEnter<Ram>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(SecretKorrigan.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(SecretKorrigan.All);
     }
 }
 

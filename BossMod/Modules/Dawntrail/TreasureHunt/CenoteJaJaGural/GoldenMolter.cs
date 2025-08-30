@@ -153,17 +153,7 @@ sealed class GoldenMolterStates : StateMachineBuilder
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<RottenSpores>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(GoldenMolter.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(GoldenMolter.All);
     }
 }
 

@@ -159,17 +159,7 @@ class GymnasiouAcheloiosStates : StateMachineBuilder
             .ActivateOnEnter<VolcanicHowl>()
             .ActivateOnEnter<MandragoraAOEs>()
             .ActivateOnEnter<HeavySmash>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(GymnasiouAcheloios.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(GymnasiouAcheloios.All);
     }
 }
 

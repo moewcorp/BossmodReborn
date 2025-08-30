@@ -124,17 +124,7 @@ class LyssaChrysineStates : StateMachineBuilder
             .ActivateOnEnter<FrigidStone>()
             .ActivateOnEnter<HeavySmash2>()
             .ActivateOnEnter<PillarPierce>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(LyssaChrysine.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(LyssaChrysine.All);
     }
 }
 

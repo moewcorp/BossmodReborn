@@ -68,17 +68,7 @@ class SecretUndineStates : StateMachineBuilder
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(SecretUndine.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(SecretUndine.All);
     }
 }
 

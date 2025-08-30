@@ -61,16 +61,18 @@ sealed class ScraplineTyphoon(BossModule module) : Components.GenericAOEs(module
     {
         if (spell.Action.ID == (uint)AID.ScraplineStorm)
         {
-            AddAOE(circle, 2.1f);
-            AddAOE(donut, 5.6f);
-            void AddAOE(AOEShape shape, float delay) => AOEs.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay)));
+            AddAOE(circle, 2.1d);
+            AddAOE(donut, 5.6d);
+            void AddAOE(AOEShape shape, double delay) => AOEs.Add(new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay)));
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if (AOEs.Count != 0 && spell.Action.ID is (uint)AID.Scrapline or (uint)AID.Typhoon)
+        {
             AOEs.RemoveAt(0);
+        }
     }
 }
 
@@ -85,17 +87,7 @@ public sealed class A10DespotStates : StateMachineBuilder
             .ActivateOnEnter<ScraplineStorm>()
             .ActivateOnEnter<Panzerfaust>()
             .ActivateOnEnter<PanzerfaustHint>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(A10Despot.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(A10Despot.Trash);
     }
 }
 
