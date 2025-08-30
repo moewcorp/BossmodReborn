@@ -51,14 +51,14 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     FocusMaster(master);
 
                 _afkMode = _config.AutoAFK && !master.InCombat && (WorldState.CurrentTime - _masterLastMoved).TotalSeconds > _config.AFKModeTimer;
-                var gazeImminent = autorot.Hints.ForbiddenDirections.Count != 0 && autorot.Hints.ForbiddenDirections[0].activation <= WorldState.FutureTime(0.5d);
+                var gazeImminent = autorot.Hints.ForbiddenDirections.Count != 0 && autorot.Hints.ForbiddenDirections.Ref(0).activation <= WorldState.FutureTime(0.5d);
                 var pyreticImminent = autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1d);
                 var misdirectionMode = autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Misdirection && autorot.Hints.ImminentSpecialMode.activation <= WorldState.CurrentTime;
                 var forbidTargeting = _config.ForbidActions || _afkMode || gazeImminent || pyreticImminent;
                 var hadNavi = _naviDecision.Destination != null;
 
                 Targeting target = default;
-                if (!forbidTargeting && AIPreset != null && (!_config.ForbidAIMovementMounted || _config.ForbidAIMovementMounted && player.MountId == 0))
+                if (!forbidTargeting && AIPreset != null && (!_config.ForbidAIMovementMounted || _config.ForbidAIMovementMounted && player.MountId == default))
                 {
                     target = SelectPrimaryTarget(player, master);
                     if (_config.ManualTarget)
@@ -92,7 +92,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
                 var masterIsMoving = TrackMasterMovement(master);
                 var moveWithMaster = masterIsMoving && _followMaster && master != player;
-                ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? 0f : _naviDecision.LeewaySeconds;
+                ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? default : _naviDecision.LeewaySeconds;
 
                 if (_config.MoveDelay != 0d && !hadNavi && _naviDecision.Destination != null)
                     _navStartTime = WorldState.FutureTime(_config.MoveDelay);

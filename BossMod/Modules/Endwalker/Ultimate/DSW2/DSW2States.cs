@@ -16,7 +16,7 @@ sealed class DSW2States : StateMachineBuilder
         SimplePhase(1u, Phase2Thordan, "P2: Thordan") // TODO: auto-attack cleave component
             .Raw.Update = () => IsReset || Module.PrimaryActor.IsDead;
         SimplePhase(2u, Phase3Nidhogg, "P3: Nidhogg") // TODO: auto-attack cleave component
-            .OnEnter(() => Module.Arena.Bounds = DSW2.BoundsSquare)
+            .OnEnter(() => Module.Arena.Bounds = new ArenaBoundsSquare(22f))
             .Raw.Update = () => IsReset || IsDead(_module.BossP3());
         SimplePhase(3u, Phase4Eyes, "P4: Eyes")
             .Raw.Update = () => IsReset || IsDead(_module.LeftEyeP4()) && IsDead(_module.RightEyeP4()) && IsDead(_module.NidhoggP4());
@@ -27,7 +27,7 @@ sealed class DSW2States : StateMachineBuilder
             .ActivateOnEnter<P5Surrender>()
             .Raw.Update = () => IsResetOrRewindFailed || _module.FindComponent<P5Surrender>()?.NumCasts > 0;
         SimplePhase(6u, Phase6Dragons, "P6: Nidhogg + Hraesvelgr")
-            .OnEnter(() => Module.Arena.Bounds = DSW2.BoundsSquare)
+            .OnEnter(() => Module.Arena.Bounds = new ArenaBoundsSquare(22f))
             .Raw.Update = () => IsResetOrRewindFailed || (_module.FindComponent<P7PhaseChange>()?.PhaseChanged ?? false);
         SimplePhase(7u, Phase7DragonKingThordan, "P7: DKT")
             .Raw.Update = () => IsResetOrRewindFailed || IsDead(_module.BossP7());

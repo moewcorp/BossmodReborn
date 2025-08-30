@@ -25,7 +25,8 @@ sealed class A24EaldnarcheStates : StateMachineBuilder
             .ActivateOnEnter<TornadoFlareBurst>()
             .ActivateOnEnter<Tornado>()
             .ActivateOnEnter<TornadoPull>()
+            .ActivateOnEnter<OrbitalLevin>()
             .ActivateOnEnter<Paralysis>()
-        ;
+            .ActivateOnEnter<FlareRect>();
     }
 }

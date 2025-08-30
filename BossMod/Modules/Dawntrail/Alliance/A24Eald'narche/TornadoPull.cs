@@ -48,4 +48,19 @@ sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module
             }
         }
     }
+
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
+    {
+        var aoes = CollectionsMarshal.AsSpan(_aoe.Casters);
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (aoe.Check(pos))
+            {
+                return true;
+            }
+        }
+        return !Module.InBounds(pos);
+    }
 }
