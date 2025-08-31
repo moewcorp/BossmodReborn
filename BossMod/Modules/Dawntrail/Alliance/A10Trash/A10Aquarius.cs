@@ -102,6 +102,6 @@ public sealed class A10Aquarius(WorldState ws, Actor primary) : BossModule(ws, p
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

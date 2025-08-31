@@ -48,7 +48,7 @@ public sealed class A13ArkAngels(WorldState ws, Actor primary) : BossModule(ws, 
         }
         else
         {
-            Arena.Actors(Enemies(Bosses));
+            Arena.Actors(this, Bosses);
         }
     }
 

@@ -142,22 +142,7 @@ abstract class C010Trash1States : StateMachineBuilder
             .ActivateOnEnter<SHoneyedRight>(savage)
             .ActivateOnEnter<SHoneyedFront>(savage)
             .ActivateOnEnter<SBloodyCaress>(savage)
-            .Raw.Update = () =>
-            {
-                var allDeadOrDestroyed = true;
-                var enemies = module.Enemies(savage ? Trash1Arena.TrashSavage : Trash1Arena.TrashNormal);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                    {
-                        allDeadOrDestroyed = false;
-                        break;
-                    }
-                }
-                return allDeadOrDestroyed;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(savage ? Trash1Arena.TrashSavage : Trash1Arena.TrashNormal);
     }
 }
 sealed class C010NTrash1States(BossModule module) : C010Trash1States(module, false);
@@ -275,6 +260,6 @@ public abstract class Trash1Arena(WorldState ws, Actor primary, bool savage) : B
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(savage ? TrashSavage : TrashNormal));
+        Arena.Actors(this, savage ? TrashSavage : TrashNormal);
     }
 }

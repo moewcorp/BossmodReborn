@@ -23,7 +23,7 @@ class D120HaamHalonidStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<Icestorm>()
-            .Raw.Update = () => module.Enemies(D120HaamHalonid.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D120HaamHalonid.Trash);
     }
 }
 
@@ -95,6 +95,6 @@ public class D120HaamHalonid(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

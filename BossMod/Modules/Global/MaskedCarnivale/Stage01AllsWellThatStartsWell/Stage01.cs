@@ -32,18 +32,7 @@ sealed class Stage01States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<IronJustice>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage01.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage01.Trash);
     }
 }
 

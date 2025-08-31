@@ -122,7 +122,7 @@ public sealed class CE101BlackRegiment(WorldState ws, Actor primary) : BossModul
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
         Arena.Actor(BossBlackStar);
     }
 

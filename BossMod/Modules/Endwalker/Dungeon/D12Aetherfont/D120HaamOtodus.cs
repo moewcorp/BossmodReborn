@@ -29,7 +29,7 @@ class D120HaamOtodusStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<AquaticLance>()
             .ActivateOnEnter<Icestorm>()
-            .Raw.Update = () => module.Enemies(D120HaamOtodus.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D120HaamOtodus.Trash);
     }
 }
 
@@ -107,6 +107,6 @@ public class D120HaamOtodus(WorldState ws, Actor primary) : BossModule(ws, prima
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

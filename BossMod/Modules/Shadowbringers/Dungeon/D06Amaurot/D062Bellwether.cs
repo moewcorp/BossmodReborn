@@ -60,6 +60,6 @@ public sealed class D062Bellwether(WorldState ws, Actor primary) : BossModule(ws
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 }

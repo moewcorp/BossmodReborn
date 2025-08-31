@@ -123,6 +123,6 @@ public class D033Yol(WorldState ws, Actor primary) : BossModule(ws, primary, are
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 }

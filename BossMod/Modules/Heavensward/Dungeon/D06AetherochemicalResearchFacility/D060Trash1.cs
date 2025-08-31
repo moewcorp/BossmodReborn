@@ -61,17 +61,7 @@ class D060EnforcementDroid210States : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<PassiveInfraredGuidanceSystem>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D060Trash1.TrashP1);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D060Trash1.TrashP1);
     }
 }
 
@@ -87,17 +77,7 @@ class D060ScrambledIronGiantStates : StateMachineBuilder
             .ActivateOnEnter<Headspin2>()
             .ActivateOnEnter<GrandSword>()
             .ActivateOnEnter<TheHand>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D060Trash1.TrashP2);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D060Trash1.TrashP2);
     }
 }
 
@@ -132,13 +112,15 @@ public abstract class D060Trash1(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

@@ -178,7 +178,7 @@ public sealed class AHunterTrue(WorldState ws, Actor primary) : BossModule(ws, p
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
         Arena.Actors(Enemies((uint)OID.FilthyShackle), Colors.Object);
     }
 }

@@ -177,6 +177,6 @@ public sealed class AnAntidoteForAnarchy(WorldState ws, Actor primary) : BossMod
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
     }
 }

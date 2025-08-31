@@ -32,18 +32,7 @@ sealed class Stage02Act2States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<GoldenTongue>()
             .ActivateOnEnter<Hints>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage02Act2.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage02Act2.Trash);
     }
 }
 

@@ -388,6 +388,6 @@ public sealed class TakingAStand(WorldState ws, Actor primary) : BossModule(ws, 
     (uint)OID.HoobigoLancer, (uint)OID.DopproIllusionist];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
     }
 }

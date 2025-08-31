@@ -222,7 +222,7 @@ public sealed class ApyaahiTheArchitect(WorldState ws, Actor primary) : BossModu
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies([(uint)OID.Mycotender, (uint)OID.MycotenderArms]));
+        Arena.Actors(this, [(uint)OID.Mycotender, (uint)OID.MycotenderArms]);
     }
 
     protected override bool CheckPull() => Enemies((uint)OID.Mycotender) is var mycotender && mycotender.Count != 0 && mycotender[0].InCombat;

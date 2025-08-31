@@ -37,6 +37,6 @@ public sealed class T01Valigarmanda(WorldState ws, Actor primary) : BossModule(w
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(objects), Colors.Object);
+        Arena.Actors(this, objects, Colors.Object);
     }
 }

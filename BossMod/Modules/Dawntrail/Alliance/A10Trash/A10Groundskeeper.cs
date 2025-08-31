@@ -56,6 +56,6 @@ public sealed class A10Groundskeeper(WorldState ws, Actor primary) : BossModule(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

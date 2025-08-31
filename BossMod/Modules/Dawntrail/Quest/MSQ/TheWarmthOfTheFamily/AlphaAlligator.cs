@@ -61,25 +61,22 @@ sealed class CriticalBite(BossModule module) : Components.SimpleAOEs(module, (ui
 
 sealed class AlphaAlligatorStates : StateMachineBuilder
 {
-    public AlphaAlligatorStates(BossModule module) : base(module)
+    public AlphaAlligatorStates(AlphaAlligator module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<FeedingTime>()
             .ActivateOnEnter<CriticalBite>()
             .Raw.Update = () =>
             {
-                var enemies = module.Enemies(AlphaAlligator.All);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
+                if (module.BossAlphaAlligator?.IsDead ?? false)
                 {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDestroyed)
-                        return false;
-                }
-                var alpha = module.Enemies((uint)OID.AlphaAlligator);
-                if (alpha.Count != 0 && alpha[0].IsDead)
                     return true;
-                return true;
+                }
+                if (AllDestroyed(AlphaAlligator.All))
+                {
+                    return true;
+                }
+                return false;
             };
     }
 }
@@ -101,9 +98,15 @@ public sealed class AlphaAlligator(WorldState ws, Actor primary) : BossModule(ws
     new(406.44f, -129.39f), new(407.78f, -134.79f), new(408.15f, -135.35f), new(420.82f, -140.11f), new(423.33f, -140.59f)];
     private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] All = [(uint)OID.Yeheheceyaa, (uint)OID.AlphaAlligator, (uint)OID.HornedLizard, (uint)OID.Ceratoraptor, (uint)OID.Alligator];
+    public Actor? BossAlphaAlligator;
+
+    protected override void UpdateModule()
+    {
+        BossAlphaAlligator ??= GetActor((uint)OID.AlphaAlligator);
+    }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(All));
+        Arena.Actors(this, All);
     }
 }

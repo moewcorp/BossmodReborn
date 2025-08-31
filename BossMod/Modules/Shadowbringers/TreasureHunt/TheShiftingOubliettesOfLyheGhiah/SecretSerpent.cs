@@ -100,7 +100,7 @@ public class SecretSerpent(WorldState ws, Actor primary) : THTemplate(ws, primar
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.SerpentHatchling));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

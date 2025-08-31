@@ -53,7 +53,7 @@ public class RegulaVanHydrus(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies([(uint)OID.MagitekTurretI, (uint)OID.MagitekTurretII]));
+        Arena.Actors(this, [(uint)OID.MagitekTurretI, (uint)OID.MagitekTurretII]);
         Arena.Actor(PrimaryActor);
     }
 }

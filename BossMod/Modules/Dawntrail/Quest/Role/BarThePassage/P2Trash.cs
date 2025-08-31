@@ -100,6 +100,6 @@ public sealed class Trash2(WorldState ws, Actor primary) : BossModule(ws, primar
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 }

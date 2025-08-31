@@ -111,8 +111,9 @@ public class GymnasiouMegakantha(WorldState ws, Actor primary) : THTemplate(ws, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(rest));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        var m = this;
+        Arena.Actors(m, rest);
+        Arena.Actors(m, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

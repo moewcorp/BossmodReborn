@@ -16,7 +16,7 @@ public enum AID : uint
     AetherialSpark = 33996, // Boss->self, 3.0s cast, range 12 width 4 rect
 }
 
-class AetherialSpark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AetherialSpark, new AOEShapeRect(12, 2));
+class AetherialSpark(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AetherialSpark, new AOEShapeRect(12f, 2f));
 
 class D120HaamForlornStates : StateMachineBuilder
 {
@@ -24,7 +24,7 @@ class D120HaamForlornStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<AetherialSpark>()
-            .Raw.Update = () => module.Enemies(D120HaamForlorn.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D120HaamForlorn.Trash);
     }
 }
 
@@ -91,6 +91,6 @@ public class D120HaamForlorn(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash).Where(x => x.Position.AlmostEqual(Arena.Center, Bounds.Radius)));
+        Arena.ActorsInBounds(this, Trash);
     }
 }

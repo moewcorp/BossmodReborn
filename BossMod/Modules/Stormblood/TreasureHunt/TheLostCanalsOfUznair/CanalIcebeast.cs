@@ -61,7 +61,7 @@ public class CanalIcebeast(WorldState ws, Actor primary) : FinalRoomArena(ws, pr
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
         Arena.Actors(Enemies((uint)OID.Abharamu), Colors.Vulnerable);
     }
 

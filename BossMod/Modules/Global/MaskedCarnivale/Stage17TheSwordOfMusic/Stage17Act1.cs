@@ -49,18 +49,7 @@ sealed class Stage17Act1States : StateMachineBuilder
             .ActivateOnEnter<Shred>()
             .ActivateOnEnter<TheHand>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage17Act1.Hands);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage17Act1.Hands);
     }
 }
 

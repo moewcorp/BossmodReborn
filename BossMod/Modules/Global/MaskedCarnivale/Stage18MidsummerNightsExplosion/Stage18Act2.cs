@@ -112,18 +112,7 @@ sealed class Stage18Act2States : StateMachineBuilder
             .ActivateOnEnter<RipperClaw>()
             .ActivateOnEnter<TailSmash>()
             .ActivateOnEnter<WildCharge>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage18Act2.Kegs);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage18Act2.Kegs);
     }
 }
 

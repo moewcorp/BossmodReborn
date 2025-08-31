@@ -205,7 +205,7 @@ public sealed class CLL4Dawon(WorldState ws, Actor primary) : BossModule(ws, pri
         }
         else
         {
-            Arena.Actors(Enemies(adds));
+            Arena.Actors(this, adds);
             Arena.Actor(PrimaryActor);
         }
     }

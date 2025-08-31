@@ -30,17 +30,7 @@ sealed class D050OrigenicsAerostatStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<IncendiaryCircle>()
             .ActivateOnEnter<GrenadoShot>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D050OrigenicsAerostat.Trash);
-                for (var i = 0; i < enemies.Count; ++i)
-                {
-                    var e = enemies[i];
-                    if (!e.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D050OrigenicsAerostat.Trash);
     }
 }
 
@@ -56,7 +46,7 @@ public sealed class D050OrigenicsAerostat(WorldState ws, Actor primary) : BossMo
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

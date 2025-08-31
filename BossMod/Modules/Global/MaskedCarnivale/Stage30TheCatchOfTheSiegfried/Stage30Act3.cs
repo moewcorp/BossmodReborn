@@ -250,6 +250,6 @@ public sealed class Stage30Act3(WorldState ws, Actor primary) : BossModule(ws, p
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(clones), Colors.Object);
+        Arena.Actors(this, clones, Colors.Object);
     }
 }

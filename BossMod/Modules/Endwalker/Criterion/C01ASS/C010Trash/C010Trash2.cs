@@ -72,24 +72,10 @@ abstract class C010DullahanStates : StateMachineBuilder
             .ActivateOnEnter<SBlightedGloom>(savage)
             .ActivateOnEnter<SKingsWill>(savage)
             .ActivateOnEnter<SInfernalPain>(savage)
-            .Raw.Update = () =>
-            {
-                var allDeadOrDestroyed = true;
-                var enemies = module.Enemies(savage ? Trash2Arena.TrashSavage : Trash2Arena.TrashNormal);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                    {
-                        allDeadOrDestroyed = false;
-                        break;
-                    }
-                }
-                return allDeadOrDestroyed;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(savage ? Trash2Arena.TrashSavage : Trash2Arena.TrashNormal);
     }
 }
+
 sealed class C010NTrash2States(BossModule module) : C010DullahanStates(module, false);
 sealed class C010STrash2States(BossModule module) : C010DullahanStates(module, true);
 
@@ -126,6 +112,6 @@ public abstract class Trash2Arena(WorldState ws, Actor primary, bool savage) : B
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(savage ? TrashSavage : TrashNormal));
+        Arena.Actors(this, savage ? TrashSavage : TrashNormal);
     }
 }

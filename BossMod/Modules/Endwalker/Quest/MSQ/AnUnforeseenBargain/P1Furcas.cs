@@ -91,6 +91,6 @@ public class Furcas(WorldState ws, Actor primary) : BossModule(ws, primary, Aren
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 }

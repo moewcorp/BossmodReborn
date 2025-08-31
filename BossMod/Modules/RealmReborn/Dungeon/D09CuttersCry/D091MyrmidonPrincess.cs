@@ -75,6 +75,6 @@ public sealed class D091MyrmidonPrincess(WorldState ws, Actor primary) : BossMod
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 }

@@ -123,17 +123,7 @@ class D113CalcabrinaStates : StateMachineBuilder
             .ActivateOnEnter<HeatGazeCalca>()
             .ActivateOnEnter<Slapstick>()
             .ActivateOnEnter<Knockout>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D113Calcabrina.NpcDolls);
-                for (var i = 0; i < enemies.Count; ++i)
-                {
-                    var e = enemies[i];
-                    if (!e.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D113Calcabrina.NpcDolls);
     }
 }
 
@@ -146,8 +136,8 @@ public class D113Calcabrina(WorldState ws, Actor primary) : BossModule(ws, prima
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(NpcDolls));
-        Arena.Actors(Enemies(playerDolls), Colors.Vulnerable);
+        Arena.Actors(this, NpcDolls);
+        Arena.Actors(this, playerDolls, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

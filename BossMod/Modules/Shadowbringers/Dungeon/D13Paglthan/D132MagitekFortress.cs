@@ -230,7 +230,7 @@ public sealed class D132MagitekFortress(WorldState ws, Actor primary) : BossModu
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 
     protected override bool CheckPull()

@@ -82,22 +82,7 @@ class D090VelveteenAntStates : StateMachineBuilder
             .ActivateOnEnter<FinalSting>()
             .ActivateOnEnter<PoisonBreathStickyThread>()
             .ActivateOnEnter<WallRemoval>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D090VelveteenAnt.All);
-                var count = enemies.Count;
-                var alldeadordestroyed = true;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                    {
-                        alldeadordestroyed = false;
-                        break;
-                    }
-                }
-                return alldeadordestroyed || D092QueenHawk.D092QueenHawk.ArenaBounds.Contains(Module.Raid.Player()!.Position - D092QueenHawk.D092QueenHawk.ArenaBounds.Center);
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D090VelveteenAnt.All) || D092QueenHawk.D092QueenHawk.ArenaBounds.Contains(Module.Raid.Player()!.Position - D092QueenHawk.D092QueenHawk.ArenaBounds.Center);
     }
 }
 
@@ -294,14 +279,17 @@ public class D090VelveteenAnt(WorldState ws, Actor primary) : BossModule(ws, pri
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(trash));
-        Arena.Actors(Enemies(combs), Colors.Object);
+        var m = this;
+        Arena.Actors(m, trash);
+        Arena.Actors(m, combs, Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

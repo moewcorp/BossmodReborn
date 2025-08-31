@@ -77,7 +77,7 @@ public class AncelRockfist(WorldState ws, Actor primary) : BossModule(ws, primar
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(bosses));
+        Arena.Actors(this, bosses);
     }
 }
 

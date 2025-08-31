@@ -97,6 +97,6 @@ public sealed class D073YokHuyAttestant(WorldState ws, Actor primary) : BossModu
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

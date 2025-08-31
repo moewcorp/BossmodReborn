@@ -33,7 +33,7 @@ sealed class FlightOfTheGriffinStates : StateMachineBuilder
             .ActivateOnEnter<FrigidPulse>()
             .ActivateOnEnter<FervidPulse>()
             .ActivateOnEnter<EyeOfTheFierce>()
-            .Raw.Update = () => module.Enemies(FlightOfTheGriffin.All).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyed(FlightOfTheGriffin.All);
     }
 }
 

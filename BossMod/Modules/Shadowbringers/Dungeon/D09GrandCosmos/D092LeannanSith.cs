@@ -286,7 +286,7 @@ public sealed class D092LeananSith(WorldState ws, Actor primary) : BossModule(ws
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(Seeds), Colors.Object);
+        Arena.Actors(this, Seeds, Colors.Object);
         Arena.Actors(Enemies((uint)OID.LoversRing));
     }
 

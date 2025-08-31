@@ -521,6 +521,48 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
         }
     }
 
+    public void Actors(BossModule module, uint[] actors, uint color = default, bool allowDeadAndUntargetable = false)
+    {
+        var actors_ = actors;
+        var len = actors_.Length;
+        var color_ = color == default ? Colors.Enemy : color;
+        for (var i = 0; i < len; ++i)
+        {
+            var enemies = module.Enemies(actors[i]);
+            var count = enemies.Count;
+            for (var j = 0; j < count; ++j)
+            {
+                var enemy = enemies[j];
+                if (!enemy.IsDestroyed && (allowDeadAndUntargetable || enemy.IsTargetable && !enemy.IsDead))
+                {
+                    Actor(enemy.Position, enemy.Rotation, color_);
+                }
+            }
+        }
+    }
+
+    public void ActorsInBounds(BossModule module, uint[] actors, uint color = default, bool allowDeadAndUntargetable = false)
+    {
+        var actors_ = actors;
+        var len = actors_.Length;
+        var center = Center;
+        var radius = Bounds.Radius;
+        var color_ = color == default ? Colors.Enemy : color;
+        for (var i = 0; i < len; ++i)
+        {
+            var enemies = module.Enemies(actors[i]);
+            var count = enemies.Count;
+            for (var j = 0; j < count; ++j)
+            {
+                var enemy = enemies[j];
+                if (!enemy.IsDestroyed && enemy.Position.AlmostEqual(center, radius) && (allowDeadAndUntargetable || enemy.IsTargetable && !enemy.IsDead))
+                {
+                    Actor(enemy.Position, enemy.Rotation, color_);
+                }
+            }
+        }
+    }
+
     public static void End()
     {
         ImGui.GetWindowDrawList().PopClipRect();

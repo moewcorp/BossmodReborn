@@ -29,20 +29,7 @@ sealed class D90StationSpecterStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<GlassPunch>()
             .ActivateOnEnter<Catapult>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D90StationSpecter.Trash);
-                var center = module.Arena.Center;
-                var radius = module.Bounds.Radius;
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D90StationSpecter.Trash);
     }
 }
 
@@ -107,7 +94,7 @@ public sealed class D90StationSpecter(WorldState ws, Actor primary) : BossModule
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

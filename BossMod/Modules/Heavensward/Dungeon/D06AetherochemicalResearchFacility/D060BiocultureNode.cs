@@ -86,18 +86,7 @@ class D060BiocultureNodeStates : StateMachineBuilder
             .ActivateOnEnter<TheRamsVoice>()
             .ActivateOnEnter<Sideswipe>()
             .ActivateOnEnter<Gust>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(module.Bounds == D060BiocultureNode.Arena1 || module.Bounds == D060BiocultureNode.Arena1b ? D060BiocultureNode.Trash1 : D060BiocultureNode.Trash2);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(module.Bounds == D060BiocultureNode.Arena1 || module.Bounds == D060BiocultureNode.Arena1b ? D060BiocultureNode.Trash1 : D060BiocultureNode.Trash2);
     }
 }
 
@@ -185,9 +174,13 @@ public class D060BiocultureNode(WorldState ws, Actor primary) : BossModule(ws, p
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         if (Bounds == Arena1 || Bounds == Arena1b)
-            Arena.Actors(Enemies(Trash1));
+        {
+            Arena.Actors(this, Trash1);
+        }
         else
-            Arena.Actors(Enemies(Trash2));
+        {
+            Arena.Actors(this, Trash2);
+        }
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

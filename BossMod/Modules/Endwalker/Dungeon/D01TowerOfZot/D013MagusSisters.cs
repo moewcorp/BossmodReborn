@@ -157,7 +157,7 @@ class D013MagusSistersStates : StateMachineBuilder
             .ActivateOnEnter<DeltaBlizzardIII1>()
             .ActivateOnEnter<DeltaBlizzardIII2>()
             .ActivateOnEnter<DeltaBlizzardIII3>()
-            .Raw.Update = () => module.Enemies(D013MagusSisters.Bosses).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyed(D013MagusSisters.Bosses);
     }
 }
 
@@ -167,12 +167,13 @@ class D013MagusSisters(WorldState ws, Actor primary) : BossModule(ws, primary, n
     public static readonly uint[] Bosses = [(uint)OID.Boss, (uint)OID.Sanduruva, (uint)OID.Minduruva];
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Bosses));
+        Arena.Actors(this, Bosses);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch

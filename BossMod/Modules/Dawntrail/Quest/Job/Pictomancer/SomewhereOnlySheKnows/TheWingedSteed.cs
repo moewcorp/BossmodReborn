@@ -27,7 +27,7 @@ sealed class TheWingedSteedStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<BurningBright>()
             .ActivateOnEnter<Nicker>()
-            .Raw.Update = () => module.Enemies(TheWingedSteed.All).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyed(TheWingedSteed.All);
     }
 }
 
@@ -63,6 +63,6 @@ public sealed class TheWingedSteed(WorldState ws, Actor primary) : BossModule(ws
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(All));
+        Arena.Actors(this, All);
     }
 }

@@ -148,6 +148,6 @@ public class D293Midgardsormr(WorldState ws, Actor primary) : BossModule(ws, pri
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(dragons));
+        Arena.Actors(this, dragons);
     }
 }

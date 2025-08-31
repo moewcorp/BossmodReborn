@@ -28,18 +28,7 @@ class D130KargasStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<BreathWing>()
             .ActivateOnEnter<WingsOfWoe>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D130Kargas.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D130Kargas.Trash);
     }
 }
 
@@ -116,7 +105,7 @@ public class D130Kargas(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
