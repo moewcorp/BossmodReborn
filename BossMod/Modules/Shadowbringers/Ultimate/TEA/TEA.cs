@@ -7,7 +7,6 @@ sealed class P1Splash(BossModule module) : Components.CastCounter(module, (uint)
 sealed class P1Drainage(BossModule module) : Components.TankbusterTether(module, (uint)AID.DrainageP1, (uint)TetherID.Drainage, 6f);
 
 sealed class P2JKick(BossModule module) : Components.CastCounter(module, (uint)AID.JKick);
-sealed class P2EyeOfTheChakram(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EyeOfTheChakram, new AOEShapeRect(76f, 3f));
 sealed class P2HawkBlasterOpticalSight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HawkBlasterP2, 10f);
 sealed class P2Photon(BossModule module) : Components.CastCounter(module, (uint)AID.PhotonAOE);
 sealed class P2SpinCrusher(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpinCrusher, new AOEShapeCone(10f, 45f.Degrees()));
@@ -26,7 +25,7 @@ sealed class P3ChasteningHeat(BossModule module) : Components.BaitAwayCast(modul
 sealed class P3DivineSpear(BossModule module) : Components.Cleave(module, (uint)AID.DivineSpear, new AOEShapeCone(24.2f, 45f.Degrees()), [(uint)OID.AlexanderPrime]); // TODO: verify angle
 sealed class P3DivineJudgmentRaidwide(BossModule module) : Components.CastCounter(module, (uint)AID.DivineJudgmentRaidwide);
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694u, NameID = 9042u, PlanLevel = 80, Category = BossModuleInfo.Category.Ultimate, Expansion = BossModuleInfo.Expansion.Shadowbringers)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.BossP1, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 694u, NameID = 9042u, PlanLevel = 80, Category = BossModuleInfo.Category.Ultimate, Expansion = BossModuleInfo.Expansion.Shadowbringers, SortOrder = 1)]
 public sealed class TEA : BossModule
 {
     public Actor? LiquidHand2;
