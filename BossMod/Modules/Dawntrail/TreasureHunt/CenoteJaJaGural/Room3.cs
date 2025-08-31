@@ -65,7 +65,7 @@ sealed class FireBreak(BossModule module) : Components.SimpleAOEs(module, (uint)
 sealed class TornadoIncubusRottenSpores(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Tornado, (uint)AID.Incubus, (uint)AID.RottenSpores], 6f);
 sealed class FireIIBitterNectar(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FireII, (uint)AID.BitterNectar], 5f);
 
-sealed class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11);
+sealed class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
 sealed class Scoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Scoop, new AOEShapeCone(15f, 60f.Degrees()));
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
