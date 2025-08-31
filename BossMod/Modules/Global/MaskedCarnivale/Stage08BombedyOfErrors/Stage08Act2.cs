@@ -80,18 +80,7 @@ sealed class Stage08Act2States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Burst>()
             .ActivateOnEnter<Sap>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage08Act2.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage08Act2.Trash);
     }
 }
 

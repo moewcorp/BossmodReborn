@@ -41,18 +41,7 @@ sealed class Stage02Act1States : StateMachineBuilder
             .ActivateOnEnter<GoldenTongue>()
             .ActivateOnEnter<Hints2>()
             .DeactivateOnEnter<Hints>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage02Act1.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage02Act1.Trash);
     }
 }
 

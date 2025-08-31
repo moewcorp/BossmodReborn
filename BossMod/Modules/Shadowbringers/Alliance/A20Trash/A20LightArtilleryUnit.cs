@@ -119,7 +119,6 @@ public sealed class A20LightArtilleryUnit(WorldState ws, Actor primary) : BossMo
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
     }
 }

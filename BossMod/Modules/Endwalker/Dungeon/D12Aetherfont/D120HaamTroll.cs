@@ -24,7 +24,7 @@ class D120HaamTrollStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<Uppercut>()
-            .Raw.Update = () => module.Enemies(D120HaamTroll.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D120HaamTroll.Trash);
     }
 }
 
@@ -78,6 +78,6 @@ public class D120HaamTroll(WorldState ws, Actor primary) : BossModule(ws, primar
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

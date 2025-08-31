@@ -67,18 +67,7 @@ class D090TangledNarbrooiStates : StateMachineBuilder
             .ActivateOnEnter<Canopy>()
             .ActivateOnEnter<Hurl>()
             .ActivateOnEnter<WallRemoval>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D090TangledNarbrooi.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D090TangledNarbrooi.Trash);
     }
 }
 
@@ -226,7 +215,7 @@ public class D090TangledNarbrooi(WorldState ws, Actor primary) : BossModule(ws, 
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

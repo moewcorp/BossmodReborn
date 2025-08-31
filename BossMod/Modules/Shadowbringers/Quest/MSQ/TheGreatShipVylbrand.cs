@@ -232,11 +232,11 @@ public class SecondOrderRocksplitterStates : StateMachineBuilder
 public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(ws, primary, default, arena)
 {
     private static readonly ArenaBoundsCustom arena = new([new Polygon(default, 26.5f, 24)]);
-    private static readonly uint[] opponents = [(uint)OID.Grenade1, (uint)OID.Grenade2, (uint)OID.SecondOrderRoundsman, (uint)OID.SecondOrderRocksplitter, (uint)OID.SecondOrderPickman,
+    private static readonly uint[] all = [(uint)OID.Grenade1, (uint)OID.Grenade2, (uint)OID.SecondOrderRoundsman, (uint)OID.SecondOrderRocksplitter, (uint)OID.SecondOrderPickman,
     (uint)OID.SecondOrderAlchemist, (uint)OID.Bomb, (uint)OID.Construct2, (uint)OID.OghomoroGolem];
 
     protected override bool CheckPull() => Raid.Player()!.InCombat;
-    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(Enemies(opponents));
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(this, all);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

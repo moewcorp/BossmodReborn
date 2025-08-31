@@ -31,8 +31,8 @@ public enum AID : uint
     Breakbeak = 6626 // AbalathianHornbill->player, no cast, single-target
 }
 
-class Overpower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Overpower, new AOEShapeCone(7.08f, 45.Degrees()));
-class Gust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Gust, 5);
+class Overpower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Overpower, new AOEShapeCone(7.08f, 45f.Degrees()));
+class Gust(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Gust, 5f);
 
 class D150XelphatolSwiftbeakStates : StateMachineBuilder
 {
@@ -41,28 +41,7 @@ class D150XelphatolSwiftbeakStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Overpower>()
             .ActivateOnEnter<Gust>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D150XelphatolSwiftbeak.Trash);
-                var center = module.Arena.Center;
-                var radius = module.Bounds.Radius;
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed && enemy.Position.AlmostEqual(center, radius))
-                        return false;
-                }
-                var keys = module.Enemies(D150XelphatolSwiftbeak.Keys);
-                var countK = keys.Count;
-                for (var i = 0; i < countK; ++i)
-                {
-                    var key = keys[i];
-                    if (key.IsTargetable)
-                        return true;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D150XelphatolSwiftbeak.Trash) || AnyTargetable(D150XelphatolSwiftbeak.Keys);
     }
 }
 
@@ -232,22 +211,15 @@ IsArena1(primary) ? arena1 : IsArena2(primary) ? arena3 : arena2)
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.Position.AlmostEqual(center, radius))
-                Arena.Actor(enemy);
-        }
+        Arena.ActorsInBounds(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

@@ -90,7 +90,7 @@ public sealed class CLL2AlbeleoTheMaleficent(WorldState ws, Actor primary) : Bos
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

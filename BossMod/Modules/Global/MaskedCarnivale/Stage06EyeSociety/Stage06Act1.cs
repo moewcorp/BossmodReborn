@@ -116,18 +116,7 @@ sealed class Stage06Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<ColdStare>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage06Act1.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage06Act1.Trash);
     }
 }
 

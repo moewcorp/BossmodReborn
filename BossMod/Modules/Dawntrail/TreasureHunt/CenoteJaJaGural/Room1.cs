@@ -109,8 +109,9 @@ public sealed class Room1(WorldState ws, Actor primary) : BossModule(ws, primary
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(trash));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        var m = this;
+        Arena.Actors(m, trash);
+        Arena.Actors(m, bonusAdds, Colors.Vulnerable);
     }
 
     protected override bool CheckPull() => Enemies(trash).Count != 0;

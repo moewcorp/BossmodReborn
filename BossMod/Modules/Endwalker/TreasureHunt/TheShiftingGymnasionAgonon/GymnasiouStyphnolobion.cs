@@ -101,7 +101,7 @@ public class GymnasiouStyphnolobion(WorldState ws, Actor primary) : THTemplate(w
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.GymnasiouHippogryph));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

@@ -49,7 +49,9 @@ sealed class UniteMare3(BossModule module) : Components.GenericAOEs(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.UniteMare3)
+        {
             _aoes.Add(new(circle, spell.LocXZ, default, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+        }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -58,9 +60,11 @@ sealed class UniteMare3(BossModule module) : Components.GenericAOEs(module)
         {
             var count = _aoes.Count;
             var id = caster.InstanceID;
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
             for (var i = 0; i < count; ++i)
             {
-                if (_aoes[i].ActorID == id)
+                ref var aoe = ref aoes[i];
+                if (aoe.ActorID == id)
                 {
                     _aoes.RemoveAt(i);
                     return;
@@ -111,6 +115,6 @@ public sealed class D101EvilDreamers(WorldState ws, Actor primary) : BossModule(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(dreamers));
+        Arena.Actors(this, dreamers);
     }
 }

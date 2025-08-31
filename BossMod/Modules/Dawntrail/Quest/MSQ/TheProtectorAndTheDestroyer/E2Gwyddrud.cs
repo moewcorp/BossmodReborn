@@ -172,6 +172,6 @@ public sealed class Gwyddrud(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
     }
 }

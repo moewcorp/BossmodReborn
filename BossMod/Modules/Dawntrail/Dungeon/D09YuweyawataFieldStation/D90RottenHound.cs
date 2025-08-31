@@ -23,20 +23,7 @@ sealed class D90RottenResearcherStates : StateMachineBuilder
     public D90RottenResearcherStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D90RottenResearcher.Trash);
-                var center = module.Arena.Center;
-                var radius = module.Bounds.Radius;
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed && enemy.Position.AlmostEqual(center, radius))
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D90RottenResearcher.Trash);
     }
 }
 
@@ -106,16 +93,7 @@ public sealed class D90RottenResearcher(WorldState ws, Actor primary) : BossModu
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.Position.AlmostEqual(center, radius))
-                Arena.Actor(enemy);
-        }
+        Arena.ActorsInBounds(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

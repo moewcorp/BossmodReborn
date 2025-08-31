@@ -146,6 +146,6 @@ public sealed class A10Despot(WorldState ws, Actor primary) : BossModule(ws, pri
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

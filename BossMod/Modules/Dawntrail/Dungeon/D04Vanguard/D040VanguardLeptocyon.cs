@@ -26,18 +26,7 @@ sealed class D040VanguardLeptocyonStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<SpreadShot>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D040VanguardLeptocyon.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D040VanguardLeptocyon.Trash);
     }
 }
 
@@ -98,7 +87,7 @@ public sealed class D040VanguardLeptocyon(WorldState ws, Actor primary) : BossMo
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

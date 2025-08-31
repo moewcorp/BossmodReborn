@@ -66,7 +66,7 @@ public class GymnasiouSatyros(WorldState ws, Actor primary) : THTemplate(ws, pri
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.GymnasiouElaphos));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

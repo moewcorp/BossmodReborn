@@ -65,7 +65,7 @@ public sealed class T09WhorleaterH(WorldState ws, Actor primary) : BossModule(ws
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
         Arena.Actors(Enemies((uint)OID.Spume), Colors.Vulnerable);
         Arena.Actors(Enemies((uint)OID.Converter), Colors.Object);
     }

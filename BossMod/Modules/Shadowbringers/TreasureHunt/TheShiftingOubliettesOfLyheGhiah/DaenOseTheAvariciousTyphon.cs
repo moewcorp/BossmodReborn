@@ -170,7 +170,7 @@ public class DaenOseTheAvariciousTyphon(WorldState ws, Actor primary) : THTempla
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.WrigglingMenace));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

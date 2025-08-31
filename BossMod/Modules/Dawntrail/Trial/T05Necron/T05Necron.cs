@@ -48,7 +48,7 @@ public sealed class T05Necron(WorldState ws, Actor primary) : Necron(ws, primary
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(hands));
+        Arena.Actors(this, hands);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

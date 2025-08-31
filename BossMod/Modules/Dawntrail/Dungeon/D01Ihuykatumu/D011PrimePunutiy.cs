@@ -235,6 +235,6 @@ public sealed class D011PrimePunutiy(WorldState ws, Actor primary) : BossModule(
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 }

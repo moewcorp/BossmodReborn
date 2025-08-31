@@ -16,8 +16,8 @@ public enum AID : uint
     HardHead = 33995, // Boss->self, 3.0s cast, range 12 120-degree cone
 }
 
-class HardHead(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HardHead, new AOEShapeCone(12, 60.Degrees()));
-class EarthenHeart(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EarthenHeart, 6);
+class HardHead(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HardHead, new AOEShapeCone(12f, 60f.Degrees()));
+class EarthenHeart(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EarthenHeart, 6f);
 
 class D120HaamCrystalStates : StateMachineBuilder
 {
@@ -26,7 +26,7 @@ class D120HaamCrystalStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<HardHead>()
             .ActivateOnEnter<EarthenHeart>()
-            .Raw.Update = () => module.Enemies(D120HaamCrystal.Trash).Where(x => x.Position.AlmostEqual(module.Arena.Center, module.Bounds.Radius)).All(e => e.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyedInBounds(D120HaamCrystal.Trash);
     }
 }
 
@@ -70,6 +70,6 @@ public class D120HaamCrystal(WorldState ws, Actor primary) : BossModule(ws, prim
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

@@ -27,17 +27,7 @@ class D060FacilityDreadnaughtStates : StateMachineBuilder
             .ActivateOnEnter<Rotoswipe>()
             .ActivateOnEnter<AutoCannons>()
             .ActivateOnEnter<WreckingBall>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D060FacilityDreadnaught.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    if (!enemies[i].IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D060FacilityDreadnaught.Trash);
     }
 }
 
@@ -49,13 +39,15 @@ public class D060FacilityDreadnaught(WorldState ws, Actor primary) : BossModule(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

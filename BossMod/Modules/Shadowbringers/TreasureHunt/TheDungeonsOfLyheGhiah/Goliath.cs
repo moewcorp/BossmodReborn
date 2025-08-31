@@ -107,7 +107,7 @@ public class Goliath(WorldState ws, Actor primary) : BossModule(ws, primary, are
     {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.GoliathsJavelin));
-        Arena.Actors(Enemies(bonusAdds), Colors.Vulnerable);
+        Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

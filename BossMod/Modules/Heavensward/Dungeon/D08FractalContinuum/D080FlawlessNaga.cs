@@ -48,26 +48,7 @@ class D080FlawlessNagaStates : StateMachineBuilder
             .ActivateOnEnter<TheDragonsVoiceHint>()
             .ActivateOnEnter<Furore>()
             .ActivateOnEnter<BalefulRoar>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D080FlawlessNaga.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                var trash2 = module.Enemies(trash); // 3 trash mobs spawn after rest died, so we check for destroyed instead of dead here
-                var countE = trash2.Count;
-                for (var i = 0; i < countE; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDestroyed(trash) && AllDeadOrDestroyed(D080FlawlessNaga.Trash);
     }
 }
 
@@ -179,22 +160,15 @@ public class D080FlawlessNaga(WorldState ws, Actor primary) : BossModule(ws, pri
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.Position.AlmostEqual(center, radius))
-                Arena.Actor(enemy);
-        }
+        Arena.ActorsInBounds(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

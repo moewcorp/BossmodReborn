@@ -226,7 +226,7 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
     private Pathfinding.Map? _cachedMap;
     public readonly RelSimplifiedComplexPolygon Polygon;
     private readonly (WDir, WDir)[] edges;
-    public float HalfWidth, HalfHeight;
+    public readonly float HalfWidth, HalfHeight;
     private readonly float offset;
     public readonly WPos Center;
     public bool IsCircle; // can be used by gaze component for gazes outside of the arena

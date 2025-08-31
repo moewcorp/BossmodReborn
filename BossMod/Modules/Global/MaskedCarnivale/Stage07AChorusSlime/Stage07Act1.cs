@@ -57,18 +57,7 @@ sealed class Stage07Act1States : StateMachineBuilder
         TrivialPhase()
             .DeactivateOnEnter<Hints>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage07Act1.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage07Act1.Trash);
     }
 }
 

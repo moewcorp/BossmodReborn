@@ -48,7 +48,7 @@ class SerGrinnauxStates : StateMachineBuilder
             .ActivateOnEnter<Rive>()
             .ActivateOnEnter<Heartstopper>()
             .ActivateOnEnter<ThunderThrust>()
-            .Raw.Update = () => module.Enemies(SerGrinnaux.Bosses).All(x => x.IsDeadOrDestroyed);
+            .Raw.Update = () => AllDeadOrDestroyed(SerGrinnaux.Bosses);
     }
 }
 
@@ -60,18 +60,19 @@ public class SerGrinnaux(WorldState ws, Actor primary) : BossModule(ws, primary,
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Bosses));
+        Arena.Actors(this, Bosses);
         Arena.Actors(Enemies((uint)OID.IshgardianSteelChain), Colors.Object);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        for (var i = 0; i < hints.PotentialTargets.Count; ++i)
+        var count = hints.PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
         {
             var e = hints.PotentialTargets[i];
-            e.Priority = (OID)e.Actor.OID switch
+            e.Priority = e.Actor.OID switch
             {
-                OID.IshgardianSteelChain => 1,
+                (uint)OID.IshgardianSteelChain => 1,
                 _ => 0
             };
         }

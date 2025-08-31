@@ -138,7 +138,7 @@ public class Grynewaht(WorldState ws, Actor primary) : BossModule(ws, primary, d
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 
     protected override void UpdateModule()

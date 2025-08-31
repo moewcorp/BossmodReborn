@@ -96,7 +96,7 @@ public sealed class Ceto(WorldState ws, Actor primary) : SimpleBossModule(ws, pr
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

@@ -124,13 +124,14 @@ public unsafe struct ActionEffects
         set => _effects[index] = value;
     }
 
-    public Span<ActionEffect> AsSpan()
+    public readonly Span<ActionEffect> AsSpan()
     {
-        var span = MemoryMarshal.CreateSpan(ref _effects[0], MaxCount);
-        return MemoryMarshal.Cast<ulong, ActionEffect>(span);
+        ref var first = ref Unsafe.AsRef(in _effects[0]);
+        var raw = MemoryMarshal.CreateSpan(ref first, MaxCount);
+        return MemoryMarshal.Cast<ulong, ActionEffect>(raw);
     }
 
-    public ReadOnlySpan<ActionEffect> ValidEffects()
+    public readonly ReadOnlySpan<ActionEffect> ValidEffects()
     {
         var span = AsSpan();
         var count = 0;
@@ -145,6 +146,24 @@ public unsafe struct ActionEffects
         }
 
         return span[..count];
+    }
+
+    public override readonly string ToString()
+    {
+        var effects = ValidEffects();
+        var len = effects.Length;
+        if (effects.Length == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.Append(effects[0].Type);
+
+        for (var i = 1; i < len; ++i)
+        {
+            sb.Append(", ");
+            sb.Append(effects[i].Type);
+        }
+        return sb.ToString();
     }
 }
 

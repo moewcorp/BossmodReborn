@@ -32,18 +32,7 @@ sealed class D040VanguardAerostat2States : StateMachineBuilder
             .ActivateOnEnter<IncendiaryRing>()
             .ActivateOnEnter<Electrobeam>()
             .ActivateOnEnter<SpreadShot>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D040VanguardAerostat2.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D040VanguardAerostat2.Trash);
     }
 }
 
@@ -86,7 +75,7 @@ public sealed class D040VanguardAerostat2(WorldState ws, Actor primary) : BossMo
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

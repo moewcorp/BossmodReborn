@@ -26,18 +26,7 @@ sealed class D90ForestWoolbackStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Thunderball>()
             .ActivateOnEnter<SweepingGouge>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D90ForestWoolback.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D90ForestWoolback.Trash);
     }
 }
 
@@ -103,7 +92,7 @@ public sealed class D90ForestWoolback(WorldState ws, Actor primary) : BossModule
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

@@ -114,7 +114,7 @@ public class D292MagitekGunship(WorldState ws, Actor primary) : BossModule(ws, p
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(trash));
+        Arena.Actors(this, trash);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

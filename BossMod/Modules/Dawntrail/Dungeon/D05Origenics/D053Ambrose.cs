@@ -317,6 +317,6 @@ public sealed class D053Ambrose(WorldState ws, Actor primary) : BossModule(ws, p
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 }

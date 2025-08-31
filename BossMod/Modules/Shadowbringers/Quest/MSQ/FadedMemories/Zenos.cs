@@ -44,7 +44,7 @@ public class ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, prima
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(swords));
+        Arena.Actors(this, swords);
     }
 
     protected override bool CheckPull()

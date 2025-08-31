@@ -224,6 +224,6 @@ public class D063ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, p
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(swords));
+        Arena.Actors(this, swords);
     }
 }

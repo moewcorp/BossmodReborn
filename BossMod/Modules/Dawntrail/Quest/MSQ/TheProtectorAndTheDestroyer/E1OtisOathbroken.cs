@@ -90,6 +90,6 @@ public sealed class OtisOathbroken(WorldState ws, Actor primary) : BossModule(ws
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(all));
+        Arena.Actors(this, all);
     }
 }

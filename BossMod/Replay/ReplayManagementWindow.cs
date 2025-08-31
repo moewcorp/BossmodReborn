@@ -211,9 +211,18 @@ public sealed class ReplayManagementWindow : UIWindow
     {
         var map = new Dictionary<uint, bool>();
 
-        uint[] alwaysImportantDuties = [280u, 539u, 694u, 788u, 908u, 1006u, 700u, 736u, 779u, 878u, 879u, 946u, 947u, 979u, 980u,
-        801u, 807u, 809u, 811u, 873u, 877u, 881u, 884u, 937u, 939u, 941u, 943u];
-        for (var i = 0; i < 27; ++i)
+        uint[] alwaysImportantDuties =
+        [
+            280u, 539u, 694u, 788u, 908u,
+            1006u, 700u, 736u, 779u, 878u,
+            879u, 946u, 947u, 979u, 980u,
+            801u, 807u, 809u, 811u, 873u,
+            877u, 881u, 884u, 937u, 939u,
+            941u, 943u, 993u, 1060u, 819u,
+            909u, 688u, 745u, 268u, 276u,
+            586u
+        ];
+        for (var i = 0; i < 36; ++i)
         {
             map[alwaysImportantDuties[i]] = true;
         }
@@ -248,6 +257,7 @@ public sealed class ReplayManagementWindow : UIWindow
         AddRange(map, 952u, 957u); // ocean fishing
         AddRange(map, 967u, 978u); // crystalline conflict
         AddRange(map, 1012u, 1014u); // tutorial
+        AddRange(map, 1046u, 1057u); // crystalline conflict
 
         // check modules for WIP and non existing
         foreach (var module in BossModuleRegistry.RegisteredModules.Values)

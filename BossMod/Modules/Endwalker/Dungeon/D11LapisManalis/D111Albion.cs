@@ -51,9 +51,25 @@ sealed class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module
     private readonly Stampede[] _stampedes = [default, default];
     private readonly List<AOEInstance> _aoes = new(2);
     private int numActiveStampedes;
-    private static readonly uint[] animals = [(uint)OID.WildBeasts1, (uint)OID.WildBeasts2, (uint)OID.WildBeasts3, (uint)OID.WildBeasts4];
+    private readonly List<Actor> animals = new(40);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID is (uint)OID.WildBeasts1 or (uint)OID.WildBeasts2 or (uint)OID.WildBeasts3 or (uint)OID.WildBeasts4)
+        {
+            animals.Add(actor);
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if (actor.OID is (uint)OID.WildBeasts1 or (uint)OID.WildBeasts2 or (uint)OID.WildBeasts3 or (uint)OID.WildBeasts4)
+        {
+            animals.Remove(actor);
+        }
+    }
 
     public override void OnEventEnvControl(byte index, uint state)
     {
@@ -109,13 +125,12 @@ sealed class WildlifeCrossing(BossModule module) : Components.GenericAOEs(module
                 return;
             }
 
-            var beasts = Module.Enemies(animals);
-            var count = beasts.Count;
+            var count = animals.Count;
 
             HashSet<Actor> updatedBeasts = [.. s.Beasts];
             for (var j = 0; j < count; ++j)
             {
-                var b = beasts[j];
+                var b = animals[j];
                 if (b.Position.InRect(s.Position, s.Rotation, default, 10f, 5f))
                 {
                     updatedBeasts.Add(b);

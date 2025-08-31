@@ -335,7 +335,7 @@ class VishapStates : StateMachineBuilder
 public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(default, 245f), ScrollingBounds.Bounds)
 {
     // vishap doesn't start targetable
-    private static readonly uint[] opponents = [(uint)OID.HordeWyvern1, (uint)OID.HordeWyvern2, (uint)OID.HordeWyvern3, (uint)OID.HordeWyvern4, (uint)OID.HordeWyvern5,
+    private static readonly uint[] all = [(uint)OID.HordeWyvern1, (uint)OID.HordeWyvern2, (uint)OID.HordeWyvern3, (uint)OID.HordeWyvern4, (uint)OID.HordeWyvern5,
     (uint)OID.HordeWyvern6, (uint)OID.HordeWyvern7, (uint)OID.HordeWyvern8, (uint)OID.HordeWyvern8, (uint)OID.HordeWyvern9, (uint)OID.HordeWyvern10, (uint)OID.HordeDragonfly1,
     (uint)OID.HordeDragonfly2, (uint)OID.HordeDragonfly3, (uint)OID.HordeDragonfly4, (uint)OID.HordeDragonfly5, (uint)OID.HordeDragonfly6, (uint)OID.HordeDragonfly7,
     (uint)OID.HordeDragonfly8, (uint)OID.HordeAevis1, (uint)OID.HordeAevis2, (uint)OID.HordeAevis3, (uint)OID.HordeAevis4, (uint)OID.HordeAevis5, (uint)OID.HordeAevis6,
@@ -347,7 +347,7 @@ public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(opponents));
+        Arena.Actors(this, all);
         Arena.Actor(PrimaryActor, allowDeadAndUntargetable: true);
     }
 }

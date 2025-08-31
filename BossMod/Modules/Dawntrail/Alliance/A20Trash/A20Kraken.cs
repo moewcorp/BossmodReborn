@@ -121,7 +121,8 @@ public sealed class A20Kraken(WorldState ws, Actor primary) : BossModule(ws, pri
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(TrashP1));
-        Arena.Actors(Enemies(TrashP2));
+        var m = this;
+        Arena.Actors(m, TrashP1);
+        Arena.Actors(m, TrashP2);
     }
 }

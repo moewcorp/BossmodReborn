@@ -58,6 +58,6 @@ public sealed class A10VanguardPathfinder(WorldState ws, Actor primary) : BossMo
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(Enemies(Trash));
+        Arena.Actors(this, Trash);
     }
 }

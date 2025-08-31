@@ -142,18 +142,7 @@ sealed class Stage06Act2States : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<ColdStare>()
             .ActivateOnEnter<DreadGaze>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage06Act2.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage06Act2.Trash);
     }
 }
 

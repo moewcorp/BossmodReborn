@@ -30,41 +30,13 @@ sealed class D110AlbusGriffinStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<TransonicBlast>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D110AlbusGriffin.TrashP1);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(D110AlbusGriffin.TrashP1);
         TrivialPhase(1u)
             .ActivateOnEnter<Freefall>()
             .ActivateOnEnter<WindsOfWinter>()
             .ActivateOnEnter<WindsOfWinterStunHint>()
             .ActivateOnEnter<GoldenTalons>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(D110AlbusGriffin.TrashP1);
-                var count = enemies.Count;
-                var trashP1Destroyed = true;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDestroyed)
-                    {
-                        trashP1Destroyed = false;
-                    }
-                }
-                var albus = module.Enemies((uint)OID.AlbusGriffin);
-                return trashP1Destroyed && albus.Count != 0 && albus[0].IsDeadOrDestroyed;
-            };
+            .Raw.Update = () => AllDestroyed(D110AlbusGriffin.TrashP1) && (module.BossAlbusGriffin?.IsDeadOrDestroyed ?? true);
     }
 }
 
@@ -72,6 +44,13 @@ sealed class D110AlbusGriffinStates : StateMachineBuilder
 public sealed class D110AlbusGriffin(WorldState ws, Actor primary) : BossModule(ws, primary, new(47f, -570.5f), new ArenaBoundsRect(8.5f, 11.5f))
 {
     public static readonly uint[] TrashP1 = [(uint)OID.CaladriusMaturus, (uint)OID.Caladrius];
+    public Actor? BossAlbusGriffin;
+
+    protected override void UpdateModule()
+    {
+        BossAlbusGriffin ??= GetActor((uint)OID.AlbusGriffin);
+    }
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);

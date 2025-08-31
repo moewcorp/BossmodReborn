@@ -262,6 +262,6 @@ public sealed class D052Deceiver(WorldState ws, Actor primary) : BossModule(ws, 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies(adds));
+        Arena.Actors(this, adds);
     }
 }

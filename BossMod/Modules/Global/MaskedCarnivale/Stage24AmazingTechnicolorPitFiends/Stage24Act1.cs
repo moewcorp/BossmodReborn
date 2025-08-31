@@ -58,18 +58,7 @@ sealed class Stage24Act1States : StateMachineBuilder
             .ActivateOnEnter<RagingAxe>()
             .ActivateOnEnter<LightningSpark>()
             .ActivateOnEnter<Hints2>()
-            .Raw.Update = () =>
-            {
-                var enemies = module.Enemies(Stage24Act1.Trash);
-                var count = enemies.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var enemy = enemies[i];
-                    if (!enemy.IsDeadOrDestroyed)
-                        return false;
-                }
-                return true;
-            };
+            .Raw.Update = () => AllDeadOrDestroyed(Stage24Act1.Trash);
     }
 }
 
