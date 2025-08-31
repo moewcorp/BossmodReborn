@@ -374,7 +374,7 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
         if (obj == null)
             return;
 
-        var selfToObj = obj->Position - selfPos;
+        var selfToObj = (Vector3)obj->Position - selfPos;
         var dist = selfToObj.Length();
         var angle = Angle.FromDirection(new(selfToObj.XZ())) - refAngle;
         var visHalf = Angle.Asin(obj->HitboxRadius / dist);
