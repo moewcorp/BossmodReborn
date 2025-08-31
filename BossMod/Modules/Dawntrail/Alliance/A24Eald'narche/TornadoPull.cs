@@ -1,6 +1,6 @@
 namespace BossMod.Dawntrail.Alliance.A24Ealdnarche;
 
-sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TornadoPull, 16f, minDistance: 0.5f, kind: Kind.TowardsOrigin, stopAfterWall: true)
+sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TornadoPull, 16f, minDistance: 1f, kind: Kind.TowardsOrigin, stopAfterWall: true)
 {
     private readonly TornadoFlareBurst _aoe = module.FindComponent<TornadoFlareBurst>()!;
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
