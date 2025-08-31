@@ -146,6 +146,8 @@ public unsafe struct ActionEffects
 
         return span[..count];
     }
+
+    public override readonly string ToString() => string.Join(", ", this.Select(e => e.Type));
 }
 
 public static class ActionEffectParser
