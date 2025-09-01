@@ -10,6 +10,7 @@ public enum OID : uint
     VaultGarlic = 0x48BB, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    GoldyCat = 0x48B7, // R1.87
     Helper = 0x233C
 }
 
@@ -111,7 +112,7 @@ public sealed class Fastitocalon : SharedBoundsBoss
         lasercannons = Enemies((uint)OID.VaultLaserCannon);
     }
 
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultOnion, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.GoldyCat];
     public static readonly uint[] All = [(uint)OID.Fastitocalon, (uint)OID.VaultLaserCannon, .. bonusAdds];
     private readonly List<Actor> lasercannons;
 
@@ -134,7 +135,7 @@ public sealed class Fastitocalon : SharedBoundsBoss
                 (uint)OID.VaultEggplant => 5,
                 (uint)OID.VaultGarlic => 4,
                 (uint)OID.VaultTomato => 3,
-                (uint)OID.VaultQueen => 2,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 2,
                 (uint)OID.VaultLaserCannon => 1,
                 _ => 0
             };

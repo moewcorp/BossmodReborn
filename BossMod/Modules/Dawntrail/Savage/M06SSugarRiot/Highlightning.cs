@@ -36,7 +36,9 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
     public override void Update()
     {
         if (!active || AOE.Length != 0)
+        {
             return;
+        }
         var tempest = Module.Enemies((uint)OID.TempestPiece)[0];
         var angle = (int)Angle.FromDirection(tempest.Position - lastPosition).Deg;
         if (angle == 0)
@@ -46,14 +48,14 @@ sealed class Highlightning(BossModule module) : Components.GenericAOEs(module)
 
         WPos next = angle switch
         {
-            -149 or -150 or -90 => new(86.992f, 91.997f),
-            90 or 146 or 147 => new(114.977f, 91.997f),
-            >= -35 and <= -32 or 28 or 29 => new(99.992f, 114.997f),
+            -149 or -150 or -90 => new(87f, 92f),
+            90 or 146 or 147 => new(115f, 92f),
+            >= -35 and <= -32 or 28 or 29 => new(100f, 115f),
             _ => default
         };
         if (next != default)
         {
-            AOE = [new(circle, next, default, nextActivation)];
+            AOE = [new(circle, next.Quantized(), default, nextActivation)];
         }
 
         Module.FindComponent<LightningStormHint>()?.UpdateAOE();

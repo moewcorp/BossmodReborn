@@ -141,7 +141,7 @@ public sealed class Paeonia : SharedBoundsBoss
         seedlings = Enemies((uint)OID.PaeoniaSeedling);
     }
 
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultOnion, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
     public static readonly uint[] All = [(uint)OID.Paeonia, (uint)OID.PaeoniaSeedling, .. bonusAdds];
     private readonly List<Actor> seedlings;
 

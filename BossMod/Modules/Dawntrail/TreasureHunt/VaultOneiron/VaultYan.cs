@@ -118,7 +118,6 @@ sealed class VaultYanStates : StateMachineBuilder
     public VaultYanStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<CollectionEnd>()
             .ActivateOnEnter<Rush>()
             .ActivateOnEnter<CollectSacks>()
             .Raw.Update = () =>
@@ -129,8 +128,13 @@ sealed class VaultYanStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.VaultYan, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1060u, NameID = 14046u, Category = BossModuleInfo.Category.TreasureHunt, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 8)]
-public sealed class VaultYan(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.SilverSack, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1060u, NameID = 14046u, Category = BossModuleInfo.Category.TreasureHunt, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 8)]
+public sealed class VaultYan : SharedBoundsBoss
 {
+    public VaultYan(WorldState ws, Actor primary) : base(ws, primary)
+    {
+        ActivateComponent<CollectionEnd>();
+    }
+
     protected override bool CheckPull() => PrimaryActor.Renderflags == 0;
 }

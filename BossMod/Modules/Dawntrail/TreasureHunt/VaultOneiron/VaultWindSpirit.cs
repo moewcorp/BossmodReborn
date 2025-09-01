@@ -24,7 +24,7 @@ sealed class Leafcutter(BossModule module) : Components.SimpleAOEs(module, (uint
 sealed class Entangle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Entangle, 4f);
 sealed class StumpGust(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Stump, (uint)AID.Gust], 6f);
 sealed class Whipwind(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Whipwind, new AOEShapeRect(60f, 20f));
-sealed class ChangelessWinds(BossModule module) : Components.BaitAwayCast(module, (uint)AID.ChangelessWinds, new AOEShapeRect(40f, 4f), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
+sealed class ChangelessWinds(BossModule module) : Components.BaitAwayCast(module, (uint)AID.ChangelessWinds, new AOEShapeRect(40f, 4f), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster, endsOnCastEvent: true);
 sealed class WhirlingGaol(BossModule module) : Components.RaidwideCast(module, (uint)AID.WhirlingGaol);
 
 sealed class VaultWindSpiritStates : StateMachineBuilder

@@ -10,6 +10,8 @@ public enum OID : uint
     VaultGarlic = 0x48BB, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    GoldyCat = 0x48B7, // R1.87
+    Vaultkeeper = 0x48B8, // R2.0
     Helper = 0x233C
 }
 
@@ -28,6 +30,9 @@ public enum AID : uint
     PredatorialInstinct = 43684, // OldBitterEye->self, 4.0s cast, range 45 circle, pull 50, between hitboxes
     HundredStoneSwing = 43676, // OldBitterEye->self, 1.5s cast, range 13 circle
 
+    AutoAttack2 = 871, // Vaultkeeper->player, no cast, single-target
+    Thunderlance = 43727, // Vaultkeeper->self, 3.5s cast, range 20 width 3 rect
+    LanceSwing = 43726, // Vaultkeeper->self, 4.0s cast, range 8 circle
     TearyTwirl = 32301, // VaultOnion->self, 3.5s cast, range 7 circle
     PluckAndPrune = 32302, // VaultEggplant->self, 3.5s cast, range 7 circle
     PungentPirouette = 32303, // VaultGarlic->self, 3.5s cast, range 7 circle
@@ -38,7 +43,7 @@ public enum AID : uint
 
 sealed class TenStoneSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TenStoneSwing, 11f);
 sealed class LumberingLeap(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LumberingLeap, 10f);
-sealed class HundredStoneSmash(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HundredStoneSmash, new AOEShapeRect(65f, 4f), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
+sealed class HundredStoneSmash(BossModule module) : Components.BaitAwayCast(module, (uint)AID.HundredStoneSmash, new AOEShapeRect(65f, 4f), tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster, endsOnCastEvent: true);
 sealed class HundredStoneSwipe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HundredStoneSwipe, new AOEShapeCone(40f, 30f.Degrees()));
 sealed class HyperchargedGlower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HyperchargedGlower, new AOEShapeRect(20f, 3.5f));
 sealed class Glower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Glower, new AOEShapeRect(19f, 3.5f));
@@ -57,10 +62,16 @@ sealed class HundredStoneSwingEyeOfTheThunderstorm(BossModule module) : Componen
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.PredatorialInstinct)
+        switch (spell.Action.ID)
         {
-            _aoe = [new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 4.6d))];
+            case (uint)AID.PredatorialInstinct:
+                AddAOE(circle, 4.6d);
+                break;
+            case (uint)AID.EyeOfTheThunderstorm: // update AOE incase prediction failed (for example if target was somehow exactly in the middle)
+                AddAOE(donut);
+                break;
         }
+        void AddAOE(AOEShape shape, double delay = default) => _aoe = [new(shape, spell.LocXZ, default, Module.CastFinishAt(spell, delay))];
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
@@ -72,9 +83,9 @@ sealed class HundredStoneSwingEyeOfTheThunderstorm(BossModule module) : Componen
                 _aoe = [];
                 break;
             case (uint)AID.LumberingLeap:
-                if ((++NumCasts & 1) == 0)
+                if (spell.LocXZ == new WPos(99.99231f, 99.99231f))
                 {
-                    return; // boss only does donut on uneven number of leaps
+                    return; // boss only does another mechanic if jumping middle
                 }
                 _aoe = [new(donut, spell.LocXZ, default, Module.CastFinishAt(spell, 7.1d))];
                 break;
@@ -84,6 +95,8 @@ sealed class HundredStoneSwingEyeOfTheThunderstorm(BossModule module) : Componen
 
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
+sealed class Thunderlance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thunderlance, new AOEShapeRect(20f, 1.5f));
+sealed class LanceSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LanceSwing, 8f);
 
 sealed class OldBitterEyeStates : StateMachineBuilder
 {
@@ -101,6 +114,8 @@ sealed class OldBitterEyeStates : StateMachineBuilder
             .ActivateOnEnter<PredatorialInstinct>()
             .ActivateOnEnter<HundredStoneSwingEyeOfTheThunderstorm>()
             .ActivateOnEnter<MandragoraAOEs>()
+            .ActivateOnEnter<Thunderlance>()
+            .ActivateOnEnter<LanceSwing>()
             .Raw.Update = () => AllDeadOrDestroyed(OldBitterEye.All);
     }
 }
@@ -113,7 +128,7 @@ public sealed class OldBitterEye : SharedBoundsBoss
         eyeclops = Enemies((uint)OID.VaultEyeclops);
     }
 
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultOnion, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.Vaultkeeper, (uint)OID.GoldyCat];
     public static readonly uint[] All = [(uint)OID.OldBitterEye, (uint)OID.VaultEyeclops, .. bonusAdds];
     private readonly List<Actor> eyeclops;
 
@@ -132,11 +147,12 @@ public sealed class OldBitterEye : SharedBoundsBoss
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch
             {
-                (uint)OID.VaultOnion => 6,
-                (uint)OID.VaultEggplant => 5,
-                (uint)OID.VaultGarlic => 4,
-                (uint)OID.VaultTomato => 3,
-                (uint)OID.VaultQueen => 2,
+                (uint)OID.VaultOnion => 7,
+                (uint)OID.VaultEggplant => 6,
+                (uint)OID.VaultGarlic => 5,
+                (uint)OID.VaultTomato => 4,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 3,
+                (uint)OID.Vaultkeeper => 2,
                 (uint)OID.VaultEyeclops => 1,
                 _ => 0
             };
