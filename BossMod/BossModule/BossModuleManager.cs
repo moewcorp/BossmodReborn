@@ -75,14 +75,30 @@ public sealed class BossModuleManager : IDisposable
                 if (prim.IsDestroyed)
                 {
                     PendingModules.RemoveAt(i);
+                    m.Dispose();
                     continue;
                 }
-                if ((playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxSq)
+
+                if ((playerPos - prim.PosRot.AsVector3()).LengthSquared() <= maxSq)
                 {
-                    LoadedModules.Add(m);
-                    Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
-                    ModuleLoaded.Fire(m);
-                    PendingModules.RemoveAt(i);
+                    var countL = LoadedModules.Count;
+                    var oid = prim.OID;
+                    var exists = false;
+                    for (var j = 0; j < countL; ++j)
+                    {
+                        if (oid == LoadedModules[j].PrimaryActor.OID) // mob is likely a trash mob and there is already a loaded module for it
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists)
+                    {
+                        LoadedModules.Add(m);
+                        Service.Log($"[BMM] Boss module '{m.GetType()}' moved from pending to loaded for actor {m.PrimaryActor}");
+                        ModuleLoaded.Fire(m);
+                        PendingModules.RemoveAt(i);
+                    }
                 }
             }
 
@@ -90,12 +106,10 @@ public sealed class BossModuleManager : IDisposable
             {
                 var m = LoadedModules[i];
                 var wasActive = m.StateMachine.ActiveState != null;
-                var allowUpdate = wasActive || !LoadedModules.Any(other => other.StateMachine.ActiveState != null && other.GetType() == m.GetType()); // hack: forbid activating multiple modules of the same type
                 bool isActive;
                 try
                 {
-                    if (allowUpdate)
-                        m.Update();
+                    m.Update();
                     isActive = m.StateMachine.ActiveState != null;
                 }
                 catch (Exception ex)
@@ -163,10 +177,10 @@ public sealed class BossModuleManager : IDisposable
         }
     }
 
-    private void LoadModule(BossModule m)
+    private void LoadModule(BossModule m, bool oidExists = false)
     {
         var maxDist = Config.MaxLoadDistance;
-        if (WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
+        if (!oidExists && WorldState.Party[0]?.PosRot.AsVector3() is Vector3 playerPos && (playerPos - m.PrimaryActor.PosRot.AsVector3()).LengthSquared() <= maxDist * maxDist)
         {
             LoadedModules.Add(m);
             Service.Log($"[BMM] Boss module '{m.GetType()}' loaded for actor {m.PrimaryActor}");
@@ -217,9 +231,14 @@ public sealed class BossModuleManager : IDisposable
             for (var i = 0; i < count; ++i)
             {
                 var module = LoadedModules[i];
-                if (module.PrimaryActor.OID == actor.OID && module.PrimaryActor.InstanceID == actor.InstanceID) // module already exists, but actor reference was no longer valid (eg due to teleports at Necron)
+                if (module.PrimaryActor.OID == actor.OID)
                 {
-                    module.PrimaryActor = actor;
+                    if (module.PrimaryActor.InstanceID == actor.InstanceID)  // module already exists, but actor reference was no longer valid (eg due to teleports at Necron)
+                    {
+                        module.PrimaryActor = actor;
+                        return;
+                    }
+                    LoadModule(m, true); // module for oid already loaded, usually means its a trash mob
                     return;
                 }
             }
