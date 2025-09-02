@@ -80,7 +80,7 @@ sealed class ReplayDetailsWindow : UIWindow
 
         DrawControlRow();
         DrawTimelineRow();
-        ImGui.TextUnformatted($"Num loaded modules: {_mgr.LoadedModules.Count}, num active modules: {_mgr.LoadedModules.Count(m => m.StateMachine.ActiveState != null)}, active module: {_mgr.ActiveModule?.GetType()}, zone module: {_zmm.ActiveModule?.GetType()}");
+        ImGui.TextUnformatted($"Num loaded modules: {_mgr.LoadedModules.Count}, num active modules: {_mgr.LoadedModules.Count(m => m.StateMachine.ActiveState != null)}, num pending modules: {_mgr.PendingModules.Count}, active module: {_mgr.ActiveModule?.GetType()}, zone module: {_zmm.ActiveModule?.GetType()}");
         if (_zmm.ActiveModule != null)
         {
             // TODO: reconsider where this is all drawn...

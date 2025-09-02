@@ -51,7 +51,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
-        if (_kbs[slot].Length != 0)
+        if (_kbs[slot] != null)
         {
             var count = _aoe1.AOEs.Count;
             var aoes = CollectionsMarshal.AsSpan(_aoe1.AOEs);
@@ -123,7 +123,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kbs[slot].Length != 0)
+        if (_kbs[slot] is var kbs && kbs != null && kbs.Length != 0)
         {
             ref var kb = ref _kbs[slot][0];
             var attract = kb.Kind == Kind.TowardsOrigin;

@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.TreasureHunt.VaultOneiron.VaultYan;
 
 public enum OID : uint
 {
-    VaultYan = 0x4902,
+    VaultYan = 0x4902, // R1.0
     SilverSack = 0x1EBE48, // R0.5
     GoldSack = 0x1EBE47 // R0.5
 }
@@ -98,33 +98,14 @@ sealed class CollectSacks(BossModule module) : Components.GenericTowers(module)
     }
 }
 
-sealed class CollectionEnd(BossModule module) : BossComponent(module)
-{
-    public bool End;
-
-    public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
-    {
-        if (updateID == 0x6u && param1 == 0xFFFFFFFF)
-        {
-            End = true;
-        }
-    }
-}
-
 sealed class VaultYanStates : StateMachineBuilder
 {
-    private CollectionEnd? collect;
-
     public VaultYanStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<Rush>()
             .ActivateOnEnter<CollectSacks>()
-            .Raw.Update = () =>
-            {
-                collect ??= module.FindComponent<CollectionEnd>();
-                return collect!.End || module.WorldState.CurrentCFCID != 1060u;
-            };
+            .Raw.Update = () => AllDestroyed(VaultYan.Sacks);
     }
 }
 
@@ -133,8 +114,16 @@ public sealed class VaultYan : SharedBoundsBoss
 {
     public VaultYan(WorldState ws, Actor primary) : base(ws, primary)
     {
-        ActivateComponent<CollectionEnd>();
+        goldsacks = Enemies((uint)OID.GoldSack);
     }
 
-    protected override bool CheckPull() => PrimaryActor.Renderflags == 0;
+    public static readonly uint[] Sacks = [(uint)OID.SilverSack, (uint)OID.GoldSack];
+    private readonly List<Actor> goldsacks;
+
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actors(goldsacks, Colors.Danger, true);
+    }
+
+    protected override bool CheckPull() => true;
 }

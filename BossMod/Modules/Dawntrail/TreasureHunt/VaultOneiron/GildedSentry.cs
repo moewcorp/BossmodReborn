@@ -20,6 +20,8 @@ public enum AID : uint
     AlexandrianThunderVisual = 43720, // GildedSentry->self, 2.5+0,5s cast, single-target
     AlexandrianThunder = 43721, // Helper->location, 3.0s cast, range 6 circle
     SkeweringLance = 43725, // GildedSentry->player, 5.0s cast, single-target, tankbuster
+    AlexandrianThunderIIIVisual = 43722, // GildedSentry->self, 4.5+0,5s cast, single-target
+    AlexandrianThunderIII = 43723, // Helper->location, 5.0s cast, range 35 circle, raidwide
 
     Thunderlance = 43727, // Vaultkeeper->self, 3.5s cast, range 20 width 3 rect
     LanceSwing = 43726, // Vaultkeeper->self, 4.0s cast, range 8 circle
@@ -30,6 +32,7 @@ sealed class AlexandrianThunder(BossModule module) : Components.SimpleAOEs(modul
 sealed class CrossLightning(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrossLightning, new AOEShapeCross(50f, 5f));
 sealed class Electray(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Electray, new AOEShapeRect(75f, 2f));
 sealed class SkeweringLance(BossModule module) : Components.SingleTargetCast(module, (uint)AID.SkeweringLance);
+sealed class AlexandrianThunderIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.AlexandrianThunderIII);
 
 sealed class Thunderlance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thunderlance, new AOEShapeRect(20f, 1.5f));
 sealed class LanceSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LanceSwing, 8f);
@@ -43,6 +46,7 @@ sealed class GildedSentryStates : StateMachineBuilder
             .ActivateOnEnter<CrossLightning>()
             .ActivateOnEnter<Electray>()
             .ActivateOnEnter<SkeweringLance>()
+            .ActivateOnEnter<AlexandrianThunderIII>()
             .ActivateOnEnter<Thunderlance>()
             .ActivateOnEnter<LanceSwing>()
             .Raw.Update = () => AllDeadOrDestroyed(GildedSentry.All);

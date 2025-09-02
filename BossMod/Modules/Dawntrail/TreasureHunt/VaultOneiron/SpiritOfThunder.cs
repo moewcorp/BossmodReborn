@@ -100,8 +100,8 @@ sealed class SpiritOfThunderStates : StateMachineBuilder
             .ActivateOnEnter<PowerLine>()
             .ActivateOnEnter<Electrowave>()
             .ActivateOnEnter<ElectricVortex>()
-            .ActivateOnEnter<HighVoltageElectray>()
             .ActivateOnEnter<HypercondensedThunder>()
+            .ActivateOnEnter<MandragoraAOEs>()
             .Raw.Update = () => AllDeadOrDestroyed(SpiritOfThunder.All);
     }
 }

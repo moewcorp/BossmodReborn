@@ -10,12 +10,14 @@ public enum OID : uint
     VaultEggplant = 0x48BA, // R0.84, icon 2, needs to be killed in order from 1 to 5 for maximum rewards
     VaultGarlic = 0x48BB, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
-    VaultQueen = 0x48BD // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    GoldyCat = 0x48B7, // R1.87
+    Vaultkeeper = 0x48B8 // R2.0
 }
 
 public enum AID : uint
 {
-    AutoAttack = 872, // VaultCrab/VaultScorpion/VaultGargantuan->player, no cast, single-target
+    AutoAttack1 = 872, // VaultCrab/VaultScorpion/VaultGargantuan->player, no cast, single-target
 
     SmallClaw = 43611, // VaultCrab->player, no cast, single-target
     MoltenSilk1 = 43612, // VaultScorpion->self, 3.0s cast, range 9 270-degree cone
@@ -27,6 +29,9 @@ public enum AID : uint
     Spin = 43619, // VaultGargantuan->self, 3.5s cast, range 11 circle
     Mash = 43615, // VaultGargantuan->player, 5.0s cast, single-target, tankbuster
 
+    AutoAttack2 = 871, // Vaultkeeper->player, no cast, single-target
+    Thunderlance = 43727, // Vaultkeeper->self, 3.5s cast, range 20 width 3 rect
+    LanceSwing = 43726, // Vaultkeeper->self, 4.0s cast, range 8 circle
     TearyTwirl = 32301, // VaultOnion->self, 3.5s cast, range 7 circle
     PluckAndPrune = 32302, // VaultEggplant->self, 3.5s cast, range 7 circle
     PungentPirouette = 32303, // VaultGarlic->self, 3.5s cast, range 7 circle
@@ -44,6 +49,8 @@ sealed class Brushfire(BossModule module) : Components.RaidwideCast(module, (uin
 
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
+sealed class Thunderlance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thunderlance, new AOEShapeRect(20f, 1.5f));
+sealed class LanceSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LanceSwing, 8f);
 
 sealed class VaultGargantuanStates : StateMachineBuilder
 {
@@ -56,6 +63,8 @@ sealed class VaultGargantuanStates : StateMachineBuilder
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<Brushfire>()
+            .ActivateOnEnter<Thunderlance>()
+            .ActivateOnEnter<LanceSwing>()
             .ActivateOnEnter<MandragoraAOEs>()
             .Raw.Update = () => AllDestroyed(VaultGargantuan.All) && (module.BossGargantuan?.IsDeadOrDestroyed ?? true);
     }
@@ -64,9 +73,9 @@ sealed class VaultGargantuanStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.VaultCrab, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1060u, NameID = 13986u, Category = BossModuleInfo.Category.TreasureHunt, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 1)]
 public sealed class VaultGargantuan(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
 {
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
-    public static readonly uint[] Trash = [(uint)OID.VaultCrab, (uint)OID.VaultScorpion];
-    public static readonly uint[] All = [.. Trash, .. bonusAdds];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.GoldyCat, (uint)OID.Vaultkeeper];
+    private static readonly uint[] trash = [(uint)OID.VaultCrab, (uint)OID.VaultScorpion];
+    public static readonly uint[] All = [.. trash, .. bonusAdds];
 
     public Actor? BossGargantuan;
 
@@ -79,7 +88,7 @@ public sealed class VaultGargantuan(WorldState ws, Actor primary) : SharedBounds
     {
         Arena.Actor(BossGargantuan);
         var m = this;
-        Arena.Actors(m, Trash);
+        Arena.Actors(m, trash);
         Arena.Actors(m, bonusAdds, Colors.Vulnerable);
     }
 
@@ -91,11 +100,12 @@ public sealed class VaultGargantuan(WorldState ws, Actor primary) : SharedBounds
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch
             {
-                (uint)OID.VaultOnion => 5,
-                (uint)OID.VaultEggplant => 4,
-                (uint)OID.VaultGarlic => 3,
-                (uint)OID.VaultTomato => 2,
-                (uint)OID.VaultQueen => 1,
+                (uint)OID.VaultOnion => 6,
+                (uint)OID.VaultEggplant => 5,
+                (uint)OID.VaultGarlic => 4,
+                (uint)OID.VaultTomato => 3,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 2,
+                (uint)OID.Vaultkeeper => 1,
                 _ => 0
             };
         }

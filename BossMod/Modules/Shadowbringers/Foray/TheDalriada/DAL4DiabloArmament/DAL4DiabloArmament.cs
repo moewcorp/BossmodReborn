@@ -6,7 +6,7 @@ sealed class AethericBoomExplosionDiabolicGateVoidSystemsOverload(BossModule mod
 
 sealed class AdvancedNox(BossModule module) : Components.SimpleExaflare(module, 10f, (uint)AID.AdvancedNoxFirst, (uint)AID.AdvancedNoxRest, 10f, 1.1d, 5, 5, true);
 
-sealed class AccelerationBomb(BossModule module) : Components.StayMove(module, 2.5f)
+sealed class AccelerationBomb(BossModule module) : Components.StayMove(module, 2.5d)
 {
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
