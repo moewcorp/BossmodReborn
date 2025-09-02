@@ -11,6 +11,7 @@ public enum OID : uint
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
     GoldyCat = 0x48B7, // R1.87
+    Vaultkeeper = 0x48B8, // R2.0
     Helper = 0x233C
 }
 
@@ -38,6 +39,9 @@ public enum AID : uint
     CanyonVisual = 43671, // Fastitocalon->self, 4.0+1,0s cast, single-target
     Canyon = 43672, // Helper->self, 5.0s cast, range 45 circle
 
+    AutoAttack3 = 871, // Vaultkeeper->player, no cast, single-target
+    Thunderlance = 43727, // Vaultkeeper->self, 3.5s cast, range 20 width 3 rect
+    LanceSwing = 43726, // Vaultkeeper->self, 4.0s cast, range 8 circle
     TearyTwirl = 32301, // VaultOnion->self, 3.5s cast, range 7 circle
     PluckAndPrune = 32302, // VaultEggplant->self, 3.5s cast, range 7 circle
     PungentPirouette = 32303, // VaultGarlic->self, 3.5s cast, range 7 circle
@@ -86,6 +90,8 @@ sealed class Tremblor(BossModule module) : Components.ConcentricAOEs(module, _sh
     }
 }
 
+sealed class Thunderlance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thunderlance, new AOEShapeRect(20f, 1.5f));
+sealed class LanceSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LanceSwing, 8f);
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
 
@@ -100,6 +106,8 @@ sealed class FastitocalonStates : StateMachineBuilder
             .ActivateOnEnter<Earthshake>()
             .ActivateOnEnter<Canyon>()
             .ActivateOnEnter<MandragoraAOEs>()
+            .ActivateOnEnter<Thunderlance>()
+            .ActivateOnEnter<LanceSwing>()
             .Raw.Update = () => AllDeadOrDestroyed(Fastitocalon.All);
     }
 }
@@ -112,7 +120,7 @@ public sealed class Fastitocalon : SharedBoundsBoss
         lasercannons = Enemies((uint)OID.VaultLaserCannon);
     }
 
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.GoldyCat];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.Vaultkeeper, (uint)OID.GoldyCat];
     public static readonly uint[] All = [(uint)OID.Fastitocalon, (uint)OID.VaultLaserCannon, .. bonusAdds];
     private readonly List<Actor> lasercannons;
 
@@ -131,11 +139,12 @@ public sealed class Fastitocalon : SharedBoundsBoss
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch
             {
-                (uint)OID.VaultOnion => 6,
-                (uint)OID.VaultEggplant => 5,
-                (uint)OID.VaultGarlic => 4,
-                (uint)OID.VaultTomato => 3,
-                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 2,
+                (uint)OID.VaultOnion => 7,
+                (uint)OID.VaultEggplant => 6,
+                (uint)OID.VaultGarlic => 5,
+                (uint)OID.VaultTomato => 4,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 3,
+                (uint)OID.Vaultkeeper => 2,
                 (uint)OID.VaultLaserCannon => 1,
                 _ => 0
             };

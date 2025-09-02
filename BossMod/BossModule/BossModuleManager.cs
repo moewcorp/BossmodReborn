@@ -72,7 +72,7 @@ public sealed class BossModuleManager : IDisposable
             {
                 var m = PendingModules[i];
                 var prim = m.PrimaryActor;
-                if (prim.IsDestroyed)
+                if (prim.IsDeadOrDestroyed)
                 {
                     PendingModules.RemoveAt(i);
                     m.Dispose();

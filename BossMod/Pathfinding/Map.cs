@@ -168,22 +168,17 @@ public sealed class Map
             for (var x = 0; x < width; ++x)
             {
                 var posBase = posY + x * dx;
-                var isBlocked = false;
                 for (var i = 0; i < 4; ++i)
                 {
                     var pos = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
 
                     if (shape_(pos) <= 0f)
                     {
-                        isBlocked = true;
+                        var index = rowBaseIndex + x;
+                        var pixelMaxG = PixelMaxG[index];
+                        PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
                         break;
                     }
-                }
-                if (isBlocked)
-                {
-                    var index = rowBaseIndex + x;
-                    var pixelMaxG = PixelMaxG[index];
-                    PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
                 }
             }
         });

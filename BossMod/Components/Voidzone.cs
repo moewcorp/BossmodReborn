@@ -29,7 +29,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
             var forbidden = new List<Func<WPos, float>>();
             foreach (var s in Sources(Module))
                 forbidden.Add(ShapeDistance.Circle(s.Position.Quantized(), radius));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+            hints.TemporaryObstacles.Add(ShapeDistance.Union(forbidden));
         }
         else
         {
@@ -46,7 +46,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
                 forbiddenFarFarFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, 3f * MovementHintLength, radius));
                 forbiddenImminent.Add(ShapeDistance.Circle(s.Position, radius));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
+            hints.TemporaryObstacles.Add(ShapeDistance.Union(forbiddenImminent));
             hints.AddForbiddenZone(ShapeDistance.Union(forbiddenNearFuture), WorldState.FutureTime(1.1d));
             hints.AddForbiddenZone(ShapeDistance.Union(forbiddenSoon), WorldState.FutureTime(3d));
             hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFarFuture), WorldState.FutureTime(10d));

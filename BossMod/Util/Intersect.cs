@@ -17,6 +17,31 @@ public static class Intersect
     }
     public static float RayCircle(WPos rayOrigin, WDir rayDir, WPos circleCenter, float circleRadius) => RayCircle(rayOrigin - circleCenter, rayDir, circleRadius);
 
+    public static bool RayCircle(WDir rayOriginOffset, WDir rayDirNorm, float circleRadius, float maxDist)
+    {
+        var b = rayOriginOffset.Dot(rayDirNorm);
+        var c = rayOriginOffset.LengthSq() - circleRadius * circleRadius;
+        var discriminant = b * b - c;
+
+        if (discriminant < 0f)
+        {
+            return false;
+        }
+
+        var sqrtD = MathF.Sqrt(discriminant);
+        var t1 = -b - sqrtD;
+        var t2 = -b + sqrtD;
+
+        if (t1 >= 0 && t1 <= maxDist)
+        {
+            return true;
+        }
+        if (t2 >= 0 && t2 <= maxDist)
+        {
+            return true;
+        }
+        return false;
+    }
     // halfWidth is along X, halfHeight is along Z
     public static float RayAABB(WDir rayOriginOffset, WDir rayDir, float halfWidth, float halfHeight)
     {

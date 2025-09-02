@@ -32,7 +32,12 @@ public struct NavigationDecision
         // local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
         (Func<WPos, float>, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
         Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
-        if (hints.ForbiddenZones.Count != 0)
+        Func<WPos, float>[] localTemporaryObstacles = [.. hints.TemporaryObstacles];
+        if (localTemporaryObstacles.Length != 0)
+        {
+            RasterizeVoidzones(ctx.Map, localTemporaryObstacles);
+        }
+        if (localForbiddenZones.Length != 0)
         {
             RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
         }
@@ -41,7 +46,7 @@ public struct NavigationDecision
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
             if (ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
             {
-                if (hints.GoalZones.Count != 0)
+                if (localGoalZones.Length != 0)
                 {
                     RasterizeGoalZones(ctx.Map, localGoalZones);
                 }
@@ -403,6 +408,58 @@ public struct NavigationDecision
         map.MaxPriority = globalMaxPriority;
     }
     private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
+
+    const float Epsilon = 1e-5f;
+    static readonly float[] offsetsX = [0f, Epsilon, Epsilon, 1f - Epsilon, 1f - Epsilon];
+    static readonly float[] offsetsZ = [0f, Epsilon, 1f - Epsilon, Epsilon, 1f - Epsilon];
+
+    public static void RasterizeVoidzones(Map map, Func<WPos, float>[] zones)
+    {
+        var len = zones.Length;
+
+        var width = map.Width;
+        var height = map.Height;
+        var lenPixelMaxG = map.PixelMaxG.Length;
+
+        var resolution = map.Resolution;
+        var cushion = resolution * 0.5f;
+
+        var dy = map.LocalZDivRes * resolution * resolution;
+        var dx = dy.OrthoL();
+        var startPos = map.Center - (width >> 1) * dx - (height >> 1) * dy;
+
+        Parallel.For(0, height, y =>
+        {
+            var posY = startPos + y * dy;
+            var rowBaseIndex = y * width;
+
+            for (var x = 0; x < width; ++x)
+            {
+                var pixelIndex = rowBaseIndex + x;
+                var posBase = posY + x * dx;
+
+                for (var j = 0; j < len; ++j)
+                {
+                    var shape = zones[j];
+                    var inside = false;
+                    for (var i = 0; i < 5; ++i)
+                    {
+                        var sample = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
+                        if (shape(sample) <= (i == 0 ? cushion : 0f))
+                        {
+                            inside = true;
+                            break;
+                        }
+                    }
+                    if (inside)
+                    {
+                        map.PixelMaxG[pixelIndex] = -1f;
+                        break;
+                    }
+                }
+            }
+        });
+    }
 
     private static float CalculateMaxG((Func<WPos, float> shapeDistance, float g)[] zones, WPos p, float cushion = default)
     {
