@@ -10,12 +10,14 @@ public enum OID : uint
     VaultGarlic = 0x48BB, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    GoldyCat = 0x48B7, // R1.87
+    Vaultkeeper = 0x48B8, // R2.0
     Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    AutoAttack = 43767, // Hexapod->player, no cast, single-target
+    AutoAttack1 = 43767, // Hexapod->player, no cast, single-target
 
     MagneticGenesisVisual = 43749, // Hexapod->self, 4.0s cast, single-target
     MagneticGenesis = 43750, // Helper->self, 4.0s cast, range 40 circle, apply positive/negative charges
@@ -41,6 +43,9 @@ public enum AID : uint
     Electromine = 43771, // Mine->self, no cast, range 5 circle, stepped into mine
     AntiHeroArtillery = 43768, // Hexapod->player, 5.0s cast, range 5 circle, tankbuster
 
+    AutoAttack2 = 871, // Vaultkeeper->player, no cast, single-target
+    Thunderlance = 43727, // Vaultkeeper->self, 3.5s cast, range 20 width 3 rect
+    LanceSwing = 43726, // Vaultkeeper->self, 4.0s cast, range 8 circle
     TearyTwirl = 32301, // VaultOnion->self, 3.5s cast, range 7 circle
     PluckAndPrune = 32302, // VaultEggplant->self, 3.5s cast, range 7 circle
     PungentPirouette = 32303, // VaultGarlic->self, 3.5s cast, range 7 circle
@@ -322,6 +327,8 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
 
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 7f);
+sealed class Thunderlance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Thunderlance, new AOEShapeRect(20f, 1.5f));
+sealed class LanceSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LanceSwing, 8f);
 
 sealed class HexapodStates : StateMachineBuilder
 {
@@ -339,6 +346,8 @@ sealed class HexapodStates : StateMachineBuilder
             .ActivateOnEnter<PoleShift>()
             .ActivateOnEnter<AntiHeroArtillery>()
             .ActivateOnEnter<MandragoraAOEs>()
+            .ActivateOnEnter<Thunderlance>()
+            .ActivateOnEnter<LanceSwing>()
             .Raw.Update = () => AllDeadOrDestroyed(Hexapod.All);
     }
 }
@@ -346,7 +355,7 @@ sealed class HexapodStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.Hexapod, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1060u, NameID = 14010u, Category = BossModuleInfo.Category.TreasureHunt, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 14)]
 public sealed class Hexapod(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
 {
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.Vaultkeeper, (uint)OID.GoldyCat];
     public static readonly uint[] All = [(uint)OID.Hexapod, .. bonusAdds];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
@@ -363,11 +372,12 @@ public sealed class Hexapod(WorldState ws, Actor primary) : SharedBoundsBoss(ws,
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch
             {
-                (uint)OID.VaultOnion => 5,
-                (uint)OID.VaultEggplant => 4,
-                (uint)OID.VaultGarlic => 3,
-                (uint)OID.VaultTomato => 2,
-                (uint)OID.VaultQueen => 1,
+                (uint)OID.VaultOnion => 6,
+                (uint)OID.VaultEggplant => 5,
+                (uint)OID.VaultGarlic => 4,
+                (uint)OID.VaultTomato => 3,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 2,
+                (uint)OID.Vaultkeeper => 1,
                 _ => 0
             };
         }

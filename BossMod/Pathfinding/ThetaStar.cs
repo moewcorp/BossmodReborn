@@ -60,9 +60,13 @@ public sealed class ThetaStar
         _map = map;
         var numPixels = map.Width * map.Height;
         if (_nodes.Length < numPixels)
+        {
             _nodes = new Node[numPixels];
+        }
         else
-            Array.Fill(_nodes, default, 0, numPixels);
+        {
+            new Span<Node>(_nodes, 0, numPixels).Clear();
+        }
         _openList.Clear();
         _deltaGSide = map.Resolution * gMultiplier;
         _deltaGDiag = _deltaGSide * 1.414214f;

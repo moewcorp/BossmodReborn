@@ -385,6 +385,7 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
         var polygon = offset != default ? Polygon.Offset(offset) : Polygon;
         var map = new Pathfinding.Map(MapResolution, default, HalfWidth, HalfHeight);
         var pixels = map.PixelMaxG;
+
         var width = map.Width;
         var height = map.Height;
         var resolution = map.Resolution;
@@ -421,17 +422,15 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
                 var pos = posY + x * dx;
 
                 var relativeCenter = new WDir(pos.X, pos.Z);
-                var allInside = true;
 
                 for (var i = 0; i < 4; ++i)
                 {
                     if (!polygon.Contains(relativeCenter + sampleOffsets[i]))
                     {
-                        allInside = false;
+                        pixels[offset] = -1f;
                         break;
                     }
                 }
-                pixels[offset] = allInside ? float.MaxValue : -1f;
             }
         });
 

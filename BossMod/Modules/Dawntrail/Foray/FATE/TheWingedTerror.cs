@@ -15,6 +15,7 @@ public enum OID : uint
 public enum AID : uint
 {
     AutoAttack = 42900, // Boss->player, no cast, single-target
+    Teleport = 44481, // Boss->location, no cast, single-target
 
     GaleCannon = 41274, // Boss->self, 5.0s cast, range 40 width 10 rect
     Petrisphere = 41272, // Boss->self, 4.0s cast, single-target

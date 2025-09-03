@@ -134,8 +134,10 @@ public struct NavigationDecision
         map.MaxG = clusterG;
 
         if (scratch.Length < lenPixelMaxG)
+        {
             scratch = new float[lenPixelMaxG];
-        Array.Fill(scratch, float.MaxValue);
+        }
+        new Span<float>(scratch, 0, lenPixelMaxG).Fill(float.MaxValue);
 
         var dy = map.LocalZDivRes * resolution * resolution;
         var dx = dy.OrthoL();
@@ -436,27 +438,27 @@ public struct NavigationDecision
             for (var x = 0; x < width; ++x)
             {
                 var pixelIndex = rowBaseIndex + x;
-                var posBase = posY + x * dx;
 
+                if (map.PixelMaxG[pixelIndex] < 0f) // pixel is already blocked by arena bounds
+                {
+                    continue;
+                }
+                var posBase = posY + x * dx;
                 for (var j = 0; j < len; ++j)
                 {
                     var shape = zones[j];
-                    var inside = false;
                     for (var i = 0; i < 5; ++i)
                     {
                         var sample = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
                         if (shape(sample) <= (i == 0 ? cushion : 0f))
                         {
-                            inside = true;
-                            break;
+                            map.PixelMaxG[pixelIndex] = -1f;
+                            goto next;
                         }
                     }
-                    if (inside)
-                    {
-                        map.PixelMaxG[pixelIndex] = -1f;
-                        break;
-                    }
                 }
+            next:
+                ;
             }
         });
     }

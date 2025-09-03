@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Endwalker.Alliance.A32Llymlaen;
 
-class A32LlymlaenStates : StateMachineBuilder
+sealed class A32LlymlaenStates : StateMachineBuilder
 {
     public A32LlymlaenStates(BossModule module) : base(module)
     {
-        DeathPhase(0, SinglePhase);
+        DeathPhase(default, SinglePhase);
     }
 
     private void SinglePhase(uint id)

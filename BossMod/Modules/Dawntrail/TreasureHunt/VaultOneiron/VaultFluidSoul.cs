@@ -11,6 +11,7 @@ public enum OID : uint
     VaultGarlic = 0x48BB, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     VaultTomato = 0x48BC, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     VaultQueen = 0x48BD, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
+    GoldyCat = 0x48B7, // R1.87
     Vaultkeeper = 0x48B8 // R2.0
 }
 
@@ -74,7 +75,7 @@ sealed class VaultFluidSoulStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.VaultTorbalan, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1060u, NameID = 13983u, Category = BossModuleInfo.Category.TreasureHunt, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 13)]
 public sealed class VaultFluidSoul(WorldState ws, Actor primary) : SharedBoundsBoss(ws, primary)
 {
-    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.Vaultkeeper];
+    private static readonly uint[] bonusAdds = [(uint)OID.VaultOnion, (uint)OID.VaultTomato, (uint)OID.VaultGarlic, (uint)OID.VaultEggplant, (uint)OID.VaultQueen, (uint)OID.Vaultkeeper, (uint)OID.GoldyCat];
     private static readonly uint[] trash = [(uint)OID.VaultTorbalan, (uint)OID.VaultWaterSpirit];
     public static readonly uint[] All = [.. trash, .. bonusAdds];
 
@@ -105,7 +106,7 @@ public sealed class VaultFluidSoul(WorldState ws, Actor primary) : SharedBoundsB
                 (uint)OID.VaultEggplant => 5,
                 (uint)OID.VaultGarlic => 4,
                 (uint)OID.VaultTomato => 3,
-                (uint)OID.VaultQueen => 2,
+                (uint)OID.VaultQueen or (uint)OID.GoldyCat => 2,
                 (uint)OID.Vaultkeeper => 1,
                 _ => 0
             };

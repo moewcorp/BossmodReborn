@@ -41,12 +41,18 @@ public sealed class Map
 
         var numPixels = Width * Height;
         if (PixelMaxG.Length < numPixels)
+        {
             PixelMaxG = new float[numPixels];
-        Array.Fill(PixelMaxG, float.MaxValue, 0, numPixels); // fill is unconditional, can we avoid it by changing storage?..
+        }
+        new Span<float>(PixelMaxG, 0, numPixels).Fill(float.MaxValue); // fill is unconditional, can we avoid it by changing storage?..
         if (PixelPriority.Length < numPixels)
+        {
             PixelPriority = new float[numPixels];
+        }
         else
-            Array.Fill(PixelPriority, 0f, 0, numPixels);
+        {
+            new Span<float>(PixelPriority, 0, numPixels).Clear();
+        }
 
         Center = center;
         Rotation = rotation;
@@ -135,9 +141,7 @@ public sealed class Map
                 var pos = posY + x * dx;
                 if (shape_(pos) <= threshold_)
                 {
-                    var index = rowBaseIndex + x;
-                    var pixelMaxG = PixelMaxG[index];
-                    PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
+                    PixelMaxG[rowBaseIndex + x] = maxG_;
                 }
             }
         });
@@ -174,9 +178,7 @@ public sealed class Map
 
                     if (shape_(pos) <= 0f)
                     {
-                        var index = rowBaseIndex + x;
-                        var pixelMaxG = PixelMaxG[index];
-                        PixelMaxG[index] = pixelMaxG < maxG_ ? pixelMaxG : maxG_;
+                        PixelMaxG[rowBaseIndex + x] = maxG_;
                         break;
                     }
                 }

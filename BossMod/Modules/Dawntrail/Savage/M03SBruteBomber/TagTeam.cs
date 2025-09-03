@@ -100,7 +100,7 @@ sealed class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(modu
             case (uint)AID.FusesOfFuryLariatComboSecondRAOE:
             case (uint)AID.FusesOfFuryLariatComboSecondLAOE:
                 ++NumCasts;
-                Array.Fill(_tetherSource, null);
+                new Span<Actor?>(_tetherSource, 0, PartyState.MaxPartySize).Clear();
                 var index = -1;
                 var aoes = CollectionsMarshal.AsSpan(AOEs);
                 var len = aoes.Length;

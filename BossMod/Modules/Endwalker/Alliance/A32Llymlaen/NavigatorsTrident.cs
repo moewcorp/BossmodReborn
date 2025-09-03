@@ -1,25 +1,28 @@
 ﻿namespace BossMod.Endwalker.Alliance.A32Llymlaen;
 
-class DireStraits(BossModule module) : Components.GenericAOEs(module)
+sealed class DireStraits(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private static readonly AOEShapeRect _shape = new(40f, 40f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        var count = _aoes.Count;
-        if (count == 0)
-            return [];
-        var aoes = CollectionsMarshal.AsSpan(_aoes);
-        aoes[0].Risky = true;
-        return aoes;
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.DireStraitsVisualFirst or (uint)AID.DireStraitsVisualSecond)
         {
-            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8f), _aoes.Count == 0 ? Colors.Danger : default, false));
+            _aoes.Add(new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 4.8d)));
+            if (_aoes.Count > 1)
+            {
+                var aoes = CollectionsMarshal.AsSpan(_aoes);
+                ref var aoe1 = ref aoes[0];
+                ref var aoe2 = ref aoes[1];
+                if (aoe1.Activation > aoe2.Activation)
+                {
+                    (aoe1, aoe2) = (aoe2, aoe1);
+                }
+                aoe2.Origin += aoe2.Rotation.ToDirection();
+            }
         }
     }
 
@@ -29,14 +32,22 @@ class DireStraits(BossModule module) : Components.GenericAOEs(module)
         {
             ++NumCasts;
             if (_aoes.Count != 0)
+            {
                 _aoes.RemoveAt(0);
+            }
+            if (_aoes.Count == 1)
+            {
+                var aoes = CollectionsMarshal.AsSpan(_aoes);
+                ref var aoe = ref aoes[0];
+                aoe.Origin -= aoe.Rotation.ToDirection();
+            }
         }
     }
 }
 
-class NavigatorsTridentAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NavigatorsTridentAOE, new AOEShapeRect(40f, 5f));
+sealed class NavigatorsTridentAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NavigatorsTridentAOE, new AOEShapeRect(40f, 5f));
 
-class NavigatorsTridentKnockback(BossModule module) : Components.GenericKnockback(module)
+sealed class NavigatorsTridentKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private SerpentsTide? _serpentsTide = module.FindComponent<SerpentsTide>();
     private readonly List<Knockback> _sources = new(2);
@@ -68,8 +79,8 @@ class NavigatorsTridentKnockback(BossModule module) : Components.GenericKnockbac
     {
         if (spell.Action.ID == (uint)AID.NavigatorsTridentAOE)
         {
-            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation + 90f.Degrees(), Kind.DirForward));
-            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, spell.Rotation - 90f.Degrees(), Kind.DirForward));
+            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, default, Kind.DirForward));
+            _sources.Add(new(spell.LocXZ, 20f, Module.CastFinishAt(spell), _shape, 180f.Degrees(), Kind.DirForward));
         }
     }
 
@@ -79,6 +90,61 @@ class NavigatorsTridentKnockback(BossModule module) : Components.GenericKnockbac
         {
             _sources.Clear();
             ++NumCasts;
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (_sources.Count != 0)
+        {
+            _serpentsTide ??= Module.FindComponent<SerpentsTide>();
+            // rect intentionally slightly smaller to prevent sus knockback
+            ref var kb = ref _sources.Ref(0);
+            var act = kb.Activation;
+            if (!IsImmune(slot, act))
+            {
+                var center = Arena.Center;
+                var dir1 = new WDir(default, 20f);
+                var dir2 = new WDir(default, -20f);
+
+                if (_serpentsTide != null)
+                {
+                    var serpentaoes = _serpentsTide.AOEs;
+                    var count = serpentaoes.Count;
+                    hints.AddForbiddenZone(p =>
+                    {
+                        var projected1 = p + dir1;
+                        var projected2 = p + dir2;
+                        var pZ = p.Z > -900f;
+                        var aoes = CollectionsMarshal.AsSpan(serpentaoes);
+                        for (var i = 0; i < count; ++i)
+                        {
+                            ref var aoe = ref aoes[i];
+                            if (pZ && aoe.Check(projected1) || !pZ && aoe.Check(projected2))
+                            {
+                                return default;
+                            }
+                        }
+                        if (pZ && projected1.InRect(center, 19f, 28f) || !pZ && projected2.InRect(center, 19f, 28f))
+                        {
+                            return 1f;
+                        }
+                        return default;
+                    }, act);
+                }
+                else
+                {
+                    hints.AddForbiddenZone(p =>
+                    {
+                        var pZ = p.Z > -900f;
+                        if (pZ && (p + dir1).InRect(center, 19f, 28f) || !pZ && (p + dir2).InRect(center, 19f, 28f))
+                        {
+                            return 1f;
+                        }
+                        return default;
+                    }, act);
+                }
+            }
         }
     }
 }

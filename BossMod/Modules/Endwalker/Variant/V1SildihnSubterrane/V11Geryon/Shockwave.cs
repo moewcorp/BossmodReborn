@@ -72,16 +72,16 @@ sealed class Shockwave(BossModule module) : Components.GenericKnockback(module)
                 {
                     var projected1 = p + dir1;
                     var projected2 = p + dir2;
-                    var pX = p.X;
+                    var pX = p.X > centerX;
                     for (var i = 0; i < count; ++i)
                     {
                         var pos = vzs[i];
-                        if (pX > centerX && projected1.InSquare(pos, 9f) || pX < centerX && projected2.InSquare(pos, 9f))
+                        if (pX && projected1.InSquare(pos, 9f) || !pX && projected2.InSquare(pos, 9f))
                         {
                             return default;
                         }
                     }
-                    if (pX > centerX && projected1.InSquare(center, 19f) || pX < centerX && projected2.InSquare(center, 19f))
+                    if (pX && projected1.InSquare(center, 19f) || !pX && projected2.InSquare(center, 19f))
                     {
                         return 1f;
                     }
