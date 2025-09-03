@@ -170,6 +170,7 @@ sealed class Brainjack(BossModule module) : Components.StatusDrivenForcedMarch(m
         var aoes = CollectionsMarshal.AsSpan(_mine.AOEs);
         var len = aoes.Length;
         var pos = actor.Position;
+        var moveDir = move0.dir.ToDirection();
         for (var i = 0; i < len; ++i)
         {
             ref var aoe = ref aoes[i];
@@ -177,13 +178,15 @@ sealed class Brainjack(BossModule module) : Components.StatusDrivenForcedMarch(m
             var d = origin - pos;
             var dist = d.Length();
 
-            if (dist <= 5f)
+            if (dist is <= 5f or >= 24f) // inside mine or max distance 3s * 6 + 5 radius + 1 safety margin
             {
-                hints.ForbiddenDirections.Clear();
-                return; // inside mine, no directions good
+                continue; // inside mine or impossible to run into this mine from current position
             }
 
-            hints.ForbiddenDirections.Add((Angle.FromDirection(origin - pos) + move0.dir, Angle.Asin(5f / dist), act));
+            var forward = d.Dot(moveDir);
+            var sideways = d.Dot(moveDir.OrthoL());
+
+            hints.ForbiddenDirections.Add(new(Angle.Atan2(sideways, forward), Angle.Asin(5f / dist), act));
         }
     }
 }
@@ -207,7 +210,7 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
 
     public override bool DestinationUnsafe(int slot, Actor actor, WPos pos)
     {
-        ref var kb = ref _kbs[slot][0];
+        ref readonly var kb = ref _kbs[slot][0];
         if (kb.Kind == Kind.AwayFromOrigin)
         {
             var count = _aoe1.Casters.Count;
@@ -294,7 +297,7 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
     {
         if (_kbs[slot] != null)
         {
-            ref var kb = ref _kbs[slot][0];
+            ref readonly var kb = ref _kbs[slot][0];
             var pos = kb.Origin;
             var act = kb.Activation;
             if (kb.Kind == Kind.TowardsOrigin)
