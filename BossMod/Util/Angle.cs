@@ -39,6 +39,7 @@ public readonly struct Angle(float rad)
     public readonly float Sin() => (float)Math.Sin(Rad);
     public readonly float Cos() => (float)Math.Cos(Rad);
     public readonly float Tan() => (float)Math.Tan(Rad);
+    public static Angle Atan2(float y, float x) => new(MathF.Atan2(y, x));
     public static Angle Asin(float x) => new((float)Math.Asin(x));
     public static Angle Acos(float x) => new((float)Math.Acos(x));
     public readonly Angle Round(float roundToNearestDeg) => (MathF.Round(Deg / roundToNearestDeg) * roundToNearestDeg).Degrees();
