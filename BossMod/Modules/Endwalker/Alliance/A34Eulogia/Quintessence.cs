@@ -7,6 +7,8 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
     private static readonly AOEShapeDonut donut = new(8f, 60f);
     private byte _index;
     private WPos position;
+    private uint cast;
+    private DateTime activation;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -54,21 +56,16 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
         };
         _index = index;
         position = (Arena.Center + offset).Quantized();
+        InitIfReady();
     }
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    private void InitIfReady()
     {
-        if (_index == default)
+        if (_index == default || cast == default) // map effects and casts can appear in random order
         {
             return;
         }
-        void AddAOE(Angle rotation, AOEShape? shape = null)
-        {
-            _aoes.Add(new(shape ?? cone, position, rotation, Module.CastFinishAt(spell, 19.5d - _aoes.Count * 3.7d)));
-            _index = default;
-        }
-
-        switch (spell.Action.ID)
+        switch (cast)
         {
             case (uint)AID.FirstFormRight:
                 switch (_index)
@@ -143,6 +140,23 @@ class Quintessence(BossModule module) : Components.GenericAOEs(module)
                         break;
                 }
                 break;
+        }
+        void AddAOE(Angle rotation, AOEShape? shape = null)
+        {
+            _aoes.Add(new(shape ?? cone, position, rotation, activation.AddSeconds(19.5d - _aoes.Count * 3.7d)));
+            _index = default;
+            cast = default;
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        var id = spell.Action.ID;
+        if (id is >= (uint)AID.FirstFormRight and <= (uint)AID.ThirdFormDonut)
+        {
+            cast = id;
+            InitIfReady();
+            activation = Module.CastFinishAt(spell);
         }
     }
 

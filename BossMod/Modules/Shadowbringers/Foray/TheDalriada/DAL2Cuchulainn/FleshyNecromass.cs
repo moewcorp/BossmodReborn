@@ -2,7 +2,7 @@ namespace BossMod.Shadowbringers.Foray.TheDalriada.DAL2Cuchulainn;
 
 sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly WPos[] positions = [new(637.27f, -174.667f), new(662.71f, -174.667f), new(662.71f, -200.133f), new(637.27f, -200.133f)];
+    public static readonly WPos[] Positions = [new(637.27f, -174.667f), new(662.71f, -174.667f), new(662.71f, -200.133f), new(637.27f, -200.133f)];
     public static readonly AOEShapeCustom Circles = VoidzoneShape();
     private AOEInstance[] _voidzone = [];
     private AOEInstance[] _invertedvoidzone = [];
@@ -15,7 +15,7 @@ sealed class FleshNecromass(BossModule module) : Components.GenericAOEs(module)
         var circle = new Polygon(default, 5.676f, 40);
         for (var i = 0; i < 4; ++i)
         {
-            circles[i] = circle with { Center = positions[i] };
+            circles[i] = circle with { Center = Positions[i] };
         }
         return new(circles);
     }

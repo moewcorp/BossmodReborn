@@ -136,7 +136,7 @@ public sealed class AIHints
         PathfindMapCenter = default;
         PathfindMapBounds = DefaultBounds;
         PathfindMapObstacles = default;
-        Array.Fill(Enemies, null);
+        Array.Clear(Enemies);
         PotentialTargets.Clear();
         ForcedTarget = null;
         ForcedMovement = null;

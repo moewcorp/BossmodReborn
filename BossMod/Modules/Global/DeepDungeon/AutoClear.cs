@@ -231,7 +231,7 @@ public abstract class AutoClear : ZoneModule
         IgnoreTraps.AddRange(ProblematicTrapLocations);
         DesiredRoom = 0;
         Kills = 0;
-        Array.Fill(_playerImmunes, default);
+        new Span<PlayerImmuneState>(_playerImmunes).Clear();
         _lastChestContentsGold = null;
         _lastChestMagicite = false;
         _chestContentsGold.Clear();

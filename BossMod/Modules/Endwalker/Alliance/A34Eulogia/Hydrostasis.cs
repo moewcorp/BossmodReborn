@@ -21,7 +21,9 @@ class Hydrostasis(BossModule module) : Components.GenericKnockback(module)
         {
             ++NumCasts;
             if (_sources.Count != 0)
+            {
                 _sources.RemoveAt(0);
+            }
         }
     }
 }

@@ -80,8 +80,8 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, (uint)AID
         else if (index == 0x4F && state == 0x00080004u)
         {
             Active = false;
-            Array.Fill(LineOffset, 0);
-            Array.Fill(LineMovement, 0);
+            new Span<int>(LineOffset).Clear();
+            new Span<int>(LineMovement).Clear();
         }
     }
 
@@ -110,7 +110,7 @@ class HammersSpire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
         base.OnCastStarted(caster, spell);
         if (spell.Action.ID == WatchedAction)
         {
-            ref readonly var aoe = ref CollectionsMarshal.AsSpan(Casters)[0];
+            ref var aoe = ref CollectionsMarshal.AsSpan(Casters)[0];
             var safespots = new List<WPos>();
             {
                 for (var z = -2; z <= 2; ++z)
