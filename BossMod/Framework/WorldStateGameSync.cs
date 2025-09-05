@@ -1049,7 +1049,8 @@ sealed class WorldStateGameSync : IDisposable
 
     private unsafe void ProcessMapEffect(byte* data, byte offLow, byte offIndex)
     {
-        for (var i = 0; i < *data; ++i)
+        var count = *data;
+        for (var i = 0; i < count; ++i)
         {
             var low = *(ushort*)(data + 2 * i + offLow);
             var high = *(ushort*)(data + 2 * i + 2);

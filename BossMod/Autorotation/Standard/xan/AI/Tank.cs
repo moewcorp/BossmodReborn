@@ -206,8 +206,8 @@ public sealed class TankAI(RotationModuleManager manager, Actor player) : AIBase
     {
         var threat = Hints.PotentialTargets.TakeWhile(t => t.Priority >= AIHints.Enemy.PriorityInvincible).FirstOrDefault(x =>
             // fate mobs are immune to provoke and we probably don't care about this anyway
-            x.Actor.FateID == 0
-            && World.Party.TryFindSlot(x.Actor.TargetID, out var slot)
+            x.Actor.FateID == default
+            && World.Party.FindSlot(x.Actor.TargetID) is var slot && slot >= 0
             && World.Party[slot]!.Class.GetRole() != Role.Tank
         );
         if (threat != null)
@@ -234,7 +234,7 @@ public sealed class TankAI(RotationModuleManager manager, Actor player) : AIBase
             }
 
         foreach (var (ally, t) in Tankbusters)
-            if (ally != Player && (t - World.CurrentTime).TotalSeconds < 4)
+            if (ally != Player && (t - World.CurrentTime).TotalSeconds < 4d)
                 Hints.ActionsToExecute.Push(JobActions.AllyMit.ID, ally, ActionQueue.Priority.Low);
     }
 
