@@ -75,7 +75,7 @@ class RahuCometKB(BossModule module, uint aid, float distance) : Components.Simp
         {
             ref readonly var c = ref Casters.Ref(0);
             var center = Arena.Center;
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(center, 20f, Angle.FromDirection(center - c.Origin), 20f.Degrees()), c.Activation);
+            hints.AddForbiddenZone(new SDInvertedCone(center, 20f, Angle.FromDirection(center - c.Origin), 20f.Degrees()), c.Activation);
         }
     }
 

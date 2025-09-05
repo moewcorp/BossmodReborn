@@ -15,8 +15,8 @@ sealed class P4AkhRhai(BossModule module) : Components.GenericAOEs(module, (uint
         {
             // preposition for baits - note that this is very arbitrary...
             var off = 10f * 45f.Degrees().ToDirection();
-            var p1 = ShapeDistance.Circle(Arena.Center + off, 1f);
-            var p2 = ShapeDistance.Circle(Arena.Center - off, 1f);
+            var p1 = new SDCircle(Arena.Center + off, 1f);
+            var p2 = new SDCircle(Arena.Center - off, 1f);
             hints.AddForbiddenZone(p => -Math.Min(p1(p), p2(p)), DateTime.MaxValue);
         }
     }

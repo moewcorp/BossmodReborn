@@ -446,7 +446,7 @@ public abstract class AutoClear : ZoneModule
         {
             var wall = Walls[i];
             var w = wall.Wall;
-            hints.AddForbiddenZone(ShapeDistance.Rect(w.Position, (wall.Rotated ? 90f : default).Degrees(), w.Depth, w.Depth, 20f));
+            hints.AddForbiddenZone(new SDRect(w.Position, (wall.Rotated ? 90f : default).Degrees(), w.Depth, w.Depth, 20f));
         }
 
         if (canNavigate)
@@ -500,7 +500,7 @@ public abstract class AutoClear : ZoneModule
                 passage = a;
 
             if (RevealedTrapOIDs.Contains(a.OID))
-                revealedTraps.Add(ShapeDistance.Circle(a.Position, 2f));
+                revealedTraps.Add(new SDCircle(a.Position, 2f));
         }
 
         var fullClear = false;
@@ -536,14 +536,14 @@ public abstract class AutoClear : ZoneModule
 
                     if (!shouldIgnore)
                     {
-                        var trapCircle = ShapeDistance.Circle(trap, 2f);
+                        var trapCircle = new SDCircle(trap, 2f);
                         traps.Add(trapCircle);
                     }
                 }
             }
 
             if (traps.Count != 0)
-                hints.AddForbiddenZone(ShapeDistance.Union(traps));
+                hints.AddForbiddenZone(new SDUnion(traps));
         }
 
         if (coffer != null)
@@ -594,7 +594,7 @@ public abstract class AutoClear : ZoneModule
         }
 
         if (revealedTraps.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.Union(revealedTraps));
+            hints.AddForbiddenZone(new SDUnion(revealedTraps));
 
         if (!IsPlayerTransformed(player) && canNavigate && Config.AutoMoveTreasure && hoardLight is Actor h && Palace.GetPomanderState(PomanderID.Intuition).Active)
             hints.GoalZones.Add(hints.GoalSingleTarget(h.Position, 2f, 10f));
@@ -678,12 +678,12 @@ public abstract class AutoClear : ZoneModule
 
         IterAndExpire(Donuts, d => d.Source.CastInfo == null, d =>
         {
-            hints.AddForbiddenZone(ShapeDistance.Donut(d.Source.Position.Quantized(), d.Inner, d.Outer), CastFinishAt(d.Source));
+            hints.AddForbiddenZone(new SDDonut(d.Source.Position.Quantized(), d.Inner, d.Outer), CastFinishAt(d.Source));
         });
 
         IterAndExpire(Circles, d => d.Source.CastInfo == null, d =>
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(d.Source.Position.Quantized(), d.Radius), CastFinishAt(d.Source));
+            hints.AddForbiddenZone(new SDCircle(d.Source.Position.Quantized(), d.Radius), CastFinishAt(d.Source));
 
             // some enrages are way bigger than pathfinding map size (e.g. slime explosion is 60y)
             // in these cases, if the player is inside the aoe, add a goal zone telling it to GTFO as far as possible
@@ -740,7 +740,7 @@ public abstract class AutoClear : ZoneModule
             if (_playerImmunes[playerSlot].ImmuneAt(castFinish))
                 return;
 
-            hints.AddForbiddenZone(ShapeDistance.Circle(kb.Source.Position, kb.Radius), castFinish);
+            hints.AddForbiddenZone(new SDCircle(kb.Source.Position, kb.Radius), castFinish);
         });
 
         IterAndExpire(Spikes, t => t.Timeout <= World.CurrentTime, t =>

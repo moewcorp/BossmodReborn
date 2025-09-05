@@ -80,7 +80,7 @@ sealed class P5PolarizingStrikes(BossModule module) : Components.GenericAOEs(mod
                     left ^= true;
                 var distance = front ? 5 : 9;
                 var dir = _source.Rotation + (left ? 135 : -135).Degrees();
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(_source.Position + distance * dir.ToDirection(), 1));
+                hints.AddForbiddenZone(new SDInvertedCircle(_source.Position + distance * dir.ToDirection(), 1));
             }
         }
     }

@@ -13,7 +13,7 @@ class ByregotStrikeKnockback(BossModule module) : Components.SimpleKnockbacks(mo
             ref readonly var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(c.Origin, 14f, c.Direction + a180, a45), act);
+                hints.AddForbiddenZone(new SDInvertedCone(c.Origin, 14f, c.Direction + a180, a45), act);
         }
     }
 }

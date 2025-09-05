@@ -67,7 +67,7 @@ sealed class HeavyweightNeedles(BossModule module) : Components.SimpleAOEs(modul
             return;
         ref var aoe = ref Casters.Ref(0);
         // stay close to the middle to switch safespots
-        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe.Origin, 3f), aoe.Activation);
+        hints.AddForbiddenZone(new SDInvertedCircle(aoe.Origin, 3f), aoe.Activation);
     }
 }
 
@@ -177,11 +177,11 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {
-                var forbidden = new Func<WPos, float>[2];
+                var forbidden = new ShapeDistance[2];
                 var pattern = CurrentPattern == Pattern.NESW;
-                forbidden[0] = ShapeDistance.InvertedCone(c.Origin, 4f, pattern ? a135 : -a135, a10);
-                forbidden[1] = ShapeDistance.InvertedCone(c.Origin, 4f, pattern ? -a45 : a45, a10);
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
+                forbidden[0] = new SDInvertedCone(c.Origin, 4f, pattern ? a135 : -a135, a10);
+                forbidden[1] = new SDInvertedCone(c.Origin, 4f, pattern ? -a45 : a45, a10);
+                hints.AddForbiddenZone(new SDIntersection(forbidden), act);
             }
         }
     }

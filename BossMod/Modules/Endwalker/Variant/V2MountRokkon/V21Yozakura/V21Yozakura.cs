@@ -20,15 +20,15 @@ sealed class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(mod
             var origin = c.Origin;
             var a20 = 20f.Degrees();
             var len = aoes.Length;
-            var forbidden = new Func<WPos, float>[len + 1];
-            forbidden[len] = ShapeDistance.InvertedCircle(origin, 5f);
+            var forbidden = new ShapeDistance[len + 1];
+            forbidden[len] = new SDInvertedCircle(origin, 5f);
 
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var aoe = ref aoes[i];
-                forbidden[i] = ShapeDistance.Cone(origin, 20f, Angle.FromDirection(aoe.Origin - origin), a20);
+                forbidden[i] = new SDCone(origin, 20f, Angle.FromDirection(aoe.Origin - origin), a20);
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), c.Activation);
+            hints.AddForbiddenZone(new SDUnion(forbidden), c.Activation);
         }
     }
 
@@ -96,7 +96,7 @@ sealed class RootArrangement(BossModule module) : Components.StandardChasingAOEs
         base.AddAIHints(slot, actor, assignment, hints);
         if (Targets[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(19f, default), Arena.Center + new WDir(-19f, default), 20f), Activation);
+            hints.AddForbiddenZone(new SDRect(Arena.Center + new WDir(19f, default), Arena.Center + new WDir(-19f, default), 20f), Activation);
         }
     }
 }

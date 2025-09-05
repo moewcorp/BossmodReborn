@@ -7,8 +7,8 @@ sealed class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
     private static readonly WDir offset1 = new(default, 20f), offset2 = new(default, 8f);
     private readonly Besiegement _aoe = module.FindComponent<Besiegement>()!;
     private static readonly Func<WPos, float> stayInBounds = p =>
-        Math.Max(ShapeDistance.InvertedRect(T03QueenEternal.LeftSplitCenter + offset2, T03QueenEternal.LeftSplitCenter - offset2, 4f)(p),
-            ShapeDistance.InvertedRect(T03QueenEternal.RightSplitCenter + offset2, T03QueenEternal.RightSplitCenter - offset2, 4f)(p));
+        Math.Max(new SDInvertedRect(T03QueenEternal.LeftSplitCenter + offset2, T03QueenEternal.LeftSplitCenter - offset2, 4f)(p),
+            new SDInvertedRect(T03QueenEternal.RightSplitCenter + offset2, T03QueenEternal.RightSplitCenter - offset2, 4f)(p));
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -88,7 +88,7 @@ sealed class LegitimateForce(BossModule module) : Components.GenericAOEs(module)
         var besiegeCount = besiege.Count;
         var gravityBounds = Arena.Bounds == T03QueenEternal.SplitGravityBounds;
         if (count != 0 && Arena.Center != T03QueenEternal.SplitArena.Center || besiegeCount == 0 && count == 2 && gravityBounds)
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center + offset1, Arena.Center - offset1, 3), _aoes[0].Activation);
+            hints.AddForbiddenZone(new SDInvertedRect(Arena.Center + offset1, Arena.Center - offset1, 3), _aoes[0].Activation);
         else if (count != 2 && besiegeCount == 0 && gravityBounds)
             hints.AddForbiddenZone(stayInBounds, count != 0 ? _aoes[0].Activation : besiegeCount != 0 ? besiege[0].Activation : default);
     }

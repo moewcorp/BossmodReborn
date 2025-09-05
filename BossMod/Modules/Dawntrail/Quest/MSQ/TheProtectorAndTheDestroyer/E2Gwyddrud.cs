@@ -124,13 +124,13 @@ sealed class RoaringBoltKB(BossModule module) : Components.SimpleKnockbacks(modu
         var len = aoes.Length;
         if (len != 0)
         {
-            var forbidden = new Func<WPos, float>[len];
+            var forbidden = new ShapeDistance[len];
             for (var i = 0; i < len; ++i)
             {
                 ref readonly var aoe = ref aoes[i];
-                forbidden[i] = ShapeDistance.Cone(Arena.Center, 20f, Angle.FromDirection(aoe.Origin - Arena.Center), a25);
+                forbidden[i] = new SDCone(Arena.Center, 20f, Angle.FromDirection(aoe.Origin - Arena.Center), a25);
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Casters.Ref(0).Activation);
+            hints.AddForbiddenZone(new SDUnion(forbidden), Casters.Ref(0).Activation);
         }
     }
 }

@@ -72,7 +72,7 @@ sealed class Kanabo(BossModule module) : Components.TankbusterTether(module, (ui
         base.AddAIHints(slot, actor, assignment, hints);
         if (_tetheredPlayers[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, Arena.Bounds.Radius >= 20f ? 19f : 18.5f), activation);
+            hints.AddForbiddenZone(new SDCircle(Arena.Center, Arena.Bounds.Radius >= 20f ? 19f : 18.5f), activation);
         }
     }
 }

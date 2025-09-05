@@ -33,7 +33,7 @@ sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(m
                 if (!kb.Shape!.Check(actor.Position, kb.Origin, kb.Direction))
                     continue; // this won't affect player due to being out of aoe
                 var dir = kb.Direction.ToDirection();
-                hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center + 3f * dir, dir, 5f, default, 15f), act);
+                hints.AddForbiddenZone(new SDInvertedRect(Arena.Center + 3f * dir, dir, 5f, default, 15f), act);
                 return;
             }
         }

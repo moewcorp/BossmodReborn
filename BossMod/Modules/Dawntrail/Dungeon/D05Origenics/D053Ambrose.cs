@@ -127,11 +127,11 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
                 ref var recti = ref kbs[i];
                 if (recti.Shape is AOEShapeRect rect && rect == RectNS)
                 {
-                    forbidden.Add(ShapeDistance.InvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
+                    forbidden.Add(new SDInvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
                 }
             }
             ref var kb0 = ref kbs[0];
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), kb0.Activation);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), kb0.Activation);
         }
     }
 }

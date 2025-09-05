@@ -110,19 +110,19 @@ class ValfodrKB(BossModule module) : Components.GenericKnockback(module, (uint)A
             var total = countV + countI;
             if (total == 0)
                 return;
-            var forbidden = new Func<WPos, float>[total];
+            var forbidden = new ShapeDistance[total];
             var pos = Module.PrimaryActor.Position;
             for (var i = 0; i < countV; ++i)
             {
                 var a = voidzones[i];
-                forbidden[i] = ShapeDistance.Cone(pos, 100f, Module.PrimaryActor.AngleTo(a), Angle.Asin(9f / (a.Position - pos).Length()));
+                forbidden[i] = new SDCone(pos, 100f, Module.PrimaryActor.AngleTo(a), Angle.Asin(9f / (a.Position - pos).Length()));
             }
             for (var i = 0; i < countI; ++i)
             {
                 var a = _aoe1.Casters[i];
-                forbidden[i + countV] = ShapeDistance.Cone(pos, 100f, Module.PrimaryActor.AngleTo(a.Origin), Angle.Asin(7f / (a.Origin - pos).Length()));
+                forbidden[i + countV] = new SDCone(pos, 100f, Module.PrimaryActor.AngleTo(a.Origin), Angle.Asin(7f / (a.Origin - pos).Length()));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), _source!.Value.Activation);
+            hints.AddForbiddenZone(new SDUnion(forbidden), _source!.Value.Activation);
         }
     }
 }

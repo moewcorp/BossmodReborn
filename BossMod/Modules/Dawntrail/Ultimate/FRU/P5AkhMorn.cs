@@ -41,7 +41,7 @@ sealed class P5AkhMorn(BossModule module) : Components.UniformStackSpread(module
         if (Source != null && _leftSoakers.Any() && _fulgent?.NumCasts > 6)
         {
             var dir = Source.Rotation + (_leftSoakers[slot] ? -45 : 45).Degrees(); // note that left group go to boss right!
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Source.Position + 5 * dir.ToDirection(), 1), _activation);
+            hints.AddForbiddenZone(new SDInvertedCircle(Source.Position + 5 * dir.ToDirection(), 1), _activation);
         }
     }
 

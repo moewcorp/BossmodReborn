@@ -258,19 +258,19 @@ sealed class CosmicKissKnockback(BossModule module) : Components.SimpleKnockback
             var pos = c.Origin;
             if (hasMinus152 && hasMinus162)
             {
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, default, a45));
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, a180, a45));
+                forbidden.Add(new SDInvertedCone(pos, 7f, default, a45));
+                forbidden.Add(new SDInvertedCone(pos, 7f, a180, a45));
             }
             else if (hasMinus142 && hasMinus172)
             {
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, a90, a45));
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, -a90, a45));
+                forbidden.Add(new SDInvertedCone(pos, 7f, a90, a45));
+                forbidden.Add(new SDInvertedCone(pos, 7f, -a90, a45));
             }
             else if (hasMinus142 && hasMinus152)
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, a180, a90));
+                forbidden.Add(new SDInvertedCone(pos, 7f, a180, a90));
             else
-                forbidden.Add(ShapeDistance.InvertedCone(pos, 7f, default, a90));
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), act);
+                forbidden.Add(new SDInvertedCone(pos, 7f, default, a90));
+            hints.AddForbiddenZone(new SDIntersection(forbidden), act);
         }
     }
 }

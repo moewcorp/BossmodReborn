@@ -129,7 +129,7 @@ sealed class BuyersRemorseForcedMarch(BossModule module) : Components.GenericKno
     {
         if (affectedPlayers[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 15f), activation);
+            hints.AddForbiddenZone(new SDCircle(Arena.Center, 15f), activation);
             var dir = actor.Position - Arena.Center;
             var len = dir.Length();
             hints.ForbiddenDirections.Add((Angle.FromDirection(dir), Angle.Acos(Math.Clamp(-((len * len + 600f) / (len * 70f)), -1f, 1f)), activation));

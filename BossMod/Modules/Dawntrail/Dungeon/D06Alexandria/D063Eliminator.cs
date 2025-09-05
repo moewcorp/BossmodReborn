@@ -115,7 +115,7 @@ sealed class Electray(BossModule module) : Components.SpreadFromCastTargets(modu
             base.AddAIHints(slot, actor, assignment, hints);
             if (Spreads.Count != 0)
             {
-                hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center - new WDir(default, 15f), 15f), Spreads.Ref(0).Activation);
+                hints.AddForbiddenZone(new SDCircle(Arena.Center - new WDir(default, 15f), 15f), Spreads.Ref(0).Activation);
             }
         }
     }
@@ -139,7 +139,7 @@ sealed class Impact(BossModule module) : Components.SimpleKnockbacks(module, (ui
         if (Casters.Count != 0)
         {
             ref readonly var c = ref Casters.Ref(0);
-            hints.AddForbiddenZone(ShapeDistance.InvertedDonutSector(c.Origin, 6f, 8f, c.Origin.Z == -640f ? 180f.Degrees() : default, halfAngle), c.Activation);
+            hints.AddForbiddenZone(new SDInvertedInvertedDonutSector(c.Origin, 6f, 8f, c.Origin.Z == -640f ? 180f.Degrees() : default, halfAngle), c.Activation);
         }
     }
 }

@@ -92,7 +92,7 @@ sealed class GreatestFlood(BossModule module) : Components.SimpleKnockbacks(modu
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(c.Origin, 4f, c.Direction, a45), act);
+                hints.AddForbiddenZone(new SDInvertedCone(c.Origin, 4f, c.Direction, a45), act);
             }
         }
     }

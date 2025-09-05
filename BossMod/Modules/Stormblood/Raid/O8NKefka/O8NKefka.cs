@@ -65,7 +65,7 @@ class AeroAssault(BossModule module) : Components.SimpleKnockbacks(module, (uint
             ref readonly var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
-                hints.AddForbiddenZone(ShapeDistance.InvertedCone(c.Origin, 15f, Angle.FromDirection(Arena.Center - c.Origin).Normalized(), 45f.Degrees()), c.Activation);
+                hints.AddForbiddenZone(new SDInvertedCone(c.Origin, 15f, Angle.FromDirection(Arena.Center - c.Origin).Normalized(), 45f.Degrees()), c.Activation);
         }
     }
 }
@@ -79,7 +79,7 @@ class Shockwave(BossModule module) : Components.SimpleKnockbacks(module, (uint)A
             ref readonly var c = ref Casters.Ref(0);
             var act = c.Activation;
             if (!IsImmune(slot, act))
-                hints.AddForbiddenZone(ShapeDistance.Cone(c.Direction.AlmostEqual(90f.Degrees(), Angle.DegToRad) ? c.Origin - new WDir(-33f, default) : c.Origin - new WDir(33, default), 40f, c.Direction, 135f.Degrees()), act);
+                hints.AddForbiddenZone(new SDCone(c.Direction.AlmostEqual(90f.Degrees(), Angle.DegToRad) ? c.Origin - new WDir(-33f, default) : c.Origin - new WDir(33, default), 40f, c.Direction, 135f.Degrees()), act);
         }
     }
 }

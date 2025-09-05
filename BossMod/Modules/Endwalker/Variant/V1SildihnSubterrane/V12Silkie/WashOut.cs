@@ -12,7 +12,7 @@ sealed class WashOut(BossModule module) : Components.SimpleKnockbacks(module, (u
             {
                 var vzs = Module.Enemies((uint)OID.WaterVoidzone);
                 var count = vzs.Count;
-                var forbidden = new Func<WPos, float>[count + 1];
+                var forbidden = new ShapeDistance[count + 1];
                 var dir = kb.Direction.ToDirection();
                 var dirAdj = 35f * dir;
                 var center = Arena.Center;
@@ -27,9 +27,9 @@ sealed class WashOut(BossModule module) : Components.SimpleKnockbacks(module, (u
                 for (var i = 0; i < count; ++i)
                 {
                     var a = vzs[i].Position;
-                    forbidden[i] = ShapeDistance.Rect(a, dir, 40f, 40f, 5f);
+                    forbidden[i] = new SDRect(a, dir, 40f, 40f, 5f);
                 }
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), act);
+                hints.AddForbiddenZone(new SDUnion(forbidden), act);
             }
         }
     }

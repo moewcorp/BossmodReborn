@@ -130,12 +130,12 @@ sealed class InfraredBlast(BossModule module) : Components.InterceptTether(modul
                 if (t.Player.OID != default || t.Player == actor)
                 {
                     var source = t.Enemy;
-                    forbidden.Add(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f));
+                    forbidden.Add(new SDInvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f));
                 }
             }
             if (forbidden.Count != 0)
             {
-                hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), _activation);
+                hints.AddForbiddenZone(new SDIntersection(forbidden), _activation);
             }
         }
     }

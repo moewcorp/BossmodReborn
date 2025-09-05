@@ -192,12 +192,12 @@ class WildRageKnockback(BossModule module) : Components.SimpleKnockbacks(module,
         if (Casters.Count != 0)
         {
             ref readonly var c = ref Casters.Ref(0);
-            var forbidden = new Func<WPos, float>[2];
+            var forbidden = new ShapeDistance[2];
             var pos = c.Origin;
             var dir = pos.X == 738f ? 1 : -1;
-            forbidden[0] = ShapeDistance.InvertedDonutSector(pos, 8f, 9f, a45 * dir, a10);
-            forbidden[1] = ShapeDistance.InvertedDonutSector(pos, 8f, 9f, 3f * a45 * dir, a10);
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), c.Activation);
+            forbidden[0] = new SDInvertedInvertedDonutSector(pos, 8f, 9f, a45 * dir, a10);
+            forbidden[1] = new SDInvertedInvertedDonutSector(pos, 8f, 9f, 3f * a45 * dir, a10);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), c.Activation);
         }
     }
 }

@@ -86,7 +86,7 @@ public class StackTogether(BossModule module, uint iconId, float activationDelay
         if (count == 0)
             return;
         var actorFound = false;
-        var forbidden = new List<Func<WPos, float>>(count);
+        var forbidden = new List<ShapeDistance>(count);
         for (var i = 0; i < count; ++i)
         {
             var target = Targets[i];
@@ -94,9 +94,9 @@ public class StackTogether(BossModule module, uint iconId, float activationDelay
             if (target == actor)
                 actorFound = true;
             else
-                forbidden.Add(ShapeDistance.InvertedCircle(target.Position, Radius));
+                forbidden.Add(new SDInvertedCircle(target.Position, Radius));
         }
         if (actorFound)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Activation);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), Activation);
     }
 }

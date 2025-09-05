@@ -68,11 +68,11 @@ class IonosphericCharge(BossModule module) : Components.BaitAwayTethers(module, 
     {
         if (ActiveBaitsOn(actor).Count == 0)
             return;
-        var forbidden = new List<Func<WPos, float>>();
+        var forbidden = new List<ShapeDistance>();
         foreach (var a in Module.Enemies((uint)OID.BlackenedStatue))
-            forbidden.Add(ShapeDistance.InvertedCircle(a.Position, 4));
+            forbidden.Add(new SDInvertedCircle(a.Position, 4));
         if (forbidden.Count != 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), ActiveBaits.FirstOrDefault().Activation);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), ActiveBaits.FirstOrDefault().Activation);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)

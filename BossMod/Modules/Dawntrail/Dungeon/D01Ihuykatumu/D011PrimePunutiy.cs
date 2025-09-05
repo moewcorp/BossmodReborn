@@ -64,7 +64,7 @@ sealed class HydrowaveBait(BossModule module) : Components.BaitAwayTethers(modul
         base.AddAIHints(slot, actor, assignment, hints);
         if (ActiveBaitsOn(actor).Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center - new WDir(default, -18f), Arena.Center - new WDir(default, 18f), 18f), WorldState.FutureTime(ActivationDelay));
+            hints.AddForbiddenZone(new SDRect(Arena.Center - new WDir(default, -18f), Arena.Center - new WDir(default, 18f), 18f), WorldState.FutureTime(ActivationDelay));
         }
     }
 

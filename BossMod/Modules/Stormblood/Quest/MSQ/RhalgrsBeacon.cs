@@ -98,12 +98,12 @@ class Gunblade(BossModule module) : Components.GenericKnockback(module, (uint)AI
             var len = aoes.Length;
             if (len == 0)
                 return;
-            var voidzones = new Func<WPos, float>[len];
+            var voidzones = new ShapeDistance[len];
             for (var i = 0; i < len; ++i)
             {
-                voidzones[i] = new(ShapeDistance.Circle(aoes[i].Origin, 5f));
+                voidzones[i] = new(new SDCircle(aoes[i].Origin, 5f));
             }
-            var combined = ShapeDistance.Union(voidzones);
+            var combined = new SDUnion(voidzones);
             float projectedDist(WPos pos)
             {
                 var direction = (pos - source.Position).Normalized();

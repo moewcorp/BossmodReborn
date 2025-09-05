@@ -13,7 +13,7 @@ sealed class DustBluster(BossModule module) : Components.SimpleKnockbacks(module
                 var center = Arena.Center;
                 var vzs = Module.Enemies((uint)OID.WaterVoidzone);
                 var count = vzs.Count;
-                var forbidden = new Func<WPos, float>[count + 1];
+                var forbidden = new ShapeDistance[count + 1];
 
                 // square intentionally slightly smaller to prevent sus knockback
                 forbidden[count] = p =>
@@ -28,9 +28,9 @@ sealed class DustBluster(BossModule module) : Components.SimpleKnockbacks(module
                 for (var i = 0; i < count; ++i)
                 {
                     var a = vzs[i].Position;
-                    forbidden[i] = ShapeDistance.Cone(center, 100f, Angle.FromDirection(a - center), Angle.Asin(5f / (a - center).Length()));
+                    forbidden[i] = new SDCone(center, 100f, Angle.FromDirection(a - center), Angle.Asin(5f / (a - center).Length()));
                 }
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), act);
+                hints.AddForbiddenZone(new SDUnion(forbidden), act);
             }
         }
     }

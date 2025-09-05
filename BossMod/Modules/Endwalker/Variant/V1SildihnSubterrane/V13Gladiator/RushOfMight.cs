@@ -56,7 +56,7 @@ sealed class RushOfMight(BossModule module) : Components.GenericAOEs(module)
         ref var aoe = ref _aoes.Ref(0);
         if (aoe.Risky)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(aoe.Origin, aoe.Rotation, 2f, 2f, 40f), aoe.Activation.AddSeconds(2d));
+            hints.AddForbiddenZone(new SDInvertedRect(aoe.Origin, aoe.Rotation, 2f, 2f, 40f), aoe.Activation.AddSeconds(2d));
         }
     }
 }

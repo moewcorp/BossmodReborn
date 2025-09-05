@@ -268,7 +268,7 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
             return;
         }
         base.AddAIHints(slot, actor, assignment, hints);
-        var forbidden = new Func<WPos, float>[2];
+        var forbidden = new ShapeDistance[2];
         var index = 0;
         var aoes = ActiveAOEs(slot, actor);
         var len = aoes.Length;
@@ -277,13 +277,13 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
             ref readonly var aoe = ref aoes[i];
             if (aoe.Color == Colors.SafeFromAOE)
             {
-                forbidden[index++] = ShapeDistance.InvertedRect(aoe.Origin, aoe.Rotation, 20f, 20f, 2f);
+                forbidden[index++] = new SDInvertedRect(aoe.Origin, aoe.Rotation, 20f, 20f, 2f);
             }
         }
         if (index == 2)
         {
             ref readonly var aoe0 = ref aoes[0];
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), aoe0.Activation);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), aoe0.Activation);
         }
     }
 }

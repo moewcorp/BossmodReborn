@@ -166,7 +166,7 @@ public sealed record class ArenaBoundsCircle(float Radius, float MapResolution =
     private Pathfinding.Map BuildMap()
     {
         var map = new Pathfinding.Map(MapResolution, default, Radius, Radius);
-        map.BlockPixelsInside2(ShapeDistance.InvertedCircle(default, Radius), -1f);
+        map.BlockPixelsInside2(new SDInvertedCircle(default, Radius), -1f);
         return map;
     }
 }
@@ -191,7 +191,7 @@ public record class ArenaBoundsRect(float HalfWidth, float HalfHeight, Angle Rot
         var halfHeight = HalfHeight;
         var rotation = Rotation;
         var map = new Pathfinding.Map(MapResolution, default, halfWidth + 0.5f, halfHeight + 0.5f, rotation);
-        map.BlockPixelsInside2(ShapeDistance.InvertedRect(default, rotation, halfHeight, halfHeight, halfWidth), -1f);
+        map.BlockPixelsInside2(new SDInvertedRect(default, rotation, halfHeight, halfHeight, halfWidth), -1f);
         return map;
     }
 
@@ -389,9 +389,9 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
         var width = map.Width;
         var height = map.Height;
         var resolution = map.Resolution;
-        var shapeDistance = new PolygonWithHolesDistanceFunction(default, Polygon);
-        ref readonly var distance = ref shapeDistance;
-        map.BlockPixelsInside(distance.InvertedDistance, -1f, 0.49999f * resolution); // check inner circle of the pixel
+
+        map.BlockPixelsInside(new SDInvertedPolygonWithHoles(default, Polygon), -1f, 0.49999f * resolution); // check inner circle of the pixel
+
         // now check the corners
         var halfSample = resolution * 0.49999f; // tiny offset to account for floating point inaccuracies
 

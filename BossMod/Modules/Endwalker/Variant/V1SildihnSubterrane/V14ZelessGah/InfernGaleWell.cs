@@ -82,7 +82,7 @@ sealed class InfernWellPull(BossModule module) : Components.GenericKnockback(mod
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                hints.AddForbiddenZone(ShapeDistance.Circle(kb.Origin, 23f), act); // radius: 15 pull distance + 8 aoe radius
+                hints.AddForbiddenZone(new SDCircle(kb.Origin, 23f), act); // radius: 15 pull distance + 8 aoe radius
             }
         }
     }

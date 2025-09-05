@@ -181,9 +181,9 @@ sealed class Surge(BossModule module) : Components.GenericKnockback(module)
             for (var i = 0; i < 4; ++i)
             {
                 var safeWall = safewalls[i];
-                forbidden.Add(ShapeDistance.InvertedRect(new(centerX, safeWall.Vertex1.Z - 5f), safeWall.Vertex1.X == XWest ? -offset : offset, 10f, default, 20f));
+                forbidden.Add(new SDInvertedRect(new(centerX, safeWall.Vertex1.Z - 5f), safeWall.Vertex1.X == XWest ? -offset : offset, 10f, default, 20f));
             }
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), SourcesList[0].Activation);
+            hints.AddForbiddenZone(new SDIntersection(forbidden), SourcesList[0].Activation);
         }
     }
 }

@@ -111,7 +111,7 @@ sealed class BoundlessPain(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         if (_aoe.Length != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, Arena.Center + new WDir(default, 20f), 20f));
+            hints.AddForbiddenZone(new SDRect(Arena.Center, Arena.Center + new WDir(default, 20f), 20f));
         }
     }
 }
@@ -145,11 +145,11 @@ sealed class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(m
         base.AddAIHints(slot, actor, assignment, hints);
         if (Targets[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center + new WDir(18.5f, default), Arena.Center + new WDir(-18.5f, default), 20f), Activation);
+            hints.AddForbiddenZone(new SDRect(Arena.Center + new WDir(18.5f, default), Arena.Center + new WDir(-18.5f, default), 20f), Activation);
         }
         else if (IsChaserTarget(actor))
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(actor.Position, new WDir(1f, default), 40f, 40f, 3f));
+            hints.AddForbiddenZone(new SDInvertedRect(actor.Position, new WDir(1f, default), 40f, 40f, 3f));
         }
     }
 

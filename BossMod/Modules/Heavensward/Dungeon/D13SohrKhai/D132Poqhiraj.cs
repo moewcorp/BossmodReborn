@@ -213,14 +213,14 @@ class BurningBright(BossModule module) : Components.BaitAwayCast(module, (uint)A
             var count = walls.Count;
             if (count <= 4) // don't care if most walls are up plus most of the arena would likely be forbidden anyway depending on player positioning
             {
-                var forbidden = new Func<WPos, float>[count];
+                var forbidden = new ShapeDistance[count];
                 for (var i = 0; i < count; ++i)
                 {
                     var a = walls[i];
-                    forbidden[i] = ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(8f / (a.Position - bait.Source.Position).Length()));
+                    forbidden[i] = new SDCone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(8f / (a.Position - bait.Source.Position).Length()));
                 }
                 if (forbidden.Length != 0)
-                    hints.AddForbiddenZone(ShapeDistance.Union(forbidden), bait.Activation);
+                    hints.AddForbiddenZone(new SDUnion(forbidden), bait.Activation);
             }
         }
     }
@@ -299,7 +299,7 @@ class CloudCall(BossModule module) : Components.GenericBaitAway(module, centerAt
         base.AddAIHints(slot, actor, assignment, hints);
         if (CurrentBaits.Count != 0 && CurrentBaits.Ref(0).Target == actor)
         {
-            hints.AddForbiddenZone(ShapeDistance.Rect(Arena.Center, new WDir(default, 1f), 19f, 19f, 5f));
+            hints.AddForbiddenZone(new SDRect(Arena.Center, new WDir(default, 1f), 19f, 19f, 5f));
         }
     }
 

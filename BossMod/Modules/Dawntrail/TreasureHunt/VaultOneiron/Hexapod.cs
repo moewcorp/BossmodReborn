@@ -136,7 +136,7 @@ sealed class Electromine(BossModule module) : Components.GenericAOEs(module)
         for (var i = 0; i < count; ++i)
         {
             ref var aoe = ref aoes[i];
-            hints.TemporaryObstacles.Add(ShapeDistance.Circle(aoe.Origin, 5f));
+            hints.TemporaryObstacles.Add(new SDCircle(aoe.Origin, 5f));
         }
     }
 }
@@ -307,7 +307,7 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
             var act = kb.Activation;
             if (kb.Kind == Kind.TowardsOrigin)
             {
-                hints.AddForbiddenZone(ShapeDistance.Circle(pos, 18f), act); // circle 10 + 7 pull + 1 safety margin
+                hints.AddForbiddenZone(new SDCircle(pos, 18f), act); // circle 10 + 7 pull + 1 safety margin
             }
             else
             {

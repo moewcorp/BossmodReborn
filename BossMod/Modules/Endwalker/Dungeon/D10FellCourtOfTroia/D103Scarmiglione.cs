@@ -306,11 +306,11 @@ sealed class RottenRampageSpread(BossModule module) : Components.SpreadFromCastT
             var count = walls.Count;
             if (count == 0)
                 return;
-            var forbidden = new Func<WPos, float>[count];
+            var forbidden = new ShapeDistance[count];
             for (var i = 0; i < count; ++i)
-                forbidden[i] = ShapeDistance.Circle(walls[i].Position, 7f);
+                forbidden[i] = new SDCircle(walls[i].Position, 7f);
             if (forbidden.Length != 0)
-                hints.AddForbiddenZone(ShapeDistance.Union(forbidden), Spreads[0].Activation);
+                hints.AddForbiddenZone(new SDUnion(forbidden), Spreads[0].Activation);
         }
     }
 

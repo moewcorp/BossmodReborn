@@ -86,14 +86,14 @@ class Breakthrough(BossModule module) : Components.GenericAOEs(module)
         var count = _aoes.Count;
         if (count != 0)
         {
-            var forbidden = new Func<WPos, float>[count];
+            var forbidden = new ShapeDistance[count];
             for (var i = 0; i < count; ++i)
             {
                 var aoe = _aoes[i];
                 if (aoe.Shape is AOEShapeRect shape)
                     forbidden[i] = (shape with { InvertForbiddenZone = true }).Distance(aoe.Origin, aoe.Rotation);
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden), _aoes[0].Activation);
+            hints.AddForbiddenZone(new SDUnion(forbidden), _aoes[0].Activation);
         }
     }
 
@@ -191,7 +191,7 @@ class BombTether(BossModule module) : Components.InterceptTetherAOE(module, (uin
             {
                 var source = tether.Enemy;
                 var target = Module.Enemies((uint)OID.Alphinaud)[0];
-                hints.AddForbiddenZone(ShapeDistance.InvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), Activation);
+                hints.AddForbiddenZone(new SDInvertedRect(target.Position + (target.HitboxRadius + 0.1f) * target.DirectionTo(source), source.Position, 0.5f), Activation);
             }
         }
     }

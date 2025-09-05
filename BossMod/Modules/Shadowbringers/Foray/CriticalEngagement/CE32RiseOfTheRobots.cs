@@ -153,7 +153,7 @@ sealed class Train(BossModule module) : Components.GenericRotatingAOE(module)
             base.AddAIHints(slot, actor, assignment, hints);
             var sequences = CollectionsMarshal.AsSpan(Sequences);
             ref readonly var sequence = ref sequences[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(CE32RiseOfTheRobots.ArenaCenter, 3f), sequence.NextActivation);
+            hints.AddForbiddenZone(new SDInvertedCircle(CE32RiseOfTheRobots.ArenaCenter, 3f), sequence.NextActivation);
         }
     }
 }
@@ -296,7 +296,7 @@ sealed class OrderForcedMarch(BossModule module) : Components.StatusDrivenForced
             var act = move0.activation;
             var isDefault = num[0] == default;
             var angleToTower = isDefault ? default : (num[0] - 1) * am90;
-            hints.AddForbiddenZone(isDefault ? ShapeDistance.InvertedCone(CE32RiseOfTheRobots.ArenaCenter, 7f, a45 * randomOdd, a225) : ShapeDistance.InvertedCone(CE32RiseOfTheRobots.ArenaCenter, 7f, a180 + angleToTower, a225), act);
+            hints.AddForbiddenZone(isDefault ? new SDInvertedCone(CE32RiseOfTheRobots.ArenaCenter, 7f, a45 * randomOdd, a225) : new SDInvertedCone(CE32RiseOfTheRobots.ArenaCenter, 7f, a180 + angleToTower, a225), act);
             hints.ForbiddenDirections.Add(isDefault ? (a45 * randomOdd, a175, act) : (angleToTower - move0.dir, a175, act));
         }
     }

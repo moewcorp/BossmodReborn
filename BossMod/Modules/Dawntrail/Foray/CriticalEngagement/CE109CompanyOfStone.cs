@@ -77,7 +77,7 @@ sealed class KnuckleCrusher : Components.SimpleAOEs
         base.AddAIHints(slot, actor, assignment, hints);
         if (Casters.Count != 0 && NumCasts < 2)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 3f), Casters[^1].Activation); // stay in dodge spot
+            hints.AddForbiddenZone(new SDInvertedCircle(midpoint, 3f), Casters[^1].Activation); // stay in dodge spot
         }
     }
 
@@ -173,7 +173,7 @@ sealed class SpinningSiege(BossModule module) : Components.GenericRotatingAOE(mo
         base.AddAIHints(slot, actor, assignment, hints);
         if (Sequences.Count == 4 && NumCasts < 20)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(midpoint, 5f), Sequences.Ref(0).NextActivation); // stay in safe area
+            hints.AddForbiddenZone(new SDInvertedCircle(midpoint, 5f), Sequences.Ref(0).NextActivation); // stay in safe area
         }
     }
 

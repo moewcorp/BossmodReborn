@@ -90,7 +90,7 @@ sealed class P5ParadiseRegainedBaits(BossModule module) : Components.GenericBait
         if (!ForbiddenPlayers[slot])
         {
             // just go to the next safespot
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center + SafeOffset(slot, actor), 1f));
+            hints.AddForbiddenZone(new SDInvertedCircle(Arena.Center + SafeOffset(slot, actor), 1f));
         }
     }
 

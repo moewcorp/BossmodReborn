@@ -30,9 +30,9 @@ public struct NavigationDecision
         // build a pathfinding map: rasterize all forbidden zones and goals
         hints.InitPathfindMap(ctx.Map);
         // local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
-        (Func<WPos, float>, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
+        (ShapeDistance, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
         Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
-        Func<WPos, float>[] localTemporaryObstacles = [.. hints.TemporaryObstacles];
+        ShapeDistance[] localTemporaryObstacles = [.. hints.TemporaryObstacles];
         if (localTemporaryObstacles.Length != 0)
         {
             RasterizeVoidzones(ctx.Map, localTemporaryObstacles);
@@ -105,11 +105,11 @@ public struct NavigationDecision
         }
     }
 
-    public static void RasterizeForbiddenZones(Map map, (Func<WPos, float> shapeDistance, DateTime activation, ulong source)[] zones, DateTime current, float[] scratch)
+    public static void RasterizeForbiddenZones(Map map, (ShapeDistance shapeDistance, DateTime activation, ulong source)[] zones, DateTime current, float[] scratch)
     {
         // 1) Cluster activation times
         // very slight difference in activation times cause issues for pathfinding - cluster them together
-        var zonesFixed = new (Func<WPos, float> shapeDistance, float g)[zones.Length];
+        var zonesFixed = new (ShapeDistance shapeDistance, float g)[zones.Length];
         DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120d);
         float clusterG = 0;
         var lenZonesFixed = zonesFixed.Length;
@@ -415,7 +415,7 @@ public struct NavigationDecision
     static readonly float[] offsetsX = [0f, Epsilon, Epsilon, 1f - Epsilon, 1f - Epsilon];
     static readonly float[] offsetsZ = [0f, Epsilon, 1f - Epsilon, Epsilon, 1f - Epsilon];
 
-    public static void RasterizeVoidzones(Map map, Func<WPos, float>[] zones)
+    public static void RasterizeVoidzones(Map map, ShapeDistance[] zones)
     {
         var len = zones.Length;
 
@@ -450,7 +450,7 @@ public struct NavigationDecision
                     for (var i = 0; i < 5; ++i)
                     {
                         var sample = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
-                        if (shape(sample) <= (i == 0 ? cushion : 0f))
+                        if (shape.Distance(sample) <= (i == 0 ? cushion : 0f))
                         {
                             map.PixelMaxG[pixelIndex] = -1f;
                             goto next;
@@ -463,14 +463,14 @@ public struct NavigationDecision
         });
     }
 
-    private static float CalculateMaxG((Func<WPos, float> shapeDistance, float g)[] zones, WPos p, float cushion = default)
+    private static float CalculateMaxG((ShapeDistance shapeDistance, float g)[] zones, WPos p, float cushion = default)
     {
         var len = zones.Length;
         var threshold = cushion;
         for (var i = 0; i < len; ++i)
         {
-            var z = zones[i];
-            if (z.shapeDistance(p) < threshold)
+            ref var z = ref zones[i];
+            if (z.shapeDistance.Distance(p) < threshold)
             {
                 return z.g;
             }

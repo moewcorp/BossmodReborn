@@ -128,17 +128,17 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
             ref var kb = ref _kbs[slot][0];
             var attract = kb.Kind == Kind.TowardsOrigin;
             var pos = Module.PrimaryActor.Position;
-            var barofield = ShapeDistance.Circle(pos, 5f);
-            var arena = ShapeDistance.InvertedCircle(pos, 8f);
+            var barofield = new SDCircle(pos, 5f);
+            var arena = new SDInvertedCircle(pos, 8f);
             var cannons = Module.Enemies((uint)OID.WeaponsDrone);
             var count = cannons.Count;
-            var forbiddenRects = new Func<WPos, float>[count];
+            var forbiddenRects = new ShapeDistance[count];
             for (var i = 0; i < count; ++i)
             {
                 var c = cannons[i];
-                forbiddenRects[i] = ShapeDistance.Rect(c.Position, c.Rotation, 43f, default, 2.5f);
+                forbiddenRects[i] = new SDRect(c.Position, c.Rotation, 43f, default, 2.5f);
             }
-            var all = ShapeDistance.Union((Func<WPos, float>[])[barofield, arena, .. forbiddenRects]);
+            var all = new SDUnion((Func<WPos, float>[])[barofield, arena, .. forbiddenRects]);
             var origin = kb.Origin;
 
             hints.AddForbiddenZone(p =>

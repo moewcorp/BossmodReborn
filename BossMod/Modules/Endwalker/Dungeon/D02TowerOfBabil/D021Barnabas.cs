@@ -164,11 +164,11 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         var pos = Arena.Center;
 
         var forbidden = shape
-            ? isPull ? ShapeDistance.Rect(pos, new WDir(default, 1f), 15f, 15f, 12f)
-            : isKnockback ? ShapeDistance.InvertedCircle(pos, 6f)
+            ? isPull ? new SDRect(pos, new WDir(default, 1f), 15f, 15f, 12f)
+            : isKnockback ? new SDInvertedCircle(pos, 6f)
             : null
-            : isPull ? ShapeDistance.Circle(pos, 13f)
-            : isKnockback ? ShapeDistance.InvertedCircle(pos, 10f)
+            : isPull ? new SDCircle(pos, 13f)
+            : isKnockback ? new SDInvertedCircle(pos, 10f)
             : null;
 
         if (forbidden != null)

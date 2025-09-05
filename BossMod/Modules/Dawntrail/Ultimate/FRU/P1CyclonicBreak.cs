@@ -100,7 +100,7 @@ sealed class P1CyclonicBreakAIBait(BossModule module) : BossComponent(module)
             return; // no assignment
         var assignedDirection = (180f - 45f * clockspot).Degrees();
         // TODO: think about melee vs ranged distance...
-        hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, assignedDirection, 15f, -5f, 1f), _spreadStack.Activation);
+        hints.AddForbiddenZone(new SDInvertedRect(Module.PrimaryActor.Position, assignedDirection, 15f, -5f, 1f), _spreadStack.Activation);
     }
 }
 
@@ -126,7 +126,7 @@ sealed class P1CyclonicBreakAIDodgeSpreadStack(BossModule module) : BossComponen
         var assignedDirection = (180 - 45 * clockspot).Degrees();
         var safeAngles = _forbiddenDirections.NextAllowed(assignedDirection, dodgeCCW);
         var (rangeMin, rangeMax) = _spreadStack.Stacks.Count > 0 ? (4, 10) : assignment is PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT or PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2 ? (3, 6) : (7, 15);
-        var safeZone = ShapeDistance.DonutSector(_forbiddenDirections.Center, rangeMin, rangeMax, (safeAngles.min + safeAngles.max) * 0.5f, (safeAngles.max - safeAngles.min) * 0.5f);
+        var safeZone = new SDDonutSector(_forbiddenDirections.Center, rangeMin, rangeMax, (safeAngles.min + safeAngles.max) * 0.5f, (safeAngles.max - safeAngles.min) * 0.5f);
         hints.AddForbiddenZone(p => -safeZone(p), _spreadStack.Activation);
 
         // micro adjusts if activation is imminent
@@ -136,12 +136,12 @@ sealed class P1CyclonicBreakAIDodgeSpreadStack(BossModule module) : BossComponen
             {
                 var closestPartner = Module.Raid.WithoutSlot(false, true, true).Where(p => p.Class.IsSupport() != isSupport).Closest(actor.Position);
                 if (closestPartner != null)
-                    hints.AddForbiddenZone(ShapeDistance.InvertedCircle(closestPartner.Position, _spreadStack.StackRadius), _spreadStack.Activation);
+                    hints.AddForbiddenZone(new SDInvertedCircle(closestPartner.Position, _spreadStack.StackRadius), _spreadStack.Activation);
             }
             else
             {
                 foreach (var p in Raid.WithoutSlot(false, true, true).Exclude(actor))
-                    hints.AddForbiddenZone(ShapeDistance.Circle(p.Position, _spreadStack.SpreadRadius), _spreadStack.Activation);
+                    hints.AddForbiddenZone(new SDCircle(p.Position, _spreadStack.SpreadRadius), _spreadStack.Activation);
             }
         }
     }

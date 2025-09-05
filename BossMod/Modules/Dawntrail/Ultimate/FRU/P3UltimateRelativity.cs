@@ -62,7 +62,7 @@ sealed class P3UltimateRelativity(BossModule module) : Components.CastCounter(mo
                     if (WorldState.CurrentTime < _nextImminent)
                     {
                         // there's still time, around maxmelee at assigned direction
-                        hints.AddForbiddenZone(ShapeDistance.InvertedCircle(SafeSpot(slot, 9f), 1f), _nextImminent);
+                        hints.AddForbiddenZone(new SDInvertedCircle(SafeSpot(slot, 9f), 1f), _nextImminent);
                     }
                     else
                     {
@@ -71,7 +71,7 @@ sealed class P3UltimateRelativity(BossModule module) : Components.CastCounter(mo
                         foreach (var (i, p) in Raid.WithSlot(false, true, true).Exclude(slot))
                         {
                             var avoidRadius = avoidBlizzard && States[i].HaveDarkBlizzard ? 12f : 8f;
-                            hints.AddForbiddenZone(ShapeDistance.Circle(p.Position, avoidRadius));
+                            hints.AddForbiddenZone(new SDCircle(p.Position, avoidRadius));
                         }
                         var lasers = Module.FindComponent<P3UltimateRelativitySinboundMeltdownAOE>();
                         if (lasers != null)
@@ -83,12 +83,12 @@ sealed class P3UltimateRelativity(BossModule module) : Components.CastCounter(mo
                 case RangeHintDarkEruption:
                 case RangeHintEye:
                     // go to exact safespot
-                    hints.AddForbiddenZone(ShapeDistance.PrecisePosition(SafeSpot(slot, range), new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
+                    hints.AddForbiddenZone(new SDPrecisePosition(SafeSpot(slot, range), new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
                     break;
                 default:
                     // go to mid, staying as tightly as possible to allow for better uptime; after all mechanics, go opposite to dodge eyes more naturally
                     var dest = NumCasts >= 6 ? SafeSpot(slot, range) : Arena.Center;
-                    hints.AddForbiddenZone(ShapeDistance.PrecisePosition(dest, new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
+                    hints.AddForbiddenZone(new SDPrecisePosition(dest, new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
                     break;
             }
         }

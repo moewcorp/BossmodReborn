@@ -3,778 +3,1002 @@
 // shapes can be defined by distance from point to shape's border; distance is positive for points outside shape and negative for points inside shape
 // union is min, intersection is max
 
-public static class ShapeDistance
+public abstract class ShapeDistance
 {
-    private static readonly Angle a90 = 90f.Degrees();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract float Distance(WPos p);
+}
 
-    public static Func<WPos, float> HalfPlane(WPos point, WDir normal)
+public sealed class SDHalfPlane : ShapeDistance
+{
+    private readonly float pointX, pointZ, normalX, normalZ;
+
+    public SDHalfPlane(WPos Point, WDir Normal)
     {
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-        var pointX = point.X;
-        var pointZ = point.Z;
-        return p => normalX * (p.X - pointX) + normalZ * (p.Z - pointZ);
+        var point = Point;
+        pointX = point.X;
+        pointZ = point.Z;
+        var normal = Normal;
+        normalX = normal.X;
+        normalZ = normal.Z;
     }
 
-    public static Func<WPos, float> Circle(WPos origin, float radius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p) => normalX * (p.X - pointX) + normalZ * (p.Z - pointZ);
+}
+
+public sealed class SDCircle : ShapeDistance
+{
+    private readonly float originX, originZ, radius;
+
+    public SDCircle(WPos Origin, float Radius)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        return radius <= 0f ? (_ => float.MaxValue) : (p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            return MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ) - radius;
-        });
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        radius = Radius;
     }
 
-    public static Func<WPos, float> InvertedCircle(WPos origin, float radius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        return radius <= 0f ? (_ => float.MinValue) : (p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            return radius - MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-        });
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        return MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ) - radius;
+    }
+}
+
+public sealed class SDInvertedCircle : ShapeDistance
+{
+    private readonly float originX, originZ, radius;
+
+    public SDInvertedCircle(WPos Origin, float Radius)
+    {
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        radius = Radius;
     }
 
-    public static Func<WPos, float> Donut(WPos origin, float innerRadius, float outerRadius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        return outerRadius <= 0f || innerRadius >= outerRadius ? (_ => float.MaxValue) : innerRadius <= 0f ? Circle(origin, outerRadius) : (p =>
-        {
-            // intersection of outer circle and inverted inner circle
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distSqOuter = distOrigin - outerRadius;
-            var distSqInner = innerRadius - distOrigin;
-            return distSqOuter > distSqInner ? distSqOuter : distSqInner;
-        });
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        return radius - MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+    }
+}
+
+public sealed class SDDonut : ShapeDistance
+{
+    private readonly float originX, originZ, innerRadius, outerRadius;
+
+    public SDDonut(WPos Origin, float InnerRadius, float OuterRadius)
+    {
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        innerRadius = InnerRadius;
+        outerRadius = OuterRadius;
     }
 
-    public static Func<WPos, float> InvertedDonut(WPos origin, float innerRadius, float outerRadius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        return outerRadius <= 0f || innerRadius >= outerRadius ? (_ => float.MaxValue) : innerRadius <= 0f ? Circle(origin, outerRadius) : (p =>
-        {
-            // intersection of outer circle and inverted inner circle
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distOuter = distOrigin - outerRadius;
-            var distInner = innerRadius - distOrigin;
-            return distOuter > distInner ? -distOuter : -distInner;
-        });
+        // intersection of outer circle and inverted inner circle
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - outerRadius;
+        var distInner = innerRadius - distOrigin;
+        return distOuter > distInner ? distOuter : distInner;
+    }
+}
+
+public sealed class SDInvertedDonut : ShapeDistance
+{
+    private readonly float originX, originZ, innerRadius, outerRadius;
+
+    public SDInvertedDonut(WPos Origin, float InnerRadius, float OuterRadius)
+    {
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        innerRadius = InnerRadius;
+        outerRadius = OuterRadius;
     }
 
-    public static Func<WPos, float> Cone(WPos origin, float radius, Angle centerDir, Angle halfAngle)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        if (halfAngle.Rad <= 0f || radius <= 0f)
-            return _ => float.MaxValue;
-        if (halfAngle.Rad >= MathF.PI)
-            return Circle(origin, radius);
-        // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
-        // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
-        // both normals point outside
-        var coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        // intersection of outer circle and inverted inner circle
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - outerRadius;
+        var distInner = innerRadius - distOrigin;
+        return distOuter > distInner ? -distOuter : -distInner;
+    }
+}
+
+public sealed class SDCone : ShapeDistance
+{
+    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+
+    public SDCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
+    {
+        originX = Origin.X;
+        originZ = Origin.Z;
+        radius = Radius;
+        var halfAngle = HalfAngle;
+        coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        var centerDir = CenterDir;
         var nl = coneFactor * (centerDir + halfAngle).ToDirection().OrthoL();
         var nr = coneFactor * (centerDir - halfAngle).ToDirection().OrthoR();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var nlX = nl.X;
-        var nlZ = nl.Z;
-        var nrX = nr.X;
-        var nrZ = nr.Z;
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distOuter = distOrigin - radius;
-            var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
-            var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
-
-            var maxSideDist = distLeft > distRight ? distLeft : distRight;
-            var conef = coneFactor * maxSideDist;
-            return distOuter > conef ? distOuter : conef;
-        };
+        nlX = nl.X;
+        nlZ = nl.Z;
+        nrX = nr.X;
+        nrZ = nr.Z;
     }
 
-    public static Func<WPos, float> InvertedCone(WPos origin, float radius, Angle centerDir, Angle halfAngle)
+    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
+    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
+    // both normals point outside
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        if (halfAngle.Rad <= 0f || radius <= 0f)
-            return _ => float.MaxValue;
-        if (halfAngle.Rad >= MathF.PI)
-            return Circle(origin, radius);
-        // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
-        // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
-        // both normals point outside
-        var coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - radius;
+        var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
+        var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
+
+        var maxSideDist = distLeft > distRight ? distLeft : distRight;
+        var conef = coneFactor * maxSideDist;
+        return distOuter > conef ? distOuter : conef;
+    }
+}
+
+public sealed class SDInvertedCone : ShapeDistance
+{
+    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+
+    public SDInvertedCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
+    {
+        originX = Origin.X;
+        originZ = Origin.Z;
+        radius = Radius;
+        var halfAngle = HalfAngle;
+        coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        var centerDir = CenterDir;
         var nl = coneFactor * (centerDir + halfAngle).ToDirection().OrthoL();
         var nr = coneFactor * (centerDir - halfAngle).ToDirection().OrthoR();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var nlX = nl.X;
-        var nlZ = nl.Z;
-        var nrX = nr.X;
-        var nrZ = nr.Z;
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distOuter = distOrigin - radius;
-            var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
-            var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
-
-            var maxSideDist = distLeft > distRight ? distLeft : distRight;
-            var conef = coneFactor * maxSideDist;
-            return distOuter > conef ? -distOuter : -conef;
-        };
+        nlX = nl.X;
+        nlZ = nl.Z;
+        nrX = nr.X;
+        nrZ = nr.Z;
     }
 
-    public static Func<WPos, float> DonutSector(WPos origin, float innerRadius, float outerRadius, Angle centerDir, Angle halfAngle)
+    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
+    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
+    // both normals point outside
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        if (halfAngle.Rad <= 0f || outerRadius <= 0f || innerRadius >= outerRadius)
-            return _ => float.MaxValue;
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - radius;
+        var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
+        var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
 
-        if (halfAngle.Rad >= MathF.PI)
-            return Donut(origin, innerRadius, outerRadius);
+        var maxSideDist = distLeft > distRight ? distLeft : distRight;
+        var conef = coneFactor * maxSideDist;
+        return distOuter > conef ? -distOuter : -conef;
+    }
+}
 
-        if (innerRadius <= 0f)
-            return Cone(origin, outerRadius, centerDir, halfAngle);
+public sealed class SDDonutSector : ShapeDistance
+{
+    private readonly float originX, originZ, coneFactor, innerRadius, outerRadius, nlX, nlZ, nrX, nrZ;
 
-        var coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
-        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection();
-        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var nlX = nl.X;
-        var nlZ = nl.Z;
-        var nrX = nr.X;
-        var nrZ = nr.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distOuter = distOrigin - outerRadius;
-            var distInner = innerRadius - distOrigin;
-            var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
-            var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
-
-            var maxRadial = distOuter > distInner ? distOuter : distInner;
-            var maxCone = distLeft > distRight ? distLeft : distRight;
-            var conef = coneFactor * maxCone;
-            return maxRadial > conef ? maxRadial : conef;
-        };
+    public SDDonutSector(WPos Origin, float InnerRadius, float OuterRadius, Angle CenterDir, Angle HalfAngle)
+    {
+        originX = Origin.X;
+        originZ = Origin.Z;
+        innerRadius = InnerRadius;
+        outerRadius = OuterRadius;
+        var halfAngle = HalfAngle;
+        coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        var centerDir = CenterDir;
+        var a90 = 90f.Degrees();
+        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection().OrthoL();
+        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection().OrthoR();
+        nlX = nl.X;
+        nlZ = nl.Z;
+        nrX = nr.X;
+        nrZ = nr.Z;
     }
 
-    public static Func<WPos, float> InvertedDonutSector(WPos origin, float innerRadius, float outerRadius, Angle centerDir, Angle halfAngle)
+    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
+    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
+    // both normals point outside
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        if (halfAngle.Rad <= 0f || outerRadius <= 0f || innerRadius >= outerRadius)
-            return _ => float.MaxValue;
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - outerRadius;
+        var distInner = innerRadius - distOrigin;
+        var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
+        var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
 
-        if (halfAngle.Rad >= MathF.PI)
-            return Donut(origin, innerRadius, outerRadius);
+        var maxRadial = distOuter > distInner ? distOuter : distInner;
+        var maxCone = distLeft > distRight ? distLeft : distRight;
+        var conef = coneFactor * maxCone;
+        return maxRadial > conef ? maxRadial : conef;
+    }
+}
 
-        if (innerRadius <= 0f)
-            return Cone(origin, outerRadius, centerDir, halfAngle);
+public sealed class SDInvertedDonutSector : ShapeDistance
+{
+    private readonly float originX, originZ, coneFactor, innerRadius, outerRadius, nlX, nlZ, nrX, nrZ;
 
-        var coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
-        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection();
-        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var nlX = nl.X;
-        var nlZ = nl.Z;
-        var nrX = nr.X;
-        var nrZ = nr.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
-            var distOuter = distOrigin - outerRadius;
-            var distInner = innerRadius - distOrigin;
-            var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
-            var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
-
-            var maxRadial = distOuter > distInner ? distOuter : distInner;
-            var maxCone = distLeft > distRight ? distLeft : distRight;
-            var conef = coneFactor * maxCone;
-            return maxRadial > conef ? -maxRadial : -conef;
-        };
+    public SDInvertedDonutSector(WPos Origin, float InnerRadius, float OuterRadius, Angle CenterDir, Angle HalfAngle)
+    {
+        originX = Origin.X;
+        originZ = Origin.Z;
+        innerRadius = InnerRadius;
+        outerRadius = OuterRadius;
+        var halfAngle = HalfAngle;
+        coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
+        var centerDir = CenterDir;
+        var a90 = 90f.Degrees();
+        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection().OrthoL();
+        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection().OrthoR();
+        nlX = nl.X;
+        nlZ = nl.Z;
+        nrX = nr.X;
+        nrZ = nr.Z;
     }
 
-    public static Func<WPos, float> Tri(WPos origin, RelTriangle tri)
+    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
+    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
+    // both normals point outside
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distOrigin = MathF.Sqrt(pXoriginX * pXoriginX + pZoriginZ * pZoriginZ);
+        var distOuter = distOrigin - outerRadius;
+        var distInner = innerRadius - distOrigin;
+        var distLeft = pXoriginX * nlX + pZoriginZ * nlZ;
+        var distRight = pXoriginX * nrX + pZoriginZ * nrZ;
+
+        var maxRadial = distOuter > distInner ? distOuter : distInner;
+        var maxCone = distLeft > distRight ? distLeft : distRight;
+        var conef = coneFactor * maxCone;
+        return maxRadial > conef ? -maxRadial : -conef;
+    }
+}
+
+public sealed class SDTri : ShapeDistance
+{
+    private readonly float n1X, n1Z, n2X, n2Z, n3X, n3Z, aX, aZ, bX, bZ, cX, cZ;
+
+    public SDTri(WPos Origin, RelTriangle Triangle)
+    {
+        var tri = Triangle;
         var ab = tri.B - tri.A;
         var bc = tri.C - tri.B;
         var ca = tri.A - tri.C;
         var n1 = ab.OrthoL().Normalized();
         var n2 = bc.OrthoL().Normalized();
         var n3 = ca.OrthoL().Normalized();
-        if (ab.Cross(bc) < 0)
+        if (ab.Cross(bc) < 0f)
         {
             n1 = -n1;
             n2 = -n2;
             n3 = -n3;
         }
+        var origin = Origin;
         var a = origin + tri.A;
         var b = origin + tri.B;
         var c = origin + tri.C;
 
-        var n1X = n1.X;
-        var n1Z = n1.Z;
-        var n2X = n2.X;
-        var n2Z = n2.Z;
-        var n3X = n3.X;
-        var n3Z = n3.Z;
-        var aX = a.X;
-        var aZ = a.Z;
-        var bX = b.X;
-        var bZ = b.Z;
-        var cX = c.X;
-        var cZ = c.Z;
-
-        return p =>
-        {
-            var d1 = n1X * (p.X - aX) + n1Z * (p.Z - aZ);
-            var d2 = n2X * (p.X - bX) + n2Z * (p.Z - bZ);
-            var d3 = n3X * (p.X - cX) + n3Z * (p.Z - cZ);
-            var max1 = d1 > d2 ? d1 : d2;
-            return max1 > d3 ? max1 : d3;
-        };
+        n1X = n1.X;
+        n1Z = n1.Z;
+        n2X = n2.X;
+        n2Z = n2.Z;
+        n3X = n3.X;
+        n3Z = n3.Z;
+        aX = a.X;
+        aZ = a.Z;
+        bX = b.X;
+        bZ = b.Z;
+        cX = c.X;
+        cZ = c.Z;
     }
 
-    public static Func<WPos, float> InvertedTri(WPos origin, RelTriangle tri)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
+        var pX = p.X;
+        var pZ = p.Z;
+        var d1 = n1X * (pX - aX) + n1Z * (pZ - aZ);
+        var d2 = n2X * (pX - bX) + n2Z * (pZ - bZ);
+        var d3 = n3X * (pX - cX) + n3Z * (pZ - cZ);
+        var max1 = d1 > d2 ? d1 : d2;
+        return max1 > d3 ? max1 : d3;
+    }
+}
+
+public sealed class SDInvertedTri : ShapeDistance
+{
+    private readonly float n1X, n1Z, n2X, n2Z, n3X, n3Z, aX, aZ, bX, bZ, cX, cZ;
+
+    public SDInvertedTri(WPos Origin, RelTriangle Triangle)
+    {
+        var tri = Triangle;
         var ab = tri.B - tri.A;
         var bc = tri.C - tri.B;
         var ca = tri.A - tri.C;
         var n1 = ab.OrthoL().Normalized();
         var n2 = bc.OrthoL().Normalized();
         var n3 = ca.OrthoL().Normalized();
-        if (ab.Cross(bc) < 0)
+        if (ab.Cross(bc) < 0f)
         {
             n1 = -n1;
             n2 = -n2;
             n3 = -n3;
         }
+        var origin = Origin;
         var a = origin + tri.A;
         var b = origin + tri.B;
         var c = origin + tri.C;
 
-        var n1X = n1.X;
-        var n1Z = n1.Z;
-        var n2X = n2.X;
-        var n2Z = n2.Z;
-        var n3X = n3.X;
-        var n3Z = n3.Z;
-        var aX = a.X;
-        var aZ = a.Z;
-        var bX = b.X;
-        var bZ = b.Z;
-        var cX = c.X;
-        var cZ = c.Z;
-
-        return p =>
-        {
-            var d1 = n1X * (p.X - aX) + n1Z * (p.Z - aZ);
-            var d2 = n2X * (p.X - bX) + n2Z * (p.Z - bZ);
-            var d3 = n3X * (p.X - cX) + n3Z * (p.Z - cZ);
-            var max1 = d1 > d2 ? d1 : d2;
-            return max1 > d3 ? -max1 : -d3;
-        };
+        n1X = n1.X;
+        n1Z = n1.Z;
+        n2X = n2.X;
+        n2Z = n2.Z;
+        n3X = n3.X;
+        n3Z = n3.Z;
+        aX = a.X;
+        aZ = a.Z;
+        bX = b.X;
+        bZ = b.Z;
+        cX = c.X;
+        cZ = c.Z;
     }
 
-    public static Func<WPos, float> Rect(WPos origin, WDir dir, float lenFront, float lenBack, float halfWidth)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        // dir points outside far side
-        var normal = dir.OrthoL(); // points outside left side
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - lenFront;
-            var distBack = -distParr - lenBack;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? maxParr : maxOrtho;
-        };
+        var pX = p.X;
+        var pZ = p.Z;
+        var d1 = n1X * (pX - aX) + n1Z * (pZ - aZ);
+        var d2 = n2X * (pX - bX) + n2Z * (pZ - bZ);
+        var d3 = n3X * (pX - cX) + n3Z * (pZ - cZ);
+        var max1 = d1 > d2 ? d1 : d2;
+        return max1 > d3 ? -max1 : -d3;
     }
+}
 
-    public static Func<WPos, float> Rect(WPos origin, Angle direction, float lenFront, float lenBack, float halfWidth)
+public sealed class SDRect : ShapeDistance
+{
+    private readonly float originX, originZ, dirX, dirZ, normalX, normalZ, lenFront, lenBack, halfWidth;
+
+    public SDRect(WPos Origin, Angle Direction, float LenFront, float LenBack, float HalfWidth) : this(Origin, Direction.ToDirection(), LenFront, LenBack, HalfWidth) { }
+
+    public SDRect(WPos From, WPos To, float HalfWidth)
     {
-        // dir points outside far side
-        var dir = direction.ToDirection();
-        var normal = dir.OrthoL(); // points outside left side
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - lenFront;
-            var distBack = -distParr - lenBack;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? maxParr : maxOrtho;
-        };
-    }
-
-    public static Func<WPos, float> Rect(WPos from, WPos to, float halfWidth)
-    {
-        var dir = to - from;
+        var from = From;
+        var dir = To - from;
         var l = dir.Length();
         var normalizedDir = dir / l;
         var normal = normalizedDir.OrthoL();
 
-        var originX = from.X;
-        var originZ = from.Z;
-        var dirX = normalizedDir.X;
-        var dirZ = normalizedDir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - l;
-            var distBack = -distParr;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? maxParr : maxOrtho;
-        };
+        originX = from.X;
+        originZ = from.Z;
+        dirX = normalizedDir.X;
+        dirZ = normalizedDir.Z;
+        normalX = normal.X;
+        normalZ = normal.Z;
+        lenFront = l;
+        lenBack = 0;
+        halfWidth = HalfWidth;
     }
 
-    public static Func<WPos, float> InvertedRect(WPos origin, WDir dir, float lenFront, float lenBack, float halfWidth)
+    public SDRect(WPos Origin, WDir Dir, float LenFront, float LenBack, float HalfWidth)
     {
         // dir points outside far side
+        var dir = Dir;
         var normal = dir.OrthoL(); // points outside left side
-
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - lenFront;
-            var distBack = -distParr - lenBack;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? -maxParr : -maxOrtho;
-        };
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        dirX = dir.X;
+        dirZ = dir.Z;
+        normalX = normal.X;
+        normalZ = normal.Z;
+        lenFront = LenFront;
+        lenBack = LenBack;
+        halfWidth = HalfWidth;
     }
 
-    public static Func<WPos, float> InvertedRect(WPos origin, Angle direction, float lenFront, float lenBack, float halfWidth)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        // dir points outside far side
-        var dir = direction.ToDirection();
-        var normal = dir.OrthoL(); // points outside left side
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
+        var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
+        var distFront = distParr - lenFront;
+        var distBack = -distParr - lenBack;
+        var distLeft = distOrtho - halfWidth;
+        var distRight = -distOrtho - halfWidth;
 
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
+        var maxParr = distFront > distBack ? distFront : distBack;
+        var maxOrtho = distLeft > distRight ? distLeft : distRight;
 
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - lenFront;
-            var distBack = -distParr - lenBack;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? -maxParr : -maxOrtho;
-        };
+        return maxParr > maxOrtho ? maxParr : maxOrtho;
     }
+}
 
-    public static Func<WPos, float> InvertedRect(WPos from, WPos to, float halfWidth)
+public sealed class SDInvertedRect : ShapeDistance
+{
+    private readonly float originX, originZ, dirX, dirZ, normalX, normalZ, lenFront, lenBack, halfWidth;
+
+    public SDInvertedRect(WPos Origin, Angle Direction, float LenFront, float LenBack, float HalfWidth) : this(Origin, Direction.ToDirection(), LenFront, LenBack, HalfWidth) { }
+
+    public SDInvertedRect(WPos From, WPos To, float HalfWidth)
     {
-        var dir = to - from;
+        var from = From;
+        var dir = To - from;
         var l = dir.Length();
         var normalizedDir = dir / l;
         var normal = normalizedDir.OrthoL();
 
-        var originX = from.X;
-        var originZ = from.Z;
-        var dirX = normalizedDir.X;
-        var dirZ = normalizedDir.Z;
-        var normalX = normal.X;
-        var normalZ = normal.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
-            var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
-            var distFront = distParr - l;
-            var distBack = -distParr;
-            var distLeft = distOrtho - halfWidth;
-            var distRight = -distOrtho - halfWidth;
-
-            var maxParr = distFront > distBack ? distFront : distBack;
-            var maxOrtho = distLeft > distRight ? distLeft : distRight;
-
-            return maxParr > maxOrtho ? -maxParr : -maxOrtho;
-        };
+        originX = from.X;
+        originZ = from.Z;
+        dirX = normalizedDir.X;
+        dirZ = normalizedDir.Z;
+        normalX = normal.X;
+        normalZ = normal.Z;
+        lenFront = l;
+        lenBack = default;
+        halfWidth = HalfWidth;
     }
 
-    public static Func<WPos, float> Capsule(WPos origin, WDir dir, float length, float radius)
+    public SDInvertedRect(WPos Origin, WDir Dir, float LenFront, float LenBack, float HalfWidth)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
-
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var t = pXoriginX * dirX + pZoriginZ * dirZ;
-            t = (t < 0f) ? 0f : (t > length ? length : t);
-            var proj = origin + t * dir;
-            var pXprojX = p.X - proj.X;
-            var pZprojZ = p.Z - proj.Z;
-            return MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ) - radius;
-        };
+        // dir points outside far side
+        var dir = Dir;
+        var normal = dir.OrthoL(); // points outside left side
+        var origin = Origin;
+        originX = origin.X;
+        originZ = origin.Z;
+        dirX = dir.X;
+        dirZ = dir.Z;
+        normalX = normal.X;
+        normalZ = normal.Z;
+        lenFront = LenFront;
+        lenBack = LenBack;
+        halfWidth = HalfWidth;
     }
 
-    public static Func<WPos, float> Capsule(WPos origin, Angle direction, float length, float radius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var dir = direction.ToDirection();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
+        var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
+        var distFront = distParr - lenFront;
+        var distBack = -distParr - lenBack;
+        var distLeft = distOrtho - halfWidth;
+        var distRight = -distOrtho - halfWidth;
 
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var t = pXoriginX * dirX + pZoriginZ * dirZ;
-            t = (t < 0f) ? 0f : (t > length ? length : t);
-            var proj = origin + t * dir;
-            var pXprojX = p.X - proj.X;
-            var pZprojZ = p.Z - proj.Z;
-            return MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ) - radius;
-        };
+        var maxParr = distFront > distBack ? distFront : distBack;
+        var maxOrtho = distLeft > distRight ? distLeft : distRight;
+
+        return maxParr > maxOrtho ? -maxParr : -maxOrtho;
+    }
+}
+
+public sealed class SDCapsule : ShapeDistance
+{
+    private readonly float originX, originZ, dirX, dirZ, length, radius;
+    private readonly WDir direction;
+    private readonly WPos origin;
+
+    public SDCapsule(WPos Origin, Angle Direction, float Length, float Radius) : this(Origin, Direction.ToDirection(), Length, Radius) { }
+
+    public SDCapsule(WPos Origin, WDir Direction, float Length, float Radius)
+    {
+        origin = Origin;
+        direction = Direction;
+        originX = origin.X;
+        originZ = origin.Z;
+        dirX = direction.X;
+        dirZ = direction.Z;
+        length = Length;
+        radius = Radius;
     }
 
-    public static Func<WPos, float> InvertedCapsule(WPos origin, WDir dir, float length, float radius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
+        var pX = p.X;
+        var pZ = p.Z;
+        var pXoriginX = pX - originX;
+        var pZoriginZ = pZ - originZ;
+        var t = pXoriginX * dirX + pZoriginZ * dirZ;
+        t = (t < 0f) ? default : (t > length ? length : t);
+        var proj = origin + t * direction;
+        var pXprojX = pX - proj.X;
+        var pZprojZ = pZ - proj.Z;
+        return MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ) - radius;
+    }
+}
 
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var t = pXoriginX * dirX + pZoriginZ * dirZ;
-            t = (t < 0f) ? 0f : (t > length ? length : t);
-            var proj = origin + t * dir;
-            var pXprojX = p.X - proj.X;
-            var pZprojZ = p.Z - proj.Z;
-            return radius - MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ);
-        };
+public sealed class SDInvertedCapsule : ShapeDistance
+{
+    private readonly float originX, originZ, dirX, dirZ, length, radius;
+    private readonly WDir direction;
+    private readonly WPos origin;
+
+    public SDInvertedCapsule(WPos Origin, Angle Direction, float Length, float Radius) : this(Origin, Direction.ToDirection(), Length, Radius) { }
+
+    public SDInvertedCapsule(WPos Origin, WDir Direction, float Length, float Radius)
+    {
+        origin = Origin;
+        direction = Direction;
+        originX = origin.X;
+        originZ = origin.Z;
+        dirX = direction.X;
+        dirZ = direction.Z;
+        length = Length;
+        radius = Radius;
     }
 
-    public static Func<WPos, float> InvertedCapsule(WPos origin, Angle direction, float length, float radius)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var dir = direction.ToDirection();
-        var originX = origin.X;
-        var originZ = origin.Z;
-        var dirX = dir.X;
-        var dirZ = dir.Z;
+        var pX = p.X;
+        var pZ = p.Z;
+        var pXoriginX = pX - originX;
+        var pZoriginZ = pZ - originZ;
+        var t = pXoriginX * dirX + pZoriginZ * dirZ;
+        t = (t < 0f) ? default : (t > length ? length : t);
+        var proj = origin + t * direction;
+        var pXprojX = pX - proj.X;
+        var pZprojZ = pZ - proj.Z;
+        return radius - MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ);
+    }
+}
 
-        return p =>
-        {
-            var pXoriginX = p.X - originX;
-            var pZoriginZ = p.Z - originZ;
-            var t = pXoriginX * dirX + pZoriginZ * dirZ;
-            t = (t < 0) ? 0 : (t > length ? length : t);
-            var proj = origin + t * dir;
-            var pXprojX = p.X - proj.X;
-            var pZprojZ = p.Z - proj.Z;
-            return radius - MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ);
-        };
+public sealed class SDCross : ShapeDistance
+{
+    private readonly float length, halfWidth;
+    private readonly WDir direction, normal;
+    private readonly WPos origin;
+
+    public SDCross(WPos Origin, Angle Direction, float Length, float HalfWidth)
+    {
+        origin = Origin;
+        direction = Direction.ToDirection();
+        length = Length;
+        halfWidth = HalfWidth;
+        normal = direction.OrthoL();
     }
 
-    public static Func<WPos, float> Cross(WPos origin, Angle direction, float length, float halfWidth)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var dir = direction.ToDirection();
-        var normal = dir.OrthoL();
-        return p =>
-        {
-            var offset = p - origin;
-            var distParr = offset.Dot(dir);
-            var distOrtho = offset.Dot(normal);
-            var distPFront = distParr - length;
-            var distPBack = -distParr - length;
-            var distPLeft = distOrtho - halfWidth;
-            var distPRight = -distOrtho - halfWidth;
-            var distOFront = distOrtho - length;
-            var distOBack = -distOrtho - length;
-            var distOLeft = distParr - halfWidth;
-            var distORight = -distParr - halfWidth;
+        var offset = p - origin;
+        var distParr = offset.Dot(direction);
+        var distOrtho = offset.Dot(normal);
+        var distPFront = distParr - length;
+        var distPBack = -distParr - length;
+        var distPLeft = distOrtho - halfWidth;
+        var distPRight = -distOrtho - halfWidth;
+        var distOFront = distOrtho - length;
+        var distOBack = -distOrtho - length;
+        var distOLeft = distParr - halfWidth;
+        var distORight = -distParr - halfWidth;
 
-            var distPMax1 = distPFront > distPBack ? distPFront : distPBack;
-            var distPMax2 = distPLeft > distPRight ? distPLeft : distPRight;
-            var distP = distPMax1 > distPMax2 ? distPMax1 : distPMax2;
+        var distPMax1 = distPFront > distPBack ? distPFront : distPBack;
+        var distPMax2 = distPLeft > distPRight ? distPLeft : distPRight;
+        var distP = distPMax1 > distPMax2 ? distPMax1 : distPMax2;
 
-            var distOMax1 = distOFront > distOBack ? distOFront : distOBack;
-            var distOMax2 = distOLeft > distORight ? distOLeft : distORight;
-            var distO = distOMax1 > distOMax2 ? distOMax1 : distOMax2;
+        var distOMax1 = distOFront > distOBack ? distOFront : distOBack;
+        var distOMax2 = distOLeft > distORight ? distOLeft : distORight;
+        var distO = distOMax1 > distOMax2 ? distOMax1 : distOMax2;
 
-            return distP < distO ? distP : distO;
-        };
+        return distP < distO ? distP : distO;
+    }
+}
+
+public sealed class SDInvertedCross : ShapeDistance
+{
+    private readonly float length, halfWidth;
+    private readonly WDir direction, normal;
+    private readonly WPos origin;
+
+    public SDInvertedCross(WPos Origin, Angle Direction, float Length, float HalfWidth)
+    {
+        origin = Origin;
+        direction = Direction.ToDirection();
+        length = Length;
+        halfWidth = HalfWidth;
+        normal = direction.OrthoL();
     }
 
-    public static Func<WPos, float> InvertedCross(WPos origin, Angle direction, float length, float halfWidth)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var dir = direction.ToDirection();
-        var normal = dir.OrthoL();
-        return p =>
-        {
-            var offset = p - origin;
-            var distParr = offset.Dot(dir);
-            var distOrtho = offset.Dot(normal);
-            var distPFront = distParr - length;
-            var distPBack = -distParr - length;
-            var distPLeft = distOrtho - halfWidth;
-            var distPRight = -distOrtho - halfWidth;
-            var distOFront = distOrtho - length;
-            var distOBack = -distOrtho - length;
-            var distOLeft = distParr - halfWidth;
-            var distORight = -distParr - halfWidth;
+        var offset = p - origin;
+        var distParr = offset.Dot(direction);
+        var distOrtho = offset.Dot(normal);
+        var distPFront = distParr - length;
+        var distPBack = -distParr - length;
+        var distPLeft = distOrtho - halfWidth;
+        var distPRight = -distOrtho - halfWidth;
+        var distOFront = distOrtho - length;
+        var distOBack = -distOrtho - length;
+        var distOLeft = distParr - halfWidth;
+        var distORight = -distParr - halfWidth;
 
-            var distPMax1 = distPFront > distPBack ? distPFront : distPBack;
-            var distPMax2 = distPLeft > distPRight ? distPLeft : distPRight;
-            var distP = distPMax1 > distPMax2 ? distPMax1 : distPMax2;
+        var distPMax1 = distPFront > distPBack ? distPFront : distPBack;
+        var distPMax2 = distPLeft > distPRight ? distPLeft : distPRight;
+        var distP = distPMax1 > distPMax2 ? distPMax1 : distPMax2;
 
-            var distOMax1 = distOFront > distOBack ? distOFront : distOBack;
-            var distOMax2 = distOLeft > distORight ? distOLeft : distORight;
-            var distO = distOMax1 > distOMax2 ? distOMax1 : distOMax2;
+        var distOMax1 = distOFront > distOBack ? distOFront : distOBack;
+        var distOMax2 = distOLeft > distORight ? distOLeft : distORight;
+        var distO = distOMax1 > distOMax2 ? distOMax1 : distOMax2;
 
-            return distP < distO ? -distP : -distO;
-        };
+        return distP < distO ? -distP : -distO;
+    }
+}
+
+public sealed class SDConvexPolygon : ShapeDistance
+{
+    private readonly bool cw;
+    private readonly (WPos, WPos)[] edges;
+
+    public SDConvexPolygon((WPos, WPos)[] Edges, bool Cw)
+    {
+        edges = Edges;
+        cw = Cw;
     }
 
-    public static Func<WPos, float> ConvexPolygon((WPos, WPos)[] edges, bool cw)
+    public SDConvexPolygon(ReadOnlySpan<WPos> Vertices, bool Cw)
     {
-        return point =>
-        {
-            var minDistance = float.MaxValue;
-            var inside = true;
-            var len = edges.Length;
-            for (var i = 0; i < len; ++i)
-            {
-                var edge = edges[i];
-                var a = edge.Item1;
-                var b = edge.Item2;
-                var ab = b - a;
-                var ap = point - a;
-                var distance = (ab.X * ap.Z - ab.Z * ap.X) / ab.Length();
-
-                if (cw && distance > 0 || !cw && distance < 0)
-                {
-                    inside = false;
-                }
-                minDistance = Math.Min(minDistance, Math.Abs(distance));
-            }
-            return inside ? -minDistance : minDistance;
-        };
-    }
-
-    public static Func<WPos, float> ConvexPolygon(ReadOnlySpan<WPos> vertices, bool cw)
-    {
+        var vertices = Vertices;
         var len = vertices.Length;
-        var edges = new (WPos, WPos)[len];
+        var edgesA = new (WPos, WPos)[len];
         for (var i = 0; i < len; ++i)
         {
             var a = vertices[i];
             var b = vertices[(i + 1) % len];
-            edges[i] = (a, b);
+            edgesA[i] = (a, b);
         }
-        return ConvexPolygon(edges, cw);
+        edges = edgesA;
+        cw = Cw;
     }
 
-    public static Func<WPos, float> Intersection(List<Func<WPos, float>> funcs) // max distance func
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var count = funcs.Count;
-        return p =>
+        var minDistance = float.MaxValue;
+        var inside = true;
+        var len = edges.Length;
+        var point = p;
+        for (var i = 0; i < len; ++i)
         {
-            var maxDistance = float.MinValue;
-            for (var i = 0; i < count; ++i)
+            ref readonly var edge = ref edges[i];
+            var a = edge.Item1;
+            var b = edge.Item2;
+            var ab = b - a;
+            var ap = point - a;
+            var distance = (ab.X * ap.Z - ab.Z * ap.X) / ab.Length();
+
+            if (cw && distance > 0f || !cw && distance < 0f)
             {
-                var distance = funcs[i](p);
-                if (distance > maxDistance)
-                    maxDistance = distance;
+                inside = false;
             }
-            return maxDistance;
-        };
+            minDistance = Math.Min(minDistance, Math.Abs(distance));
+        }
+        return inside ? -minDistance : minDistance;
+    }
+}
+
+public sealed class SDIntersection : ShapeDistance // max distance func
+{
+    private readonly ShapeDistance[] zones;
+    private readonly int length;
+
+    public SDIntersection(ShapeDistance[] Zones)
+    {
+        zones = Zones;
+        length = zones.Length;
     }
 
-    public static Func<WPos, float> Intersection(Func<WPos, float>[] funcs) // max distance func
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var count = funcs.Length;
-        return p =>
+        var array = zones;
+        var max = float.MinValue;
+        var point = p;
+
+        for (var i = 0; i < length; ++i)
         {
-            var maxDistance = float.MinValue;
-            for (var i = 0; i < count; ++i)
+            var d = array[i].Distance(point);
+            if (d > max)
             {
-                var distance = funcs[i](p);
-                if (distance > maxDistance)
-                    maxDistance = distance;
+                max = d;
             }
-            return maxDistance;
-        };
+        }
+        return max;
+    }
+}
+
+public sealed class SDUnion : ShapeDistance // min distance func
+{
+    private readonly ShapeDistance[] zones;
+    private readonly int length;
+
+    public SDUnion(ShapeDistance[] Zones)
+    {
+        zones = Zones;
+        length = zones.Length;
     }
 
-    public static Func<WPos, float> Union(List<Func<WPos, float>> funcs) // min distance func
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var count = funcs.Count;
-        return p =>
+        var array = zones;
+        var min = float.MaxValue;
+        var point = p;
+
+        for (var i = 0; i < length; ++i)
         {
-            var minDistance = float.MaxValue;
-            for (var i = 0; i < count; ++i)
+            var d = array[i].Distance(point);
+            if (d < min)
             {
-                var distance = funcs[i](p);
-                if (distance < minDistance)
-                    minDistance = distance;
+                min = d;
             }
-            return minDistance;
-        };
+        }
+        return min;
+    }
+}
+
+public sealed class SDInvertedUnion : ShapeDistance // min distance func
+{
+    private readonly ShapeDistance[] zones;
+    private readonly int length;
+
+    public SDInvertedUnion(ShapeDistance[] Zones)
+    {
+        zones = Zones;
+        length = zones.Length;
     }
 
-    public static Func<WPos, float> Union(Func<WPos, float>[] funcs) // min distance func
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
     {
-        var len = funcs.Length;
-        return p =>
+        var array = zones;
+        var min = float.MaxValue;
+        var point = p;
+
+        for (var i = 0; i < length; ++i)
         {
-            var minDistance = float.MaxValue;
-            for (var i = 0; i < len; ++i)
+            var d = array[i].Distance(point);
+            if (d < min)
             {
-                var distance = funcs[i](p);
-                if (distance < minDistance)
-                    minDistance = distance;
+                min = d;
             }
-            return minDistance;
-        };
+        }
+        return -min;
     }
+}
 
-    public static Func<WPos, float> InvertedUnion(List<Func<WPos, float>> funcs) // min distance func
-    {
-        var count = funcs.Count;
-        return p =>
-        {
-            var minDistance = float.MaxValue;
-            for (var i = 0; i < count; ++i)
-            {
-                var distance = funcs[i](p);
-                if (distance < minDistance)
-                    minDistance = distance;
-            }
-            return -minDistance;
-        };
-    }
+// special distance function for precise positioning, finer than map resolution
+// it's an inverted rect of a size equal to one grid cell, with a special adjustment if starting position is in the same cell, but farther than tolerance
+public sealed class SDPrecisePosition : ShapeDistance
+{
+    private readonly float originX, originZ, dirX, dirZ, normalX, normalZ, cellSize;
 
-    public static Func<WPos, float> InvertedUnion(Func<WPos, float>[] funcs) // min distance func
+    public SDPrecisePosition(WPos Origin, WDir Direction, float CellSize, WPos Starting, float Tolerance = default)
     {
-        var len = funcs.Length;
-        return p =>
-        {
-            var minDistance = float.MaxValue;
-            for (var i = 0; i < len; ++i)
-            {
-                var distance = funcs[i](p);
-                if (distance < minDistance)
-                    minDistance = distance;
-            }
-            return -minDistance;
-        };
-    }
-
-    // special distance function for precise positioning, finer than map resolution
-    // it's an inverted rect of a size equal to one grid cell, with a special adjustment if starting position is in the same cell, but farther than tolerance
-    public static Func<WPos, float> PrecisePosition(WPos origin, WDir dir, float cellSize, WPos starting, float tolerance = 0f)
-    {
+        var starting = Starting;
+        var origin = Origin;
+        cellSize = CellSize;
+        var dir = Direction;
+        var tolerance = Tolerance;
         var delta = starting - origin;
         var dparr = delta.Dot(dir);
         if (dparr > tolerance && dparr <= cellSize)
+        {
             origin -= cellSize * dir;
+        }
         else if (dparr < -tolerance && dparr >= -cellSize)
+        {
             origin += cellSize * dir;
+        }
 
         var normal = dir.OrthoL();
         var dortho = delta.Dot(normal);
         if (dortho > tolerance && dortho <= cellSize)
+        {
             origin -= cellSize * normal;
+        }
         else if (dortho < -tolerance && dortho >= -cellSize)
+        {
             origin += cellSize * normal;
+        }
+        originX = origin.X;
+        originZ = origin.Z;
+        dirX = dir.X;
+        dirZ = dir.Z;
+        normalX = normal.X;
+        normalZ = normal.Z;
+    }
 
-        return InvertedRect(origin, dir, cellSize, cellSize, cellSize);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var pXoriginX = p.X - originX;
+        var pZoriginZ = p.Z - originZ;
+        var distParr = pXoriginX * dirX + pZoriginZ * dirZ;
+        var distOrtho = pXoriginX * normalX + pZoriginZ * normalZ;
+        var distFront = distParr - cellSize;
+        var distBack = -distParr - cellSize;
+        var distLeft = distOrtho - cellSize;
+        var distRight = -distOrtho - cellSize;
+
+        var maxParr = distFront > distBack ? distFront : distBack;
+        var maxOrtho = distLeft > distRight ? distLeft : distRight;
+
+        return maxParr > maxOrtho ? maxParr : maxOrtho;
+    }
+}
+
+public abstract class SDPolygonWithHolesAbs : ShapeDistance
+{
+    protected readonly RelSimplifiedComplexPolygon _polygon;
+    protected readonly float _originX, _originZ;
+    protected readonly Edge[] _edges;
+    protected readonly SpatialIndex _spatialIndex;
+
+    public SDPolygonWithHolesAbs(WPos origin, RelSimplifiedComplexPolygon polygon)
+    {
+        _originX = origin.X;
+        _originZ = origin.Z;
+        _polygon = polygon;
+        var edgeCount = 0;
+        var countPolygonParts = polygon.Parts.Count;
+        for (var i = 0; i < countPolygonParts; ++i)
+        {
+            var part = polygon.Parts[i];
+            edgeCount += part.ExteriorEdges.Length;
+            var lenPolygonHoles = part.Holes.Length;
+            for (var j = 0; j < lenPolygonHoles; ++j)
+                edgeCount += part.InteriorEdges(j).Length;
+        }
+        _edges = new Edge[edgeCount];
+        var edgeIndex = 0;
+        for (var i = 0; i < countPolygonParts; ++i)
+        {
+            var part = polygon.Parts[i];
+            var exteriorEdges = GetEdges(part.Exterior, origin);
+            var exteriorCount = exteriorEdges.Length;
+            Array.Copy(exteriorEdges, 0, _edges, edgeIndex, exteriorCount);
+            edgeIndex += exteriorCount;
+            var lenPolygonHoles = part.Holes.Length;
+            for (var j = 0; j < lenPolygonHoles; ++j)
+            {
+                var holeEdges = GetEdges(part.Interior(j), origin);
+                var holeEdgesCount = holeEdges.Length;
+                Array.Copy(holeEdges, 0, _edges, edgeIndex, holeEdgesCount);
+                edgeIndex += holeEdgesCount;
+            }
+        }
+        _spatialIndex = new(_edges);
+
+        static Edge[] GetEdges(ReadOnlySpan<WDir> vertices, WPos origin)
+        {
+            var count = vertices.Length;
+
+            if (count == 0)
+            {
+                return [];
+            }
+
+            var edges = new Edge[count];
+
+            var prev = vertices[count - 1];
+            var originX = origin.X;
+            var originZ = origin.Z;
+
+            for (var i = 0; i < count; ++i)
+            {
+                var curr = vertices[i];
+                var prevX = prev.X;
+                var prevZ = prev.Z;
+                edges[i] = new(originX + prevX, originZ + prevZ, curr.X - prevX, curr.Z - prevZ);
+                prev = curr;
+            }
+
+            return edges;
+        }
+    }
+}
+
+public sealed class SDPolygonWithHoles(WPos origin, RelSimplifiedComplexPolygon polygon) : SDPolygonWithHolesAbs(origin, polygon)
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var pX = p.X;
+        var pZ = p.Z;
+        if (_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance inside of the polygon, so we can short circuit here
+        {
+            return default;
+        }
+        var minDistanceSq = float.MaxValue;
+
+        var indices = _spatialIndex.Query(pX, pZ);
+        var len = indices.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var edge = ref _edges[indices[i]];
+            var edgeAx = edge.Ax;
+            var edgeAy = edge.Ay;
+            var edgeDx = edge.Dx;
+            var edgeDy = edge.Dy;
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
+            var distX = pX - (edgeAx + t * edgeDx);
+            var distY = pZ - (edgeAy + t * edgeDy);
+
+            minDistanceSq = Math.Min(minDistanceSq, distX * distX + distY * distY);
+        }
+        return MathF.Sqrt(minDistanceSq);
+    }
+}
+
+public sealed class SDInvertedPolygonWithHoles(WPos origin, RelSimplifiedComplexPolygon polygon) : SDPolygonWithHolesAbs(origin, polygon)
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var pX = p.X;
+        var pZ = p.Z;
+        if (!_polygon.Contains(new(pX - _originX, pZ - _originZ))) // NOTE: our usecase doesn't care about distance outside of the polygon, so we can short circuit here
+        {
+            return default;
+        }
+        var minDistanceSq = float.MaxValue;
+
+        var indices = _spatialIndex.Query(pX, pZ);
+        var len = indices.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            ref readonly var edge = ref _edges[indices[i]];
+            var edgeAx = edge.Ax;
+            var edgeAy = edge.Ay;
+            var edgeDx = edge.Dx;
+            var edgeDy = edge.Dy;
+            var t = Math.Clamp(((pX - edgeAx) * edgeDx + (pZ - edgeAy) * edgeDy) * edge.InvLengthSq, default, 1f);
+            var distX = pX - (edgeAx + t * edgeDx);
+            var distY = pZ - (edgeAy + t * edgeDy);
+
+            minDistanceSq = Math.Min(minDistanceSq, distX * distX + distY * distY);
+        }
+        return MathF.Sqrt(minDistanceSq);
     }
 }

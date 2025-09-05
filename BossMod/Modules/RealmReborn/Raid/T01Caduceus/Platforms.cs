@@ -49,21 +49,21 @@ class Platforms(BossModule module) : BossComponent(module)
 
     private static Func<WPos, float>[] InitializePlatformShapes()
     {
-        var platformShapes = new Func<WPos, float>[12 + 1];
+        var platformShapes = new ShapeDistance[12 + 1];
         for (var i = 0; i < 12; ++i)
         {
-            platformShapes[i] = ShapeDistance.ConvexPolygon(PlatformPoly(i), true);
+            platformShapes[i] = new SDConvexPolygon(PlatformPoly(i), true);
         }
         return platformShapes;
     }
 
     private static Func<WPos, float>[] InitializeHighEdgeShapes()
     {
-        var highEdgeShapes = new Func<WPos, float>[5];
+        var highEdgeShapes = new ShapeDistance[5];
         for (var i = 0; i < 5; ++i)
         {
             var e = HexaEdge(highEdges[i].lower, highEdges[i].upper);
-            highEdgeShapes[i] = ShapeDistance.Rect(e.Item1, e.Item2, 0);
+            highEdgeShapes[i] = new SDRect(e.Item1, e.Item2, 0);
         }
         return highEdgeShapes;
     }

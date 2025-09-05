@@ -182,7 +182,7 @@ class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(m
         base.AddAIHints(slot, actor, assignment, hints);
         if (Targets[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 18f), Activation);
+            hints.AddForbiddenZone(new SDCircle(Arena.Center, 18f), Activation);
         }
     }
 }
