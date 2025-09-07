@@ -14,6 +14,7 @@ public abstract class BossModule : IDisposable
     public readonly BossModuleRegistry.Info? Info;
     public readonly StateMachine StateMachine;
     public readonly Pathfinding.ObstacleMapManager Obstacles;
+    public readonly bool OnlyLoadIfTargetable;
 
     private readonly EventSubscriptions _subscriptions;
 
@@ -153,12 +154,13 @@ public abstract class BossModule : IDisposable
         Components.RemoveAll(condition);
     }
 
-    protected BossModule(WorldState ws, Actor primary, WPos center, ArenaBounds bounds)
+    protected BossModule(WorldState ws, Actor primary, WPos center, ArenaBounds bounds, bool onlyLoadIfTargetable = false)
     {
         Obstacles = new(ws);
         WorldState = ws;
         PrimaryActor = primary;
         Arena = new(center, bounds);
+        OnlyLoadIfTargetable = onlyLoadIfTargetable;
         Info = BossModuleRegistry.FindByOID(primary.OID);
         StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
 
