@@ -48,6 +48,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
     private readonly Knockback[][] _kbs = new Knockback[4][];
     private readonly NerveGasRingAndAutoCannons _aoe1 = module.FindComponent<NerveGasRingAndAutoCannons>()!;
     private readonly Barofield _aoe2 = module.FindComponent<Barofield>()!;
+    private readonly List<Actor> drones = module.Enemies((uint)OID.WeaponsDrone);
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
     {
@@ -73,7 +74,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         var aoes = CollectionsMarshal.AsSpan(_aoe1.AOEs);
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
+            ref var aoe = ref aoes[i];
             if (aoe.Check(pos))
             {
                 return true;
@@ -127,37 +128,26 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         {
             ref var kb = ref _kbs[slot][0];
             var attract = kb.Kind == Kind.TowardsOrigin;
-            var pos = Module.PrimaryActor.Position;
-            var barofield = new SDCircle(pos, 5f);
-            var arena = new SDInvertedCircle(pos, 8f);
-            var cannons = Module.Enemies((uint)OID.WeaponsDrone);
-            var count = cannons.Count;
-            var forbiddenRects = new ShapeDistance[count];
+            var distance = attract ? -10f : 10f;
+            var pos = kb.Origin;
+            var count = drones.Count;
+
+            var forbidden = new ShapeDistance[2 + count];
+            forbidden[0] = new SDCircle(pos, 5f);
+            forbidden[1] = new SDInvertedCircle(pos, 8f);
             for (var i = 0; i < count; ++i)
             {
-                var c = cannons[i];
-                forbiddenRects[i] = new SDRect(c.Position, c.Rotation, 43f, default, 2.5f);
+                var c = drones[i];
+                forbidden[2 + i] = new SDRect(c.Position, c.Rotation, 43f, default, 2.5f);
             }
-            var all = new SDUnion((Func<WPos, float>[])[barofield, arena, .. forbiddenRects]);
+
             var origin = kb.Origin;
-
-            hints.AddForbiddenZone(p =>
-            {
-                var dir = (p - origin).Normalized();
-                var kb = attract ? -dir : dir;
-
-                // prevent KB through death zone in center
-                if (Intersect.RayCircle(p, kb, pos, 5f) < 99f)
-                {
-                    return default;
-                }
-                return all(p + kb * 10f);
-            }, kb.Activation);
+            hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOriginPlusMixedAOEsPlusSingleCircleIntersection(Arena.Center, origin, 19f, distance, new SDUnion(forbidden), origin, 6f), kb.Activation);
         }
     }
 }
 
-sealed class Barofield(BossModule module) : Components.GenericAOEs(module)
+sealed class Barofield(BossModule module) : Components.GenericAOEs(module) // TODO: convert to arena change
 {
     private static readonly AOEShapeCircle circle = new(5f);
     public AOEInstance[] AOE = [];
@@ -166,7 +156,7 @@ sealed class Barofield(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (AOE.Length != 0 && spell.Action.ID is (uint)AID.Barofield or (uint)AID.NanosporeJet)
+        if (AOE.Length == 0 && spell.Action.ID is (uint)AID.Barofield or (uint)AID.NanosporeJet)
         {
             AOE = [new(circle, spell.LocXZ, default, Module.CastFinishAt(spell, 0.7d))];
         }
@@ -178,6 +168,16 @@ sealed class Barofield(BossModule module) : Components.GenericAOEs(module)
         {
             AOE = [];
         }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (AOE.Length == 0)
+        {
+            return;
+        }
+        ref var aoe = ref AOE[0];
+        hints.TemporaryObstacles.Add(new SDCircle(aoe.Origin, 5f));
     }
 }
 
@@ -239,7 +239,7 @@ sealed class NerveGas(BossModule module) : Components.SimpleAOEGroups(module, [(
 
 sealed class CentralizedNerveGas(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CentralizedNerveGas, new AOEShapeCone(25.5f, 60f.Degrees()));
 
-class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAttack, new AOEShapeCone(11f, 45f.Degrees()))
+sealed class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAttack, new AOEShapeCone(11f, 45f.Degrees()))
 {
     private readonly Barofield _aoe = module.FindComponent<Barofield>()!;
 

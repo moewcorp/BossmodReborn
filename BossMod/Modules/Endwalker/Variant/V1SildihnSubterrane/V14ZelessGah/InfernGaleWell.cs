@@ -28,21 +28,12 @@ sealed class InfernGale(BossModule module) : Components.GenericKnockback(module)
     {
         if (kbInit)
         {
-            var center = Arena.Center;
             ref var kb = ref _kb[0];
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                var origin = kb.Origin;
                 // rect intentionally slightly smaller to prevent sus knockbacks
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + 20f * (p - origin).Normalized()).InRect(center, 14f, 19f))
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, act);
+                hints.AddForbiddenZone(new SDKnockbackInAABBRectAwayFromOrigin(Arena.Center, kb.Origin, 20f, 14f, 19f), act);
             }
         }
     }

@@ -67,23 +67,27 @@ class DousePuddle(BossModule module) : BossComponent(module)
             hints.Add("Pull boss out of puddle!");
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Module.PrimaryActor.TargetID == actor.InstanceID && BossInPuddle)
-        {
-            var effPuddleSize = 8 + Module.PrimaryActor.HitboxRadius;
-            var tankDist = hints.FindEnemy(Module.PrimaryActor)?.TankDistance ?? 2;
-            // yulunggu tank distance seems to be around 2-2.5y, but from testing, 3y minimum is needed to move it out of the puddle, either because of rasterization shenanigans or netcode
-            var effTankDist = Module.PrimaryActor.HitboxRadius + tankDist + 1;
+    // public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    // {
+    //     if (Module.PrimaryActor.TargetID == actor.InstanceID && BossInPuddle)
+    //     {
+    //         var primary = Module.PrimaryActor;
+    //         var hitbox = primary.HitboxRadius;
+    //         var effPuddleSize = 8f + hitbox;
+    //         var tankDist = hints.FindEnemy(primary)?.TankDistance ?? 2f;
+    //         // yaquaru tank distance seems to be around 2-2.5y, but from testing, 3y minimum is needed to move it out of the puddle, either because of rasterization shenanigans or netcode
+    //         var effTankDist = hitbox + tankDist + 1f;
 
-            var len = puddles.Length;
-            var puddlez = new ShapeDistance[len];
-            for (var i = 0; i < len; ++i)
-                puddlez[i] = new SDCircle(puddles[i].Position, effPuddleSize + effTankDist);
-            var closest = new SDUnion(puddlez);
-            hints.GoalZones.Add(p => closest(p) > 0f ? 1000f : 0f);
-        }
-    }
+    //         var len = puddles.Length;
+    //         var puddlez = new ShapeDistance[len];
+    //         for (var i = 0; i < len; ++i)
+    //         {
+    //             puddlez[i] = new SDCircle(puddles[i].Position, effPuddleSize + effTankDist);
+    //         }
+    //         var closest = new SDUnion(puddlez);
+    //         hints.GoalZones.Add(p => closest(p) > 0f ? 1000f : 0f);
+    //     }
+    // }
 }
 
 class Drench(BossModule module) : Components.Cleave(module, (uint)AID.Drench, new AOEShapeCone(15.75f, 45f.Degrees()), activeWhileCasting: false);

@@ -74,7 +74,7 @@ sealed class RhalgrBeaconKnockback(BossModule module) : Components.GenericKnockb
         hints.AddForbiddenZone(new SDIntersection(forbidden), DateTime.MaxValue);
     }
 
-    private static Func<WPos, float>[] DetermineForbiddenZones(WPos sourcePos, List<Actor> shock, int count, float z)
+    private static ShapeDistance[] DetermineForbiddenZones(WPos sourcePos, List<Actor> shock, int count, float z)
     {
         var isZone268 = z == 268.5f;
         WPos zone1, zone2;
@@ -91,7 +91,9 @@ sealed class RhalgrBeaconKnockback(BossModule module) : Components.GenericKnockb
         }
 
         if (count == 0)
+        {
             return [new SDInvertedRect(sourcePos, zone1, 0.5f), new SDInvertedRect(sourcePos, zone2, 0.5f)];
+        }
         var inFirstZone = false;
         for (var i = 0; i < count; ++i)
         {

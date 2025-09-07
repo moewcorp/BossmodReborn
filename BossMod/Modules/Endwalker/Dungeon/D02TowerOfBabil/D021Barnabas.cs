@@ -163,7 +163,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         var isKnockback = bossCharge && isPositive || !bossCharge && isNegative;
         var pos = Arena.Center;
 
-        var forbidden = shape
+        ShapeDistance? forbidden = shape
             ? isPull ? new SDRect(pos, new WDir(default, 1f), 15f, 15f, 12f)
             : isKnockback ? new SDInvertedCircle(pos, 6f)
             : null

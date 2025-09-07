@@ -117,7 +117,7 @@ sealed class Fractures(BossModule module) : Components.DirectionalParry(module, 
             }
             var target = WorldState.Actors.Find(first.Key)!;
             var dir = first.Value == sideR ? target.Rotation - a90 : first.Value == sideL ? target.Rotation + a90 : target.Rotation + a180;
-            hints.AddForbiddenZone(new SDInvertedInvertedDonutSector(target.Position, target.HitboxRadius, 20f, dir, a20));
+            hints.AddForbiddenZone(new SDInvertedDonutSector(target.Position, target.HitboxRadius, 20f, dir, a20));
         }
     }
 }

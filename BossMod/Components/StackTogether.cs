@@ -77,14 +77,18 @@ public class StackTogether(BossModule module, uint iconId, float activationDelay
 
         var countPos = positions.Count;
         for (var i = 0; i < countPos; ++i)
+        {
             Arena.AddCircle(positions[i], Radius, Colors.Safe);
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = Targets.Count;
         if (count == 0)
+        {
             return;
+        }
         var actorFound = false;
         var forbidden = new List<ShapeDistance>(count);
         for (var i = 0; i < count; ++i)
@@ -92,11 +96,17 @@ public class StackTogether(BossModule module, uint iconId, float activationDelay
             var target = Targets[i];
 
             if (target == actor)
+            {
                 actorFound = true;
+            }
             else
+            {
                 forbidden.Add(new SDInvertedCircle(target.Position, Radius));
+            }
         }
         if (actorFound)
-            hints.AddForbiddenZone(new SDIntersection(forbidden), Activation);
+        {
+            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), Activation);
+        }
     }
 }

@@ -112,27 +112,8 @@ sealed class ElevateAndEviscerate(BossModule module) : Components.GenericKnockba
             {
                 temp[len + i] = aoes2[i].Origin;
             }
-            var center = Arena.Center;
-            var origin = Tether.source.Position;
-            var polygon = poly;
-            hints.AddForbiddenZone(p =>
-            {
-                var offsetSource = (p - origin).Normalized();
-                var offsetCenter = p - center;
-                if (polygon.Contains(offsetCenter + 10f * offsetSource.Normalized()))
-                {
-                    var offset = p + 10f * offsetSource;
-                    for (var i = 0; i < total; ++i)
-                    {
-                        if (offset.InSquare(temp[i], 5f))
-                        {
-                            return default;
-                        }
-                    }
-                    return 1f;
-                }
-                return default;
-            }, kb[0].Activation);
+
+            hints.AddForbiddenZone(new SDKnockbackInComplexPolygonAwayFromOriginPlusAOEAABBSquares(Arena.Center, Tether.source.Position, 10f, poly, temp, 5f, total), kb[0].Activation);
         }
     }
 }

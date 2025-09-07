@@ -268,12 +268,17 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     }
 
     // point-in-polygon test; point is defined as offset from shape center
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(WDir p)
     {
         var count = Parts.Count;
         for (var i = 0; i < count; ++i)
+        {
             if (Parts[i].Contains(p))
+            {
                 return true;
+            }
+        }
         return false;
     }
 

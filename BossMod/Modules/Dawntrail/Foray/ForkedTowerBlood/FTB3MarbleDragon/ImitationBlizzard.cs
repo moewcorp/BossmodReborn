@@ -272,7 +272,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
             }
             if (forbidden.Count != 0)
             {
-                hints.AddForbiddenZone(new SDIntersection(forbidden), aoes[0].Activation);
+                hints.AddForbiddenZone(new SDIntersection([.. forbidden]), aoes[0].Activation);
             }
         }
         else

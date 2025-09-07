@@ -461,7 +461,7 @@ public abstract class AutoClear : ZoneModule
         Actor? coffer = null;
         Actor? hoardLight = null;
         Actor? passage = null;
-        List<Func<WPos, float>> revealedTraps = [];
+        List<ShapeDistance> revealedTraps = [];
 
         PomanderID? pomanderToUseHere = null;
 
@@ -516,7 +516,7 @@ public abstract class AutoClear : ZoneModule
         if (Config.TrapHints && _trapsHidden)
         {
             var countTraps = _trapsCurrentZone.Length;
-            var traps = new List<Func<WPos, float>>(countTraps);
+            var traps = new List<ShapeDistance>(countTraps);
 
             for (var i = 0; i < countTraps; ++i)
             {
@@ -543,7 +543,7 @@ public abstract class AutoClear : ZoneModule
             }
 
             if (traps.Count != 0)
-                hints.AddForbiddenZone(new SDUnion(traps));
+                hints.AddForbiddenZone(new SDUnion([..traps]));
         }
 
         if (coffer != null)
@@ -594,7 +594,7 @@ public abstract class AutoClear : ZoneModule
         }
 
         if (revealedTraps.Count > 0)
-            hints.AddForbiddenZone(new SDUnion(revealedTraps));
+            hints.AddForbiddenZone(new SDUnion([.. revealedTraps]));
 
         if (!IsPlayerTransformed(player) && canNavigate && Config.AutoMoveTreasure && hoardLight is Actor h && Palace.GetPomanderState(PomanderID.Intuition).Active)
             hints.GoalZones.Add(hints.GoalSingleTarget(h.Position, 2f, 10f));
@@ -722,11 +722,7 @@ public abstract class AutoClear : ZoneModule
             var origin = dangermap.Item1;
             var map = dangermap.Item2;
 
-            hints.AddForbiddenZone(p =>
-            {
-                var offset = (p - origin) / map.PixelSize;
-                return map[(int)offset.X, (int)offset.Z] ? -10 : 10;
-            }, CastFinishAt(caster));
+            hints.AddForbiddenZone(new SDDeepDungeonLOS(dangermap.Item2, dangermap.Item1));
         }, d => _losCache.Remove(d.InstanceID));
 
         IterAndExpire(Voidzones, d => d.Source.IsDeadOrDestroyed, d =>

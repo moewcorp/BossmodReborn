@@ -150,14 +150,18 @@ class HammersSpire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_safespot is WPos pos)
+        {
             Arena.AddRect(pos, new(default, 1), 5f, 5f, 5f, Colors.Safe, 2f);
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (_safespot is WPos pos)
-            hints.GoalZones.Add(new SDInvertedRect(pos, new WDir(default, 1f), 5f, 5f, 10f));
+        {
+            hints.GoalZones.Add(hints.GoalRectangle(pos, new WDir(default, 1f), 5f, 5f, 10f));
+        }
     }
 
     public override void OnEventEnvControl(byte index, uint state)
@@ -168,6 +172,8 @@ class HammersSpire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     public override void AddGlobalHints(GlobalHints hints)
     {
         if (_safespot != null)
+        {
             hints.Add("Prepare to go to upcoming safespot!");
+        }
     }
 }

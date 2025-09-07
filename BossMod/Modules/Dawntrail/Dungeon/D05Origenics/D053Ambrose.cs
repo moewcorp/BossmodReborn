@@ -120,7 +120,7 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
         var count = KBs.Count;
         if (KBs.Count != 0)
         {
-            var forbidden = new List<Func<WPos, float>>(2);
+            var forbidden = new List<ShapeDistance>(2);
             var kbs = CollectionsMarshal.AsSpan(KBs);
             for (var i = 0; i < count; ++i)
             {
@@ -131,7 +131,7 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
                 }
             }
             ref var kb0 = ref kbs[0];
-            hints.AddForbiddenZone(new SDIntersection(forbidden), kb0.Activation);
+            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), kb0.Activation);
         }
     }
 }

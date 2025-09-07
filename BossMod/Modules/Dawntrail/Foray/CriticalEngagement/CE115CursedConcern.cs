@@ -83,14 +83,8 @@ sealed class CostOfLiving(BossModule module) : Components.SimpleKnockbacks(modul
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {
-                var center = Arena.Center;
-                var origin = c.Origin;
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + 30f * (p - origin).Normalized()).InCircle(center, 23f))
-                        return 1f;
-                    return default;
-                }, act);
+                // circle intentionally slightly smaller to prevent sus knockback
+                hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOrigin(Arena.Center, c.Origin, 30f, 23f), act);
             }
         }
     }

@@ -311,15 +311,7 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
             }
             else
             {
-                var center = Arena.Center;
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + 7f * (p - pos).Normalized()).InSquare(center, 13f)) // arena square 20 - 6 rect width - 1 safety margin
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, act);
+                hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, pos, 7f, 13f), act); // arena square 20 - 6 rect width - 1 safety margin
             }
         }
     }

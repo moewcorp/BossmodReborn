@@ -135,7 +135,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
         var isKnockback = bossCharge && isPositive || !bossCharge && isNegative;
         var pos = Module.PrimaryActor.Position;
 
-        var forbidden = shape
+        ShapeDistance? forbidden = shape
             ? isPull ? new SDInvertedCircle(pos, 18f)
             : isKnockback ? new SDInvertedCircle(pos, 1f)
             : null
@@ -144,7 +144,9 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
             : null;
 
         if (forbidden != null)
+        {
             hints.AddForbiddenZone(forbidden, activation);
+        }
     }
 }
 

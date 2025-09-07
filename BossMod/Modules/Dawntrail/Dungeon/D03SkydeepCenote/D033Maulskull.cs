@@ -185,19 +185,10 @@ abstract class Impact(BossModule module, uint aid, float distance) : Components.
         if (Casters.Count != 0)
         {
             ref readonly var c = ref Casters.Ref(0);
-            var pos = c.Origin;
-            var center = Arena.Center;
             var dist = Distance;
-            var w = halfWidth;
+
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(p =>
-            {
-                if ((p + dist * (p - pos).Normalized()).InSquare(center, w))
-                {
-                    return 1f;
-                }
-                return default;
-            }, c.Activation);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, c.Origin, dist, halfWidth), c.Activation);
         }
     }
 }

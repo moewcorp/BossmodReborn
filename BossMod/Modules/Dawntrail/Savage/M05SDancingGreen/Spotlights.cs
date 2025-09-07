@@ -208,11 +208,11 @@ class Spotlights1(BossModule module) : Components.GenericTowers(module)
         var fcount = forbidden.Count;
         if (fcount == 0 || inTower || missingSoakers && forbiddenInverted.Count != 0)
         {
-            hints.AddForbiddenZone(new SDIntersection(forbiddenInverted), towers[0].Activation);
+            hints.AddForbiddenZone(new SDIntersection([.. forbiddenInverted]), towers[0].Activation);
         }
         else if (fcount != 0 && !inTower)
         {
-            hints.AddForbiddenZone(new SDUnion(forbidden), towers[0].Activation);
+            hints.AddForbiddenZone(new SDUnion([.. forbidden]), towers[0].Activation);
         }
     }
 

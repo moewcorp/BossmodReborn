@@ -152,7 +152,7 @@ sealed class P1BoundOfFaithAIStack(BossModule module) : BossComponent(module)
             var stackWith = _comp.Stacks.MinBy(s => (s.Target.Position - actor.Position).LengthSq());
             foreach (var s in _comp.Stacks)
             {
-                var zone = s.Target == stackWith.Target
+                ShapeDistance zone = s.Target == stackWith.Target
                     ? new SDInvertedCircle(s.Target.Position, 4f) // stay a bit closer to the target to avoid spooking people
                     : new SDCircle(s.Target.Position, 6f);
                 hints.AddForbiddenZone(zone, _comp.Activation);

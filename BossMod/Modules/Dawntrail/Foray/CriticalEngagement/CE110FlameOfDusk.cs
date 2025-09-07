@@ -193,16 +193,8 @@ sealed class MoltKB(BossModule module) : Components.GenericKnockback(module)
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                var center = Arena.Center;
-                var origin = kb.Origin;
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + 20f * (p - origin).Normalized()).InCircle(center, 18f))
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, act);
+                // circle intentionally slightly smaller to prevent sus knockback
+                hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOrigin(Arena.Center, kb.Origin, 20f, 18f), act);
             }
         }
     }

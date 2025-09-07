@@ -221,9 +221,6 @@ public sealed class SDDonutSector : ShapeDistance
         nrZ = nr.Z;
     }
 
-    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
-    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
-    // both normals point outside
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
@@ -264,9 +261,6 @@ public sealed class SDInvertedDonutSector : ShapeDistance
         nrZ = nr.Z;
     }
 
-    // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
-    // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
-    // both normals point outside
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
@@ -717,6 +711,22 @@ public sealed class SDConvexPolygon : ShapeDistance
     }
 }
 
+public sealed class SDComplexPolygonInvertedContains(RelSimplifiedComplexPolygon Polygon, WPos Center) : ShapeDistance
+{
+    private readonly RelSimplifiedComplexPolygon polygon = Polygon;
+    private readonly WPos center = Center;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if (polygon.Contains(p - center))
+        {
+            return default;
+        }
+        return 1f;
+    }
+}
+
 public sealed class SDIntersection : ShapeDistance // max distance func
 {
     private readonly ShapeDistance[] zones;
@@ -777,7 +787,7 @@ public sealed class SDUnion : ShapeDistance // min distance func
     }
 }
 
-public sealed class SDInvertedUnion : ShapeDistance // min distance func
+public sealed class SDInvertedUnion : ShapeDistance // -min distance func
 {
     private readonly ShapeDistance[] zones;
     private readonly int length;
@@ -804,6 +814,38 @@ public sealed class SDInvertedUnion : ShapeDistance // min distance func
             }
         }
         return -min;
+    }
+}
+
+public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
+{
+    private readonly ShapeDistance[] zones;
+    private readonly int length;
+    private readonly float offset;
+
+    public SDInvertedUnionOffset(ShapeDistance[] Zones, float Offset)
+    {
+        zones = Zones;
+        length = zones.Length;
+        offset = Offset;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var array = zones;
+        var min = float.MaxValue;
+        var point = p;
+
+        for (var i = 0; i < length; ++i)
+        {
+            var d = array[i].Distance(point);
+            if (d < min)
+            {
+                min = d;
+            }
+        }
+        return -min - offset;
     }
 }
 
@@ -1000,5 +1042,531 @@ public sealed class SDInvertedPolygonWithHoles(WPos origin, RelSimplifiedComplex
             minDistanceSq = Math.Min(minDistanceSq, distX * distX + distY * distY);
         }
         return MathF.Sqrt(minDistanceSq);
+    }
+}
+
+// NOTE: these are not returning the true distance, only 0 for forbidden and 1 for allowed. best to add 1y safety margin to cover all points in a cell
+public sealed class SDKnockbackInComplexPolygonAwayFromOrigin(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float distance = Distance;
+    private readonly RelSimplifiedComplexPolygon polygon = Polygon;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if (polygon.Contains(p - center + distance * (p - origin).Normalized()))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInComplexPolygonFixedDirection(WPos Center, WDir Direction, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WDir direction = Direction;
+    private readonly RelSimplifiedComplexPolygon polygon = Polygon;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if (polygon.Contains(p - center + direction))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusAOEAABBSquares(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon, WPos[] AOEs, float HalfWidth, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly RelSimplifiedComplexPolygon polygon = Polygon;
+    private readonly float distance = Distance;
+    private readonly WPos[] aoes = AOEs;
+    private readonly float halfWidth = HalfWidth;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var dir = distance * (p - origin).Normalized();
+        var offsetCenter = p - center;
+        var projected = p + dir;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (projected.InSquare(aoes[i], halfWidth))
+            {
+                return default;
+            }
+        }
+        if (polygon.Contains(offsetCenter + dir))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusIntersectionTest(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float distance = Distance;
+    private readonly RelSimplifiedComplexPolygon polygon = Polygon;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var offset = p - center;
+        var dir = (p - origin).Normalized();
+        // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
+        if (polygon.Contains(offset + distance * dir) && Intersect.RayPolygon(offset, dir, polygon) > distance)
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBRectFixedDirection(WPos Center, WDir Direction, float HalfWidth, float HalfHeight) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WDir direction = Direction;
+    private readonly float halfWidth = HalfWidth;
+    private readonly float halfHeight = HalfHeight;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + direction).InRect(center, halfWidth, halfHeight))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBRectAwayFromOrigin(WPos Center, WPos Origin, float Distance, float HalfWidth, float HalfHeight) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float halfWidth = HalfWidth;
+    private readonly float halfHeight = HalfHeight;
+    private readonly float distance = Distance;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + distance * (p - origin).Normalized()).InRect(center, halfWidth, halfHeight))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBRectLeftRightAlongZAxis(WPos Center, float Distance, float HalfWidth, float HalfHeight) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly float originZ = Center.Z;
+    private readonly WDir dir1 = new(default, Distance);
+    private readonly WDir dir2 = new(default, -Distance);
+    private readonly float halfWidth = HalfWidth;
+    private readonly float halfHeight = HalfHeight;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + (p.Z > originZ ? dir1 : dir2)).InRect(center, halfWidth, halfHeight))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBRectLeftRightAlongZAxisPlusAOERects(WPos Center, float Distance, float HalfWidth, float HalfHeight, (WPos Origin, WDir Direction)[] AOEs, float LengthFront, float RectHalfWidth, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly float originZ = Center.Z;
+    private readonly WDir dir1 = new(default, Distance);
+    private readonly WDir dir2 = new(default, -Distance);
+    private readonly float halfWidth = HalfWidth;
+    private readonly float halfHeight = HalfHeight;
+    private readonly (WPos origin, WDir direction)[] aoes = AOEs;
+    private readonly float lenFront = LengthFront;
+    private readonly float rectHalfWidth = RectHalfWidth;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + (p.Z > originZ ? dir1 : dir2);
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (projected.InRect(aoe.origin, aoe.direction, lenFront, default, rectHalfWidth))
+            {
+                return default;
+            }
+        }
+        if (projected.InRect(center, halfWidth, halfHeight))
+        {
+            return 1f;
+        }
+
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBSquareLeftRightAlongXAxisPlusAOECircles(WPos Center, float Distance, float HalfWidth, WPos[] AOEs, float Radius, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly float originX = Center.X;
+    private readonly WDir dir1 = new(default, Distance);
+    private readonly WDir dir2 = new(default, -Distance);
+    private readonly float halfWidth = HalfWidth;
+    private readonly WPos[] aoes = AOEs;
+    private readonly float radius = Radius;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + (p.X > originX ? dir1 : dir2);
+        for (var i = 0; i < len; ++i)
+        {
+            if (projected.InCircle(aoes[i], radius))
+            {
+                return default;
+            }
+        }
+        if (projected.InSquare(center, halfWidth))
+        {
+            return 1f;
+        }
+
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBSquareAwayFromOrigin(WPos Center, WPos Origin, float Distance, float HalfWidth) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float halfWidth = HalfWidth;
+    private readonly float distance = Distance;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + distance * (p - origin).Normalized()).InSquare(center, halfWidth))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBSquareFixedDirection(WPos Center, WDir Direction, float HalfWidth) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WDir direction = Direction;
+    private readonly float halfWidth = HalfWidth;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + direction).InSquare(center, halfWidth))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts((WPos Origin, WDir Direction)[] Knockbacks, int LengthKnockbacks, float RectLengthFront, float RectHalfWidth, float Distance, WPos[] DonutOrigins, float DonutInnerRadius, int LengthDonuts) : ShapeDistance
+{
+    private readonly (WPos origin, WDir direction)[] knockbacks = Knockbacks;
+    private readonly int lenKBs = LengthKnockbacks;
+    private readonly float rectLengthFront = RectLengthFront;
+    private readonly float rectHalfWidth = RectHalfWidth;
+    private readonly float distance = Distance;
+    private readonly WPos[] donutOrigins = DonutOrigins;
+    private readonly float donutInnerRadius = DonutInnerRadius;
+    private readonly int lenDonuts = LengthDonuts;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        for (var i = 0; i < lenKBs; ++i)
+        {
+            ref readonly var kb = ref knockbacks[i];
+            var origin = kb.origin;
+            if (p.InRect(origin, kb.direction, rectLengthFront, default, rectHalfWidth))
+            {
+                var projected = p + distance * (origin - p).Normalized();
+                for (var j = 0; j < lenDonuts; ++j)
+                {
+                    if (projected.InCircle(donutOrigins[j], donutInnerRadius))
+                    {
+                        return 1f;
+                    }
+                }
+                return default;
+            }
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBSquareAwayFromOriginPlusAOECircles(WPos Center, WPos Origin, float Distance, float HalfWidth, (WPos Origin, float Radius)[] AOEs, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float halfWidth = HalfWidth;
+    private readonly float distance = Distance;
+    private readonly (WPos origin, float radius)[] aoes = AOEs;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + distance * (p - origin).Normalized();
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (projected.InCircle(aoe.origin, aoe.radius))
+            {
+                return default;
+            }
+        }
+        if (projected.InSquare(center, halfWidth))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInAABBSquareAwayFromOriginPlusAOERects(WPos Center, WPos Origin, float Distance, float HalfWidth, (WPos Origin, WDir Direction)[] AOEs, float LengthFront, float RectHalfWidth, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float halfWidth = HalfWidth;
+    private readonly float distance = Distance;
+    private readonly (WPos origin, WDir direction)[] aoes = AOEs;
+    private readonly float lenFront = LengthFront;
+    private readonly float rectHalfWidth = RectHalfWidth;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + distance * (p - origin).Normalized();
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (projected.InRect(aoe.origin, aoe.direction, lenFront, default, rectHalfWidth))
+            {
+                return default;
+            }
+        }
+        if (projected.InSquare(center, halfWidth))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInCircleAwayFromOrigin(WPos Center, WPos Origin, float Distance, float Radius) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float radius = Radius;
+    private readonly float distance = Distance;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + distance * (p - origin).Normalized()).InCircle(center, radius))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInCircleAwayFromOriginMixedAOEs(WPos Center, WPos Origin, float Distance, float Radius, Components.GenericAOEs.AOEInstance[] AOEs, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float radius = Radius;
+    private readonly float distance = Distance;
+    private readonly Components.GenericAOEs.AOEInstance[] aoes = AOEs;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + distance * (p - origin).Normalized();
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (aoe.Check(projected))
+            {
+                return default;
+            }
+        }
+        if (projected.InCircle(center, radius))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInCircleAwayFromOriginPlusAOERects(WPos Center, WPos Origin, float Distance, float Radius, (WPos Origin, WDir Direction)[] AOEs, float LengthFront, float HalfWidth, int Length) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float radius = Radius;
+    private readonly float distance = Distance;
+    private readonly (WPos origin, WDir direction)[] aoes = AOEs;
+    private readonly float lenFront = LengthFront;
+    private readonly float halfWidth = HalfWidth;
+    private readonly int len = Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var projected = p + distance * (p - origin).Normalized();
+        for (var i = 0; i < len; ++i)
+        {
+            ref var aoe = ref aoes[i];
+            if (projected.InRect(aoe.origin, aoe.direction, lenFront, default, halfWidth))
+            {
+                return default;
+            }
+        }
+        if (projected.InCircle(center, radius))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInCircleFixedDirection(WPos Center, WDir Direction, float Radius) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WDir direction = Direction;
+    private readonly float radius = Radius;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + direction).InCircle(center, radius))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDKnockbackInCircleAwayFromOriginPlusMixedAOEsPlusSingleCircleIntersection(WPos Center, WPos Origin, float Radius, float Distance, SDUnion AOEs, WPos CircleOrigin, float CircleRadius) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly float radius = Radius;
+    private readonly float distance = Distance;
+    private readonly SDUnion aoes = AOEs;
+    private readonly WPos circleOrigin = CircleOrigin;
+    private readonly float circleRadius = CircleRadius;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var dir = (p - origin).Normalized();
+        var projected = p + dir;
+        if (!projected.InCircle(center, radius) || Intersect.RayCircle(p, dir, circleOrigin, circleRadius) < distance)
+        {
+            return default;
+        }
+        return aoes.Distance(projected);
+    }
+}
+
+public sealed class SDKnockbackInCircleFixedDirectionAndAwayFromOrigin(WPos Center, WPos Origin, WDir Direction, float Distance, float Radius) : ShapeDistance
+{
+    private readonly WPos center = Center;
+    private readonly WPos origin = Origin;
+    private readonly WDir direction = Direction;
+    private readonly float radius = Radius;
+    private readonly float distance = Distance; // distance for the away from origin kb
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        if ((p + direction).InCircle(center, radius) && (p + distance * (p - origin).Normalized()).InCircle(center, distance))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}
+
+public sealed class SDDeepDungeonLOS(Bitmap Map, WPos Origin) : ShapeDistance
+{
+    private readonly Bitmap map = Map;
+    private readonly WPos origin = Origin;
+    private readonly float pixelSize = Map.PixelSize;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var offset = (p - origin) / pixelSize;
+        return map[(int)offset.X, (int)offset.Z] ? -10 : 10;
+    }
+}
+
+public sealed class SDBlockedAreaT01Caduceus(ShapeDistance[] platformShapes, (int lower, int upper)[] highEdges, ShapeDistance[] highEdgeShapes, float actorY, float[] platformHeights) : ShapeDistance
+{
+    private readonly ShapeDistance[] _platformShapes = platformShapes;
+    private readonly (int lower, int upper)[] _highEdges = highEdges;
+    private readonly ShapeDistance[] _highEdgeShapes = highEdgeShapes;
+    private readonly float _actorY = actorY;
+    private readonly float[] _platformHeights = platformHeights;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p)
+    {
+        var res = float.MaxValue;
+
+        for (var i = 0; i < 13; ++i)
+        {
+            res = Math.Min(res, _platformShapes[i].Distance(p));
+        }
+
+        res = -res; // invert
+
+        for (var i = 0; i < 5; ++i)
+        {
+            var e = _highEdges[i];
+            var f = _highEdgeShapes[i];
+
+            if (_actorY + 0.1f < _platformHeights[e.upper])
+            {
+                res = Math.Min(res, f.Distance(p));
+            }
+        }
+        return res;
     }
 }

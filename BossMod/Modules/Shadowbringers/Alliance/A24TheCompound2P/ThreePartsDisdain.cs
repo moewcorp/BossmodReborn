@@ -115,16 +115,9 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
                     return default;
                 }, kb.Activation);
             }
-            else
+            else // if we are bait target we have more freedom
             {
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + dist * (p - loc).Normalized()).InSquare(center, 28f)) // if we are bait target we have more freedom
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, kb.Activation);
+                hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(center, kb.Origin, dist, 28f), kb.Activation);
             }
         }
     }

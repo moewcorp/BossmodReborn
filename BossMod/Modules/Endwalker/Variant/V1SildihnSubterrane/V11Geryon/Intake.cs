@@ -42,12 +42,11 @@ sealed class Intake(BossModule module) : Components.GenericKnockback(module, sto
     {
         if (_kbs.Count != 0)
         {
-            // square intentionally slightly smaller to prevent sus knockback, voidzones are treated as squares because we dont want to get knocked through them (there might be space behind them otherwise)
+            // voidzones are treated as squares because we dont want to get knocked through them (there might be space behind them otherwise)
             ref var kb = ref _kbs.Ref(0);
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                var center = kb.Origin;
                 var kbs = _kbs;
                 var aoes = CollectionsMarshal.AsSpan(_aoe.AOEs);
                 var len = aoes.Length;
@@ -65,31 +64,18 @@ sealed class Intake(BossModule module) : Components.GenericKnockback(module, sto
                         }
                     }
                 }
-                var dir = kb.Direction.ToDirection();
 
-                var centerX = center.X;
-                hints.AddForbiddenZone(p =>
+                var kbz = CollectionsMarshal.AsSpan(kbs);
+                var lenKBz = kbz.Length;
+                var rects = new (WPos origin, WDir rotation)[len];
+                for (var i = 0; i < len; ++i)
                 {
-                    var kbz = CollectionsMarshal.AsSpan(kbs);
-                    for (var i = 0; i < 4; ++i)
-                    {
-                        ref var kb = ref kbz[i];
-                        var origin = kb.Origin;
-                        if (p.InRect(origin, dir, 40f, default, 5f))
-                        {
-                            var projected = p + 25f * (origin - p).Normalized(); // we don't need to clamp the distance since origin is outside of the arena
-                            for (var j = 0; j < 2; ++j)
-                            {
-                                if (projected.InCircle(donutPos[j], 6f)) // just need to get pulled into the general direction of the donut inner circle, still have about 4s to move into place after
-                                {
-                                    return 1f;
-                                }
-                            }
-                            return default;
-                        }
-                    }
-                    return default;
-                }, act);
+                    ref var aoe = ref aoes[i];
+                    rects[i] = (aoe.Origin, aoe.Rotation.ToDirection());
+                }
+                // we don't need to clamp the distance since origin is outside of the arena
+                // just need to get pulled into the general direction of the donut inner circle, still have about 4s to move into place after
+                hints.AddForbiddenZone(new SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts(rects, lenKBz, 40f, 5f, 25f, donutPos, 6f, len), act);
             }
         }
     }
