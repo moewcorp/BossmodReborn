@@ -48,23 +48,4 @@ public sealed class FTB4Magitaur(WorldState ws, Actor primary) : BossModule(ws, 
         shape.Polygon = shape.GetCombinedPolygon(arenaCenter).Offset(6f, Clipper2Lib.JoinType.Round);
         return shape;
     }
-
-    // // this is a hack because there are 4 magitaurs in the object table, but we are preventing more than 1 module to load for each OID, so we use an event object as a placeholder instead
-    // protected override bool CheckPull()
-    // {
-    //     if (PrimaryActor.OID != (uint)OID.Magitaur)
-    //     {
-    //         var magitaurs = Enemies((uint)OID.Magitaur);
-    //         var count = magitaurs.Count;
-    //         for (var i = 0; i < count; ++i)
-    //         {
-    //             var m = magitaurs[i];
-    //             if (m.IsTargetable)
-    //             {
-    //                 PrimaryActor = m;
-    //             }
-    //         }
-    //     }
-    //     return base.CheckPull();
-    // }
 }
