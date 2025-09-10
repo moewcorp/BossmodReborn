@@ -34,7 +34,7 @@ sealed class MortalRay(BossModule module) : Components.GenericAOEs(module)
 {
     private BitMask doomed;
     private AOEInstance[] _platform = [];
-    private static readonly AOEShapeRect square = new(1.75f, 1.75f, 1.75f, InvertForbiddenZone: true);
+    private static readonly AOEShapeRect square = new(1.75f, 1.75f, 1.75f, invertForbiddenZone: true);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => doomed[slot] ? _platform : [];
 

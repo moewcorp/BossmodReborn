@@ -67,7 +67,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
         }
     }
 
-    private MapVisualizer BuildZoneVisualizer(Func<WPos, float> shape)
+    private MapVisualizer BuildZoneVisualizer(ShapeDistance shape)
     {
         var map = new Map();
         hints.InitPathfindMap(map);

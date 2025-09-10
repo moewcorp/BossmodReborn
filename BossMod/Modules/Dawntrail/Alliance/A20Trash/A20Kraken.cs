@@ -57,7 +57,7 @@ sealed class Sucker(BossModule module) : Components.SimpleKnockbacks(module, (ui
         if (Casters.Count != 0)
         {
             ref readonly var source = ref Casters.Ref(0);
-            hints.AddForbiddenZone(ShapeDistance.Circle(source.Origin, 23f), source.Activation);
+            hints.AddForbiddenZone(new SDCircle(source.Origin, 23f), source.Activation);
         }
     }
 }

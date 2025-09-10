@@ -184,7 +184,7 @@ sealed class ArcaneOrb(BossModule module) : Components.GenericAOEs(module)
         {
             return;
         }
-        hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 6.6f), WorldState.FutureTime(8d));
+        hints.AddForbiddenZone(new SDCircle(Arena.Center, 6.6f), WorldState.FutureTime(8d));
     }
 }
 

@@ -347,12 +347,16 @@ public sealed class ThetaStar
         ref var destNode = ref _nodes[nodeIndex];
 
         if (destNode.OpenHeapIndex < 0 && destNode.Score >= Score.SemiSafeAsStart)
+        {
             return;
+        }
 
-        ref var destPixG = ref _map.PixelMaxG[nodeIndex];
-        ref var parentPixG = ref _map.PixelMaxG[parentIndex];
+        var destPixG = _map.PixelMaxG[nodeIndex];
+        var parentPixG = _map.PixelMaxG[parentIndex];
         if (destPixG < 0f && parentPixG >= 0f)
+        {
             return; // impassable
+        }
 
         var stepCost = deltaGrid; // either _deltaGSide or _deltaGDiag
         var candidateG = currentParentNode.GScore + stepCost;
@@ -371,7 +375,7 @@ public sealed class ThetaStar
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
 
-        if (currentParentNode.Score >= Score.Safe && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        if (currentParentNode.Score >= Score.SemiSafeAsStart && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
             return;
 
         var grandParentIndex = currentParentNode.ParentIndex;

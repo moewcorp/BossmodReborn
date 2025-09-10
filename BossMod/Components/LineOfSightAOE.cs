@@ -100,7 +100,7 @@ public abstract class GenericLineOfSightAOE(BossModule module, uint aid, float m
             }
             if (unionShapes.Count != 0)
             {
-                Safezones.Add(new(new AOEShapeCustom([.. unionShapes], [.. differenceShapes], InvertForbiddenZone: true), Arena.Center, default, activation, Colors.SafeFromAOE));
+                Safezones.Add(new(new AOEShapeCustom([.. unionShapes], [.. differenceShapes], invertForbiddenZone: true), Arena.Center, default, activation, Colors.SafeFromAOE));
             }
         }
     }

@@ -83,7 +83,7 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, in
     public abstract ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor);
 
     // called to determine whether we need to show hint
-    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !StopAtWall && !Module.InBounds(pos);
+    public virtual bool DestinationUnsafe(int slot, Actor actor, WPos pos) => !StopAtWall && !Arena.InBounds(pos);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {

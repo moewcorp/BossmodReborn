@@ -197,7 +197,7 @@ class OnHighHint(BossModule module) : Components.GenericAOEs(module)
                 cones.Add(new(D152DotoliCiloc.ArenaCenter, 20f, deg, angle));
             }
         }
-        _aoe = [new(new AOEShapeCustom([.. cones], InvertForbiddenZone: true), D152DotoliCiloc.ArenaCenter, default, activation, Colors.SafeFromAOE)];
+        _aoe = [new(new AOEShapeCustom([.. cones], invertForbiddenZone: true), D152DotoliCiloc.ArenaCenter, default, activation, Colors.SafeFromAOE)];
     }
 
     public override void OnActorCreated(Actor actor)

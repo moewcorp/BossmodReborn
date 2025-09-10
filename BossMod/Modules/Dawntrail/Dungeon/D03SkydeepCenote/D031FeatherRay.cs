@@ -121,21 +121,21 @@ sealed class AiryBubble(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (active)
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius));
+            hints.AddForbiddenZone(new SDCircle(Arena.Center, Module.PrimaryActor.HitboxRadius));
         if (count == 0)
             return;
-        var forbiddenImminent = new Func<WPos, float>[count + 1];
-        var forbiddenFuture = new Func<WPos, float>[count];
+        var forbiddenImminent = new ShapeDistance[count + 1];
+        var forbiddenFuture = new ShapeDistance[count];
         for (var i = 0; i < count; ++i)
         {
             var o = _aoes[i];
-            forbiddenFuture[i] = ShapeDistance.Capsule(o.Position, o.Rotation, Length, Radius);
-            forbiddenImminent[i] = ShapeDistance.Circle(o.Position, Radius);
+            forbiddenFuture[i] = new SDCapsule(o.Position, o.Rotation, Length, Radius);
+            forbiddenImminent[i] = new SDCircle(o.Position, Radius);
         }
-        forbiddenImminent[count] = ShapeDistance.Circle(Arena.Center, Module.PrimaryActor.HitboxRadius);
+        forbiddenImminent[count] = new SDCircle(Arena.Center, Module.PrimaryActor.HitboxRadius);
 
-        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFuture), WorldState.FutureTime(1.5d));
-        hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
+        hints.AddForbiddenZone(new SDUnion(forbiddenFuture), WorldState.FutureTime(1.5d));
+        hints.AddForbiddenZone(new SDUnion(forbiddenImminent));
     }
 }
 

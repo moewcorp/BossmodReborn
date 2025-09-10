@@ -105,26 +105,11 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
             var destPos = loc + destDir;
             if (actor != target)
             {
-                hints.AddForbiddenZone(p =>
-                {
-                    var pos = p + dist * (p - loc).Normalized();
-                    if (pos.InCircle(destPos, 6f) && pos.InSquare(center, 30f)) // we want to stay inside stack and inside arena bounds
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, kb.Activation);
+                hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginIntoCircle(center, kb.Origin, dist, 30f, destPos, 6f), kb.Activation); // we want to stay inside stack and inside arena bounds
             }
-            else
+            else // if we are bait target we have more freedom
             {
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + dist * (p - loc).Normalized()).InSquare(center, 28f)) // if we are bait target we have more freedom
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, kb.Activation);
+                hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(center, kb.Origin, dist, 28f), kb.Activation);
             }
         }
     }

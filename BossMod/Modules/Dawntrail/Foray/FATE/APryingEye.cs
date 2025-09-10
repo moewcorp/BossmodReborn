@@ -57,7 +57,7 @@ sealed class SearchMarkOfDeath(BossModule module) : Components.GenericAOEs(modul
         for (var i = 0; i < len; ++i)
         {
             ref readonly var aoe = ref aoes[i];
-            hints.AddForbiddenZone(ShapeDistance.Cone(aoe.Origin, 6f, aoe.Rotation, 45f.Degrees()));
+            hints.AddForbiddenZone(new SDCone(aoe.Origin, 6f, aoe.Rotation, 45f.Degrees()));
         }
     }
 }

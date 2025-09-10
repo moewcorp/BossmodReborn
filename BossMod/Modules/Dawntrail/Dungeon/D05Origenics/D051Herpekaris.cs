@@ -129,7 +129,7 @@ sealed class WrithingRiot(BossModule module) : Components.GenericAOEs(module)
         if (_aoes.Count > 1)
         {
             var aoe = _aoes[0];
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(aoe.Origin, 3f), aoe.Activation);
+            hints.AddForbiddenZone(new SDInvertedCircle(aoe.Origin, 3f), aoe.Activation);
         }
     }
 }

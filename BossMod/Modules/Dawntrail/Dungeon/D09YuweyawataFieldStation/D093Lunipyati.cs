@@ -145,7 +145,7 @@ sealed class JaggedEdge(BossModule module) : Components.SpreadFromCastTargets(mo
     {
         if (_aoe.AOE.Length != 0 && Spreads.Count != 0 && !IsSpreadTarget(actor))
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, default, 1f, 50f), Spreads.Ref(0).Activation);
+            hints.AddForbiddenZone(new SDInvertedRect(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, default, 1f, 50f), Spreads.Ref(0).Activation);
             return;
         }
         base.AddAIHints(slot, actor, assignment, hints);

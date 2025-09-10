@@ -163,7 +163,7 @@ sealed class Quarantine(BossModule module) : Components.StackWithIcon(module, (u
             var closestAlly = party.Exclude(exclude).Closest(actor.Position);
             if (closestAlly != null)
             {
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(closestAlly.Position, 3f), Stacks.Ref(0).Activation);
+                hints.AddForbiddenZone(new SDInvertedCircle(closestAlly.Position, 3f), Stacks.Ref(0).Activation);
             }
         }
         else

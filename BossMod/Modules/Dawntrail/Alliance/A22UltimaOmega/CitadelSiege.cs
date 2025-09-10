@@ -14,8 +14,7 @@ sealed class CitadelSiege(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.CitadelSiege)
         {
-            ++NumCasts;
-            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), risky: NumCasts != 4));
+            _aoes.Add(new(rect, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
         }
     }
 
@@ -65,6 +64,8 @@ sealed class CitadelSiege(BossModule module) : Components.GenericAOEs(module)
             }
         }
     }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
 }
 
 sealed class CitadelSiegeHint(BossModule module) : Components.GenericAOEs(module)

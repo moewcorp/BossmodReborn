@@ -87,11 +87,11 @@ sealed class LighterNoteBait(BossModule module) : BossComponent(module)
         var count = casters.Count;
         for (var i = 0; i < count; ++i)
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(casters[i].caster.Position, 6f), activation);
+            hints.AddForbiddenZone(new SDCircle(casters[i].caster.Position, 6f), activation);
         }
         if (targets[slot])
         {
-            hints.AddForbiddenZone(ShapeDistance.Circle(Arena.Center, 24.5f), activation);
+            hints.AddForbiddenZone(new SDCircle(Arena.Center, 24.5f), activation);
         }
     }
 

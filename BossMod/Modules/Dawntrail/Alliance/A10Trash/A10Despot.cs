@@ -44,7 +44,7 @@ sealed class ScraplineStorm(BossModule module) : Components.SimpleKnockbacks(mod
         if (Casters.Count != 0)
         {
             ref readonly var source = ref Casters.Ref(0);
-            hints.AddForbiddenZone(ShapeDistance.Circle(source.Origin, 20f), source.Activation);
+            hints.AddForbiddenZone(new SDCircle(source.Origin, 20f), source.Activation);
         }
     }
 }

@@ -118,7 +118,7 @@ public sealed class Map
     }
 
     // block all pixels for which function returns value smaller than threshold ('inside' shape + extra cushion)
-    public void BlockPixelsInside(Func<WPos, float> shape, float maxG, float threshold)
+    public void BlockPixelsInside(ShapeDistance shape, float maxG, float threshold)
     {
         MaxG = Math.Max(MaxG, maxG);
         var width = Width;
@@ -139,7 +139,7 @@ public sealed class Map
             for (var x = 0; x < width; ++x)
             {
                 var pos = posY + x * dx;
-                if (shape_(pos) <= threshold_)
+                if (shape_.Distance(pos) <= threshold_)
                 {
                     PixelMaxG[rowBaseIndex + x] = maxG_;
                 }
@@ -148,7 +148,7 @@ public sealed class Map
     }
 
     // for testing 4 points per pixel for increased accuracy to rasterize circle and rectangle arena bounds
-    public void BlockPixelsInside2(Func<WPos, float> shape, float maxG)
+    public void BlockPixelsInside2(ShapeDistance shape, float maxG)
     {
         MaxG = Math.Max(MaxG, maxG);
         var width = Width;
@@ -176,7 +176,7 @@ public sealed class Map
                 {
                     var pos = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
 
-                    if (shape_(pos) <= 0f)
+                    if (shape_.Distance(pos) <= 0f)
                     {
                         PixelMaxG[rowBaseIndex + x] = maxG_;
                         break;

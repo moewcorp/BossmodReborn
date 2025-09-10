@@ -222,10 +222,10 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
                     hints.AddForbiddenZone(bait.Shape, a.Position - bait.Offset, default, bait.Activation);
                     break;
                 case AOEShapeCone cone:
-                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
+                    hints.AddForbiddenZone(new SDCone(bait.Source.Position, 100f, bait.Source.AngleTo(a), cone.HalfAngle), bait.Activation);
                     break;
                 case AOEShapeRect rect:
-                    hints.AddForbiddenZone(ShapeDistance.Cone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
+                    hints.AddForbiddenZone(new SDCone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(rect.HalfWidth / (a.Position - bait.Source.Position).Length())), bait.Activation);
                     break;
                 case AOEShapeCross cross:
                     hints.AddForbiddenZone(cross, a.Position - bait.Offset, bait.Rotation, bait.Activation);
@@ -506,7 +506,7 @@ public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : 
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == WatchedAction && WorldState.Actors.Find(spell.TargetID) is var target && target != null)
+        if (spell.Action.ID == WatchedAction && WorldState.Actors.Find(spell.TargetID) is Actor target)
         {
             CurrentBaits.Add(new(caster, target, new AOEShapeRect((target.Position - caster.Position).Length(), HalfWidth), Module.CastFinishAt(spell)));
         }

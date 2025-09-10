@@ -90,7 +90,7 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -120,18 +120,18 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
         var count = KBs.Count;
         if (KBs.Count != 0)
         {
-            var forbidden = new List<Func<WPos, float>>(2);
+            var forbidden = new List<ShapeDistance>(2);
             var kbs = CollectionsMarshal.AsSpan(KBs);
             for (var i = 0; i < count; ++i)
             {
                 ref var recti = ref kbs[i];
                 if (recti.Shape is AOEShapeRect rect && rect == RectNS)
                 {
-                    forbidden.Add(ShapeDistance.InvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
+                    forbidden.Add(new SDInvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
                 }
             }
             ref var kb0 = ref kbs[0];
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), kb0.Activation);
+            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), kb0.Activation);
         }
     }
 }

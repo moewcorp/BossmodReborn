@@ -101,7 +101,14 @@ sealed class Stonecarver(BossModule module) : Components.GenericAOEs(module)
                 if (AOEs.Count == 2)
                 {
                     _kb ??= Module.FindComponent<Impact2>();
-                    AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+
+                    var aoes = CollectionsMarshal.AsSpan(AOEs);
+                    ref var aoe1 = ref aoes[0];
+                    ref var aoe2 = ref aoes[1];
+                    if (aoe1.Activation > aoe2.Activation)
+                    {
+                        (aoe1, aoe2) = (aoe2, aoe1);
+                    }
                 }
                 break;
         }
@@ -128,7 +135,7 @@ sealed class Stonecarver(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         if (AOEs.Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedRect(Arena.Center, new WDir(1f, default), 1.5f, 1.5f, 40f), _kb!.Casters.Count != 0 ? _kb.Casters.Ref(0).Activation : AOEs.Ref(0).Activation);
+            hints.AddForbiddenZone(new SDInvertedRect(Arena.Center, new WDir(1f, default), 1.5f, 1.5f, 40f), _kb!.Casters.Count != 0 ? _kb.Casters.Ref(0).Activation : AOEs.Ref(0).Activation);
         }
     }
 }
@@ -142,10 +149,11 @@ sealed class Shatter(BossModule module) : Components.GenericAOEs(module)
     {
         var count = _aoes.Count;
         if (count == 0)
+        {
             return [];
+        }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        ref readonly var aoe = ref aoes[0];
-        if (aoe.Activation.AddSeconds(-6d) <= WorldState.CurrentTime)
+        if (aoes[0].Activation.AddSeconds(-6d) <= WorldState.CurrentTime)
         {
             return aoes;
         }
@@ -185,19 +193,10 @@ abstract class Impact(BossModule module, uint aid, float distance) : Components.
         if (Casters.Count != 0)
         {
             ref readonly var c = ref Casters.Ref(0);
-            var pos = c.Origin;
-            var center = Arena.Center;
             var dist = Distance;
-            var w = halfWidth;
+
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(p =>
-            {
-                if ((p + dist * (p - pos).Normalized()).InSquare(center, w))
-                {
-                    return 1f;
-                }
-                return default;
-            }, c.Activation);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, c.Origin, dist, halfWidth), c.Activation);
         }
     }
 }
@@ -208,7 +207,7 @@ sealed class Impact2(BossModule module) : Impact(module, (uint)AID.Impact2, 18f)
 {
     private readonly Stonecarver _aoe = module.FindComponent<Stonecarver>()!;
 
-    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _aoe.AOEs.Count != 0 && _aoe.AOEs.Ref(0).Check(pos) || !Module.InBounds(pos);
+    public override bool DestinationUnsafe(int slot, Actor actor, WPos pos) => _aoe.AOEs.Count != 0 && _aoe.AOEs.Ref(0).Check(pos) || !Arena.InBounds(pos);
 }
 
 sealed class Impact3(BossModule module) : Impact(module, (uint)AID.Impact3, 20f)
@@ -260,7 +259,7 @@ sealed class DestructiveHeat(BossModule module) : Components.SpreadFromCastTarge
             if (origin != default)
             {
                 base.AddAIHints(slot, actor, assignment, hints);
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(origin, 15f), Spreads.Ref(0).Activation);
+                hints.AddForbiddenZone(new SDInvertedCircle(origin, 15f), Spreads.Ref(0).Activation);
             }
             else
             { }

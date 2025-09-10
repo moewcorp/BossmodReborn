@@ -121,9 +121,9 @@ sealed class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
 
         if (containsENVC20 || containsENVC21)
         {
-            var forbiddenZone = actor.Role != Role.Tank
-                ? ShapeDistance.Rect(Arena.Center, containsENVC20 ? am40 : a0, 20f, containsENVC20 ? 1f : 10f, 20f)
-                : ShapeDistance.InvertedCircle(Arena.Center, 12f);
+            ShapeDistance forbiddenZone = actor.Role != Role.Tank
+                ? new SDRect(Arena.Center, containsENVC20 ? am40 : a0, 20f, containsENVC20 ? 1f : 10f, 20f)
+                : new SDInvertedCircle(Arena.Center, 12f);
 
             hints.AddForbiddenZone(forbiddenZone, aoe.Activation);
         }
@@ -131,7 +131,7 @@ sealed class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
 
     private static AOEShapeCustom CreateShape(WPos pos1, WPos pos2, WPos pos3, Angle angle1, Angle angle2, Angle angle3, int halfWidth, bool inverted = false)
         => new([new Rectangle(pos1, halfWidth, Length, angle1), new Rectangle(pos2, halfWidth, Length, angle2), new Rectangle(pos3, halfWidth, Length, angle3)],
-        InvertForbiddenZone: inverted);
+        invertForbiddenZone: inverted);
 }
 
 sealed class WindShotStack(BossModule module) : Components.DonutStack(module, (uint)AID.WindShot, (uint)IconID.WindShot, 5f, 10f, 6f, 4, 4)
@@ -144,14 +144,16 @@ sealed class WindShotStack(BossModule module) : Components.DonutStack(module, (u
             return;
 
         ref var aoe = ref _aoe.AOE[0];
-        var forbidden = new List<Func<WPos, float>>(3);
+        var forbidden = new List<ShapeDistance>(3);
         var party = Raid.WithoutSlot(false, true, true);
         var len = party.Length;
         for (var i = 0; i < len; ++i)
         {
             var p = party[i];
             if (p == actor)
+            {
                 continue;
+            }
 
             var addForbidden = false;
             if (aoe.Shape is AOEShapeDonut && !aoe.Check(p.Position) || aoe.Shape is AOEShapeCustom && aoe.Check(p.Position))
@@ -160,13 +162,13 @@ sealed class WindShotStack(BossModule module) : Components.DonutStack(module, (u
             }
             if (addForbidden)
             {
-                forbidden.Add(ShapeDistance.InvertedCircle(p.Position, 1.66f));
+                forbidden.Add(new SDInvertedCircle(p.Position, 1.66f));
             }
         }
 
         if (forbidden.Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.Intersection(forbidden), Stacks.Ref(0).Activation);
+            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), Stacks.Ref(0).Activation);
         }
     }
 }

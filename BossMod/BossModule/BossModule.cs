@@ -23,7 +23,6 @@ public abstract class BossModule : IDisposable
     public PartyState Raid => WorldState.Party;
     public WPos Center => Arena.Center;
     public ArenaBounds Bounds => Arena.Bounds;
-    public bool InBounds(WPos position) => Arena.InBounds(position);
 
     // per-oid enemy lists; filled on first request
     public readonly Dictionary<uint, List<Actor>> RelevantEnemies = []; // key = actor OID
