@@ -208,30 +208,66 @@ public sealed class ConfigUI : IDisposable
                 _filterNodes.Add(path);
     }
 
-    private IEnumerable<List<string>> WalkNodes(UINode node)
+    private static readonly Dictionary<Type, List<(FieldInfo Field, PropertyDisplayAttribute Attr)>> _fieldCache = [];
+
+    private List<List<string>> WalkNodes(UINode node)
     {
-        // if node matches, show all children
-        if (Utils.TextMatch(node.Name, _searchText) || node.Tags.Any(t => Utils.TextMatch(t, _searchText)))
+        var results = new List<List<string>>();
+        WalkNodesInternal(node, [], results);
+        return results;
+    }
+
+    private void WalkNodesInternal(UINode node, List<string> path, List<List<string>> results)
+    {
+        if (Utils.TextMatch(node.Name, _searchText) || TagsMatch(node.Tags))
         {
-            yield return [node.Name, "*"];
-            yield break;
+            var matchPath = new List<string>(path) { node.Name, "*" };
+            results.Add(matchPath);
+            return;
         }
 
-        // check for matching fields
-        foreach (var field in node.Node.GetType().GetFields())
+        foreach (var (_, props) in GetFieldAttributes(node.Node.GetType()))
         {
-            var props = field.GetCustomAttribute<PropertyDisplayAttribute>();
-            if (props == null)
-                continue;
-
-            if (Utils.TextMatch(props.Label, _searchText) || props.Tags.Any(t => Utils.TextMatch(t, _searchText)))
-                yield return [node.Name, props.Label];
+            if (Utils.TextMatch(props.Label, _searchText) || TagsMatch(props.Tags))
+            {
+                var matchPath = new List<string>(path) { node.Name, props.Label };
+                results.Add(matchPath);
+            }
         }
 
-        // check for matching subnodes
-        foreach (var p in node.Children)
-            foreach (var path in WalkNodes(p))
-                yield return [node.Name, .. path];
+        path.Add(node.Name);
+        foreach (var child in node.Children)
+        {
+            WalkNodesInternal(child, path, results);
+        }
+        path.RemoveAt(path.Count - 1);
+    }
+
+    private static List<(FieldInfo, PropertyDisplayAttribute)> GetFieldAttributes(Type type)
+    {
+        if (_fieldCache.TryGetValue(type, out var cached))
+            return cached;
+
+        var list = new List<(FieldInfo, PropertyDisplayAttribute)>();
+        foreach (var field in type.GetFields())
+        {
+            var attr = field.GetCustomAttribute<PropertyDisplayAttribute>();
+            if (attr != null)
+                list.Add((field, attr));
+        }
+
+        _fieldCache[type] = list;
+        return list;
+    }
+
+    private bool TagsMatch(string[] tags)
+    {
+        foreach (var tag in tags)
+        {
+            if (Utils.TextMatch(tag, _searchText))
+                return true;
+        }
+        return false;
     }
 
     public static void DrawNode(ConfigNode node, ConfigRoot root, UITree tree, WorldState ws, Func<PropertyDisplayAttribute, bool>? filter = null)

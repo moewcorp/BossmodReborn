@@ -16,13 +16,13 @@ public sealed class ConfigDisplayAttribute : Attribute
 
 // attribute that specifies how config node field or enumeration value is shown in the UI
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class PropertyDisplayAttribute(string label, uint color = 0, string tooltip = "", bool separator = false, string[]? tags = null) : Attribute
+public sealed class PropertyDisplayAttribute(string label, uint color = default, string tooltip = "", bool separator = false, string[]? tags = null) : Attribute
 {
     public string Label { get; } = label;
-    public uint Color { get; } = color == 0 ? Colors.TextColor1 : color;
+    public uint Color { get; } = color == default ? Colors.TextColor1 : color;
     public string Tooltip { get; } = tooltip;
     public bool Separator { get; } = separator;
-    public string? Since { get; } = since;
+    public string[] Tags { get; } = tags ?? [];
 }
 
 // attribute that specifies combobox should be used for displaying int/bool property
@@ -40,7 +40,7 @@ public sealed class PropertyComboAttribute(string[] values) : Attribute
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class PropertySliderAttribute(float min, float max) : Attribute
 {
-    public float Speed { get; set; } = 1;
+    public float Speed { get; set; } = 1f;
     public float Min { get; } = min;
     public float Max { get; } = max;
     public bool Logarithmic { get; set; }
