@@ -115,7 +115,7 @@ class P2AI(BossModule module) : BossComponent(module)
             var bossTarget = WorldState.Actors.Find(Module.PrimaryActor.TargetID);
             var dir = bossTarget != null ? Angle.FromDirection(bossTarget.Position - Module.PrimaryActor.Position) : Module.PrimaryActor.Rotation;
             dir += (stayLeft ? 135 : -135).Degrees();
-            hints.AddForbiddenZone(new SDInvertedCircle(Module.PrimaryActor.Position + dir.ToDirection() * 8, P2Fireball.Radius * 0.5f), _fireball?.Target != null ? _fireball.ExplosionAt : DateTime.MaxValue);
+            hints.AddForbiddenZone(new SDInvertedCircle(Module.PrimaryActor.Position + 8f * dir.ToDirection(), P2Fireball.Radius * 0.5f), _fireball?.Target != null ? _fireball.ExplosionAt : DateTime.MaxValue);
         }
 
         if (_fireball?.Target != null)

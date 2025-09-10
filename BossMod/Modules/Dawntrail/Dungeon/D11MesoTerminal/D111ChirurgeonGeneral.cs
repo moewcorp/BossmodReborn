@@ -142,7 +142,7 @@ sealed class PungentAerosol(BossModule module) : Components.SimpleKnockbacks(mod
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

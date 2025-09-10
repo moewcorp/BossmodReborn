@@ -21,7 +21,7 @@ sealed class P5FulgentBlade : Components.Exaflare
         //{
         //    var shape = NumCasts switch
         //    {
-        //        < 2 => new SDInvertedCircle(SafeSpot(), 1),
+        //        < 2 => new SDInvertedCircle(SafeSpot(), 1)),
         //        < 4 => LineIntersection(0, 1),
         //        < 6 => LineIntersection(2, 3),
         //        _ => LineIntersection(4, 5),

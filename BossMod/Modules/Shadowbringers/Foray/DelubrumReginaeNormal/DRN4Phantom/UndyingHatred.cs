@@ -41,6 +41,6 @@ sealed class UndyingHatred(BossModule module) : Components.SimpleKnockbacks(modu
             if (aoe.Color == Colors.Danger && aoe.Check(pos))
                 return true;
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }

@@ -72,7 +72,7 @@ public struct NavigationDecision
         var len = pixels.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var p = ref pixels[i];
+            var p = pixels[i];
             var px = p.x;
             var py = p.y;
             var cellIndex = map.GridToIndex(px, py);
@@ -271,8 +271,7 @@ public struct NavigationDecision
                         initVal = realMaxG;
                         computedVal = Math.Max(initVal, localMax);
                     }
-                    while (initVal != Interlocked.CompareExchange(
-                        ref realMaxG, computedVal, initVal));
+                    while (initVal != Interlocked.CompareExchange(ref realMaxG, computedVal, initVal));
                 }
             );
 
@@ -402,8 +401,7 @@ public struct NavigationDecision
                 initVal = globalMaxPriority;
                 newVal = Math.Max(initVal, localMax);
             }
-            while (initVal != Interlocked.CompareExchange(
-                ref globalMaxPriority, newVal, initVal));
+            while (initVal != Interlocked.CompareExchange(ref globalMaxPriority, newVal, initVal));
         });
 
         // Finally store the global maximum in map.MaxPriority
@@ -469,7 +467,7 @@ public struct NavigationDecision
         var threshold = cushion;
         for (var i = 0; i < len; ++i)
         {
-            ref var z = ref zones[i];
+            var z = zones[i];
             if (z.shapeDistance.Distance(p) < threshold)
             {
                 return z.g;

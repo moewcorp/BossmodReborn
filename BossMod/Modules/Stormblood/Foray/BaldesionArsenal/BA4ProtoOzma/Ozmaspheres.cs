@@ -59,7 +59,7 @@ sealed class Ozmaspheres(BossModule module) : Components.GenericAOEs(module)
                 for (var i = 0; i < count; ++i)
                 {
                     var o = orbs[i];
-                    forbidden[i] = new SDInvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(0f, 1f), 0.5f, 0.5f, 0.5f);
+                    forbidden[i] = new SDInvertedRect(o.Position + 0.5f * o.Rotation.ToDirection(), new WDir(default, 1f), 0.5f, 0.5f, 0.5f);
                 }
                 hints.AddForbiddenZone(new SDIntersection(forbidden), DateTime.MaxValue);
             }

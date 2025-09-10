@@ -52,7 +52,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             for (var i = 0; i < countH; ++i)
             {
                 var c = helpers[i];
-                if (c.NameID == 6274)
+                if (c.NameID == 6274u)
                 {
                     chests.Add(c);
                 }
@@ -73,7 +73,10 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
             aoes[i] = new(circle, openChests[i].Center);
         }
         if (closedAOE is AOEShapeCustom aoe)
-            aoes[count] = new(aoe with { InvertForbiddenZone = !IsOld(actor) && active }, Arena.Center, color: IsOld(actor) || !active ? default : Colors.SafeFromAOE);
+        {
+            aoe.InvertForbiddenZone = !IsOld(actor) && active;
+            aoes[count] = new(aoe, Arena.Center, color: IsOld(actor) || !active ? default : Colors.SafeFromAOE);
+        }
         return aoes;
     }
 
@@ -98,7 +101,7 @@ class SeduceOld(BossModule module) : Components.GenericAOEs(module)
                         }
                     }
                 }
-                else if (state == 0x00100020)
+                else if (state == 0x00100020u)
                 {
                     var countO = openChests.Count;
                     for (var j = 0; j < countO; ++j)

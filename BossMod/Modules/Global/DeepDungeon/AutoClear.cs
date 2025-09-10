@@ -536,14 +536,14 @@ public abstract class AutoClear : ZoneModule
 
                     if (!shouldIgnore)
                     {
-                        var trapCircle = new SDCircle(trap, 2f);
+                        ShapeDistance trapCircle = new SDCircle(trap, 2f);
                         traps.Add(trapCircle);
                     }
                 }
             }
 
             if (traps.Count != 0)
-                hints.AddForbiddenZone(new SDUnion([..traps]));
+                hints.AddForbiddenZone(new SDUnion([.. traps]));
         }
 
         if (coffer != null)
@@ -627,7 +627,7 @@ public abstract class AutoClear : ZoneModule
                 pickBetterTarget(pp.Actor);
 
             // pomander of storms was used, enemy can't autoheal; any damage will kill
-            else if (pp.Actor.FindStatus((uint)SID.AutoHealPenalty) != null && pp.Actor.HPMP.CurHP < 10)
+            else if (pp.Actor.FindStatus((uint)SID.AutoHealPenalty) != null && pp.Actor.HPMP.CurHP < 10u)
                 pickBetterTarget(pp.Actor);
 
             // if player does not have a target, prioritize everything so that AI picks one - skip dangerous enemies

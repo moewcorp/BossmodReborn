@@ -125,7 +125,7 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
                 circles[i] = (aoe.Origin, aoe.ActorID == default ? 4f : 15f);
             }
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusAOECircles(Arena.Center, c.Origin, 11f, 19f, circles, len), act);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusAOECirclesMixedRadii(Arena.Center, c.Origin, 11f, 19f, circles, len), act);
         }
     }
 
@@ -141,7 +141,7 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

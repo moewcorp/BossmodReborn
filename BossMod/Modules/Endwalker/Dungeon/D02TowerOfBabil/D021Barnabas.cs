@@ -99,7 +99,7 @@ sealed class Magnetism(BossModule module) : Components.GenericKnockback(module)
             return true;
         if (_aoe2.Casters.Count != 0 && _aoe2.Casters.Ref(0).Check(pos))
             return true;
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)

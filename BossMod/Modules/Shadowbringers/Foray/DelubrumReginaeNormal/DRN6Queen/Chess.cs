@@ -191,6 +191,6 @@ sealed class Chess(BossModule module) : Components.GenericAOEs(module)
                 forbidden.Add(new SDInvertedRect(aoe.Origin, new WDir(default, 1f), 5f, 5f, 5f));
             }
         }
-        hints.AddForbiddenZone(new SDIntersection(forbidden), aoes[0].Activation);
+        hints.AddForbiddenZone(new SDIntersection([.. forbidden]), aoes[0].Activation);
     }
 }

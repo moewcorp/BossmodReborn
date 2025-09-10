@@ -78,7 +78,7 @@ class P3Adds(BossModule module) : BossComponent(module)
         if (!Module.PrimaryActor.IsTargetable && !ActiveHygieia.Any() && !Asclepius.Any(a => !a.IsDead))
         {
             // once all adds are dead, gather where boss will return
-            hints.AddForbiddenZone(new SDInvertedCircle(new(-6.67f, 5), 5), DateTime.MaxValue);
+            hints.AddForbiddenZone(new SDInvertedCircle(new(-6.67f, 5f), 5f), DateTime.MaxValue);
         }
     }
 
@@ -87,7 +87,7 @@ class P3Adds(BossModule module) : BossComponent(module)
         foreach (var a in ActiveHygieia)
         {
             Arena.Actor(a);
-            Arena.AddCircle(a.Position, _explosionRadius, Colors.Danger);
+            Arena.AddCircle(a.Position, _explosionRadius);
         }
         Arena.Actors(Asclepius);
     }
@@ -95,7 +95,7 @@ class P3Adds(BossModule module) : BossComponent(module)
 
 class P3AethericProfusion(BossModule module) : Components.CastCounter(module, (uint)AID.AethericProfusion)
 {
-    private readonly DateTime _activation = module.WorldState.FutureTime(6.7f);
+    private readonly DateTime _activation = module.WorldState.FutureTime(6.7d);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -111,9 +111,7 @@ class P3AethericProfusion(BossModule module) : Components.CastCounter(module, (u
         }
 
         // let MT taunt boss if needed
-        var boss = hints.FindEnemy(Module.PrimaryActor);
-        if (boss != null)
-            boss.PreferProvoking = true;
+        hints.FindEnemy(Module.PrimaryActor)?.PreferProvoking = true;
 
         // mitigate heavy raidwide
         hints.AddPredictedDamage(Raid.WithSlot(false, true, true).Mask(), _activation);

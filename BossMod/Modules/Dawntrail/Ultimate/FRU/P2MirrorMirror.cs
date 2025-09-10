@@ -145,14 +145,14 @@ sealed class P2MirrorMirrorHouseOfLight(BossModule module) : Components.GenericB
         switch (spell.Action.ID)
         {
             case (uint)AID.ScytheKick:
-                var activation = Module.CastFinishAt(spell, 0.7f);
+                var activation = Module.CastFinishAt(spell, 0.7d);
                 FirstSources.Add(new(caster, activation));
-                var mirror = _blueMirror != null ? Module.Enemies((uint)OID.FrozenMirror).Closest(Arena.Center + 20 * _blueMirror.Value.ToDirection()) : null;
+                var mirror = _blueMirror != null ? Module.Enemies((uint)OID.FrozenMirror).Closest(Arena.Center + 20f * _blueMirror.Value.ToDirection()) : null;
                 if (mirror != null)
                     FirstSources.Add(new(mirror, activation));
                 break;
             case (uint)AID.ReflectedScytheKickRed:
-                SecondSources.Add(new(caster, Module.CastFinishAt(spell, 0.6f)));
+                SecondSources.Add(new(caster, Module.CastFinishAt(spell, 0.6d)));
                 if (SecondSources.Count == 2 && _blueMirror != null)
                 {
                     // order two red mirrors so that first one is closer to boss and second one closer to blue mirror; if both are same distance, select CW ones (arbitrary)

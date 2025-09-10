@@ -34,7 +34,7 @@ sealed class SurgingWaveShockwave(BossModule module) : Components.SimpleKnockbac
                 polyInit = true;
             }
 
-            ref var c = ref Casters.Ref(0);
+            ref readonly var c = ref Casters.Ref(0);
             hints.AddForbiddenZone(new SDKnockbackInComplexPolygonAwayFromOrigin(Arena.Center, c.Origin, 68f, poly), c.Activation);
         }
     }

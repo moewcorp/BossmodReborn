@@ -231,7 +231,7 @@ sealed class OrderTowers(BossModule module) : Components.GenericAOEs(module)
                         shapes.Add(new Polygon(TowerPositions[j - 1], 5f, 20));
                     }
                 }
-                AOEs[p.Item1] = [new(new AOEShapeCustom(shapes, InvertForbiddenZone: !outsideSafe), Arena.Center, default, Module.CastFinishAt(spell), !outsideSafe ? Colors.SafeFromAOE : default)];
+                AOEs[p.Item1] = [new(new AOEShapeCustom(shapes, invertForbiddenZone: !outsideSafe), Arena.Center, default, Module.CastFinishAt(spell), !outsideSafe ? Colors.SafeFromAOE : default)];
             }
         }
     }
@@ -282,7 +282,7 @@ sealed class OrderForcedMarch(BossModule module) : Components.StatusDrivenForced
             var isInside = aoe.Check(pos);
             return _math.Numbers[slot][0] == default ? isInside : !isInside;
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

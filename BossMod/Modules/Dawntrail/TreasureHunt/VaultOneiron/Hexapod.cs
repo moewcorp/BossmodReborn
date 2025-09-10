@@ -153,8 +153,7 @@ sealed class Brainjack(BossModule module) : Components.StatusDrivenForcedMarch(m
 
         for (var i = 0; i < count; ++i)
         {
-            ref var aoe = ref aoes[i];
-            if (Intersect.RayCircle(actor.Position - aoe.Origin, dir, 5f, 18f))
+            if (Intersect.RayCircle(actor.Position - aoes[i].Origin, dir, 5f, 18f))
             {
                 return true;
             }
@@ -222,8 +221,7 @@ sealed class PoleShift(BossModule module) : Components.GenericKnockback(module, 
             var aoes = CollectionsMarshal.AsSpan(_aoe1.Casters);
             for (var i = 0; i < count; ++i)
             {
-                ref var aoe = ref aoes[i];
-                if (aoe.Check(pos))
+                if (aoes[i].Check(pos))
                 {
                     return true;
                 }

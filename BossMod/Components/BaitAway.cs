@@ -506,7 +506,7 @@ public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : 
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == WatchedAction && WorldState.Actors.Find(spell.TargetID) is var target && target != null)
+        if (spell.Action.ID == WatchedAction && WorldState.Actors.Find(spell.TargetID) is Actor target)
         {
             CurrentBaits.Add(new(caster, target, new AOEShapeRect((target.Position - caster.Position).Length(), HalfWidth), Module.CastFinishAt(spell)));
         }

@@ -243,7 +243,7 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

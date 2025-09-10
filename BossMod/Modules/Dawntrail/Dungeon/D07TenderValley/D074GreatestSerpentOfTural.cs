@@ -121,7 +121,7 @@ sealed class GreatestLabyrinth(BossModule module) : Components.GenericAOEs(modul
         for (var i = 0; i < 4; ++i)
         {
             var tp = tilePairs[i];
-            shapes[i] = !invert ? new AOEShapeCustom(wholeArena, [middle, tp.correctTile, tp.goalTile]) : new AOEShapeCustom([tp.correctTile, tp.goalTile], InvertForbiddenZone: true);
+            shapes[i] = !invert ? new AOEShapeCustom(wholeArena, [middle, tp.correctTile, tp.goalTile]) : new AOEShapeCustom([tp.correctTile, tp.goalTile], invertForbiddenZone: true);
         }
         return shapes;
     }

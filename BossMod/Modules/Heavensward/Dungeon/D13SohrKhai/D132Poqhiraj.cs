@@ -168,7 +168,7 @@ class GallopKBHint(BossModule module) : Components.GenericAOEs(module)
                 var pos = new WPos(safeWall.X, safeWall.Z + 5f);
                 rects.Add(new(pos + dir, pos - 3.5f * dir, 5f));
             }
-            AOEShapeCustom aoe = new([.. rects], InvertForbiddenZone: true);
+            AOEShapeCustom aoe = new([.. rects], invertForbiddenZone: true);
             _aoe = [new(aoe, Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE, true)];
         }
     }
@@ -236,7 +236,7 @@ class BurningBright(BossModule module) : Components.BaitAwayCast(module, (uint)A
             {
                 var walls = Module.Enemies((uint)OID.PrayerWall);
                 var count = walls.Count;
-                if (count <= 4) // don't care if most walls are up plus most of the arena would likely be forbidden anyway depending on player positioning
+                if (count is <= 4 and > 0) // don't care if most walls are up plus most of the arena would likely be forbidden anyway depending on player positioning
                 {
                     var forbidden = new ShapeDistance[count];
                     for (var i = 0; i < count; ++i)
@@ -244,8 +244,7 @@ class BurningBright(BossModule module) : Components.BaitAwayCast(module, (uint)A
                         var a = walls[i];
                         forbidden[i] = new SDCone(bait.Source.Position, 100f, bait.Source.AngleTo(a), Angle.Asin(8f / (a.Position - bait.Source.Position).Length()));
                     }
-                    if (forbidden.Length != 0)
-                        hints.AddForbiddenZone(new SDUnion(forbidden), bait.Activation);
+                    hints.AddForbiddenZone(new SDUnion(forbidden), bait.Activation);
                 }
             }
         }

@@ -130,7 +130,7 @@ sealed class AetherSprayWaterKB(BossModule module) : Components.SimpleKnockbacks
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

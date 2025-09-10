@@ -71,7 +71,7 @@ sealed class MediumRearNeerDoneWell(BossModule module) : Components.SimpleAOEGro
     }
 }
 
-class HuffAndPuff1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.HuffAndPuff1, 15, true, stopAtWall: true, kind: Kind.DirForward)
+class HuffAndPuff1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.HuffAndPuff1, 15f, true, stopAtWall: true, kind: Kind.DirForward)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

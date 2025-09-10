@@ -38,8 +38,7 @@ sealed class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(mod
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }
@@ -48,8 +47,7 @@ sealed class DriftingPetals(BossModule module) : Components.SimpleKnockbacks(mod
         var len2 = aoes2.Length;
         for (var i = 0; i < len2; ++i)
         {
-            ref readonly var aoe = ref aoes2[i];
-            if (aoe.Check(pos))
+            if (aoes2[i].Check(pos))
             {
                 return true;
             }

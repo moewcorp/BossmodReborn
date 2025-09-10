@@ -291,7 +291,7 @@ sealed class Steelstrike(BossModule module) : Components.GenericAOEs(module)
 sealed class ThermalDivideSides(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly Angle a90 = 90f.Degrees();
-    private static readonly AOEShapeCone cone = new(40f, a90);
+    private static readonly AOEShapeCone cone = new(40f, a90), coneInv = new(40f, a90, invertForbiddenZone: true);
     private bool? pattern; // null = none, false = ice left, fire right, true = fire left, ice right
     private Angle rotation;
     private WDir offset;
@@ -315,7 +315,7 @@ sealed class ThermalDivideSides(BossModule module) : Components.GenericAOEs(modu
             var check = condition ? 1f : -1f;
             var aoes = new AOEInstance[2];
             aoes[0] = new(cone, condition ? pos1 : pos2, rotation + check * a90, activation);
-            aoes[1] = new(cone with { InvertForbiddenZone = true }, condition ? pos2 : pos1, rotation - check * a90, activation, Colors.SafeFromAOE);
+            aoes[1] = new(coneInv, condition ? pos2 : pos1, rotation - check * a90, activation, Colors.SafeFromAOE);
             return aoes;
         }
     }

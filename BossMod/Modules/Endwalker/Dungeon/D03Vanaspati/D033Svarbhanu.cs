@@ -218,7 +218,7 @@ sealed class CosmicKissKnockback(BossModule module) : Components.SimpleKnockback
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

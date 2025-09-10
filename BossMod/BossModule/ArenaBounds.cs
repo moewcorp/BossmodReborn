@@ -390,7 +390,7 @@ public sealed record class ArenaBoundsCustom : ArenaBounds
         var height = map.Height;
         var resolution = map.Resolution;
 
-        map.BlockPixelsInside(new SDInvertedPolygonWithHoles(default, Polygon), -1f, 0.49999f * resolution); // check inner circle of the pixel
+        map.BlockPixelsInside(new SDInvertedPolygonWithHoles(new(default, Polygon)), -1f, 0.49999f * resolution); // check inner circle of the pixel
 
         // now check the corners
         var halfSample = resolution * 0.49999f; // tiny offset to account for floating point inaccuracies

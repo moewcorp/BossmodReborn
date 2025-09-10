@@ -300,7 +300,7 @@ sealed class P2LightRampantAITowers(BossModule module) : BossComponent(module)
                 // note that this is only really relevant for second and third puddles - after that towers resolve and we use different component
                 //var nextSpot = Arena.Center + BaitOffset * _puddles.PrevBaitOffset[slot].Normalized().Rotate(-45.Degrees());
                 //hints.AddForbiddenZone(new SDInvertedCircle(nextSpot, 3));
-                hints.AddForbiddenZone(new SDInvertedDonutSector(Arena.Center, BaitOffset - 1, BaitOffset + 2, Angle.FromDirection(_puddles.PrevBaitOffset[slot]) - 45.Degrees(), 30.Degrees()), DateTime.MaxValue);
+                hints.AddForbiddenZone(new SDInvertedDonutSector(Arena.Center, BaitOffset - 1f, BaitOffset + 2f, Angle.FromDirection(_puddles.PrevBaitOffset[slot]) - 45f.Degrees(), 30f.Degrees()), DateTime.MaxValue);
             }
         }
         else

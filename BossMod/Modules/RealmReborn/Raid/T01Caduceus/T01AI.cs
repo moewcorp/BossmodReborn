@@ -134,6 +134,6 @@ class T01AI(BossModule module) : BossComponent(module)
 
     private void SetPreferredPlatform(AIHints hints, int platform)
     {
-        hints.AddForbiddenZone(new SDInvertedUnionOffset([Platforms.PlatformShapes[platform]], 1f), DateTime.MaxValue);  // inverted and slightly reduced to avoid standing on borders
+        hints.AddForbiddenZone(new SDInvertedUnionOffset([Platforms.PlatformShapes[platform]], -1f), DateTime.MaxValue);  // inverted and slightly reduced to avoid standing on borders
     }
 }

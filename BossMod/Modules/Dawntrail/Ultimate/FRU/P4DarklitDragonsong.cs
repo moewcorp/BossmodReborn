@@ -217,7 +217,7 @@ sealed class P4DarklitDragonsongSpiritTaker(BossModule module) : SpiritTaker(mod
         //if (_darklit != null && _darklit.AssignS.Any() && Spreads.Count > 0 && Spreads[0].Activation > WorldState.FutureTime(1))
         //{
         //    // preposition
-        //    hints.AddForbiddenZone(new SDInvertedCircle(Arena.Center + PrepositionOffset(_darklit, slot, actor), 1), Spreads[0].Activation);
+        //    hints.AddForbiddenZone(new SDInvertedCircle(Arena.Center + PrepositionOffset(_darklit, slot, actor), 1)), Spreads[0].Activation);
         //}
         //else
         {

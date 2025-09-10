@@ -107,7 +107,7 @@ sealed class Landslip(BossModule module) : Components.GenericKnockback(module)
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

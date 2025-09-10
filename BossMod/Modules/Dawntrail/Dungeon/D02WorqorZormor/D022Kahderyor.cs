@@ -131,7 +131,7 @@ sealed class WindEarthShot(BossModule module) : Components.GenericAOEs(module)
 
     private static AOEShapeCustom CreateShape(WPos pos1, WPos pos2, WPos pos3, Angle angle1, Angle angle2, Angle angle3, int halfWidth, bool inverted = false)
         => new([new Rectangle(pos1, halfWidth, Length, angle1), new Rectangle(pos2, halfWidth, Length, angle2), new Rectangle(pos3, halfWidth, Length, angle3)],
-        InvertForbiddenZone: inverted);
+        invertForbiddenZone: inverted);
 }
 
 sealed class WindShotStack(BossModule module) : Components.DonutStack(module, (uint)AID.WindShot, (uint)IconID.WindShot, 5f, 10f, 6f, 4, 4)

@@ -161,7 +161,7 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly (WPos dropofflocation, int required, int current)[] playerData = new (WPos, int, int)[PartyState.MaxPartySize];
     private readonly List<AOEInstance>[] _aoesPerPlayer = new List<AOEInstance>[PartyState.MaxPartySize];
-    private static readonly AOEShapeCircle circle = new(7f);
+    private static readonly AOEShapeCircle circle = new(7f), circleInv = new(7f, true);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => playerData[slot] != default ? CollectionsMarshal.AsSpan(_aoesPerPlayer[slot]) : [];
 
@@ -243,7 +243,7 @@ sealed class WhatreYouBuying(BossModule module) : Components.GenericAOEs(module)
                     if (aoe.Origin.AlmostEqual(pSlot.dropofflocation, 1f))
                     {
                         aoe.Color = Colors.SafeFromAOE;
-                        aoe.Shape = circle with { InvertForbiddenZone = true };
+                        aoe.Shape = circleInv;
                         return;
                     }
                 }

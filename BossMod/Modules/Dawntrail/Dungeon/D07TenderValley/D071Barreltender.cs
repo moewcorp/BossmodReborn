@@ -199,7 +199,7 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void OnActorDestroyed(Actor actor)

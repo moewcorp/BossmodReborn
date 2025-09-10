@@ -160,14 +160,14 @@ sealed class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
         if (_safeOffs[slot] != default)
         {
             hints.PathfindMapBounds = FRU.PathfindHugBorderBounds;
-            hints.AddForbiddenZone(new SDPrecisePosition(Arena.Center + _safeOffs[slot], new WDir(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f));
+            hints.AddForbiddenZone(new SDPrecisePosition(Arena.Center + _safeOffs[slot], new WDir(default, 1f), Arena.Bounds.MapResolution, actor.Position, 0.1f));
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         if (_safeOffs[pcSlot] != default)
-            Arena.AddCircle(Arena.Center + _safeOffs[pcSlot], 1, Colors.Safe);
+            Arena.AddCircle(Arena.Center + _safeOffs[pcSlot], 1f, Colors.Safe);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -200,13 +200,13 @@ sealed class P2DiamondDustSafespots(BossModule module) : BossComponent(module)
                 // out done => cone baiters go in, ice baiters stay
                 for (var i = 0; i < _safeOffs.Length; ++i)
                     if (_safeOffs[i] != default && Raid[i]?.Class.IsSupport() == _supportsBaitCones)
-                        _safeOffs[i] = 4 * _safeOffs[i].Normalized();
+                        _safeOffs[i] = 4f * _safeOffs[i].Normalized();
                 break;
             case (uint)AID.ScytheKick:
                 // in done => cone baiters stay, ice baiters go out
                 for (var i = 0; i < _safeOffs.Length; ++i)
                     if (_safeOffs[i] != default && Raid[i]?.Class.IsSupport() != _supportsBaitCones)
-                        _safeOffs[i] = 8 * _safeOffs[i].Normalized();
+                        _safeOffs[i] = 8f * _safeOffs[i].Normalized();
                 break;
         }
     }
@@ -505,12 +505,12 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
                 if (dist >= SlideDistance)
                 {
                     // voidzone center is outside slide distance => forbid voidzone itself
-                    zoneList.ForbidCircle(z.Position, 6);
+                    zoneList.ForbidCircle(z.Position, 6f);
                 }
                 else if (dist >= 6)
                 {
                     // forbid the voidzone's shadow
-                    zoneList.ForbidArcByLength(Angle.FromDirection(offset), Angle.Asin(6 / dist));
+                    zoneList.ForbidArcByLength(Angle.FromDirection(offset), Angle.Asin(6f / dist));
                 }
                 // else: we're already in voidzone, oh well
             }
@@ -521,7 +521,7 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
                 var farthestDir = Angle.FromDirection(-sourceOffset);
                 var bestRange = zoneList.Allowed(5.Degrees()).MinBy(r => farthestDir.DistanceToRange(r.min, r.max).Abs().Rad);
                 var dir = farthestDir.ClosestInRange(bestRange.min, bestRange.max);
-                hints.AddForbiddenZone(new SDInvertedCircle(actor.Position + SlideDistance * dir.ToDirection(), 1), DateTime.MaxValue);
+                hints.AddForbiddenZone(new SDInvertedCircle(actor.Position + SlideDistance * dir.ToDirection(), 1f), DateTime.MaxValue);
             }
             else
             {
@@ -532,12 +532,12 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
                 // prefer to return to the starting spot, for more natural preposition for next mechanic
                 if (AOEs.Count == 1 && _slideBackPos[slot] != default && !zoneList.Forbidden.Contains(Angle.FromDirection(_slideBackPos[slot] - actor.Position).Rad))
                 {
-                    hints.AddForbiddenZone(new SDInvertedCircle(_slideBackPos[slot], 1), DateTime.MaxValue);
+                    hints.AddForbiddenZone(new SDInvertedCircle(_slideBackPos[slot], 1f), DateTime.MaxValue);
                 }
                 else if (zoneList.Allowed(1.Degrees()).MaxBy(r => (r.max - r.min).Rad) is var best && best.max.Rad > best.min.Rad)
                 {
                     var dir = 0.5f * (best.min + best.max);
-                    hints.AddForbiddenZone(new SDInvertedCircle(actor.Position + SlideDistance * dir.ToDirection(), 1), DateTime.MaxValue);
+                    hints.AddForbiddenZone(new SDInvertedCircle(actor.Position + SlideDistance * dir.ToDirection(), 1f), DateTime.MaxValue);
                 }
                 // else: no good direction can be found, wait for a bit, maybe voidzone will disappear
             }
@@ -602,6 +602,6 @@ sealed class P2ThinIce(BossModule module) : Components.ThinIce(module, 32f)
                 }
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }

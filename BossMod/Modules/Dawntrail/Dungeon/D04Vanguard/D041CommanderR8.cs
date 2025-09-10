@@ -86,7 +86,13 @@ sealed class EnhancedMobility(BossModule module) : Components.GenericAOEs(module
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell)));
             if (_aoes.Count == 2)
             {
-                _aoes.Sort((x, y) => x.Activation.CompareTo(y.Activation));
+                var aoes = CollectionsMarshal.AsSpan(_aoes);
+                ref var aoe1 = ref aoes[0];
+                ref var aoe2 = ref aoes[1];
+                if (aoe1.Activation > aoe2.Activation)
+                {
+                    (aoe1, aoe2) = (aoe2, aoe1);
+                }
             }
         }
     }

@@ -46,11 +46,12 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         _ai.Execute(player, hints);
     }
 
-    private static Func<WPos, float> GetSightCone(Actor p)
+    private static ShapeDistance GetSightCone(Actor p)
     {
-        if (p.OID == 0x362A)
+        if (p.OID == 0x362Au)
+        {
             return new SDCircle(p.Position, 8.5f + p.HitboxRadius);
-
+        }
         return new SDCone(p.Position, 10f + p.HitboxRadius, p.Rotation, 45f.Degrees());
     }
 

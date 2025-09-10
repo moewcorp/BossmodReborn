@@ -1,6 +1,4 @@
-﻿using BossMod.Autorotation.xan;
-
-namespace BossMod.Dawntrail.Dungeon.D02WorqorZormor.D023Gurfurlur;
+﻿namespace BossMod.Dawntrail.Dungeon.D02WorqorZormor.D023Gurfurlur;
 
 public enum OID : uint
 {
@@ -167,7 +165,7 @@ sealed class GreatFlood(BossModule module) : Components.SimpleKnockbacks(module,
 sealed class Allfire(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeRect rect = new(10f, 5f);
-    private static readonly AOEShapeRect safespot = new(15f, 10f, InvertForbiddenZone: true);
+    private static readonly AOEShapeRect safespot = new(15f, 10f, invertForbiddenZone: true);
     public readonly List<AOEInstance> AOEs = new(16);
     private bool first = true;
 
@@ -254,9 +252,11 @@ sealed class Windswrath1(BossModule module) : Windswrath(module, (uint)AID.Winds
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count == 0)
+        {
             return;
+        }
         ref readonly var c = ref Casters.Ref(0);
-        hints.AddForbiddenZone(new SDInvertedCircle(c.Origin, 5f), c.Activation);
+        hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, c.Origin, 15f, 19f), c.Activation);
     }
 }
 
@@ -289,13 +289,12 @@ sealed class Windswrath2(BossModule module) : Windswrath(module, (uint)AID.Winds
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

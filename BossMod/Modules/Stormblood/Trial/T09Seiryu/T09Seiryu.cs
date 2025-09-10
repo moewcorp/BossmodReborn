@@ -10,7 +10,7 @@ sealed class CoursingRiver(BossModule module) : Components.SimpleKnockbacks(modu
         if (_aoe.Casters.Count == 0 && Casters.Count != 0)
         {
             ref readonly var c = ref Casters.Ref(0);
-            hints.AddForbiddenZone(new SDRect(c.Direction.AlmostEqual(90f.Degrees(), Angle.DegToRad) ? c.Origin - new WDir(12.5f, default) : c.Origin - new WDir(-12.5f, default), c.Direction, 50f, default, 20f), c.Activation);
+            hints.AddForbiddenZone(new SDKnockbackInCircleFixedDirection(Arena.Center, 25f * c.Direction.ToDirection(), 19f), c.Activation);
         }
     }
 }

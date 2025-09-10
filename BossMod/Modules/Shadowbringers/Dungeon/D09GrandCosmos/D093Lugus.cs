@@ -242,7 +242,7 @@ class FiresDomain(BossModule module) : Components.GenericBaitAway(module)
         for (var i = 0; i < count; ++i)
         {
             ref var b = ref baits[i];
-            b.Shape = rect with { LengthFront = (b.Target.Position - b.Source.Position).Length() };
+            b.Shape = new AOEShapeRect((b.Target.Position - b.Source.Position).Length(), 2f);
         }
     }
 }

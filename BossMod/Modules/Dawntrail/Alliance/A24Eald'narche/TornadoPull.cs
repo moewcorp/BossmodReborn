@@ -5,37 +5,6 @@ sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module
     private readonly TornadoFlareBurst _aoe = module.FindComponent<TornadoFlareBurst>()!;
     private readonly ArenaChanges _arena = module.FindComponent<ArenaChanges>()!;
 
-    private sealed class SDPull(WPos[] AoeOrigins, WPos Center, WPos CenterTile, int Length) : ShapeDistance
-    {
-        private readonly WPos[] aoeOrigins = AoeOrigins;
-        private readonly WPos center = Center;
-        private readonly WPos centerTile = CenterTile;
-        private readonly int len = Length;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override float Distance(WPos p)
-        {
-            var offsetCenter = p - center;
-            var length = offsetCenter.Length();
-            var lengthAdj = length > 16f ? 16f : length;
-            var offsetSource = length > 0f ? -offsetCenter / length : default;
-            var projected = lengthAdj * offsetSource;
-            for (var i = 0; i < len; ++i)
-            {
-                if ((p + projected).InCircle(aoeOrigins[i], 6f))  // pretend circles are 1y bigger than real for less suspect knockbacks
-                {
-                    return default;
-                }
-            }
-
-            if (Intersect.RayAABB(centerTile - center, offsetSource, 9f, 9f) > lengthAdj) // pull must not intersect missing tiles...
-            {
-                return 1f;
-            }
-            return default;
-        }
-    }
-
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Casters.Count != 0)
@@ -52,10 +21,9 @@ sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module
                     ref var aoe = ref aoes[i];
                     origins[i] = aoe.Origin;
                 }
-                var center = c.Origin;
                 var arenaTile = _arena.RemovedTiles.Count != 0 ? _arena.RemovedTiles[0] : 0;
                 var centerTile = new WPos(784f + arenaTile % 3 * 16f, -816f + arenaTile / 3 * 16f);
-                hints.AddForbiddenZone(new SDPull(origins, center, centerTile, len), act);
+                hints.AddForbiddenZone(new SDKnockbackTowardsOriginPlusAOECirclesPlusAABBSquareIntersection(Arena.Center, 16f, origins, 6f, centerTile, 9f, len), act);
             }
         }
     }
@@ -72,6 +40,6 @@ sealed class TornadoPull(BossModule module) : Components.SimpleKnockbacks(module
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }

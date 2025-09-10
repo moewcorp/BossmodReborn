@@ -42,13 +42,12 @@ sealed class Shockwave(BossModule module) : Components.GenericKnockback(module)
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -56,7 +55,7 @@ sealed class Shockwave(BossModule module) : Components.GenericKnockback(module)
         if (_kbs.Count != 0)
         {
             // square intentionally slightly smaller to prevent sus knockback, voidzones are treated as squares because we dont want to get knocked through them (there might be space behind them otherwise)
-            ref var kb = ref _kbs.Ref(0);
+            ref readonly var kb = ref _kbs.Ref(0);
             var act = kb.Activation;
             if (!IsImmune(slot, act))
             {

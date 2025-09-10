@@ -21,7 +21,7 @@ sealed class DireStraits(BossModule module) : Components.GenericAOEs(module)
                 {
                     (aoe1, aoe2) = (aoe2, aoe1);
                 }
-                aoe2.Origin += aoe2.Rotation.ToDirection();
+                aoe2.Origin += 1.5f * aoe2.Rotation.ToDirection();
             }
         }
     }
@@ -37,9 +37,8 @@ sealed class DireStraits(BossModule module) : Components.GenericAOEs(module)
             }
             if (_aoes.Count == 1)
             {
-                var aoes = CollectionsMarshal.AsSpan(_aoes);
-                ref var aoe = ref aoes[0];
-                aoe.Origin -= aoe.Rotation.ToDirection();
+                ref var aoe = ref CollectionsMarshal.AsSpan(_aoes)[0];
+                aoe.Origin -= 1.5f * aoe.Rotation.ToDirection();
             }
         }
     }
@@ -72,7 +71,7 @@ sealed class NavigatorsTridentKnockback(BossModule module) : Components.GenericK
                 }
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

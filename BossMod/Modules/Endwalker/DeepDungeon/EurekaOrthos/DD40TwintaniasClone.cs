@@ -120,7 +120,7 @@ class Turbine(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

@@ -105,7 +105,7 @@ sealed class CradleOfTheSleepless(BossModule module) : Components.GenericAOEs(mo
 {
     private AOEInstance[] _aoe = [];
 
-    private static readonly AOEShapeCone cone = new(8f, 60f.Degrees(), InvertForbiddenZone: true);
+    private static readonly AOEShapeCone cone = new(8f, 60f.Degrees(), invertForbiddenZone: true);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 

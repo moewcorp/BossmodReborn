@@ -48,7 +48,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
                 _aoesPerPlayer[j].Add(new(Vulnerable[j] ? ref aoe : ref aoeSafe, Arena.Center, default, activations[i], Vulnerable[j] ? default : i < 2 ? colorSafe1 : colorSafe2));
             }
         }
-        distance = new SDInvertedPolygonWithHoles(center, clipper.Simplify(unionOperand));
+        distance = new SDInvertedPolygonWithHoles(new(center, clipper.Simplify(unionOperand)));
         isInit = true;
     }
 

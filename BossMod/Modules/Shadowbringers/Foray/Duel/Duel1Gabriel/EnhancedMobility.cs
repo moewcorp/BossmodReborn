@@ -56,7 +56,7 @@ sealed class EnhancedMobility(BossModule module) : Components.GenericKnockback(m
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 }
 

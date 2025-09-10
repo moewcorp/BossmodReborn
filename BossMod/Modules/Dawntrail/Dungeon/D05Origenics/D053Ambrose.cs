@@ -90,7 +90,7 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
                 return true;
             }
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

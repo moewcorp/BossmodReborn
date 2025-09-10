@@ -10,7 +10,7 @@ sealed class LandingKnockback(BossModule module) : Components.SimpleKnockbacks(m
         {
             return true;
         }
-        return !Module.InBounds(pos);
+        return !Arena.InBounds(pos);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

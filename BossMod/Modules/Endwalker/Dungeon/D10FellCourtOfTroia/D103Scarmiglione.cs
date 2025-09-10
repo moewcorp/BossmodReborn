@@ -188,7 +188,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
     {
         // safety precaution so AI can properly pathfind back into arena if it somehow got knocked out of it...
         var player = Raid.Player()!.Position;
-        if (_aoe.Length == 0 && defaultArena && !Module.InBounds(player))
+        if (_aoe.Length == 0 && defaultArena && !Arena.InBounds(player))
         {
             _aoe = [new(donut, Arena.Center)];
             ArenaBoundsCustom arena = new(D103Scarmiglione.StartingCircle, [.. SafeWalls]);
@@ -269,7 +269,7 @@ sealed class VacuumWaveHint(BossModule module) : Components.GenericAOEs(module)
                     cones[index++] = new(D103Scarmiglione.ArenaCenter, 20f, Angle.FromDirection(wall.Center - D103Scarmiglione.ArenaCenter), angle);
                 }
             }
-            _aoe = [new(new AOEShapeCustom(cones, InvertForbiddenZone: true), Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE)];
+            _aoe = [new(new AOEShapeCustom(cones, invertForbiddenZone: true), Arena.Center, default, Module.CastFinishAt(spell), Colors.SafeFromAOE)];
         }
     }
 

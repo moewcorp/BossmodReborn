@@ -83,12 +83,12 @@ sealed class P3UltimateRelativity(BossModule module) : Components.CastCounter(mo
                 case RangeHintDarkEruption:
                 case RangeHintEye:
                     // go to exact safespot
-                    hints.AddForbiddenZone(new SDPrecisePosition(SafeSpot(slot, range), new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
+                    hints.AddForbiddenZone(new SDPrecisePosition(SafeSpot(slot, range), new(default, 1f), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
                     break;
                 default:
                     // go to mid, staying as tightly as possible to allow for better uptime; after all mechanics, go opposite to dodge eyes more naturally
                     var dest = NumCasts >= 6 ? SafeSpot(slot, range) : Arena.Center;
-                    hints.AddForbiddenZone(new SDPrecisePosition(dest, new(0, 1), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
+                    hints.AddForbiddenZone(new SDPrecisePosition(dest, new(default, 1f), Arena.Bounds.MapResolution, actor.Position, 0.1f), _nextImminent);
                     break;
             }
         }
@@ -99,8 +99,8 @@ sealed class P3UltimateRelativity(BossModule module) : Components.CastCounter(mo
         var assignedDir = States[pcSlot].AssignedDir;
         if (assignedDir != default && NumCasts < 6)
         {
-            Arena.AddLine(Arena.Center, Arena.Center + Arena.Bounds.Radius * assignedDir, Colors.Safe);
-            Arena.AddCircle(SafeSpot(pcSlot, RangeHint(States[pcSlot], pc.Class.IsSupport(), NumCasts)), 1, Colors.Safe);
+            Arena.AddLine(Arena.Center, Arena.Center + 20f * assignedDir, Colors.Safe);
+            Arena.AddCircle(SafeSpot(pcSlot, RangeHint(States[pcSlot], pc.Class.IsSupport(), NumCasts)), 1f, Colors.Safe);
         }
     }
 

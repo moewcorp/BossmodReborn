@@ -20,7 +20,7 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, (uint)AID
             for (var x = -2; x <= 2; ++x)
             {
                 var center = CellCenter(x, z);
-                if (Module.InBounds(center) && CellDangerous(x, z))
+                if (Arena.InBounds(center) && CellDangerous(x, z))
                     aoes.Add(new(_shape, center, default, activation));
             }
         }
