@@ -94,6 +94,8 @@ public sealed class D040VanguardLeptocyon(WorldState ws, Actor primary) : BossMo
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

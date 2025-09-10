@@ -192,20 +192,7 @@ public class D150ChasmHarpeia(WorldState ws, Actor primary) : BossModule(ws, pri
     private static readonly ArenaBoundsCustom arena2 = new([new PolygonCustom(vertices2)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ChasmCobra, (uint)OID.VelodynaToad, (uint)OID.AbalathianSlug, (uint)OID.SwiftwaterHakulaq];
 
-    protected override bool CheckPull()
-    {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
-                return true;
-        }
-        return false;
-    }
+    protected override bool CheckPull() => IsAnyActorInBoundsInCombat(Trash);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

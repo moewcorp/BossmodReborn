@@ -71,6 +71,8 @@ public sealed class D040VanguardSentryR7(WorldState ws, Actor primary) : BossMod
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

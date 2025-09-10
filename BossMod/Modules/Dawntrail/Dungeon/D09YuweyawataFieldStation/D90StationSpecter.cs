@@ -77,20 +77,7 @@ public sealed class D90StationSpecter(WorldState ws, Actor primary) : BossModule
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.RottenResearcher1, (uint)OID.RottenResearcher2, (uint)OID.RottenResearcher3,
     (uint)OID.GiantCorse, (uint)OID.StationSpecter];
 
-    protected override bool CheckPull()
-    {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
-                return true;
-        }
-        return false;
-    }
+    protected override bool CheckPull() => IsAnyActorInBoundsInCombat(Trash);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
