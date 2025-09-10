@@ -197,8 +197,8 @@ public sealed class SDDonutSector : ShapeDistance
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
         var a90 = 90f.Degrees();
-        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection().OrthoL();
-        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection().OrthoR();
+        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection();
+        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection();
         nlX = nl.X;
         nlZ = nl.Z;
         nrX = nr.X;
@@ -236,8 +236,8 @@ public sealed class SDInvertedDonutSector : ShapeDistance
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
         var a90 = 90f.Degrees();
-        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection().OrthoL();
-        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection().OrthoR();
+        var nl = coneFactor * (centerDir + halfAngle + a90).ToDirection();
+        var nr = coneFactor * (centerDir - halfAngle - a90).ToDirection();
         nlX = nl.X;
         nlZ = nl.Z;
         nrX = nr.X;

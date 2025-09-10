@@ -75,20 +75,7 @@ public sealed class D90ForestWoolback(WorldState ws, Actor primary) : BossModule
     private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
     public static readonly uint[] Trash = [(uint)OID.Boss, (uint)OID.ForestAxeBeak, (uint)OID.ForestWoolback, (uint)OID.Electrogolem];
 
-    protected override bool CheckPull()
-    {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
-                return true;
-        }
-        return false;
-    }
+    protected override bool CheckPull() => IsAnyActorInBoundsInCombat(Trash);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
@@ -99,6 +86,8 @@ public sealed class D90ForestWoolback(WorldState ws, Actor primary) : BossModule
     {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.PotentialTargets[i].Priority = 0;
+        }
     }
 }

@@ -55,7 +55,9 @@ public abstract class BossModule : IDisposable
                 foreach (var actor in WorldState.Actors.Actors.Values)
                 {
                     if (actor.OID == enemy)
+                    {
                         entry.Add(actor);
+                    }
                 }
                 RelevantEnemies[enemy] = entry;
             }
@@ -378,6 +380,88 @@ public abstract class BossModule : IDisposable
     {
         var b = Enemies(enemy);
         return b.Count != 0 ? b[0] : null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsActorInCombat(uint enemy)
+    {
+        var b = Enemies(enemy);
+        return b.Count != 0 && b[0].InCombat;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsAnyActorInCombat(uint[] enemies)
+    {
+        var allenemies = enemies;
+        var len = allenemies.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            var enemies_ = Enemies(allenemies[i]);
+            var count = enemies_.Count;
+            for (var j = 0; j < count; ++j)
+            {
+                var enemy = enemies_[j];
+                if (enemy.InCombat)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsAnyActorInBoundsInCombat(uint[] enemies)
+    {
+        var allenemies = enemies;
+        var len = allenemies.Length;
+        var center = Arena.Center;
+        var radius = Bounds.Radius;
+        for (var i = 0; i < len; ++i)
+        {
+            var enemies_ = Enemies(allenemies[i]);
+            var count = enemies_.Count;
+            for (var j = 0; j < count; ++j)
+            {
+                var enemy = enemies_[j];
+                if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Actor? GetActiveActor(List<Actor> enemy)
+    {
+        var count = enemy.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var e = enemy[i];
+            if (e.IsTargetable && !e.IsDead)
+            {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static List<Actor> GetActiveActors(List<Actor> enemy)
+    {
+        var count = enemy.Count;
+        List<Actor> actors = new(count);
+        for (var i = 0; i < count; ++i)
+        {
+            var e = enemy[i];
+            if (e.IsTargetable && !e.IsDead)
+            {
+                actors.Add(e);
+            }
+        }
+        return actors;
     }
 
     protected virtual void DrawArenaBackground(int pcSlot, Actor pc) { } // before modules background

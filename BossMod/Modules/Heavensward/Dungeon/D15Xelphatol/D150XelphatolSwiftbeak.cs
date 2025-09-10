@@ -194,20 +194,7 @@ IsArena1(primary) ? arena1 : IsArena2(primary) ? arena3 : arena2)
     (uint)OID.XelphatolBravewing, (uint)OID.XelphatolFatecaller, (uint)OID.XelphatolStrongbeak, (uint)OID.AbalathianHornbill];
     public static readonly uint[] Keys = [(uint)OID.BoneKey, (uint)OID.Airstone1, (uint)OID.Airstone2];
 
-    protected override bool CheckPull()
-    {
-        var enemies = Enemies(Trash);
-        var count = enemies.Count;
-        var center = Arena.Center;
-        var radius = Bounds.Radius;
-        for (var i = 0; i < count; ++i)
-        {
-            var enemy = enemies[i];
-            if (enemy.InCombat && enemy.Position.AlmostEqual(center, radius))
-                return true;
-        }
-        return false;
-    }
+    protected override bool CheckPull() => IsAnyActorInBoundsInCombat(Trash);
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {

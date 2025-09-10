@@ -71,7 +71,7 @@ sealed class P2Intermission(BossModule module) : Components.GenericBaitAway(modu
     private readonly List<Actor> _iceVeil = module.Enemies((uint)OID.IceVeil);
     private bool _iceVeilInvincible = true;
 
-    public bool CrystalsActive => CrystalsOfLight.Any();
+    public bool CrystalsActive => CrystalsOfLight.Count != 0;
 
     public override void Update()
     {
@@ -156,13 +156,14 @@ sealed class P2Intermission(BossModule module) : Components.GenericBaitAway(modu
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         if (status.ID == (uint)SID.Invincibility)
+        {
             _iceVeilInvincible = false;
+        }
     }
 
-    private IEnumerable<Actor> ActiveActors(IReadOnlyList<Actor> raw) => raw.Where(a => a.IsTargetable && !a.IsDead);
-    private IEnumerable<Actor> CrystalsOfLight => ActiveActors(_crystalsOfLight);
-    private IEnumerable<Actor> CrystalsOfDarkness => ActiveActors(_crystalsOfDarkness);
-    private Actor? IceVeil => ActiveActors(_iceVeil).FirstOrDefault();
+    private List<Actor> CrystalsOfLight => BossModule.GetActiveActors(_crystalsOfLight);
+    private List<Actor> CrystalsOfDarkness => BossModule.GetActiveActors(_crystalsOfDarkness);
+    private Actor? IceVeil => BossModule.GetActiveActor(_iceVeil);
 
     private int CrystalPriority(Actor crystal, int clockSpot)
     {

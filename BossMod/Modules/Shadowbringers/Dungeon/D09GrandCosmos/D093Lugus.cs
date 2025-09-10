@@ -363,10 +363,10 @@ public class D093Lugus(WorldState ws, Actor primary) : BossModule(ws, primary, n
         {
             if (chandeliers[i].IsTargetable)
             {
-                Arena.Actors(Enemies(FurnitureB));
+                Arena.Actors(this, FurnitureB);
                 return;
             }
         }
-        Arena.Actors(Enemies(FurnitureA), Colors.Object, true);
+        Arena.Actors(this, FurnitureA, Colors.Object, true);
     }
 }
