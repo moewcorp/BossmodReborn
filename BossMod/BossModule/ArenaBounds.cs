@@ -165,8 +165,33 @@ public sealed record class ArenaBoundsCircle(float Radius, float MapResolution =
 
     private Pathfinding.Map BuildMap()
     {
-        var map = new Pathfinding.Map(MapResolution, default, Radius, Radius);
-        map.BlockPixelsInside2(new SDInvertedCircle(default, Radius), -1f);
+        var radius = Radius;
+        var map = new Pathfinding.Map(MapResolution, default, radius, radius);
+        var iCell = 0;
+
+        var width = map.Width;
+        var height = map.Height;
+        var resolution = map.Resolution;
+
+        var threshold = radius * radius / (resolution * resolution); // square of bounds radius, in grid coordinates
+        var dy = -height / 2 + 0.5f;
+        var dx = -width / 2 + 0.5f;
+
+        for (var y = 0; y < height; ++y, ++dy)
+        {
+            var cy = Math.Abs(dy) + 0.5f; // farthest corner
+            var cySq = cy * cy;
+            var dx2 = dx;
+            for (var x = 0; x < width; ++x, ++dx2)
+            {
+                var cx = Math.Abs(dx2) + 0.5f;
+                if (cx * cx + cySq > threshold)
+                {
+                    map.PixelMaxG[iCell] = -1f;
+                }
+                ++iCell;
+            }
+        }
         return map;
     }
 }
@@ -191,7 +216,7 @@ public record class ArenaBoundsRect(float HalfWidth, float HalfHeight, Angle Rot
         var halfHeight = HalfHeight;
         var rotation = Rotation;
         var map = new Pathfinding.Map(MapResolution, default, halfWidth + 0.5f, halfHeight + 0.5f, rotation);
-        map.BlockPixelsInside2(new SDInvertedRect(default, rotation, halfHeight, halfHeight, halfWidth), -1f);
+        map.BlockPixelsInside(new SDInvertedRect(default, rotation, halfHeight, halfHeight, halfWidth), -1f, 0.49999f * MapResolution);
         return map;
     }
 

@@ -11,7 +11,10 @@ public static class BossModuleInfo
         Contributed,
 
         [PropertyDisplay("First-party module created by the plugin author, or a third-party contributed module that was thoroughly verified and effectively taken over by the plugin author")]
-        Verified
+        Verified,
+
+        [PropertyDisplay("Module that has been verified to work well with AI enabled.")]
+        AISupport
     }
 
     public enum Expansion

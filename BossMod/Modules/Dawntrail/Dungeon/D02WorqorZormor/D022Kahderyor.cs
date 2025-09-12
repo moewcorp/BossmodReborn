@@ -200,7 +200,7 @@ sealed class D022KahderyorStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 824, NameID = 12703)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 824, NameID = 12703)]
 public sealed class D022Kahderyor(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
     public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(new(-53f, -57f), 19.5f, 40)], [new Rectangle(new(-72.5f, -57f), 0.75f, 20), new Rectangle(new(-53f, -37f), 20f, 1.5f)]);

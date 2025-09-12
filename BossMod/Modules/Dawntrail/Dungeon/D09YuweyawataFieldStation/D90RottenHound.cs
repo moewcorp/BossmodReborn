@@ -27,7 +27,7 @@ sealed class D90RottenResearcherStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13575, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13575, SortOrder = 4)]
 public sealed class D90RottenResearcher(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(54.67f, 59.58f), new(58.29f, 60.28f), new(58.94f, 60.14f), new(59.88f, 60.06f), new(60.69f, 60.1f),

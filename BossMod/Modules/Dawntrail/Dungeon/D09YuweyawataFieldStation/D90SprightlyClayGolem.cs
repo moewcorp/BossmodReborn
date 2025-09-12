@@ -31,7 +31,7 @@ class D90SprightlyClayGolemStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13582, SortOrder = 8)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13582, SortOrder = 8)]
 public sealed class D90SprightlyClayGolem(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(107.5f, -419.32f), new(108.05f, -418.91f), new(108.99f, -417.9f), new(109.55f, -416.49f), new(109.98f, -416.05f),
