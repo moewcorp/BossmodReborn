@@ -32,7 +32,7 @@ sealed class D90SprightlyPhoebadStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13580, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13580, SortOrder = 7)]
 public sealed class D90SprightlyPhoebad(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(123.42f, -297.25f), new(123.17f, -290.97f), new(123.59f, -290.57f), new(125.1f, -289.46f), new(123.03f, -284.58f),

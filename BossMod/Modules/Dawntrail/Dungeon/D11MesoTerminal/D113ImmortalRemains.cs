@@ -213,5 +213,5 @@ sealed class D113ImmortalRemainsStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.ImmortalRemains, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1028u, NameID = 13974u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.ImmortalRemains, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1028u, NameID = 13974u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 3)]
 public sealed class D113ImmortalRemains(WorldState ws, Actor primary) : BossModule(ws, primary, default, new ArenaBoundsSquare(20f));

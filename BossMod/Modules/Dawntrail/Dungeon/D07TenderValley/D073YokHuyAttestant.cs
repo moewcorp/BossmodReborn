@@ -66,7 +66,9 @@ sealed class AncientWrath(BossModule module) : Components.GenericAOEs(module)
         {
             var aoe = aoeMap[i];
             if (position.AlmostEqual(aoe.Position, 1f))
+            {
                 return aoe.Shape;
+            }
         }
         return null;
     }
@@ -84,7 +86,7 @@ sealed class D073YokHuyAttestantStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12801)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12801)]
 public sealed class D073YokHuyAttestant(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices1 = [new(-134.226f, -482.956f), new(-134.105f, -483.161f), new(-134.227f, -484.617f), new(-134.259f, -486.314f), new(-134.168f, -488.471f),

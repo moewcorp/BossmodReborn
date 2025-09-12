@@ -353,7 +353,7 @@ sealed class D112FourHeadsmenStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.PaleHeadsman, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1028u, NameID = 14049u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", PrimaryActorOID = (uint)OID.PaleHeadsman, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1028u, NameID = 14049u, Category = BossModuleInfo.Category.Dungeon, Expansion = BossModuleInfo.Expansion.Dawntrail, SortOrder = 2)]
 public sealed class D112FourHeadsmen(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
     public Actor? RavenousHeadsman;

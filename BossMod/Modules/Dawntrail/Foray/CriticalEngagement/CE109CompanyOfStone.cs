@@ -237,8 +237,7 @@ sealed class BlastKnuckles(BossModule module) : Components.GenericKnockback(modu
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }
@@ -314,7 +313,7 @@ sealed class CE109CompanyOfStoneStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 40)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1018, NameID = 40)]
 public sealed class CE109CompanyOfStone(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(680f, -280f).Quantized(), new ArenaBoundsCircle(20f))
 {
     public Actor? BossMegaloknight;

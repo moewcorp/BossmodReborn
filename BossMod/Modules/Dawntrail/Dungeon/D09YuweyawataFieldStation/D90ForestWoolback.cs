@@ -30,7 +30,7 @@ sealed class D90ForestWoolbackStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13573, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13573, SortOrder = 2)]
 public sealed class D90ForestWoolback(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(54.16f, 358.33f), new(54.83f, 358.64f), new(61.41f, 363.35f), new(61.86f, 363.88f), new(60.68f, 366.6f),

@@ -193,8 +193,7 @@ sealed class BarrelBreaker(BossModule module) : Components.SimpleKnockbacks(modu
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }
@@ -230,7 +229,7 @@ sealed class D071BarreltenderStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12889)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12889)]
 public sealed class D071Barreltender(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, StartingBounds)
 {
     public static readonly WPos ArenaCenter = new(-65f, 470f);

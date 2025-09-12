@@ -61,7 +61,7 @@ sealed class D072AnthraciteStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12853)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 834, NameID = 12853)]
 public sealed class D072Anthracite(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private const float Radius = 3.8f;

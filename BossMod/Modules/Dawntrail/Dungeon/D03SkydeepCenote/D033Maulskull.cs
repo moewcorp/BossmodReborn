@@ -298,5 +298,5 @@ sealed class D033MaulskullStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 829, NameID = 12728)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 829, NameID = 12728)]
 public sealed class D033Maulskull(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, -430f), new ArenaBoundsSquare(20f));

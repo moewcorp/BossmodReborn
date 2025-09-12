@@ -30,7 +30,7 @@ sealed class D90ForestBatStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13572, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1008, NameID = 13572, SortOrder = 1)]
 public sealed class D90ForestBat(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(-16.78f, 468.11f), new(-15.92f, 468.13f), new(-17.46f, 472.46f), new(-17.41f, 473.1f), new(-16.79f, 476),

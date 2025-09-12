@@ -91,7 +91,7 @@ public sealed class A10DespotStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1015, NameID = 13608, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1015, NameID = 13608, SortOrder = 6)]
 public sealed class A10Despot(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly WPos[] vertices = [new(-585.1f, -640.25f), new(-584.42f, -640.14f), new(-556.15f, -628.13f), new(-556.17f, -627.43f), new(-556.81f, -626.37f),

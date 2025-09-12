@@ -248,42 +248,27 @@ public struct NavigationDecision
         // PASS #4: if absolutely everything is blocked, free the "least dangerous"
         // --------------------------------------------------------------
         //  - We need the actual max of map.PixelMaxG to know which ones to free
-        //  - First parallel pass: find max
-        //  - Second parallel pass: free cells with that max
+        //  - First pass: find max
+        //  - Second pass: free cells with that max
 
         if (numBlockedCells == width * height)
         {
-            // 4a) find the real max
-            var realMaxG = float.MinValue;
-            // parallel reduction
-            Parallel.For(0, lenPixelMaxG, () => float.MinValue,
-                (i, loopState, localMax) =>
-                {
-                    var val = map.PixelMaxG[i];
-                    return (val > localMax) ? val : localMax;
-                },
-                localMax =>
-                {
-                    // Merge local maxima with an atomic
-                    float initVal, computedVal;
-                    do
-                    {
-                        initVal = realMaxG;
-                        computedVal = Math.Max(initVal, localMax);
-                    }
-                    while (initVal != Interlocked.CompareExchange(ref realMaxG, computedVal, initVal));
-                }
-            );
-
-            // 4b) free pixels that match that max
-            Parallel.For(0, lenPixelMaxG, i =>
+            // everything is dangerous, clear least dangerous so that pathfinding works reasonably
+            // note that max value could be smaller than MaxG, if more dangerous stuff overlaps it
+            var realMaxG = 0f;
+            var iCell = 0;
+            for (iCell = 0; iCell < numBlockedCells; ++iCell)
             {
-                if (map.PixelMaxG[i] == realMaxG)
+                realMaxG = Math.Max(realMaxG, map.PixelMaxG[iCell]);
+            }
+            for (iCell = 0; iCell < numBlockedCells; ++iCell)
+            {
+                if (map.PixelMaxG[iCell] == realMaxG)
                 {
-                    map.PixelMaxG[i] = float.MaxValue;
-                    map.PixelPriority[i] = 0f;
+                    map.PixelMaxG[iCell] = float.MaxValue;
+                    map.PixelPriority[iCell] = default;
                 }
-            });
+            }
         }
     }
 
