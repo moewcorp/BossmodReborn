@@ -20,6 +20,7 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
 {
     // constructor for simple polygon
     public readonly List<WDir> Vertices = vertices;
+    public int VerticesCount => Vertices.Count;
     public RelPolygonWithHoles(List<WDir> simpleVertices) : this(simpleVertices, []) { }
     public ReadOnlySpan<WDir> AllVertices => CollectionsMarshal.AsSpan(Vertices);
     public ReadOnlySpan<WDir> Exterior => AllVertices[..ExteriorEnd];

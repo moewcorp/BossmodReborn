@@ -15,7 +15,7 @@ sealed class TractorBeam(BossModule module) : Components.SimpleKnockbacks(module
             {
                 var center = Arena.Center;
                 var dir = -25f * c.Direction.ToDirection();
-                hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirection(center, dir, 19f, 23.5f)); // rect intentionally slightly smaller to prevent sus knockback
+                hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirection(center, dir, 19f, 23.5f), act); // rect intentionally slightly smaller to prevent sus knockback
             }
         }
     }

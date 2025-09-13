@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Buffers;
 
 namespace BossMod.Pathfinding;
 
@@ -13,7 +14,6 @@ public struct NavigationDecision
     // context that allows reusing large memory allocations
     public sealed class Context
     {
-        public float[] Scratch = [];
         public Map Map = new();
         public ThetaStar ThetaStar = new();
     }
@@ -39,7 +39,7 @@ public struct NavigationDecision
         }
         if (localForbiddenZones.Length != 0)
         {
-            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime, ctx.Scratch);
+            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime);
         }
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
@@ -67,7 +67,7 @@ public struct NavigationDecision
     private static void AvoidForbiddenZone(Map map, float forbiddenZoneCushion)
     {
         var d = (int)(forbiddenZoneCushion / map.Resolution);
-        map.MaxPriority = -1;
+        map.MaxPriority = -1f;
         var pixels = map.EnumeratePixels();
         var len = pixels.Length;
         for (var i = 0; i < len; ++i)
@@ -78,8 +78,7 @@ public struct NavigationDecision
             var cellIndex = map.GridToIndex(px, py);
             if (map.PixelMaxG[cellIndex] == float.MaxValue)
             {
-                var hasDangerousNeighbour = false;
-                for (var ox = -1; ox <= 1 && !hasDangerousNeighbour; ++ox)
+                for (var ox = -1; ox <= 1; ++ox)
                 {
                     for (var oy = -1; oy <= 1; ++oy)
                     {
@@ -90,24 +89,19 @@ public struct NavigationDecision
                         var (nx, ny) = map.ClampToGrid((px + ox * d, py + oy * d));
                         if (map.PixelMaxG[map.GridToIndex(nx, ny)] != float.MaxValue)
                         {
-                            hasDangerousNeighbour = true;
-                            break;
+                            map.PixelPriority[cellIndex] -= 0.125f;
+                            goto next;
                         }
                     }
                 }
-
-                if (hasDangerousNeighbour)
-                {
-                    map.PixelPriority[cellIndex] -= 0.125f;
-                }
             }
+        next:
             map.MaxPriority = Math.Max(map.MaxPriority, map.PixelPriority[cellIndex]);
         }
     }
 
-    public static void RasterizeForbiddenZones(Map map, (ShapeDistance shapeDistance, DateTime activation, ulong source)[] zones, DateTime current, float[] scratch)
+    private static void RasterizeForbiddenZones(Map map, (ShapeDistance shapeDistance, DateTime activation, ulong source)[] zones, DateTime current)
     {
-        // 1) Cluster activation times
         // very slight difference in activation times cause issues for pathfinding - cluster them together
         var zonesFixed = new (ShapeDistance shapeDistance, float g)[zones.Length];
         DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120d);
@@ -133,135 +127,122 @@ public struct NavigationDecision
         var cushion = resolution * 0.5f;
         map.MaxG = clusterG;
 
-        if (scratch.Length < lenPixelMaxG)
-        {
-            scratch = new float[lenPixelMaxG];
-        }
-        new Span<float>(scratch, 0, lenPixelMaxG).Fill(float.MaxValue);
-
         var dy = map.LocalZDivRes * resolution * resolution;
         var dx = dy.OrthoL();
         var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
-        // note that a zone can partially intersect a pixel; so what we do is check each corner and set the maxg value of a pixel equal to the minimum of 4 corners
-        // to avoid 4x calculations, we do a slightly tricky loop:
-        // - outer loop fills row i to with g values corresponding to the 'upper edge' of cell i
-        // - inner loop calculates the g value at the left border, then iterates over all right corners and fills minimums of two g values to the cells
-        // - second outer loop calculates values at 'bottom' edge and then updates the values of all cells to correspond to the cells rather than edges
-        // - third loops checks center and surrounding circle until cell edge to counter small cones not intersecting corners of a cell
-
-        // --------------------------------------------------------------
-        // PASS #1 (Parallel over rows): compute min corner G in scratch
-        // --------------------------------------------------------------
-
-        // This pass sets: scratch[iCell] = min(G-of-left-corner, G-of-right-corner)
-        // for each pixel in row y, from x=0..width-1.
-        Parallel.For(0, height, y =>
-        {
-            var rowStart = y * width;
-            var rowCorner = topLeft + y * dy;
-
-            var leftPos = rowCorner;
-            var leftG = CalculateMaxG(zonesFixed, leftPos);
-
-            for (var x = 0; x < width; ++x)
-            {
-                var rightPos = leftPos + dx;
-                var rightG = CalculateMaxG(zonesFixed, rightPos);
-                scratch[rowStart + x] = Math.Min(leftG, rightG);
-                leftPos = rightPos;
-                leftG = rightG;
-            }
-        });
-
-        // --------------------------------------------------------------
-        // PASS #2 (Parallel over columns): combine top corners with bottom
-        // --------------------------------------------------------------
-        //
-        // This takes the 'top' corners from scratch[] and merges them with
-        // the 'bottom' corners for each column. We can parallelize
-        // by letting each thread handle one column of pixels. Since each
-        // column is independent of others, there's no write collision.
-        //
-        // We'll track how many cells become blocked in a thread-local counter
-        // and aggregate it with Interlocked.Add.
-
         var numBlockedCells = 0;
 
-        Parallel.For(0, width, x =>
+        // Partition rows so each worker computes its own local 'top-edge' scratch for rows [ys..ye]
+        var rangePartitioner = Partitioner.Create(0, height);
+
+        Parallel.ForEach(rangePartitioner, () => 0, (range, loopState, localBlocked) =>
         {
-            // Each column starts from the same 'bottom corner' approach:
-            // But we can compute "bottom corners" for this column now.
-            // The bottom row's corner is topLeft + height*dy + x*dx
-            // because at the end of pass #1, 'cy' was top-left + (height)*dy.
-            var cyBottom = topLeft + height * dy + x * dx;
-            var bleftG = CalculateMaxG(zonesFixed, cyBottom);
-
-            var columnStart = x;
-            var localBlocked = 0;
-
-            var bottomG = bleftG;
-            for (var y = height - 1; y >= 0; y--)
+            var ys = range.Item1;
+            var ye = range.Item2; // exclusive
+            var rowsToCompute = Math.Min(ye, height) - ys;
+            // allocate local scratch for rowsToCompute + 1 (extra row if available)
+            var scratchRows = rowsToCompute + 1; // the +1 may correspond to row ys+rowsToCompute (i.e., ye)
+            var localScratch = ArrayPool<float>.Shared.Rent(scratchRows * width);
+            try
             {
-                var jCell = columnStart + y * width;
-                // top corner from pass #1
-                var topG = scratch[jCell];
-
-                var cellG = Math.Min(Math.Min(topG, bottomG), map.PixelMaxG[jCell]);
-
-                map.PixelMaxG[jCell] = cellG;
-                if (cellG != float.MaxValue)
+                // compute top-edge mins for rows ys .. ys+rowsToCompute (if row < height)
+                for (var r = 0; r < scratchRows; ++r)
                 {
-                    map.PixelPriority[jCell] = float.MinValue;
-                    ++localBlocked;
+                    var row = ys + r;
+                    if (row >= height)
+                    {
+                        // beyond bottom; leave values as float.MaxValue
+                        var baseIdx = r * width;
+                        for (var x = 0; x < width; ++x)
+                        {
+                            localScratch[baseIdx + x] = float.MaxValue;
+                        }
+                        continue;
+                    }
+
+                    var rowStartPos = topLeft + row * dy;
+                    var leftPos = rowStartPos;
+                    var leftG = CalculateMaxG(zonesFixed, leftPos);
+                    var baseIndex = r * width;
+                    for (var x = 0; x < width; ++x)
+                    {
+                        var rightPos = leftPos + dx;
+                        var rightG = CalculateMaxG(zonesFixed, rightPos);
+                        localScratch[baseIndex + x] = Math.Min(leftG, rightG);
+                        leftPos = rightPos;
+                        leftG = rightG;
+                    }
                 }
-                bottomG = topG;
+
+                // Now process rows ys .. ye-1 using top-edge (localScratch[row-ys]) and bottom-edge (localScratch[row+1-ys] or direct calc if bottom-most)
+                for (var y = ys; y < ye; ++y)
+                {
+                    if (y >= height)
+                    {
+                        break;
+                    }
+                    var rowBase = (y - ys) * width;
+                    var nextRowBase = rowBase + width; // index for row+1 within localScratch
+
+                    for (var x = 0; x < width; ++x)
+                    {
+                        var idx = y * width + x;
+
+                        var topG = localScratch[rowBase + x];
+
+                        float bottomG;
+                        if (y + 1 < height)
+                        {
+                            bottomG = localScratch[nextRowBase + x];
+                        }
+                        else
+                        {
+                            // bottom-most row: compute corner at y+1 == height
+                            var cornerPos = topLeft + (y + 1) * dy + x * dx;
+                            bottomG = CalculateMaxG(zonesFixed, cornerPos);
+                        }
+
+                        // merge with existing PixelMaxG
+                        var cellEdgeG = Math.Min(Math.Min(topG, bottomG), map.PixelMaxG[idx]);
+
+                        // center check with cushion, this is needed for shapes that can intersect cells between corners
+                        var centerPos = map.GridToWorld(x, y, 0.5f, 0.5f);
+                        var centerG = CalculateMaxG(zonesFixed, centerPos, cushion);
+
+                        var finalG = Math.Min(cellEdgeG, centerG);
+
+                        var oldVal = map.PixelMaxG[idx];
+                        if (finalG < oldVal)
+                        {
+                            map.PixelMaxG[idx] = finalG;
+                            if (oldVal == float.MaxValue)
+                            {
+                                map.PixelPriority[idx] = float.MinValue;
+                                ++localBlocked;
+                            }
+                        }
+                    }
+                }
+
+                return localBlocked;
             }
-
-            // Merge local count
-            Interlocked.Add(ref numBlockedCells, localBlocked);
-        });
-
-        // --------------------------------------------------------------
-        // PASS #3 (Parallel): check each pixel center to catch partial overlaps, this is needed because small cones might not intersect corners
-        // with a cushion of cellsize / 2 this ensures the entire inner circle until the edge will be safe
-        // --------------------------------------------------------------
-        Parallel.For(0, lenPixelMaxG, idx =>
-        {
-            var (px, py) = map.IndexToGrid(idx);
-            var centerPos = map.GridToWorld(px, py, 0.5f, 0.5f);
-
-            var centerG = CalculateMaxG(zonesFixed, centerPos, cushion);
-            var oldVal = map.PixelMaxG[idx];
-            if (centerG < oldVal)
+            finally
             {
-                map.PixelMaxG[idx] = centerG;
-                if (oldVal == float.MaxValue)
-                {
-                    map.PixelPriority[idx] = float.MinValue;
-                    Interlocked.Increment(ref numBlockedCells);
-                }
+                ArrayPool<float>.Shared.Return(localScratch, clearArray: false);
             }
-        });
-
-        // --------------------------------------------------------------
-        // PASS #4: if absolutely everything is blocked, free the "least dangerous"
-        // --------------------------------------------------------------
-        //  - We need the actual max of map.PixelMaxG to know which ones to free
-        //  - First pass: find max
-        //  - Second pass: free cells with that max
+        }, localBlocked => Interlocked.Add(ref numBlockedCells, localBlocked));
 
         if (numBlockedCells == width * height)
         {
             // everything is dangerous, clear least dangerous so that pathfinding works reasonably
             // note that max value could be smaller than MaxG, if more dangerous stuff overlaps it
             var realMaxG = 0f;
-            var iCell = 0;
-            for (iCell = 0; iCell < numBlockedCells; ++iCell)
+            for (var iCell = 0; iCell < numBlockedCells; ++iCell)
             {
                 realMaxG = Math.Max(realMaxG, map.PixelMaxG[iCell]);
             }
-            for (iCell = 0; iCell < numBlockedCells; ++iCell)
+            for (var iCell = 0; iCell < numBlockedCells; ++iCell)
             {
                 if (map.PixelMaxG[iCell] == realMaxG)
                 {
@@ -269,6 +250,21 @@ public struct NavigationDecision
                     map.PixelPriority[iCell] = default;
                 }
             }
+        }
+
+        static float CalculateMaxG((ShapeDistance shapeDistance, float g)[] zones, WPos p, float cushion = default)
+        {
+            var len = zones.Length;
+            var threshold = cushion;
+            for (var i = 0; i < len; ++i)
+            {
+                var z = zones[i];
+                if (z.shapeDistance.Distance(p) < threshold)
+                {
+                    return z.g;
+                }
+            }
+            return float.MaxValue;
         }
     }
 
@@ -282,129 +278,118 @@ public struct NavigationDecision
         var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
         var len = goals.Length;
 
-        // We'll do two passes:
-        //    Pass #1: row-by-row (parallel over y)
-        //    Pass #2: column-by-column (parallel over x)
-
-        //------------------------------------------------------------------------
-        // PASS #1 (row-based) - fill in partial priorities in map.PixelPriority
-        //------------------------------------------------------------------------
-        Parallel.For(0, height, y =>
-        {
-            // For row y, compute the position of the 'left corner' in world coords
-            var cy = topLeft + y * dy;
-
-            // Sum up all goals at the left corner (x=0)
-            float leftP = 0;
-            for (var i = 0; i < len; ++i)
-            {
-                leftP += goals[i](cy);
-            }
-
-            // Now walk across the row from x=0..(width-1), computing right corner
-            var rowStart = y * width;
-            var cx = cy;
-            for (var x = 0; x < width; ++x)
-            {
-                // Right corner for this pixel is cx = cy + x*dx
-                cx += dx;
-                float rightP = 0;
-                for (var i = 0; i < len; ++i)
-                {
-                    rightP += goals[i](cx);
-                }
-
-                // Store the min in PixelPriority
-                map.PixelPriority[rowStart + x] = Math.Min(leftP, rightP);
-
-                // Shift left -> right
-                leftP = rightP;
-            }
-        });
-
-        //------------------------------------------------------------------------
-        // PASS #2 (column-based) - combine top (in PixelPriority) with bottom corners
-        //------------------------------------------------------------------------
-        // We also update map.MaxPriority here. Each thread will keep a local maximum
-        // and we'll merge them in a thread-safe way.
         var globalMaxPriority = float.MinValue;
+        var rangePartitioner = Partitioner.Create(0, height);
 
-        // We'll compute the bottom-left corner *once* per column. The bottom row is
-        // topLeft + height*dy. Then we move right by x*dx for each column.
-        var bottomRowLeft = topLeft + height * dy;  // world coords for left corner of the *bottom* row
-
-        Parallel.For(0, width, () => float.MinValue,
-        (x, loopState, localMax) =>
-        {
-            // For column x, compute the bottom-left corner
-            var cyBottom = bottomRowLeft + x * dx;
-
-            // The 'left' bottom corner's priority
-            float bleftP = 0;
-            for (var i = 0; i < len; ++i)
+        Parallel.ForEach(rangePartitioner, () => float.MinValue, (range, loopState, localMax) =>
             {
-                bleftP += goals[i](cyBottom);
-            }
+                var ys = range.Item1;
+                var ye = range.Item2;
 
-            var bottomP = bleftP;
-            var iCell = (height - 1) * width + x;
+                var rows = Math.Max(0, Math.Min(ye, height) - ys);
+                var scratchRows = rows + 1; // extra row for bottom corners
+                var scratchLen = scratchRows * width;
 
-            for (var y = height - 1; y >= 0; --y, iCell -= width)
-            {
-                var topP = map.PixelPriority[iCell];
-
-                // If this pixel is not blocked (PixelMaxG == float.MaxValue),
-                // we keep the min of topP and bottomP. Otherwise, we set it to float.MinValue.
-                if (map.PixelMaxG[iCell] == float.MaxValue)
+                var localScratch = ArrayPool<float>.Shared.Rent(scratchLen);
+                try
                 {
-                    var cellP = Math.Min(topP, bottomP);
-                    map.PixelPriority[iCell] = cellP;
+                    // Fill corner mins for each scratch row
+                    for (var r = 0; r < scratchRows; ++r)
+                    {
+                        var row = ys + r;
+                        var baseIdx = r * width;
 
-                    // Update local max
-                    if (cellP > localMax)
-                        localMax = cellP;
+                        if (row >= height)
+                        {
+                            // out-of-bounds row -> mark as no contribution
+                            for (var x = 0; x < width; ++x)
+                            {
+                                localScratch[baseIdx + x] = float.MaxValue;
+                            }
+                            continue;
+                        }
+
+                        var rowCorner = topLeft + row * dy;
+                        var leftPos = rowCorner;
+
+                        // compute left corner sum
+                        var leftP = 0f;
+                        for (var i = 0; i < len; ++i)
+                        {
+                            leftP += goals[i](leftPos);
+                        }
+
+                        for (var x = 0; x < width; ++x)
+                        {
+                            var rightPos = leftPos + dx;
+                            var rightP = 0f;
+                            for (var i = 0; i < len; ++i)
+                            {
+                                rightP += goals[i](rightPos);
+                            }
+
+                            localScratch[baseIdx + x] = Math.Min(leftP, rightP);
+
+                            leftPos = rightPos;
+                            leftP = rightP;
+                        }
+                    }
+
+                    // produce final cell priorities
+                    for (var y = ys; y < ye; ++y)
+                    {
+                        if (y >= height)
+                        {
+                            break;
+                        }
+                        var rowBase = (y - ys) * width;
+                        var nextRowBase = rowBase + width;
+
+                        var idx = y * width;
+                        for (var x = 0; x < width; ++x, ++idx)
+                        {
+                            var topP = localScratch[rowBase + x];
+                            var bottomP = localScratch[nextRowBase + x];
+
+                            var cellP = (map.PixelMaxG[idx] == float.MaxValue) ? Math.Min(topP, bottomP) : float.MinValue;
+
+                            map.PixelPriority[idx] = cellP;
+
+                            if (cellP > localMax)
+                            {
+                                localMax = cellP;
+                            }
+                        }
+                    }
+
+                    return localMax;
                 }
-                else
+                finally
                 {
-                    // Mark blocked areas
-                    map.PixelPriority[iCell] = float.MinValue;
+                    ArrayPool<float>.Shared.Return(localScratch, clearArray: false);
                 }
-
-                // Shift bottom -> top for next iteration
-                bottomP = topP;
-            }
-
-            // Return thread-local max for final merge
-            return localMax;
-        },
-        // Final merge across threads:
-        localMax =>
-        {
-            float initVal, newVal;
-            do
+            },
+            localMax =>
             {
-                initVal = globalMaxPriority;
-                newVal = Math.Max(initVal, localMax);
-            }
-            while (initVal != Interlocked.CompareExchange(ref globalMaxPriority, newVal, initVal));
-        });
+                float initVal, newVal;
+                do
+                {
+                    initVal = globalMaxPriority;
+                    newVal = Math.Max(initVal, localMax);
+                }
+                while (initVal != Interlocked.CompareExchange(ref globalMaxPriority, newVal, initVal));
+            });
 
-        // Finally store the global maximum in map.MaxPriority
         map.MaxPriority = globalMaxPriority;
     }
-    private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
 
-    const float Epsilon = 1e-5f;
-    static readonly float[] offsetsX = [0f, Epsilon, Epsilon, 1f - Epsilon, 1f - Epsilon];
-    static readonly float[] offsetsZ = [0f, Epsilon, 1f - Epsilon, Epsilon, 1f - Epsilon];
+    private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
 
     public static void RasterizeVoidzones(Map map, ShapeDistance[] zones)
     {
         var len = zones.Length;
-
         var width = map.Width;
         var height = map.Height;
-        var lenPixelMaxG = map.PixelMaxG.Length;
 
         var resolution = map.Resolution;
         var cushion = resolution * 0.5f;
@@ -413,52 +398,52 @@ public struct NavigationDecision
         var dx = dy.OrthoL();
         var startPos = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
-        Parallel.For(0, height, y =>
+        var sampleOffsets = new WDir[5];
+        sampleOffsets[0] = default; // center, cushion applied
+        sampleOffsets[1] = dx * 0.5f + dy * 0.5f;
+        sampleOffsets[2] = dx * 0.5f - dy * 0.5f;
+        sampleOffsets[3] = -dx * 0.5f + dy * 0.5f;
+        sampleOffsets[4] = -dx * 0.5f - dy * 0.5f;
+
+        var partitioner = Partitioner.Create(0, height);
+
+        Parallel.ForEach(partitioner, range =>
         {
-            var posY = startPos + y * dy;
-            var rowBaseIndex = y * width;
-
-            for (var x = 0; x < width; ++x)
+            var ys = range.Item1;
+            var ye = range.Item2;
+            for (var y = ys; y < ye; ++y)
             {
-                var pixelIndex = rowBaseIndex + x;
+                var posY = startPos + y * dy;
+                var rowBaseIndex = y * width;
 
-                if (map.PixelMaxG[pixelIndex] < 0f) // pixel is already blocked by arena bounds
+                for (var x = 0; x < width; ++x)
                 {
-                    continue;
-                }
-                var posBase = posY + x * dx;
-                for (var j = 0; j < len; ++j)
-                {
-                    var shape = zones[j];
-                    for (var i = 0; i < 5; ++i)
+                    var pixelIndex = rowBaseIndex + x;
+
+                    if (map.PixelMaxG[pixelIndex] < 0f)
                     {
-                        var sample = posBase + offsetsX[i] * dx + offsetsZ[i] * dy;
-                        if (shape.Distance(sample) <= (i == 0 ? cushion : 0f))
+                        continue; // already blocked by arena bounds
+                    }
+                    var posBase = posY + x * dx;
+
+                    var blocked = false;
+                    for (var j = 0; j < len && !blocked; ++j)
+                    {
+                        var shape = zones[j];
+                        for (var i = 0; i < 5; ++i)
                         {
-                            map.PixelMaxG[pixelIndex] = -1f;
-                            goto next;
+                            if (shape.Distance(posBase + sampleOffsets[i]) < (i == 0 ? cushion : default))
+                            {
+                                map.PixelMaxG[pixelIndex] = -1f;
+                                goto next;
+                            }
                         }
                     }
+                next:
+                    ;
                 }
-            next:
-                ;
             }
         });
-    }
-
-    private static float CalculateMaxG((ShapeDistance shapeDistance, float g)[] zones, WPos p, float cushion = default)
-    {
-        var len = zones.Length;
-        var threshold = cushion;
-        for (var i = 0; i < len; ++i)
-        {
-            var z = zones[i];
-            if (z.shapeDistance.Distance(p) < threshold)
-            {
-                return z.g;
-            }
-        }
-        return float.MaxValue;
     }
 
     private static (WPos? first, WPos? second) GetFirstWaypoints(ThetaStar pf, Map map, int cell, WPos startingPos)
@@ -468,7 +453,9 @@ public struct NavigationDecision
         var maxIterations = map.Width * map.Height;
 
         if (startingNode.GScore == 0f && startingNode.PathMinG == float.MaxValue)
-            return (null, null); // we're already in safe zone
+        {
+            return default; // we're already in safe zone
+        }
 
         var nextCell = cell;
         do

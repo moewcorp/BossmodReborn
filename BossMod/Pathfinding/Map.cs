@@ -30,7 +30,7 @@ public sealed class Map
     public int MaxY;
 
     public Map() { }
-    public Map(float resolution, WPos center, float worldHalfWidth, float worldHalfHeight, Angle rotation = new()) => Init(resolution, center, worldHalfWidth, worldHalfHeight, rotation);
+    public Map(float resolution, WPos center, float worldHalfWidth, float worldHalfHeight, Angle rotation = default) => Init(resolution, center, worldHalfWidth, worldHalfHeight, rotation);
 
     public void Init(float resolution, WPos center, float worldHalfWidth, float worldHalfHeight, Angle rotation = default)
     {
