@@ -294,7 +294,7 @@ public sealed class ThetaStar
 
         while (true)
         {
-            ref var maxG = ref _map.PixelMaxG[y * _map.Width + x];
+            var maxG = _map.PixelMaxG[y * _map.Width + x];
 
             // If this pixel is considered impassable
             if (maxG < 0f)
