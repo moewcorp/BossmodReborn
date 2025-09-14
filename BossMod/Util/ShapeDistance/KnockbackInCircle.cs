@@ -180,3 +180,19 @@ public sealed class SDKnockbackInCircleAwayFromOriginPlusAOECircles(WPos Center,
         return 1f;
     }
 }
+
+public sealed class SDKnockbackFixedDirectionIntoCircle(WDir Direction, WPos CircleOrigin, float Radius) : ShapeDistance
+{
+    private readonly WDir direction = Direction; // direction includes distance, not normalized
+    private readonly WPos circleOrigin = CircleOrigin;
+    private readonly float radius = Radius;
+
+    public override float Distance(WPos p)
+    {
+        if ((p + direction).InCircle(circleOrigin, radius))
+        {
+            return 1f;
+        }
+        return default;
+    }
+}

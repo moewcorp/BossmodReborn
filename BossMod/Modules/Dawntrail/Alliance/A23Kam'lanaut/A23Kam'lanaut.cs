@@ -1,14 +1,14 @@
 namespace BossMod.Dawntrail.Alliance.A23Kamlanaut;
 
 sealed class ElementalBladeWide(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.IceBladeWide, (uint)AID.LightningBladeWide, (uint)AID.FireBladeWide,
-(uint)AID.EarthBladeWide, (uint)AID.WaterBladeWide, (uint)AID.WindBladeWide], new AOEShapeRect(80f, 10f), riskyWithSecondsLeft: 5d);
+(uint)AID.EarthBladeWide, (uint)AID.WaterBladeWide, (uint)AID.WindBladeWide], new AOEShapeRect(80f, 10f), riskyWithSecondsLeft: 6d);
 sealed class ElementalBladeNarrow(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.IceBladeNarrow, (uint)AID.LightningBladeNarrow, (uint)AID.FireBladeNarrow,
-(uint)AID.EarthBladeNarrow, (uint)AID.WaterBladeNarrow, (uint)AID.WindBladeNarrow], new AOEShapeRect(80f, 2.5f), riskyWithSecondsLeft: 5d);
-sealed class ElementalResonance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElementalResonance, 18f, riskyWithSecondsLeft: 5d);
+(uint)AID.EarthBladeNarrow, (uint)AID.WaterBladeNarrow, (uint)AID.WindBladeNarrow], new AOEShapeRect(80f, 2.5f), riskyWithSecondsLeft: 6d);
+sealed class ElementalResonance(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElementalResonance, 18f, riskyWithSecondsLeft: 6d);
 sealed class SublimeElementsWide(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SublimeIceWide, (uint)AID.SublimeLightningWide, (uint)AID.SublimeFireWide,
-(uint)AID.SublimeEarthWide, (uint)AID.SublimeWaterWide, (uint)AID.SublimeWindWide], new AOEShapeCone(40f, 50f.Degrees()), riskyWithSecondsLeft: 5d);
+(uint)AID.SublimeEarthWide, (uint)AID.SublimeWaterWide, (uint)AID.SublimeWindWide], new AOEShapeCone(40f, 50f.Degrees()), riskyWithSecondsLeft: 6d);
 sealed class SublimeElementsNarrow(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SublimeIceNarrow, (uint)AID.SublimeLightningNarrow, (uint)AID.SublimeFireNarrow,
-(uint)AID.SublimeEarthNarrow, (uint)AID.SublimeWaterNarrow, (uint)AID.SublimeWindNarrow], new AOEShapeCone(40f, 10f.Degrees()), riskyWithSecondsLeft: 5d);
+(uint)AID.SublimeEarthNarrow, (uint)AID.SublimeWaterNarrow, (uint)AID.SublimeWindNarrow], new AOEShapeCone(40f, 10f.Degrees()), riskyWithSecondsLeft: 6d);
 sealed class EmpyrealBanishIV(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.EmpyrealBanishIV, 5f, PartyState.MaxAllianceSize, PartyState.MaxAllianceSize);
 sealed class EmpyrealBanishIII(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.EmpyrealBanishIII, 5f);
 sealed class GreatWheelCircle(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GreatWheelCircle1, (uint)AID.GreatWheelCircle2,

@@ -120,8 +120,10 @@ public struct NavigationDecision
         }
 
         var width = map.Width;
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
         var height = map.Height;
-        var lenPixelMaxG = map.PixelMaxG.Length;
+        var lenPixelMaxG = pixelMaxG.Length;
 
         var resolution = map.Resolution;
         var cushion = resolution * 0.5f;
@@ -132,14 +134,20 @@ public struct NavigationDecision
         var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
         var numBlockedCells = 0;
-
+        for (var i = 0; i < lenPixelMaxG; ++i)
+        {
+            if (pixelMaxG[i] < 0f)
+            {
+                ++numBlockedCells;
+            }
+        }
         // Partition rows so each worker computes its own local 'top-edge' scratch for rows [ys..ye]
         var rangePartitioner = Partitioner.Create(0, height);
 
         Parallel.ForEach(rangePartitioner, () => 0, (range, loopState, localBlocked) =>
         {
             var ys = range.Item1;
-            var ye = range.Item2; // exclusive
+            var ye = range.Item2;
             var rowsToCompute = Math.Min(ye, height) - ys;
             // allocate local scratch for rowsToCompute + 1 (extra row if available)
             var scratchRows = rowsToCompute + 1; // the +1 may correspond to row ys+rowsToCompute (i.e., ye)
@@ -152,11 +160,11 @@ public struct NavigationDecision
                     var row = ys + r;
                     if (row >= height)
                     {
-                        // beyond bottom; leave values as float.MaxValue
+                        // beyond bottom; treat as outside arena
                         var baseIdx = r * width;
-                        for (var x = 0; x < width; ++x)
+                        for (var x1 = 0; x1 < width; ++x1)
                         {
-                            localScratch[baseIdx + x] = float.MaxValue;
+                            localScratch[baseIdx + x1] = float.MaxValue;
                         }
                         continue;
                     }
@@ -165,13 +173,40 @@ public struct NavigationDecision
                     var leftPos = rowStartPos;
                     var leftG = CalculateMaxG(zonesFixed, leftPos);
                     var baseIndex = r * width;
-                    for (var x = 0; x < width; ++x)
+                    var x = 0;
+                    while (x < width)
                     {
+                        var idx = row * width + x;
+                        if (pixelMaxG[idx] < 0f)
+                        {
+                            // start of a blocked run
+                            var runStart = x;
+                            do
+                            {
+                                localScratch[baseIndex + x] = float.MaxValue;
+                                leftPos += dx;
+                                ++x;
+                                idx = row * width + x;
+                            }
+                            while (x < width && pixelMaxG[idx] < 0f);
+
+                            // compute right corner once at the run boundary
+                            if (x < width)
+                            {
+                                var rightG2 = CalculateMaxG(zonesFixed, leftPos);
+                                // advance chain: leftG becomes boundary corner
+                                leftG = rightG2;
+                            }
+                            continue;
+                        }
+
+                        // normal cell
                         var rightPos = leftPos + dx;
                         var rightG = CalculateMaxG(zonesFixed, rightPos);
                         localScratch[baseIndex + x] = Math.Min(leftG, rightG);
                         leftPos = rightPos;
                         leftG = rightG;
+                        ++x;
                     }
                 }
 
@@ -188,7 +223,10 @@ public struct NavigationDecision
                     for (var x = 0; x < width; ++x)
                     {
                         var idx = y * width + x;
-
+                        if (pixelMaxG[idx] < 0f)
+                        {
+                            continue;
+                        }
                         var topG = localScratch[rowBase + x];
 
                         float bottomG;
@@ -204,7 +242,7 @@ public struct NavigationDecision
                         }
 
                         // merge with existing PixelMaxG
-                        var cellEdgeG = Math.Min(Math.Min(topG, bottomG), map.PixelMaxG[idx]);
+                        var cellEdgeG = Math.Min(Math.Min(topG, bottomG), pixelMaxG[idx]);
 
                         // center check with cushion, this is needed for shapes that can intersect cells between corners
                         var centerPos = map.GridToWorld(x, y, 0.5f, 0.5f);
@@ -212,13 +250,13 @@ public struct NavigationDecision
 
                         var finalG = Math.Min(cellEdgeG, centerG);
 
-                        var oldVal = map.PixelMaxG[idx];
+                        var oldVal = pixelMaxG[idx];
                         if (finalG < oldVal)
                         {
-                            map.PixelMaxG[idx] = finalG;
+                            pixelMaxG[idx] = finalG;
                             if (oldVal == float.MaxValue)
                             {
-                                map.PixelPriority[idx] = float.MinValue;
+                                pixelPriority[idx] = float.MinValue;
                                 ++localBlocked;
                             }
                         }
@@ -240,14 +278,14 @@ public struct NavigationDecision
             var realMaxG = 0f;
             for (var iCell = 0; iCell < numBlockedCells; ++iCell)
             {
-                realMaxG = Math.Max(realMaxG, map.PixelMaxG[iCell]);
+                realMaxG = Math.Max(realMaxG, pixelMaxG[iCell]);
             }
             for (var iCell = 0; iCell < numBlockedCells; ++iCell)
             {
-                if (map.PixelMaxG[iCell] == realMaxG)
+                if (pixelMaxG[iCell] == realMaxG)
                 {
-                    map.PixelMaxG[iCell] = float.MaxValue;
-                    map.PixelPriority[iCell] = default;
+                    pixelMaxG[iCell] = float.MaxValue;
+                    pixelPriority[iCell] = float.MinValue;
                 }
             }
         }
@@ -266,6 +304,7 @@ public struct NavigationDecision
             }
             return float.MaxValue;
         }
+        static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
     }
 
     public static void RasterizeGoalZones(Map map, Func<WPos, float>[] goals)
@@ -280,6 +319,8 @@ public struct NavigationDecision
 
         var globalMaxPriority = float.MinValue;
         var rangePartitioner = Partitioner.Create(0, height);
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
 
         Parallel.ForEach(rangePartitioner, () => float.MinValue, (range, loopState, localMax) =>
             {
@@ -304,7 +345,7 @@ public struct NavigationDecision
                             // out-of-bounds row -> mark as no contribution
                             for (var x = 0; x < width; ++x)
                             {
-                                localScratch[baseIdx + x] = float.MaxValue;
+                                localScratch[baseIdx + x] = float.MinValue;
                             }
                             continue;
                         }
@@ -351,9 +392,11 @@ public struct NavigationDecision
                             var topP = localScratch[rowBase + x];
                             var bottomP = localScratch[nextRowBase + x];
 
-                            var cellP = (map.PixelMaxG[idx] == float.MaxValue) ? Math.Min(topP, bottomP) : float.MinValue;
-
-                            map.PixelPriority[idx] = cellP;
+                            var cellP = (pixelMaxG[idx] == float.MaxValue) ? Math.Min(topP, bottomP) : float.MinValue;
+                            if (cellP != float.MinValue)
+                            {
+                                pixelPriority[idx] = cellP;
+                            }
 
                             if (cellP > localMax)
                             {
@@ -361,7 +404,6 @@ public struct NavigationDecision
                             }
                         }
                     }
-
                     return localMax;
                 }
                 finally
@@ -382,8 +424,6 @@ public struct NavigationDecision
 
         map.MaxPriority = globalMaxPriority;
     }
-
-    private static float ActivationToG(DateTime activation, DateTime current) => Math.Max(0f, (float)(activation - current).TotalSeconds - ActivationTimeCushion);
 
     public static void RasterizeVoidzones(Map map, ShapeDistance[] zones)
     {
@@ -406,6 +446,8 @@ public struct NavigationDecision
         sampleOffsets[4] = -dx * 0.5f - dy * 0.5f;
 
         var partitioner = Partitioner.Create(0, height);
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
 
         Parallel.ForEach(partitioner, range =>
         {
@@ -420,7 +462,7 @@ public struct NavigationDecision
                 {
                     var pixelIndex = rowBaseIndex + x;
 
-                    if (map.PixelMaxG[pixelIndex] < 0f)
+                    if (pixelMaxG[pixelIndex] < 0f)
                     {
                         continue; // already blocked by arena bounds
                     }
@@ -434,7 +476,8 @@ public struct NavigationDecision
                         {
                             if (shape.Distance(posBase + sampleOffsets[i]) < (i == 0 ? cushion : default))
                             {
-                                map.PixelMaxG[pixelIndex] = -1f;
+                                pixelMaxG[pixelIndex] = -1f;
+                                pixelPriority[pixelIndex] = float.MinValue;
                                 goto next;
                             }
                         }

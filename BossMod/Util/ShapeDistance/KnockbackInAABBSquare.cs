@@ -92,7 +92,7 @@ public sealed class SDKnockbackInAABBSquareAwayFromOriginIntoCircle(WPos Center,
 public sealed class SDKnockbackInAABBSquareFixedDirection(WPos Center, WDir Direction, float HalfWidth) : ShapeDistance
 {
     private readonly WPos center = Center;
-    private readonly WDir direction = Direction;
+    private readonly WDir direction = Direction; // direction includes distance, not normalized
     private readonly float halfWidth = HalfWidth;
 
     public override float Distance(WPos p)
@@ -108,7 +108,7 @@ public sealed class SDKnockbackInAABBSquareFixedDirection(WPos Center, WDir Dire
 public sealed class SDKnockbackInAABBSquareFixedDirectionPlusAOECircle(WPos Center, WDir Direction, float HalfWidth, WPos CircleOrigin, float Radius) : ShapeDistance
 {
     private readonly WPos center = Center;
-    private readonly WDir direction = Direction;
+    private readonly WDir direction = Direction; // direction includes distance, not normalized
     private readonly float halfWidth = HalfWidth;
     private readonly WPos circleOrigin = CircleOrigin;
     private readonly float radius = Radius;
@@ -127,7 +127,7 @@ public sealed class SDKnockbackInAABBSquareFixedDirectionPlusAOECircle(WPos Cent
 public sealed class SDKnockbackInAABBSquareFixedDirectionPlusAOECircles(WPos Center, WDir Direction, float HalfWidth, WPos[] Origins, float Radius, int Length) : ShapeDistance
 {
     private readonly WPos center = Center;
-    private readonly WDir direction = Direction;
+    private readonly WDir direction = Direction; // direction includes distance, not normalized
     private readonly float halfWidth = HalfWidth;
     private readonly WPos[] origins = Origins;
     private readonly float radius = Radius;
@@ -240,7 +240,7 @@ public sealed class SDKnockbackInAABBSquareAwayFromOriginPlusAOERects(WPos Cente
 public sealed class SDKnockbackInAABBSquareFixedDirectionPlusMixedAOEs(WPos Center, WDir Direction, float HalfWidth, Components.GenericAOEs.AOEInstance[] AOEs, int Length) : ShapeDistance
 {
     private readonly WPos center = Center;
-    private readonly WDir direction = Direction;
+    private readonly WDir direction = Direction; // direction includes distance, not normalized
     private readonly float halfWidth = HalfWidth;
     private readonly Components.GenericAOEs.AOEInstance[] aoes = AOEs;
     private readonly int len = Length;
