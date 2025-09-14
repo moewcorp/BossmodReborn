@@ -180,6 +180,9 @@ public sealed class ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, 
         var height = map.Height;
         var resolution = map.Resolution;
 
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
+
         var threshold = radius * radius / (resolution * resolution); // square of bounds radius, in grid coordinates
         var dy = -height / 2 + 0.5f;
         var dx = -width / 2 + 0.5f;
@@ -194,7 +197,8 @@ public sealed class ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, 
                 var cx = Math.Abs(dx2) + 0.5f;
                 if (cx * cx + cySq > threshold)
                 {
-                    map.PixelMaxG[iCell] = -1000f;
+                    pixelMaxG[iCell] = -1000f;
+                    pixelPriority[iCell] = float.MinValue;
                 }
                 ++iCell;
             }
@@ -239,6 +243,8 @@ public abstract class ABRect : ArenaBounds
         var width = map.Width;
         var height = map.Height;
         var resolution = map.Resolution;
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
 
         var dir = Rotation.ToDirection();
         var dirX = dir.X;
@@ -267,7 +273,8 @@ public abstract class ABRect : ArenaBounds
 
                 if (!((distParr - halfPixel) >= -halfHeight && (distParr + halfPixel) <= halfHeight) || !((distOrtho - halfPixel) >= -halfWidth && (distOrtho + halfPixel) <= halfWidth))
                 {
-                    map.PixelMaxG[rowBase + x] = -1000f;
+                    pixelMaxG[rowBase + x] = -1000f;
+                    pixelPriority[rowBase + x] = float.MinValue;
                 }
             }
         }
@@ -493,8 +500,9 @@ public sealed class ArenaBoundsCustom : ArenaBounds
     {
         var polygon = offset != default ? Polygon.Offset(offset) : Polygon;
         var map = new Pathfinding.Map(MapResolution, default, HalfWidth, HalfHeight);
-        var pixels = map.PixelMaxG;
 
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
         var width = map.Width;
         var height = map.Height;
         var resolution = map.Resolution;
@@ -530,7 +538,8 @@ public sealed class ArenaBoundsCustom : ArenaBounds
                     var pos = posY + x * dx;
                     if (shape.Distance(pos) <= halfSample) // inner circle of the pixel
                     {
-                        pixels[offset] = -1000f; // no reason to check more points of the cell
+                        pixelMaxG[offset] = -1000f; // no reason to check more points of the cell
+                        pixelPriority[offset] = float.MinValue;
                         continue;
                     }
                     var relativeCenter = new WDir(pos.X, pos.Z);
@@ -539,7 +548,8 @@ public sealed class ArenaBoundsCustom : ArenaBounds
                     {
                         if (!polygon.Contains(relativeCenter + sampleOffsets[i]))
                         {
-                            pixels[offset] = -1000f;
+                            pixelMaxG[offset] = -1000f;
+                            pixelPriority[offset] = float.MinValue;
                             break;
                         }
                     }

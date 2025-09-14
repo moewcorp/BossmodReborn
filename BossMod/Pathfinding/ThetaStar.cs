@@ -1,4 +1,6 @@
-﻿namespace BossMod.Pathfinding;
+﻿using System.Buffers;
+
+namespace BossMod.Pathfinding;
 
 public sealed class ThetaStar
 {
@@ -291,10 +293,11 @@ public sealed class ThetaStar
 
         var x = x0;
         var y = y0;
+        var pixelMaxG = _map.PixelMaxG;
 
         while (true)
         {
-            var maxG = _map.PixelMaxG[y * _map.Width + x];
+            var maxG = pixelMaxG[y * _map.Width + x];
 
             // If this pixel is considered impassable
             if (maxG < 0f)
@@ -413,60 +416,132 @@ public sealed class ThetaStar
     private void PrefillH()
     {
         var width = _map.Width;
-        var hight = _map.Height;
+        var height = _map.Height;
         var maxPriority = _map.MaxPriority;
-        var iCell = 0;
-        for (var y = 0; y < hight; ++y)
-        {
-            for (var x = 0; x < width; ++x, ++iCell)
-            {
-                if (_map.PixelPriority[iCell] < maxPriority)
-                {
-                    ref var node = ref _nodes[iCell];
-                    node.HScore = float.MaxValue;
-                    if (x > 0)
-                        UpdateHNeighbour(x, y, ref node, x - 1, y, iCell - 1);
-                    if (y > 0)
-                        UpdateHNeighbour(x, y, ref node, x, y - 1, iCell - width);
-                }
-                // else: leave unfilled (H=0, parent=uninit)
-            }
-        }
-        --iCell;
-        for (int y0 = hight - 1, y = y0; y >= 0; --y)
-        {
-            for (int x0 = width - 1, x = x0; x >= 0; --x, --iCell)
-            {
-                if (_map.PixelPriority[iCell] < maxPriority)
-                {
-                    ref var node = ref _nodes[iCell];
-                    if (x < x0)
-                        UpdateHNeighbour(x, y, ref node, x + 1, y, iCell + 1);
-                    if (y < y0)
-                        UpdateHNeighbour(x, y, ref node, x, y + 1, iCell + width);
-                }
-            }
-        }
-    }
 
-    private void UpdateHNeighbour(int x1, int y1, ref Node node, int x2, int y2, int neighIndex)
-    {
-        ref var neighbour = ref _nodes[neighIndex];
-        if (neighbour.HScore == 0)
+        var pixelPriority = _map.PixelPriority;
+        var nodes = _nodes;
+
+        const float INFf = 1e18f;
+        const double INFd = 1e18d;
+
+        // temporary storage for column-pass squared distances
+        var colDist = ArrayPool<float>.Shared.Rent(width * height);
+        try
         {
-            node.HScore = _deltaGSide; // don't bother with min, it can't be lower
-            node.ParentIndex = neighIndex;
-        }
-        else if (neighbour.HScore < float.MaxValue)
-        {
-            (x2, y2) = _map.IndexToGrid(neighbour.ParentIndex);
-            var dx = x2 - x1;
-            var dy = y2 - y1;
-            var hScore = _deltaGSide * MathF.Sqrt(dx * dx + dy * dy);
-            if (hScore < node.HScore)
+            // 1) Column-wise 1D EDT (parallel over columns)
+            var partitioner = Partitioner.Create(0, width);
+            Parallel.ForEach(partitioner, range =>
             {
-                node.HScore = hScore;
-                node.ParentIndex = neighbour.ParentIndex;
+                var x1 = range.Item1;
+                var x2 = range.Item2;
+                var n = height;
+                Span<float> f = stackalloc float[n];
+                Span<float> d = stackalloc float[n];
+                Span<int> v = stackalloc int[n];
+                Span<double> z = stackalloc double[n + 1];
+                for (var x = x1; x < x2; ++x)
+                {
+                    for (var y = 0; y < n; ++y)
+                    {
+                        var idx = y * width + x;
+                        f[y] = pixelPriority[idx] == maxPriority ? 0f : INFf;
+                    }
+
+                    DistanceTransform1D(f, d, v, z, n, INFd);
+
+                    for (var y = 0; y < n; ++y)
+                    {
+                        colDist[y * width + x] = d[y];
+                    }
+                }
+            });
+
+            // 2) Row-wise 1D EDT (parallel over rows) using column results -> final distances
+            partitioner = Partitioner.Create(0, height);
+            Parallel.ForEach(partitioner, range =>
+            {
+                var y1 = range.Item1;
+                var y2 = range.Item2;
+                var n = width;
+                Span<float> f = stackalloc float[n];
+                Span<float> d = stackalloc float[n];
+                Span<int> v = stackalloc int[n];
+                Span<double> z = stackalloc double[n + 1];
+
+                for (var y = y1; y < y2; ++y)
+                {
+                    var rowBase = y * width;
+                    for (var x = 0; x < n; ++x)
+                    {
+                        f[x] = colDist[rowBase + x];
+                    }
+                    DistanceTransform1D(f, d, v, z, n, INFd);
+
+                    for (var x = 0; x < n; ++x)
+                    {
+                        var iCell = rowBase + x;
+                        if (pixelPriority[iCell] < maxPriority)
+                        {
+                            nodes[iCell].HScore = MathF.Sqrt(d[x]) * _deltaGSide;
+                        }
+                        else
+                        {
+                            nodes[iCell].HScore = default;
+                        }
+                    }
+                }
+            });
+        }
+        finally
+        {
+            ArrayPool<float>.Shared.Return(colDist, false);
+        }
+        // 1D squared distance transform (Felzenszwalb) using provided buffers
+        static void DistanceTransform1D(Span<float> f, Span<float> d, Span<int> v, Span<double> z, int n, double INF)
+        {
+            var k = 0;
+            v[0] = 0;
+            z[0] = -INF;
+            z[1] = INF;
+
+            for (var q = 1; q < n; ++q)
+            {
+                double s;
+                while (true)
+                {
+                    var vk = v[k];
+                    // compute intersection
+                    // (f[q] + q*q) - (f[vk] + vk*vk)
+                    var num = f[q] + (float)q * q - (f[vk] + (float)vk * vk);
+                    var den = 2d * (q - vk);
+                    s = num / den;
+                    if (s <= z[k])
+                    {
+                        --k;
+                        if (k < 0)
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+                    break;
+                }
+                ++k;
+                v[k] = q;
+                z[k] = s;
+                z[k + 1] = INF;
+            }
+
+            k = 0;
+            for (var q = 0; q < n; ++q)
+            {
+                while (z[k + 1] < q)
+                {
+                    ++k;
+                }
+                var diff = q - v[k];
+                d[q] = diff * diff + f[v[k]];
             }
         }
     }
