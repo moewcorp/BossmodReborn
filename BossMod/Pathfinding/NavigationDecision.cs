@@ -133,18 +133,10 @@ public struct NavigationDecision
         var dx = dy.OrthoL();
         var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
-        var numBlockedCells = 0;
-        for (var i = 0; i < lenPixelMaxG; ++i)
-        {
-            if (pixelMaxG[i] < 0f)
-            {
-                ++numBlockedCells;
-            }
-        }
         // Partition rows so each worker computes its own local 'top-edge' scratch for rows [ys..ye]
         var rangePartitioner = Partitioner.Create(0, height);
 
-        Parallel.ForEach(rangePartitioner, () => 0, (range, loopState, localBlocked) =>
+        Parallel.ForEach(rangePartitioner, (range, loopState) =>
         {
             var ys = range.Item1;
             var ye = range.Item2;
@@ -257,36 +249,38 @@ public struct NavigationDecision
                             if (oldVal == float.MaxValue)
                             {
                                 pixelPriority[idx] = float.MinValue;
-                                ++localBlocked;
                             }
                         }
                     }
                 }
-
-                return localBlocked;
             }
             finally
             {
                 ArrayPool<float>.Shared.Return(localScratch, clearArray: false);
             }
-        }, localBlocked => Interlocked.Add(ref numBlockedCells, localBlocked));
+        });
 
-        if (numBlockedCells == width * height)
+        for (var i = 0; i < lenPixelMaxG; ++i)
         {
-            // everything is dangerous, clear least dangerous so that pathfinding works reasonably
-            // note that max value could be smaller than MaxG, if more dangerous stuff overlaps it
-            var realMaxG = 0f;
-            for (var iCell = 0; iCell < numBlockedCells; ++iCell)
+            if (pixelMaxG[i] == float.MaxValue)
             {
-                realMaxG = Math.Max(realMaxG, pixelMaxG[iCell]);
+                return;
             }
-            for (var iCell = 0; iCell < numBlockedCells; ++iCell)
+        }
+        var cellCount = width * height;
+        // everything is dangerous, clear least dangerous so that pathfinding works reasonably
+        // note that max value could be smaller than MaxG, if more dangerous stuff overlaps it
+        var realMaxG = 0f;
+        for (var iCell = 0; iCell < cellCount; ++iCell)
+        {
+            realMaxG = Math.Max(realMaxG, pixelMaxG[iCell]);
+        }
+        for (var iCell = 0; iCell < cellCount; ++iCell)
+        {
+            if (pixelMaxG[iCell] == realMaxG)
             {
-                if (pixelMaxG[iCell] == realMaxG)
-                {
-                    pixelMaxG[iCell] = float.MaxValue;
-                    pixelPriority[iCell] = float.MinValue;
-                }
+                pixelMaxG[iCell] = float.MaxValue;
+                pixelPriority[iCell] = default;
             }
         }
 
