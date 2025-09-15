@@ -387,38 +387,38 @@ public sealed class ThetaStar
             PathMinG = candidateMinG,
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
-
-        if (currentParentNode.Score >= Score.UnsafeImprove && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        ref var altnode = ref altNode;
+        if ((currentParentNode.Score >= Score.Safe || currentParentNode.Score >= Score.UnsafeAsStart && altnode.PathLeeway < 0f) && altnode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
             return;
 
         var grandParentIndex = currentParentNode.ParentIndex;
-
-        if (grandParentIndex != nodeIndex && _nodes[grandParentIndex].PathMinG >= currentParentNode.PathMinG)
+        ref var grandparentnode = ref _nodes[grandParentIndex];
+        if (grandParentIndex != nodeIndex && grandparentnode.PathMinG >= currentParentNode.PathMinG)
         {
             var (gx, gy) = _map.IndexToGrid(grandParentIndex);
 
             // Attempt to see if we can go directly from grandparent to (nodeX, nodeY)
-            if (LineOfSight(gx, gy, nodeX, nodeY, _nodes[grandParentIndex].GScore, out var losLeeway, out var losDist, out var losMinG))
+            if (LineOfSight(gx, gy, nodeX, nodeY, grandparentnode.GScore, out var losLeeway, out var losDist, out var losMinG))
             {
                 var losScore = CalculateScore(destPixG, losMinG, losLeeway, nodeIndex);
-                if (losScore >= altNode.Score)
+                if (losScore >= altnode.Score)
                 {
                     parentIndex = grandParentIndex;
-                    altNode.GScore = _nodes[parentIndex].GScore + _deltaGSide * losDist;
-                    altNode.ParentIndex = grandParentIndex;
-                    altNode.PathLeeway = losLeeway;
-                    altNode.PathMinG = losMinG;
-                    altNode.Score = losScore;
+                    altnode.GScore = _nodes[parentIndex].GScore + _deltaGSide * losDist;
+                    altnode.ParentIndex = grandParentIndex;
+                    altnode.PathLeeway = losLeeway;
+                    altnode.PathMinG = losMinG;
+                    altnode.Score = losScore;
                 }
             }
         }
 
-        var visit = destNode.OpenHeapIndex == 0 || CompareNodeScores(ref altNode, ref destNode) < (destNode.OpenHeapIndex < 0 ? -1 : 0);
+        var visit = destNode.OpenHeapIndex == 0 || CompareNodeScores(ref altnode, ref destNode) < (destNode.OpenHeapIndex < 0 ? -1 : 0);
         if (visit)
         {
             if (destNode.OpenHeapIndex < 0)
                 ++NumReopens;
-            destNode = altNode;
+            destNode = altnode;
             AddToOpen(nodeIndex);
         }
     }
