@@ -125,7 +125,7 @@ public sealed class SDKnockbackInCircleFixedDirectionAndAwayFromOrigin(WPos Cent
 
     public override float Distance(WPos p)
     {
-        if ((p + direction).InCircle(center, radius) && (p + distance * (p - origin).Normalized()).InCircle(center, distance))
+        if ((p + direction).InCircle(center, radius) && (p + distance * (p - origin).Normalized()).InCircle(center, radius))
         {
             return 1f;
         }
