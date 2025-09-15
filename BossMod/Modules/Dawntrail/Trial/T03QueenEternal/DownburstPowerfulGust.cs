@@ -12,7 +12,7 @@ sealed class PowerfulGustKB(BossModule module) : Components.SimpleKnockbacks(mod
             var act = c.Activation;
             if (!IsImmune(slot, act))
             {
-                hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(Arena.Center, c.Direction.ToDirection(), _kb.Polygon), act);
+                hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(Arena.Center, 20f * c.Direction.ToDirection(), _kb.Polygon), act);
             }
         }
     }
