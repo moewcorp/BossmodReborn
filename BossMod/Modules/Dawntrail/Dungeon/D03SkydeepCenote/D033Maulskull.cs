@@ -143,7 +143,7 @@ sealed class Stonecarver(BossModule module) : Components.GenericAOEs(module)
 sealed class Shatter(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
-    private static readonly AOEShapeRect rect = new(40f, 10f);
+    private static readonly AOEShapeRect rectCenter = new(40f, 10f), rectSides = new(45f, 11f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -162,18 +162,18 @@ sealed class Shatter(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        void AddAOE(WPos pos, Angle rot) => _aoes.Add(new(rect, pos, rot, Module.CastFinishAt(spell, 15.1d)));
+        void AddAOE(AOEShapeRect rect, WPos pos, Angle rot) => _aoes.Add(new(rect, pos, rot, Module.CastFinishAt(spell, 15.1d)));
         switch (spell.Action.ID)
         {
             case (uint)AID.MaulworkFirstCenter:
             case (uint)AID.MaulworkSecondCenter:
-                AddAOE(spell.LocXZ, spell.Rotation);
+                AddAOE(rectCenter, spell.LocXZ, spell.Rotation);
                 break;
             case (uint)AID.MaulworkFirstSides:
             case (uint)AID.MaulworkSecondSides:
                 var z = -453.025f;
-                AddAOE(new(91.539f, z), -17.004f.Degrees());
-                AddAOE(new(108.415f, z), 16.999f.Degrees());
+                AddAOE(rectSides, new(91.539f, z), -17.004f.Degrees());
+                AddAOE(rectSides, new(108.415f, z), 16.999f.Degrees());
                 break;
             case (uint)AID.ShatterCenter:
             case (uint)AID.ShatterLR1:

@@ -247,7 +247,7 @@ sealed class RelentlessTorment(BossModule module) : Components.SingleTargetCastD
     {
         if (Targets.Count != 0)
         {
-            ref readonly var t = ref Targets.Ref(0);
+            ref var t = ref Targets.Ref(0);
             if (t.target.IsDead || t.caster.IsDead)
             {
                 Targets.Clear();

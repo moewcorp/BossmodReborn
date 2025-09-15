@@ -112,7 +112,7 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
         {
             return;
         }
-        ref var c = ref Casters.Ref(0);
+        ref readonly var c = ref Casters.Ref(0);
         var act = c.Activation;
         if (!IsImmune(slot, act))
         {
@@ -135,8 +135,7 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
         var len = aoes.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var aoe = ref aoes[i];
-            if (aoe.Check(pos))
+            if (aoes[i].Check(pos))
             {
                 return true;
             }

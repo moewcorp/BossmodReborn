@@ -15,23 +15,21 @@ public sealed class ThetaStar
         SemiSafeImprove, // the path is semi-safe (no cell along the path has negative leeway or max-g lower than starting cell), destination is unsafe but better than start
         Safe, // the path reaches safe cell and is fully safe (no cell along the path has negative leeway) (starting cell will have this score if it's safe)
         SafeBetterPrio, // the path reaches safe cell with a higher goal priority than starting cell (but less than max) and is fully safe (no cell along the path has negative leeway)
-        SafeMaxPrio, // the path reaches safe cell with max goal priority and is fully safe (no cell along the path has negative leeway)
+        SafeMaxPrio // the path reaches safe cell with max goal priority and is fully safe (no cell along the path has negative leeway)
     }
 
     public struct Node
     {
         public float GScore;
         public float HScore;
-        public int ParentIndex;
-        public int OpenHeapIndex; // -1 if in closed list, 0 if not in any lists, otherwise (index+1)
         public float PathLeeway; // min diff along path between node's g-value and cell's g-value
         public float PathMinG; // minimum 'max g' value along path
+        public int ParentIndex;
+        public int OpenHeapIndex; // -1 if in closed list, 0 if not in any lists, otherwise (index+1)
         public Score Score;
 
         public readonly float FScore => GScore + HScore;
     }
-
-    private const float Epsilon = 1e-5f;
 
     private Map _map = new();
     private Node[] _nodes = [];
@@ -90,7 +88,7 @@ public sealed class ThetaStar
         startFrac.X -= start.x + 0.5f;
         startFrac.Y -= start.y + 0.5f;
         ref var startNode = ref _nodes[StartNodeIndex];
-        startNode = new()
+        _nodes[StartNodeIndex] = new()
         {
             GScore = 0f,
             HScore = startNode.HScore, //HeuristicDistance(start.x, start.y),
@@ -103,46 +101,53 @@ public sealed class ThetaStar
     }
 
     // returns whether search is to be terminated; on success, first node of the open list would contain found goal
+    private static readonly (int dx, int dy, float step)[] _nbrs =
+    [
+        ( 0,-1, 1f), (-1,-1, 1.414214f), ( 1,-1, 1.414214f),
+        (-1, 0, 1f),                  ( 1, 0, 1f),
+        ( 0, 1, 1f), (-1, 1, 1.414214f), ( 1, 1, 1.414214f),
+    ];
+
     public bool ExecuteStep()
     {
-        if (_openList.Count == 0 /*|| _nodes[_openList[0]].HScore <= 0*/)
+        if (_openList.Count == 0)
+        {
             return false;
+        }
 
         ++NumSteps;
-        var nextNodeIndex = PopMinOpen();
-        var nextNodeX = nextNodeIndex % _map.Width;
-        var nextNodeY = nextNodeIndex / _map.Width;
-        ref var nextNode = ref _nodes[nextNodeIndex];
+        var pIdx = PopMinOpen();
+        var width = _map.Width;
+        var widthu = (uint)width;
+        var height = (uint)_map.Height;
+        var px = pIdx % width;
+        var py = pIdx / width;
 
-        // update our best indices
-        if (CompareNodeScores(ref nextNode, ref _nodes[_bestIndex]) < 0)
-            _bestIndex = nextNodeIndex;
-        if (nextNode.Score == Score.UltimatelySafe && (_fallbackIndex == StartNodeIndex || CompareNodeScores(ref nextNode, ref _nodes[_fallbackIndex]) < 0))
-            _fallbackIndex = nextNodeIndex;
+        ref var p = ref _nodes[pIdx];
 
-        var haveN = nextNodeY > 0;
-        var haveS = nextNodeY < _map.Height - 1;
-        var haveE = nextNodeX > 0;
-        var haveW = nextNodeX < _map.Width - 1;
-        if (haveN)
+        // update best & fallback
+        if (CompareNodeScores(ref p, ref _nodes[_bestIndex]) < 0)
         {
-            VisitNeighbour(nextNodeIndex, nextNodeX, nextNodeY - 1, nextNodeIndex - _map.Width, _deltaGSide);
-            if (haveE)
-                VisitNeighbour(nextNodeIndex, nextNodeX - 1, nextNodeY - 1, nextNodeIndex - _map.Width - 1, _deltaGDiag);
-            if (haveW)
-                VisitNeighbour(nextNodeIndex, nextNodeX + 1, nextNodeY - 1, nextNodeIndex - _map.Width + 1, _deltaGDiag);
+            _bestIndex = pIdx;
         }
-        if (haveE)
-            VisitNeighbour(nextNodeIndex, nextNodeX - 1, nextNodeY, nextNodeIndex - 1, _deltaGSide);
-        if (haveW)
-            VisitNeighbour(nextNodeIndex, nextNodeX + 1, nextNodeY, nextNodeIndex + 1, _deltaGSide);
-        if (haveS)
+        if (p.Score == Score.UltimatelySafe && (_fallbackIndex == StartNodeIndex || CompareNodeScores(ref p, ref _nodes[_fallbackIndex]) < 0))
         {
-            VisitNeighbour(nextNodeIndex, nextNodeX, nextNodeY + 1, nextNodeIndex + _map.Width, _deltaGSide);
-            if (haveE)
-                VisitNeighbour(nextNodeIndex, nextNodeX - 1, nextNodeY + 1, nextNodeIndex + _map.Width - 1, _deltaGDiag);
-            if (haveW)
-                VisitNeighbour(nextNodeIndex, nextNodeX + 1, nextNodeY + 1, nextNodeIndex + _map.Width + 1, _deltaGDiag);
+            _fallbackIndex = pIdx;
+        }
+
+        // neighbor loop with bounds checks and packed cost
+        for (var i = 0; i < 8; ++i)
+        {
+            var (dx, dy, stepMul) = _nbrs[i];
+            var nx = px + dx;
+            var ny = py + dy;
+            if ((uint)nx >= widthu || (uint)ny >= height)
+            {
+                continue;
+            }
+
+            var nIdx = ny * width + nx;
+            VisitNeighbour(pIdx, nx, ny, nIdx, stepMul == 1f ? _deltaGSide : _deltaGDiag);
         }
         return true;
     }
@@ -156,18 +161,21 @@ public sealed class ThetaStar
 
     public int BestIndex()
     {
-        if (_nodes[_bestIndex].Score > _startScore)
+        ref var nd = ref _nodes[_bestIndex];
+        if (nd.Score > _startScore)
             return _bestIndex; // we've found something better than start
 
         if (_fallbackIndex != StartNodeIndex)
         {
             // find first parent of best-among-worst that is at least as good as start
             var destIndex = _fallbackIndex;
-            var parentIndex = _nodes[destIndex].ParentIndex;
+            ref var ndp = ref _nodes[destIndex];
+            var parentIndex = ndp.ParentIndex;
             while (_nodes[parentIndex].Score < _startScore)
             {
                 destIndex = parentIndex;
-                parentIndex = _nodes[destIndex].ParentIndex;
+                ref var ndd = ref _nodes[destIndex];
+                parentIndex = ndd.ParentIndex;
             }
 
             // TODO: this is very similar to LineOfSight, try to unify implementations...
@@ -224,12 +232,12 @@ public sealed class ThetaStar
     public Score CalculateScore(float pixMaxG, float pathMinG, float pathLeeway, int pixelIndex)
     {
         var destSafe = pixMaxG == float.MaxValue;
-        var pathSafe = pathLeeway > 0;
+        var pathSafe = pathLeeway > 0f;
         var destBetter = pixMaxG > _startMaxG;
 
         if (destSafe && pathSafe)
         {
-            ref readonly var prio = ref _map.PixelPriority[pixelIndex];
+            var prio = _map.PixelPriority[pixelIndex];
             return prio == _map.MaxPriority ? Score.SafeMaxPrio : prio > _startPrio ? Score.SafeBetterPrio : Score.Safe;
         }
 
@@ -247,27 +255,26 @@ public sealed class ThetaStar
         if (nodeL.Score != nodeR.Score)
             return nodeL.Score > nodeR.Score ? -2 : +2;
 
+        const float Eps = 1e-5f;
         // TODO: should we use leeway here or distance?..
         //return nodeL.PathLeeway > nodeR.PathLeeway;
         var gl = nodeL.GScore;
         var gr = nodeR.GScore;
         var fl = gl + nodeL.HScore;
         var fr = gr + nodeR.HScore;
-        if (fl + Epsilon < fr)
+        if (fl + Eps < fr)
             return -1;
-        else if (fr + Epsilon < fl)
+        if (fr + Eps < fl)
             return +1;
-        else if (gl != gr)
+        if (gl != gr)
             return gl > gr ? -1 : 1; // tie-break towards larger g-values
-        else
-            return 0;
+        return 0;
     }
 
     public bool LineOfSight(int x0, int y0, int x1, int y1, float parentGScore, out float lineOfSightLeeway, out float lineOfSightDist, out float lineOfSightMinG)
     {
         lineOfSightLeeway = float.MaxValue;
         lineOfSightMinG = float.MaxValue;
-        var cumulativeG = parentGScore;
 
         var dx = x1 - x0;
         var dy = y1 - y0;
@@ -281,8 +288,10 @@ public sealed class ThetaStar
         dx = (dx ^ shiftdx) - shiftdx;  // Absolute value of dx
         dy = (dy ^ shiftdy) - shiftdy;  // Absolute value of dy
 
+        // grid distance in cells (Euclidean) – used only at the end
         lineOfSightDist = MathF.Sqrt(dx * dx + dy * dy);
 
+        // Precompute inverse (avoid div-by-zero branching via MaxValue)
         var invdx = dx != 0 ? 1f / dx : float.MaxValue;
         var invdy = dy != 0 ? 1f / dy : float.MaxValue;
 
@@ -291,32 +300,35 @@ public sealed class ThetaStar
         var tDeltaX = _mapResolution * invdx;
         var tDeltaY = _mapResolution * invdy;
 
-        var x = x0;
-        var y = y0;
-        var pixelMaxG = _map.PixelMaxG;
+        int x = x0, y = y0, w = _map.Width;
+        var pixG = _map.PixelMaxG;
+        var cumulativeG = parentGScore;
 
+        // Quick bound: if parent already unsafe and we dip further, bail early.
+        // (Keeps correctness because we only use LOS as an optional improvement.)
         while (true)
         {
-            var maxG = pixelMaxG[y * _map.Width + x];
-
-            // If this pixel is considered impassable
+            var maxG = pixG[y * w + x];
             if (maxG < 0f)
-                return false;
+            {
+                return false; // blocked
+            }
 
-            // Update the minG we have seen on this line
             if (maxG < lineOfSightMinG)
+            {
                 lineOfSightMinG = maxG;
+            }
+            var leeway = maxG - cumulativeG;
+            if (leeway < lineOfSightLeeway)
+            {
+                lineOfSightLeeway = leeway;
+            }
 
-            // Update the path leeway along this line
-            var thisLeeway = maxG - cumulativeG;
-            if (thisLeeway < lineOfSightLeeway)
-                lineOfSightLeeway = thisLeeway;
-
-            // Check if we're finished
             if (x == x1 && y == y1)
+            {
                 break;
+            }
 
-            // Otherwise pick which direction to step
             if (tMaxX < tMaxY)
             {
                 tMaxX += tDeltaX;
@@ -331,7 +343,6 @@ public sealed class ThetaStar
             }
             else
             {
-                // stepping diagonally
                 tMaxX += tDeltaX;
                 tMaxY += tDeltaY;
                 x += stepX;
@@ -339,8 +350,6 @@ public sealed class ThetaStar
                 cumulativeG += _deltaGDiag;
             }
         }
-
-        // If we made it out of the loop, line of sight is good
         return true;
     }
 
@@ -354,8 +363,9 @@ public sealed class ThetaStar
             return;
         }
 
-        var destPixG = _map.PixelMaxG[nodeIndex];
-        var parentPixG = _map.PixelMaxG[parentIndex];
+        var pixelMaxG = _map.PixelMaxG;
+        var destPixG = pixelMaxG[nodeIndex];
+        var parentPixG = pixelMaxG[parentIndex];
         if (destPixG < 0f && parentPixG >= 0f)
         {
             return; // impassable
@@ -378,7 +388,7 @@ public sealed class ThetaStar
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
 
-        if (currentParentNode.Score >= Score.SemiSafeAsStart && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        if (currentParentNode.Score >= Score.UnsafeImprove && altNode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
             return;
 
         var grandParentIndex = currentParentNode.ParentIndex;
@@ -424,6 +434,7 @@ public sealed class ThetaStar
 
         const float INFf = 1e18f;
         const double INFd = 1e18d;
+        var deltaGSide = _deltaGSide;
 
         // temporary storage for column-pass squared distances
         var colDist = ArrayPool<float>.Shared.Rent(width * height);
@@ -483,11 +494,8 @@ public sealed class ThetaStar
                         var iCell = rowBase + x;
                         if (pixelPriority[iCell] < maxPriority)
                         {
-                            nodes[iCell].HScore = MathF.Sqrt(d[x]) * _deltaGSide;
-                        }
-                        else
-                        {
-                            nodes[iCell].HScore = default;
+                            ref var nd = ref nodes[iCell];
+                            nd.HScore = MathF.Sqrt(d[x]) * deltaGSide;
                         }
                     }
                 }
@@ -548,13 +556,32 @@ public sealed class ThetaStar
 
     private void AddToOpen(int nodeIndex)
     {
-        if (_nodes[nodeIndex].OpenHeapIndex <= 0)
+        ref var nd = ref _nodes[nodeIndex];
+
+        // New insertion: must sift up from the leaf position
+        if (nd.OpenHeapIndex <= 0)
         {
             _openList.Add(nodeIndex);
-            _nodes[nodeIndex].OpenHeapIndex = _openList.Count;
+            nd.OpenHeapIndex = _openList.Count;
+            PercolateUp(_openList.Count - 1);
+            return;
         }
-        // update location
-        PercolateUp(_nodes[nodeIndex].OpenHeapIndex - 1);
+
+        // Node already in heap: only sift if priority improved vs parent.
+        var heapIndex = nd.OpenHeapIndex - 1;
+        if (heapIndex > 0)
+        {
+            var parentHeapIndex = (heapIndex - 1) >> 1;
+            var parentNodeIndex = _openList[parentHeapIndex];
+            ref var parent = ref _nodes[parentNodeIndex];
+
+            // If nd is strictly better than parent, it must move up.
+            if (CompareNodeScores(ref nd, ref parent) < 0)
+            {
+                PercolateUp(heapIndex);
+                return;
+            }
+        }
     }
 
     // remove first (minimal) node from open heap and mark as closed

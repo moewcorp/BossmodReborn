@@ -136,7 +136,7 @@ public struct NavigationDecision
         // Partition rows so each worker computes its own local 'top-edge' scratch for rows [ys..ye]
         var rangePartitioner = Partitioner.Create(0, height);
 
-        Parallel.ForEach(rangePartitioner, (range, loopState) =>
+        Parallel.ForEach(rangePartitioner, range =>
         {
             var ys = range.Item1;
             var ye = range.Item2;
@@ -237,7 +237,7 @@ public struct NavigationDecision
                         var cellEdgeG = Math.Min(Math.Min(topG, bottomG), pixelMaxG[idx]);
 
                         // center check with cushion, this is needed for shapes that can intersect cells between corners
-                        var centerPos = map.GridToWorld(x, y, 0.5f, 0.5f);
+                        var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
                         var centerG = CalculateMaxG(zonesFixed, centerPos, cushion);
 
                         var finalG = Math.Min(cellEdgeG, centerG);
@@ -267,15 +267,14 @@ public struct NavigationDecision
                 return;
             }
         }
-        var cellCount = width * height;
         // everything is dangerous, clear least dangerous so that pathfinding works reasonably
         // note that max value could be smaller than MaxG, if more dangerous stuff overlaps it
         var realMaxG = 0f;
-        for (var iCell = 0; iCell < cellCount; ++iCell)
+        for (var iCell = 0; iCell < lenPixelMaxG; ++iCell)
         {
             realMaxG = Math.Max(realMaxG, pixelMaxG[iCell]);
         }
-        for (var iCell = 0; iCell < cellCount; ++iCell)
+        for (var iCell = 0; iCell < lenPixelMaxG; ++iCell)
         {
             if (pixelMaxG[iCell] == realMaxG)
             {
@@ -286,6 +285,9 @@ public struct NavigationDecision
 
         static float CalculateMaxG((ShapeDistance shapeDistance, float g)[] zones, WPos p, float cushion = default)
         {
+            // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
+            // threshold > 0 inflates by that margin (used for center cushion).
+            // zones are already sorted by activation time in AIHints.Normalize(), so we can exit early on first match
             var len = zones.Length;
             var threshold = cushion;
             for (var i = 0; i < len; ++i)
