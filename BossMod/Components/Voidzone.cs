@@ -15,7 +15,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
         var aoes = new List<AOEInstance>();
         foreach (var source in Sources(Module))
         {
-            aoes.Add(new(Shape, source.Position.Quantized(), source.Rotation));
+            aoes.Add(new(Shape, source.Position, source.Rotation));
         }
         return CollectionsMarshal.AsSpan(aoes);
     }
@@ -26,31 +26,25 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
             return;
         if (MovementHintLength == 0)
         {
-            var forbidden = new List<ShapeDistance>();
             foreach (var s in Sources(Module))
-                forbidden.Add(new SDCircle(s.Position.Quantized(), radius));
-            hints.TemporaryObstacles.Add(new SDUnion([.. forbidden]));
+            {
+                hints.TemporaryObstacles.Add(new SDCircle(s.Position, radius));
+            }
         }
         else
         {
-            var forbiddenImminent = new List<ShapeDistance>();
-            var forbiddenNearFuture = new List<ShapeDistance>();
-            var forbiddenSoon = new List<ShapeDistance>();
-            var forbiddenFarFuture = new List<ShapeDistance>();
-            var forbiddenFarFarFuture = new List<ShapeDistance>();
+            var forbiddenNearFuture = WorldState.FutureTime(1.1d);
+            var forbiddenSoon = WorldState.FutureTime(3d);
+            var forbiddenFarFuture = WorldState.FutureTime(10d);
+            var forbiddenFarFarFuture = DateTime.MaxValue;
             foreach (var s in Sources(Module))
             {
-                forbiddenNearFuture.Add(new SDCapsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius));
-                forbiddenSoon.Add(new SDCapsule(s.Position, s.Rotation, MovementHintLength, radius));
-                forbiddenFarFuture.Add(new SDCapsule(s.Position, s.Rotation, 2f * MovementHintLength, radius));
-                forbiddenFarFarFuture.Add(new SDCapsule(s.Position, s.Rotation, 3f * MovementHintLength, radius));
-                forbiddenImminent.Add(new SDCircle(s.Position, radius));
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius), forbiddenNearFuture);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength, radius), forbiddenSoon);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 2f * MovementHintLength, radius), forbiddenFarFuture);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 3f * MovementHintLength, radius), forbiddenFarFarFuture);
+                hints.TemporaryObstacles.Add(new SDCircle(s.Position, radius));
             }
-            hints.TemporaryObstacles.Add(new SDUnion([.. forbiddenImminent]));
-            hints.AddForbiddenZone(new SDUnion([.. forbiddenNearFuture]), WorldState.FutureTime(1.1d));
-            hints.AddForbiddenZone(new SDUnion([.. forbiddenSoon]), WorldState.FutureTime(3d));
-            hints.AddForbiddenZone(new SDUnion([.. forbiddenFarFuture]), WorldState.FutureTime(10d));
-            hints.AddForbiddenZone(new SDUnion([.. forbiddenFarFarFuture]), DateTime.MaxValue);
         }
     }
 }

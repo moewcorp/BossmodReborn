@@ -388,8 +388,10 @@ public sealed class ThetaStar
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
         ref var altnode = ref altNode;
-        if ((currentParentNode.Score >= Score.Safe || currentParentNode.Score >= Score.UnsafeAsStart && altnode.PathLeeway < 0f) && altnode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        if (currentParentNode.Score >= Score.UnsafeAsStart && altnode.PathLeeway < 0f && altnode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        {
             return;
+        }
 
         var grandParentIndex = currentParentNode.ParentIndex;
         ref var grandparentnode = ref _nodes[grandParentIndex];
@@ -558,30 +560,13 @@ public sealed class ThetaStar
     {
         ref var nd = ref _nodes[nodeIndex];
 
-        // New insertion: must sift up from the leaf position
         if (nd.OpenHeapIndex <= 0)
         {
             _openList.Add(nodeIndex);
             nd.OpenHeapIndex = _openList.Count;
-            PercolateUp(_openList.Count - 1);
-            return;
         }
-
-        // Node already in heap: only sift if priority improved vs parent.
-        var heapIndex = nd.OpenHeapIndex - 1;
-        if (heapIndex > 0)
-        {
-            var parentHeapIndex = (heapIndex - 1) >> 1;
-            var parentNodeIndex = _openList[parentHeapIndex];
-            ref var parent = ref _nodes[parentNodeIndex];
-
-            // If nd is strictly better than parent, it must move up.
-            if (CompareNodeScores(ref nd, ref parent) < 0)
-            {
-                PercolateUp(heapIndex);
-                return;
-            }
-        }
+        // update location
+        PercolateUp(nd.OpenHeapIndex - 1);
     }
 
     // remove first (minimal) node from open heap and mark as closed
