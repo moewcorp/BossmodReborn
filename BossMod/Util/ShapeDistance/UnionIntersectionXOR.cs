@@ -27,6 +27,9 @@ public sealed class SDIntersection : ShapeDistance // max distance func
         }
         return max;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDUnion : ShapeDistance // min distance func
@@ -56,6 +59,9 @@ public sealed class SDUnion : ShapeDistance // min distance func
         }
         return min;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDInvertedUnion : ShapeDistance // -min distance func
@@ -85,6 +91,9 @@ public sealed class SDInvertedUnion : ShapeDistance // -min distance func
         }
         return -min;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
@@ -116,6 +125,9 @@ public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
         }
         return -min + offset;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDXor : ShapeDistance
@@ -159,6 +171,9 @@ public sealed class SDXor : ShapeDistance
         var odd = (insideCount & 1) == 1;
         return odd ? -minAbs : minAbs;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 // special XOR SD that considers multiple overlaps as a single overlap
@@ -202,6 +217,9 @@ public sealed class SDXORExactlyOne : ShapeDistance
         // Exactly one shape contains the point => inside (negative)
         return (insideCount == 1) ? -minAbs : minAbs;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDInvertedXORExactlyOne : ShapeDistance
@@ -244,4 +262,7 @@ public sealed class SDInvertedXORExactlyOne : ShapeDistance
         // Exactly one shape contains the point => outside (positive)
         return (insideCount == 1) ? minAbs : -minAbs;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }

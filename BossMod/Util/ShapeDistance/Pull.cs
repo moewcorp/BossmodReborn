@@ -31,4 +31,7 @@ public sealed class SDKnockbackTowardsOriginPlusAOECirclesPlusAABBSquareIntersec
         }
         return default;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
