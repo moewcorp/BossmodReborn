@@ -19,6 +19,9 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewalls(WDir Direction, Co
         }
         return default;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDKnockbackFixedDirectionAgainstSafewallsPlusRectAOE(WDir Direction, Components.GenericKnockback.SafeWall[] SafeWalls, float Distance, int Length, WPos RectOrigin, WDir RectDirection, float LengthFront, float HalfWidth) : ShapeDistance
@@ -49,6 +52,9 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewallsPlusRectAOE(WDir Di
         }
         return default;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts((WPos Origin, WDir Direction)[] Knockbacks, int LengthKnockbacks, float RectLengthFront, float RectHalfWidth, float Distance, WPos[] DonutOrigins, float DonutInnerRadius, int LengthDonuts) : ShapeDistance
@@ -83,4 +89,7 @@ public sealed class SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts((WPos O
         }
         return default;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }

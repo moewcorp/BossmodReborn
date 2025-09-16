@@ -58,4 +58,7 @@ public sealed class SDPrecisePosition : ShapeDistance
 
         return maxParr > maxOrtho ? maxParr : maxOrtho;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }

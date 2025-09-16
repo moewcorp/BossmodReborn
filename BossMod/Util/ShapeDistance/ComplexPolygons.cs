@@ -13,6 +13,9 @@ public sealed class SDComplexPolygonInvertedContains(RelSimplifiedComplexPolygon
         }
         return 1f;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public readonly struct SDPolygonWithHolesBase
@@ -151,6 +154,9 @@ public sealed class SDPolygonWithHoles(SDPolygonWithHolesBase core) : ShapeDista
     {
         return _core.Distance(p);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDInvertedPolygonWithHoles(SDPolygonWithHolesBase core) : ShapeDistance
@@ -162,4 +168,7 @@ public sealed class SDInvertedPolygonWithHoles(SDPolygonWithHolesBase core) : Sh
     {
         return _core.DistanceInverted(p);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
