@@ -103,11 +103,12 @@ public struct NavigationDecision
     private static void RasterizeForbiddenZones(Map map, (ShapeDistance shapeDistance, DateTime activation, ulong source)[] zones, DateTime current)
     {
         // very slight difference in activation times cause issues for pathfinding - cluster them together
-        var zonesFixed = new (ShapeDistance shapeDistance, float g)[zones.Length];
+        var lenZones = zones.Length;
+        var zonesFixed = new (ShapeDistance shapeDistance, float g)[lenZones];
         DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120d);
         float clusterG = 0;
-        var lenZonesFixed = zonesFixed.Length;
-        for (var i = 0; i < lenZonesFixed; ++i)
+
+        for (var i = 0; i < lenZones; ++i)
         {
             ref var zone = ref zones[i];
             var activation = zone.activation.Clamp(globalStart, globalEnd);
@@ -146,10 +147,12 @@ public struct NavigationDecision
             var localScratch = ArrayPool<float>.Shared.Rent(scratchRows * width);
             try
             {
+                var shapesInRowBuf = new List<(ShapeDistance shapeDistance, float g)>(lenZones);
                 // compute top-edge mins for rows ys .. ys+rowsToCompute (if row < height)
                 for (var r = 0; r < scratchRows; ++r)
                 {
                     var row = ys + r;
+
                     if (row >= height)
                     {
                         // beyond bottom; treat as outside arena
@@ -161,9 +164,30 @@ public struct NavigationDecision
                         continue;
                     }
 
+                    shapesInRowBuf.Clear();
+                    var rowCenter = topLeft + (row + 0.5f) * dy;
+                    for (var i = 0; i < lenZones; ++i)
+                    {
+                        ref var zone = ref zonesFixed[i];
+                        if (zone.shapeDistance.RowIntersectsShape(rowCenter, dx, width, cushion))
+                        {
+                            shapesInRowBuf.Add(zone);
+                        }
+                    }
+                    if (shapesInRowBuf.Count == 0)
+                    {
+                        // no zones affect this row → scratch is +inf
+                        var baseIdx = r * width;
+                        for (var x1 = 0; x1 < width; ++x1)
+                        {
+                            localScratch[baseIdx + x1] = float.MaxValue;
+                        }
+                        continue;
+                    }
+
                     var rowStartPos = topLeft + row * dy;
                     var leftPos = rowStartPos;
-                    var leftG = CalculateMaxG(zonesFixed, leftPos);
+                    var leftG = CalculateMaxG(shapesInRowBuf, leftPos);
                     var baseIndex = r * width;
                     var x = 0;
                     while (x < width)
@@ -185,7 +209,7 @@ public struct NavigationDecision
                             // compute right corner once at the run boundary
                             if (x < width)
                             {
-                                var rightG2 = CalculateMaxG(zonesFixed, leftPos);
+                                var rightG2 = CalculateMaxG(shapesInRowBuf, leftPos);
                                 // advance chain: leftG becomes boundary corner
                                 leftG = rightG2;
                             }
@@ -194,7 +218,7 @@ public struct NavigationDecision
 
                         // normal cell
                         var rightPos = leftPos + dx;
-                        var rightG = CalculateMaxG(zonesFixed, rightPos);
+                        var rightG = CalculateMaxG(shapesInRowBuf, rightPos);
                         localScratch[baseIndex + x] = Math.Min(leftG, rightG);
                         leftPos = rightPos;
                         leftG = rightG;
@@ -208,6 +232,22 @@ public struct NavigationDecision
                     if (y >= height)
                     {
                         break;
+                    }
+
+                    shapesInRowBuf.Clear();
+                    var rowCenter = topLeft + (y + 0.5f) * dy;
+
+                    for (var i = 0; i < lenZones; ++i)
+                    {
+                        ref var zone = ref zonesFixed[i];
+                        if (zone.shapeDistance.RowIntersectsShape(rowCenter, dx, width, cushion))
+                        {
+                            shapesInRowBuf.Add(zone);
+                        }
+                    }
+                    if (shapesInRowBuf.Count == 0)
+                    {
+                        continue; // whole row unaffected
                     }
                     var rowBase = (y - ys) * width;
                     var nextRowBase = rowBase + width; // index for row+1 within localScratch
@@ -230,7 +270,7 @@ public struct NavigationDecision
                         {
                             // bottom-most row: compute corner at y+1 == height
                             var cornerPos = topLeft + (y + 1) * dy + x * dx;
-                            bottomG = CalculateMaxG(zonesFixed, cornerPos);
+                            bottomG = CalculateMaxG(shapesInRowBuf, cornerPos);
                         }
 
                         // merge with existing PixelMaxG
@@ -238,7 +278,7 @@ public struct NavigationDecision
 
                         // center check with cushion, this is needed for shapes that can intersect cells between corners
                         var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
-                        var centerG = CalculateMaxG(zonesFixed, centerPos, cushion);
+                        var centerG = CalculateMaxG(shapesInRowBuf, centerPos, cushion);
 
                         var finalG = Math.Min(cellEdgeG, centerG);
 
@@ -283,14 +323,14 @@ public struct NavigationDecision
             }
         }
 
-        static float CalculateMaxG((ShapeDistance shapeDistance, float g)[] zones, WPos p, float cushion = default)
+        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, WPos p, float cushion = default)
         {
             // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
             // threshold > 0 inflates by that margin (used for center cushion).
             // zones are already sorted by activation time in AIHints.Normalize(), so we can exit early on first match
-            var len = zones.Length;
+            var count = zones.Count;
             var threshold = cushion;
-            for (var i = 0; i < len; ++i)
+            for (var i = 0; i < count; ++i)
             {
                 var z = zones[i];
                 if (z.shapeDistance.Distance(p) < threshold)
@@ -449,9 +489,27 @@ public struct NavigationDecision
         {
             var ys = range.Item1;
             var ye = range.Item2;
+            var shapesInRow = new List<ShapeDistance>(len);
             for (var y = ys; y < ye; ++y)
             {
-                var posY = startPos + y * dy;
+
+                var rowStart = startPos + y * dy;
+
+                shapesInRow.Clear();
+                for (var j = 0; j < len; ++j)
+                {
+                    var s = zones[j];
+                    if (s.RowIntersectsShape(rowStart, dx, width, cushion))
+                    {
+                        shapesInRow.Add(s);
+                    }
+                }
+                var count = shapesInRow.Count;
+                if (count == 0)
+                {
+                    continue; // no shapes in this row
+                }
+
                 var rowBaseIndex = y * width;
 
                 for (var x = 0; x < width; ++x)
@@ -462,12 +520,11 @@ public struct NavigationDecision
                     {
                         continue; // already blocked by arena bounds
                     }
-                    var posBase = posY + x * dx;
+                    var posBase = rowStart + x * dx;
 
-                    var blocked = false;
-                    for (var j = 0; j < len && !blocked; ++j)
+                    for (var j = 0; j < count; ++j)
                     {
-                        var shape = zones[j];
+                        var shape = shapesInRow[j];
                         for (var i = 0; i < 5; ++i)
                         {
                             if (shape.Distance(posBase + sampleOffsets[i]) < (i == 0 ? cushion : default))

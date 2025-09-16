@@ -6,5 +6,10 @@
 
 public abstract class ShapeDistance
 {
+    public const float Epsilon = 1e-5f;
+
     public abstract float Distance(WPos p);
+
+    public virtual bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
+    public static bool NearlyZero(float v) => MathF.Abs(v) <= Epsilon;
 }
