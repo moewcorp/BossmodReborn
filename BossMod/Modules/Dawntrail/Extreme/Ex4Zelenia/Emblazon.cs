@@ -24,10 +24,10 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
         {
             if (!pattern)
             {
-                const int index1 = (0x2E - 0x2D - 1 + 8) % 8;
-                const int index2 = (0x2E - 0x2D - 2 + 8) % 8;
-                const int index3 = (0x32 - 0x2D - 1 + 8) % 8;
-                const int index4 = (0x32 - 0x2D - 2 + 8) % 8;
+                const int index1 = (0x2E - 0x2D - 1 + 8) & 7;
+                const int index2 = (0x2E - 0x2D - 2 + 8) & 7;
+                const int index3 = (0x32 - 0x2D - 1 + 8) & 7;
+                const int index4 = (0x32 - 0x2D - 2 + 8) & 7;
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index1]);
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index2]);
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index3]);
@@ -35,10 +35,10 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
             }
             else
             {
-                const int index1 = (0x15 - 0x14 - 1 + 8) % 8;
-                const int index2 = (0x15 - 0x14 - 2 + 8) % 8;
-                const int index3 = (0x19 - 0x14 - 1 + 8) % 8;
-                const int index4 = (0x19 - 0x14 - 2 + 8) % 8;
+                const int index1 = (0x15 - 0x14 - 1 + 8) & 7;
+                const int index2 = (0x15 - 0x14 - 2 + 8) & 7;
+                const int index3 = (0x19 - 0x14 - 1 + 8) & 7;
+                const int index4 = (0x19 - 0x14 - 2 + 8) & 7;
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index1]);
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index2]);
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index3]);
@@ -49,10 +49,10 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
         {
             if (pattern)
             {
-                const int index1 = (0x2F - 0x2D + 1) % 8;
-                const int index2 = (0x2F - 0x2D + 2) % 8;
-                const int index3 = (0x33 - 0x2D + 1) % 8;
-                const int index4 = (0x33 - 0x2D + 2) % 8;
+                const int index1 = (0x2F - 0x2D + 1) & 7;
+                const int index2 = (0x2F - 0x2D + 2) & 7;
+                const int index3 = (0x33 - 0x2D + 1) & 7;
+                const int index4 = (0x33 - 0x2D + 2) & 7;
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index1]);
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index2]);
                 AddTower(FloorTiles.DonutSIn, FloorTiles.TileAngles[index3]);
@@ -60,17 +60,17 @@ sealed class Emblazon(BossModule module) : Components.GenericTowers(module, (uin
             }
             else
             {
-                const int index1 = (0x16 - 0x14 + 1) % 8;
-                const int index2 = (0x16 - 0x14 + 2) % 8;
-                const int index3 = (0x1A - 0x14 + 1) % 8;
-                const int index4 = (0x1A - 0x14 + 2) % 8;
+                const int index1 = (0x16 - 0x14 + 1) & 7;
+                const int index2 = (0x16 - 0x14 + 2) & 7;
+                const int index3 = (0x1A - 0x14 + 1) & 7;
+                const int index4 = (0x1A - 0x14 + 2) & 7;
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index1]);
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index2]);
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index3]);
                 AddTower(FloorTiles.DonutS, FloorTiles.TileAngles[index4]);
             }
         }
-        void AddTower(AOEShapeDonutSector shape, Angle rot) => Towers.Add(new(Arena.Center, shape, forbiddenSoakers: ~Allowed, activation: Module.CastFinishAt(spell, 4.5f), rotation: rot));
+        void AddTower(AOEShapeDonutSector shape, Angle rot) => Towers.Add(new(Arena.Center, shape, forbiddenSoakers: ~Allowed, activation: Module.CastFinishAt(spell, 4.5d), rotation: rot));
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)

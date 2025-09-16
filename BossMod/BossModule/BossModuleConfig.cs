@@ -58,15 +58,15 @@ public sealed class BossModuleConfig : ConfigNode
 
     [PropertyDisplay("方位名称字体大小")]
     [PropertySlider(0.1f, 100, Speed = 1)]
-    public float CardinalsFontSize = 17;
+    public float CardinalsFontSize = 17f;
 
     [PropertyDisplay("场地标记字体大小")]
     [PropertySlider(0.1f, 100, Speed = 1)]
-    public float WaymarkFontSize = 22;
+    public float WaymarkFontSize = 22f;
 
     [PropertyDisplay("角色三角型比例大小")]
     [PropertySlider(0.1f, 10, Speed = 0.1f)]
-    public float ActorScale = 1;
+    public float ActorScale = 1f;
 
     [PropertyDisplay("在雷达上显示标记点")]
     public bool ShowWaymarks = false;
@@ -102,4 +102,8 @@ public sealed class BossModuleConfig : ConfigNode
 
     [PropertyDisplay("显示近战范围指示器")]
     public bool ShowMeleeRangeIndicator = false;
+
+    [PropertyDisplay("Maximum load distance", tooltip: "Maximum load distance in yalms")]
+    [PropertySlider(0.1f, 500f, Speed = 0.1f, Logarithmic = true)]
+    public float MaxLoadDistance = 500f;
 }

@@ -18,7 +18,7 @@ sealed class SerZephirin(BossModule module) : Components.Adds(module, (uint)OID.
 
 sealed class BossReappear(BossModule module) : Components.CastCounter(module, (uint)AID.BossReappear);
 
-sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(module, (uint)AID.LightOfAscalon, true)
+sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(module, (uint)AID.LightOfAscalon)
 {
     private readonly List<Knockback> _sources = new(7);
 
@@ -36,7 +36,7 @@ sealed class LightOfAscalon(BossModule module) : Components.GenericKnockback(mod
             var origin = new WPos(-0.822f, -16.314f); // knockback originates from a helper
             for (var i = 0d; i < 7d; ++i)
             {
-                _sources.Add(new(origin, 3f, WorldState.FutureTime(10.7d + i * 1.3d)));
+                _sources.Add(new(origin, 3f, WorldState.FutureTime(10.7d + i * 1.3d), ignoreImmunes: true));
             }
         }
     }
@@ -68,8 +68,8 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 91, NameID = 3632, PlanLevel = 60)]
 public sealed class Ex3Thordan(WorldState ws, Actor primary) : BossModule(ws, primary, default, startingArena)
 {
-    private static readonly ArenaBoundsComplex startingArena = new([new Polygon(default, 23.5f, 48)]);
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(default, 21.052f, 40)]);
+    private static readonly ArenaBoundsCustom startingArena = new([new Polygon(default, 23.5f, 48)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(default, 21.052f, 40)]);
     private Actor? _bossAdelphel;
     public Actor? BossAdelphel() => _bossAdelphel;
     private Actor? _bossJanlenoux;
@@ -77,20 +77,10 @@ public sealed class Ex3Thordan(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void UpdateModule()
     {
-        // TODO: this is an ugly hack, think how multi-actor fights can be implemented without it...
-        // the problem is that on wipe, any actor can be deleted and recreated in the same frame
         if (StateMachine.ActivePhaseIndex >= 1)
         {
-            if (_bossJanlenoux == null)
-            {
-                var b = Enemies((uint)OID.SerJanlenoux);
-                _bossJanlenoux = b.Count != 0 ? b[0] : null;
-            }
-            if (_bossAdelphel == null)
-            {
-                var b = Enemies((uint)OID.SerAdelphel);
-                _bossAdelphel = b.Count != 0 ? b[0] : null;
-            }
+            _bossJanlenoux ??= GetActor((uint)OID.SerJanlenoux);
+            _bossAdelphel ??= GetActor((uint)OID.SerAdelphel);
         }
     }
 }

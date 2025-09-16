@@ -4,14 +4,14 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
 {
     public enum Debuff { None, LightBeacon, LightFollow, DarkBeacon, DarkFollow }
 
-    public bool Done { get; protected set; }
+    public bool Done;
     protected Debuff[] Debuffs = new Debuff[PartyState.MaxPartySize];
     protected Actor? LightBeacon;
     protected Actor? DarkBeacon;
 
-    private const float _forcedMarchDistance = 20; // TODO: verify
-    private const float _minLightDistance = 22; // TODO: verify
-    private const float _maxDarkDistance = 5; // TODO: verify
+    private const float _forcedMarchDistance = 20f; // TODO: verify
+    private const float _minLightDistance = 22f; // TODO: verify
+    private const float _maxDarkDistance = 5f; // TODO: verify
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -27,7 +27,7 @@ abstract class P4ForcedMarchDebuffs(BossModule module) : BossComponent(module)
             case Debuff.DarkFollow:
                 if (DarkBeacon != null)
                 {
-                    if (!Module.InBounds(Components.GenericKnockback.AwayFromSource(actor.Position, DarkBeacon.Position, _forcedMarchDistance)))
+                    if (!Arena.InBounds(Components.GenericKnockback.AwayFromSource(actor.Position, DarkBeacon.Position, _forcedMarchDistance)))
                         hints.Add("Aim away from wall!");
                     if ((actor.Position - DarkBeacon.Position).LengthSq() > _maxDarkDistance * _maxDarkDistance)
                         hints.Add("Move closer to dark beacon!");

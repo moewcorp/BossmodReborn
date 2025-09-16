@@ -4,20 +4,20 @@ sealed class MechanicalLaceration(BossModule module) : Components.RaidwideCast(m
 sealed class MechanicalDissection(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MechanicalDissection, new AOEShapeRect(85f, 5.5f));
 sealed class MechanicalDecapitation(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MechanicalDecapitation, new AOEShapeDonut(8f, 43f));
 sealed class MechanicalContusionAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MechanicalContusionAOE, 6f);
-sealed class MechanicalContusionSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.MechanicalContusionSpread, 6);
+sealed class MechanicalContusionSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.MechanicalContusionSpread, 6f);
 sealed class IncongruousSpin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.IncongruousSpin, new AOEShapeRect(80f, 75f));
 
-sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.GenericKnockback(module)
 {
-    private Knockback? _kb;
+    private Knockback[] _kb = [];
 
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => Utils.ZeroOrOne(ref _kb);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
     public override void OnActorCreated(Actor actor)
     {
         if (actor.OID == (uint)OID.Compound2P)
         {
-            _kb = new(Arena.Center.Quantized(), 10f, WorldState.FutureTime(3.8d));
+            _kb = [new(Arena.Center.Quantized(), 10f, WorldState.FutureTime(3.8d), ignoreImmunes: true)];
         }
     }
 
@@ -25,24 +25,18 @@ sealed class MechanicalLacerationPhaseChange(BossModule module) : Components.Gen
     {
         if (spell.Action.ID == (uint)AID.MechanicalLacerationPhaseChange)
         {
-            _kb = null;
+            _kb = [];
         }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (_kb is Knockback kb)
+        if (_kb.Length != 0)
         {
-            var center = Arena.Center;
+            ref readonly var kb = ref _kb[0];
+
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(p =>
-            {
-                if ((p + 10f * (p - center).Normalized()).InSquare(center, 28f))
-                {
-                    return 1f;
-                }
-                return default;
-            }, kb.Activation);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, kb.Origin, 10f, 28f), kb.Activation);
         }
     }
 }

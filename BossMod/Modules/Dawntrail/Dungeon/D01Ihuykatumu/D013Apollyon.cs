@@ -60,7 +60,7 @@ sealed class HighWind(BossModule module) : Components.RaidwideCast(module, (uint
 sealed class RazorZephyrBladesOfFamine(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.RazorZephyr, (uint)AID.BladesOfFamine], new AOEShapeRect(50f, 6f));
 
 sealed class Levinsickle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Levinsickle, 4f);
-sealed class LevinsickleSpark(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.LevinsickleSpark, GetVoidzones, 0.7f)
+sealed class LevinsickleSpark(BossModule module) : Components.VoidzoneAtCastTarget(module, 4f, (uint)AID.LevinsickleSpark, GetVoidzones, 0.7d)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -159,8 +159,8 @@ sealed class D013ApollyonStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 826, NameID = 12711)]
+[ModuleInfo(BossModuleInfo.Maturity.AISupport, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 826, NameID = 12711)]
 public sealed class D013Apollyon(WorldState ws, Actor primary) : BossModule(ws, primary, DefaultBounds.Center, DefaultBounds)
 {
-    public static readonly ArenaBoundsComplex DefaultBounds = new([new Polygon(new(-107f, 265f), 19.5f, 32)], [new Rectangle(new(-107f, 285.75f), 20f, 2f)]);
+    public static readonly ArenaBoundsCustom DefaultBounds = new([new Polygon(new(-107f, 265f), 19.5f, 32)], [new Rectangle(new(-107f, 285.75f), 20f, 2f)]);
 }

@@ -39,9 +39,13 @@ sealed class MountainFire(BossModule module) : Components.GenericTowers(module, 
         {
             ++NumCasts;
             _lastSoakers = default;
-            var count = spell.Targets.Count;
-            for (var i = 0; i < count; ++i)
-                _lastSoakers[Raid.FindSlot(spell.Targets[i].ID)] = true;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var targ = ref targets[i];
+                _lastSoakers.Set(Raid.FindSlot(targ.ID));
+            }
         }
     }
 }
@@ -49,14 +53,13 @@ sealed class MountainFire(BossModule module) : Components.GenericTowers(module, 
 sealed class MountainFireCone(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly MountainFire? _tower = module.FindComponent<MountainFire>();
-    private AOEInstance? _aoe;
-
+    private AOEInstance[] _aoe = [];
     private static readonly AOEShapeCone _shape = new(40f, 165f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         // show aoe only if not (or not allowed to) soak the tower
-        if (_aoe is AOEInstance aoe)
+        if (_aoe.Length != 0)
         {
             var isForbidden = false;
             if (_tower != null)
@@ -71,10 +74,10 @@ sealed class MountainFireCone(BossModule module) : Components.GenericAOEs(module
                     }
                 }
             }
-
+            ref var aoe = ref _aoe[0];
             if (isForbidden || !actor.Position.InCircle(aoe.Origin, 3f))
             {
-                return new AOEInstance[1] { aoe };
+                return _aoe;
             }
         }
         return [];
@@ -83,14 +86,16 @@ sealed class MountainFireCone(BossModule module) : Components.GenericAOEs(module
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.MountainFireTower)
-            _aoe = new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 0.4f));
+        {
+            _aoe = [new(_shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell, 0.4d))];
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.MountainFireConeAOE)
         {
-            _aoe = null;
+            _aoe = [];
             ++NumCasts;
         }
     }

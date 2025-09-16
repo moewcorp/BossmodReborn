@@ -28,16 +28,16 @@ sealed class AIConfig : ConfigNode
     public bool ForbidMovement = false;
 
     [PropertyDisplay("战斗时跟随")]
-    public bool FollowDuringCombat = false;
+    public bool FollowDuringCombat = true;
 
-    [PropertyDisplay("在boss模块启用期间跟随")]
-    public bool FollowDuringActiveBossModule = false;
+    [PropertyDisplay("在boss模块工作期间跟随")]
+    public bool FollowDuringActiveBossModule = true;
 
     [PropertyDisplay("脱战时跟随")]
     public bool FollowOutOfCombat = false;
 
     [PropertyDisplay("跟随目标")]
-    public bool FollowTarget = false;
+    public bool FollowTarget = true;
 
     [PropertyDisplay("跟随目标时所需的位置")]
     [PropertyCombo(["任何", "侧面", "背面", "正面"])]
@@ -69,6 +69,9 @@ sealed class AIConfig : ConfigNode
 
     [PropertyDisplay("骑乘时空闲")]
     public bool ForbidAIMovementMounted = false;
+
+    [PropertyDisplay("输出斜杠命令到聊天")]
+    public bool EchoToChat = true;
 
     public string? AIAutorotPresetName;
 }

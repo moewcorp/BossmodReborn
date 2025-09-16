@@ -4,9 +4,9 @@ sealed class SerpentAscending(BossModule module) : Components.GenericTowers(modu
 {
     public override void OnActorCreated(Actor actor)
     {
-        if (actor.OID == (uint)OID.Towers)
+        if (actor.OID == (uint)OID.Tower)
         {
-            Towers.Add(new(actor.Position, 3f, activation: WorldState.FutureTime(7.8d)));
+            Towers.Add(new(actor.Position.Quantized(), 3f, activation: WorldState.FutureTime(7.8d)));
         }
     }
 

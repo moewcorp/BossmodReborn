@@ -14,7 +14,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("移除因帧率引起的额外冷却延迟", tooltip: "动态调整冷却和动画锁，以确保无论帧率限制如何，队列中的技能都能立即执行")]
     public bool RemoveCooldownDelay = false;
 
-    [PropertyDisplay("读条时锁定移动")]
+    [PropertyDisplay("读条时锁定移动", tags: ["slidecast"])]
     public bool PreventMovingWhileCasting = false;
 
     public enum ModifierKey
@@ -31,7 +31,7 @@ public sealed class ActionTweaksConfig : ConfigNode
         M12
     }
 
-    [PropertyDisplay("按住此键可在读条时允许移动", tooltip: "需要同时启用上面的设置")]
+    [PropertyDisplay("按住此键可在读条时允许移动", tooltip: "需要同时启用上面的设置", tags: ["slidecast"])]
     public ModifierKey MoveEscapeHatch = ModifierKey.None;
 
     [PropertyDisplay("当目标死亡时自动打断读条")]

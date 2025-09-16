@@ -2,16 +2,18 @@ namespace BossMod.Dawntrail.Savage.M04SWickedThunder;
 
 sealed class ElectropeEdgeWitchgleam(BossModule module) : Components.GenericAOEs(module, (uint)AID.ElectropeEdgeWitchgleamAOE)
 {
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
     private static readonly AOEShapeCross _shape = new(60f, 2.5f);
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ElectropeEdgeWitchgleam)
-            _aoe = new(_shape, spell.LocXZ, 45f.Degrees(), Module.CastFinishAt(spell, 1.2f));
+        {
+            _aoe = [new(_shape, spell.LocXZ, 45f.Degrees(), Module.CastFinishAt(spell, 1.2d))];
+        }
     }
 }
 
@@ -79,7 +81,7 @@ sealed class LightningCage(BossModule module) : Components.GenericAOEs(module, (
         var safeCells = SafeCells(slot);
         var len = patternAOE.Length;
         var count = safeCells.Count;
-        Span<AOEInstance> aoes = new AOEInstance[len + count];
+        var aoes = new AOEInstance[len + count];
         for (var i = 0; i < len; ++i)
             aoes[i] = new(_cell, CellCenter(patternAOE[i]), default, _activation);
         for (var i = 0; i < count; ++i)
@@ -143,11 +145,15 @@ sealed class LightningCage(BossModule module) : Components.GenericAOEs(module, (
         {
             case (uint)AID.LightningCageWitchgleamAOE:
                 ++NumGleams;
-                var count = spell.Targets.Count;
-                for (var i = 0; i < count; ++i)
+                var targets = CollectionsMarshal.AsSpan(spell.Targets);
+                var len = targets.Length;
+                for (var i = 0; i < len; ++i)
                 {
-                    if (Raid.FindSlot(spell.Targets[i].ID) is var slot && slot >= 0)
+                    ref readonly var targ = ref targets[i];
+                    if (Raid.FindSlot(targ.ID) is var slot && slot >= 0)
+                    {
                         ++_gleams[slot];
+                    }
                 }
                 break;
             case (uint)AID.LightningCageSpark2:
@@ -210,7 +216,7 @@ sealed class LightningCageWitchgleam(BossModule module) : Components.GenericBait
             var party = Raid.WithoutSlot(true, true, true);
             var len = party.Length;
             for (var i = 0; i < len; ++i)
-                CurrentBaits.Add(new(caster, party[i], _shape, Module.CastFinishAt(spell, 1.2f)));
+                CurrentBaits.Add(new(caster, party[i], _shape, Module.CastFinishAt(spell, 1.2d)));
         }
     }
 }

@@ -116,26 +116,6 @@ public sealed class Plugin : IDalamudPlugin
         Service.Framework.Update += Framework_Update;
     }
 
-    private void Framework_Update(IFramework framework)
-    {
-        var tsStart = DateTime.Now;
-        var moveImminent = _movementOverride.IsMoveRequested() && (!ActionManagerEx.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
-
-        Camera.Instance?.Update();
-        _wsSync.Update(_prevUpdateTime);
-        _bossmod.Update();
-        _zonemod.ActiveModule?.Update();
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, moveImminent);
-        _amex.QueueManualActions();
-        _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
-        _ai.Update();
-        _broadcast.Update();
-        _amex.FinishActionGather();
-
-        ExecuteHints();
-        _prevUpdateTime = DateTime.Now - tsStart;
-    }
-
     public void Dispose()
     {
 #if !DEBUG
@@ -273,6 +253,26 @@ public sealed class Plugin : IDalamudPlugin
         _ = new UISimpleWindow("BossModReborn", _configUI.Draw, true, new(300, 300));
     }
 
+    private void Framework_Update(IFramework framework)
+    {
+        var tsStart = DateTime.Now;
+        var moveImminent = _movementOverride.IsMoveRequested() && (!ActionManagerEx.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
+
+        Camera.Instance?.Update();
+        _wsSync.Update(_prevUpdateTime);
+        _bossmod.Update();
+        _zonemod.ActiveModule?.Update();
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, moveImminent);
+        _amex.QueueManualActions();
+        _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving(), Service.Condition[ConditionFlag.DutyRecorderPlayback]);
+        _ai.Update();
+        _broadcast.Update();
+        _amex.FinishActionGather();
+
+        ExecuteHints();
+        _prevUpdateTime = DateTime.Now - tsStart;
+    }
+
     private void DrawUI()
     {
         _dtr.Update();
@@ -299,6 +299,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         _movementOverride.DesiredDirection = _hints.ForcedMovement;
         _movementOverride.MisdirectionThreshold = _hints.MisdirectionThreshold;
+        _movementOverride.DesiredSpinDirection = _hints.SpinDirection;
         // update forced target, if needed (TODO: move outside maybe?)
         if (_hints.ForcedTarget != null && _hints.ForcedTarget.IsTargetable)
         {

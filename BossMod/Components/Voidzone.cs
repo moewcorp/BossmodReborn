@@ -15,7 +15,7 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
         var aoes = new List<AOEInstance>();
         foreach (var source in Sources(Module))
         {
-            aoes.Add(new(Shape, source.Position.Quantized(), source.Rotation));
+            aoes.Add(new(Shape, source.Position, source.Rotation));
         }
         return CollectionsMarshal.AsSpan(aoes);
     }
@@ -26,31 +26,25 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
             return;
         if (MovementHintLength == 0)
         {
-            var forbidden = new List<Func<WPos, float>>();
             foreach (var s in Sources(Module))
-                forbidden.Add(ShapeDistance.Circle(s.Position.Quantized(), radius));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbidden));
+            {
+                hints.TemporaryObstacles.Add(new SDCircle(s.Position, radius));
+            }
         }
         else
         {
-            var forbiddenImminent = new List<Func<WPos, float>>();
-            var forbiddenNearFuture = new List<Func<WPos, float>>();
-            var forbiddenSoon = new List<Func<WPos, float>>();
-            var forbiddenFarFuture = new List<Func<WPos, float>>();
-            var forbiddenFarFarFuture = new List<Func<WPos, float>>();
+            var forbiddenNearFuture = WorldState.FutureTime(1.1d);
+            var forbiddenSoon = WorldState.FutureTime(3d);
+            var forbiddenFarFuture = WorldState.FutureTime(10d);
+            var forbiddenFarFarFuture = DateTime.MaxValue;
             foreach (var s in Sources(Module))
             {
-                forbiddenNearFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius));
-                forbiddenSoon.Add(ShapeDistance.Capsule(s.Position, s.Rotation, MovementHintLength, radius));
-                forbiddenFarFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, 2f * MovementHintLength, radius));
-                forbiddenFarFarFuture.Add(ShapeDistance.Capsule(s.Position, s.Rotation, 3f * MovementHintLength, radius));
-                forbiddenImminent.Add(ShapeDistance.Circle(s.Position, radius));
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius), forbiddenNearFuture);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength, radius), forbiddenSoon);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 2f * MovementHintLength, radius), forbiddenFarFuture);
+                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 3f * MovementHintLength, radius), forbiddenFarFarFuture);
+                hints.TemporaryObstacles.Add(new SDCircle(s.Position, radius));
             }
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenImminent));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenNearFuture), WorldState.FutureTime(1.1d));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenSoon), WorldState.FutureTime(3d));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFarFuture), WorldState.FutureTime(10d));
-            hints.AddForbiddenZone(ShapeDistance.Union(forbiddenFarFarFuture), DateTime.MaxValue);
         }
     }
 }
@@ -213,7 +207,7 @@ public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var shapes = new List<Func<WPos, float>>();
+        var shapes = new List<ShapeDistance>();
 
         foreach (var source in Sources(Module))
         {
@@ -223,7 +217,7 @@ public class PersistentInvertibleVoidzone(BossModule module, float radius, Func<
         if (shapes.Count == 0)
             return;
 
-        hints.AddForbiddenZone(Inverted ? ShapeDistance.InvertedUnion(shapes) : ShapeDistance.Union(shapes), InvertResolveAt);
+        hints.AddForbiddenZone(Inverted ? new SDInvertedUnion([.. shapes]) : new SDUnion([.. shapes]), InvertResolveAt);
     }
 
     // TODO: reconsider - draw foreground circles instead?

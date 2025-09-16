@@ -2,17 +2,15 @@ namespace BossMod.Endwalker.VariantCriterion.C01ASS.C013Shadowcaster;
 
 sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeCustom rect = new([new Rectangle(C013Shadowcaster.ArenaCenter, 25f, 30f)], [new Rectangle(C013Shadowcaster.ArenaCenter, 15f, 20f)]);
+    private AOEInstance[] _aoe = [];
 
-    private AOEInstance? _aoe;
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is (uint)AID.NShowOfStrength or (uint)AID.SShowOfStrength && Arena.Bounds == C013Shadowcaster.StartingBounds)
+        if (spell.Action.ID is (uint)AID.NShowOfStrength or (uint)AID.SShowOfStrength && Arena.Bounds.Radius > 20f)
         {
-            _aoe = new(rect, Arena.Center, default, Module.CastFinishAt(spell, 0.8d));
+            _aoe = [new(V1SildihnSubterrane.V14ZelessGah.VCZelessGah.Rect, Arena.Center, default, Module.CastFinishAt(spell, 0.8d))];
         }
     }
 
@@ -20,8 +18,8 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (index == 0x02 && state == 0x00080004u)
         {
-            Arena.Bounds = C013Shadowcaster.DefaultBounds;
-            _aoe = null;
+            Arena.Bounds = new ArenaBoundsRect(15f, 20f);
+            _aoe = [];
         }
     }
 }

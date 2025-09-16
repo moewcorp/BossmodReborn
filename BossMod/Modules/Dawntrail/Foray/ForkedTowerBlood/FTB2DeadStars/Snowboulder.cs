@@ -7,7 +7,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     private readonly List<DateTime> activations = new(6);
     public BitMask Vulnerable;
     private bool isInit;
-    private PolygonWithHolesDistanceFunction distance;
+    private SDInvertedPolygonWithHoles distance;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => isInit && slot < PartyState.MaxPartySize ? CollectionsMarshal.AsSpan(_aoesPerPlayer[slot]) : [];
 
@@ -17,7 +17,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
         {
             rectangles.Add(new(caster.Position, spell.LocXZ, 5f));
             activations.Add(Module.CastFinishAt(spell, 0.1d));
-            if (rectangles.Count % 2 == 0)
+            if ((rectangles.Count & 1) == 0)
             {
                 ComputeNonOverlappingArea();
             }
@@ -48,7 +48,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
                 _aoesPerPlayer[j].Add(new(Vulnerable[j] ? ref aoe : ref aoeSafe, Arena.Center, default, activations[i], Vulnerable[j] ? default : i < 2 ? colorSafe1 : colorSafe2));
             }
         }
-        distance = new PolygonWithHolesDistanceFunction(center, clipper.Simplify(unionOperand));
+        distance = new SDInvertedPolygonWithHoles(new(center, clipper.Simplify(unionOperand)));
         isInit = true;
     }
 
@@ -56,19 +56,20 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.SnowBoulder)
         {
-            var targets = spell.Targets;
-            var count = targets.Count;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
             rectangles.RemoveAt(0);
             activations.RemoveAt(0);
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < len; ++i)
             {
-                var slot = Raid.FindSlot(targets[i].ID);
+                ref readonly var targ = ref targets[i];
+                var slot = Raid.FindSlot(targ.ID);
                 if (slot < PartyState.MaxPartySize)
                 {
                     Vulnerable[slot] = true;
                 }
             }
-            if (++NumCasts % 2 == 0 && NumCasts < 6)
+            if (((++NumCasts) & 1) == 0 && NumCasts < 6)
             {
                 Array.Clear(_aoesPerPlayer);
                 ComputeNonOverlappingArea();
@@ -112,7 +113,7 @@ sealed class Snowboulder(BossModule module) : Components.GenericAOEs(module)
     {
         if (!Vulnerable[slot] && isInit)
         {
-            hints.AddForbiddenZone(distance.InvertedDistance, activations[0]);
+            hints.AddForbiddenZone(distance, activations[0]);
         }
         else
         {
@@ -169,10 +170,11 @@ sealed class SnowBoulderKnockback(BossModule module) : Components.GenericKnockba
     {
         if (!_charge.Vulnerable[slot] && _kbs.Count != 0)
         {
-            var act = _kbs[0].Activation;
+            ref var kb = ref _kbs.Ref(0);
+            var act = kb.Activation;
             if (!IsImmune(slot, act))
             {
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 20f), _kbs[0].Activation);
+                hints.AddForbiddenZone(new SDInvertedCircle(Arena.Center, 20f), kb.Activation);
             }
         }
     }

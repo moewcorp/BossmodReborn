@@ -2,11 +2,9 @@ namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB4Magitaur;
 
 public enum OID : uint
 {
-    Boss = 0x46E3, // R7.0
+    Magitaur = 0x46E3, // R7.0
     AssassinsDagger = 0x46E6, // R1.0
     SagesStaff = 0x46E5, // R1.0
-    _Gen_Actor1ebd90 = 0x1EBD90, // R0.500, x1, EventObj type
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
     UniversalEmpowermentConduit = 0x46F9, // R4.0
     AxeEmpowermentConduit = 0x46EC, // R4.0
     LanceEmpowermentConduit = 0x46EB, // R4.0
@@ -49,9 +47,9 @@ public enum AID : uint
     ArcaneReaction = 41565, // Helper->self, no cast, range 55 width 6 rect
     ArcaneRecoil = 41564, // Helper->player, no cast, single-target
     HolyVisual = 41563, // Boss->self, 19.0+1,0s cast, single-target
-    Holy = 39910, // Helper->self, 20.0s cast, ???
+    Holy = 39910, // Helper->self, 1.0s cast, ???
     AuraBurstVisual = 41562, // Boss->self, 19.0+1,0s cast, single-target
-    AuraBurst = 39909, // Helper->self, 20.0s cast, ???
+    AuraBurst = 39909, // Helper->self, 1.0s cast, ???
 
     SagesStaff = 41566, // Boss->self, 5.0s cast, single-target
     ManaExpulsion = 41567, // SagesStaff->self, no cast, range 40 width 4 rect, line stack

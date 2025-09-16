@@ -1,3 +1,5 @@
+using BossMod.Global.DeepDungeon;
+
 namespace BossMod.Shadowbringers.Alliance.A24TheCompound2P;
 
 sealed class ThreePartsDisdainStack(BossModule module) : Components.GenericStackSpread(module)
@@ -31,7 +33,7 @@ sealed class ThreePartsDisdainStack(BossModule module) : Components.GenericStack
     }
 }
 
-sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericKnockback(module, ignoreImmunes: true)
+sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericKnockback(module)
 {
     private Actor? target;
     private readonly DateTime[] activation = new DateTime[3];
@@ -51,7 +53,7 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
             var knockback = new Knockback[count];
             for (var i = 0; i < count; ++i)
             {
-                knockback[i] = new Knockback(primaryPos, i != count - 1 ? 8f : 12f, activation[i]);
+                knockback[i] = new Knockback(primaryPos, i != count - 1 ? 8f : 12f, activation[i], direction: Angle.FromDirection(target.Position - primaryPos), kind: Kind.DirForward, ignoreImmunes: true);
             }
             return knockback;
         }
@@ -66,7 +68,7 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
             var act = Module.CastFinishAt(spell);
             for (var i = 0; i < 3; ++i)
             {
-                activation[i] = act.AddSeconds(i == 1 ? i * 1.2d : i == 2 ? 1.4d : 0);
+                activation[i] = act.AddSeconds(i == 1 ? i * 1.2d : i == 2 ? 1.4d : default);
             }
         }
     }
@@ -99,32 +101,18 @@ sealed class ThreePartsDisdainKnockback(BossModule module) : Components.GenericK
         {
             ref readonly var kb = ref knockback[0];
             var loc = kb.Origin;
-            var dist = 28f - NumCasts * 8f;
-            var center = Arena.Center;
-            var destDir = dist * (target!.Position - loc).Normalized();
-            var destPos = loc + destDir;
+            var distTarget = 28f - NumCasts * 8f;
+            var destDir = kb.Direction.ToDirection();
+            var distStackers = NumCasts < 2 ? 8f : 12f;
+            var destPos = loc + distStackers * destDir;
+            var act = kb.Activation.AddSeconds(1d);
             if (actor != target)
             {
-                hints.AddForbiddenZone(p =>
-                {
-                    var pos = p + dist * (p - loc).Normalized();
-                    if (pos.InCircle(destPos, 6f) && pos.InSquare(center, 30f)) // we want to stay inside stack and inside arena bounds
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, kb.Activation);
+                hints.AddForbiddenZone(new SDKnockbackFixedDirectionIntoCircle(distStackers * destDir, destPos, 6f), act); // we want to stay inside stack
             }
-            else
+            else // if we are bait target we have more freedom
             {
-                hints.AddForbiddenZone(p =>
-                {
-                    if ((p + dist * (p - loc).Normalized()).InSquare(center, 28f)) // if we are bait target we have more freedom
-                    {
-                        return 1f;
-                    }
-                    return default;
-                }, kb.Activation);
+                hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, loc, distTarget, 29f), act);
             }
         }
     }

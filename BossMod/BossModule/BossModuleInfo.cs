@@ -10,8 +10,11 @@ public static class BossModuleInfo
         [PropertyDisplay("未经插件作者验证的第三方贡献模块；可能运行正常，也可能与其他模块存在各种不一致之处 - YMMV")]
         Contributed,
 
-        [PropertyDisplay("由插件作者创建的第一方模块，或由插件作者彻底验证并有效接管的第三方贡献模块")]
-        Verified
+        [PropertyDisplay("插件作者创建的第一方模块，或经过插件作者彻底验证并有效接管的第三方贡献模块")]
+        Verified,
+
+        [PropertyDisplay("已验证可在启用 AI 的情况下良好运行的模块。")]
+        AISupport
     }
 
     public enum Expansion

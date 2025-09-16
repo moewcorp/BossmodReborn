@@ -1,7 +1,7 @@
 ﻿namespace BossMod;
 
 // 2d vector that represents world-space direction on XZ plane
-public readonly struct WDir(float x, float z) : IEquatable<WDir>
+public readonly struct WDir(float x, float z)
 {
     public readonly float X = x;
     public readonly float Z = z;
@@ -47,9 +47,7 @@ public readonly struct WDir(float x, float z) : IEquatable<WDir>
         var length = MathF.Sqrt(X * X + Z * Z);
         return length > 0f ? this / length : default;
     }
-    public static bool AlmostZero(WDir a, float eps) => Math.Abs(a.X) <= eps && Math.Abs(a.Z) <= eps;
-    public readonly bool AlmostZero(float eps) => AlmostZero(this, eps);
-    public readonly bool AlmostEqual(WDir b, float eps) => AlmostZero(this - b, eps);
+    public readonly bool AlmostEqual(WDir b, float eps) => Math.Abs(X - b.X) <= eps && Math.Abs(Z - b.Z) <= eps;
     public readonly WDir Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WDir Rounded() => new(MathF.Round(X), MathF.Round(Z));
     public readonly WDir Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
@@ -80,7 +78,7 @@ public readonly struct WDir(float x, float z) : IEquatable<WDir>
 }
 
 // 2d vector that represents world-space position on XZ plane
-public readonly struct WPos(float x, float z) : IEquatable<WPos>
+public readonly struct WPos(float x, float z)
 {
     public readonly float X = x;
     public readonly float Z = z;
@@ -109,8 +107,8 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
     public static WPos operator +(WDir a, WPos b) => new(a.X + b.X, a.Z + b.Z);
     public static WPos operator -(WPos a, WDir b) => new(a.X - b.X, a.Z - b.Z);
     public static WDir operator -(WPos a, WPos b) => new(a.X - b.X, a.Z - b.Z);
-    public static bool AlmostEqual(WPos a, WPos b, float eps) => (a - b).AlmostZero(eps);
-    public readonly bool AlmostEqual(WPos b, float eps) => (this - b).AlmostZero(eps);
+
+    public readonly bool AlmostEqual(WPos b, float eps) => Math.Abs(X - b.X) <= eps && Math.Abs(Z - b.Z) <= eps;
     public readonly WPos Scaled(float multiplier) => new(X * multiplier, Z * multiplier);
     public readonly WPos Rounded() => new(MathF.Round(X), MathF.Round(Z));
     public readonly WPos Rounded(float precision) => Scaled(1f / precision).Rounded().Scaled(precision);
@@ -172,7 +170,10 @@ public readonly struct WPos(float x, float z) : IEquatable<WPos>
 
     public readonly bool InSquare(WPos origin, float halfWidth, Angle rotation) => (this - origin).InRect(rotation.ToDirection(), halfWidth, halfWidth, halfWidth);
     public readonly bool InSquare(WPos origin, float halfWidth, WDir rotation) => (this - origin).InRect(rotation, halfWidth, halfWidth, halfWidth);
+
+    // for AABB squares and rects
     public readonly bool InSquare(WPos origin, float halfWidth) => Math.Abs(X - origin.X) <= halfWidth && Math.Abs(Z - origin.Z) <= halfWidth;
+    public readonly bool InRect(WPos origin, float halfWidth, float halfHeight) => Math.Abs(X - origin.X) <= halfWidth && Math.Abs(Z - origin.Z) <= halfHeight;
 
     public readonly bool InCross(WPos origin, Angle direction, float length, float halfWidth) => (this - origin).InCross(direction.ToDirection(), length, halfWidth);
     public readonly bool InCross(WPos origin, WDir direction, float length, float halfWidth) => (this - origin).InCross(direction, length, halfWidth);

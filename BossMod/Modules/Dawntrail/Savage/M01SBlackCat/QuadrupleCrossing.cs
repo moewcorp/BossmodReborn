@@ -79,7 +79,7 @@ sealed class QuadrupleCrossingProtean(BossModule module) : Components.GenericBai
                 break;
             case (uint)AID.NailchipperAOE:
                 if (NumCasts == 8)
-                    ForbiddenPlayers[Raid.FindSlot(spell.TargetID)] = true;
+                    ForbiddenPlayers.Set(Raid.FindSlot(spell.TargetID));
                 break;
         }
     }
@@ -94,9 +94,13 @@ sealed class QuadrupleCrossingProtean(BossModule module) : Components.GenericBai
             }
 
             _activation = WorldState.FutureTime(3d);
-            var count = spell.Targets.Count;
-            for (var i = 0; i < count; ++i)
-                ForbiddenPlayers[Raid.FindSlot(spell.Targets[i].ID)] = true;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ref readonly var targ = ref targets[i];
+                ForbiddenPlayers.Set(Raid.FindSlot(targ.ID));
+            }
 
             if (++NumCasts is 8 or 16)
             {

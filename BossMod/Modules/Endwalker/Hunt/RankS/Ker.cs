@@ -134,12 +134,13 @@ sealed class AncientFlare(BossModule module) : Components.StayMove(module, 2.5d)
         if (spell.Action.ID is (uint)AID.AncientFlare or (uint)AID.AncientFlare2 or (uint)AID.WhispersManifest1)
         {
             Array.Clear(PlayerStates);
-            var targets = spell.Targets;
-            var count = targets.Count;
+            var targets = CollectionsMarshal.AsSpan(spell.Targets);
+            var len = targets.Length;
             PlayerState state = new(Requirement.Stay, WorldState.CurrentTime);
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < len; ++i)
             {
-                SetState(Raid.FindSlot(targets[i].ID), ref state);
+                ref readonly var targ = ref targets[i];
+                SetState(Raid.FindSlot(targ.ID), ref state);
             }
         }
     }

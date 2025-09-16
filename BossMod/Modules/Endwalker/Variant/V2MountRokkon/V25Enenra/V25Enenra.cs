@@ -15,7 +15,7 @@ sealed class ClearingSmoke(BossModule module) : Components.SimpleKnockbacks(modu
     {
         if (Casters.Count != 0 && _aoe.Casters.Count != 0)
         {
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Arena.Center, 4f), Casters.Ref(0).Activation);
+            hints.AddForbiddenZone(new SDInvertedCircle(Arena.Center, 4f), Casters.Ref(0).Activation);
         }
     }
 }
@@ -49,7 +49,7 @@ sealed class StringRock(BossModule module) : Components.ConcentricAOEs(module, _
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12393, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus, LTS)", PrimaryActorOID = (uint)OID.Enenra, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 945, NameID = 12393, SortOrder = 7, Category = BossModuleInfo.Category.VariantCriterion, Expansion = BossModuleInfo.Expansion.Endwalker)]
 public sealed class V25Enenra(WorldState ws, Actor primary) : BossModule(ws, primary, new(900f, -900f), StartingBounds)
 {
     public static readonly ArenaBoundsCircle StartingBounds = new(20.5f);

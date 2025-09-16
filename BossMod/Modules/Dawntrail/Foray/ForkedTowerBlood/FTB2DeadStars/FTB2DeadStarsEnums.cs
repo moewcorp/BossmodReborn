@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Foray.ForkedTowerBlood.FTB2DeadStars;
 
 public enum OID : uint
 {
-    Boss = 0x4786, // R4.0, Triton
+    Triton = 0x4786, // R4.0
     Phobos = 0x4788, // R4.0
     Nereid = 0x4787, // R4.0
     LiquifiedTriton = 0x478B, // R4.0

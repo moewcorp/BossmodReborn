@@ -48,7 +48,7 @@ sealed class P1ProgramLoop(BossModule module) : P1CommonAssignments(module)
     }
 
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
-        => PlayerStates[playerSlot].Order == PlayerStates[pcSlot].Order % 4 + 1 ? PlayerPriority.Interesting : base.CalcPriority(pcSlot, pc, playerSlot, player, ref customColor);
+        => PlayerStates[playerSlot].Order == (PlayerStates[pcSlot].Order & 3) + 1 ? PlayerPriority.Interesting : base.CalcPriority(pcSlot, pc, playerSlot, player, ref customColor);
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {

@@ -4,15 +4,15 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeCustom square = new([new Square(V12Silkie.ArenaCenter, 30f)], [new Square(V12Silkie.ArenaCenter, 20f)]);
 
-    private AOEInstance? _aoe;
+    private AOEInstance[] _aoe = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(ref _aoe);
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.TotalWash && Arena.Bounds.Radius != 20f)
         {
-            _aoe = new(square, Arena.Center, default, WorldState.FutureTime(1.8d));
+            _aoe = [new(square, Arena.Center, default, WorldState.FutureTime(1.8d))];
         }
     }
 
@@ -21,7 +21,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
         if (index == 0x04 && state == 0x00020001u)
         {
             Arena.Bounds = new ArenaBoundsSquare(20f);
-            _aoe = null;
+            _aoe = [];
         }
     }
 }
