@@ -26,16 +26,9 @@ class Tetrapagos(BossModule module) : Components.GenericAOEs(module)
             return;
         }
         var aoes = CollectionsMarshal.AsSpan(_aoes);
-        ref var aoe0 = ref aoes[0];
-        aoe0.Risky = true;
         if (count > 1)
         {
-            aoe0.Color = Colors.Danger;
-            ref var aoe1 = ref aoes[1];
-            if (aoe0.Shape != aoe1.Shape)
-            {
-                aoe1.Risky = true;
-            }
+            aoes[0].Color = Colors.Danger;
         }
     }
 
@@ -50,7 +43,7 @@ class Tetrapagos(BossModule module) : Components.GenericAOEs(module)
         };
         if (shape != null)
         {
-            _aoes.Add(new(shape, spell.LocXZ, caster.Rotation, Module.CastFinishAt(spell, 7.3d), risky: false));
+            _aoes.Add(new(shape, spell.LocXZ, caster.Rotation, Module.CastFinishAt(spell, 7.3d)));
             var count = _aoes.Count;
             if (count > 1)
             {
