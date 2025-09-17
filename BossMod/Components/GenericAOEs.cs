@@ -89,7 +89,9 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
     {
         var count = Casters.Count;
         if (count == 0)
+        {
             return [];
+        }
 
         var time = WorldState.CurrentTime;
         var max = count > MaxCasts ? MaxCasts : count;
@@ -129,8 +131,7 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
             var aoes = CollectionsMarshal.AsSpan(Casters);
             for (var i = 0; i < count; ++i)
             {
-                ref var aoe = ref aoes[i];
-                if (aoe.ActorID == id)
+                if (aoes[i].ActorID == id)
                 {
                     Casters.RemoveAt(i);
                     return;
@@ -190,8 +191,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
         var aoes = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            ref var aoe = ref aoes[i];
-            if (aoe.ActorID == id)
+            if (aoes[i].ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;
@@ -230,13 +230,12 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(Casters);
-        ref var aoe0 = ref aoes[0];
-        var deadline = aoe0.Activation.AddSeconds(TimeWindowInSeconds);
+        var deadline = aoes[0].Activation.AddSeconds(TimeWindowInSeconds);
 
         var index = 0;
         while (index < count)
         {
-            ref readonly var aoe = ref aoes[index];
+            ref var aoe = ref aoes[index];
             if (aoe.Activation >= deadline)
             {
                 break;

@@ -277,8 +277,7 @@ public class SimpleKnockbacks(BossModule module, uint aid, float distance, bool 
             var kbs = CollectionsMarshal.AsSpan(Casters);
             for (var i = 0; i < count; ++i)
             {
-                ref var kb = ref kbs[i];
-                if (kb.ActorID == id)
+                if (kbs[i].ActorID == id)
                 {
                     Casters.RemoveAt(i);
                     return;
@@ -314,8 +313,7 @@ public class SimpleKnockbackGroups(BossModule module, uint[] aids, float distanc
         var kbs = CollectionsMarshal.AsSpan(Casters);
         for (var i = 0; i < count; ++i)
         {
-            ref var kb = ref kbs[i];
-            if (kb.ActorID == id)
+            if (kbs[i].ActorID == id)
             {
                 Casters.RemoveAt(i);
                 return;

@@ -20,7 +20,7 @@ public static class Intersect
     public static bool RayCircle(WDir rayOriginOffset, WDir rayDir, float circleRadius, float maxDist)
     {
         var t = (-rayOriginOffset).Dot(rayDir);
-        var tClamped = MathF.Max(0f, MathF.Min(maxDist, t));
+        var tClamped = Math.Max(0f, Math.Min(maxDist, t));
 
         var closest = rayOriginOffset + rayDir * tClamped;
         return closest.LengthSq() <= circleRadius * circleRadius;
@@ -229,7 +229,7 @@ public static class Intersect
     {
         var distSq = circleOffset.LengthSq();
         var maxR = outerRadius + circleRadius;
-        var minR = MathF.Max(0, innerRadius - circleRadius);
+        var minR = Math.Max(0, innerRadius - circleRadius);
 
         if (distSq > maxR * maxR || distSq < minR * minR)
             return false;
@@ -251,7 +251,7 @@ public static class Intersect
 
         static float DistToRay(WDir dir, WDir pt)
             // vector rejection = cross product length / length of ray dir (==1)
-            => MathF.Abs(pt.Cross(dir));
+            => Math.Abs(pt.Cross(dir));
 
         // check if circle intersects side rays
         var dL = DistToRay(sideDirL, circleOffset);

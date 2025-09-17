@@ -2,32 +2,30 @@ namespace BossMod;
 
 public sealed class SDHalfPlane : ShapeDistance
 {
-    private readonly float pointX, pointZ, normalX, normalZ;
+    private readonly float normalX, normalZ, bias;
 
     public SDHalfPlane(WPos Point, WDir Normal)
     {
-        var point = Point;
-        pointX = point.X;
-        pointZ = point.Z;
         var normal = Normal;
         normalX = normal.X;
         normalZ = normal.Z;
+        var point = Point;
+        bias = normalX * point.X + normalZ * point.Z;
     }
 
-    public override float Distance(WPos p) => normalX * (p.X - pointX) + normalZ * (p.Z - pointZ);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(WPos p) => normalX * p.X + normalZ * p.Z - bias;
 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
         var rowstart = rowStart;
-        var rowstartX = rowstart.X;
-        var rowstartZ = rowstart.Z;
-        var aX = rowstartX - pointX;
-        var aZ = rowstartZ - pointZ;
-        var bX = (rowstart + width * dx).X - pointX;
-        var bZ = (rowstart + width * dx).Z - pointZ;
-        var s0 = normalX * aX + normalZ * aZ;
-        var s1 = normalX * bX + normalZ * bZ;
-        return (s0 < s1 ? s0 : s1) <= cushion + Epsilon; // include tangency
+        var dx_ = dx;
+        // s(p) = n·p − bias. Only need values at endpoints.
+        var s0 = normalX * rowstart.X + normalZ * rowstart.Z - bias;
+        var delta = width * (normalX * dx_.X + normalZ * dx_.Z);
+        var s1 = s0 + delta;
+        var min = s0 < s1 ? s0 : s1;
+        return min <= cushion + Epsilon; // include tangency
     }
 }
 
@@ -43,6 +41,7 @@ public sealed class SDCircle : ShapeDistance
         radius = Radius;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
         var pXoriginX = p.X - originX;
@@ -97,6 +96,7 @@ public sealed class SDInvertedCircle : ShapeDistance
         radius = Radius;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
         var pXoriginX = p.X - originX;
@@ -160,7 +160,7 @@ public sealed class SDDonut : ShapeDistance
 
         var Rout = outerRadius + cushion;
         var Rout2 = Rout * Rout;
-        var Rin = MathF.Max(0f, innerRadius - cushion);
+        var Rin = Math.Max(0f, innerRadius - cushion);
         var Rin2 = Rin * Rin;
 
         // closest-point distance^2 to center
@@ -243,7 +243,7 @@ public sealed class SDInvertedDonut : ShapeDistance
 
         var Rout = outerRadius + cushion;
         var Rout2 = Rout * Rout;
-        var Rin = MathF.Max(0f, innerRadius - cushion);
+        var Rin = Math.Max(0f, innerRadius - cushion);
         var Rin2 = Rin * Rin;
 
         // Fully inside outer disk? (convex ⇒ endpoints-inside suffice)
@@ -323,6 +323,13 @@ public sealed class SDCone : ShapeDistance
         return distOuter > conef ? distOuter : conef;
     }
 
+    // rotated grid row: p(s) = rowStart + s*dx, s∈[s0,s1]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
+    {
+        return SegmentIntersectsCone(rowStart, rowStart + width * dx, cushion);
+    }
+
     public bool SegmentIntersectsCone(WPos a, WPos b, float cushion = default)
     {
         // Shift to cone origin
@@ -358,8 +365,8 @@ public sealed class SDCone : ShapeDistance
         {
             (t2, t1) = (t1, t2);
         }
-        var tmin = MathF.Max(0f, t1);
-        var tmax = MathF.Min(1f, t2);
+        var tmin = Math.Max(0f, t1);
+        var tmax = Math.Min(1f, t2);
         if (tmax <= tmin + Epsilon)
         {
             return false; // misses disk entirely
@@ -385,14 +392,8 @@ public sealed class SDCone : ShapeDistance
                 return false;
             }
             // Intersect each with disk window and test overlap
-            return lOk && MathF.Min(l1, tmax) > MathF.Max(l0, tmin) + Epsilon || rOk && MathF.Min(r1, tmax) > MathF.Max(r0, tmin) + Epsilon;
+            return lOk && Math.Min(l1, tmax) > Math.Max(l0, tmin) + Epsilon || rOk && Math.Min(r1, tmax) > Math.Max(r0, tmin) + Epsilon;
         }
-    }
-
-    // rotated grid row: p(s) = rowStart + s*dx, s∈[s0,s1]
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
-    {
-        return SegmentIntersectsCone(rowStart, rowStart + width * dx, cushion);
     }
 
     // Solve n·((a-o) + t d) <= c for t in [tmin,tmax]
@@ -407,11 +408,11 @@ public sealed class SDCone : ShapeDistance
         var bound = (c - s0) / s1; // t at which equality holds
         if (s1 > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -434,11 +435,11 @@ public sealed class SDCone : ShapeDistance
         var bound = (v - s0) / s1;
         if (s1 > 0f)
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         else
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -481,141 +482,9 @@ public sealed class SDInvertedCone : ShapeDistance
         return distOuter > conef ? -distOuter : -conef;
     }
 
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
-    {
-        return !SegmentFullyInsideOriginal(rowStart, rowStart + width * dx, cushion);
-    }
-
-    private bool SegmentFullyInsideOriginal(WPos a, WPos b, float cushion)
-    {
-        var r = radius + cushion;
-
-        // Shift to origin frame
-        var a_ = a;
-        var b_ = b;
-        var ax = a_.X - originX;
-        var az = a_.Z - originZ;
-        var bx = b_.X - originX;
-        var bz = b_.Z - originZ;
-
-        // Disk: convex ⇒ endpoints-inside implies whole segment-inside
-        var r2 = r * r;
-        var aInDisk = (ax * ax + az * az) <= r2 + Epsilon;
-        var bInDisk = (bx * bx + bz * bz) <= r2 + Epsilon;
-        if (!(aInDisk && bInDisk))
-        {
-            return false;
-        }
-        if (coneFactor > 0f)
-        {
-            // ≤180°: wedge = intersection of two half-planes (convex). Endpoints test is sufficient.
-            bool EndInside(float px, float pz)
-            {
-                var left = px * nlX + pz * nlZ; // <= cushion
-                var right = px * nrX + pz * nrZ; // <= cushion
-                return left <= cushion + Epsilon && right <= cushion + Epsilon;
-            }
-            return EndInside(ax, az) && EndInside(bx, bz);
-        }
-        else
-        {
-            // >180°: wedge = union of two half-planes. Need coverage of [0,1] by union of GE intervals.
-            // Parametric segment in local frame: p(t) = a + t (b - a), t∈[0,1]
-            var dx = bx - ax;
-            var dz = bz - az;
-            float t0 = 0f, t1 = 1f;
-
-            // Intervals where each half-plane holds: n·(a + t d) >= -cushion
-            var LOk = ClipHalfplaneGE(nlX, nlZ, ax, az, dx, dz, -cushion, ref t0, ref t1, out var l0, out var l1);
-            var ROk = ClipHalfplaneGE(nrX, nrZ, ax, az, dx, dz, -cushion, ref t0, ref t1, out var r0, out var r1);
-
-            if (!LOk && !ROk)
-            {
-                return false; // no t satisfies wedge → cannot be fully inside
-            }
-
-            // Check if union covers [0,1]
-            if (LOk && !ROk)
-            {
-                return l0 <= Epsilon && l1 >= 1f - Epsilon;
-            }
-            if (ROk && !LOk)
-            {
-                return r0 <= Epsilon && r1 >= 1f - Epsilon;
-            }
-
-            // Both present: merge two intervals
-            float s0, s1, t2, t3;
-            if (l0 <= r0)
-            {
-                s0 = l0;
-                s1 = l1;
-                t2 = r0;
-                t3 = r1;
-            }
-            else
-            {
-                s0 = r0;
-                s1 = r1;
-                t2 = l0;
-                t3 = l1;
-            }
-
-            if (s0 > 0f + Epsilon)
-            {
-                return false; // gap at start
-            }
-            var coverEnd = s1;
-            if (t2 > coverEnd + Epsilon)
-            {
-                return false; // gap between intervals
-            }
-            if (t3 > coverEnd)
-            {
-                coverEnd = t3;
-            }
-            return coverEnd >= 1f - Epsilon;
-        }
-    }
-
-    // Compute interval on [0,1] where n·(a + t d) >= value. Returns false if empty.
-    private static bool ClipHalfplaneGE(float nX, float nZ, float ax, float az, float dx, float dz, float value, ref float tmin, ref float tmax, out float outMin, out float outMax)
-    {
-        outMin = 1f;
-        outMax = 0f; // empty by default
-        var s0 = nX * ax + nZ * az;
-        var s1 = nX * dx + nZ * dz;
-        if (NearlyZero(s1))
-        {
-            if (s0 >= value - Epsilon)
-            {
-                outMin = 0f;
-                outMax = 1f;
-                return true;
-            }
-            return false;
-        }
-        var bound = (value - s0) / s1;
-        float a0 = 0f, a1 = 1f;
-        if (s1 > 0f)
-        {
-            a0 = MathF.Max(a0, bound);
-        }
-        else
-        {
-            a1 = MathF.Min(a1, bound);
-        }
-        // also clip with caller's [tmin,tmax] if desired
-        a0 = MathF.Max(a0, tmin);
-        a1 = MathF.Min(a1, tmax);
-        if (a1 > a0 + Epsilon)
-        {
-            outMin = a0;
-            outMax = a1;
-            return true;
-        }
-        return false;
-    }
+    // inverted cones very rarely do not intersect a row, so we always return true
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDDonutSector : ShapeDistance
@@ -677,7 +546,7 @@ public sealed class SDDonutSector : ShapeDistance
         // radial annulus window(s)
         var Rout = outerRadius + cushion;
         var Rout2 = Rout * Rout;
-        var Rin = MathF.Max(0f, innerRadius - cushion);
+        var Rin = Math.Max(0f, innerRadius - cushion);
         var Rin2 = Rin * Rin;
         var B = 2f * (ax * dx + az * dz);
         var Couter = ax * ax + az * az - Rout2;
@@ -694,8 +563,8 @@ public sealed class SDDonutSector : ShapeDistance
         {
             (tOut2, tOut1) = (tOut1, tOut2);
         }
-        var u0 = MathF.Max(0f, tOut1);
-        var u1 = MathF.Min(1f, tOut2);
+        var u0 = Math.Max(0f, tOut1);
+        var u1 = Math.Min(1f, tOut2);
         if (u1 <= u0 + Epsilon)
         {
             return false;
@@ -715,8 +584,8 @@ public sealed class SDDonutSector : ShapeDistance
             {
                 (tIn2, tIn1) = (tIn1, tIn2);
             }
-            v0 = MathF.Max(0f, tIn1);
-            v1 = MathF.Min(1f, tIn2);
+            v0 = Math.Max(0f, tIn1);
+            v1 = Math.Min(1f, tIn2);
             if (v1 <= v0 + Epsilon)
             {
                 hasInner = false; // tangent/empty
@@ -806,11 +675,11 @@ public sealed class SDDonutSector : ShapeDistance
             {
                 var a0 = annulus[i].a;
                 var a1 = annulus[i].b;
-                if (lOk && MathF.Min(l1, a1) > MathF.Max(l0, a0) + Epsilon)
+                if (lOk && Math.Min(l1, a1) > Math.Max(l0, a0) + Epsilon)
                 {
                     return true;
                 }
-                if (rOk && MathF.Min(r1, a1) > MathF.Max(r0, a0) + Epsilon)
+                if (rOk && Math.Min(r1, a1) > Math.Max(r0, a0) + Epsilon)
                 {
                     return true;
                 }
@@ -823,18 +692,18 @@ public sealed class SDDonutSector : ShapeDistance
     {
         var s0 = nX * ax + nZ * az;
         var s1 = nX * dx + nZ * dz;
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 <= c + Epsilon;
         }
         var bound = (c - s0) / s1;
         if (s1 > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -843,18 +712,18 @@ public sealed class SDDonutSector : ShapeDistance
     {
         var s0 = nX * ax + nZ * az;
         var s1 = nX * dx + nZ * dz;
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 >= v - Epsilon;
         }
         var bound = (v - s0) / s1;
         if (s1 > 0f)
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         else
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -898,85 +767,9 @@ public sealed class SDInvertedDonutSector : ShapeDistance
         return maxRadial > conef ? -maxRadial : -conef;
     }
 
-    // conservative and safe: consider the row to intersect the inverted region unless we can prove
-    // the whole segment lies inside the original donut-sector.
-    public override bool RowIntersectsShape(WPos rowStart, WDir dxVec, float width, float cushion = default)
-    {
-        return !SegmentProvablyInsideOriginal(rowStart, rowStart + width * dxVec, cushion);
-    }
-
-    private bool SegmentProvablyInsideOriginal(WPos a, WPos b, float cushion)
-    {
-        var a_ = a;
-        var aX_ = a_.X;
-        var aZ_ = a_.Z;
-        var b_ = b;
-        var bX_ = b_.X;
-        var bZ_ = b_.Z;
-        var ax = aX_ - originX;
-        var az = aZ_ - originZ;
-        var bx = bX_ - originX;
-        var bz = bZ_ - originZ;
-        var dx = bX_ - aX_;
-        var dz = bZ_ - aZ_;
-
-        // 1) Entire segment inside outer disk (convex): endpoints suffice
-        var Rout = outerRadius + cushion;
-        var Rout2 = Rout * Rout;
-        var aOut = (ax * ax + az * az) <= Rout2 + Epsilon;
-        var bOut = (bx * bx + bz * bz) <= Rout2 + Epsilon;
-        if (!(aOut && bOut))
-        {
-            return false;
-        }
-
-        // 2) Entire segment outside inner disk: min distance >= Rin
-        var Rin = MathF.Max(0f, innerRadius - cushion);
-        var Rin2 = Rin * Rin;
-        float minD2;
-        var A = dx * dx + dz * dz;
-        if (A <= Epsilon)
-        {
-            minD2 = ax * ax + az * az;
-        }
-        else
-        {
-            var t = -(ax * dx + az * dz) / A;
-            if (t < 0f)
-            {
-                t = 0f;
-            }
-            else if (t > 1f)
-            {
-                t = 1f;
-            }
-            var cx = ax + t * dx;
-            var cz = az + t * dz;
-            minD2 = cx * cx + cz * cz;
-        }
-        if (minD2 < Rin2 - Epsilon)
-        {
-            return false;
-        }
-
-        // 3) Wedge containment
-        var lA = ax * nlX + az * nlZ;
-        var lB = bx * nlX + bz * nlZ;
-        var rA = ax * nrX + az * nrZ;
-        var rB = bx * nrX + bz * nrZ;
-        if (coneFactor > 0f)
-        {
-            // intersection of two convex half-planes ⇒ endpoints suffice
-            return lA <= cushion + Epsilon && lB <= cushion + Epsilon && rA <= cushion + Epsilon && rB <= cushion + Epsilon;
-        }
-        else
-        {
-            // union of two half-planes: ensure segment stays entirely in at least one
-            var inL = lA >= -cushion - Epsilon && lB >= -cushion - Epsilon;
-            var inR = rA >= -cushion - Epsilon && rB >= -cushion - Epsilon;
-            return inL || inR;
-        }
-    }
+    // inverted donut segments very rarely do not intersect a row, so we always return true
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDTri : ShapeDistance
@@ -1056,11 +849,11 @@ public sealed class SDTri : ShapeDistance
         var bound = (value - s0) / s1;
         if (s1 > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -1115,21 +908,9 @@ public sealed class SDInvertedTri : ShapeDistance
         return max1 > d3 ? -max1 : -d3;
     }
 
-    // inverted: segment intersects unless fully inside (inflated) triangle
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
-    {
-        return !(Inside(rowStart, cushion) && Inside(rowStart + width * dx, cushion));
-    }
-
-    private bool Inside(WPos p, float cushion)
-    {
-        var px = p.X;
-        var pz = p.Z;
-        var d1 = n1X * (px - aX) + n1Z * (pz - aZ);
-        var d2 = n2X * (px - bX) + n2Z * (pz - bZ);
-        var d3 = n3X * (px - cX) + n3Z * (pz - cZ);
-        return d1 <= cushion + Epsilon && d2 <= cushion + Epsilon && d3 <= cushion + Epsilon;
-    }
+    // inverted triangles very rarely do not intersect a row, so we always return true
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDRect : ShapeDistance
@@ -1153,7 +934,7 @@ public sealed class SDRect : ShapeDistance
         normalX = normal.X;
         normalZ = normal.Z;
         lenFront = l;
-        lenBack = 0;
+        lenBack = default;
         halfWidth = HalfWidth;
     }
 
@@ -1174,6 +955,7 @@ public sealed class SDRect : ShapeDistance
         halfWidth = HalfWidth;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
         var pXoriginX = p.X - originX;
@@ -1191,6 +973,7 @@ public sealed class SDRect : ShapeDistance
         return maxParr > maxOrtho ? maxParr : maxOrtho;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
         return SegmentIntersectsRect(rowStart, rowStart + width * dx, cushion);
@@ -1198,61 +981,82 @@ public sealed class SDRect : ShapeDistance
 
     private bool SegmentIntersectsRect(WPos a, WPos b, float cushion)
     {
-        // Clip segment [0,1] by 4 half-planes of inflated rectangle
-        var a_ = a;
-        var aX_ = a_.X;
-        var aZ_ = a_.Z;
-        var ax = aX_ - originX;
-        var az = aZ_ - originZ;
-        var b_ = b;
-        var dxs = b_.X - aX_;
-        var dzs = b_.Z - aZ_;
+        // Translate to rectangle origin
+        var ax = a.X - originX;
+        var az = a.Z - originZ;
+        var dxs = b.X - a.X;
+        var dzs = b.Z - a.Z;
 
+        // Endpoint projections (parallel to dir and orthogonal to dir)
+        var p0 = ax * dirX + az * dirZ;
+        var q0 = ax * normalX + az * normalZ;
+        var p1 = (ax + dxs) * dirX + (az + dzs) * dirZ;
+        var q1 = (ax + dxs) * normalX + (az + dzs) * normalZ;
+
+        // Inflated bounds
+        var front = lenFront + cushion;
+        var back = -(lenBack + cushion);
+        var left = halfWidth + cushion;
+        var right = -(halfWidth + cushion);
+
+        // Quick reject (both outside the same half-plane)
+        if (p0 > front && p1 > front || p0 < back && p1 < back || q0 > left && q1 > left || q0 < right && q1 < right)
+        {
+            return false;
+        }
+
+        // Quick accept (both endpoints fully inside)
+        if (p0 <= front && p0 >= back && p1 <= front && p1 >= back && q0 <= left && q0 >= right && q1 <= left && q1 >= right)
+        {
+            return true;
+        }
+
+        // Scalar Liang–Barsky on projections
         float tmin = 0f, tmax = 1f;
-        // dir·(p-o) <= lenFront + c
-        return ClipLE(dirX, dirZ, ax, az, dxs, dzs, lenFront + cushion, ref tmin, ref tmax) // dir·(p-o) <= lenFront + c
-        && ClipGE(dirX, dirZ, ax, az, dxs, dzs, -(lenBack + cushion), ref tmin, ref tmax) // dir·(p-o) >= -(lenBack + c)
-        && ClipLE(normalX, normalZ, ax, az, dxs, dzs, halfWidth + cushion, ref tmin, ref tmax) // n·(p-o) <= halfWidth + c
-        && ClipGE(normalX, normalZ, ax, az, dxs, dzs, -(halfWidth + cushion), ref tmin, ref tmax) // n·(p-o) >= -(halfWidth + c)
+        var dp = p1 - p0;
+        var dq = q1 - q0;
+
+        return ClipUpper(p0, dp, front, ref tmin, ref tmax) // p <= front
+        && ClipLower(p0, dp, back, ref tmin, ref tmax) // p >= back
+        && ClipUpper(q0, dq, left, ref tmin, ref tmax) // q <= left
+        && ClipLower(q0, dq, right, ref tmin, ref tmax) // q >= right
         && tmax > tmin + Epsilon;
     }
 
-    private static bool ClipLE(float nX, float nZ, float ax, float az, float dx, float dz, float value, ref float tmin, ref float tmax)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ClipUpper(float s0, float ds, float upper, ref float tmin, ref float tmax)
     {
-        var s0 = nX * ax + nZ * az;
-        var s1 = nX * dx + nZ * dz;
-        if (NearlyZero(s1))
+        if (NearlyZero(ds))
         {
-            return s0 <= value + Epsilon;
+            return s0 <= upper + Epsilon;
         }
-        var bound = (value - s0) / s1;
-        if (s1 > 0f)
+        var t = (upper - s0) / ds;
+        if (ds > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, t);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, t);
         }
         return tmax > tmin + Epsilon;
     }
 
-    private static bool ClipGE(float nX, float nZ, float ax, float az, float dx, float dz, float value, ref float tmin, ref float tmax)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ClipLower(float s0, float ds, float lower, ref float tmin, ref float tmax)
     {
-        var s0 = nX * ax + nZ * az;
-        var s1 = nX * dx + nZ * dz;
-        if (NearlyZero(s1))
+        if (NearlyZero(ds))
         {
-            return s0 >= value - Epsilon;
+            return s0 >= lower - Epsilon;
         }
-        var bound = (value - s0) / s1;
-        if (s1 > 0f)
+        var t = (lower - s0) / ds;
+        if (ds > 0f)
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, t);
         }
         else
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, t);
         }
         return tmax > tmin + Epsilon;
     }
@@ -1319,9 +1123,7 @@ public sealed class SDInvertedRect : ShapeDistance
 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
-        var a = rowStart;
-        var b = rowStart + width * dx;
-        return !SegmentFullyInsideOriginalRect(a, b, cushion);
+        return !SegmentFullyInsideOriginalRect(rowStart, rowStart + width * dx, cushion);
     }
 
     private bool SegmentFullyInsideOriginalRect(WPos a, WPos b, float cushion)
@@ -1359,6 +1161,7 @@ public sealed class SDCapsule : ShapeDistance
         radius = Radius;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p)
     {
         var pX = p.X;
@@ -1388,9 +1191,8 @@ public sealed class SDCapsule : ShapeDistance
         var q1Z = originZ + length * dirZ;
 
         var r = radius + cushion;
-        var r2 = r * r;
-        var dist2 = SegmentSegmentDistanceSquared(aX, aZ, bX, bZ, q0X, q0Z, q1X, q1Z);
-        return dist2 <= r2 + Epsilon;
+
+        return SegmentSegmentDistanceSquared(aX, aZ, bX, bZ, q0X, q0Z, q1X, q1Z) <= r * r + Epsilon;
     }
 
     // Closest distance^2 between 2D segments P=[p0,p1], Q=[q0,q1]
@@ -1448,6 +1250,7 @@ public sealed class SDCapsule : ShapeDistance
         var dz = p0z + s * uz - (q0z + t * vz);
         return dx * dx + dz * dz;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static float Clamp01(float x) => x < 0f ? 0f : (x > 1f ? 1f : x);
     }
 }
@@ -1486,52 +1289,9 @@ public sealed class SDInvertedCapsule : ShapeDistance
         return radius - MathF.Sqrt(pXprojX * pXprojX + pZprojZ * pZprojZ);
     }
 
-    // Inverted: row intersects unless fully inside (inflated) capsule — convex ⇒ endpoints check
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
-    {
-        return !(PointInsideCapsule(rowStart, cushion) && PointInsideCapsule(rowStart + width * dx, cushion));
-    }
-
-    private bool PointInsideCapsule(WPos p, float cushion)
-    {
-        var q0x = originX;
-        var q0z = originZ;
-        var q1x = originX + length * dirX;
-        var q1z = originZ + length * dirZ;
-        var r = radius + cushion;
-        var r2 = r * r;
-        var d2 = PointSegmentDistanceSquared(p.X, p.Z, q0x, q0z, q1x, q1z);
-        return d2 <= r2 + Epsilon;
-    }
-
-    private static float PointSegmentDistanceSquared(float px, float pz, float q0x, float q0z, float q1x, float q1z)
-    {
-        var vx = q1x - q0x;
-        var vz = q1z - q0z;
-        var wx = px - q0x;
-        var wz = pz - q0z;
-        var vv = vx * vx + vz * vz;
-        if (vv <= Epsilon)
-        {
-            var dx = px - q0x;
-            var dz = pz - q0z;
-            return dx * dx + dz * dz;
-        }
-        var t = (wx * vx + wz * vz) / vv;
-        if (t < 0f)
-        {
-            t = 0f;
-        }
-        else if (t > 1f)
-        {
-            t = 1f;
-        }
-        var cx = q0x + t * vx;
-        var cz = q0z + t * vz;
-        var dx2 = px - cx;
-        var dz2 = pz - cz;
-        return dx2 * dx2 + dz2 * dz2;
-    }
+    // inverted capsules very rarely do not intersect a row, so we always return true
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
 public sealed class SDCross : ShapeDistance
@@ -1609,18 +1369,18 @@ public sealed class SDCross : ShapeDistance
     {
         var s0 = nX * ax + nZ * az;
         var s1 = nX * dx + nZ * dz;
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 <= value + Epsilon;
         }
         var bound = (value - s0) / s1;
         if (s1 > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -1629,18 +1389,18 @@ public sealed class SDCross : ShapeDistance
     {
         var s0 = nX * ax + nZ * az;
         var s1 = nX * dx + nZ * dz;
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 >= value - Epsilon;
         }
         var bound = (value - s0) / s1;
         if (s1 > 0f)
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         else
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         return tmax > tmin + Epsilon;
     }
@@ -1778,7 +1538,7 @@ public sealed class SDConvexPolygon : ShapeDistance
         var lenEdges = edges.Length;
 
         // Degenerate segment → point-in-inflated-polygon test by half-planes
-        if (MathF.Abs(dirx) + MathF.Abs(dirz) <= Epsilon)
+        if (Math.Abs(dirx) + Math.Abs(dirz) <= Epsilon)
         {
             for (var i = 0; i < lenEdges; ++i)
             {
@@ -1852,36 +1612,36 @@ public sealed class SDConvexPolygon : ShapeDistance
 
     private static bool ClipLE_Unnormalized(float s0, float s1, float value, ref float tmin, ref float tmax)
     {
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 <= value + Epsilon;
         }
         var bound = (value - s0) / s1;
         if (s1 > 0f)
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         else
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         return tmax > tmin + Epsilon;
     }
 
     private static bool ClipGE_Unnormalized(float s0, float s1, float value, ref float tmin, ref float tmax)
     {
-        if (MathF.Abs(s1) <= Epsilon)
+        if (Math.Abs(s1) <= Epsilon)
         {
             return s0 >= value - Epsilon;
         }
         var bound = (value - s0) / s1;
         if (s1 > 0f)
         {
-            tmin = MathF.Max(tmin, bound);
+            tmin = Math.Max(tmin, bound);
         }
         else
         {
-            tmax = MathF.Min(tmax, bound);
+            tmax = Math.Min(tmax, bound);
         }
         return tmax > tmin + Epsilon;
     }

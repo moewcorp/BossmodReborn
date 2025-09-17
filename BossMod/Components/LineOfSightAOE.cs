@@ -249,8 +249,7 @@ public abstract class CastLineOfSightAOEComplex(BossModule module, uint aid, Rel
             var aoes = CollectionsMarshal.AsSpan(AOEs);
             for (var i = 0; i < count; ++i)
             {
-                ref var aoe = ref aoes[i];
-                if (aoe.ActorID == id)
+                if (aoes[i].ActorID == id)
                 {
                     AOEs.RemoveAt(i);
                     return;
