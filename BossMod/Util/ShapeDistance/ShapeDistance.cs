@@ -14,5 +14,5 @@ public abstract class ShapeDistance
     public virtual bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyZero(float v) => MathF.Abs(v) <= Epsilon;
+    public static bool NearlyZero(float v) => Math.Abs(v) <= Epsilon;
 }

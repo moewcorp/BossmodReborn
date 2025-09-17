@@ -374,8 +374,8 @@ public sealed class ThetaStar
         var stepCost = deltaGrid; // either _deltaGSide or _deltaGDiag
         var candidateG = currentParentNode.GScore + stepCost;
 
-        var candidateLeeway = MathF.Min(currentParentNode.PathLeeway, Math.Min(destPixG, parentPixG) - candidateG);
-        var candidateMinG = MathF.Min(currentParentNode.PathMinG, destPixG);
+        var candidateLeeway = Math.Min(currentParentNode.PathLeeway, Math.Min(destPixG, parentPixG) - candidateG);
+        var candidateMinG = Math.Min(currentParentNode.PathMinG, destPixG);
 
         var altNode = new Node
         {

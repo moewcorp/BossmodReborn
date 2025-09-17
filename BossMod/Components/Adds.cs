@@ -25,7 +25,9 @@ public class Adds(BossModule module, uint oid, int priority = 0) : BossComponent
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (priority != 0)
+        {
             hints.PrioritizeTargetsByOID(oid, priority);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
@@ -41,7 +43,9 @@ public class AddsPointless(BossModule module, uint oid) : Adds(module, oid)
     {
         var count = Actors.Count;
         for (var i = 0; i < count; ++i)
+        {
             hints.SetPriority(Actors[i], AIHints.Enemy.PriorityPointless);
+        }
     }
 }
 
@@ -71,7 +75,9 @@ public class AddsMulti(BossModule module, uint[] oids, int priority = 0) : BossC
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (priority != 0)
+        {
             hints.PrioritizeTargetsByOID(OIDs, priority);
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
