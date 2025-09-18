@@ -305,7 +305,7 @@ public sealed class ActionDefinitions : IDisposable
         var dir = player.DirectionTo(target).Normalized();
         var src = player.Position;
 
-        return IsDashDangerous(src, src + dir * MathF.Max(0, dist), hints);
+        return IsDashDangerous(src, src + dir * Math.Max(0, dist), hints);
     }
 
     public static bool DashToPositionCheck(WorldState _, Actor player, ActionQueue.Entry action, AIHints hints)
