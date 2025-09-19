@@ -22,12 +22,12 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.Frogtourage && modelState is 5 or 7)
         {
             var count = _aoes.Count;
-            var act = count != 0 ? _aoes[0].Activation.AddSeconds(count * 2.4d) : WorldState.FutureTime(26.1d);
+            var act = count != 0 ? _aoes.Ref(0).Activation.AddSeconds(count * 2.4d) : WorldState.FutureTime(26.1d);
             _aoes.Add(new(Rect, Arena.Center.Quantized(), modelState == 5 ? Angle.AnglesCardinals[3] : Angle.AnglesCardinals[0], act));
             if (_aoes.Count == 2)
             {
                 ref var aoe2 = ref _aoes.Ref(1);
-                aoe2.Origin += 1.5f * aoe2.Rotation.ToDirection();
+                aoe2.Origin += 5f * aoe2.Rotation.ToDirection();
             }
         }
     }
@@ -45,11 +45,11 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
                 {
                     var aoes = CollectionsMarshal.AsSpan(_aoes);
                     ref var aoe1 = ref aoes[0];
-                    aoe1.Origin -= 1.5f * aoe1.Rotation.ToDirection();
+                    aoe1.Origin -= 5f * aoe1.Rotation.ToDirection();
                     if (count > 2)
                     {
                         ref var aoe2 = ref aoes[1];
-                        aoe2.Origin += 1.5f * aoe2.Rotation.ToDirection();
+                        aoe2.Origin += 5f * aoe2.Rotation.ToDirection();
                     }
                 }
             }
@@ -121,7 +121,7 @@ sealed class LetsDanceRemix(BossModule module) : Components.GenericAOEs(module)
             if (_aoes.Count == 2 && aoe0.Rotation.AlmostEqual(rot + a180, Angle.DegToRad))
             {
                 ref var aoe2 = ref _aoes.Ref(1);
-                aoe2.Origin += 1.5f * aoe2.Rotation.ToDirection();
+                aoe2.Origin += 5f * aoe2.Rotation.ToDirection();
             }
         }
     }
@@ -150,7 +150,7 @@ sealed class LetsDanceRemix(BossModule module) : Components.GenericAOEs(module)
                         var rot2 = aoe2.Rotation;
                         if (rot1.AlmostEqual(rot2 + a180, Angle.DegToRad))
                         {
-                            aoe2.Origin += 1.5f * rot2.ToDirection();
+                            aoe2.Origin += 5f * rot2.ToDirection();
                         }
                     }
                 }

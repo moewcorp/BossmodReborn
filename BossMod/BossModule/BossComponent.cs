@@ -3,6 +3,7 @@
 // different encounter mechanics can be split into independent components
 // individual components should be activated and deactivated when needed (typically by state machine transitions)
 // components can also have sub-components; typically these are created immediately by constructor
+[SkipLocalsInit]
 public class BossComponent(BossModule module)
 {
     public readonly BossModule Module = module;

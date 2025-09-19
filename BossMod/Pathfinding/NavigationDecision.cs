@@ -9,6 +9,8 @@ namespace BossMod.Pathfinding;
 // 2. maintain uptime - this is represented by being in specified range of specified target, and not moving to interrupt casts unless needed
 // 3. execute positionals - this is strictly less important than points above, we only do that if we can meet other conditions
 // 4. be in range of healers - even less important, but still nice to do
+
+[SkipLocalsInit]
 public struct NavigationDecision
 {
     // context that allows reusing large memory allocations

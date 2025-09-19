@@ -1,5 +1,6 @@
 namespace BossMod;
 
+[SkipLocalsInit]
 public sealed class SDHalfPlane : ShapeDistance
 {
     private readonly float normalX, normalZ, bias;
@@ -29,6 +30,7 @@ public sealed class SDHalfPlane : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDCircle : ShapeDistance
 {
     private readonly float originX, originZ, radius;
@@ -52,12 +54,11 @@ public sealed class SDCircle : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
         // Segment vs disk test using closest-point distance
-        var rowstart = rowStart;
-        var rowstartX = rowstart.X;
-        var rowstartZ = rowstart.Z;
+        var rowstartX = rowStart.X;
+        var rowstartZ = rowStart.Z;
         var aX = rowstartX - originX;
         var aZ = rowstartZ - originZ;
-        var b = rowstart + width * dx;
+        var b = rowStart + width * dx;
         var dX = b.X - rowstartX;
         var dZ = b.Z - rowstartZ;
         var A = dX * dX + dZ * dZ;
@@ -84,6 +85,7 @@ public sealed class SDCircle : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedCircle : ShapeDistance
 {
     private readonly float originX, originZ, radius;
@@ -107,10 +109,9 @@ public sealed class SDInvertedCircle : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
         // Outside of disk: segment intersects unless fully inside the (inflated) disk.
-        var rowstart = rowStart;
-        var aX = rowstart.X - originX;
-        var aZ = rowstart.Z - originZ;
-        var b = rowstart + width * dx;
+        var aX = rowStart.X - originX;
+        var aZ = rowStart.Z - originZ;
+        var b = rowStart + width * dx;
         var bX = b.X - originX;
         var bZ = b.Z - originZ;
         var R = radius + cushion;
@@ -121,6 +122,7 @@ public sealed class SDInvertedCircle : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDDonut : ShapeDistance
 {
     private readonly float originX, originZ, innerRadius, outerRadius;
@@ -148,12 +150,11 @@ public sealed class SDDonut : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dxVec, float width, float cushion = default)
     {
         // Segment vs annulus [Rin, Rout] with cushion ⇒ [max(0,Rin-c), Rout+c]
-        var rowstart = rowStart;
-        var rowstartX = rowstart.X;
-        var rowstartZ = rowstart.Z;
+        var rowstartX = rowStart.X;
+        var rowstartZ = rowStart.Z;
         var aX = rowstartX - originX;
         var aZ = rowstartZ - originZ;
-        var b = rowstart + width * dxVec;
+        var b = rowStart + width * dxVec;
         var dX = b.X - rowstartX;
         var dZ = b.Z - rowstartZ;
         var A = dX * dX + dZ * dZ;
@@ -199,6 +200,7 @@ public sealed class SDDonut : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedDonut : ShapeDistance
 {
     private readonly float originX, originZ, innerRadius, outerRadius;
@@ -227,12 +229,11 @@ public sealed class SDInvertedDonut : ShapeDistance
     {
         // Inverted annulus = outside outer disk ∪ inside inner disk.
         // Segment hits inverted region unless it is fully inside the inflated annulus.
-        var rowstart = rowStart;
-        var rowstartX = rowstart.X;
-        var rowstartZ = rowstart.Z;
+        var rowstartX = rowStart.X;
+        var rowstartZ = rowStart.Z;
         var aX = rowstartX - originX;
         var aZ = rowstartZ - originZ;
-        var b = rowstart + width * dxVec;
+        var b = rowStart + width * dxVec;
         var bX_ = b.X;
         var bZ_ = b.Z;
         var bX = bX_ - originX;
@@ -286,6 +287,7 @@ public sealed class SDInvertedDonut : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDCone : ShapeDistance
 {
     private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
@@ -445,6 +447,7 @@ public sealed class SDCone : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedCone : ShapeDistance
 {
     private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
@@ -487,6 +490,7 @@ public sealed class SDInvertedCone : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDDonutSector : ShapeDistance
 {
     private readonly float originX, originZ, coneFactor, innerRadius, outerRadius, nlX, nlZ, nrX, nrZ;
@@ -729,6 +733,7 @@ public sealed class SDDonutSector : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedDonutSector : ShapeDistance
 {
     private readonly float originX, originZ, coneFactor, innerRadius, outerRadius, nlX, nlZ, nrX, nrZ;
@@ -772,6 +777,7 @@ public sealed class SDInvertedDonutSector : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDTri : ShapeDistance
 {
     private readonly float n1X, n1Z, n2X, n2Z, n3X, n3Z, aX, aZ, bX, bZ, cX, cZ;
@@ -859,6 +865,7 @@ public sealed class SDTri : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedTri : ShapeDistance
 {
     private readonly float n1X, n1Z, n2X, n2Z, n3X, n3Z, aX, aZ, bX, bZ, cX, cZ;
@@ -913,6 +920,7 @@ public sealed class SDInvertedTri : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDRect : ShapeDistance
 {
     private readonly float originX, originZ, dirX, dirZ, normalX, normalZ, lenFront, lenBack, halfWidth;
@@ -1062,6 +1070,7 @@ public sealed class SDRect : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedRect : ShapeDistance
 {
     private readonly float originX, originZ, dirX, dirZ, normalX, normalZ, lenFront, lenBack, halfWidth;
@@ -1141,6 +1150,7 @@ public sealed class SDInvertedRect : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDCapsule : ShapeDistance
 {
     private readonly float originX, originZ, dirX, dirZ, length, radius;
@@ -1255,6 +1265,7 @@ public sealed class SDCapsule : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedCapsule : ShapeDistance
 {
     private readonly float originX, originZ, dirX, dirZ, length, radius;
@@ -1294,6 +1305,7 @@ public sealed class SDInvertedCapsule : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDCross : ShapeDistance
 {
     private readonly float length, halfWidth;
@@ -1406,6 +1418,7 @@ public sealed class SDCross : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedCross : ShapeDistance
 {
     private readonly float length, halfWidth;
@@ -1475,6 +1488,7 @@ public sealed class SDInvertedCross : ShapeDistance
     }
 }
 
+[SkipLocalsInit]
 public sealed class SDConvexPolygon : ShapeDistance
 {
     private readonly bool cw;

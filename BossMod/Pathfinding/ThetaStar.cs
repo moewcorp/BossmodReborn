@@ -2,6 +2,7 @@
 
 namespace BossMod.Pathfinding;
 
+[SkipLocalsInit]
 public sealed class ThetaStar
 {
     public enum Score
@@ -51,7 +52,9 @@ public sealed class ThetaStar
     public int NumSteps;
     public int NumReopens;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Node NodeByIndex(int index) => ref _nodes[index];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public WPos CellCenter(int index) => _map.GridToWorld(index % _map.Width, index / _map.Width, 0.5f, 0.5f);
 
     // gMultiplier is typically inverse speed, which turns g-values into time
@@ -147,11 +150,12 @@ public sealed class ThetaStar
             }
 
             var nIdx = ny * width + nx;
-            VisitNeighbour(pIdx, nx, ny, nIdx, stepMul == 1f ? _deltaGSide : _deltaGDiag);
+            VisitNeighbour(pIdx, nx, ny, nIdx, stepMul == 1f ? _deltaGSide : _deltaGDiag, dx, dy);
         }
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Execute()
     {
         while (_nodes[_bestIndex].HScore > 0f && _fallbackIndex == StartNodeIndex && ExecuteStep())
@@ -276,73 +280,107 @@ public sealed class ThetaStar
         lineOfSightLeeway = float.MaxValue;
         lineOfSightMinG = float.MaxValue;
 
-        var dx = x1 - x0;
-        var dy = y1 - y0;
+        var dxRaw = x1 - x0;
+        var dyRaw = y1 - y0;
 
-        var shiftdx = dx >> 31;
-        var shiftdy = dy >> 31;
+        var shiftdx = dxRaw >> 31;
+        var shiftdy = dyRaw >> 31;
+        var stepX = dxRaw == 0 ? 0 : (shiftdx | 1);
+        var stepY = dyRaw == 0 ? 0 : (shiftdy | 1);
 
-        var stepX = dx == 0 ? 0 : (shiftdx | 1); // Sign of dx
-        var stepY = dy == 0 ? 0 : (shiftdy | 1); // Sign of dy
+        var dx = (dxRaw ^ shiftdx) - shiftdx;
+        var dy = (dyRaw ^ shiftdy) - shiftdy;
 
-        dx = (dx ^ shiftdx) - shiftdx;  // Absolute value of dx
-        dy = (dy ^ shiftdy) - shiftdy;  // Absolute value of dy
-
-        // grid distance in cells (Euclidean) – used only at the end
         lineOfSightDist = MathF.Sqrt(dx * dx + dy * dy);
 
-        // Precompute inverse (avoid div-by-zero branching via MaxValue)
         var invdx = dx != 0 ? 1f / dx : float.MaxValue;
         var invdy = dy != 0 ? 1f / dy : float.MaxValue;
 
+        // DDA parameters; start from cell centers → half a cell to the first boundary
         var tMaxX = _mapHalfResolution * invdx;
         var tMaxY = _mapHalfResolution * invdy;
         var tDeltaX = _mapResolution * invdx;
         var tDeltaY = _mapResolution * invdy;
 
-        int x = x0, y = y0, w = _map.Width;
+        int x = x0, y = y0;
+        var w = _map.Width;
         var pixG = _map.PixelMaxG;
         var cumulativeG = parentGScore;
 
-        // Quick bound: if parent already unsafe and we dip further, bail early.
-        // (Keeps correctness because we only use LOS as an optional improvement.)
-        while (true)
+        // Epsilon for tie-breaking; small tolerance makes corner detection robust
+        const float kEps = 0.003f;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        bool CheckCell(int cx, int cy, float gAtEntry, ref float minG, ref float minLeeway)
         {
-            var maxG = pixG[y * w + x];
+            var maxG = pixG[cy * w + cx];
             if (maxG < 0f)
             {
                 return false; // blocked
             }
 
-            if (maxG < lineOfSightMinG)
+            if (maxG < minG)
             {
-                lineOfSightMinG = maxG;
+                minG = maxG;
             }
-            var leeway = maxG - cumulativeG;
-            if (leeway < lineOfSightLeeway)
+
+            var leeway = maxG - gAtEntry;
+            if (leeway < minLeeway)
             {
-                lineOfSightLeeway = leeway;
+                minLeeway = leeway;
+            }
+
+            return true;
+        }
+
+        while (true)
+        {
+            // Check the current cell at the current path-length (conservative).
+
+            if (!CheckCell(x, y, cumulativeG, ref lineOfSightMinG, ref lineOfSightLeeway))
+            {
+                return false;
             }
 
             if (x == x1 && y == y1)
             {
-                break;
+                return true;
             }
 
-            if (tMaxX < tMaxY)
+            // Compare with epsilon to catch corner hits despite float noise.
+            var diff = tMaxX - tMaxY;
+            if (diff < -kEps)
             {
+                // Step X
                 tMaxX += tDeltaX;
                 x += stepX;
                 cumulativeG += _deltaGSide;
             }
-            else if (tMaxY < tMaxX)
+            else if (diff > kEps)
             {
+                // Step Y
                 tMaxY += tDeltaY;
                 y += stepY;
                 cumulativeG += _deltaGSide;
             }
             else
             {
+                // Corner: the ray passes exactly through a pixel corner.
+                // Supercover—also test the two side-adjacent cells the ray touches.
+                var gAtCorner = cumulativeG + _deltaGSide; // conservative leeway at the corner crossings
+
+                // Peek X side
+                if (!CheckCell(x + stepX, y, gAtCorner, ref lineOfSightMinG, ref lineOfSightLeeway))
+                {
+                    return false;
+                }
+
+                // Peek Y side
+                if (!CheckCell(x, y + stepY, gAtCorner, ref lineOfSightMinG, ref lineOfSightLeeway))
+                {
+                    return false;
+                }
+
                 tMaxX += tDeltaX;
                 tMaxY += tDeltaY;
                 x += stepX;
@@ -350,10 +388,9 @@ public sealed class ThetaStar
                 cumulativeG += _deltaGDiag;
             }
         }
-        return true;
     }
 
-    private void VisitNeighbour(int parentIndex, int nodeX, int nodeY, int nodeIndex, float deltaGrid)
+    private void VisitNeighbour(int parentIndex, int nodeX, int nodeY, int nodeIndex, float deltaGrid, int dx, int dy)
     {
         ref var currentParentNode = ref _nodes[parentIndex];
         ref var destNode = ref _nodes[nodeIndex];
@@ -366,11 +403,22 @@ public sealed class ThetaStar
         var pixelMaxG = _map.PixelMaxG;
         var destPixG = pixelMaxG[nodeIndex];
         var parentPixG = pixelMaxG[parentIndex];
-        if (destPixG < 0f && parentPixG >= 0f)
+        if (destPixG < 0f && parentPixG >= 0f || parentPixG == -1f && destPixG < -1f)
         {
             return; // impassable
         }
 
+        if (dx != 0 && dy != 0) // diagonal
+        {
+            var sideX = parentIndex + dx; // (px + sign(dx), py)
+            var sideY = parentIndex + dy * _map.Width; // (px, py + sign(dy))
+            if (!Passable(pixelMaxG, sideX) || !Passable(pixelMaxG, sideY))
+            {
+                return;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static bool Passable(float[] g, int idx) => (uint)idx < (uint)g.Length && g[idx] >= 0f;
+        }
         var stepCost = deltaGrid; // either _deltaGSide or _deltaGDiag
         var candidateG = currentParentNode.GScore + stepCost;
 
@@ -556,6 +604,7 @@ public sealed class ThetaStar
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void AddToOpen(int nodeIndex)
     {
         ref var nd = ref _nodes[nodeIndex];

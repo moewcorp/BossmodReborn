@@ -145,7 +145,7 @@ sealed class ImpressionKB(BossModule module) : Components.SimpleKnockbacks(modul
                 circles[i] = (aoe.Origin, aoe.ActorID == default ? 4f : 15f);
             }
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusAOECirclesMixedRadiiPlusAvoidShape(Arena.Center, c.Origin, 11f, 19f, circles, len, innerCircle), act);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusAOECirclesMixedRadiiPlusAvoidShape(Arena.Center, c.Origin, 11f, 18f, circles, len, innerCircle), act);
         }
         else
         {

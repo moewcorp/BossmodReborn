@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Components;
 
 // generic component that shows arbitrary shapes representing avoidable aoes
+[SkipLocalsInit]
 public abstract class GenericAOEs(BossModule module, uint aid = default, string warningText = "GTFO from aoe!") : CastCounter(module, aid)
 {
     public struct AOEInstance(AOEShape shape, WPos origin, Angle rotation = default, DateTime activation = default, uint color = default, bool risky = true, ulong actorID = default)
@@ -62,6 +63,7 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
 }
 
 // For simple AOEs, formerly known as SelfTargetedAOEs and LocationTargetedAOEs, that happens at the end of the cast
+[SkipLocalsInit]
 public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : GenericAOEs(module, aid)
 {
     public SimpleAOEs(BossModule module, uint aid, float radius, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : this(module, aid, new AOEShapeCircle(radius), maxCasts, riskyWithSecondsLeft) { }
@@ -142,6 +144,7 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
 }
 
 // 'charge at location' aoes that happen at the end of the cast
+[SkipLocalsInit]
 public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default, float extraLengthFront = default) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
 {
     public readonly float HalfWidth = halfWidth;
@@ -158,6 +161,7 @@ public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCas
 }
 
 // For simple AOEs where multiple AOEs use the same AOEShape
+[SkipLocalsInit]
 public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : SimpleAOEs(module, default, shape, maxCasts, riskyWithSecondsLeft)
 {
     public SimpleAOEGroups(BossModule module, uint[] aids, float radius, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : this(module, aids, new AOEShapeCircle(radius), maxCasts, expectedNumCasters, riskyWithSecondsLeft) { }
@@ -216,6 +220,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
 // For simple AOEs where multiple AOEs use the same AOEShape and are grouped by activation time, expectedNumCasters sorts Casters by activation when number is reached
 // set to correct amount if sorting is needed (eg skills with different activation times start at the same time)
 // useful if the amount of casts in a group of AOEs can vary
+[SkipLocalsInit]
 public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShape shape, double timeWindowInSeconds = 1d, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : SimpleAOEGroups(module, aids, shape, maxCasts: int.MaxValue, expectedNumCasters, riskyWithSecondsLeft)
 {
     public SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, float radius, double timeWindowInSeconds = 1d, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : this(module, aids, new AOEShapeCircle(radius), timeWindowInSeconds, expectedNumCasters, riskyWithSecondsLeft) { }
@@ -255,6 +260,7 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
     }
 }
 
+[SkipLocalsInit]
 public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWidth, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = 0d, float extraLengthFront = 0f) : SimpleAOEGroups(module, aids, 0f, maxCasts, expectedNumCasters, riskyWithSecondsLeft)
 {
     private readonly float HalfWidth = halfWidth;

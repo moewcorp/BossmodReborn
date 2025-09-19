@@ -52,7 +52,7 @@ sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.
         {
             var loc = spell.LocXZ;
             var rot = spell.Rotation;
-            AOEs.Add(new(rect, delay != default ? loc - 1.5f * rot.ToDirection() : loc, spell.Rotation + offset, Module.CastFinishAt(spell, delay)));
+            AOEs.Add(new(rect, delay != default ? loc - 5f * rot.ToDirection() : loc, spell.Rotation + offset, Module.CastFinishAt(spell, delay)));
         }
     }
 
@@ -99,7 +99,7 @@ sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.
                     if (count == 2)
                     {
                         ref var aoe2 = ref AOEs.Ref(0);
-                        aoe2.Origin -= 1.5f * aoe2.Rotation.ToDirection();
+                        aoe2.Origin -= 5f * aoe2.Rotation.ToDirection();
                     }
                 }
                 ++NumCasts;

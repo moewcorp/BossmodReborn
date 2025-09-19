@@ -8,6 +8,8 @@
 // - goal: destination with X priority (X > 0); 'default' is considered a goal with priority 0
 // - goal and danger are mutually exclusive, 'danger' overriding 'goal' state
 // typically we try to find a path to goal with highest priority; if that fails, try lower priorities; if no paths can be found (e.g. we're currently inside an imminent aoe) we find direct path to closest safe pixel
+
+[SkipLocalsInit]
 public sealed class Map
 {
     public float Resolution; // pixel size, in world units
@@ -92,6 +94,7 @@ public sealed class Map
         MaxY = source.MaxY;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 WorldToGridFrac(WPos world)
     {
         var offset = world - Center;
@@ -100,14 +103,22 @@ public sealed class Map
         return new((Width >> 1) + x, (Height >> 1) + y);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GridToIndex(int x, int y) => y * Width + x;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GridToIndex((int x, int y) p) => GridToIndex(p.x, p.y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (int x, int y) IndexToGrid(int index) => (index % Width, index / Width);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (int x, int y) FracToGrid(Vector2 frac) => ((int)MathF.Floor(frac.X), (int)MathF.Floor(frac.Y));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (int x, int y) WorldToGrid(WPos world) => FracToGrid(WorldToGridFrac(world));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (int x, int y) ClampToGrid((int x, int y) pos) => (Math.Clamp(pos.x, 0, Width - 1), Math.Clamp(pos.y, 0, Height - 1));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool InBounds(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public WPos GridToWorld(int gx, int gy, float fx, float fy)
     {
         var rsq = Resolution * Resolution; // since we then multiply by _localZDivRes, end result is same as * res * rotation.ToDir()
