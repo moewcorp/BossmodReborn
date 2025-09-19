@@ -1,5 +1,6 @@
 namespace BossMod;
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInAABBRectFixedDirection(WPos Center, WDir Direction, float HalfWidth, float HalfHeight) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -20,6 +21,7 @@ public sealed class SDKnockbackInAABBRectFixedDirection(WPos Center, WDir Direct
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInAABBRectAwayFromOrigin(WPos Center, WPos Origin, float Distance, float HalfWidth, float HalfHeight) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -41,6 +43,7 @@ public sealed class SDKnockbackInAABBRectAwayFromOrigin(WPos Center, WPos Origin
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInAABBRectLeftRightAlongZAxis(WPos Center, float Distance, float HalfWidth, float HalfHeight) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -63,6 +66,7 @@ public sealed class SDKnockbackInAABBRectLeftRightAlongZAxis(WPos Center, float 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInAABBRectLeftRightAlongZAxisPlusAOERects(WPos Center, float Distance, float HalfWidth, float HalfHeight, (WPos Origin, WDir Direction)[] AOEs, float LengthFront, float RectHalfWidth, int Length) : ShapeDistance
 {
     private readonly WPos center = Center;

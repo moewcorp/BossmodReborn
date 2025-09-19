@@ -5,6 +5,7 @@ namespace BossMod;
 
 // base for boss modules - provides all the common features, so that look is standardized
 // by default, module activates (transitions to phase 0) whenever "primary" actor becomes both targetable and in combat (this is how we detect 'pull') - though this can be overridden if needed
+[SkipLocalsInit]
 public abstract class BossModule : IDisposable
 {
     public readonly WorldState WorldState;

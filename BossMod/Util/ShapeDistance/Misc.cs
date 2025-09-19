@@ -1,5 +1,6 @@
 namespace BossMod;
 
+[SkipLocalsInit]
 public sealed class SDDeepDungeonLOS(Bitmap Map, WPos Origin) : ShapeDistance
 {
     private readonly Bitmap map = Map;
@@ -16,6 +17,7 @@ public sealed class SDDeepDungeonLOS(Bitmap Map, WPos Origin) : ShapeDistance
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDBlockedAreaT01Caduceus(ShapeDistance[] platformShapes, (int lower, int upper)[] highEdges, ShapeDistance[] highEdgeShapes, float actorY, float[] platformHeights) : ShapeDistance
 {
     private readonly ShapeDistance[] _platformShapes = platformShapes;

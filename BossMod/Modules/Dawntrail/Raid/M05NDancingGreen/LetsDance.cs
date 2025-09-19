@@ -26,7 +26,7 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
             if (_aoes.Count == 2)
             {
                 ref var aoe2 = ref _aoes.Ref(1);
-                aoe2.Origin += 1.5f * aoe2.Rotation.ToDirection();
+                aoe2.Origin += 5f * aoe2.Rotation.ToDirection();
             }
         }
     }
@@ -42,7 +42,7 @@ sealed class LetsDance(BossModule module) : Components.GenericAOEs(module)
             {
                 var aoes = CollectionsMarshal.AsSpan(_aoes);
                 ref var aoe1 = ref aoes[0];
-                aoe1.Origin -= 1.5f * aoe1.Rotation.ToDirection();
+                aoe1.Origin -= 5f * aoe1.Rotation.ToDirection();
                 if (count > 2)
                 {
                     ref var aoe2 = ref aoes[1];

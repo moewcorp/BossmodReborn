@@ -2,6 +2,8 @@
 // radius is the largest horizontal/vertical dimension: radius for circle, max of width/height for rect
 // note: this class to represent *relative* arena bounds (relative to arena center) - the reason being that in some cases effective center moves every frame, and bounds caches a lot (clip poly & base map for pathfinding)
 // note: if arena bounds are changed, new instance is recreated; max approx error can change without recreating the instance
+
+[SkipLocalsInit]
 public abstract class ArenaBounds(float radius, float mapResolution, float scaleFactor = 1f, bool allowObstacleMap = false)
 {
     public readonly float Radius = radius;
@@ -147,6 +149,7 @@ public abstract class ArenaBounds(float radius, float mapResolution, float scale
     }
 }
 
+[SkipLocalsInit]
 public sealed class ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, bool AllowObstacleMap = false) : ArenaBounds(Radius, MapResolution, allowObstacleMap: AllowObstacleMap)
 {
     private Pathfinding.Map? _cachedMap;
@@ -210,6 +213,7 @@ public sealed class ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, 
 }
 
 // if rotation is 0, half-width is along X and half-height is along Z
+[SkipLocalsInit]
 public abstract class ABRect : ArenaBounds
 {
     public ABRect(float halfWidth, float halfHeight, Angle rotation = default, float MapResolution = 0.5f, bool AllowObstacleMap = false) : base(Math.Max(halfWidth, halfHeight), MapResolution, rotation != default ? CalculateScaleFactor(rotation) : 1f, AllowObstacleMap)
@@ -304,10 +308,12 @@ public abstract class ABRect : ArenaBounds
     }
 }
 
+[SkipLocalsInit]
 public sealed class ArenaBoundsRect(float halfWidth, float halfHeight, Angle rotation = default, float mapResolution = 0.5f, bool allowObstacleMap = false) : ABRect(halfWidth, halfHeight, rotation, mapResolution, allowObstacleMap)
 {
     public override string ToString() => $"{nameof(ArenaBoundsRect)}, Radius {Radius}, HalfWidth: {HalfWidth}, HalfHeight: {HalfHeight}, MapResolution: {MapResolution}, ScaleFactor: {ScaleFactor}";
 }
+[SkipLocalsInit]
 public sealed class ArenaBoundsSquare(float halfWidth, Angle rotation = default, float mapResolution = 0.5f, bool allowObstacleMap = false) : ABRect(halfWidth, halfWidth, rotation, mapResolution, allowObstacleMap)
 {
     public override string ToString() => $"{nameof(ArenaBoundsSquare)}, Radius {Radius}, HalfWidth: {HalfWidth}, MapResolution: {MapResolution}, ScaleFactor: {ScaleFactor}";
@@ -319,6 +325,7 @@ public sealed class ArenaBoundsSquare(float halfWidth, Angle rotation = default,
 // for convenience third array will optionally perform additional unions at the end
 // offset shrinks the pathfinding map only, for example if the edges of the arena are deadly and floating point errors cause the AI to fall of the map or problems like that
 // AdjustForHitbox adjusts both the visible map and the pathfinding map
+[SkipLocalsInit]
 public sealed class ArenaBoundsCustom : ArenaBounds
 {
     private Pathfinding.Map? _cachedMap;

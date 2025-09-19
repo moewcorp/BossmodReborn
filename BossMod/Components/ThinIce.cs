@@ -2,6 +2,7 @@ namespace BossMod.Components;
 
 // component for ThinIce mechanic
 // observation: for SID 911 the distance is 0.1 * status extra
+[SkipLocalsInit]
 public abstract class ThinIce(BossModule module, float distance, bool createforbiddenzones = false, uint statusID = 911u, bool stopAtWall = false, bool stopAfterWall = false) : GenericKnockback(module, stopAtWall: stopAtWall, stopAfterWall: stopAfterWall)
 {
     public readonly uint StatusID = statusID;

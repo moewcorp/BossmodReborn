@@ -7,6 +7,7 @@ using System.Threading;
 namespace BossMod;
 
 // a triangle; as basic as it gets
+[SkipLocalsInit]
 public readonly struct RelTriangle(WDir a, WDir b, WDir c)
 {
     public readonly WDir A = a;
@@ -16,6 +17,7 @@ public readonly struct RelTriangle(WDir a, WDir b, WDir c)
 
 // a complex polygon that is a single simple-polygon exterior minus 0 or more simple-polygon holes; all edges are assumed to be non intersecting
 // hole-starts list contains starting index of each hole
+[SkipLocalsInit]
 public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStarts)
 {
     // constructor for simple polygon
@@ -237,6 +239,7 @@ public sealed class RelPolygonWithHoles(List<WDir> vertices, List<int> HoleStart
 }
 
 // generic 'simplified' complex polygon that consists of 0 or more non-intersecting polygons with holes (note however that some polygons could be fully inside other polygon's hole)
+[SkipLocalsInit]
 public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
 {
     public readonly List<RelPolygonWithHoles> Parts = parts;
@@ -288,7 +291,7 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     {
         var clipperOffset = new ClipperOffset
         {
-            ArcTolerance = 2000d
+            ArcTolerance = 10000d
         };
         var allPaths = new Paths64();
         var count = Parts.Count;
@@ -335,6 +338,7 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
 }
 
 // utility for simplifying and performing boolean operations on complex polygons
+[SkipLocalsInit]
 public sealed class PolygonClipper
 {
     public const float Scale = 1024f * 1024f; // note: we need at least 10 bits for integer part (-1024 to 1024 range); using 11 bits leaves 20 bits for fractional part; power-of-two scale should reduce rounding issues
@@ -451,6 +455,7 @@ public sealed class PolygonClipper
     private static WDir ConvertPoint(Point64 pt) => new(pt.X * InvScale, pt.Y * InvScale);
 }
 
+[SkipLocalsInit]
 public static class PolygonUtil
 {
     public static ReadOnlySpan<(WDir, WDir)> EnumerateEdges(ReadOnlySpan<WDir> contour)
@@ -472,6 +477,7 @@ public static class PolygonUtil
     }
 }
 
+[SkipLocalsInit]
 public readonly struct Edge(float ax, float ay, float dx, float dy)
 {
     private const float Epsilon = 1e-8f;
@@ -479,6 +485,7 @@ public readonly struct Edge(float ax, float ay, float dx, float dy)
     public readonly float Ax = ax, Ay = ay, Dx = dx, Dy = dy, InvLengthSq = 1f / (dx * dx + dy * dy + Epsilon);
 }
 
+[SkipLocalsInit]
 public sealed class SpatialIndex
 {
     private int[][] _grid = [];
@@ -574,6 +581,7 @@ public sealed class SpatialIndex
 }
 
 // used to create a visibility polygon of a point source and a RelSimplifiedComplexPolygon
+[SkipLocalsInit]
 public static class Visibility
 {
     public static WDir[] Compute(WDir origin, RelSimplifiedComplexPolygon polygon)

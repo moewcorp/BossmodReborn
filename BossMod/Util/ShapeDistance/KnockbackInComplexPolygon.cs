@@ -1,5 +1,6 @@
 namespace BossMod;
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInComplexPolygonAwayFromOrigin(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -20,6 +21,7 @@ public sealed class SDKnockbackInComplexPolygonAwayFromOrigin(WPos Center, WPos 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInComplexPolygonFixedDirection(WPos Center, WDir Direction, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -39,6 +41,7 @@ public sealed class SDKnockbackInComplexPolygonFixedDirection(WPos Center, WDir 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusAOEAABBSquares(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon, WPos[] AOEs, float HalfWidth, int Length) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -73,6 +76,7 @@ public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusAOEAABBSquares(
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusAOECircles(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon, WPos[] AOEs, float Radius, int Length) : ShapeDistance
 {
     private readonly WPos center = Center;
@@ -107,6 +111,7 @@ public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusAOECircles(WPos
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusIntersectionTest(WPos Center, WPos Origin, float Distance, RelSimplifiedComplexPolygon Polygon) : ShapeDistance
 {
     private readonly WPos center = Center;
