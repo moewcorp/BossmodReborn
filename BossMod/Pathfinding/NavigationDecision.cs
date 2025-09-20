@@ -46,7 +46,7 @@ public struct NavigationDecision
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
-            if (ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
+            if (index >= 0 && ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f || index < 0) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
             {
                 if (localGoalZones.Length != 0)
                 {
@@ -280,7 +280,7 @@ public struct NavigationDecision
 
                         // center check with cushion, this is needed for shapes that can intersect cells between corners
                         var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
-                        var centerG = CalculateMaxG(shapesInRowBuf, centerPos, cushion);
+                        var centerG = CalculateMaxGCenter(shapesInRowBuf, centerPos, cushion);
 
                         var finalG = Math.Min(cellEdgeG, centerG);
 
@@ -325,7 +325,7 @@ public struct NavigationDecision
             }
         }
 
-        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, WPos p, float cushion = default)
+        static float CalculateMaxGCenter(List<(ShapeDistance shapeDistance, float g)> zones, WPos p, float cushion = default)
         {
             // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
             // threshold > 0 inflates by that margin (used for center cushion).
@@ -335,7 +335,22 @@ public struct NavigationDecision
             for (var i = 0; i < count; ++i)
             {
                 var z = zones[i];
-                if (z.shapeDistance.Distance(p) < threshold)
+                if (z.shapeDistance.Distance(p) <= threshold)
+                {
+                    return z.g;
+                }
+            }
+            return float.MaxValue;
+        }
+
+        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, WPos p)
+        {
+            // pip test for corners
+            var count = zones.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var z = zones[i];
+                if (z.shapeDistance.Contains(p))
                 {
                     return z.g;
                 }
@@ -532,7 +547,7 @@ public struct NavigationDecision
                         var shape = shapesInRow[j];
 
                         // center with cushion, corners without
-                        if (shape.Distance(center) < cushion || shape.Distance(tl) < 0f || shape.Distance(tr) < 0f || shape.Distance(bl) < 0f || shape.Distance(br) < 0f)
+                        if (shape.Distance(center) <= cushion || shape.Contains(tl) || shape.Contains(br) || shape.Contains(tr) || shape.Contains(bl))
                         {
                             pixelMaxG[idx] = -1f;
                             pixelPriority[idx] = float.MinValue;
