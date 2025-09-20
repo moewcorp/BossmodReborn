@@ -178,7 +178,7 @@ public struct NavigationDecision
                     }
                     if (shapesInRowBuf.Count == 0)
                     {
-                        // no zones affect this row → scratch is +inf
+                        // no zones affect this row → scratch float max value
                         var baseIdx = r * width;
                         for (var x1 = 0; x1 < width; ++x1)
                         {
@@ -474,14 +474,7 @@ public struct NavigationDecision
 
         var dy = map.LocalZDivRes * resolution * resolution;
         var dx = dy.OrthoL();
-        var startPos = map.Center - (width >> 1) * dx - (height >> 1) * dy;
-
-        var sampleOffsets = new WDir[5];
-        sampleOffsets[0] = default; // center, cushion applied
-        sampleOffsets[1] = dx * 0.5f + dy * 0.5f;
-        sampleOffsets[2] = dx * 0.5f - dy * 0.5f;
-        sampleOffsets[3] = -dx * 0.5f + dy * 0.5f;
-        sampleOffsets[4] = -dx * 0.5f - dy * 0.5f;
+        var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
         var partitioner = Partitioner.Create(0, height);
         var pixelMaxG = map.PixelMaxG;
@@ -491,54 +484,61 @@ public struct NavigationDecision
         {
             var ys = range.Item1;
             var ye = range.Item2;
+
             var shapesInRow = new List<ShapeDistance>(len);
+
             for (var y = ys; y < ye; ++y)
             {
-
-                var rowStart = startPos + y * dy;
-
+                var rowCenter = topLeft + (y + 0.5f) * dy;
                 shapesInRow.Clear();
+
                 for (var j = 0; j < len; ++j)
                 {
                     var s = zones[j];
-                    if (s.RowIntersectsShape(rowStart, dx, width, cushion))
+                    if (s.RowIntersectsShape(rowCenter, dx, width, cushion))
                     {
                         shapesInRow.Add(s);
                     }
                 }
+
                 var count = shapesInRow.Count;
                 if (count == 0)
                 {
-                    continue; // no shapes in this row
+                    continue;
                 }
 
                 var rowBaseIndex = y * width;
+                var rowTopLeft = topLeft + y * dy;
 
                 for (var x = 0; x < width; ++x)
                 {
-                    var pixelIndex = rowBaseIndex + x;
+                    var idx = rowBaseIndex + x;
 
-                    if (pixelMaxG[pixelIndex] < 0f)
+                    if (pixelMaxG[idx] < 0f)
                     {
-                        continue; // already blocked by arena bounds
+                        continue; // arena bounds already blocked
                     }
-                    var posBase = rowStart + x * dx;
+
+                    var cellTopLeft = rowTopLeft + x * dx;
+
+                    var tl = cellTopLeft;
+                    var tr = cellTopLeft + dx;
+                    var bl = cellTopLeft + dy;
+                    var br = cellTopLeft + dx + dy;
+                    var center = cellTopLeft + (dx * 0.5f + dy * 0.5f);
 
                     for (var j = 0; j < count; ++j)
                     {
                         var shape = shapesInRow[j];
-                        for (var i = 0; i < 5; ++i)
+
+                        // center with cushion, corners without
+                        if (shape.Distance(center) < cushion || shape.Distance(tl) < 0f || shape.Distance(tr) < 0f || shape.Distance(bl) < 0f || shape.Distance(br) < 0f)
                         {
-                            if (shape.Distance(posBase + sampleOffsets[i]) < (i == 0 ? cushion : default))
-                            {
-                                pixelMaxG[pixelIndex] = -1f;
-                                pixelPriority[pixelIndex] = float.MinValue;
-                                goto next;
-                            }
+                            pixelMaxG[idx] = -1f;
+                            pixelPriority[idx] = float.MinValue;
+                            break;
                         }
                     }
-                next:
-                    ;
                 }
             }
         });

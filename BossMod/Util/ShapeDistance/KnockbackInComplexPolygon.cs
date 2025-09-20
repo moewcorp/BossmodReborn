@@ -123,7 +123,6 @@ public sealed class SDKnockbackInComplexPolygonAwayFromOriginPlusIntersectionTes
     {
         var offset = p - center;
         var dir = (p - origin).Normalized();
-        // while doing a point in polygon test and intersection test seems like double the work, the intersection test is actually a lot slower than the PiP test, so this is a net positive to filter out some cells beforehand
         if (polygon.Contains(offset + distance * dir) && Intersect.RayPolygon(offset, dir, polygon) > distance)
         {
             return 1f;
