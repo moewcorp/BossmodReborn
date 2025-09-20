@@ -14,7 +14,7 @@ public sealed class SpatialIndex
     private int[][] _grid = [];
     private readonly Edge[] _edges;
     private readonly int _minX, _minY, _gridWidth, _gridHeight;
-    private const float InvGridSize = 1 / 1f;
+    private const float InvGridSize = 1f / 5f;
 
     public SpatialIndex(Edge[] edges)
     {

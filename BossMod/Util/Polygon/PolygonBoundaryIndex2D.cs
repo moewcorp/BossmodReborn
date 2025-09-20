@@ -21,8 +21,6 @@ internal sealed class PolygonBoundaryIndex2D
                 y1 = by;
                 x0 = ax;
                 k = (bx - ax) / Math.Max(by - ay, Eps);
-                minX = Math.Min(ax, bx);
-                maxX = Math.Max(ax, bx);
             }
             else
             {
@@ -30,9 +28,10 @@ internal sealed class PolygonBoundaryIndex2D
                 y1 = ay;
                 x0 = bx;
                 k = (ax - bx) / Math.Max(ay - by, Eps);
-                minX = Math.Min(ax, bx);
-                maxX = Math.Max(ax, bx);
             }
+
+            minX = Math.Min(ax, bx);
+            maxX = Math.Max(ax, bx);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -136,12 +135,6 @@ internal sealed class PolygonBoundaryIndex2D
             }
         }
 
-        if (all.Count == 0)
-        {
-            // Empty index
-            return new PolygonBoundaryIndex2D([], [], [], [], [], [], [0], [], [0], [], 1, 0f, 1f, 1f, 1f, 1f, -1f, -1f, [float.PositiveInfinity], [float.NegativeInfinity]);
-        }
-
         // Split horizontals/non-horizontals
         var count = all.Count;
         List<E> eList = new(count);
@@ -214,7 +207,7 @@ internal sealed class PolygonBoundaryIndex2D
         var lenH = hEdges.Length;
         for (var idx = 0; idx < lenH; ++idx)
         {
-            var y = hEdges[idx].y;
+            ref readonly var y = ref hEdges[idx].y;
             var r = (int)MathF.Floor((y - bbMinY) * invCellH);
             if (r < 0)
             {
@@ -295,9 +288,10 @@ internal sealed class PolygonBoundaryIndex2D
 
             // expand by horizontals
             var hStart = hRowLists[r];
-            for (var i = 0; i < hStart.Count; ++i)
+            var hCount = hStart.Count;
+            for (var i = 0; i < hCount; ++i)
             {
-                var h = hEdges[hStart[i]];
+                ref readonly var h = ref hEdges[hStart[i]];
                 if (h.minX < rMinX)
                 {
                     rMinX = h.minX;
@@ -484,7 +478,7 @@ internal sealed class PolygonBoundaryIndex2D
             var x = _e_x0_Row[i0] + _e_k_Row[i0] * (py - y0);
 
             // boundary check (use MathF.Abs to avoid double)
-            if (MathF.Abs(px - x) <= Eps && px >= _e_minX_Row[i0] - Eps && px <= _e_maxX_Row[i0] + Eps)
+            if (Math.Abs(px - x) <= Eps && px >= _e_minX_Row[i0] - Eps && px <= _e_maxX_Row[i0] + Eps)
             {
                 return true;
             }
@@ -517,265 +511,302 @@ internal sealed class PolygonBoundaryIndex2D
 
     public float Raycast(in WDir o, in WDir d)
     {
+        float ox = o.X, oz = o.Z;
+        float dx = d.X, dz = d.Z;
+
+        // AABB slab reject (why: fast coarse pruning)
+        float tmin = -float.Epsilon, tmax = float.MaxValue;
+        if (Math.Abs(dx) > Eps)
         {
-            float ox = o.X, oz = o.Z;
-            float dx = d.X, dz = d.Z;
-
-            // AABB slab reject
-            float tmin = -float.Epsilon, tmax = float.MaxValue;
-
-            if (Math.Abs(dx) > Eps)
+            var inv = 1f / dx;
+            var tx1 = (_bbMinX - ox) * inv;
+            var tx2 = (_bbMaxX - ox) * inv;
+            if (tx1 > tx2)
             {
-                var inv = 1f / dx;
-                var tx1 = (_bbMinX - ox) * inv;
-                var tx2 = (_bbMaxX - ox) * inv;
-                if (tx1 > tx2)
-                {
-                    (tx1, tx2) = (tx2, tx1);
-                }
-                tmin = Math.Max(tmin, tx1);
-                tmax = Math.Min(tmax, tx2);
+                (tx1, tx2) = (tx2, tx1);
             }
-            else if (ox < _bbMinX - Eps || ox > _bbMaxX + Eps)
+            tmin = Math.Max(tmin, tx1);
+            tmax = Math.Min(tmax, tx2);
+        }
+        else if (ox < _bbMinX - Eps || ox > _bbMaxX + Eps)
+        {
+            return float.MaxValue;
+        }
+
+        if (Math.Abs(dz) > Eps)
+        {
+            var inv = 1f / dz;
+            var ty1 = (_bbMinY - oz) * inv;
+            var ty2 = (_bbMaxY - oz) * inv;
+            if (ty1 > ty2)
+            {
+                (ty1, ty2) = (ty2, ty1);
+            }
+            tmin = Math.Max(tmin, ty1);
+            tmax = Math.Min(tmax, ty2);
+        }
+        else if (oz < _bbMinY - Eps || oz > _bbMaxY + Eps)
+        {
+            return float.MaxValue;
+        }
+
+        if (tmax < 0f || tmin > tmax)
+        {
+            return float.MaxValue;
+        }
+
+        // Horizontal ray fast path (why: hot case, cheaper than general solve)
+        if (Math.Abs(dz) <= Eps)
+        {
+            if (Math.Abs(dx) <= Eps)
             {
                 return float.MaxValue;
             }
 
-            if (Math.Abs(dz) > Eps)
-            {
-                var inv = 1f / dz;
-                var ty1 = (_bbMinY - oz) * inv;
-                var ty2 = (_bbMaxY - oz) * inv;
-                if (ty1 > ty2)
-                {
-                    (ty1, ty2) = (ty2, ty1);
-                }
-                tmin = Math.Max(tmin, ty1);
-                tmax = Math.Min(tmax, ty2);
-            }
-            else if (oz < _bbMinY - Eps || oz > _bbMaxY + Eps)
-            {
-                return float.MaxValue;
-            }
+            var row = ClampRow(oz);
+            var best = float.MaxValue;
 
-            if (tmax < 0f || tmin > tmax)
+            int es = _rowOffsets[row], ee = _rowOffsets[row + 1];
+            for (var i = es; i < ee; ++i)
             {
-                return float.MaxValue;
-            }
-
-            // Horizontal ray fast path
-            if (Math.Abs(dz) <= Eps)
-            {
-                if (Math.Abs(dx) <= Eps)
+                float y0 = _e_y0_Row[i], y1 = _e_y1_Row[i];
+                if (oz < y0 - Eps || oz >= y1 - Eps)
                 {
-                    return float.MaxValue;
+                    continue;
                 }
 
-                var row = ClampRow(oz);
-                var best = float.MaxValue;
-
-                int es = _rowOffsets[row], ee = _rowOffsets[row + 1];
-                for (var i = es; i < ee; ++i)
+                var x = _e_x0_Row[i] + _e_k_Row[i] * (oz - y0);
+                var t = (x - ox) / dx;
+                if (t >= 0f && t < best && x >= _e_minX_Row[i] - Eps && x <= _e_maxX_Row[i] + Eps)
                 {
-                    float y0 = _e_y0_Row[i], y1 = _e_y1_Row[i];
-                    if (oz < y0 - Eps || oz >= y1 - Eps)
-                    {
-                        continue;
-                    }
+                    best = t;
+                }
+            }
 
-                    var x = _e_x0_Row[i] + _e_k_Row[i] * (oz - y0);
-                    var t = (x - ox) / dx;
-                    if (t >= 0f && t < best && x >= _e_minX_Row[i] - Eps && x <= _e_maxX_Row[i] + Eps)
+            int hs = _hRowOffsets[row], he = _hRowOffsets[row + 1];
+            for (var k = hs; k < he; ++k)
+            {
+                ref readonly var h = ref _hEdges[_hRowIdx[k]];
+                if (Math.Abs(oz - h.y) > Eps)
+                {
+                    continue;
+                }
+
+                if (dx > 0f)
+                {
+                    var x0 = ox <= h.minX ? h.minX : (ox <= h.maxX ? ox : float.PositiveInfinity);
+                    var t = (x0 - ox) / dx;
+                    if (t >= 0f && t < best)
                     {
                         best = t;
                     }
                 }
-
-                int hs = _hRowOffsets[row], he = _hRowOffsets[row + 1];
-                for (var k = hs; k < he; ++k)
+                else
                 {
-                    ref readonly var h = ref _hEdges[_hRowIdx[k]];
-                    if (Math.Abs(oz - h.y) > Eps)
+                    var x0 = ox >= h.maxX ? h.maxX : (ox >= h.minX ? ox : float.NegativeInfinity);
+                    var t = (x0 - ox) / dx;
+                    if (t >= 0f && t < best)
                     {
-                        continue;
-                    }
-
-                    if (dx > 0f)
-                    {
-                        var x0 = ox <= h.minX ? h.minX : (ox <= h.maxX ? ox : float.PositiveInfinity);
-                        var t = (x0 - ox) / dx;
-                        if (t >= 0f && t < best)
-                        {
-                            best = t;
-                        }
-                    }
-                    else
-                    {
-                        var x0 = ox >= h.maxX ? h.maxX : (ox >= h.minX ? ox : float.NegativeInfinity);
-                        var t = (x0 - ox) / dx;
-                        if (t >= 0f && t < best)
-                        {
-                            best = t;
-                        }
+                        best = t;
                     }
                 }
-                return best;
+            }
+            return best;
+        }
+
+        // DDA rows + robust segment-ray solve
+        var bestT = float.MaxValue;
+        var rowCur = ClampRow(oz);
+        var step = dz > 0f ? +1 : -1;
+        var nextY = (dz > 0f) ? (_minY + (rowCur + 1) * _cellH) : (_minY + rowCur * _cellH);
+
+        var v_dx = new Vector<float>(dx);
+        var v_dz = new Vector<float>(dz);
+        var v_ox = new Vector<float>(ox);
+        var v_oz = new Vector<float>(oz);
+        var v_zero = Vector<float>.Zero;
+        var v_inf = new Vector<float>(float.PositiveInfinity);
+        var v_tiny = new Vector<float>(1e-9f); // stricter than Eps for denom
+        var v_one = new Vector<float>(1f);
+
+        while ((uint)rowCur < (uint)_rows)
+        {
+            var tBoundary = (nextY - oz) / dz;
+            if (bestT <= tBoundary + 1e-6f)
+            {
+                break; // small bias to avoid row-transition jitter
             }
 
-            // row DDA + SIMD over non-horizontals
-            var bestT = float.MaxValue;
-            var rowCur = ClampRow(oz);
-            var step = dz > 0f ? +1 : -1;
+            int es = _rowOffsets[rowCur], ee = _rowOffsets[rowCur + 1];
 
-            var nextY = (dz > 0f) ? (_minY + (rowCur + 1) * _cellH) : (_minY + rowCur * _cellH);
-
-            // ray slope in x-over-y
-            var s = dx / dz;
-
-            // broadcast vectors
-            var v_s = new Vector<float>(s);
-            var v_ox = new Vector<float>(ox);
-            var v_oz = new Vector<float>(oz);
-            var v_dz = new Vector<float>(dz);
-            var v_eps = new Vector<float>(Eps);
-            var v_zero = Vector<float>.Zero;
-            var v_inf = new Vector<float>(float.PositiveInfinity);
-
-            while ((uint)rowCur < (uint)_rows)
+            // SIMD blocks
+            var i = es;
+            var lanes = Vector<float>.Count;
+            for (; i + lanes <= ee; i += lanes)
             {
-                var tBoundary = (nextY - oz) / dz;
-                if (bestT <= tBoundary + Eps)
+                // Edge anchor A and vector e
+                var y0 = LoadVec(_e_y0_Row, i);
+                var y1 = LoadVec(_e_y1_Row, i);
+                var x0 = LoadVec(_e_x0_Row, i);
+                var k = LoadVec(_e_k_Row, i);
+
+                var ey = y1 - y0; // dy
+                var ex = k * ey; // dx
+                var wox = x0 - v_ox; // A - o
+                var woz = y0 - v_oz;
+
+                // den = cross(d, e) = dx*ey - dz*ex
+                var den = v_dx * ey - v_dz * ex;
+                var absDen = Vector.Abs(den);
+                var nonParallel = Vector.GreaterThan(absDen, v_tiny);
+
+                // t = cross(w, e)/den = (w.x*ey - w.y*ex)/den
+                var t = (wox * ey - woz * ex) / den;
+
+                // u = cross(w, d)/den = (w.x*dz - w.y*dx)/den
+                var u = (wox * v_dz - woz * v_dx) / den;
+
+                var tNonNeg = Vector.GreaterThanOrEqual(t, v_zero);
+                // half-open on u to avoid counting far vertex twice
+                var ge0 = Vector.GreaterThanOrEqual(u, v_zero);
+                var lt1 = Vector.LessThan(u, v_one);
+                var inSeg = ge0 & lt1;
+
+                var valid = nonParallel & tNonNeg & inSeg;
+
+                var tCand = Vector.ConditionalSelect(valid, t, v_inf);
+                var v_best = new Vector<float>(bestT);
+                tCand = Vector.Min(tCand, v_best);
+
+                var laneMin = ReduceMin(tCand);
+                if (laneMin < bestT)
                 {
-                    break;
+                    bestT = laneMin;
                 }
+            }
 
-                int es = _rowOffsets[rowCur], ee = _rowOffsets[rowCur + 1];
+            // Scalar tail (with collinear handling)
+            for (; i < ee; ++i)
+            {
+                float y0s = _e_y0_Row[i], y1s = _e_y1_Row[i], x0s = _e_x0_Row[i];
+                float eys = y1s - y0s, exs = _e_k_Row[i] * eys;
 
-                // SIMD blocks across non-horizontals
-                var i = es;
-                var countF = Vector<float>.Count;
-                for (; i + countF <= ee; i += countF)
+                float woxs = x0s - ox, wozs = y0s - oz;
+                var den = dx * eys - dz * exs;
+
+                if (Math.Abs(den) > 1e-9f)
                 {
-                    var y0 = LoadVec(_e_y0_Row, i);
-                    var y1 = LoadVec(_e_y1_Row, i);
-                    var x0 = LoadVec(_e_x0_Row, i);
-                    var k = LoadVec(_e_k_Row, i);
-                    var mn = LoadVec(_e_minX_Row, i);
-                    var mx = LoadVec(_e_maxX_Row, i);
-
-                    var denom = v_s - k;
-                    var nonParallel = Vector.GreaterThan(Vector.Abs(denom), new Vector<float>(1e-12f));
-
-                    // y = (x0 - k*y0 - ox + s*oz)/denom
-                    var y = (x0 - k * y0 - v_ox + v_s * v_oz) / denom;
-
-                    // y ∈ [y0-ε, y1-ε)
-                    var geY0 = Vector.GreaterThanOrEqual(y, y0 - v_eps);
-                    var ltY1 = Vector.LessThan(y, y1 - v_eps);
-                    var inSpan = geY0 & ltY1;
-
-                    var t = (y - v_oz) / v_dz;
-                    var tNonNeg = Vector.GreaterThanOrEqual(t, v_zero);
-
-                    // x within edge bounds (with ε)
-                    var x = x0 + k * (y - y0);
-                    var geMn = Vector.GreaterThanOrEqual(x + v_eps, mn);
-                    var leMx = Vector.LessThanOrEqual(x - v_eps, mx);
-
-                    var valid = nonParallel & inSpan & tNonNeg & geMn & leMx;
-
-                    // Masked candidates → +∞ if invalid
-                    var tCand = Vector.ConditionalSelect(valid, t, v_inf);
-
-                    // Keep only candidates < current bestT
-                    var v_best = new Vector<float>(bestT);
-                    tCand = Vector.Min(tCand, v_best);
-
-                    var laneMin = ReduceMin(tCand);
-                    if (laneMin < bestT)
-                    {
-                        bestT = laneMin;
-                    }
-                }
-
-                // scalar tail
-                for (; i < ee; ++i)
-                {
-                    var y0 = _e_y0_Row[i];
-                    var y1 = _e_y1_Row[i];
-                    var k = _e_k_Row[i];
-                    var x0 = _e_x0_Row[i];
-
-                    var denom = s - k;
-                    if (Math.Abs(denom) <= 1e-12f)
-                    {
-                        continue;
-                    }
-
-                    var y = (x0 - k * y0 - ox + s * oz) / denom;
-                    if (y < y0 - Eps || y >= y1 - Eps)
-                    {
-                        continue;
-                    }
-
-                    var t = (y - oz) / dz;
+                    var t = (woxs * eys - wozs * exs) / den;
                     if (t < 0f || t >= bestT)
                     {
-                        continue;
+                        goto NEXT_SCALAR;
                     }
 
-                    var x = x0 + k * (y - y0);
-                    if (x + Eps < _e_minX_Row[i] || x - Eps > _e_maxX_Row[i])
+                    var u = (woxs * dz - wozs * dx) / den;
+                    if (u is < 0f or >= (1f - 1e-6f))
                     {
-                        continue;
+                        goto NEXT_SCALAR; // half-open
                     }
+
                     bestT = t;
                 }
-
-                // horizontals
-                int hs = _hRowOffsets[rowCur], he = _hRowOffsets[rowCur + 1];
-                for (var k = hs; k < he; ++k)
+                else
                 {
-                    ref readonly var h = ref _hEdges[_hRowIdx[k]];
-                    var t = (h.y - oz) / dz;
-                    if (t < 0f || t >= bestT)
+                    // Possible parallel; if also collinear, project segment onto ray.
+                    var col = woxs * dz - wozs * dx; // cross(w, d)
+                    if (MathF.Abs(col) <= 1e-7f)
                     {
-                        continue;
-                    }
+                        // param along ray for edge endpoints
+                        var iddd = 1f / (dx * dx + dz * dz + 1e-20f);
+                        var tA = (woxs * dx + wozs * dz) * iddd;
+                        var tB = ((x0s + exs - ox) * dx + (y0s + eys - oz) * dz) * iddd;
 
-                    var x = ox + t * dx;
-                    if (x >= h.minX - Eps && x <= h.maxX + Eps)
-                    {
-                        bestT = t;
+                        if (tA > tB)
+                        {
+                            (tA, tB) = (tB, tA);
+                        }
+                        // nearest non-negative overlap
+                        var cand = tA >= 0f ? tA : (tB >= 0f ? tB : float.MaxValue);
+                        if (cand < bestT)
+                        {
+                            bestT = cand;
+                        }
                     }
                 }
-
-                // advance to next row
-                rowCur += step;
-                nextY += step * _cellH;
+            NEXT_SCALAR:
+                ;
             }
 
-            return bestT;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static Vector<float> LoadVec(float[] src, int index) => new(src, index);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static float ReduceMin(in Vector<float> v)
+            // horizontals in this row
+            int hs = _hRowOffsets[rowCur], he = _hRowOffsets[rowCur + 1];
+            for (var k = hs; k < he; ++k)
             {
-                Span<float> buf = stackalloc float[Vector<float>.Count];
-                v.CopyTo(buf);
-                var m = buf[0];
-                var len = buf.Length;
-                for (var i = 1; i < len; ++i)
+                ref readonly var h = ref _hEdges[_hRowIdx[k]];
+                // general ray vs horizontal segment, using same cross-based rule
+                var eHx = h.maxX - h.minX;
+                var eHy = 0f;
+
+                // den = cross(d, eH) = dx*0 - dz*eHx = -dz*eHx
+                var denH = -dz * eHx;
+                float woxH = h.minX - ox, wozH = h.y - oz;
+
+                if (Math.Abs(denH) > 1e-9f)
                 {
-                    if (buf[i] < m)
+                    var t = (woxH * eHy - wozH * eHx) / denH; // simplifies to -wozH*eHx/denH
+                    if (t >= 0f && t < bestT)
                     {
-                        m = buf[i];
+                        var u = (woxH * dz - wozH * dx) / denH;
+                        if (u is >= (-1e-6f) and <= (1f - 1e-6f))
+                        {
+                            bestT = t;
+                        }
                     }
                 }
-                return m;
+                else
+                {
+                    // collinear with horizontal: project
+                    if (Math.Abs(wozH * dx - woxH * dz) <= 1e-7f)
+                    {
+                        var iddd = 1f / (dx * dx + dz * dz + 1e-20f);
+                        var tA = (woxH * dx + wozH * dz) * iddd;
+                        var tB = ((h.maxX - ox) * dx + (h.y - oz) * dz) * iddd;
+                        if (tA > tB)
+                        {
+                            (tA, tB) = (tB, tA);
+                        }
+                        var cand = tA >= 0f ? tA : (tB >= 0f ? tB : float.MaxValue);
+                        if (cand < bestT)
+                        {
+                            bestT = cand;
+                        }
+                    }
+                }
             }
+
+            rowCur += step;
+            nextY += step * _cellH;
+        }
+
+        return bestT;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static Vector<float> LoadVec(float[] src, int index) => new(src, index);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static float ReduceMin(in Vector<float> v)
+        {
+            Span<float> buf = stackalloc float[Vector<float>.Count];
+            v.CopyTo(buf);
+            var m = buf[0];
+            var len = buf.Length;
+            for (var i = 1; i < len; ++i)
+            {
+                if (buf[i] < m)
+                {
+                    m = buf[i];
+                }
+            }
+            return m;
         }
     }
 
