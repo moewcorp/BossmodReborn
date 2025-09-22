@@ -7,10 +7,7 @@ public sealed class SDComplexPolygonInvertedContains(RelSimplifiedComplexPolygon
     private readonly WPos center = Center;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
-    {
-        return polygon.Contains(p - center);
-    }
+    public override bool Contains(WPos p) => polygon.Contains(p - center);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p) => Contains(p) ? 0f : 1f;

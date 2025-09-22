@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 
 sealed class RideTheWaves(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rectFull = new(40f, 2.5f), rectMid = new(20f, 2.5f), rectShort = new(15f, 2.5f);
+    private readonly AOEShapeRect rectFull = new(40f, 2.5f), rectMid = new(20f, 2.5f), rectShort = new(15f, 2.5f);
     public readonly List<AOEInstance> AOEs = new(8);
     private readonly M05SDancingGreenConfig _config = Service.Config.Get<M05SDancingGreenConfig>();
 

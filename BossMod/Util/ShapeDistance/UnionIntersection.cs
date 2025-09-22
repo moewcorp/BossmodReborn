@@ -30,6 +30,9 @@ public sealed class SDIntersection : ShapeDistance // max distance func
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(WPos p) => Distance(p) <= 0f;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
@@ -197,7 +200,7 @@ public sealed class SDOutsideOfUnion : ShapeDistance
         for (var i = 0; i < length; ++i)
         {
             var d = array[i].Distance(p);
-            if (d > 0f)
+            if (d >= 0f)
             {
                 ++insideCount;
             }
@@ -217,6 +220,25 @@ public sealed class SDOutsideOfUnion : ShapeDistance
 
         // Exactly one shape contains the point => inside (negative)
         return (insideCount == 1) ? minAbs : -minAbs;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(WPos p)
+    {
+        var array = zones;
+        var insideCount = 0;
+        for (var i = 0; i < length; ++i)
+        {
+            if (array[i].Contains(p))
+            {
+                ++insideCount;
+                if (insideCount > 1)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -171,7 +171,7 @@ sealed class LostHope(BossModule module) : Components.TemporaryMisdirection(modu
         base.AddAIHints(slot, actor, assignment, hints);
         if (prepare)
         {
-            hints.GoalZones.Add(hints.GoalSingleTarget(Arena.Center, 1f, 9f));
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(Arena.Center, 1f, 9f));
         }
     }
 }

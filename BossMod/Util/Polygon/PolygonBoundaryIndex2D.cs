@@ -810,7 +810,7 @@ internal sealed class PolygonBoundaryIndex2D
         }
     }
 
-    public WDir ClampToBounds(in WDir p)
+    public WDir ClosestPointOnBoundary(in WDir p)
     {
         float px = p.X, py = p.Z;
 
@@ -1032,7 +1032,7 @@ internal sealed class PolygonBoundaryIndex2D
         static Vector<float> LoadVec(float[] src, int index) => new(src, index);
     }
 
-    public WDir[] VisibilityFrom(WDir origin, RelSimplifiedComplexPolygon polygon)
+    public WDir[] VisibilityFrom(in WDir origin, RelSimplifiedComplexPolygon polygon)
     {
         // collect unique vertices (exterior + holes)
         var unique = new HashSet<WDir>();

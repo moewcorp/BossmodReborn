@@ -183,7 +183,7 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
                 var seed = clippedSeeds[i];
                 if (seed.IsTargetable)
                 {
-                    hints.GoalZones.Add(hints.GoalSingleTarget(clippedSeeds[i], 2.5f, 5f));
+                    hints.GoalZones.Add(AIHints.GoalSingleTarget(clippedSeeds[i], 2.5f, 5f));
                     var distSq = (actor.Position - seed.Position).LengthSq();
                     if (distSq < minDistSq)
                     {

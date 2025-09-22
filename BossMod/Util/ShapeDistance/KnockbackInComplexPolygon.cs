@@ -29,10 +29,7 @@ public sealed class SDKnockbackInComplexPolygonFixedDirection(WPos Center, WDir 
     private readonly RelSimplifiedComplexPolygon polygon = Polygon;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
-    {
-        return !polygon.Contains(p - center + direction);
-    }
+    public override bool Contains(WPos p) => !polygon.Contains(p - center + direction);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override float Distance(WPos p) => Contains(p) ? 0f : 1f;

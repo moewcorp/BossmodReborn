@@ -391,6 +391,38 @@ public abstract class BossModule : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsAnyActorInCombat(uint enemy)
+    {
+        var enemies = Enemies(enemy);
+        var count = enemies.Count;
+        for (var j = 0; j < count; ++j)
+        {
+            var e = enemies[j];
+            if (e.InCombat)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsAnyActorTargetable(uint enemy)
+    {
+        var enemies = Enemies(enemy);
+        var count = enemies.Count;
+        for (var j = 0; j < count; ++j)
+        {
+            var e = enemies[j];
+            if (e.IsTargetable)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool IsAnyActorInCombat(uint[] enemies)
     {
         var allenemies = enemies;

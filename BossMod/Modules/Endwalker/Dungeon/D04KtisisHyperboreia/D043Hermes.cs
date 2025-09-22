@@ -148,7 +148,7 @@ sealed class TrueAeroIVLOS(BossModule module) : Components.CastLineOfSightAOE(mo
 
         if (countBroken == 3 && meteor is Actor met && _aoe.Casters.Count == 0) // force AI to move closer to the meteor as soon as they become visible
         {
-            hints.GoalZones.Add(hints.GoalSingleTarget(met, 5f, 5f));
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(met, 5f, 5f));
         }
     }
 }

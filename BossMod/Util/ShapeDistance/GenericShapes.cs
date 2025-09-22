@@ -333,13 +333,14 @@ public sealed class SDInvertedDonut : ShapeDistance
 [SkipLocalsInit]
 public sealed class SDCone : ShapeDistance
 {
-    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+    private readonly float originX, originZ, coneFactor, radius, radiusSq, nlX, nlZ, nrX, nrZ;
 
     public SDCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
     {
         originX = Origin.X;
         originZ = Origin.Z;
         radius = Radius;
+        radiusSq = radius * radius;
         var halfAngle = HalfAngle;
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
@@ -494,17 +495,25 @@ public sealed class SDCone : ShapeDistance
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
+
+        // cone is always bounded by the circle
+        var r2 = dx * dx + dz * dz;
+        if (r2 > radiusSq)
+        {
+            return false;
+        }
+
         var sL = dx * nlX + dz * nlZ;
         var sR = dx * nrX + dz * nrZ;
 
         if (coneFactor > 0f)
         {
-            // ≤ 180°: inside both half-planes
+            // ≤ 180°: must be inside both sides
             return sL <= 0f && sR <= 0f;
         }
         else
         {
-            // > 180°: inside at least one half-plane
+            // > 180°: inside if not outside both sides
             return sL >= 0f || sR >= 0f;
         }
     }
@@ -513,13 +522,14 @@ public sealed class SDCone : ShapeDistance
 [SkipLocalsInit]
 public sealed class SDInvertedCone : ShapeDistance
 {
-    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+    private readonly float originX, originZ, coneFactor, radius, radiusSq, nlX, nlZ, nrX, nrZ;
 
     public SDInvertedCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
     {
         originX = Origin.X;
         originZ = Origin.Z;
         radius = Radius;
+        radiusSq = radius * radius;
         var halfAngle = HalfAngle;
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
@@ -554,6 +564,13 @@ public sealed class SDInvertedCone : ShapeDistance
         var dx = p.X - originX;
         var dz = p.Z - originZ;
 
+        // cone is always bounded by the circle
+        var r2 = dx * dx + dz * dz;
+        if (r2 > radiusSq)
+        {
+            return false;
+        }
+
         // Angular complement
         var sL = dx * nlX + dz * nlZ;
         var sR = dx * nrX + dz * nrZ;
@@ -566,7 +583,7 @@ public sealed class SDInvertedCone : ShapeDistance
         else
         {
             // > 180°: outside if both sides are strictly inside
-            return sL < 0f && sR < -0f;
+            return sL < 0f && sR < 0f;
         }
     }
 
@@ -633,11 +650,11 @@ public sealed class SDDonutSector : ShapeDistance
 
         if (coneFactor > 0f)
         {
-            return dl <= 0f && dr <= 0f;    // ≤ 180°: intersection
+            return dl <= 0f && dr <= 0f; // ≤ 180°: intersection
         }
         else
         {
-            return dl >= 0f || dr >= 0f;  // > 180°: union
+            return dl >= 0f || dr >= 0f; // > 180°: union
         }
     }
 

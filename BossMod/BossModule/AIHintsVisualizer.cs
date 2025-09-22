@@ -80,7 +80,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
     {
         // TODO: remove once the similar thing in AIBehaviour.BuildNavigationDecision is removed
         if (hints.GoalZones.Count == 0 && ws.Actors.Find(player.TargetID) is var target && target != null)
-            hints.GoalZones.Add(hints.GoalSingleTarget(target, preferredDistance));
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(target, preferredDistance));
 
         var now = DateTime.Now;
         _navi = NavigationDecision.Build(_naviCtx, ws, hints, player, forbiddenZoneCushion: cushionSize);

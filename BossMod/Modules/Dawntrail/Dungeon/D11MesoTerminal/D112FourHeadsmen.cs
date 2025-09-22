@@ -208,7 +208,7 @@ sealed class CellBlock(BossModule module) : Components.GenericAOEs(module)
                 enemy.Priority = 1;
                 if (actor.Role == Role.Melee)
                 {
-                    hints.GoalZones.Add(hints.GoalSingleTarget(a, 3f, 99f)); // needed for RSR since it won't attack targets outside melee range on melees
+                    hints.GoalZones.Add(AIHints.GoalSingleTarget(a, 3f, 99f)); // needed for RSR since it won't attack targets outside melee range on melees
                 }
             }
             else if (assigned != null && a != assigned)
