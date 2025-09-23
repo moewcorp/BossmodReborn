@@ -9,7 +9,7 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewalls(WDir Direction, Co
     private readonly int length = Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         for (var i = 0; i < length; ++i)
         {
@@ -23,7 +23,7 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewalls(WDir Direction, Co
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p) => Contains(p) ? 0f : 1f;
+    public override float Distance(in WPos p) => Contains(p) ? 0f : 1f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
@@ -42,7 +42,7 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewallsPlusRectAOE(WDir Di
     private readonly float halfWidth = HalfWidth;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         for (var i = 0; i < length; ++i)
         {
@@ -61,7 +61,7 @@ public sealed class SDKnockbackFixedDirectionAgainstSafewallsPlusRectAOE(WDir Di
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p) => Contains(p) ? 0f : 1f;
+    public override float Distance(in WPos p) => Contains(p) ? 0f : 1f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
@@ -80,7 +80,7 @@ public sealed class SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts((WPos O
     private readonly int lenDonuts = LengthDonuts;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         for (var i = 0; i < lenKBs; ++i)
         {
@@ -103,7 +103,7 @@ public sealed class SDKnockbackWithWallsAwayFromOriginMultiAimIntoDonuts((WPos O
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p) => Contains(p) ? 0f : 1f;
+    public override float Distance(in WPos p) => Contains(p) ? 0f : 1f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;

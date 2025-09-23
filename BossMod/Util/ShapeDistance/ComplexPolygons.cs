@@ -7,10 +7,10 @@ public sealed class SDComplexPolygonInvertedContains(RelSimplifiedComplexPolygon
     private readonly WPos center = Center;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p) => polygon.Contains(p - center);
+    public override bool Contains(in WPos p) => polygon.Contains(p - center);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p) => Contains(p) ? 0f : 1f;
+    public override float Distance(in WPos p) => Contains(p) ? 0f : 1f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
@@ -87,7 +87,7 @@ public readonly struct SDPolygonWithHolesBase
         }
     }
 
-    public readonly float Distance(WPos p)
+    public readonly float Distance(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -115,7 +115,7 @@ public readonly struct SDPolygonWithHolesBase
         return MathF.Sqrt(minDistanceSq);
     }
 
-    public readonly float DistanceInverted(WPos p)
+    public readonly float DistanceInverted(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -144,7 +144,7 @@ public readonly struct SDPolygonWithHolesBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Contains(WPos p)
+    public readonly bool Contains(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -158,13 +158,13 @@ public sealed class SDPolygonWithHoles(SDPolygonWithHolesBase core) : ShapeDista
     private readonly SDPolygonWithHolesBase _core = core;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         return _core.Distance(p);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         return _core.Contains(p);
     }
@@ -179,13 +179,13 @@ public sealed class SDInvertedPolygonWithHoles(SDPolygonWithHolesBase core) : Sh
     private readonly SDPolygonWithHolesBase _core = core;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         return _core.DistanceInverted(p);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         return !_core.Contains(p);
     }

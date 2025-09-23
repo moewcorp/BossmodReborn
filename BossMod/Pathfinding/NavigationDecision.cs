@@ -325,7 +325,7 @@ public struct NavigationDecision
             }
         }
 
-        static float CalculateMaxGCenter(List<(ShapeDistance shapeDistance, float g)> zones, WPos p, float cushion = default)
+        static float CalculateMaxGCenter(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p, float cushion = default)
         {
             // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
             // threshold > 0 inflates by that margin (used for center cushion).
@@ -343,7 +343,7 @@ public struct NavigationDecision
             return float.MaxValue;
         }
 
-        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, WPos p)
+        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p)
         {
             // pip test for corners
             var count = zones.Count;
