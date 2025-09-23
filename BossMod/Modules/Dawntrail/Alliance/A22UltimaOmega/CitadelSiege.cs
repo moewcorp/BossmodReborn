@@ -106,7 +106,7 @@ sealed class CitadelSiegeHint(BossModule module) : Components.GenericAOEs(module
     {
         if (active && actor.PosRot.X > 780f)
         {
-            hints.GoalZones.Add(hints.GoalRectangle(new(782f, 800f), new(default, 1f), 2f, 23.5f, 99f));
+            hints.GoalZones.Add(AIHints.GoalRectangle(new(782f, 800f), new(default, 1f), 2f, 23.5f, 99f));
         }
     }
 }

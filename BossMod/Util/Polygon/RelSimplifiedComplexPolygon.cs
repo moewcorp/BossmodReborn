@@ -76,11 +76,11 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
             var prev = Interlocked.CompareExchange(ref _rayIndex, built, null);
             idx = prev ?? built;
         }
-        return idx.ClampToBounds(offset);
+        return idx.ClosestPointOnBoundary(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public WDir[] Visibility(WDir origin)
+    public WDir[] Visibility(in WDir origin)
     {
         var idx = _rayIndex;
         if (idx == null)

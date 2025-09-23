@@ -126,7 +126,7 @@ sealed class PungentAerosol(BossModule module) : Components.SimpleKnockbacks(mod
         if (!IsImmune(slot, act))
         {
             // square intentionally slightly smaller to prevent sus knockback
-            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, c.Origin, 24f, 18f), act);
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, c.Origin, 24f, 19f), act);
         }
     }
 

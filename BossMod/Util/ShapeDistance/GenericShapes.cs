@@ -15,10 +15,10 @@ public sealed class SDHalfPlane : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p) => normalX * p.X + normalZ * p.Z - bias;
+    public override float Distance(in WPos p) => normalX * p.X + normalZ * p.Z - bias;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p) => (normalX * p.X + normalZ * p.Z) <= bias;
+    public override bool Contains(in WPos p) => (normalX * p.X + normalZ * p.Z) <= bias;
 
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default)
     {
@@ -48,7 +48,7 @@ public sealed class SDCircle : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -56,7 +56,7 @@ public sealed class SDCircle : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
@@ -112,7 +112,7 @@ public sealed class SDInvertedCircle : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -120,7 +120,7 @@ public sealed class SDInvertedCircle : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
@@ -159,7 +159,7 @@ public sealed class SDDonut : ShapeDistance
         outerRadiusSq = outerRadius * outerRadius;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         // intersection of outer circle and inverted inner circle
         var pXoriginX = p.X - originX;
@@ -223,7 +223,7 @@ public sealed class SDDonut : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
@@ -248,7 +248,7 @@ public sealed class SDInvertedDonut : ShapeDistance
         outerRadiusSq = outerRadius * outerRadius;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         // intersection of outer circle and inverted inner circle
         var pXoriginX = p.X - originX;
@@ -321,7 +321,7 @@ public sealed class SDInvertedDonut : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
@@ -333,13 +333,14 @@ public sealed class SDInvertedDonut : ShapeDistance
 [SkipLocalsInit]
 public sealed class SDCone : ShapeDistance
 {
-    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+    private readonly float originX, originZ, coneFactor, radius, radiusSq, nlX, nlZ, nrX, nrZ;
 
     public SDCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
     {
         originX = Origin.X;
         originZ = Origin.Z;
         radius = Radius;
+        radiusSq = radius * radius;
         var halfAngle = HalfAngle;
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
@@ -354,7 +355,7 @@ public sealed class SDCone : ShapeDistance
     // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
     // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
     // both normals point outside
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -490,21 +491,29 @@ public sealed class SDCone : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
+
+        // cone is always bounded by the circle
+        var r2 = dx * dx + dz * dz;
+        if (r2 > radiusSq)
+        {
+            return false;
+        }
+
         var sL = dx * nlX + dz * nlZ;
         var sR = dx * nrX + dz * nrZ;
 
         if (coneFactor > 0f)
         {
-            // ≤ 180°: inside both half-planes
+            // ≤ 180°: must be inside both sides
             return sL <= 0f && sR <= 0f;
         }
         else
         {
-            // > 180°: inside at least one half-plane
+            // > 180°: inside if not outside both sides
             return sL >= 0f || sR >= 0f;
         }
     }
@@ -513,13 +522,14 @@ public sealed class SDCone : ShapeDistance
 [SkipLocalsInit]
 public sealed class SDInvertedCone : ShapeDistance
 {
-    private readonly float originX, originZ, coneFactor, radius, nlX, nlZ, nrX, nrZ;
+    private readonly float originX, originZ, coneFactor, radius, radiusSq, nlX, nlZ, nrX, nrZ;
 
     public SDInvertedCone(WPos Origin, float Radius, Angle CenterDir, Angle HalfAngle)
     {
         originX = Origin.X;
         originZ = Origin.Z;
         radius = Radius;
+        radiusSq = radius * radius;
         var halfAngle = HalfAngle;
         coneFactor = halfAngle.Rad > Angle.HalfPi ? -1f : 1f;
         var centerDir = CenterDir;
@@ -534,7 +544,7 @@ public sealed class SDInvertedCone : ShapeDistance
     // for <= 180-degree cone: result = intersection of circle and two half-planes with normals pointing outside cone sides
     // for > 180-degree cone: result = intersection of circle and negated intersection of two half-planes with inverted normals
     // both normals point outside
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -549,10 +559,17 @@ public sealed class SDInvertedCone : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var dx = p.X - originX;
         var dz = p.Z - originZ;
+
+        // cone is always bounded by the circle
+        var r2 = dx * dx + dz * dz;
+        if (r2 > radiusSq)
+        {
+            return false;
+        }
 
         // Angular complement
         var sL = dx * nlX + dz * nlZ;
@@ -566,7 +583,7 @@ public sealed class SDInvertedCone : ShapeDistance
         else
         {
             // > 180°: outside if both sides are strictly inside
-            return sL < 0f && sR < -0f;
+            return sL < 0f && sR < 0f;
         }
     }
 
@@ -600,7 +617,7 @@ public sealed class SDDonutSector : ShapeDistance
         outerRadiusSq = outerRadius * outerRadius;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -617,7 +634,7 @@ public sealed class SDDonutSector : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var px = p.X - originX;
         var pz = p.Z - originZ;
@@ -633,11 +650,11 @@ public sealed class SDDonutSector : ShapeDistance
 
         if (coneFactor > 0f)
         {
-            return dl <= 0f && dr <= 0f;    // ≤ 180°: intersection
+            return dl <= 0f && dr <= 0f; // ≤ 180°: intersection
         }
         else
         {
-            return dl >= 0f || dr >= 0f;  // > 180°: union
+            return dl >= 0f || dr >= 0f; // > 180°: union
         }
     }
 
@@ -870,7 +887,7 @@ public sealed class SDInvertedDonutSector : ShapeDistance
         outerRadiusSq = outerRadius * outerRadius;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -887,7 +904,7 @@ public sealed class SDInvertedDonutSector : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var px = p.X - originX;
         var pz = p.Z - originZ;
@@ -957,7 +974,7 @@ public sealed class SDTri : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -969,7 +986,7 @@ public sealed class SDTri : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1067,7 +1084,7 @@ public sealed class SDInvertedTri : ShapeDistance
         cZ = c.Z;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1079,7 +1096,7 @@ public sealed class SDInvertedTri : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1140,7 +1157,7 @@ public sealed class SDRect : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -1246,7 +1263,7 @@ public sealed class SDRect : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var px = p.X - originX;
         var pz = p.Z - originZ;
@@ -1305,7 +1322,7 @@ public sealed class SDInvertedRect : ShapeDistance
         halfWidth = HalfWidth;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pXoriginX = p.X - originX;
         var pZoriginZ = p.Z - originZ;
@@ -1342,7 +1359,7 @@ public sealed class SDInvertedRect : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var px = p.X - originX;
         var pz = p.Z - originZ;
@@ -1381,7 +1398,7 @@ public sealed class SDCapsule : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1396,7 +1413,7 @@ public sealed class SDCapsule : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1523,7 +1540,7 @@ public sealed class SDInvertedCapsule : ShapeDistance
         radiusSq = radius * radius;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1538,7 +1555,7 @@ public sealed class SDInvertedCapsule : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var pX = p.X;
         var pZ = p.Z;
@@ -1585,7 +1602,7 @@ public sealed class SDCross : ShapeDistance
         normal = direction.OrthoL();
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var offset = p - origin;
         var distParr = offset.Dot(direction);
@@ -1611,7 +1628,7 @@ public sealed class SDCross : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var off = p - origin;
         var parr = off.Dot(direction);
@@ -1714,7 +1731,7 @@ public sealed class SDInvertedCross : ShapeDistance
         normal = direction.OrthoL();
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var offset = p - origin;
         var distParr = offset.Dot(direction);
@@ -1740,7 +1757,7 @@ public sealed class SDInvertedCross : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var off = p - origin;
         var parr = off.Dot(direction);
@@ -1812,7 +1829,7 @@ public sealed class SDConvexPolygon : ShapeDistance
         cw = Cw;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var minDistance = float.MaxValue;
         var inside = true;
@@ -1837,7 +1854,7 @@ public sealed class SDConvexPolygon : ShapeDistance
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WPos p)
+    public override bool Contains(in WPos p)
     {
         var lenEdges = edges.Length;
         for (var i = 0; i < lenEdges; ++i)

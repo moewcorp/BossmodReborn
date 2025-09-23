@@ -409,16 +409,16 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
 
     #region Splash
     /// <summary>Position checker for determining the best target for an ability that deals <b>Splash</b> damage.</summary>
-    protected PositionCheck IsSplashTarget => (primary, other) => Hints.TargetInAOECircle(other, primary.Position, 5);
+    protected PositionCheck IsSplashTarget => (primary, other) => TargetInAOECircle(other, primary.Position, 5);
 
-    protected PositionCheck Is10ySplashTarget => (primary, other) => Hints.TargetInAOECircle(other, primary.Position, 10);
+    protected PositionCheck Is10ySplashTarget => (primary, other) => TargetInAOECircle(other, primary.Position, 10);
     #endregion
 
     #region Cones
     //some use-cases for these are mainly for BLU modules, since the ranges for their abilities are all over the place. (e.g. 4y & 16y specifically)
 
     /// <summary>Creates a <b>Position Check</b> for <b>Cone AOE</b> attacks with the given range.</summary>
-    private PositionCheck ConeTargetCheck(float range) => (primary, other) => Hints.TargetInAOECone(other, Player.Position, range, Player.DirectionTo(primary), 45.Degrees());
+    private PositionCheck ConeTargetCheck(float range) => (primary, other) => TargetInAOECone(other, Player.Position, range, Player.DirectionTo(primary), 45f.Degrees());
 
     /// <summary>Checks if the target is within a <b>4-yalm Cone</b> range.</summary>
     protected PositionCheck Is4yConeTarget => ConeTargetCheck(4);
@@ -444,7 +444,7 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
 
     #region Lines (AOE Rectangles)
     /// <summary>Creates a <b>Position Check</b> for <b>Line AOE (AOE Rectangle)</b> attacks with the given range.</summary>
-    private PositionCheck LineTargetCheck(float range, float halfWidth = 2) => (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), range, halfWidth);
+    private PositionCheck LineTargetCheck(float range, float halfWidth = 2) => (primary, other) => TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), range, halfWidth);
 
     /// <summary>Checks if the target is within a <b>10-yalm AOE Rect</b> range.</summary>
     protected PositionCheck Is10yRectTarget => LineTargetCheck(10);
@@ -719,7 +719,7 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
     protected void GoalZoneSingle(float range)
     {
         if (PlayerTarget != null)
-            Hints.GoalZones.Add(Hints.GoalSingleTarget(PlayerTarget.Actor, range));
+            Hints.GoalZones.Add(GoalSingleTarget(PlayerTarget.Actor, range));
     }
 
     /// <summary>Defines a goal-zone using a combined strategy, factoring in AOE considerations.</summary>
@@ -743,9 +743,9 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
         }
         else
         {
-            Hints.GoalZones.Add(Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget.Actor, positional, range), fAoe, minAoe));
+            Hints.GoalZones.Add(GoalCombined(GoalSingleTarget(PlayerTarget.Actor, positional, range), fAoe, minAoe));
             if (maximumActionRange is float r)
-                Hints.GoalZones.Add(Hints.GoalSingleTarget(PlayerTarget.Actor, r, 0.5f));
+                Hints.GoalZones.Add(GoalSingleTarget(PlayerTarget.Actor, r, 0.5f));
         }
     }
 
@@ -763,9 +763,9 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
         }
         else
         {
-            Hints.GoalZones.Add(Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget.Actor, imminent ? positional : Positional.Any, range), fAoe, minAoe));
+            Hints.GoalZones.Add(GoalCombined(GoalSingleTarget(PlayerTarget.Actor, imminent ? positional : Positional.Any, range), fAoe, minAoe));
             if (maximumActionRange is float r)
-                Hints.GoalZones.Add(Hints.GoalSingleTarget(PlayerTarget.Actor, r, 0.5f));
+                Hints.GoalZones.Add(GoalSingleTarget(PlayerTarget.Actor, r, 0.5f));
         }
     }
     #endregion

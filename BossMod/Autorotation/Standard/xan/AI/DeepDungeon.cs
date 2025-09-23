@@ -60,7 +60,7 @@ public sealed class DeepDungeonAI(RotationModuleManager manager, Actor player) :
 
         if (IsRanged && !Player.InCombat && primaryTarget is Actor target && !target.InCombat && !target.IsAlly)
             // bandaid fix to help deal with constant LOS issues
-            Hints.GoalZones.Add(Hints.GoalSingleTarget(target, 3, 0.1f));
+            Hints.GoalZones.Add(AIHints.GoalSingleTarget(target, 3, 0.1f));
 
         SetupKiteZone(strategy, primaryTarget);
 
@@ -154,25 +154,25 @@ public sealed class DeepDungeonAI(RotationModuleManager manager, Actor player) :
         switch (t)
         {
             case Transformation.Manticore:
-                goal = Hints.GoalSingleTarget(primaryTarget, 3f);
+                goal = AIHints.GoalSingleTarget(primaryTarget, 3f);
                 numTargets = 1;
                 attack = ActionID.MakeSpell(Roleplay.AID.Pummel);
                 break;
             case Transformation.Succubus:
-                goal = Hints.GoalSingleTarget(primaryTarget, 25f);
+                goal = AIHints.GoalSingleTarget(primaryTarget, 25f);
                 numTargets = Hints.NumPriorityTargetsInAOECircle(primaryTarget.Position, 5f);
                 attack = ActionID.MakeSpell(Roleplay.AID.VoidFireII);
                 castTime = 2.5f;
                 break;
             case Transformation.Kuribu:
                 // heavenly judge is ground targeted
-                goal = Hints.GoalSingleTarget(primaryTarget.Position, 25f);
+                goal = AIHints.GoalSingleTarget(primaryTarget.Position, 25f);
                 numTargets = Hints.NumPriorityTargetsInAOECircle(primaryTarget.Position, 6f);
                 attack = ActionID.MakeSpell(Roleplay.AID.HeavenlyJudge);
                 castTime = 2.5f;
                 break;
             case Transformation.Dreadnaught:
-                goal = Hints.GoalSingleTarget(primaryTarget, 3f);
+                goal = AIHints.GoalSingleTarget(primaryTarget, 3f);
                 numTargets = 1;
                 attack = ActionID.MakeSpell(Roleplay.AID.Rotosmash);
                 break;

@@ -157,7 +157,7 @@ sealed class Disinfection(BossModule module) : Components.BaitAwayIcon(module, 6
             {
                 if (b.Target == actor)
                 {
-                    hints.GoalZones.Add(hints.GoalSingleTarget(new WPos(852f, 808f), 3f, 1f));
+                    hints.GoalZones.Add(AIHints.GoalSingleTarget(new WPos(852f, 808f), 3f, 1f));
                 }
                 else
                 { }
