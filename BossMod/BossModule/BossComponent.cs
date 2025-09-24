@@ -50,7 +50,7 @@ public class BossComponent(BossModule module)
     public virtual void OnActorDeath(Actor actor) { }
     public virtual void OnActorTargetable(Actor actor) { }
     public virtual void OnActorUntargetable(Actor actor) { }
-    public virtual void OnActorRenderflagsChanged(Actor actor, int renderflags) { }
+    public virtual void OnActorRenderflagsChange(Actor actor, int renderflags) { }
     public virtual void OnStatusGain(Actor actor, ActorStatus status) { } // note: also called for status-change events; if component needs to distinguish between lose+gain and change, it can use the fact that 'lose' is not called for change
     public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
     public virtual void OnTethered(Actor source, ActorTetherInfo tether) { }
@@ -64,6 +64,7 @@ public class BossComponent(BossModule module)
     public virtual void OnActorPlayActionTimelineEvent(Actor actor, ushort id) { }
     public virtual void OnActorNpcYell(Actor actor, ushort id) { }
     public virtual void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2) { }
+    public virtual void OnActorEventStateChange(Actor actor, byte value) { }
     public virtual void OnEventEnvControl(byte index, uint state) { }
     public virtual void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4) { }
 

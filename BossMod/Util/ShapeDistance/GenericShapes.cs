@@ -640,7 +640,7 @@ public sealed class SDDonutSector : ShapeDistance
         var pz = p.Z - originZ;
         var r2 = px * px + pz * pz;
 
-        if (r2 > outerRadiusSq || r2 < innerRadius)
+        if (r2 > outerRadiusSq || r2 < innerRadiusSq)
         {
             return false;
         }
@@ -731,7 +731,9 @@ public sealed class SDDonutSector : ShapeDistance
         void Add(float a, float b, Span<(float, float)> annulus)
         {
             if (b > a + Epsilon)
+            {
                 annulus[annN++] = (a, b);
+            }
         }
 
         if (!hasInner)
@@ -778,11 +780,7 @@ public sealed class SDDonutSector : ShapeDistance
             for (var i = 0; i < annN; ++i)
             {
                 float t0 = annulus[i].a, t1 = annulus[i].b;
-                if (!ClipHalfplaneLE(nlX, nlZ, ax, az, dx, dz, cushion, ref t0, ref t1))
-                {
-                    continue;
-                }
-                if (!ClipHalfplaneLE(nrX, nrZ, ax, az, dx, dz, cushion, ref t0, ref t1))
+                if (!ClipHalfplaneLE(nlX, nlZ, ax, az, dx, dz, cushion, ref t0, ref t1) || !ClipHalfplaneLE(nrX, nrZ, ax, az, dx, dz, cushion, ref t0, ref t1))
                 {
                     continue;
                 }
@@ -808,11 +806,7 @@ public sealed class SDDonutSector : ShapeDistance
             {
                 var a0 = annulus[i].a;
                 var a1 = annulus[i].b;
-                if (lOk && Math.Min(l1, a1) > Math.Max(l0, a0) + Epsilon)
-                {
-                    return true;
-                }
-                if (rOk && Math.Min(r1, a1) > Math.Max(r0, a0) + Epsilon)
+                if (lOk && Math.Min(l1, a1) > Math.Max(l0, a0) + Epsilon || rOk && Math.Min(r1, a1) > Math.Max(r0, a0) + Epsilon)
                 {
                     return true;
                 }

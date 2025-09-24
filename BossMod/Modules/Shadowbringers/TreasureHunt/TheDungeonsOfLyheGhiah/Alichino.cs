@@ -1,9 +1,11 @@
-namespace BossMod.Shadowbringers.TreasureHunt.DungeonsOfLyheGhiah.Goliath;
+namespace BossMod.Shadowbringers.TreasureHunt.DungeonsOfLyheGhiah.Alichino;
 
 public enum OID : uint
 {
-    Goliath = 0x2BA5, //R=5.25
-    GoliathsJavelin = 0x2BA6, //R=2.1
+    Alichino = 0x2BA7, //R=3.3
+    SweetSong = 0x2BAA, // R1.0
+    Alich = 0x2BA8, // R0.9
+    Ino = 0x2BA9, // R0.9
     DungeonQueen = 0x2A0A, // R0.84, icon 5, needs to be killed in order from 1 to 5 for maximum rewards
     DungeonGarlic = 0x2A08, // R0.84, icon 3, needs to be killed in order from 1 to 5 for maximum rewards
     DungeonTomato = 0x2A09, // R0.84, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
@@ -15,15 +17,16 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 872, // Goliath/GoliathsJavelin/Mandragoras->player, no cast, single-target
+    AutoAttack = 872, // Alichino/Ino/Alich->player, no cast, single-target
 
-    MechanicalBlow = 17873, // Goliath->player, 5.0s cast, single-target
-    Wellbore = 17874, // Goliath->location, 7.0s cast, range 15 circle
-    Fount = 17875, // Helper->location, 3.0s cast, range 4 circle
-    Incinerate = 17876, // Goliath->self, 5.0s cast, range 100 circle
-    Accelerate = 17877, // Goliath->players, 5.0s cast, range 6 circle
-    Compress1 = 17879, // Goliath->self, 2.5s cast, range 100 width 7 cross
-    Compress2 = 17878, // GoliathsJavelin->self, 2.5s cast, range 100+R width 7 rect
+    Knockout = 17880, // Alichino->player, 4.0s cast, single-target, tankbuster
+    ManiacalLaughter = 17884, // Alichino->self, 3.0s cast, single-target
+    HeatGazeDonut1 = 17883, // Alichino->self, 3.0s cast, range 5-10 donut
+    HeatGazeDonut2 = 17887, // Ino->self, 3.0s cast, range 5-10 donut
+    HeatGazeCone1 = 17881, // Alichino->self, 3.0s cast, range 40+R 120-degree cone
+    HeatGazeCone2 = 17886, // Alich->self, 3.0s cast, range 19+R 60-degree cone
+    DiscordantEcho = 17885, // SweetSong->self, 3.0s cast, range 6 circle
+    Slapstick = 17882, // Alichino->self, 3.0s cast, range 50 circle
 
     Pollen = 6452, // DungeonQueen->self, 3.5s cast, range 6+R circle
     TearyTwirl = 6448, // DungeonOnion->self, 3.5s cast, range 6+R circle
@@ -37,13 +40,12 @@ public enum AID : uint
     Telega = 9630 // BonusAdds->self, no cast, single-target, bonus adds disappear
 }
 
-sealed class Wellbore(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Wellbore, 15f);
-sealed class Compress1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress1, new AOEShapeCross(100f, 3.5f));
-sealed class Compress2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Compress2, new AOEShapeRect(102.1f, 3.5f));
-sealed class Accelerate(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.Accelerate, 6f, 8, 8);
-sealed class Incinerate(BossModule module) : Components.RaidwideCast(module, (uint)AID.Incinerate);
-sealed class Fount(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fount, 4f);
-sealed class MechanicalBlow(BossModule module) : Components.SingleTargetCast(module, (uint)AID.MechanicalBlow);
+sealed class DiscordantEcho(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DiscordantEcho, 6f);
+sealed class HeatGazeDonut(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HeatGazeDonut1, (uint)AID.HeatGazeDonut2], new AOEShapeDonut(5f, 10f));
+sealed class HeatGazeConeBig(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeatGazeCone1, new AOEShapeCone(43.3f, 60f.Degrees()));
+sealed class HeatGazeConeSmall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.HeatGazeCone2, new AOEShapeCone(19.9f, 30f.Degrees()));
+sealed class Slapstick(BossModule module) : Components.RaidwideCast(module, (uint)AID.Slapstick);
+sealed class Knockout(BossModule module) : Components.SingleTargetCast(module, (uint)AID.Knockout);
 
 sealed class Spin(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Spin, 11f);
 sealed class Mash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Mash, new AOEShapeRect(15.23f, 2f));
@@ -52,58 +54,63 @@ sealed class Scoop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
 sealed class MandragoraAOEs(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PluckAndPrune, (uint)AID.TearyTwirl,
 (uint)AID.HeirloomScream, (uint)AID.PungentPirouette, (uint)AID.Pollen], 6.84f);
 
-sealed class GoliathStates : StateMachineBuilder
+sealed class AlichinoStates : StateMachineBuilder
 {
-    public GoliathStates(BossModule module) : base(module)
+    public AlichinoStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Wellbore>()
-            .ActivateOnEnter<Compress1>()
-            .ActivateOnEnter<Compress2>()
-            .ActivateOnEnter<Accelerate>()
-            .ActivateOnEnter<Incinerate>()
-            .ActivateOnEnter<MechanicalBlow>()
+            .ActivateOnEnter<DiscordantEcho>()
+            .ActivateOnEnter<HeatGazeDonut>()
+            .ActivateOnEnter<HeatGazeConeBig>()
+            .ActivateOnEnter<HeatGazeConeSmall>()
+            .ActivateOnEnter<Slapstick>()
+            .ActivateOnEnter<Knockout>()
+            .ActivateOnEnter<HeatGazeConeSmall>()
             .ActivateOnEnter<Spin>()
             .ActivateOnEnter<Mash>()
             .ActivateOnEnter<Scoop>()
             .ActivateOnEnter<MandragoraAOEs>()
-            .Raw.Update = () => AllDeadOrDestroyed(Goliath.All);
+            .Raw.Update = () => AllDeadOrDestroyed(Alichino.All);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified,
-StatesType = typeof(GoliathStates),
+StatesType = typeof(AlichinoStates),
 ConfigType = null,
 ObjectIDType = typeof(OID),
 ActionIDType = typeof(AID),
 StatusIDType = null,
 TetherIDType = null,
 IconIDType = null,
-PrimaryActorOID = (uint)OID.Goliath,
+PrimaryActorOID = (uint)OID.Alichino,
 Contributors = "The Combat Reborn Team (Malediktus)",
 Expansion = BossModuleInfo.Expansion.Shadowbringers,
 Category = BossModuleInfo.Category.TreasureHunt,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 688u,
-NameID = 8953u,
-SortOrder = 2,
+NameID = 8955u,
+SortOrder = 1,
 PlanLevel = 0)]
-public sealed class Goliath : DungeonsOfLyheGhiahRoom5
+public sealed class Alichino : DungeonsOfLyheGhiahRoom5
 {
-    public Goliath(WorldState ws, Actor primary) : base(ws, primary)
+    public Alichino(WorldState ws, Actor primary) : base(ws, primary)
     {
-        goliathJavelins = Enemies((uint)OID.GoliathsJavelin);
+        inos = Enemies((uint)OID.Ino);
+        alichs = Enemies((uint)OID.Alich);
     }
 
-    private readonly List<Actor> goliathJavelins;
+    private readonly List<Actor> inos;
+    private readonly List<Actor> alichs;
+
     private static readonly uint[] bonusAdds = [(uint)OID.DungeonEgg, (uint)OID.DungeonGarlic, (uint)OID.DungeonTomato, (uint)OID.DungeonOnion,
     (uint)OID.DungeonQueen, (uint)OID.KeeperOfKeys];
-    public static readonly uint[] All = [(uint)OID.Goliath, (uint)OID.GoliathsJavelin, .. bonusAdds];
+    public static readonly uint[] All = [(uint)OID.Alichino, (uint)OID.Alich, (uint)OID.Ino, .. bonusAdds];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(goliathJavelins);
+        Arena.Actors(inos);
+        Arena.Actors(alichs);
         Arena.Actors(this, bonusAdds, Colors.Vulnerable);
     }
 
@@ -120,7 +127,7 @@ public sealed class Goliath : DungeonsOfLyheGhiahRoom5
                 (uint)OID.DungeonGarlic => 4,
                 (uint)OID.DungeonTomato => 3,
                 (uint)OID.DungeonQueen or (uint)OID.KeeperOfKeys => 2,
-                (uint)OID.GoliathsJavelin => 1,
+                (uint)OID.Alich or (uint)OID.Ino => 1,
                 _ => 0
             };
         }
