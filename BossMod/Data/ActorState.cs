@@ -445,7 +445,7 @@ public sealed class ActorState : IEnumerable<Actor>
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC(Value ? "ATG+"u8 : "ATG-"u8).EmitActor(InstanceID);
     }
 
-    public Event<Actor, int> RenderflagsChanged = new();
+    public Event<Actor> RenderflagsChanged = new();
     public sealed class OpRenderflags(ulong instanceID, int value) : Operation(instanceID)
     {
         public readonly int Value = value;
@@ -453,7 +453,7 @@ public sealed class ActorState : IEnumerable<Actor>
         protected override void ExecActor(WorldState ws, Actor actor)
         {
             actor.Renderflags = Value;
-            ws.Actors.RenderflagsChanged.Fire(actor, Value);
+            ws.Actors.RenderflagsChanged.Fire(actor);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("RFLG"u8).EmitActor(InstanceID).Emit(Value);
     }
@@ -733,7 +733,7 @@ public sealed class ActorState : IEnumerable<Actor>
             var len = statuses.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref var s = ref statuses[i];
+                ref readonly var s = ref statuses[i];
                 if (s.StatusId == v.ID && s.Effect.SourceInstanceID == v.SourceID)
                 {
                     actor.PendingStatuses.RemoveAt(i);
