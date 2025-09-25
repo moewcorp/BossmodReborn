@@ -37,9 +37,9 @@ public abstract class ArenaBounds(float radius, float mapResolution, float scale
 
     protected abstract PolygonClipper.Operand BuildClipPoly();
     public abstract void PathfindMap(Pathfinding.Map map, WPos center);
-    public abstract bool Contains(WDir offset);
-    public abstract float IntersectRay(WDir originOffset, WDir dir);
-    public abstract WDir ClampToBounds(WDir offset);
+    public abstract bool Contains(in WDir offset);
+    public abstract float IntersectRay(in WDir originOffset, in WDir dir);
+    public abstract WDir ClampToBounds(in WDir offset);
 
     // functions for clipping various shapes to bounds; all shapes are expected to be defined relative to bounds center
     public List<RelTriangle> ClipAndTriangulate(ReadOnlySpan<WDir> poly) => Clipper.Intersect(new PolygonClipper.Operand(poly), _clipOperand).Triangulate();
@@ -148,21 +148,17 @@ public sealed class ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, 
 
     protected override PolygonClipper.Operand BuildClipPoly() => new(CurveApprox.Circle(Radius, MaxApproxError));
     public override void PathfindMap(Pathfinding.Map map, WPos center) => map.Init(_cachedMap ??= BuildMap(), center);
-    public override bool Contains(WDir offset)
+    public override bool Contains(in WDir offset)
     {
         var radius = Radius;
         return offset.LengthSq() <= radius * radius;
     }
-    public override float IntersectRay(WDir originOffset, WDir dir) => Intersect.RayCircle(originOffset, dir, Radius);
+    public override float IntersectRay(in WDir originOffset, in WDir dir) => Intersect.RayCircle(originOffset, dir, Radius);
 
-    public override WDir ClampToBounds(WDir offset)
+    public override WDir ClampToBounds(in WDir offset)
     {
         var radius = Radius;
-        if (offset.LengthSq() > radius * radius)
-        {
-            offset *= radius / offset.Length();
-        }
-        return offset;
+        return offset.LengthSq() > radius * radius ? offset * radius / offset.Length() : offset;
     }
 
     private Pathfinding.Map BuildMap()
@@ -278,10 +274,10 @@ public abstract class ABRect : ArenaBounds
         return map;
     }
 
-    public override bool Contains(WDir offset) => offset.InRect(Orientation, HalfHeight, HalfHeight, HalfWidth);
-    public override float IntersectRay(WDir originOffset, WDir dir) => Intersect.RayRect(originOffset, dir, Orientation, HalfWidth, HalfHeight);
+    public override bool Contains(in WDir offset) => offset.InRect(Orientation, HalfHeight, HalfHeight, HalfWidth);
+    public override float IntersectRay(in WDir originOffset, in WDir dir) => Intersect.RayRect(originOffset, dir, Orientation, HalfWidth, HalfHeight);
 
-    public override WDir ClampToBounds(WDir offset)
+    public override WDir ClampToBounds(in WDir offset)
     {
         var orientation = Orientation;
         var halfWidth = HalfWidth;
@@ -424,13 +420,13 @@ public sealed class ArenaBoundsCustom : ArenaBounds
     public override void PathfindMap(Pathfinding.Map map, WPos center) => map.Init(_cachedMap ??= BuildMap(), center);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool Contains(WDir offset) => Polygon.Contains(offset);
+    public override bool Contains(in WDir offset) => Polygon.Contains(offset);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override float IntersectRay(WDir originOffset, WDir dir) => Intersect.RayPolygon(originOffset, dir, Polygon);
+    public override float IntersectRay(in WDir originOffset, in WDir dir) => Intersect.RayPolygon(originOffset, dir, Polygon);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override WDir ClampToBounds(WDir offset)
+    public override WDir ClampToBounds(in WDir offset)
     {
         if (offset.AlmostEqual(default, 1f) || Math.Abs(offset.X) < 0.1f) // if actor is almost in the center of the arena, do nothing (eg donut arena or wall boss)
         {

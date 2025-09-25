@@ -103,82 +103,157 @@ internal sealed class PolygonBoundaryIndex2D
     public static PolygonBoundaryIndex2D Build(RelSimplifiedComplexPolygon complex, int minRows = 32, int maxRows = 512)
     {
         // Collect edges and global bbox
-        List<(WDir A, WDir B)> all = [];
         var parts = complex.Parts;
+        var countP = parts.Count;
+
         float bbMinX = float.MaxValue, bbMinY = float.MaxValue;
         float bbMaxX = float.MinValue, bbMaxY = float.MinValue;
 
-        var countP = parts.Count;
+        var vertsCount = 0;
+        for (var i = 0; i < countP; ++i)
+        {
+            vertsCount += parts[i].VerticesCount;
+        }
+
+        var eList = new List<E>(vertsCount);
+        var hList = new List<H>(Math.Max(8, vertsCount / 8));
+
         for (var i = 0; i < countP; ++i)
         {
             var part = parts[i];
+
             var ext = part.ExteriorEdges;
             var lenExt = ext.Length;
-            for (var j = 0; j < lenExt; ++j)
+            for (int j = 0, n = lenExt; j < n; ++j)
             {
                 var (a, b) = ext[j];
-                all.Add((a, b));
                 AccumBB(a, b, ref bbMinX, ref bbMinY, ref bbMaxX, ref bbMaxY);
+                float ax = a.X, ay = a.Z, bx = b.X, by = b.Z;
+                if (Math.Abs(ay - by) <= Eps)
+                {
+                    hList.Add(new H(ax, ay, bx));
+                }
+                else
+                {
+                    eList.Add(new E(ax, ay, bx, by));
+                }
             }
+
             var holes = part.Holes;
             var lenHoles = holes.Length;
-            for (var h = 0; h < lenHoles; ++h)
+            for (int h = 0, nh = lenHoles; h < nh; ++h)
             {
                 var ie = part.InteriorEdges(holes[h]);
                 var lenIE = ie.Length;
-                for (var j = 0; j < lenIE; ++j)
+                for (int j = 0, n = lenIE; j < n; ++j)
                 {
                     var (a, b) = ie[j];
-                    all.Add((a, b));
                     AccumBB(a, b, ref bbMinX, ref bbMinY, ref bbMaxX, ref bbMaxY);
+                    float ax = a.X, ay = a.Z, bx = b.X, by = b.Z;
+                    if (Math.Abs(ay - by) <= Eps)
+                    {
+                        hList.Add(new H(ax, ay, bx));
+                    }
+                    else
+                    {
+                        eList.Add(new E(ax, ay, bx, by));
+                    }
                 }
             }
         }
 
-        // Split horizontals/non-horizontals
-        var count = all.Count;
-        List<E> eList = new(count);
-        List<H> hList = new(Math.Max(8, count / 8));
-
-        for (var i = 0; i < count; ++i)
-        {
-            var (A, B) = all[i];
-            float ax = A.X, ay = A.Z, bx = B.X, by = B.Z;
-            if (Math.Abs(ay - by) <= Eps)
-            {
-                hList.Add(new H(ax, ay, bx));
-            }
-            else
-            {
-                eList.Add(new E(ax, ay, bx, by));
-            }
-        }
-
-        E[] edges = [.. eList];
-        H[] hEdges = [.. hList];
+        var edges = CollectionsMarshal.AsSpan(eList);
+        H[] hEdgesArr = [.. hList];
 
         // Rowing
         var lenEdges = edges.Length;
-
         var nEdges = Math.Max(lenEdges, 1);
         var rows = Math.Clamp((int)MathF.Round(MathF.Sqrt(nEdges) * 0.9f) + 8, minRows, maxRows);
 
-        var height = MathF.Max(bbMaxY - bbMinY, Eps);
+        var height = Math.Max(bbMaxY - bbMinY, Eps);
         var cellH = height / rows;
         var invCellH = 1f / cellH;
 
-        // Bucket non-horizontals to rows
-        var rowLists = new List<int>[rows];
+        var counts = new int[rows];
+        var hCounts = new int[rows];
+
+        // non-horiz counts
+        for (var idx = 0; idx < lenEdges; ++idx)
+        {
+            ref readonly var e = ref edges[idx];
+            var y0 = e.y0;
+            var y1 = MathF.BitDecrement(e.y1); // top-exclusive
+            var r0 = (int)MathF.Floor((y0 - bbMinY) * invCellH);
+            var r1 = (int)MathF.Floor((y1 - bbMinY) * invCellH);
+            if (r0 < 0)
+            {
+                r0 = 0;
+            }
+            if (r1 >= rows)
+            {
+                r1 = rows - 1;
+            }
+            for (var r = r0; r <= r1; ++r)
+            {
+                ++counts[r];
+            }
+        }
+
+        // horizontal counts
+        var hEdges = hEdgesArr;
+        var lenH = hEdges.Length;
+        for (int idx = 0, hN = lenH; idx < hN; ++idx)
+        {
+            ref readonly var hEdge = ref hEdges[idx];
+            var y = hEdge.y;
+            var r = (int)MathF.Floor((y - bbMinY) * invCellH);
+            if (r < 0)
+            {
+                r = 0;
+            }
+            else if (r >= rows)
+            {
+                r = rows - 1;
+            }
+            ++hCounts[r];
+        }
+
+        // prefix sums → offsets
+        var rowOffsets = new int[rows + 1];
+        var total = 0;
         for (var r = 0; r < rows; ++r)
         {
-            rowLists[r] = new(8);
+            rowOffsets[r] = total;
+            total += counts[r];
         }
+        rowOffsets[rows] = total;
+
+        var hRowOffsets = new int[rows + 1];
+        var hTotal = 0;
+        for (var r = 0; r < rows; ++r)
+        {
+            hRowOffsets[r] = hTotal;
+            hTotal += hCounts[r];
+        }
+        hRowOffsets[rows] = hTotal;
+
+        // allocate SoA
+        var e_y0_Row = new float[total];
+        var e_y1_Row = new float[total];
+        var e_x0_Row = new float[total];
+        var e_k_Row = new float[total];
+        var e_minX_Row = new float[total];
+        var e_maxX_Row = new float[total];
+
+        var hRowIdx = new int[hTotal];
+
+        // fill rows
+        var wpos = new int[rows];
+        Array.Copy(rowOffsets, wpos, rows);
 
         for (var idx = 0; idx < lenEdges; ++idx)
         {
             ref readonly var e = ref edges[idx];
-
-            // Clip edge's span to grid; top-exclusive trick
             var y0 = e.y0;
             var y1 = MathF.BitDecrement(e.y1);
             var r0 = (int)MathF.Floor((y0 - bbMinY) * invCellH);
@@ -194,20 +269,22 @@ internal sealed class PolygonBoundaryIndex2D
 
             for (var r = r0; r <= r1; ++r)
             {
-                rowLists[r].Add(idx);
+                var w = wpos[r]++;
+                e_y0_Row[w] = e.y0;
+                e_y1_Row[w] = e.y1;
+                e_x0_Row[w] = e.x0;
+                e_k_Row[w] = e.k;
+                e_minX_Row[w] = e.minX;
+                e_maxX_Row[w] = e.maxX;
             }
         }
 
-        // Bucket horizontals to single row
-        var hRowLists = new List<int>[rows];
-        for (var r = 0; r < rows; ++r)
+        var hwpos = new int[rows];
+        Array.Copy(hRowOffsets, hwpos, rows);
+        for (int idx = 0, hN = lenH; idx < hN; ++idx)
         {
-            hRowLists[r] = new(2);
-        }
-        var lenH = hEdges.Length;
-        for (var idx = 0; idx < lenH; ++idx)
-        {
-            ref readonly var y = ref hEdges[idx].y;
+            ref readonly var hEdge = ref hEdges[idx];
+            var y = hEdge.y;
             var r = (int)MathF.Floor((y - bbMinY) * invCellH);
             if (r < 0)
             {
@@ -217,64 +294,38 @@ internal sealed class PolygonBoundaryIndex2D
             {
                 r = rows - 1;
             }
-            hRowLists[r].Add(idx);
+            hRowIdx[hwpos[r]++] = idx;
         }
 
-        // Flatten rows to SoA order
-        var rowOffsets = new int[rows + 1];
-        var total = 0;
-        for (var r = 0; r < rows; ++r)
-        {
-            rowOffsets[r] = total;
-            total += rowLists[r].Count;
-        }
-        rowOffsets[rows] = total;
-
-        var e_y0_Row = new float[total];
-        var e_y1_Row = new float[total];
-        var e_x0_Row = new float[total];
-        var e_k_Row = new float[total];
-        var e_minX_Row = new float[total];
-        var e_maxX_Row = new float[total];
-
+        // per-row conservative X bounds
         var rowMinX = new float[rows];
         var rowMaxX = new float[rows];
 
         for (var r = 0; r < rows; ++r)
         {
-            var start = rowOffsets[r];
-            var lst = rowLists[r];
-            var cnt = lst.Count;
-
-            // Conservative per-row x bounds
             var rMinY = bbMinY + r * cellH;
             var rMaxY = rMinY + cellH;
 
             var rMinX = float.PositiveInfinity;
             var rMaxX = float.NegativeInfinity;
 
-            for (var i = 0; i < cnt; ++i)
+            int start = rowOffsets[r], end = rowOffsets[r + 1];
+            for (var i = start; i < end; ++i)
             {
-                ref readonly var e = ref edges[lst[i]];
-                var w = start + i;
+                var y0 = e_y0_Row[i];
+                var y1 = e_y1_Row[i];
+                var x0 = e_x0_Row[i];
+                var k = e_k_Row[i];
 
-                e_y0_Row[w] = e.y0;
-                e_y1_Row[w] = e.y1;
-                e_x0_Row[w] = e.x0;
-                e_k_Row[w] = e.k;
-                e_minX_Row[w] = e.minX;
-                e_maxX_Row[w] = e.maxX;
-
-                // Update conservative x-range for this slab: use overlap segment endpoints
-                var ys = Math.Max(e.y0, rMinY);
-                var ye = Math.Min(e.y1, rMaxY);
-                // top-exclusive, nudge down
+                var ys = Math.Max(y0, rMinY);
+                var ye = Math.Min(y1, rMaxY);
                 ye = MathF.BitDecrement(ye);
 
-                var xs = e.XAt(ys);
-                var xe = e.XAt(ye);
-                var lo = Math.Min(xs, xe);
-                var hi = Math.Max(xs, xe);
+                var xs = x0 + k * (ys - y0);
+                var xe = x0 + k * (ye - y0);
+
+                var lo = xs < xe ? xs : xe;
+                var hi = xs > xe ? xs : xe;
 
                 if (lo < rMinX)
                 {
@@ -286,12 +337,10 @@ internal sealed class PolygonBoundaryIndex2D
                 }
             }
 
-            // expand by horizontals
-            var hStart = hRowLists[r];
-            var hCount = hStart.Count;
-            for (var i = 0; i < hCount; ++i)
+            int hs = hRowOffsets[r], he = hRowOffsets[r + 1];
+            for (var i = hs; i < he; ++i)
             {
-                ref readonly var h = ref hEdges[hStart[i]];
+                ref readonly var h = ref hEdges[hRowIdx[i]];
                 if (h.minX < rMinX)
                 {
                     rMinX = h.minX;
@@ -304,27 +353,6 @@ internal sealed class PolygonBoundaryIndex2D
 
             rowMinX[r] = rMinX;
             rowMaxX[r] = rMaxX;
-        }
-
-        // Flatten horizontals
-        var hRowOffsets = new int[rows + 1];
-        total = 0;
-        for (var r = 0; r < rows; ++r)
-        {
-            hRowOffsets[r] = total;
-            total += hRowLists[r].Count;
-        }
-        hRowOffsets[rows] = total;
-
-        var hRowIdx = new int[total];
-        for (int r = 0, off = 0; r < rows; ++r)
-        {
-            var lst = hRowLists[r];
-            var countlst = lst.Count;
-            for (var i = 0; i < countlst; ++i)
-            {
-                hRowIdx[off++] = lst[i];
-            }
         }
 
         return new PolygonBoundaryIndex2D(e_y0_Row, e_y1_Row, e_x0_Row, e_k_Row, e_minX_Row, e_maxX_Row,
@@ -409,8 +437,7 @@ internal sealed class PolygonBoundaryIndex2D
 
         // Non-horizontals: SIMD parity + boundary
         int es = _rowOffsets[row], ee = _rowOffsets[row + 1];
-        var n = ee - es;
-        if (n == 0)
+        if (ee - es == 0)
         {
             return false;
         }
@@ -449,7 +476,7 @@ internal sealed class PolygonBoundaryIndex2D
             var le_mx = Vector.LessThanOrEqual(v_px, mx);
             var onBoundary = span & near & ge_mn & le_mx;
 
-            if (!Vector.EqualsAll(onBoundary, Vector<int>.Zero))
+            if (!Vector.EqualsAll(onBoundary, default))
             {
                 return true;
             }
@@ -458,7 +485,7 @@ internal sealed class PolygonBoundaryIndex2D
             var gt = Vector.GreaterThan(x, v_px) & span;
 
             // Count lane bits (popcount over mask)
-            parity ^= PopCount(gt);
+            parity ^= Parity(gt);
         }
 
         // Scalar tail
@@ -477,7 +504,6 @@ internal sealed class PolygonBoundaryIndex2D
 
             var x = _e_x0_Row[i0] + _e_k_Row[i0] * (py - y0);
 
-            // boundary check (use MathF.Abs to avoid double)
             if (Math.Abs(px - x) <= Eps && px >= _e_minX_Row[i0] - Eps && px <= _e_maxX_Row[i0] + Eps)
             {
                 return true;
@@ -493,19 +519,29 @@ internal sealed class PolygonBoundaryIndex2D
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector<float> LoadVec(float[] src, int index) => new(src, index);
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static int PopCount(Vector<int> mask)
+        static int Parity(Vector<int> mask)
         {
-            // Each lane is either 0 or -1; convert to 0/1 and sum lanes.
-            // (-1 >> 31) == -1; multiply by -1 to get 1; simpler: (mask >> 31) & 1 not available; use equals to AllOnes.
-            var count = 0;
-            var countc = Vector<int>.Count;
-            for (var i = 0; i < countc; ++i)
+            // lanes are 0 or -1; XOR signbits for parity.
+            switch (Vector<int>.Count)
             {
-                count += mask[i] < 0 ? 1 : 0;
+                case 4: return ((mask[0] >> 31) ^ (mask[1] >> 31) ^ (mask[2] >> 31) ^ (mask[3] >> 31)) & 1;
+                case 8:
+                    return ((mask[0] >> 31) ^ (mask[1] >> 31) ^ (mask[2] >> 31) ^ (mask[3] >> 31)
+                               ^ (mask[4] >> 31) ^ (mask[5] >> 31) ^ (mask[6] >> 31) ^ (mask[7] >> 31)) & 1;
+                case 16:
+                    return ((mask[0] >> 31) ^ (mask[1] >> 31) ^ (mask[2] >> 31) ^ (mask[3] >> 31)
+                          ^ (mask[4] >> 31) ^ (mask[5] >> 31) ^ (mask[6] >> 31) ^ (mask[7] >> 31)
+                          ^ (mask[8] >> 31) ^ (mask[9] >> 31) ^ (mask[10] >> 31) ^ (mask[11] >> 31)
+                          ^ (mask[12] >> 31) ^ (mask[13] >> 31) ^ (mask[14] >> 31) ^ (mask[15] >> 31)) & 1;
+                default:
+                    var p = 0;
+                    for (var i = 0; i < Vector<int>.Count; ++i)
+                    {
+                        p ^= (mask[i] >> 31) & 1;
+                    }
+                    return p;
             }
-            return count & 1; // we only need parity; reduce immediately
         }
     }
 
@@ -514,7 +550,7 @@ internal sealed class PolygonBoundaryIndex2D
         float ox = o.X, oz = o.Z;
         float dx = d.X, dz = d.Z;
 
-        // AABB slab reject (why: fast coarse pruning)
+        // AABB slab reject (fast coarse pruning)
         float tmin = -float.Epsilon, tmax = float.MaxValue;
         if (Math.Abs(dx) > Eps)
         {
@@ -624,7 +660,6 @@ internal sealed class PolygonBoundaryIndex2D
         var v_dz = new Vector<float>(dz);
         var v_ox = new Vector<float>(ox);
         var v_oz = new Vector<float>(oz);
-        var v_zero = Vector<float>.Zero;
         var v_inf = new Vector<float>(float.PositiveInfinity);
         var v_tiny = new Vector<float>(1e-9f); // stricter than Eps for denom
         var v_one = new Vector<float>(1f);
@@ -666,9 +701,9 @@ internal sealed class PolygonBoundaryIndex2D
                 // u = cross(w, d)/den = (w.x*dz - w.y*dx)/den
                 var u = (wox * v_dz - woz * v_dx) / den;
 
-                var tNonNeg = Vector.GreaterThanOrEqual(t, v_zero);
+                var tNonNeg = Vector.GreaterThanOrEqual(t, default);
                 // half-open on u to avoid counting far vertex twice
-                var ge0 = Vector.GreaterThanOrEqual(u, v_zero);
+                var ge0 = Vector.GreaterThanOrEqual(u, default);
                 var lt1 = Vector.LessThan(u, v_one);
                 var inSeg = ge0 & lt1;
 
@@ -714,7 +749,7 @@ internal sealed class PolygonBoundaryIndex2D
                 {
                     // Possible parallel; if also collinear, project segment onto ray.
                     var col = woxs * dz - wozs * dx; // cross(w, d)
-                    if (MathF.Abs(col) <= 1e-7f)
+                    if (Math.Abs(col) <= Eps)
                     {
                         // param along ray for edge endpoints
                         var iddd = 1f / (dx * dx + dz * dz + 1e-20f);
@@ -765,7 +800,7 @@ internal sealed class PolygonBoundaryIndex2D
                 else
                 {
                     // collinear with horizontal: project
-                    if (Math.Abs(wozH * dx - woxH * dz) <= 1e-7f)
+                    if (Math.Abs(wozH * dx - woxH * dz) <= Eps)
                     {
                         var iddd = 1f / (dx * dx + dz * dz + 1e-20f);
                         var tA = (woxH * dx + wozH * dz) * iddd;
@@ -864,7 +899,6 @@ internal sealed class PolygonBoundaryIndex2D
             var lanes = Vector<float>.Count;
             var v_px = new Vector<float>(px);
             var v_py = new Vector<float>(py);
-            var v_zero = Vector<float>.Zero;
             var v_one = new Vector<float>(1f);
             var v_tiny = new Vector<float>(1e-12f);
             Span<float> bufD = stackalloc float[lanes];
@@ -888,7 +922,7 @@ internal sealed class PolygonBoundaryIndex2D
                 var len2 = dx * dx + dy * dy;
                 len2 = Vector.Max(len2, v_tiny);
                 var t = (relx * dx + rely * dy) / len2;
-                t = Vector.Min(Vector.Max(t, v_zero), v_one);
+                t = Vector.Min(Vector.Max(t, default), v_one);
 
                 var nx = x0 + t * dx;
                 var ny = y0 + t * dy;

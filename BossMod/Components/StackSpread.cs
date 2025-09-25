@@ -850,7 +850,7 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
                     var member = p[j];
                     if (member.OID != default)
                     {
-                        forbiddenInverted.Add(new SDInvertedCircle(member.Position, 2f));
+                        forbiddenB.Add(new SDInvertedCircle(member.Position, 2f));
                     }
                 }
                 if (forbiddenB.Count != 0)

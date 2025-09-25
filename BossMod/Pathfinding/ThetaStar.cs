@@ -104,12 +104,9 @@ public sealed class ThetaStar
     }
 
     // returns whether search is to be terminated; on success, first node of the open list would contain found goal
-    private static readonly (int dx, int dy, float step)[] _nbrs =
-    [
-        ( 0,-1, 1f), (-1,-1, 1.414214f), ( 1,-1, 1.414214f),
-        (-1, 0, 1f),                  ( 1, 0, 1f),
-        ( 0, 1, 1f), (-1, 1, 1.414214f), ( 1, 1, 1.414214f),
-    ];
+    private static readonly int[] _dx = [0, -1, 1, -1, 1, 0, -1, 1];
+    private static readonly int[] _dy = [-1, -1, -1, 0, 0, 1, 1, 1];
+    private static readonly bool[] _diagonal = [false, true, true, false, false, false, true, true];
 
     public bool ExecuteStep()
     {
@@ -141,7 +138,8 @@ public sealed class ThetaStar
         // neighbor loop with bounds checks and packed cost
         for (var i = 0; i < 8; ++i)
         {
-            var (dx, dy, stepMul) = _nbrs[i];
+            var dx = _dx[i];
+            var dy = _dy[i];
             var nx = px + dx;
             var ny = py + dy;
             if ((uint)nx >= widthu || (uint)ny >= height)
@@ -150,7 +148,7 @@ public sealed class ThetaStar
             }
 
             var nIdx = ny * width + nx;
-            VisitNeighbour(pIdx, nx, ny, nIdx, stepMul == 1f ? _deltaGSide : _deltaGDiag, dx, dy);
+            VisitNeighbour(pIdx, nx, ny, nIdx, !_diagonal[i] ? _deltaGSide : _deltaGDiag, dx, dy);
         }
         return true;
     }
@@ -408,7 +406,8 @@ public sealed class ThetaStar
             return; // impassable
         }
 
-        if (dx != 0 && dy != 0) // diagonal
+        // diagonal corner-cutting check
+        if (dx != 0 && dy != 0)
         {
             var sideX = parentIndex + dx; // (px + sign(dx), py)
             var sideY = parentIndex + dy * _map.Width; // (px, py + sign(dy))
@@ -419,6 +418,7 @@ public sealed class ThetaStar
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             static bool Passable(float[] g, int idx) => (uint)idx < (uint)g.Length && g[idx] >= 0f;
         }
+
         var stepCost = deltaGrid; // either _deltaGSide or _deltaGDiag
         var candidateG = currentParentNode.GScore + stepCost;
 
