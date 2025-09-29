@@ -47,6 +47,7 @@ sealed class WorldStateGameSync : IDisposable
     private readonly Hook<ProcessLegacyMapEffectDelegate> _processLegacyMapEffectHook;
 
     private unsafe delegate void ProcessPacketActorCastDelegate(uint casterId, Network.ServerIPC.ActorCast* packet);
+
     private readonly Hook<ProcessPacketActorCastDelegate> _processPacketActorCastHook;
 
     private unsafe delegate void ProcessPacketEffectResultDelegate(uint targetID, byte* packet, byte replaying);
@@ -1064,5 +1065,14 @@ sealed class WorldStateGameSync : IDisposable
             var index = data[i + offIndex];
             _globalOps.Add(new WorldState.OpMapEffect(index, low | ((uint)high << 16)));
         }
+    }
+
+    private unsafe byte ProcessLegacyMapEffectDetour(EventFramework* fwk, EventId eventId, byte seq, byte unk, void* data, ulong length)
+    {
+        var res = _processLegacyMapEffectHook.Original(fwk, eventId, seq, unk, data, length);
+
+        _globalOps.Add(new WorldState.OpLegacyMapEffect(seq, unk, new Span<byte>(data, (int)length).ToArray()));
+
+        return res;
     }
 }

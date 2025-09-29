@@ -1,52 +1,80 @@
 ﻿namespace BossMod.Components;
 
+[SkipLocalsInit]
 abstract class GenericInvincible(BossModule module, string hint = "Attacking invincible target!", int priority = AIHints.Enemy.PriorityInvincible) : BossComponent(module)
 {
     public bool EnableHints = true;
 
-    protected abstract IEnumerable<Actor> ForbiddenTargets(int slot, Actor actor);
+    protected abstract ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor);
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (EnableHints && ForbiddenTargets(slot, actor).Any(a => a.InstanceID == actor.TargetID))
-            hints.Add(hint);
+        if (EnableHints)
+        {
+            var targets = ForbiddenTargets(slot, actor);
+            var len = targets.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                if (targets[i].InstanceID == actor.TargetID)
+                {
+                    hints.Add(hint);
+                    return;
+                }
+            }
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var a in ForbiddenTargets(slot, actor))
-            hints.SetPriority(a, priority);
+        var targets = ForbiddenTargets(slot, actor);
+        var len = targets.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            hints.SetPriority(targets[i], priority);
+        }
     }
 }
 
+[SkipLocalsInit]
 class InvincibleStatus(BossModule module, uint statusId, string hint = "Attacking invincible target!") : GenericInvincible(module, hint)
 {
     protected readonly List<Actor> _actors = [];
 
-    protected override IEnumerable<Actor> ForbiddenTargets(int slot, Actor actor) => _actors;
+    protected override ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor) => CollectionsMarshal.AsSpan(_actors);
 
     public override void OnStatusGain(Actor actor, ActorStatus status)
     {
         if (status.ID == statusId && !_actors.Contains(actor))
+        {
             _actors.Add(actor);
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
     {
         if (status.ID == statusId)
+        {
             _actors.Remove(actor);
+        }
     }
 }
 
+[SkipLocalsInit]
 class HPThreshold(BossModule module, uint oid, float ratio) : BossComponent(module)
 {
-    public uint ID = oid;
+    public readonly List<Actor> actors = module.Enemies(oid);
     public float Ratio = ratio;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var enemy in Module.Enemies(ID))
+        var count = actors.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var enemy = actors[i];
             if (enemy.PendingHPRatio < Ratio)
+            {
                 hints.SetPriority(enemy, AIHints.Enemy.PriorityPointless);
+            }
+        }
     }
 }

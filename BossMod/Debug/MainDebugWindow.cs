@@ -16,7 +16,7 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
     private readonly DebugObstacles _debugObstacles = new(hintBuilder.Obstacles, dalamud);
     private readonly DebugObjects _debugObjects = new();
     private readonly DebugParty _debugParty = new();
-    private readonly DebugMapEffect _debugMapEffect = new();
+    private readonly DebugMapEffect _debugMapEffect = new(ws);
     private readonly DebugGraphics _debugGraphics = new();
     private readonly DebugAction _debugAction = new(ws, amex);
     private readonly DebugHate _debugHate = new(ws);

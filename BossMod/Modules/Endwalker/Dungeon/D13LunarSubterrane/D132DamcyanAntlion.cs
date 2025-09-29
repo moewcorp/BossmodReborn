@@ -40,7 +40,8 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
             _aoe = [new(rect, Arena.Center, default, Module.CastFinishAt(spell))];
         }
     }
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         if (index == 0x00 && state == 0x00020001u)
         {
@@ -183,7 +184,8 @@ sealed class Towerfall(BossModule module) : Components.GenericAOEs(module)
         return aoes;
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         if (index > 0x00 && state == 0x00020001u)
         {

@@ -34,7 +34,8 @@ sealed class FunkyFloor(BossModule module) : Components.GenericAOEs(module)
         return centers;
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         if (index != 0x03 || _activeSet != null)
             return;

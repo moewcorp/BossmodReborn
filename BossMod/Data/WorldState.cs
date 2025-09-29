@@ -169,7 +169,7 @@ public sealed class WorldState
         public readonly byte Index = index;
         public readonly uint State = state;
 
-        protected override void Exec(WorldState ws) => ws.EnvControl.Fire(this);
+        protected override void Exec(WorldState ws) => ws.MapEffect.Fire(this);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("ENVC"u8).Emit(Index, "X2").Emit(State, "X8");
     }
 

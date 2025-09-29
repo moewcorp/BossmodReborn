@@ -133,7 +133,8 @@ sealed class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(mo
         return [];
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         if (index == 0x12)
         {

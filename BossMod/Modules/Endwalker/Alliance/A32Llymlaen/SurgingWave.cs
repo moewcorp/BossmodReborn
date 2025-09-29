@@ -78,7 +78,8 @@ sealed class SurgingWaveFrothingSea : Components.Exaflare
         FutureColor = Colors.Danger;
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         void AddLine(WPos first, Angle rot) => Lines.Add(new(first, 2.3f * rot.ToDirection(), WorldState.FutureTime(30d), 0.9d, 13, 2, rot));
         if (index == 0x49)

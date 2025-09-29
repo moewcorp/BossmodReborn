@@ -1,10 +1,6 @@
 ﻿namespace BossMod.ReplayAnalysis;
 
-<<<<<<< HEAD:BossMod/Replay/Analysis/EnvControlInfo.cs
-sealed class EnvControlInfo
-=======
-class MapEffectInfo
->>>>>>> merge:BossMod/Replay/Analysis/MapEffectInfo.cs
+sealed class MapEffectInfo
 {
     private readonly Dictionary<byte, Dictionary<uint, List<(Replay r, Replay.Encounter enc, DateTime ts)>>> _data = [];
 
