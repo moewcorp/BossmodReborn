@@ -46,7 +46,7 @@ public struct NavigationDecision
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
-            if (index >= 0 && ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f || index < 0) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
+            if (index >= 0 && ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0) // prioritize safety over uptime
             {
                 if (localGoalZones.Length != 0)
                 {
@@ -393,16 +393,6 @@ public struct NavigationDecision
                         var row = ys + r;
                         var baseIdx = r * width;
 
-                        if (row >= height)
-                        {
-                            // out-of-bounds row -> mark as no contribution
-                            for (var x = 0; x < width; ++x)
-                            {
-                                localScratch[baseIdx + x] = float.MinValue;
-                            }
-                            continue;
-                        }
-
                         var rowCorner = topLeft + row * dy;
                         var leftPos = rowCorner;
 
@@ -432,10 +422,6 @@ public struct NavigationDecision
                     // produce final cell priorities
                     for (var y = ys; y < ye; ++y)
                     {
-                        if (y >= height)
-                        {
-                            break;
-                        }
                         var rowBase = (y - ys) * width;
                         var nextRowBase = rowBase + width;
 

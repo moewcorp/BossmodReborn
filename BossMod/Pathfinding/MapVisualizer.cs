@@ -142,13 +142,13 @@ public sealed class MapVisualizer
             {
                 ImGui.TextUnformatted($"Pixel at {x}x{y} ({wpos}): blocked, g={pixMaxG:f3}, prio={pixPriority}");
             }
-            else if (pixPriority != 0)
+            else if (pixPriority != default)
             {
                 ImGui.TextUnformatted($"Pixel at {x}x{y} ({wpos}): goal, prio={pixPriority}");
             }
             else
             {
-                ImGui.TextUnformatted($"Pixel at {x}x{y} ({wpos}): normal, prio={pixPriority}");
+                ImGui.TextUnformatted($"Pixel at {x}x{y} ({wpos}): normal");
             }
 
             ref var pfNode = ref _pathfind.NodeByIndex(hoverNode);
