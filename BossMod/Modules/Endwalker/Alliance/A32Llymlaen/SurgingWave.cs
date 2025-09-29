@@ -4,7 +4,7 @@ sealed class SurgingWaveCorridor(BossModule module) : BossComponent(module)
 {
     public WDir CorridorDir;
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x49 && state is 0x02000001u or 0x00200001u or 0x00800040u or 0x08000400u)
         {

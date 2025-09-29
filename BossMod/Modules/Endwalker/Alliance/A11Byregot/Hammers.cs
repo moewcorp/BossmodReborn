@@ -164,7 +164,7 @@ class HammersSpire(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
         }
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         _safespot = null;
     }
