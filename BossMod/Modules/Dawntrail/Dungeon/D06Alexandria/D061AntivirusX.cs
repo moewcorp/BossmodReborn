@@ -49,7 +49,8 @@ sealed class ImmuneResponseArenaChange(BossModule module) : Components.GenericAO
         }
     }
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect
+(byte index, uint state)
     {
         if (index == 0x03 && state == 0x00020001u)
         {
