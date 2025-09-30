@@ -8,8 +8,7 @@ sealed class Besiegement(BossModule module) : Components.GenericAOEs(module)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(AOEs);
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index != 0x03)
         {

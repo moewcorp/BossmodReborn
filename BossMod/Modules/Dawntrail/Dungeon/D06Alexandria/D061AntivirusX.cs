@@ -49,8 +49,7 @@ sealed class ImmuneResponseArenaChange(BossModule module) : Components.GenericAO
         }
     }
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x03 && state == 0x00020001u)
         {
@@ -79,7 +78,7 @@ sealed class PathoCircuitCrossPurge(BossModule module) : Components.GenericAOEs(
         return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
-    public void UpdateAOE()
+    private void UpdateAOE()
     {
         var count = _aoes.Count;
         if (count == 0)

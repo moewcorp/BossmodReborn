@@ -165,8 +165,15 @@ public sealed class ThetaStar
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Execute()
     {
-        while (_nodes[_bestIndex].HScore > 0f && _fallbackIndex == StartNodeIndex && ExecuteStep())
-            ;
+        var pixelMaxG = _map.PixelMaxG;
+        while (_fallbackIndex == StartNodeIndex && ExecuteStep())
+        {
+            ref var nd = ref _nodes[_bestIndex]; // instead of only looking for the perfect cell we search for a cell that is reasonably better
+            if (nd.Score >= Score.SafeBetterPrio && nd.PathLeeway > 0f || nd.Score > _startScore && pixelMaxG[_bestIndex] > pixelMaxG[StartNodeIndex] + 2f || nd.HScore <= 0f)
+            {
+                break;
+            }
+        }
         return BestIndex();
     }
 

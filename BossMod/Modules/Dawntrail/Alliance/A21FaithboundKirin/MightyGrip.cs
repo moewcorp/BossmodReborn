@@ -2,8 +2,7 @@ namespace BossMod.Dawntrail.Alliance.A21FaithboundKirin;
 
 sealed class DeadlyHold(BossModule module) : Components.GenericTowers(module, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x52 && state == 0x00020001u)
         {
@@ -53,8 +52,7 @@ sealed class Bury(BossModule module) : Components.SingleTargetInstant(module, (u
 
 sealed class Shockwave(BossModule module) : Components.RaidwideInstant(module, (uint)AID.Shockwave, 6.6d)
 {
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x46)
         {

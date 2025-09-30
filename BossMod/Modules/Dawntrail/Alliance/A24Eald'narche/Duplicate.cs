@@ -16,8 +16,7 @@ sealed class Duplicate(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         switch (index)
         {

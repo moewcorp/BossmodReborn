@@ -98,8 +98,7 @@ sealed class Explosion(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x09 && state is 0x00200010u or 0x00020001u)
         {
