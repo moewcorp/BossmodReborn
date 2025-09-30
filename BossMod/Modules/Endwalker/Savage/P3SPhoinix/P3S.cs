@@ -23,8 +23,7 @@ class DevouringBrand(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index == 0x00 && state == 0x00080004u)
         {

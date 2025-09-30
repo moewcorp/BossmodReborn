@@ -9,8 +9,7 @@ sealed class VirtualShiftIce(BossModule module) : Components.GenericAOEs(module,
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_unsafeBridges);
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         WDir offset = index switch
         {

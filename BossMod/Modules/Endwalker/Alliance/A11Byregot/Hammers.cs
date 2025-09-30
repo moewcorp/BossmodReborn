@@ -39,8 +39,7 @@ class HammersCells(BossModule module) : Components.GenericAOEs(module, (uint)AID
             Arena.Bounds = A11Byregot.StartingHammerBounds;
     }
 
-    public override void OnMapEffect
-(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index is >= 0x07 and <= 0x0B)
         {

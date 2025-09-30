@@ -81,7 +81,7 @@ public sealed class AIHintsBuilder : IDisposable
         hints.Normalize();
         if (_rsr != null)
         {
-            var soon = _ws.CurrentTime.AddSeconds(0.5d);
+            var soon = _ws.CurrentTime.AddSeconds(0.75d);
             var hasForbiddenDirection = hints.ForbiddenDirections.Count > 0;
 
             if (!isRSRpaused && (hasForbiddenDirection && hints.ForbiddenDirections.Ref(0).activation < soon || hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && hints.ImminentSpecialMode.activation < soon) && _rsr.IsInstalled)

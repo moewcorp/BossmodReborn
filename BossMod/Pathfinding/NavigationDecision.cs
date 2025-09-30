@@ -46,7 +46,8 @@ public struct NavigationDecision
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
-            if (index >= 0 && ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0) // prioritize safety over uptime
+            var len = ctx.Map.PixelMaxG.Length;
+            if (index >= 0 && len > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0 || index >= len) // prioritize safety over uptime
             {
                 if (localGoalZones.Length != 0)
                 {
@@ -548,8 +549,6 @@ public struct NavigationDecision
     private static (WPos? first, WPos? second) GetFirstWaypoints(ThetaStar pf, Map map, int cell, WPos startingPos)
     {
         ref var startingNode = ref pf.NodeByIndex(cell);
-        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
-        var maxIterations = map.Width * map.Height;
 
         if (startingNode.GScore == 0f && startingNode.PathMinG == float.MaxValue)
         {
@@ -557,20 +556,21 @@ public struct NavigationDecision
         }
 
         var nextCell = cell;
+        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
+        var maxIterations = map.Width * map.Height;
         do
         {
             ref var node = ref pf.NodeByIndex(cell);
             if (pf.NodeByIndex(node.ParentIndex).GScore == 0f || ++iterations == maxIterations)
             {
-                //var dest = pf.CellCenter(cell);
-                // if destination coord matches player coord, do not move along that coordinate, this is used for precise positioning
                 var destCoord = map.IndexToGrid(cell);
                 var playerCoordFrac = map.WorldToGridFrac(startingPos);
                 var playerCoord = Map.FracToGrid(playerCoordFrac);
-                var dest = map.GridToWorld(destCoord.x, destCoord.y, destCoord.x == playerCoord.x ? playerCoordFrac.X - playerCoord.x : 0.5f, destCoord.y == playerCoord.y ? playerCoordFrac.Y - playerCoord.y : 0.5f);
-
-                var next = pf.CellCenter(nextCell);
-                return (dest, next);
+                if (destCoord == playerCoord)
+                {
+                    return default;
+                }
+                return (pf.CellCenter(cell), pf.CellCenter(nextCell));
             }
             nextCell = cell;
             cell = node.ParentIndex;
