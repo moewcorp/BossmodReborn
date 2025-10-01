@@ -26,7 +26,7 @@ class Interact(BossModule module) : BossComponent(module)
         var primary = Module.PrimaryActor;
         if (Module.PrimaryActor.IsTargetable)
         {
-            hints.GoalZones.Add(hints.GoalSingleTarget(primary, 1f, 5f));
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(primary, 1f, 5f));
             hints.InteractWithTarget = primary;
         }
     }

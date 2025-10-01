@@ -1,5 +1,6 @@
 namespace BossMod.Components;
 
+[SkipLocalsInit]
 public class GenericTowers(BossModule module, uint aid = default, bool prioritizeInsufficient = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : CastCounter(module, aid)
 {
     public struct Tower(WPos position, AOEShape shape, int minSoakers = 1, int maxSoakers = 1, BitMask forbiddenSoakers = default, DateTime activation = default, Angle rotation = default, ulong actorID = default)
@@ -284,6 +285,7 @@ public class GenericTowers(BossModule module, uint aid = default, bool prioritiz
     }
 }
 
+[SkipLocalsInit]
 public class CastTowers(BossModule module, uint aid, float radius, int minSoakers = 1, int maxSoakers = 1, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : GenericTowers(module, aid, damageType: damageType)
 {
     public readonly float Radius = radius;
@@ -318,6 +320,7 @@ public class CastTowers(BossModule module, uint aid, float radius, int minSoaker
 }
 
 // for tower mechanics in open world since likely not everyone is in your party
+[SkipLocalsInit]
 public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool prioritizeInsufficient = false, bool prioritizeEmpty = false) : CastCounter(module, aid)
 {
     public sealed class Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, HashSet<Actor>? allowedSoakers = null, DateTime activation = default, ulong actorID = default)
@@ -597,6 +600,7 @@ public class GenericTowersOpenWorld(BossModule module, uint aid = default, bool 
     }
 }
 
+[SkipLocalsInit]
 public class CastTowersOpenWorld(BossModule module, uint aid, float radius, int minSoakers = 1, int maxSoakers = 1, bool prioritizeInsufficient = false, bool prioritizeEmpty = false) : GenericTowersOpenWorld(module, aid, prioritizeInsufficient, prioritizeEmpty)
 {
     public readonly float Radius = radius;

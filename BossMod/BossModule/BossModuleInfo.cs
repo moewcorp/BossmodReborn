@@ -1,5 +1,6 @@
 ﻿namespace BossMod;
 
+[SkipLocalsInit]
 public static class BossModuleInfo
 {
     public enum Maturity
@@ -93,6 +94,7 @@ public static class BossModuleInfo
 
 // attribute that allows customizing boss module's metadata; it is optional, each field has some defaults that are fine in most cases
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+[SkipLocalsInit]
 public sealed class ModuleInfoAttribute(BossModuleInfo.Maturity maturity) : Attribute
 {
     public Type? StatesType { get; set; } // default: ns.xxxStates

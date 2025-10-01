@@ -6,7 +6,7 @@ sealed class DoomSpear(BossModule module) : Components.GenericTowers(module)
     {
         if (spell.Action.ID is (uint)AID.DoomSpearAOE1 or (uint)AID.DoomSpearAOE2 or (uint)AID.DoomSpearAOE3)
         {
-            Towers.Add(new(spell.LocXZ, 6f, 8, 8, actorID: caster.InstanceID));
+            Towers.Add(new(spell.LocXZ, 6f, 8, 8, default, Module.CastFinishAt(spell), caster.InstanceID));
 
         }
     }

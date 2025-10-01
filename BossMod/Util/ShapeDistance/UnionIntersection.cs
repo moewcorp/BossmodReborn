@@ -1,5 +1,6 @@
 namespace BossMod;
 
+[SkipLocalsInit]
 public sealed class SDIntersection : ShapeDistance // max distance func
 {
     private readonly ShapeDistance[] zones;
@@ -11,7 +12,7 @@ public sealed class SDIntersection : ShapeDistance // max distance func
         length = zones.Length;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var array = zones;
         var max = float.MinValue;
@@ -29,9 +30,13 @@ public sealed class SDIntersection : ShapeDistance // max distance func
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p) => Distance(p) <= 0f;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDUnion : ShapeDistance // min distance func
 {
     private readonly ShapeDistance[] zones;
@@ -43,7 +48,7 @@ public sealed class SDUnion : ShapeDistance // min distance func
         length = zones.Length;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var array = zones;
         var min = float.MaxValue;
@@ -61,9 +66,24 @@ public sealed class SDUnion : ShapeDistance // min distance func
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p)
+    {
+        var array = zones;
+        for (var i = 0; i < length; ++i)
+        {
+            if (array[i].Contains(p))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedUnion : ShapeDistance // -min distance func
 {
     private readonly ShapeDistance[] zones;
@@ -75,7 +95,7 @@ public sealed class SDInvertedUnion : ShapeDistance // -min distance func
         length = zones.Length;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var array = zones;
         var min = float.MaxValue;
@@ -93,9 +113,24 @@ public sealed class SDInvertedUnion : ShapeDistance // -min distance func
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p)
+    {
+        var array = zones;
+        for (var i = 0; i < length; ++i)
+        {
+            if (array[i].Contains(p))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
+[SkipLocalsInit]
 public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
 {
     private readonly ShapeDistance[] zones;
@@ -109,7 +144,7 @@ public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
         offset = Offset;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var array = zones;
         var min = float.MaxValue;
@@ -127,68 +162,37 @@ public sealed class SDInvertedUnionOffset : ShapeDistance // -min distance func
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
-}
-
-public sealed class SDXor : ShapeDistance
-{
-    private readonly ShapeDistance[] zones;
-    private readonly int length;
-    public SDXor(ShapeDistance[] Zones)
+    public override bool Contains(in WPos p)
     {
-        zones = Zones;
-        length = zones.Length;
-    }
-
-    public override float Distance(WPos p)
-    {
-        var insideCount = 0;
-        var minAbs = float.MaxValue;
-
         var array = zones;
         for (var i = 0; i < length; ++i)
         {
-            var d = array[i].Distance(p);
-            if (d < 0f)
+            if (array[i].Distance(p) < offset)
             {
-                ++insideCount;
-            }
-
-            var ad = Math.Abs(d);
-            if (ad < minAbs)
-            {
-                minAbs = ad;
+                return false;
             }
         }
-
-        // If nothing contributed, treat as empty (outside everywhere)
-        if (minAbs == float.MaxValue)
-        {
-            return float.MaxValue;
-        }
-
-        // Odd parity => inside => negative; even parity => outside => positive
-        var odd = (insideCount & 1) == 1;
-        return odd ? -minAbs : minAbs;
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
 }
 
-// special XOR SD that considers multiple overlaps as a single overlap
-public sealed class SDXORExactlyOne : ShapeDistance
+// outside of a union of shapes, useful for preventing stacking spread markers
+[SkipLocalsInit]
+public sealed class SDOutsideOfUnion : ShapeDistance
 {
     private readonly ShapeDistance[] zones;
     private readonly int length;
 
-    public SDXORExactlyOne(ShapeDistance[] Zones)
+    public SDOutsideOfUnion(ShapeDistance[] Zones)
     {
         zones = Zones;
         length = zones.Length;
     }
 
-    public override float Distance(WPos p)
+    public override float Distance(in WPos p)
     {
         var insideCount = 0;
         var minAbs = float.MaxValue;
@@ -196,7 +200,7 @@ public sealed class SDXORExactlyOne : ShapeDistance
         for (var i = 0; i < length; ++i)
         {
             var d = array[i].Distance(p);
-            if (d < 0f)
+            if (d >= 0f)
             {
                 ++insideCount;
             }
@@ -208,59 +212,22 @@ public sealed class SDXORExactlyOne : ShapeDistance
             }
         }
 
-        // If nothing contributed, treat as empty (outside everywhere)
-        if (minAbs == float.MaxValue)
-        {
-            return float.MaxValue;
-        }
-
-        // Exactly one shape contains the point => inside (negative)
-        return (insideCount == 1) ? -minAbs : minAbs;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
-}
-
-public sealed class SDInvertedXORExactlyOne : ShapeDistance
-{
-    private readonly ShapeDistance[] zones;
-    private readonly int length;
-
-    public SDInvertedXORExactlyOne(ShapeDistance[] Zones)
-    {
-        zones = Zones;
-        length = zones.Length;
-    }
-
-    public override float Distance(WPos p)
-    {
-        var insideCount = 0;
-        var minAbs = float.MaxValue;
-        var array = zones;
-        for (var i = 0; i < length; ++i)
-        {
-            var d = array[i].Distance(p);
-            if (d < 0f)
-            {
-                ++insideCount;
-            }
-
-            var ad = Math.Abs(d);
-            if (ad < minAbs)
-            {
-                minAbs = ad;
-            }
-        }
-
-        // If nothing contributed, treat as empty (outside everywhere)
-        if (minAbs == float.MaxValue)
-        {
-            return float.MaxValue;
-        }
-
-        // Exactly one shape contains the point => outside (positive)
+        // exactly one shape contains the point => inside (negative)
         return (insideCount == 1) ? minAbs : -minAbs;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p)
+    {
+        var array = zones;
+        for (var i = 0; i < length; ++i)
+        {
+            if (array[i].Contains(p))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

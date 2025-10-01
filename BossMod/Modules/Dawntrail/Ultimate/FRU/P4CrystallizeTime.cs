@@ -134,7 +134,7 @@ sealed class P4CrystallizeTimeDragonHead(BossModule module) : BossComponent(modu
                     if (p.soaker != pcAssignment)
                         hints.AddForbiddenZone(new SDCircle(p.puddle.Position, 2f));
                     else if (_numMaelstroms >= 6)
-                        hints.GoalZones.Add(hints.GoalProximity(p.puddle.Position, 15f, 0.25f));
+                        hints.GoalZones.Add(AIHints.GoalProximity(p.puddle.Position, 15f, 0.25f));
                 }
             }
         }
@@ -245,7 +245,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
             AOEs.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(13.2d)));
-            AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+            AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
         }
     }
 
@@ -267,7 +267,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
                 if (aoe.Origin.AlmostEqual(pos, 1f))
                 {
                     AOEs.Ref(i).Activation = WorldState.FutureTime(delay);
-                    AOEs.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                    AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
                     return;
                 }
             }
@@ -547,7 +547,7 @@ sealed class P4CrystallizeTimeHints(BossModule module) : BossComponent(module)
                 }
                 // stay on correct side
                 var dest = Arena.Center + new WDir(default, hint.offset.Z > 0f ? 18f : -18f);
-                hints.GoalZones.Add(hints.GoalSingleTarget(dest, 2f, 0.5f));
+                hints.GoalZones.Add(AIHints.GoalSingleTarget(dest, 2f, 0.5f));
             }
         }
     }
@@ -682,9 +682,9 @@ sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnoc
         if (!RewindDone && _ct != null && _exalines != null && _ct.Cleansed[slot])
         {
             var players = Raid.WithoutSlot(false, true, true);
-            players.Sort((a, b) => a.PosRot.X.CompareTo(b.PosRot.X));
+            players.Sort(static (a, b) => a.PosRot.X.CompareTo(b.PosRot.X));
             var xOrder = Array.IndexOf(players, actor);
-            players.Sort((a, b) => a.PosRot.Z.CompareTo(b.PosRot.Z));
+            players.Sort(static (a, b) => a.PosRot.Z.CompareTo(b.PosRot.Z));
             var zOrder = Array.IndexOf(players, actor);
             if (xOrder >= 0 && zOrder >= 0)
             {
@@ -710,9 +710,9 @@ sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnoc
         if (!RewindDone && _ct != null && _exalines != null && _ct.Cleansed[slot])
         {
             var midpoint = SafeCorner();
-            hints.GoalZones.Add(hints.GoalProximity(midpoint, 15f, 0.5f));
+            hints.GoalZones.Add(AIHints.GoalProximity(midpoint, 15f, 0.5f));
             var destPoint = midpoint + AssignedPositionOffset(actor, assignment);
-            hints.GoalZones.Add(hints.GoalProximity(destPoint, 1f, 1f));
+            hints.GoalZones.Add(AIHints.GoalProximity(destPoint, 1f, 1f));
         }
     }
 

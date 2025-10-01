@@ -277,11 +277,7 @@ public sealed class ReplayManagementWindow : UIWindow
 
     private bool IsImportantDuty(uint cfcId)
     {
-        if (StaticDutyImportance.TryGetValue(cfcId, out var isImportant))
-        {
-            return isImportant;
-        }
-        return true;
+        return !StaticDutyImportance.TryGetValue(cfcId, out var isImportant) || isImportant;
     }
 
     private void OnModuleActivation(BossModule m)
@@ -317,7 +313,7 @@ public sealed class ReplayManagementWindow : UIWindow
             try
             {
                 var replays = _logDir.GetFiles();
-                replays.Sort((a, b) => a.LastWriteTime.CompareTo(b.LastWriteTime));
+                replays.Sort(static (a, b) => a.LastWriteTime.CompareTo(b.LastWriteTime));
                 foreach (var f in replays.Take(replays.Length - _config.MaxReplays))
                     f.Delete();
             }

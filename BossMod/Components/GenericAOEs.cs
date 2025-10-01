@@ -1,9 +1,10 @@
 ﻿namespace BossMod.Components;
 
 // generic component that shows arbitrary shapes representing avoidable aoes
+[SkipLocalsInit]
 public abstract class GenericAOEs(BossModule module, uint aid = default, string warningText = "GTFO from aoe!") : CastCounter(module, aid)
 {
-    public struct AOEInstance(AOEShape shape, WPos origin, Angle rotation = default, DateTime activation = default, uint color = default, bool risky = true, ulong actorID = default)
+    public struct AOEInstance(AOEShape shape, WPos origin, Angle rotation = default, DateTime activation = default, uint color = default, bool risky = true, ulong actorID = default, ShapeDistance? shapeDistance = null)
     {
         public AOEShape Shape = shape;
         public WPos Origin = origin;
@@ -12,6 +13,7 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
         public uint Color = color;
         public bool Risky = risky;
         public ulong ActorID = actorID;
+        public ShapeDistance? ShapeDistance = shapeDistance;
 
         public readonly bool Check(WPos pos) => Shape.Check(pos, Origin, Rotation);
     }
@@ -44,7 +46,7 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
             ref readonly var c = ref aoes[i];
             if (c.Risky)
             {
-                hints.AddForbiddenZone(c.Shape, c.Origin, c.Rotation, c.Activation);
+                hints.AddForbiddenZone(c.ShapeDistance ?? (c.Shape.Distance(c.Origin, c.Rotation)), c.Activation);
             }
         }
     }
@@ -62,6 +64,7 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
 }
 
 // For simple AOEs, formerly known as SelfTargetedAOEs and LocationTargetedAOEs, that happens at the end of the cast
+[SkipLocalsInit]
 public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : GenericAOEs(module, aid)
 {
     public SimpleAOEs(BossModule module, uint aid, float radius, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default) : this(module, aid, new AOEShapeCircle(radius), maxCasts, riskyWithSecondsLeft) { }
@@ -118,7 +121,9 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
     {
         if (spell.Action.ID == WatchedAction)
         {
-            Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            var origin = spell.LocXZ;
+            var rotation = spell.Rotation;
+            Casters.Add(new(Shape, origin, rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: Shape.Distance(origin, rotation)));
         }
     }
 
@@ -142,6 +147,7 @@ public class SimpleAOEs(BossModule module, uint aid, AOEShape shape, int maxCast
 }
 
 // 'charge at location' aoes that happen at the end of the cast
+[SkipLocalsInit]
 public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCasts = int.MaxValue, double riskyWithSecondsLeft = default, float extraLengthFront = default) : SimpleAOEs(module, aid, new AOEShapeCircle(default), maxCasts, riskyWithSecondsLeft)
 {
     public readonly float HalfWidth = halfWidth;
@@ -152,12 +158,16 @@ public class ChargeAOEs(BossModule module, uint aid, float halfWidth, int maxCas
         if (spell.Action.ID == WatchedAction)
         {
             var dir = spell.LocXZ - caster.Position;
-            Casters.Add(new(new AOEShapeRect(dir.Length() + ExtraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            var shape = new AOEShapeRect(dir.Length() + ExtraLengthFront, HalfWidth);
+            var origin = caster.Position.Quantized();
+            var rotation = Angle.FromDirection(dir);
+            Casters.Add(new(shape, origin, rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: shape.Distance(origin, rotation)));
         }
     }
 }
 
 // For simple AOEs where multiple AOEs use the same AOEShape
+[SkipLocalsInit]
 public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : SimpleAOEs(module, default, shape, maxCasts, riskyWithSecondsLeft)
 {
     public SimpleAOEGroups(BossModule module, uint[] aids, float radius, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : this(module, aids, new AOEShapeCircle(radius), maxCasts, expectedNumCasters, riskyWithSecondsLeft) { }
@@ -173,10 +183,12 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
         {
             if (id == AIDs[i])
             {
-                Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+                var origin = spell.LocXZ;
+                var rotation = spell.Rotation;
+                Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: Shape.Distance(origin, rotation)));
                 if (Casters.Count >= ExpectedNumCasters)
                 {
-                    Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                    Casters.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
                 }
                 return;
             }
@@ -216,6 +228,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
 // For simple AOEs where multiple AOEs use the same AOEShape and are grouped by activation time, expectedNumCasters sorts Casters by activation when number is reached
 // set to correct amount if sorting is needed (eg skills with different activation times start at the same time)
 // useful if the amount of casts in a group of AOEs can vary
+[SkipLocalsInit]
 public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShape shape, double timeWindowInSeconds = 1d, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : SimpleAOEGroups(module, aids, shape, maxCasts: int.MaxValue, expectedNumCasters, riskyWithSecondsLeft)
 {
     public SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, float radius, double timeWindowInSeconds = 1d, int expectedNumCasters = 99, double riskyWithSecondsLeft = default) : this(module, aids, new AOEShapeCircle(radius), timeWindowInSeconds, expectedNumCasters, riskyWithSecondsLeft) { }
@@ -235,8 +248,7 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
         var index = 0;
         while (index < count)
         {
-            ref var aoe = ref aoes[index];
-            if (aoe.Activation >= deadline)
+            if (aoes[index].Activation >= deadline)
             {
                 break;
             }
@@ -255,9 +267,11 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
     }
 }
 
+[SkipLocalsInit]
 public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWidth, int maxCasts = int.MaxValue, int expectedNumCasters = 99, double riskyWithSecondsLeft = 0d, float extraLengthFront = 0f) : SimpleAOEGroups(module, aids, 0f, maxCasts, expectedNumCasters, riskyWithSecondsLeft)
 {
     private readonly float HalfWidth = halfWidth;
+    private readonly float ExtraLengthFront = extraLengthFront;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -268,10 +282,13 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
             if (id == AIDs[i])
             {
                 var dir = spell.LocXZ - caster.Position;
-                Casters.Add(new(new AOEShapeRect(dir.Length() + extraLengthFront, HalfWidth), caster.Position.Quantized(), Angle.FromDirection(dir), Module.CastFinishAt(spell), actorID: caster.InstanceID));
+                var shape = new AOEShapeRect(dir.Length() + ExtraLengthFront, HalfWidth);
+                var origin = caster.Position.Quantized();
+                var rotation = Angle.FromDirection(dir);
+                Casters.Add(new(shape, origin, rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: shape.Distance(origin, rotation)));
                 if (Casters.Count == ExpectedNumCasters)
                 {
-                    Casters.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                    Casters.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
                 }
                 return;
             }

@@ -1,6 +1,8 @@
 namespace BossMod.Components;
 
 // generic 'chasing AOE' component - these are AOEs that follow the target for a set amount of casts
+
+[SkipLocalsInit]
 public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid = default, string warningText = "GTFO from chasing aoe!") : GenericAOEs(module, aid, warningText)
 {
     private readonly float MoveDistance = moveDistance;
@@ -99,6 +101,7 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
 }
 
 // standard chasing aoe; first cast is long - assume it is baited on the nearest allowed target; successive casts are instant
+[SkipLocalsInit]
 public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, double activationDelay = 5.1d) : GenericChasingAOEs(module, moveDistance)
 {
     public StandardChasingAOEs(BossModule module, float radius, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, double activationDelay = 5.1d) : this(module, new AOEShapeCircle(radius), actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetExcludedTargets, icon, activationDelay) { }
@@ -183,6 +186,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
 }
 
 // since open world players don't count towards party, we need to make a new component
+[SkipLocalsInit]
 public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, float secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, float activationDelay = 5.1f) : StandardChasingAOEs(module, shape, actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetExcludedTargets, icon, activationDelay)
 {
     public new HashSet<Actor> ExcludedTargets = []; // any targets in this hashset aren't considered to be possible targets

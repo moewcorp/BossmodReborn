@@ -7,7 +7,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
     private static readonly WPos[] prisonPositions = [new(100f, -100f), new(300f, -100f), new(300f, 100f), new(300f, 300f),
     new(100f, 300f), new(-100f, 300f), new(-100f, 100f), new(-100f, -100f)];
 
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (index <= 0x07 && state == 0x00020001u)
         {
@@ -80,10 +80,10 @@ sealed class Prisons(BossModule module) : BossComponent(module)
                 {
                     if (activeTeleporters[i])
                     {
-                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(default, -7.4f), 1f, 9f));
-                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(-2.5f, -20f), 1f, 9f));
-                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(15f, -11.5f), 1f, 9f));
-                        hints.GoalZones.Add(hints.GoalSingleTarget(pos + new WDir(20f, default), 1f, 9f));
+                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(default, -7.4f), 1f, 9f));
+                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(-2.5f, -20f), 1f, 9f));
+                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(15f, -11.5f), 1f, 9f));
+                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(20f, default), 1f, 9f));
                     }
                     return;
                 }

@@ -108,7 +108,7 @@ sealed class TagTeamLariatCombo(BossModule module) : Components.GenericAOEs(modu
                 for (var i = 0; i < len; ++i)
                 {
                     ref var aoe = ref aoes[i];
-                    if (aoe.Origin == pos)
+                    if (aoe.Origin.AlmostEqual(pos, 1f))
                     {
                         index = i;
                         break;

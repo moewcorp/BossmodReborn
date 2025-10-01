@@ -9,6 +9,8 @@ namespace BossMod.Pathfinding;
 // 2. maintain uptime - this is represented by being in specified range of specified target, and not moving to interrupt casts unless needed
 // 3. execute positionals - this is strictly less important than points above, we only do that if we can meet other conditions
 // 4. be in range of healers - even less important, but still nice to do
+
+[SkipLocalsInit]
 public struct NavigationDecision
 {
     // context that allows reusing large memory allocations
@@ -44,7 +46,8 @@ public struct NavigationDecision
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
-            if (ctx.Map.PixelMaxG.Length > index && ctx.Map.PixelMaxG[index] is >= 1f or < 0f) // prioritize safety over uptime, still needs to be active for below 0 MaxG to go back inside arena bounds if needed
+            var len = ctx.Map.PixelMaxG.Length;
+            if (index >= 0 && len > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0 || index >= len) // prioritize safety over uptime
             {
                 if (localGoalZones.Length != 0)
                 {
@@ -176,7 +179,7 @@ public struct NavigationDecision
                     }
                     if (shapesInRowBuf.Count == 0)
                     {
-                        // no zones affect this row → scratch is +inf
+                        // no zones affect this row → scratch float max value
                         var baseIdx = r * width;
                         for (var x1 = 0; x1 < width; ++x1)
                         {
@@ -278,7 +281,7 @@ public struct NavigationDecision
 
                         // center check with cushion, this is needed for shapes that can intersect cells between corners
                         var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
-                        var centerG = CalculateMaxG(shapesInRowBuf, centerPos, cushion);
+                        var centerG = CalculateMaxGCenter(shapesInRowBuf, centerPos, cushion);
 
                         var finalG = Math.Min(cellEdgeG, centerG);
 
@@ -323,7 +326,7 @@ public struct NavigationDecision
             }
         }
 
-        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, WPos p, float cushion = default)
+        static float CalculateMaxGCenter(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p, float cushion = default)
         {
             // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
             // threshold > 0 inflates by that margin (used for center cushion).
@@ -333,7 +336,22 @@ public struct NavigationDecision
             for (var i = 0; i < count; ++i)
             {
                 var z = zones[i];
-                if (z.shapeDistance.Distance(p) < threshold)
+                if (z.shapeDistance.Distance(p) <= threshold)
+                {
+                    return z.g;
+                }
+            }
+            return float.MaxValue;
+        }
+
+        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p)
+        {
+            // pip test for corners
+            var count = zones.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var z = zones[i];
+                if (z.shapeDistance.Contains(p))
                 {
                     return z.g;
                 }
@@ -376,16 +394,6 @@ public struct NavigationDecision
                         var row = ys + r;
                         var baseIdx = r * width;
 
-                        if (row >= height)
-                        {
-                            // out-of-bounds row -> mark as no contribution
-                            for (var x = 0; x < width; ++x)
-                            {
-                                localScratch[baseIdx + x] = float.MinValue;
-                            }
-                            continue;
-                        }
-
                         var rowCorner = topLeft + row * dy;
                         var leftPos = rowCorner;
 
@@ -415,10 +423,6 @@ public struct NavigationDecision
                     // produce final cell priorities
                     for (var y = ys; y < ye; ++y)
                     {
-                        if (y >= height)
-                        {
-                            break;
-                        }
                         var rowBase = (y - ys) * width;
                         var nextRowBase = rowBase + width;
 
@@ -472,14 +476,7 @@ public struct NavigationDecision
 
         var dy = map.LocalZDivRes * resolution * resolution;
         var dx = dy.OrthoL();
-        var startPos = map.Center - (width >> 1) * dx - (height >> 1) * dy;
-
-        var sampleOffsets = new WDir[5];
-        sampleOffsets[0] = default; // center, cushion applied
-        sampleOffsets[1] = dx * 0.5f + dy * 0.5f;
-        sampleOffsets[2] = dx * 0.5f - dy * 0.5f;
-        sampleOffsets[3] = -dx * 0.5f + dy * 0.5f;
-        sampleOffsets[4] = -dx * 0.5f - dy * 0.5f;
+        var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
 
         var partitioner = Partitioner.Create(0, height);
         var pixelMaxG = map.PixelMaxG;
@@ -489,54 +486,61 @@ public struct NavigationDecision
         {
             var ys = range.Item1;
             var ye = range.Item2;
+
             var shapesInRow = new List<ShapeDistance>(len);
+
             for (var y = ys; y < ye; ++y)
             {
-
-                var rowStart = startPos + y * dy;
-
+                var rowCenter = topLeft + (y + 0.5f) * dy;
                 shapesInRow.Clear();
+
                 for (var j = 0; j < len; ++j)
                 {
                     var s = zones[j];
-                    if (s.RowIntersectsShape(rowStart, dx, width, cushion))
+                    if (s.RowIntersectsShape(rowCenter, dx, width, cushion))
                     {
                         shapesInRow.Add(s);
                     }
                 }
+
                 var count = shapesInRow.Count;
                 if (count == 0)
                 {
-                    continue; // no shapes in this row
+                    continue;
                 }
 
                 var rowBaseIndex = y * width;
+                var rowTopLeft = topLeft + y * dy;
 
                 for (var x = 0; x < width; ++x)
                 {
-                    var pixelIndex = rowBaseIndex + x;
+                    var idx = rowBaseIndex + x;
 
-                    if (pixelMaxG[pixelIndex] < 0f)
+                    if (pixelMaxG[idx] < 0f)
                     {
-                        continue; // already blocked by arena bounds
+                        continue; // arena bounds already blocked
                     }
-                    var posBase = rowStart + x * dx;
+
+                    var cellTopLeft = rowTopLeft + x * dx;
+
+                    var tl = cellTopLeft;
+                    var tr = cellTopLeft + dx;
+                    var bl = cellTopLeft + dy;
+                    var br = cellTopLeft + dx + dy;
+                    var center = cellTopLeft + (dx * 0.5f + dy * 0.5f);
 
                     for (var j = 0; j < count; ++j)
                     {
                         var shape = shapesInRow[j];
-                        for (var i = 0; i < 5; ++i)
+
+                        // center with cushion, corners without
+                        if (shape.Distance(center) <= cushion || shape.Contains(tl) || shape.Contains(br) || shape.Contains(tr) || shape.Contains(bl))
                         {
-                            if (shape.Distance(posBase + sampleOffsets[i]) < (i == 0 ? cushion : default))
-                            {
-                                pixelMaxG[pixelIndex] = -1f;
-                                pixelPriority[pixelIndex] = float.MinValue;
-                                goto next;
-                            }
+                            pixelMaxG[idx] = -1f;
+                            pixelPriority[idx] = float.MinValue;
+                            break;
                         }
                     }
-                next:
-                    ;
                 }
             }
         });
@@ -545,8 +549,6 @@ public struct NavigationDecision
     private static (WPos? first, WPos? second) GetFirstWaypoints(ThetaStar pf, Map map, int cell, WPos startingPos)
     {
         ref var startingNode = ref pf.NodeByIndex(cell);
-        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
-        var maxIterations = map.Width * map.Height;
 
         if (startingNode.GScore == 0f && startingNode.PathMinG == float.MaxValue)
         {
@@ -554,20 +556,21 @@ public struct NavigationDecision
         }
 
         var nextCell = cell;
+        var iterations = 0; // iteration counter to prevent rare cases of infinite loops
+        var maxIterations = map.Width * map.Height;
         do
         {
             ref var node = ref pf.NodeByIndex(cell);
             if (pf.NodeByIndex(node.ParentIndex).GScore == 0f || ++iterations == maxIterations)
             {
-                //var dest = pf.CellCenter(cell);
-                // if destination coord matches player coord, do not move along that coordinate, this is used for precise positioning
                 var destCoord = map.IndexToGrid(cell);
                 var playerCoordFrac = map.WorldToGridFrac(startingPos);
                 var playerCoord = Map.FracToGrid(playerCoordFrac);
-                var dest = map.GridToWorld(destCoord.x, destCoord.y, destCoord.x == playerCoord.x ? playerCoordFrac.X - playerCoord.x : 0.5f, destCoord.y == playerCoord.y ? playerCoordFrac.Y - playerCoord.y : 0.5f);
-
-                var next = pf.CellCenter(nextCell);
-                return (dest, next);
+                if (destCoord == playerCoord)
+                {
+                    return default;
+                }
+                return (pf.CellCenter(cell), pf.CellCenter(nextCell));
             }
             nextCell = cell;
             cell = node.ParentIndex;

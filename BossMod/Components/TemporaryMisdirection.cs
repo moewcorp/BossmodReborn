@@ -1,6 +1,7 @@
 namespace BossMod.Components;
 
 // generic temporary misdirection component
+[SkipLocalsInit]
 public abstract class TemporaryMisdirection(BossModule module, uint aid, string hint = "Applies temporary misdirection") : CastHint(module, aid, hint)
 {
     private BitMask mask;

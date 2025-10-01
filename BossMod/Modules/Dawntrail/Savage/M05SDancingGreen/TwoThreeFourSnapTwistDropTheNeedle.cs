@@ -3,7 +3,7 @@ namespace BossMod.Dawntrail.Savage.M05SDancingGreen;
 sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(2);
-    private static readonly AOEShapeRect rect = new(20f, 20f);
+    private readonly AOEShapeRect rect = new(20f, 20f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -52,7 +52,9 @@ sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.
         {
             var loc = spell.LocXZ;
             var rot = spell.Rotation;
-            AOEs.Add(new(rect, delay != default ? loc - 1.5f * rot.ToDirection() : loc, spell.Rotation + offset, Module.CastFinishAt(spell, delay)));
+            var pos = delay != default ? loc - 5f * rot.ToDirection() : loc;
+            var rot2 = rot + offset;
+            AOEs.Add(new(rect, pos, rot2, Module.CastFinishAt(spell, delay), shapeDistance: rect.Distance(pos, rot2)));
         }
     }
 
@@ -99,23 +101,14 @@ sealed class TwoThreeFourSnapTwistDropTheNeedle(BossModule module) : Components.
                     if (count == 2)
                     {
                         ref var aoe2 = ref AOEs.Ref(0);
-                        aoe2.Origin -= 1.5f * aoe2.Rotation.ToDirection();
+                        var rot = aoe2.Rotation;
+                        aoe2.Origin -= 5f * rot.ToDirection();
+                        aoe2.ShapeDistance = rect.Distance(aoe2.Origin, rot);
                     }
                 }
                 ++NumCasts;
                 break;
         }
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        base.AddAIHints(slot, actor, assignment, hints);
-        if (AOEs.Count != 2)
-        {
-            return;
-        }
-        // make ai stay close to boss to ensure successfully dodging the combo
-        hints.AddForbiddenZone(new SDInvertedRect(Arena.Center, new WDir(1f, default), 2f, 2f, 40f), AOEs.Ref(0).Activation);
     }
 }
 
@@ -159,7 +152,7 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitAway(module
             var clip = CollectionsMarshal.AsSpan(clipped);
             for (var i = 0; i < count; ++i)
             {
-                ref readonly var c = ref clip[i];
+                var c = clip[i];
                 if (c.Role == Role.Tank)
                 {
                     ++tanks;
@@ -205,17 +198,18 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitAway(module
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.FlipToASide)
+        switch (spell.Action.ID)
         {
-            Source = caster;
-            ++NumCasts;
-            _lightparty = false;
-        }
-        else if (spell.Action.ID == (uint)AID.FlipToBSide)
-        {
-            Source = caster;
-            _lightparty = true;
-            ++NumCasts;
+            case (uint)AID.FlipToASide:
+                Source = caster;
+                ++NumCasts;
+                _lightparty = false;
+                break;
+            case (uint)AID.FlipToBSide:
+                Source = caster;
+                _lightparty = true;
+                ++NumCasts;
+                break;
         }
     }
 

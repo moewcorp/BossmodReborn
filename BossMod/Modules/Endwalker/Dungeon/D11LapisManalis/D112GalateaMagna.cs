@@ -85,7 +85,7 @@ sealed class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
             if (_aoes.Count is var count && (count == 4 || count == 2 && first))
             {
                 first = false;
-                _aoes.Sort((a, b) => a.Activation.CompareTo(b.Activation));
+                _aoes.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
             }
         }
     }
@@ -190,7 +190,7 @@ sealed class GlassyEyed(BossModule module) : Components.GenericGaze(module)
 
 sealed class TenebrismTowers(BossModule module) : Components.GenericTowers(module)
 {
-    public override void OnEventEnvControl(byte index, uint state)
+    public override void OnMapEffect(byte index, uint state)
     {
         if (state == 0x00010008u)
         {
