@@ -41,7 +41,7 @@ class VitriolicBarrage(BossModule module) : Components.RaidwideCast(module, (uin
 class RockHard(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RockHard, 8);
 class TorrentialTorment(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TorrentialTorment, new AOEShapeCone(56f, 22.5f.Degrees()));
 class Fluorescence(BossModule module) : Components.Dispel(module, (uint)SID.DamageUp);
-class IonShower(BossModule module) : Components.GenericStackSpread(module, alwaysShowSpreads: true, raidwideOnResolve: false)
+class IonShower(BossModule module) : Components.GenericStackSpread(module, raidwideOnResolve: false)
 {
     private int _numCasts;
 

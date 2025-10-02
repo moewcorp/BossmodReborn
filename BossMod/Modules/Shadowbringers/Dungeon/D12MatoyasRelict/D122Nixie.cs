@@ -165,8 +165,7 @@ sealed class GeysersCloudPlatform(BossModule module) : Components.GenericAOEs(mo
             var aoes = CollectionsMarshal.AsSpan(_aoes);
             for (var i = 0; i < count; ++i)
             {
-                ref var aoe = ref aoes[i];
-                if (aoe.Origin.AlmostEqual(pos, 1f))
+                if (aoes[i].Origin.AlmostEqual(pos, 1f))
                 {
                     _aoes.RemoveAt(i);
                     return;
