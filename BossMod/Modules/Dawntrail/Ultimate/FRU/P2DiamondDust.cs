@@ -125,7 +125,7 @@ sealed class P2DiamondDustHouseOfLight(BossModule module) : Components.GenericBa
                 hints.Add("Bait cone away from raid!");
         }
 
-        if (ActiveBaitsNotOn(actor).Any(b => IsClippedBy(actor, b)))
+        if (ActiveBaitsNotOn(actor).Any(b => IsClippedBy(actor, ref b)))
             hints.Add("GTFO from baited cone!");
     }
 

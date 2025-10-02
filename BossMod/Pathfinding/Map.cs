@@ -157,29 +157,6 @@ public sealed class Map
         }
     }
 
-    public (int x, int y, WPos center)[] EnumeratePixels()
-    {
-        var width = Width;
-        var height = Height;
-        var result = new (int x, int y, WPos center)[(width * height)];
-        var rsq = Resolution * Resolution; // since we then multiply by _localZDivRes, end result is same as * res * rotation.ToDir()
-        var dx = LocalZDivRes.OrthoL() * rsq;
-        var dy = LocalZDivRes * rsq;
-        var cy = Center + (-(width >> 1) + 0.5f) * dx + (-(height >> 1) + 0.5f) * dy;
-        var index = 0;
-        for (var y = 0; y < height; ++y)
-        {
-            var cx = cy;
-            for (var x = 0; x < width; ++x)
-            {
-                result[index++] = (x, y, cx);
-                cx += dx;
-            }
-            cy += dy;
-        }
-        return result;
-    }
-
     // enumerate pixels along line starting from (x1, y1) to (x2, y2); first is not returned, last is returned
     public (int x, int y)[] EnumeratePixelsInLine(int x1, int y1, int x2, int y2)
     {

@@ -87,7 +87,7 @@ public enum TetherID : uint
 
 class AncientCircle(BossModule module) : Components.DonutStack(module, (uint)AID.AncientCircle, (uint)IconID.AncientCircle, 10f, 20f, 8d, 4, 4);
 
-class DarkWhispers(BossModule module) : Components.UniformStackSpread(module, default, 6f, alwaysShowSpreads: true)
+class DarkWhispers(BossModule module) : Components.UniformStackSpread(module, default, 6f)
 {
     // regular spread component won't work because this is self targeted
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
