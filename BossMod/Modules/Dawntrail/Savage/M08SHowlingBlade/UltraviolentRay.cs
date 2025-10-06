@@ -2,7 +2,7 @@ namespace BossMod.Dawntrail.Savage.M08SHowlingBlade;
 
 sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(module, (uint)AID.UltraviolentRay, onlyShowOutlines: true, damageType: AIHints.PredictedDamageType.Raidwide)
 {
-    private static readonly AOEShapeRect rect = new(40f, 8.5f);
+    private readonly AOEShapeRect rect = new(40f, 8.5f);
     private readonly M08SHowlingBlade bossmod = (M08SHowlingBlade)module;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -49,7 +49,7 @@ sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(mod
         var occupiedPlatforms = new List<Angle>(5);
         for (var i = 0; i < len; ++i)
         {
-            ref readonly var b = ref baits[i];
+            ref var b = ref baits[i];
             for (var j = 0; j < 5; ++j)
             {
                 if (b.Target.Position.InCircle(ArenaChanges.EndArenaPlatforms[j].Center, 8f))
@@ -69,6 +69,8 @@ sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(mod
             }
         }
     }
+
+    // public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // useless without hardcoding teleporters
 }
 
 sealed class GleamingBeam(BossModule module) : Components.GenericAOEs(module)

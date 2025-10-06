@@ -31,17 +31,15 @@ public struct NavigationDecision
     {
         // build a pathfinding map: rasterize all forbidden zones and goals
         hints.InitPathfindMap(ctx.Map);
-        // local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
-        (ShapeDistance, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
-        Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
-        ShapeDistance[] localTemporaryObstacles = [.. hints.TemporaryObstacles];
-        if (localTemporaryObstacles.Length != 0)
+
+        // make local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
+        if (hints.TemporaryObstacles.Count != 0)
         {
-            RasterizeVoidzones(ctx.Map, localTemporaryObstacles);
+            RasterizeVoidzones(ctx.Map, [.. hints.TemporaryObstacles]);
         }
-        if (localForbiddenZones.Length != 0)
+        if (hints.ForbiddenZones.Count != 0)
         {
-            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime);
+            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], ws.CurrentTime);
         }
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
@@ -49,18 +47,23 @@ public struct NavigationDecision
             var len = ctx.Map.PixelMaxG.Length;
             if (index >= 0 && len > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0 || index >= len) // prioritize safety over uptime
             {
-                if (localGoalZones.Length != 0)
+                if (hints.GoalZones.Count != 0)
                 {
-                    RasterizeGoalZones(ctx.Map, localGoalZones);
+                    RasterizeGoalZones(ctx.Map, [.. hints.GoalZones]);
                 }
-                if (forbiddenZoneCushion > 0)
+                if (forbiddenZoneCushion > 0f)
                 {
                     AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
                 }
             }
         }
+        var speed = 1.0f / playerSpeed;
+        if (hints.Teleporters.Count != 0)
+        {
+            ctx.Map.BuildTeleporterEdges([.. hints.Teleporters]);
+        }
         // execute pathfinding
-        ctx.ThetaStar.Start(ctx.Map, player.Position, 1.0f / playerSpeed);
+        ctx.ThetaStar.Start(ctx.Map, player.Position, speed);
         var bestNodeIndex = ctx.ThetaStar.Execute();
         ref var bestNode = ref ctx.ThetaStar.NodeByIndex(bestNodeIndex);
         var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, player.Position);

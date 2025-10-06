@@ -77,7 +77,7 @@ sealed class D090MalboroTerraStates : StateMachineBuilder
             .Raw.Update = () =>
             {
                 walls ??= module.FindComponent<WallRemoval>();
-                return walls!.Complete;
+                return walls!.Complete || module.WorldState.CurrentCFCID != 41u;
             };
     }
 }

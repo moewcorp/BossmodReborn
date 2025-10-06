@@ -29,8 +29,7 @@ sealed class MassMacabre(BossModule module) : Components.GenericTowers(module, p
             var id = (ulong)index;
             for (var i = 0; i < count; ++i)
             {
-                ref var tower = ref towers[i];
-                if (tower.ActorID == id)
+                if (towers[i].ActorID == id)
                 {
                     Towers.RemoveAt(i);
                     if (Towers.Count == 0)
