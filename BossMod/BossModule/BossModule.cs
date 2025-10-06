@@ -750,8 +750,9 @@ public abstract class BossModule : IDisposable
 
     private void OnActorVFX(Actor actor, uint vfxID, ulong targetID)
     {
-        foreach (var comp in _components)
-            comp.OnEventVFX(actor, vfxID, targetID);
+        var count = Components.Count;
+        for (var i = 0; i < count; ++i)
+            Components[i].OnEventVFX(actor, vfxID, targetID);
     }
 
     private void OnActorCastEvent(Actor actor, ActorCastEvent cast)

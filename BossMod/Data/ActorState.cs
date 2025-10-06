@@ -846,8 +846,11 @@ public sealed class ActorState : IEnumerable<Actor>
 
     // same as above, but only used in old content before Lockon replaced it
     public Event<Actor, uint, ulong> VFXAppeared = new();
-    public sealed record class OpVFX(ulong InstanceID, uint VfxID, ulong TargetID) : Operation(InstanceID)
+    public sealed class OpVFX(ulong instanceID, uint vfxID, ulong targetID) : Operation(instanceID)
     {
+        public readonly uint VfxID = vfxID;
+        public readonly ulong TargetID = targetID;
+
         protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.VFXAppeared.Fire(actor, VfxID, TargetID);
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("VFX "u8).EmitActor(InstanceID).Emit(VfxID).EmitActor(TargetID);
     }
