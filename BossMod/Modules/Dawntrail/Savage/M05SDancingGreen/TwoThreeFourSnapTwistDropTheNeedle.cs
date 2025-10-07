@@ -150,7 +150,6 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitStack(modul
     {
         if (!active && Source != null && (activation - WorldState.CurrentTime).TotalSeconds < 5.1d)
         {
-            var act = activation;
             var party = Raid.WithSlot(true, true, true);
             var len = party.Length;
             if (_lightparty)
@@ -161,7 +160,7 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitStack(modul
                     var p = player.Item2;
                     if (p.Role == Role.Healer)
                     {
-                        CurrentBaits.Add(new(Source, p, rect, act));
+                        CurrentBaits.Add(new(Source, p, rect, activation));
                     }
                 }
             }
@@ -202,21 +201,21 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitStack(modul
                         case Role.Tank:
                             if (!addedTank)
                             {
-                                CurrentBaits.Add(new(Source, p, cone, act, ~allowedTanks));
+                                AddBait(p, allowedTanks);
                                 addedTank = true;
                             }
                             break;
                         case Role.Healer:
                             if (!addedHealer)
                             {
-                                CurrentBaits.Add(new(Source, p, cone, act, ~allowedHealers));
+                                AddBait(p, allowedHealers);
                                 addedHealer = true;
                             }
                             break;
                         default:
                             if (!addedDDs)
                             {
-                                CurrentBaits.Add(new(Source, p, cone, act, ~allowedDDs));
+                                AddBait(p, allowedDDs);
                                 addedDDs = true;
                             }
                             break;
@@ -224,6 +223,7 @@ sealed class FlipToABSide(BossModule module) : Components.GenericBaitStack(modul
                 }
             }
             active = true;
+            void AddBait(Actor player, BitMask allowed) => CurrentBaits.Add(new(Source!, player, cone, activation, ~allowed));
         }
     }
 

@@ -62,7 +62,7 @@ sealed class LamentOfTheCloseDistant(BossModule module) : BossComponent(module)
         {
             hints.Add(Partners[slot].close ? "Stay close to partner!" : "Stay away from partner!");
         }
-        else if (_config.LoneWolfsLamentHints)
+        else if (_config.LoneWolfsLamentHints && !TethersAssigned)
         {
             switch (actor.Role)
             {
