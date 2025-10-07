@@ -38,9 +38,10 @@ sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(mod
         var len = baits.Length;
 
         Angle playerPlatform = default;
+        var pos = actor.Position;
         for (var i = 0; i < 5; ++i)
         {
-            if (actor.Position.InCircle(ArenaChanges.EndArenaPlatforms[i].Center, 8f))
+            if (pos.InCircle(ArenaChanges.EndArenaPlatforms[i].Center, 8f))
             {
                 playerPlatform = ArenaChanges.PlatformAngles[i];
                 break;
@@ -70,7 +71,46 @@ sealed class UltraviolentRay(BossModule module) : Components.GenericBaitAway(mod
         }
     }
 
-    // public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // useless without hardcoding teleporters
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var playerBait = ActiveBaitsOn(actor);
+        if (playerBait.Count != 0)
+        {
+            var baits = CollectionsMarshal.AsSpan(CurrentBaits);
+            var len = baits.Length;
+            Span<int> playersPerPlatform = stackalloc int[5];
+            var pos = actor.Position;
+            var playerPlatform = -1;
+            for (var i = 0; i < len; ++i)
+            {
+                ref var b = ref baits[i];
+                for (var j = 0; j < 5; ++j)
+                {
+                    var t = b.Target;
+                    if (t.Position.InCircle(ArenaChanges.EndArenaPlatforms[j].Center, 8f))
+                    {
+                        playersPerPlatform[j] += 1;
+                        if (t == actor)
+                        {
+                            playerPlatform = j;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            var loc = M08SHowlingBlade.ArenaCenter.Quantized();
+            var act = baits[0].Activation;
+            for (var i = 0; i < 5; ++i)
+            {
+                var platform = playersPerPlatform[i];
+                if (platform > 1 || platform == 1 && playerPlatform != i)
+                {
+                    hints.AddForbiddenZone(rect.Distance(loc, ArenaChanges.PlatformAngles[i]), act);
+                }
+            }
+        }
+    }
 }
 
 sealed class GleamingBeam(BossModule module) : Components.GenericAOEs(module)

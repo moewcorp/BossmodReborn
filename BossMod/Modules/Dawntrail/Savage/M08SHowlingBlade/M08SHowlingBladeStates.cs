@@ -62,7 +62,7 @@ sealed class M08SHowlingBladeStates : StateMachineBuilder
         HerosBlow(id + 0x100000u, 9.4f);
         UltraviolentRay(id + 0x110000u, 12.3f);
         HowlingEight(id + 0x120000u, 16f);
-        SimpleState(id + 0x130000u, 1.5f, "Enrage");
+        SimpleState(id + 0x130000u, 11.3f, "Enrage");
     }
 
     private void ExtraplanarPursuit(uint id, float delay, bool last = false)
