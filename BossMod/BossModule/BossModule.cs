@@ -182,6 +182,7 @@ public abstract class BossModule : IDisposable
             WorldState.Actors.StatusGain.Subscribe(OnActorStatusGain),
             WorldState.Actors.StatusLose.Subscribe(OnActorStatusLose),
             WorldState.Actors.IconAppeared.Subscribe(OnActorIcon),
+            WorldState.Actors.VFXAppeared.Subscribe(OnActorVFX),
             WorldState.Actors.CastEvent.Subscribe(OnActorCastEvent),
             WorldState.Actors.EventObjectStateChange.Subscribe(OnActorEState),
             WorldState.Actors.EventObjectAnimation.Subscribe(OnActorEAnim),
@@ -244,7 +245,7 @@ public abstract class BossModule : IDisposable
                 DrawGlobalHints(CalculateGlobalHints());
 
             if (WindowConfig.ShowPlayerHints)
-                DrawPlayerHints(ref pcHints);
+                DrawPlayerHints(pcHints);
         }
         if (includeArena)
         {
@@ -259,12 +260,12 @@ public abstract class BossModule : IDisposable
                     break;
                 }
             }
-            DrawArena(pcSlot, ref pc, haveRisks);
+            DrawArena(pcSlot, pc, haveRisks);
             MiniArena.End();
         }
     }
 
-    public virtual void DrawArena(int pcSlot, ref Actor pc, bool haveRisks)
+    public virtual void DrawArena(int pcSlot, Actor pc, bool haveRisks)
     {
         // draw background
         DrawArenaBackground(pcSlot, pc);
@@ -282,7 +283,7 @@ public abstract class BossModule : IDisposable
             DrawWaymarks();
 
         // draw non-player alive party members
-        DrawPartyMembers(pcSlot, ref pc);
+        DrawPartyMembers(pcSlot, pc);
 
         // draw foreground
         DrawArenaForeground(pcSlot, pc);
@@ -290,13 +291,11 @@ public abstract class BossModule : IDisposable
             Components[i].DrawArenaForeground(pcSlot, pc);
         if (WindowConfig.ShowMeleeRangeIndicator)
         {
-            foreach (var a in WorldState.Actors)
+            var t = WorldState.Actors.Find(pc.TargetID);
+            var actor = t != null && !t.IsAlly && !t.IsDead && t.InCombat ? t : !PrimaryActor.IsDead && PrimaryActor.IsTargetable ? PrimaryActor : null;
+            if (actor != null)
             {
-                if (!a.IsAlly && a.IsTargetable && !a.IsDead && a.InCombat)
-                {
-                    Arena.ZoneDonut(a.Position, a.HitboxRadius + 2.6f, a.HitboxRadius + 2.9f, Colors.MeleeRangeIndicator);
-                    break;
-                }
+                Arena.ZoneDonut(actor.Position, actor.HitboxRadius + 2.6f, actor.HitboxRadius + 2.9f, Colors.MeleeRangeIndicator);
             }
         }
         // draw enemies & player
@@ -522,7 +521,7 @@ public abstract class BossModule : IDisposable
         ImGui.NewLine();
     }
 
-    private void DrawPlayerHints(ref BossComponent.TextHints hints)
+    private void DrawPlayerHints(BossComponent.TextHints hints)
     {
         var count = hints.Count;
         for (var i = 0; i < count; ++i)
@@ -561,7 +560,7 @@ public abstract class BossModule : IDisposable
         }
     }
 
-    private void DrawPartyMembers(int pcSlot, ref Actor pc)
+    private void DrawPartyMembers(int pcSlot, Actor pc)
     {
         var raid = Raid.WithSlot();
         var len = raid.Length;
@@ -570,7 +569,7 @@ public abstract class BossModule : IDisposable
             var (slot, player) = raid[i];
             if (slot == pcSlot)
                 continue;
-            var (prio, color) = CalculateHighestPriority(pcSlot, ref pc, slot, player);
+            var (prio, color) = CalculateHighestPriority(pcSlot, pc, slot, player);
 
             var isFocus = WorldState.Client.FocusTargetId == player.InstanceID;
             if (prio == BossComponent.PlayerPriority.Irrelevant && !WindowConfig.ShowIrrelevantPlayers && !(isFocus && WindowConfig.ShowFocusTargetPlayer))
@@ -612,7 +611,7 @@ public abstract class BossModule : IDisposable
         }
     }
 
-    private (BossComponent.PlayerPriority, uint) CalculateHighestPriority(int pcSlot, ref Actor pc, int playerSlot, Actor player)
+    private (BossComponent.PlayerPriority, uint) CalculateHighestPriority(int pcSlot, Actor pc, int playerSlot, Actor player)
     {
         uint color = 0;
         var highestPrio = BossComponent.PlayerPriority.Irrelevant;
@@ -747,6 +746,13 @@ public abstract class BossModule : IDisposable
         var count = Components.Count;
         for (var i = 0; i < count; ++i)
             Components[i].OnEventIcon(actor, iconID, targetID);
+    }
+
+    private void OnActorVFX(Actor actor, uint vfxID, ulong targetID)
+    {
+        var count = Components.Count;
+        for (var i = 0; i < count; ++i)
+            Components[i].OnEventVFX(actor, vfxID, targetID);
     }
 
     private void OnActorCastEvent(Actor actor, ActorCastEvent cast)

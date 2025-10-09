@@ -40,10 +40,11 @@ public sealed class DebugObjects
                 var internalChara = Utils.CharacterInternal(character);
 
                 _tree.LeafNode($"Unique ID: {uniqueID:X}");
-                _tree.LeafNode($"Gimmick ID: {Utils.ReadField<uint>(internalObj, 0x7C):X}");
+                _tree.LeafNode($"Layout ID: {Utils.GameObjectInternal(obj)->LayoutId:X}");
+                _tree.LeafNode($"Gimmick ID: {Utils.ReadField<uint>(internalObj, 0x80):X}");
                 _tree.LeafNode($"Radius: {obj.HitboxRadius:f3}");
                 _tree.LeafNode($"Owner: {Utils.ObjectString(obj.OwnerId)}");
-                _tree.LeafNode($"BNpcBase/Name: {obj.DataId:X}/{Utils.GameObjectInternal(obj)->GetNameId()}");
+                _tree.LeafNode($"BNpcBase/Name: {obj.BaseId:X}/{Utils.GameObjectInternal(obj)->GetNameId()}");
                 _tree.LeafNode($"Targetable: {obj.IsTargetable}");
                 _tree.LeafNode($"Is character: {internalObj->IsCharacter()}");
                 _tree.LeafNode($"Event state: {Utils.GameObjectInternal(obj)->EventState}");

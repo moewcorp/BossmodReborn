@@ -174,7 +174,7 @@ public abstract class CastLineOfSightAOE : GenericLineOfSightAOE
         }
     }
 
-    public void Refresh()
+    protected void Refresh()
     {
         var caster = ActiveCaster;
         WPos? position = caster != null ? caster.CastInfo!.LocXZ : null;

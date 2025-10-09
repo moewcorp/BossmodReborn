@@ -45,9 +45,17 @@ sealed class Prisons(BossModule module) : BossComponent(module)
 
     public override void OnMapEffect(byte index, uint state)
     {
-        if (index <= 0x07 && state == 0x00020001u)
+        if (index <= 0x07)
         {
-            activeTeleporters.Set(index);
+            switch (state)
+            {
+                case 0x00020001u:
+                    activeTeleporters.Set(index);
+                    break;
+                case 0x00080004u:
+                    activeTeleporters.Clear(index);
+                    break;
+            }
         }
     }
 
@@ -133,9 +141,9 @@ sealed class Prisons(BossModule module) : BossComponent(module)
                 {
                     if (activeTeleporters[i])
                     {
-                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(default, -7.4f), 1f, 9f));
-                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(-2.5f, -20f), 1f, 9f));
-                        hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(15f, -11.5f), 1f, 9f));
+                        hints.Teleporters.Add(new(pos + new WDir(default, -7.4f), pos + new WDir(-6f, -18f), 2f, false));
+                        hints.Teleporters.Add(new(pos + new WDir(-2.5f, -20f), pos + new WDir(10f, -15f), 2f, false));
+                        hints.Teleporters.Add(new(pos + new WDir(15f, -11.5f), pos + new WDir(19f, -2f), 2f, false));
                         hints.GoalZones.Add(AIHints.GoalSingleTarget(pos + new WDir(20f, default), 1f, 9f));
                     }
                     return;

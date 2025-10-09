@@ -96,6 +96,9 @@ public sealed class AIHints
     // AI will treat the pixels inside these shapes as unreachable and not try to pathfind through them (unlike imminent forbidden zones)
     public List<ShapeDistance> TemporaryObstacles = [];
 
+    // AI will treat the pixels inside these shapes as unreachable and not try to pathfind through them (unlike imminent forbidden zones)
+    public readonly List<Pathfinding.Teleporter> Teleporters = [];
+
     // positioning: next positional hint (TODO: reconsider, maybe it should be a list prioritized by in-gcds, and imminent should be in-gcds instead? or maybe it should be property of an enemy? do we need correct?)
     public (Actor? Target, Positional Pos, bool Imminent, bool Correct) RecommendedPositional;
 
@@ -145,6 +148,7 @@ public sealed class AIHints
         ForbiddenZones.Clear();
         GoalZones.Clear();
         TemporaryObstacles.Clear();
+        Teleporters.Clear();
         RecommendedPositional = default;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;

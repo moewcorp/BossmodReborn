@@ -31,17 +31,15 @@ public struct NavigationDecision
     {
         // build a pathfinding map: rasterize all forbidden zones and goals
         hints.InitPathfindMap(ctx.Map);
-        // local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
-        (ShapeDistance, DateTime, ulong)[] localForbiddenZones = [.. hints.ForbiddenZones];
-        Func<WPos, float>[] localGoalZones = [.. hints.GoalZones];
-        ShapeDistance[] localTemporaryObstacles = [.. hints.TemporaryObstacles];
-        if (localTemporaryObstacles.Length != 0)
+
+        // make local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
+        if (hints.TemporaryObstacles.Count != 0)
         {
-            RasterizeVoidzones(ctx.Map, localTemporaryObstacles);
+            RasterizeVoidzones(ctx.Map, [.. hints.TemporaryObstacles]);
         }
-        if (localForbiddenZones.Length != 0)
+        if (hints.ForbiddenZones.Count != 0)
         {
-            RasterizeForbiddenZones(ctx.Map, localForbiddenZones, ws.CurrentTime);
+            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], ws.CurrentTime);
         }
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
@@ -49,18 +47,23 @@ public struct NavigationDecision
             var len = ctx.Map.PixelMaxG.Length;
             if (index >= 0 && len > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0 || index >= len) // prioritize safety over uptime
             {
-                if (localGoalZones.Length != 0)
+                if (hints.GoalZones.Count != 0)
                 {
-                    RasterizeGoalZones(ctx.Map, localGoalZones);
+                    RasterizeGoalZones(ctx.Map, [.. hints.GoalZones]);
                 }
-                if (forbiddenZoneCushion > 0)
+                if (forbiddenZoneCushion > 0f)
                 {
                     AvoidForbiddenZone(ctx.Map, forbiddenZoneCushion);
                 }
             }
         }
+        var speed = 1.0f / playerSpeed;
+        if (hints.Teleporters.Count != 0)
+        {
+            ctx.Map.BuildTeleporterEdges([.. hints.Teleporters]);
+        }
         // execute pathfinding
-        ctx.ThetaStar.Start(ctx.Map, player.Position, 1.0f / playerSpeed);
+        ctx.ThetaStar.Start(ctx.Map, player.Position, speed);
         var bestNodeIndex = ctx.ThetaStar.Execute();
         ref var bestNode = ref ctx.ThetaStar.NodeByIndex(bestNodeIndex);
         var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, player.Position);
@@ -70,37 +73,94 @@ public struct NavigationDecision
     private static void AvoidForbiddenZone(Map map, float forbiddenZoneCushion)
     {
         var d = (int)(forbiddenZoneCushion / map.Resolution);
+
+        var width = map.Width;
+        var height = map.Height;
+        var pixelMaxG = map.PixelMaxG;
+        var pixelPriority = map.PixelPriority;
+
         map.MaxPriority = -1f;
-        var pixels = map.EnumeratePixels();
-        var len = pixels.Length;
-        for (var i = 0; i < len; ++i)
-        {
-            var p = pixels[i];
-            var px = p.x;
-            var py = p.y;
-            var cellIndex = map.GridToIndex(px, py);
-            if (map.PixelMaxG[cellIndex] == float.MaxValue)
+
+        var partitions = Partitioner.Create(0, height);
+
+        var globalMax = float.NegativeInfinity;
+
+        Parallel.ForEach(partitions, () => float.NegativeInfinity, (range, _, localMax) =>
             {
-                for (var ox = -1; ox <= 1; ++ox)
+                var y1 = range.Item1;
+                var y2 = range.Item2;
+                for (var y = y1; y < y2; ++y)
                 {
-                    for (var oy = -1; oy <= 1; ++oy)
+                    var rowBase = y * width;
+
+                    var topY = y - d;
+                    if (topY < 0)
                     {
-                        if (ox == 0 && oy == 0)
+                        topY = 0;
+                    }
+                    var botY = y + d;
+                    if (botY >= height)
+                    {
+                        botY = height - 1;
+                    }
+                    var topBase = topY * width;
+                    var curBase = rowBase;
+                    var botBase = botY * width;
+
+                    for (var x = 0; x < width; ++x)
+                    {
+                        var idx = rowBase + x;
+
+                        // only penalize safe cells near danger
+                        if (pixelMaxG[idx] == float.MaxValue)
                         {
-                            continue;
+                            var leftX = x - d;
+                            if (leftX < 0)
+                            {
+                                leftX = 0;
+                            }
+                            var rightX = x + d;
+                            if (rightX >= width)
+                            {
+                                rightX = width - 1;
+                            }
+
+                            // check the 8 clamped neighbors (Chebyshev ring at distance d)
+                            if (pixelMaxG[topBase + leftX] != float.MaxValue ||
+                                pixelMaxG[topBase + x] != float.MaxValue ||
+                                pixelMaxG[topBase + rightX] != float.MaxValue ||
+                                pixelMaxG[curBase + leftX] != float.MaxValue ||
+                                pixelMaxG[curBase + rightX] != float.MaxValue ||
+                                pixelMaxG[botBase + leftX] != float.MaxValue ||
+                                pixelMaxG[botBase + x] != float.MaxValue ||
+                                pixelMaxG[botBase + rightX] != float.MaxValue)
+                            {
+                                pixelPriority[idx] -= 0.125f;
+                            }
                         }
-                        var (nx, ny) = map.ClampToGrid((px + ox * d, py + oy * d));
-                        if (map.PixelMaxG[map.GridToIndex(nx, ny)] != float.MaxValue)
+
+                        // track local maximum priority
+                        var p = pixelPriority[idx];
+                        if (p > localMax)
                         {
-                            map.PixelPriority[cellIndex] -= 0.125f;
-                            goto next;
+                            localMax = p;
                         }
                     }
                 }
-            }
-        next:
-            map.MaxPriority = Math.Max(map.MaxPriority, map.PixelPriority[cellIndex]);
-        }
+                return localMax;
+            },
+            localMax =>
+            {
+                float init, newVal;
+                do
+                {
+                    init = globalMax;
+                    newVal = localMax > init ? localMax : init;
+                }
+                while (init != Interlocked.CompareExchange(ref globalMax, newVal, init));
+            });
+
+        map.MaxPriority = globalMax;
     }
 
     private static void RasterizeForbiddenZones(Map map, (ShapeDistance shapeDistance, DateTime activation, ulong source)[] zones, DateTime current)

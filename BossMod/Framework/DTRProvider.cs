@@ -25,9 +25,8 @@ internal sealed class DTRProvider : IDisposable
         _ai = ai;
 
         _autorotationEntry.OnClick = _ => _wantOpenPopup = true;
-        _aiEntry.Tooltip = "Left Click => Toggle Enabled, Right Click => Toggle DrawUI";
+        _aiEntry.Tooltip = "Left Click => Toggle Enabled";
 
-        // FIXME: onClick event should have the mouse flags now
         _aiEntry.OnClick = _ =>
         {
             if (_ai.Beh == null)

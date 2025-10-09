@@ -462,6 +462,21 @@ public class StateMachineBuilder(BossModule module)
         return true;
     }
 
+    protected bool AllDestroyed(uint enemy)
+    {
+        var enemies = Module.Enemies(enemy);
+        var count = enemies.Count;
+        for (var j = 0; j < count; ++j)
+        {
+            var e = enemies[j];
+            if (!e.IsDestroyed)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     protected bool AnyTargetable(uint[] enemies)
     {
         var allenemies = enemies;

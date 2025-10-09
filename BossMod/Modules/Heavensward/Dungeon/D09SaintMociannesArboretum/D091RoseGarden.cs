@@ -27,7 +27,7 @@ public enum AID : uint
     ExplosiveDehiscence = 5234 // RoseHip->self, no cast, range 40 circle, rose hips if not killed fast enough
 }
 
-class VineProbe(BossModule module) : Components.Cleave(module, (uint)AID.VineProbe, new AOEShapeRect(11.775f, 3.5f), activeWhileCasting: false)
+sealed class VineProbe(BossModule module) : Components.Cleave(module, (uint)AID.VineProbe, new AOEShapeRect(11.775f, 3.5f), activeWhileCasting: false)
 {
     private readonly ExtremelyBadBreathRotation _rot = module.FindComponent<ExtremelyBadBreathRotation>()!;
     private bool RotationInactive => _rot.Sequences.Count == 0;
@@ -57,9 +57,9 @@ class VineProbe(BossModule module) : Components.Cleave(module, (uint)AID.VinePro
     }
 }
 
-class ExtremelyBadBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExtremelyBadBreath, ExtremelyBadBreathRotation.Cone);
+sealed class ExtremelyBadBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExtremelyBadBreath, ExtremelyBadBreathRotation.Cone);
 
-class ExtremelyBadBreathRotation(BossModule module) : Components.GenericRotatingAOE(module)
+sealed class ExtremelyBadBreathRotation(BossModule module) : Components.GenericRotatingAOE(module)
 {
     private Angle _rot1;
     public static readonly AOEShapeCone Cone = new(24.775f, 45f.Degrees());
@@ -153,7 +153,7 @@ class ExtremelyBadBreathRotation(BossModule module) : Components.GenericRotating
     }
 }
 
-class EarthyBreath(BossModule module) : Components.GenericAOEs(module)
+sealed class EarthyBreath(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly AOEShapeCone cone = new(7.5f, 15f.Degrees());
     private readonly AOEShapeRect rect = new(7.5f, 1.5f);
@@ -203,7 +203,7 @@ class EarthyBreath(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ResinVoidzone(BossModule module) : Components.Voidzone(module, 5f, GetVoidzones)
+sealed class ResinVoidzone(BossModule module) : Components.Voidzone(module, 5f, GetVoidzones)
 {
     private static Actor[] GetVoidzones(BossModule module)
     {
@@ -224,9 +224,9 @@ class ResinVoidzone(BossModule module) : Components.Voidzone(module, 5f, GetVoid
     }
 }
 
-class BurrFester(BossModule module) : Components.RaidwideCast(module, (uint)AID.BurrFester);
+sealed class BurrFester(BossModule module) : Components.RaidwideCast(module, (uint)AID.BurrFester);
 
-class D091RoseGardenStates : StateMachineBuilder
+sealed class D091RoseGardenStates : StateMachineBuilder
 {
     public D091RoseGardenStates(BossModule module) : base(module)
     {
@@ -241,7 +241,7 @@ class D091RoseGardenStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 41, NameID = 4653, SortOrder = 2)]
-public class D091RoseGarden(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
+public sealed class D091RoseGarden(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
     private static readonly ArenaBoundsCustom arena = new([new Polygon(new(default, -82.146f), 19.5f, 48)], [new Rectangle(new(18.221f, -90.993f), 20f, 1.25f, -65f.Degrees()),
     new Rectangle(new(-20.214f, -82.492f), 20f, 1.25f, -88.9f.Degrees())]);
