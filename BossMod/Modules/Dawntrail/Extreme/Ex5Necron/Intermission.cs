@@ -40,7 +40,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
     private BitMask activeTeleporters;
     public override bool KeepOnPhaseChange => true;
 
-    private static readonly WPos[] prisonPositions = [new(100f, -100f), new(300f, -100f), new(300f, 100f), new(300f, 300f),
+    private readonly WPos[] prisonPositions = [new(100f, -100f), new(300f, -100f), new(300f, 100f), new(300f, 300f),
     new(100f, 300f), new(-100f, 300f), new(-100f, 100f), new(-100f, -100f)];
 
     public override void OnMapEffect(byte index, uint state)

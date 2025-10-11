@@ -334,7 +334,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
     private string ActorString(ulong instanceID, DateTime timestamp)
     {
         var p = replay.FindParticipant(instanceID, timestamp);
-        return p != null || instanceID == 0 ? ActorString(p, timestamp) : $"<unknown> {instanceID:X}";
+        return p != null || instanceID == default ? ActorString(p, timestamp) : $"<unknown> {instanceID:X}";
     }
 
     private string CastEventTargetString(ActorCastEvent ev, DateTime timestamp) => $"{ActorString(ev.MainTargetID, timestamp)} / {Utils.Vec3String(ev.TargetPos)} / {ev.Rotation}";

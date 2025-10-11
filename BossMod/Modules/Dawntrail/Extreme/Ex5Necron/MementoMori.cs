@@ -3,7 +3,7 @@ namespace BossMod.Dawntrail.Extreme.Ex5Necron;
 sealed class MementoMori(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance[] _aoe = [];
-    private static readonly AOEShapeRect rect = new(100f, 6f);
+    private readonly AOEShapeRect rect = new(100f, 6f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
@@ -100,8 +100,7 @@ sealed class ChokingGraspMM(BossModule module) : Components.GenericAOEs(module)
 
             for (var i = 0; i < count; ++i)
             {
-                ref var aoe = ref aoes[i];
-                aoe.Risky = true;
+                aoes[i].Risky = true;
             }
         }
     }

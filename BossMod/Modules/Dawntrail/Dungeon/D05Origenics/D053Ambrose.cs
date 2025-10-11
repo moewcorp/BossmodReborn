@@ -130,8 +130,8 @@ sealed class ExtrasensoryExpulsion(BossModule module) : Components.GenericKnockb
                     forbidden.Add(new SDInvertedRect(recti.Origin, recti.Direction, 19f, default, 7f));
                 }
             }
-            ref var kb0 = ref kbs[0];
-            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), kb0.Activation);
+
+            hints.AddForbiddenZone(new SDIntersection([.. forbidden]), kbs[0].Activation);
         }
     }
 }
@@ -256,8 +256,7 @@ sealed class Rush(BossModule module) : Components.GenericAOEs(module)
         var aoes = CollectionsMarshal.AsSpan(_aoes);
         if (count > 1)
         {
-            ref var aoe0 = ref aoes[0];
-            aoe0.Color = Colors.Danger;
+            aoes[0].Color = Colors.Danger;
         }
         return aoes;
     }

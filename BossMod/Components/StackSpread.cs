@@ -887,14 +887,14 @@ public abstract class GenericBaitStack(BossModule module, uint aid = default, bo
                         {
                             if (stacks[l].Target == a)
                             {
-                                goto done; // player got a stack marker and we don't want to stack stacks
+                                goto skip; // player got a stack marker and we don't want to stack stacks
                             }
                         }
                         // buddy is not target of stacks or spreads, so a good candidate
                         forbiddenB.Add(new SDInvertedCircle(a.Position, 2f));
-                    done:
-                        ;
                     }
+                skip:
+                    ;
                 }
                 if (forbiddenB.Count != 0)
                 {
