@@ -10,8 +10,9 @@ sealed class WyvernsRadianceChainbladeCharge(BossModule module) : Components.Sim
 sealed class WyvernsOuroblade(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.WyvernsOuroblade1, (uint)AID.WyvernsOuroblade2,
 (uint)AID.WyvernsOuroblade3, (uint)AID.WyvernsOuroblade4], new AOEShapeCone(40f, 90f.Degrees()));
 sealed class SteeltailThrust(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SteeltailThrust1, (uint)AID.SteeltailThrust2], new AOEShapeRect(60f, 3f));
+sealed class ChainbladeCharge(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ChainbladeCharge, (uint)AID.ChainbladeCharge, 6f, 8.4d, PartyState.MaxPartySize, PartyState.MaxPartySize);
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+[ModuleInfo(BossModuleInfo.Maturity.Verified,
 StatesType = typeof(Ex6GuardianArkveldStates),
 ConfigType = typeof(Ex6GuardianArkveldConfig),
 ObjectIDType = typeof(OID),
@@ -27,7 +28,7 @@ GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1044u,
 NameID = 14237u,
 SortOrder = 1,
-PlanLevel = 0)]
+PlanLevel = 100)]
 public sealed class Ex6GuardianArkveld(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, new ArenaBoundsCustom([new Polygon(arenaCenter, 20.030838f, 40)]))
 {
     private static readonly WPos arenaCenter = new(100f, 100f);

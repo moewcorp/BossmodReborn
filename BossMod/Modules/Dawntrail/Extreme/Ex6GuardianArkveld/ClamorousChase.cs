@@ -7,6 +7,7 @@ sealed class ClamorousChaseBait(BossModule module) : Components.GenericBaitAway(
     private readonly Ex6GuardianArkveldConfig _config = Service.Config.Get<Ex6GuardianArkveldConfig>();
     private bool isCCW;
     private bool active;
+    public bool IconsAssigned;
 
     public override void Update()
     {
@@ -20,7 +21,6 @@ sealed class ClamorousChaseBait(BossModule module) : Components.GenericBaitAway(
                 AddBaits(4);
                 break;
             case Ex6GuardianArkveldConfig.LimitCutStrategy.EvenNorth:
-            case Ex6GuardianArkveldConfig.LimitCutStrategy.OddNorth:
                 AddBaits(2);
                 break;
         }
@@ -98,12 +98,6 @@ sealed class ClamorousChaseBait(BossModule module) : Components.GenericBaitAway(
                         return (o & 1) == 0 ? new(100f, 80f) : new(100f, 120f);
                     }
                     return (o & 1) == 0 ? new(100f, 90f) : new(100f, 110f);
-                case Ex6GuardianArkveldConfig.LimitCutStrategy.OddNorth:
-                    if (o <= NumCasts + 2 && o > NumCasts)
-                    {
-                        return (o & 1) == 0 ? new(100f, 120f) : new(100f, 80f);
-                    }
-                    return (o & 1) == 0 ? new(100f, 110f) : new(100f, 90f);
             }
         }
         return null;
@@ -151,6 +145,7 @@ sealed class ClamorousChaseBait(BossModule module) : Components.GenericBaitAway(
         if (iconID is >= (uint)IconID.Icon1 and <= (uint)IconID.Icon8)
         {
             order[Raid.FindSlot(targetID)] = iconID - (uint)IconID.Icon1 + 1u;
+            IconsAssigned = true;
         }
     }
 
@@ -181,7 +176,9 @@ sealed class ClamorousChaseAOE(BossModule module) : Components.GenericAOEs(modul
     {
         if (spell.Action.ID is (uint)AID.ClamorousChaseCleave1 or (uint)AID.ClamorousChaseCleave2) // update AOE prediction to ensure correctness
         {
-            _aoe = [new(cone, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell))];
+            var loc = spell.LocXZ;
+            var rot = spell.Rotation;
+            _aoe = [new(cone, loc, rot, Module.CastFinishAt(spell), shapeDistance: cone.Distance(loc, rot))];
         }
     }
 
@@ -190,6 +187,7 @@ sealed class ClamorousChaseAOE(BossModule module) : Components.GenericAOEs(modul
         if (spell.Action.ID is (uint)AID.ClamorousChaseCleave1 or (uint)AID.ClamorousChaseCleave2)
         {
             _aoe = [];
+            ++NumCasts;
         }
     }
 
@@ -203,7 +201,9 @@ sealed class ClamorousChaseAOE(BossModule module) : Components.GenericAOEs(modul
         };
         if (offset is Angle o)
         {
-            _aoe = [new(cone, spell.TargetXZ, spell.Rotation + o, WorldState.FutureTime(2d))];
+            var loc = spell.TargetXZ;
+            var rot = spell.Rotation + o;
+            _aoe = [new(cone, loc, rot, WorldState.FutureTime(2d), shapeDistance: cone.Distance(loc, rot))];
         }
     }
 }

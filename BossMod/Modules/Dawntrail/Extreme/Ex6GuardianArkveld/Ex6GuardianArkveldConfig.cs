@@ -9,8 +9,6 @@ public class Ex6GuardianArkveldConfig : ConfigNode
         Circle,
         [PropertyDisplay("Even numbers north, odd numbers south")]
         EvenNorth,
-        [PropertyDisplay("Odd numbers north, even numbers south")]
-        OddNorth
     }
 
     [PropertyDisplay("Limit cut positioning hints")]
