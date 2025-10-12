@@ -31,7 +31,7 @@ public struct NavigationDecision
 
     public const float ActivationTimeCushion = 1f; // reduce time between now and activation by this value in seconds; increase for more conservativeness
 
-    public static NavigationDecision Build(Context ctx, DateTime currentTime, AIHints hints, WPos playerPosition, float playerSpeed = 6f, float forbiddenZoneCushion = default)
+    public static NavigationDecision Build(Context ctx, DateTime currentTime, AIHints hints, WPos playerPosition, ActorCastInfo? castInfo, float playerSpeed = 6f, float forbiddenZoneCushion = default)
     {
         var startTime = DateTime.Now;
 
@@ -44,9 +44,9 @@ public struct NavigationDecision
         }
         if (hints.ForbiddenZones.Count != 0)
         {
-            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], ws.CurrentTime);
+            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], currentTime);
         }
-        if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
+        if (castInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
             var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(playerPosition));
             var len = ctx.Map.PixelMaxG.Length;
@@ -67,8 +67,11 @@ public struct NavigationDecision
         {
             ctx.Map.BuildTeleporterEdges([.. hints.Teleporters]);
         }
+
+        var rasterFinish = DateTime.Now;
+
         // execute pathfinding
-        ctx.ThetaStar.Start(ctx.Map, playerPosition, speed);
+        ctx.ThetaStar.Start(ctx.Map, playerPosition, 1f / playerSpeed);
         var bestNodeIndex = ctx.ThetaStar.Execute();
         ref var bestNode = ref ctx.ThetaStar.NodeByIndex(bestNodeIndex);
         var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, playerPosition);

@@ -143,9 +143,9 @@ public abstract class AutoClear : ZoneModule
 
     public override void OnWindowClose()
     {
-        _config.Enable = false;
-        _config.EnableMinimap = false;
-        _config.Modified.Fire();
+        Config.Enable = false;
+        Config.EnableMinimap = false;
+        Config.Modified.Fire();
     }
 
     protected virtual void OnCastStarted(Actor actor) { }
@@ -303,19 +303,20 @@ public abstract class AutoClear : ZoneModule
     public override void DrawExtra()
     {
         var player = World.Party.Player()!;
-        var lenP = State.Party.Length;
+        var lenP = Palace.Party.Length;
         var playerSlot = -1;
+        var id = player.InstanceID;
         for (var i = 0; i < lenP; ++i)
         {
             ref readonly var p = ref Palace.Party[i];
-            if (p.EntityId == Player.InstanceID)
+            if (p.EntityId == id)
             {
                 playerSlot = i;
                 break;
             }
         }
 
-        var targetRoom = new Minimap(Palace, player?.Rotation ?? default, DesiredRoom, Math.Max(0, playerSlot)).Draw();
+        var targetRoom = new Minimap(Palace, player?.Rotation ?? default, DesiredRoom, Math.Max(0, playerSlot), player?.InstanceID ?? default).Draw();
         if (targetRoom >= 0)
             DesiredRoom = targetRoom;
 
@@ -700,7 +701,8 @@ public abstract class AutoClear : ZoneModule
 
         IterAndExpire(Donuts, d => d.Source.CastInfo == null, d =>
         {
-            hints.AddForbiddenZone(new SDDonutSector(d.Inner, d.Outer, d.HalfAngle), d.Source.Position, default, CastFinishAt(d.Source));
+            var castInfo = d.Source.CastInfo!;
+            hints.AddForbiddenZone(new SDDonutSector(castInfo.LocXZ, d.Inner, d.Outer, castInfo.Rotation, d.HalfAngle), CastFinishAt(d.Source));
         });
 
         IterAndExpire(Circles, d => d.Source.CastInfo == null, d =>

@@ -54,10 +54,17 @@ internal sealed class DTRProvider : IDisposable
         _aiEntry.Shown = _aiConfig.ShowDTR;
         _aiEntry.Text = "AI: " + (_ai.Beh == null ? "Off" : "On");
 
-        _statsEntry.Shown = _mgr.Config.ShowStatsDTR;
-        _statsEntry.Text = _mgr.LastPathfindMs > 0
-            ? $"Pathfind: {_mgr.LastRasterizeMs:f3}ms (r) {_mgr.LastPathfindMs:f3}ms (p)"
-            : $"Pathfind: -";
+        var showStatsAutorot = RotationModuleManager.Config.ShowStatsDTR && Autorotation.MiscAI.NormalMovement.Instance != null;
+        var showStatsAI = _aiConfig.ShowStatsDTR && AIManager.Instance?.Beh != null;
+        _statsEntry.Shown = showStatsAI || showStatsAutorot;
+        if (showStatsAI)
+        {
+            _statsEntry.Text = $"Pathfind: {_ai.Beh!.LastRasterizeMs:f3}ms (r) {_ai.Beh.LastPathfindMs:f3}ms (p)";
+        }
+        else if (showStatsAutorot)
+        {
+            _statsEntry.Text = $"Pathfind: {_mgr.LastRasterizeMs:f3}ms (r) {_mgr.LastPathfindMs:f3}ms (p)";
+        }
 
         if (_wantOpenPopup && _mgr.Player != null)
         {

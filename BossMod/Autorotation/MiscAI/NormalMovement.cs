@@ -1,5 +1,4 @@
 ﻿using BossMod.Pathfinding;
-using System.Threading.Tasks;
 
 namespace BossMod.Autorotation.MiscAI;
 
@@ -61,51 +60,38 @@ public sealed class NormalMovement : RotationModule
             .AddOption(ForbiddenZoneCushionStrategy.Small, "Small", "Prefer to stay 0.5y away from forbidden zones")
             .AddOption(ForbiddenZoneCushionStrategy.Medium, "Medium", "Prefer to stay 1.5y away from forbidden zones")
             .AddOption(ForbiddenZoneCushionStrategy.Large, "Large", "Prefer to stay 3y away from forbidden zones");
-
-        res.Define(Track.Async).As<AsyncStrategy>("Async", "Async pathfinding")
-            .AddOption(AsyncStrategy.Off, "Off", "Disabled")
-            .AddOption(AsyncStrategy.On, "On", "Enabled - in the future this behavior will be the default and this option will be removed");
-
         return res;
     }
 
     private readonly NavigationDecision.Context _navCtx = new();
 
     public const float MeleeRange = 2.6f; // Note: melee range is always hitbox radius + 2.6 for auto attacks, doesn't matter if skills have 3 range...
-    public const float CasterRange = 25;
+    public const float CasterRange = 25f;
 
     private Task<NavigationDecision> _decisionTask = Task.FromResult(default(NavigationDecision));
     private NavigationDecision _lastDecision;
 
     private NavigationDecision GetDecision(StrategyValues strategy, float speed, float cushionSize)
     {
-        if (strategy.Option(Track.Async).As<AsyncStrategy>() == AsyncStrategy.On)
+        if (_decisionTask.IsCompletedSuccessfully)
         {
-            if (_decisionTask.IsCompletedSuccessfully)
-            {
-                _lastDecision = _decisionTask.Result;
-                Manager.LastRasterizeMs = (float)_lastDecision.RasterizeTime.TotalMilliseconds;
-                Manager.LastPathfindMs = (float)_lastDecision.PathfindTime.TotalMilliseconds;
-            }
-
-            if (_decisionTask.IsCompleted)
-            {
-                if (_decisionTask.Exception is { } exception)
-                    Service.Log($"exception during pathfind: {exception}");
-
-                _decisionTask = NavigationDecision.BuildAsync(_navCtx, World.CurrentTime, Hints, Player.Position, speed, forbiddenZoneCushion: cushionSize);
-            }
-
-            return _lastDecision;
+            _lastDecision = _decisionTask.Result;
+            Manager.LastRasterizeMs = _lastDecision.RasterizeTime.TotalMilliseconds;
+            Manager.LastPathfindMs = _lastDecision.PathfindTime.TotalMilliseconds;
         }
 
-        var decision = NavigationDecision.Build(_navCtx, World.CurrentTime, Hints, Player.Position, speed, forbiddenZoneCushion: cushionSize);
-        Manager.LastRasterizeMs = (float)decision.RasterizeTime.TotalMilliseconds;
-        Manager.LastPathfindMs = (float)decision.PathfindTime.TotalMilliseconds;
-        return decision;
+        if (_decisionTask.IsCompleted)
+        {
+            if (_decisionTask.Exception is { } exception)
+                Service.Log($"exception during pathfind: {exception}");
+
+            _decisionTask = Task.Run(() => NavigationDecision.Build(_navCtx, World.CurrentTime, Hints, Player.Position, Player.CastInfo, speed, forbiddenZoneCushion: cushionSize));
+        }
+
+        return _lastDecision;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         var castOpt = strategy.Option(Track.Cast);
         var castStrategy = castOpt.As<CastStrategy>();

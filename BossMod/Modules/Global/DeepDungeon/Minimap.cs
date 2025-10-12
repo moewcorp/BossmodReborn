@@ -4,8 +4,14 @@ using static FFXIVClientStructs.FFXIV.Client.Game.InstanceContent.InstanceConten
 
 namespace BossMod.Global.DeepDungeon;
 
-public sealed record class Minimap(DeepDungeonState State, Actor Player, int CurrentDestination, int PlayerSlot)
+public sealed class Minimap(DeepDungeonState state, Angle playerRotation, int currentDestination, int playerSlot, ulong playerID)
 {
+    public readonly DeepDungeonState State = state;
+    public readonly Angle PlayerRotation = playerRotation;
+    public readonly int CurrentDestination = currentDestination;
+    public readonly int PlayerSlot = playerSlot;
+    public readonly ulong PlayerID = playerID;
+
     enum IconID : uint
     {
         ReturnClosed = 60905,
@@ -50,7 +56,7 @@ public sealed record class Minimap(DeepDungeonState State, Actor Player, int Cur
         for (var i = 0; i < lenP; ++i)
         {
             ref readonly var p = ref State.Party[i];
-            if (p.EntityId == Player.InstanceID)
+            if (p.EntityId == PlayerID)
             {
                 player = p;
                 break;
@@ -103,54 +109,54 @@ public sealed record class Minimap(DeepDungeonState State, Actor Player, int Cur
             if (i == playerCell)
             {
                 isValidDestination = false;
-                ImGui.SetCursorPos(pos + new Vector2(12, 12));
-                ImGui.Image(mapTex.Handle, new Vector2(64, 64), new Vector2(0.2424f, 0.4571f), new Vector2(0.4848f, 0.6857f));
+                ImGui.SetCursorPos(pos + new Vector2(12f, 12f));
+                ImGui.Image(mapTex.Handle, new Vector2(64f, 64f), new Vector2(0.2424f, 0.4571f), new Vector2(0.4848f, 0.6857f));
             }
 
             if (State.Rooms[i].HasFlag(RoomFlags.Passage))
             {
-                ImGui.SetCursorPos(pos + new Vector2(28, 44));
-                ImGui.Image(passageTex.Handle, new Vector2(32, 32));
+                ImGui.SetCursorPos(pos + new Vector2(28f, 44f));
+                ImGui.Image(passageTex.Handle, new Vector2(32f, 32f));
             }
 
             if (State.Rooms[i].HasFlag(RoomFlags.Return))
             {
-                ImGui.SetCursorPos(pos + new Vector2(28, 44));
-                ImGui.Image(returnTex.Handle, new Vector2(32, 32));
+                ImGui.SetCursorPos(pos + new Vector2(28f, 44f));
+                ImGui.Image(returnTex.Handle, new Vector2(32f, 32f));
             }
 
             if (((ushort)State.Rooms[i] & 0x100) != 0)
             {
-                ImGui.SetCursorPos(pos + new Vector2(28, 44));
-                ImGui.Image(votiveTex.Handle, new Vector2(32, 32));
+                ImGui.SetCursorPos(pos + new Vector2(28f, 44f));
+                ImGui.Image(votiveTex.Handle, new Vector2(32f, 32f));
             }
 
             if (chests[i].HasFlag(RoomChest.Bronze))
             {
-                ImGui.SetCursorPos(pos + new Vector2(2, 2));
-                ImGui.Image(bronzeTex.Handle, new Vector2(48, 48));
+                ImGui.SetCursorPos(pos + new Vector2(2f, 2f));
+                ImGui.Image(bronzeTex.Handle, new Vector2(48f, 48f));
             }
 
             if (chests[i].HasFlag(RoomChest.Silver))
             {
-                ImGui.SetCursorPos(pos + new Vector2(20, 2));
-                ImGui.Image(silverTex.Handle, new Vector2(48, 48));
+                ImGui.SetCursorPos(pos + new Vector2(20f, 2f));
+                ImGui.Image(silverTex.Handle, new Vector2(48f, 48f));
             }
 
             if (chests[i].HasFlag(RoomChest.Gold))
             {
-                ImGui.SetCursorPos(pos + new Vector2(38, 2));
-                ImGui.Image(goldTex.Handle, new Vector2(48, 48));
+                ImGui.SetCursorPos(pos + new Vector2(38f, 2f));
+                ImGui.Image(goldTex.Handle, new Vector2(48f, 48f));
             }
 
             if (i == playerCell)
             {
-                ImGui.SetCursorPos(pos + new Vector2(44, 44));
-                DrawPlayer(ImGui.GetCursorScreenPos(), Player.Rotation, mapTex.Handle);
+                ImGui.SetCursorPos(pos + new Vector2(44f, 44f));
+                DrawPlayer(ImGui.GetCursorScreenPos(), PlayerRotation, mapTex.Handle);
             }
 
             ImGui.SetCursorPos(pos);
-            ImGui.Dummy(new(88, 88));
+            ImGui.Dummy(new(88f, 88f));
             if (isValidDestination)
             {
                 if (ImGui.IsItemHovered())
@@ -174,10 +180,10 @@ public sealed record class Minimap(DeepDungeonState State, Actor Player, int Cur
         var sin = rotation.Sin();
         ImGui.GetWindowDrawList().AddImageQuad(
             texHandle,
-            center + Rotate(new(-32, -37.5f), cos, sin),
-            center + Rotate(new(32, -37.5f), cos, sin),
-            center + Rotate(new(32, 26.5f), cos, sin),
-            center + Rotate(new(-32, 26.5f), cos, sin),
+            center + Rotate(new(-32f, -37.5f), cos, sin),
+            center + Rotate(new(32f, -37.5f), cos, sin),
+            center + Rotate(new(32f, 26.5f), cos, sin),
+            center + Rotate(new(-32f, 26.5f), cos, sin),
             new Vector2(0.0000f, 0.4571f),
             new Vector2(0.2424f, 0.4571f),
             new Vector2(0.2424f, 0.6857f),

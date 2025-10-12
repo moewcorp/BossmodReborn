@@ -20,9 +20,6 @@ class Interact(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AI.AIManager.Instance?.Beh == null)
-            return;
-
         var primary = Module.PrimaryActor;
         if (Module.PrimaryActor.IsTargetable)
         {

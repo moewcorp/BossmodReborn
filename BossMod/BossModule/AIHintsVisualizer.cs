@@ -5,13 +5,13 @@ using Dalamud.Bindings.ImGui;
 namespace BossMod;
 
 [SkipLocalsInit]
-public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float cushionSize)
+public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance, float cushionSize)
 {
     private readonly MapVisualizer?[] _zoneVisualizers = new MapVisualizer?[hints.ForbiddenZones.Count];
     private MapVisualizer? _pathfindVisualizer;
     private readonly NavigationDecision.Context _naviCtx = new();
     private NavigationDecision _navi;
-    private float _naviTime;
+    private double _naviTimeTotal, _naviTimePathfinding, _naviTimeRaster;
     private readonly TrackPartyHealth _partyHealth = new(ws);
 
     public void Draw(UITree tree)
@@ -63,7 +63,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
             ImGui.TextUnformatted($"Obstacles={hints.PathfindMapObstacles}");
             _pathfindVisualizer ??= BuildPathfindingVisualizer();
             _pathfindVisualizer!.Draw();
-            ImGui.TextUnformatted($"Pathfinding time={_naviTime:f3}ms");
+            ImGui.TextUnformatted($"Time: Total: {_naviTimeTotal:f3}ms, Raster: {_naviTimeRaster:f3}ms, Pathfinding: {_naviTimePathfinding:f3}ms");
             ImGui.TextUnformatted($"Leeway={_navi.LeewaySeconds:f3}, ttg={_navi.TimeToGoal:f3}, dist={(_navi.Destination != null ? $"{(_navi.Destination.Value - player.Position).Length():f3}" : "---")}");
         }
     }
@@ -78,10 +78,13 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
 
     private MapVisualizer BuildPathfindingVisualizer()
     {
-        var now = DateTime.Now;
-        _navi = NavigationDecision.Build(_naviCtx, ws.CurrentTime, hints, player.Position, forbiddenZoneCushion: cushionSize);
-        _naviTime = (float)(DateTime.Now - now).TotalMilliseconds;
+        if (hints.GoalZones.Count == 0 && ws.Actors.Find(player.TargetID) is var target && target != null)
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(target, preferredDistance));
 
+        _navi = NavigationDecision.Build(_naviCtx, ws.CurrentTime, hints, player.Position, player.CastInfo, forbiddenZoneCushion: cushionSize);
+        _naviTimeTotal = _navi.TotalTime.TotalMilliseconds;
+        _naviTimePathfinding = _navi.PathfindTime.TotalMilliseconds;
+        _naviTimeRaster = _navi.RasterizeTime.TotalMilliseconds;
         return new MapVisualizer(_naviCtx.Map, player.Position);
     }
 }
