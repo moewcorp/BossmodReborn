@@ -46,24 +46,21 @@ internal sealed class DTRProvider : IDisposable
 
     public void Update()
     {
-        _autorotationEntry.Shown = RotationModuleManager.Config.ShowDTR != AutorotationConfig.DtrStatus.None;
-        var (icon, name) = _mgr.Preset == null ? (BitmapFontIcon.SwordSheathed, "Idle") : _mgr.Preset == RotationModuleManager.ForceDisable ? (BitmapFontIcon.SwordSheathed, "Disabled") : (BitmapFontIcon.SwordUnsheathed, _mgr.Preset.Name);
-        Payload prefix = RotationModuleManager.Config.ShowDTR == AutorotationConfig.DtrStatus.TextOnly ? new TextPayload("bmr: ") : new IconPayload(icon);
-        _autorotationEntry.Text = new SeString(prefix, new TextPayload(name));
-
-        _aiEntry.Shown = _aiConfig.ShowDTR;
-        _aiEntry.Text = "AI: " + (_ai.Beh == null ? "Off" : "On");
-
-        var showStatsAutorot = RotationModuleManager.Config.ShowStatsDTR && Autorotation.MiscAI.NormalMovement.Instance != null;
-        var showStatsAI = _aiConfig.ShowStatsDTR && AIManager.Instance?.Beh != null;
-        _statsEntry.Shown = showStatsAI || showStatsAutorot;
-        if (showStatsAI)
+        var show = RotationModuleManager.Config.ShowDTR != AutorotationConfig.DtrStatus.None;
+        _autorotationEntry.Shown = show;
+        if (show)
         {
-            _statsEntry.Text = $"Pathfind: {_ai.Beh!.LastRasterizeMs:f3}ms (r) {_ai.Beh.LastPathfindMs:f3}ms (p)";
+            var (icon, name) = _mgr.Preset == null ? (BitmapFontIcon.SwordSheathed, "Idle") : _mgr.Preset == RotationModuleManager.ForceDisable ? (BitmapFontIcon.SwordSheathed, "Disabled") : (BitmapFontIcon.SwordUnsheathed, _mgr.Preset.Name);
+            Payload prefix = RotationModuleManager.Config.ShowDTR == AutorotationConfig.DtrStatus.TextOnly ? new TextPayload("bmr: ") : new IconPayload(icon);
+            _autorotationEntry.Text = new SeString(prefix, new TextPayload(name));
         }
-        else if (showStatsAutorot)
+
+        var show2 = _aiConfig.ShowDTR;
+        _aiEntry.Shown = show2;
+        var beh = _ai.Beh;
+        if (show2)
         {
-            _statsEntry.Text = $"Pathfind: {_mgr.LastRasterizeMs:f3}ms (r) {_mgr.LastPathfindMs:f3}ms (p)";
+            _aiEntry.Text = "AI: " + (beh == null ? "Off" : "On");
         }
 
         if (_wantOpenPopup && _mgr.Player != null)
@@ -74,7 +71,11 @@ internal sealed class DTRProvider : IDisposable
 
         using var popup = ImRaii.Popup("bmr_dtr_menu");
         if (popup)
+        {
             if (UIRotationWindow.DrawRotationSelector(_mgr))
+            {
                 ImGui.CloseCurrentPopup();
+            }
+        }
     }
 }

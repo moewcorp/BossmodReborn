@@ -19,9 +19,6 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("Show autorotation preset in the server info bar")]
     public DtrStatus ShowDTR = DtrStatus.None;
 
-    [PropertyDisplay("Show performance stats in the server info bar")]
-    public bool ShowStatsDTR = false;
-
     [PropertyDisplay("Hide VBM Default preset", tooltip: "If you've created your own presets and no longer need the included default, this option will prevent it from being shown in the Autorotation and Preset Editor windows.")]
     public bool HideDefaultPreset = false;
 

@@ -42,11 +42,8 @@ sealed class AIManagementWindow : UIWindow
     public override void Draw()
     {
         var configModified = false;
-        var beh = _manager.Beh;
-        if (beh != null)
-        {
-            ImGui.TextUnformatted($"Time: Total: {beh.LastTotalMs:f3}ms, Raster: {beh.LastRasterizeMs:f3}ms, Pathfinding: {beh.LastTotalMs:f3}ms, Destination: {_manager.Controller.NaviTargetPos}");
-        }
+
+        ImGui.TextUnformatted($"Navi={_manager.Controller.NaviTargetPos}");
 
         configModified |= ImGui.Checkbox("Forbid actions", ref _config.ForbidActions);
         ImGui.SameLine();

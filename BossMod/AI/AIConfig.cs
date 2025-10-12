@@ -6,9 +6,6 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Show status in DTR bar")]
     public bool ShowDTR = false;
 
-    [PropertyDisplay("Show performance stats in the server info bar")]
-    public bool ShowStatsDTR = false;
-
     [PropertyDisplay("Show AI interface")]
     public bool DrawUI = false;
 

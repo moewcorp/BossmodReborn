@@ -76,8 +76,6 @@ public sealed class NormalMovement : RotationModule
         if (_decisionTask.IsCompletedSuccessfully)
         {
             _lastDecision = _decisionTask.Result;
-            Manager.LastRasterizeMs = _lastDecision.RasterizeTime.TotalMilliseconds;
-            Manager.LastPathfindMs = _lastDecision.PathfindTime.TotalMilliseconds;
         }
 
         if (_decisionTask.IsCompleted)
@@ -85,7 +83,7 @@ public sealed class NormalMovement : RotationModule
             if (_decisionTask.Exception is { } exception)
                 Service.Log($"exception during pathfind: {exception}");
 
-            _decisionTask = Task.Run(() => NavigationDecision.Build(_navCtx, World.CurrentTime, Hints, Player.Position, Player.CastInfo, speed, forbiddenZoneCushion: cushionSize));
+            _decisionTask = Task.Run(() => NavigationDecision.Build(_navCtx, World.CurrentTime, Hints, Player, speed, forbiddenZoneCushion: cushionSize));
         }
 
         return _lastDecision;
