@@ -74,7 +74,6 @@ sealed class GuardianResonanceTowers(BossModule module) : Components.GenericTowe
         if (spell.Action.ID == (uint)AID.GuardianResonanceTower1)
         {
             ++NumCasts;
-            Towers.Clear();
         }
     }
 }

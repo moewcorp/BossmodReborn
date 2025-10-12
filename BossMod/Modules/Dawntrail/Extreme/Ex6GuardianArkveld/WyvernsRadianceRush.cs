@@ -3,7 +3,7 @@ namespace BossMod.Dawntrail.Extreme.Ex6GuardianArkveld;
 sealed class WyvernsRadianceRush(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(3);
-    private int numCharges;
+    public int NumCharges;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
@@ -15,9 +15,9 @@ sealed class WyvernsRadianceRush(BossModule module) : Components.GenericAOEs(mod
             var shape = new AOEShapeRect(dir.Length(), 6f);
             var pos = caster.Position.Quantized();
             var rot = Angle.FromDirection(dir);
-            var first = numCharges == 0;
+            var first = NumCharges == 0;
             _aoes.Add(new(shape, pos, rot, Module.CastFinishAt(spell, first ? 6d : 2.6d), first ? Colors.Danger : default, shapeDistance: shape.Distance(pos, rot)));
-            ++numCharges;
+            ++NumCharges;
         }
     }
 
@@ -30,7 +30,6 @@ sealed class WyvernsRadianceRush(BossModule module) : Components.GenericAOEs(mod
             if (count != 0)
             {
                 _aoes.RemoveAt(0);
-                numCharges = 0;
                 if (count > 1)
                 {
                     _aoes.Ref(0).Color = Colors.Danger;

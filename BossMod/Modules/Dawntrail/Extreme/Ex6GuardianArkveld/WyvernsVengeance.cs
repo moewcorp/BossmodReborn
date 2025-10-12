@@ -12,7 +12,7 @@ sealed class WyvernsRadianceCrackedCrystal(BossModule module) : Components.Gener
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (!aoesAdded)
+        if (aoesAdded)
         {
             return;
         }
@@ -42,7 +42,7 @@ sealed class WyvernsRadianceCrackedCrystal(BossModule module) : Components.Gener
             AddAOE(circleSmall, smallCrystals[i].Position.Quantized());
         }
         aoesAdded = true;
-        void AddAOE(AOEShapeCircle shape, WPos origin) => _aoes.Add(new(shape, origin, default, activation));
+        void AddAOE(AOEShapeCircle shape, WPos origin) => _aoes.Add(new(shape, origin, default, activation, shapeDistance: shape.Distance(origin, default)));
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
@@ -90,7 +90,12 @@ sealed class WyvernsVengeance(BossModule module) : Components.Exaflare(module, 6
         if (id is (uint)AID.WyvernsVengeanceFirst1 or (uint)AID.WyvernsVengeanceFirst2 or (uint)AID.WyvernsVengeanceRest1 or (uint)AID.WyvernsVengeanceRest2)
         {
             var count = Lines.Count;
-            var loc = id is (uint)AID.WyvernsVengeanceFirst1 or (uint)AID.WyvernsVengeanceFirst2 ? caster.Position : spell.TargetXZ;
+            var isFirst = id is (uint)AID.WyvernsVengeanceFirst1 or (uint)AID.WyvernsVengeanceFirst2;
+            var loc = isFirst ? caster.Position : spell.TargetXZ;
+            if (isFirst)
+            {
+                ++NumCasts;
+            }
             for (var i = 0; i < count; ++i)
             {
                 var line = Lines[i];

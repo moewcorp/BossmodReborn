@@ -97,7 +97,6 @@ sealed class GuardianWyvernsSiegeflight(BossModule module) : Components.GenericA
                                 }
                             }
                         }
-                        offsets.Clear();
                     }
                 }
                 break;
