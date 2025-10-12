@@ -32,16 +32,15 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
         Roar(id + 0x140000u, 6.6f);
         GuardianResonanceTowers(id + 0x150000u, 14.8f);
         WyvernsVengeance2(id + 0x160000u, 4.1f);
-        WyvernsRadianceCleave(id + 0x170000u, 16.8f);
-        GuardianWyvernsSiegeflight(id + 0x180000u, 16.9f);
-        WyvernsRadianceExaflareGuardianWyvernsSiegeflight(id + 0x190000u, 1f);
-        WyvernsRadianceCleave(id + 0x1A0000u, 7.9f);
-        Roar(id + 0x1B0000u, 6.6f);
-        WyvernsRadianceCharges(id + 0x1C0000u, 12.2f);
-        SteeltailThrustChainbladeCharge2(id + 0x1D0000u, 6f);
-        Roar(id + 0x1E0000u, 6.6f);
-        Roar(id + 0x1F0000u, 16.8f);
-        ForgedFuryEnrage(id + 0x200000u, 14.9f);
+        GuardianWyvernsSiegeflight(id + 0x170000u, 16.9f);
+        WyvernsRadianceExaflareGuardianWyvernsSiegeflight(id + 0x180000u, 1f, true);
+        WyvernsRadianceCleave(id + 0x190000u, 7.9f);
+        Roar(id + 0x1A0000u, 6.6f);
+        WyvernsRadianceCharges(id + 0x1B0000u, 12.2f, true);
+        SteeltailThrustChainbladeCharge2(id + 0x1C0000u, 6f);
+        Roar(id + 0x1D0000u, 6.6f);
+        Roar(id + 0x1E0000u, 16.8f);
+        ForgedFuryEnrage(id + 0x1F0000u, 14.9f);
     }
 
     private void Roar(uint id, float delay)
@@ -74,13 +73,13 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
             .DeactivateOnExit<Dragonspark>();
     }
 
-    private void WyvernsRadianceExaflareGuardianWyvernsSiegeflight(uint id, float delay)
+    private void WyvernsRadianceExaflareGuardianWyvernsSiegeflight(uint id, float delay, bool second = false)
     {
         ComponentCondition<WyvernsRadianceExaflare1>(id, delay, comp => comp.Lines.Count != 0, "Exaflare + baited circles appear")
             .ActivateOnEnter<WyvernsRadianceExaflare1>()
             .ActivateOnEnter<WyvernsRadianceGuardianResonanceCircle>();
         ComponentCondition<WyvernsRadianceGuardianResonanceCircle>(id + 0x10u, 5f, comp => comp.NumCasts != 0, "Baited circles resolve");
-        ComponentCondition<GuardianWyvernsSiegeflight>(id + 0x20u, 8.3f, comp => comp.NumCasts != 0, "Rect AOE 1")
+        ComponentCondition<GuardianWyvernsSiegeflight>(id + 0x20u, second ? 7.3f : 8.3f, comp => comp.NumCasts != 0, "Rect AOE 1")
             .DeactivateOnExit<WyvernsRadianceExaflare1>()
             .DeactivateOnExit<WyvernsRadianceGuardianResonanceCircle>()
             .ActivateOnEnter<GuardianWyvernsSiegeflight>()
@@ -92,7 +91,7 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
             .DeactivateOnExit<Dragonspark>();
     }
 
-    private void WyvernsRadianceCharges(uint id, float delay, bool second = false)
+    private void WyvernsRadianceCharges(uint id, float delay, bool second = false, bool deactivateExas = false)
     {
         ComponentCondition<WyvernsRadianceRush>(id, delay, comp => comp.NumCharges != 0, "Charge telegraphs appear")
             .ActivateOnEnter<WyvernsRadianceRush>()
@@ -117,7 +116,7 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
         var cond2 = ComponentCondition<WildEnergy>(id + 0x50u, second ? 6.9f : 7.4f, comp => comp.NumFinishedSpreads != 0, "Spreads + cleave resolve")
             .DeactivateOnExit<WildEnergy>()
             .DeactivateOnExit<WyvernsOuroblade>();
-        if (second)
+        if (deactivateExas)
         {
             cond2.DeactivateOnExit<WyvernsRadianceExaflare2>();
         }
@@ -250,7 +249,7 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
             .ActivateOnEnter<Roar>()
             .DeactivateOnExit<Roar>()
             .SetHint(StateMachine.StateHint.Raidwide);
-        WyvernsRadianceCharges(id + 0x40u, 12.1f, true);
+        WyvernsRadianceCharges(id + 0x40u, 12.1f, true, true);
     }
 
     private void SteeltailThrustChainbladeCharge2(uint id, float delay)
@@ -288,11 +287,26 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
 
             var desc = $"Exaflares {i} start";
             var casts = 2 * i;
-            ComponentCondition<WyvernsVengeance>(offset, time, comp => comp.NumCasts == casts, desc);
+            var cond = ComponentCondition<WyvernsVengeance>(offset, time, comp => comp.NumCasts == casts, desc);
+            if (i == 3)
+            {
+                cond.ActivateOnEnter<ChainbladeCharge>();
+            }
         }
         ComponentCondition<WyvernsVengeance>(id + 0x50u, 5.4f, comp => comp.Lines.Count == 0, "Exaflares end")
             .DeactivateOnExit<WyvernsRadianceCrackedCrystal>()
             .DeactivateOnExit<WyvernsVengeance>();
+        ComponentCondition<ChainbladeCharge>(id + 0x60u, 6.8f, comp => comp.NumFinishedStacks == 1, "Stack resolves")
+            .DeactivateOnExit<ChainbladeCharge>();
+        ComponentCondition<WyvernsRadianceChainbladeCharge>(id + 0x70u, 5f, comp => comp.NumCasts == 1, "Circle AOE")
+            .ActivateOnEnter<ChainbladeBlow>()
+            .ActivateOnEnter<WyvernsRadianceCleave>()
+            .ActivateOnEnter<WyvernsRadianceChainbladeCharge>()
+            .DeactivateOnExit<WyvernsRadianceChainbladeCharge>();
+        ComponentCondition<WyvernsRadianceCleave>(id + 0x80u, 5f, comp => comp.NumCasts != 0, "Cleave 1");
+        ComponentCondition<WyvernsRadianceCleave>(id + 0x90u, 4.1f, comp => comp.NumCasts == 2, "Cleave 2")
+            .DeactivateOnExit<ChainbladeBlow>()
+            .DeactivateOnExit<WyvernsRadianceCleave>();
     }
 
     private void ForgedFuryEnrage(uint id, float delay)

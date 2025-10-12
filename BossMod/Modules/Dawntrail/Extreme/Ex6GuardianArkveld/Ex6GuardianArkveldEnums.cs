@@ -2,10 +2,10 @@ namespace BossMod.Dawntrail.Extreme.Ex6GuardianArkveld;
 
 public enum OID : uint
 {
-    GuardianArkveld = 0x48E5, // R7.800, x?
-    ArenaFeatures = 0x1EA1A1, // R2.000, x?, EventObj type
-    CrackedCrystal1 = 0x48E7, // R1.200, x?
-    CrackedCrystal2 = 0x48E6, // R0.700, x?
+    GuardianArkveld = 0x48E5, // R7.8
+    ArenaFeatures = 0x1EA1A1, // R2.0
+    CrackedCrystal1 = 0x48E7, // R1.2
+    CrackedCrystal2 = 0x48E6, // R0.7
     Helper = 0x233C
 }
 
