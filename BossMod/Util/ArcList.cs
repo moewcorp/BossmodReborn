@@ -8,6 +8,11 @@ public sealed class ArcList(WPos center, float radius)
     public float Radius = radius;
     public DisjointSegmentList Forbidden = new();
 
+    public ArcList Clone() => new(Center, Radius)
+    {
+        Forbidden = Forbidden.Clone()
+    };
+
     public void ForbidArc(Angle from, Angle to)
     {
         if (from.Rad < to.Rad)

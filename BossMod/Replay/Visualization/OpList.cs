@@ -148,6 +148,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ClientState.OpActionRequest => false,
             ClientState.OpHateChange => false,
             ClientState.OpActionReject => false,
+            ClientState.OpProcTimersChange => false,
             ClientState.OpAnimationLockChange => false,
             ClientState.OpComboChange => false,
             ClientState.OpCooldown => false,

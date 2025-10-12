@@ -1,11 +1,11 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.Interop;
-using Dalamud.Bindings.ImGui;
 
 namespace BossMod;
 

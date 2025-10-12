@@ -5,7 +5,7 @@ using Dalamud.Bindings.ImGui;
 namespace BossMod;
 
 [SkipLocalsInit]
-public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float preferredDistance, float cushionSize)
+public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, float cushionSize)
 {
     private readonly MapVisualizer?[] _zoneVisualizers = new MapVisualizer?[hints.ForbiddenZones.Count];
     private MapVisualizer? _pathfindVisualizer;
@@ -78,12 +78,8 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
 
     private MapVisualizer BuildPathfindingVisualizer()
     {
-        // TODO: remove once the similar thing in AIBehaviour.BuildNavigationDecision is removed
-        if (hints.GoalZones.Count == 0 && ws.Actors.Find(player.TargetID) is var target && target != null)
-            hints.GoalZones.Add(AIHints.GoalSingleTarget(target, preferredDistance));
-
         var now = DateTime.Now;
-        _navi = NavigationDecision.Build(_naviCtx, ws, hints, player, forbiddenZoneCushion: cushionSize);
+        _navi = NavigationDecision.Build(_naviCtx, ws.CurrentTime, hints, player.Position, forbiddenZoneCushion: cushionSize);
         _naviTime = (float)(DateTime.Now - now).TotalMilliseconds;
 
         return new MapVisualizer(_naviCtx.Map, player.Position);

@@ -9,6 +9,11 @@ public sealed class DisjointSegmentList
     public (float Min, float Max) this[Index index] => Segments[index];
     public int Count => Segments.Count;
 
+    public DisjointSegmentList Clone() => new()
+    {
+        Segments = [.. Segments]
+    };
+
     public void Add(float min, float max)
     {
         var (index, count) = Intersect(min, max);
