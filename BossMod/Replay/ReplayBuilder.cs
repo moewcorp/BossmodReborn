@@ -199,6 +199,7 @@ public sealed class ReplayBuilder : IDisposable
             p.OID = actor.OID;
             p.Type = actor.Type;
             p.OwnerID = actor.OwnerID;
+            p.LayoutID = actor.LayoutID;
         }
         else if (p.OID == actor.OID && p.Type == actor.Type && p.OwnerID == actor.OwnerID)
         {

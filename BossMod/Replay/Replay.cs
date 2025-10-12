@@ -42,6 +42,7 @@ public sealed class Replay
         public ulong OwnerID;
         public uint ZoneID;
         public uint CFCID;
+        public uint LayoutID;
         public TimeRange EffectiveExistence;
         public readonly List<TimeRange> WorldExistence = []; // sorted by time, non-overlapping ranges
         public readonly SortedList<DateTime, (string name, uint id)> NameHistory = [];
