@@ -16,9 +16,7 @@ public sealed class GoToPositional(RotationModuleManager manager, Actor player) 
         var track = def.Define(Tracks.Positional).As<Positional>("Positional", "Positional");
         for (var i = 0; i < 4; ++i)
         {
-            ref readonly var positional = ref positionals[i];
-            ref readonly var positionalName = ref positionalNames[i];
-            track.AddOption(positional, positionalName);
+            track.AddOption(positionals[i], positionalNames[i]);
         }
         return def;
     }

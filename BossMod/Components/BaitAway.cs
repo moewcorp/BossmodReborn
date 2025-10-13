@@ -82,6 +82,26 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         return activeBaitsOnTarget;
     }
 
+    public bool IsBaitTarget(Actor target)
+    {
+        var count = CurrentBaits.Count;
+        if (count == 0)
+        {
+            return false;
+        }
+
+        var curBaits = CollectionsMarshal.AsSpan(CurrentBaits);
+        for (var i = 0; i < count; ++i)
+        {
+            ref var bait = ref curBaits[i];
+            if (!bait.Source.IsDead && bait.Target == target)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<Bait> ActiveBaitsNotOn(Actor target)
     {
         var count = CurrentBaits.Count;
@@ -131,7 +151,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             return;
         if (ForbiddenPlayers[slot])
         {
-            if (ActiveBaitsOn(actor).Count != 0)
+            if (IsBaitTarget(actor))
             {
                 hints.Add("Avoid baiting!");
             }

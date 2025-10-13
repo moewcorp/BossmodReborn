@@ -324,7 +324,7 @@ sealed class P2LightRampantAIStackPrepos(BossModule module) : BossComponent(modu
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var isPuddleBaiter = _puddles?.ActiveBaitsOn(actor).Count != 0;
+        var isPuddleBaiter = _puddles?.IsBaitTarget(actor) ?? false;
         var northCamp = isPuddleBaiter ? actor.PosRot.X < Arena.Center.X : actor.PosRot.Z < Arena.Center.Z; // this assumes CW movement for baiter
         var dest = Arena.Center + new WDir(default, northCamp ? -18f : 18f);
         if (isPuddleBaiter)

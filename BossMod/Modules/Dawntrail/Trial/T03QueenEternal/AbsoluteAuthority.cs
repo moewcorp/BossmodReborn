@@ -7,8 +7,10 @@ sealed class AbsoluteAuthorityFlare(BossModule module) : Components.BaitAwayIcon
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
+        {
             hints.Add("Bait away!");
+        }
     }
 }
 
@@ -19,7 +21,9 @@ sealed class AbsoluteAuthorityDorito(BossModule module) : Components.GenericStac
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.DoritoStack && Stacks.Count == 0)
+        {
             Stacks.Add(new(actor, 3f, 8, 8, activation: WorldState.FutureTime(5.1d)));
+        }
     }
 
     public override void Update()

@@ -525,7 +525,12 @@ public abstract class GenericStackSpread(BossModule module, bool raidwideOnResol
         for (var i = 0; i < lenSpread; ++i)
         {
             ref var s = ref spreads[i];
-            Arena.AddCircle(s.Target.Position.Quantized(), s.Radius);
+            var t = s.Target;
+            if (!IncludeDeadTargets && t.IsDead) // player is dead and dead players are excluded
+            {
+                continue;
+            }
+            Arena.AddCircle(t.Position.Quantized(), s.Radius);
         }
     }
 }

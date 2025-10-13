@@ -157,8 +157,6 @@ public sealed class NormalMovement : RotationModule
         if (resetStats)
         {
             _lastDecision = default;
-            Manager.LastPathfindMs = 0;
-            Manager.LastRasterizeMs = 0;
         }
 
         if (navi.Destination == null)

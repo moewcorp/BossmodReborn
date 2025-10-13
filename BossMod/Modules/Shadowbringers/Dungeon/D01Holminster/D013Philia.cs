@@ -190,7 +190,7 @@ sealed class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
         {
             hints.AddForbiddenZone(shapedistance);
         }
@@ -199,7 +199,7 @@ sealed class PendulumFlare(BossModule module) : Components.BaitAwayIcon(module, 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
         {
             hints.Add("Bait away!");
         }
