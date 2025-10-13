@@ -92,8 +92,8 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
         {
             0x395 => new(-293.65f, -306.365f), // .65 must be a typo from the developers, TODO: check in future if it has been fixed
             0x396 => new(-306.365f, -306.365f),
-            0x397 => new(-306.365f, -293.365f),
-            0x398 => new(-293.365f, -293.365f),
+            0x397 => new(-293.365f, -293.365f),
+            0x398 => new(-306.365f, -293.365f),
             _ => default
         };
         if (pos != default)
@@ -251,7 +251,7 @@ Category = BossModuleInfo.Category.DeepDungeon,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1033u,
 NameID = 13973u,
-SortOrder = 2,
+SortOrder = 1,
 PlanLevel = 0)]
 public sealed class DD20ForgivenEmulation(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, new ArenaBoundsCustom([new Polygon(arenaCenter, 14.709f, 72)]))
 {
