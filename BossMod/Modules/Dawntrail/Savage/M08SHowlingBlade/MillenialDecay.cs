@@ -56,8 +56,7 @@ sealed class WindsOfDecayTether(BossModule module) : Components.StretchTetherDuo
     {
         if (_kb.NumCasts == 1)
         {
-            var baits = ActiveBaitsOn(actor);
-            if (baits.Count != 0 && _kb.IsImmune(slot, baits.Ref(0).Activation))
+            if (IsBaitTarget(actor) && _kb.IsImmune(slot, CurrentBaits.Ref(0).Activation))
             {
                 base.AddAIHints(slot, actor, assignment, hints);
             }
@@ -72,8 +71,7 @@ sealed class WindsOfDecayTether(BossModule module) : Components.StretchTetherDuo
     {
         if (_kb.NumCasts == 1)
         {
-            var baits = ActiveBaitsOn(actor);
-            if (baits.Count != 0 && _kb.IsImmune(slot, baits.Ref(0).Activation))
+            if (IsBaitTarget(actor) && _kb.IsImmune(slot, CurrentBaits.Ref(0).Activation))
             {
                 base.AddHints(slot, actor, hints);
             }
@@ -117,7 +115,7 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
         var baits = ActiveBaitsOn(pc);
         if (baits.Count != 0)
         {
-            ref readonly var bait = ref baits.Ref(0);
+            ref var bait = ref baits.Ref(0);
             if (_kb.IsImmune(pcSlot, bait.Activation))
             {
                 return;
@@ -134,7 +132,7 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
             var baits = ActiveBaitsOn(actor);
             if (baits.Count != 0)
             {
-                ref readonly var bait = ref baits.Ref(0);
+                ref var bait = ref baits.Ref(0);
                 if (_kb.IsImmune(slot, bait.Activation))
                 {
                     return;
@@ -144,17 +142,18 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
             }
         }
         else
+        {
             base.AddAIHints(slot, actor, assignment, hints);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         if (_kb.NumCasts == 1)
         {
-            var baits = ActiveBaitsOn(actor);
-            if (baits.Count != 0)
+            if (IsBaitTarget(actor))
             {
-                if (!_kb.IsImmune(slot, baits.Ref(0).Activation))
+                if (!_kb.IsImmune(slot, CurrentBaits.Ref(0).Activation))
                 {
                     hints.Add("Wait in marked spot for knockback!");
                 }

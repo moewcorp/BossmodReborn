@@ -16,7 +16,6 @@ internal sealed class DTRProvider : IDisposable
     private readonly AIManager _ai;
     private readonly IDtrBarEntry _autorotationEntry = Service.DtrBar.Get("bmr-autorotation");
     private readonly IDtrBarEntry _aiEntry = Service.DtrBar.Get("bmr-ai");
-    private readonly IDtrBarEntry _statsEntry = Service.DtrBar.Get("bmr-stats");
     private static readonly AIConfig _aiConfig = Service.Config.Get<AIConfig>();
     private bool _wantOpenPopup;
 
@@ -41,7 +40,6 @@ internal sealed class DTRProvider : IDisposable
     {
         _autorotationEntry.Remove();
         _aiEntry.Remove();
-        _statsEntry.Remove();
     }
 
     public void Update()

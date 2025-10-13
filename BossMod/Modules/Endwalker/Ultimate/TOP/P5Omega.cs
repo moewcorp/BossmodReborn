@@ -287,7 +287,7 @@ sealed class P5OmegaBlaster : Components.BaitAwayTethers
             // TODO: select one of the spots...
             return [center + 10f * toBossOrthoL, center + 10f * toBossOrthoR];
         }
-        else if (ActiveBaitsOn(actor).Count != 0)
+        else if (IsBaitTarget(actor))
         {
             var p = Arena.Center + 16f * toBoss;
             return [p + 10f * toBossOrthoL, p + 10f * toBossOrthoR];

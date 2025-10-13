@@ -162,7 +162,7 @@ class RockyRoll(BossModule module) : Components.GenericBaitAway(module)
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
             hints.Add("Bait into a hole!");
     }
 

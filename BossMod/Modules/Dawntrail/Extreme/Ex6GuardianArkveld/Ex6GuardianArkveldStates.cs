@@ -294,9 +294,9 @@ sealed class Ex6GuardianArkveldStates : StateMachineBuilder
             }
         }
         ComponentCondition<WyvernsVengeance>(id + 0x50u, 5.4f, comp => comp.Lines.Count == 0, "Exaflares end")
-            .DeactivateOnExit<WyvernsRadianceCrackedCrystal>()
             .DeactivateOnExit<WyvernsVengeance>();
         ComponentCondition<ChainbladeCharge>(id + 0x60u, 6.8f, comp => comp.NumFinishedStacks == 1, "Stack resolves")
+            .DeactivateOnExit<WyvernsRadianceCrackedCrystal>()
             .DeactivateOnExit<ChainbladeCharge>();
         ComponentCondition<WyvernsRadianceChainbladeCharge>(id + 0x70u, 5f, comp => comp.NumCasts == 1, "Circle AOE")
             .ActivateOnEnter<ChainbladeBlow>()

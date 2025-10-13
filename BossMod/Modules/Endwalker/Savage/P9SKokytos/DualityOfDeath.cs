@@ -8,7 +8,7 @@ class DualityOfDeath(BossModule module) : Components.GenericBaitAway(module, (ui
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
         {
             if (Raid.WithoutSlot(false, true, true).InRadiusExcluding(actor, _shape.Radius).Any())
                 hints.Add("GTFO from raid!");

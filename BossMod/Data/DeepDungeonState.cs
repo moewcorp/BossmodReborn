@@ -125,7 +125,7 @@ public sealed class DeepDungeonState
             var len = Value.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref var member = ref Value[i];
+                ref readonly var member = ref Value[i];
                 output.EmitActor(member.EntityId).Emit(member.Room);
             }
         }
@@ -147,7 +147,7 @@ public sealed class DeepDungeonState
             var len = Value.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref var item = ref Value[i];
+                ref readonly var item = ref Value[i];
                 output.Emit(item.Count).Emit(item.Flags, "X");
             }
         }
@@ -170,7 +170,7 @@ public sealed class DeepDungeonState
             var len = Value.Length;
             for (var i = 0; i < len; ++i)
             {
-                ref var chest = ref Value[i];
+                ref readonly var chest = ref Value[i];
                 output.Emit(chest.Type).Emit(chest.Room);
             }
         }
