@@ -35,8 +35,10 @@ public enum IconID : uint
     BareRootPlanting = 23 // player->self
 }
 
+[SkipLocalsInit]
 sealed class DenseBareRootPlanting(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.DensePlanting, (uint)AID.BareRootPlanting], 6f);
 
+[SkipLocalsInit]
 sealed class Touchdown(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Touchdown, 10f)
 {
     private readonly Burst _aoe = module.FindComponent<Burst>()!;
@@ -66,6 +68,7 @@ sealed class Touchdown(BossModule module) : Components.SimpleKnockbacks(module, 
     }
 }
 
+[SkipLocalsInit]
 sealed class Burst(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = new(4);
@@ -121,10 +124,11 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
+[SkipLocalsInit]
 sealed class BareRootPlantingBait(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
 {
     private readonly AOEShapeCircle circle = new(6f);
-    private readonly AOEShapeCross cross = new(30f, 3f); // 3 base range + 9 * 3 from status effect, TODO: verify
+    private readonly AOEShapeCross cross = new(30f, 3f); // 3 base range + 9 * 3 from status effect
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
@@ -164,11 +168,12 @@ sealed class BareRootPlantingBait(BossModule module) : Components.GenericBaitAwa
     }
 }
 
+[SkipLocalsInit]
 sealed class WoodsEmbrace(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(2);
     private readonly List<SDCross> sdfs = new(2);
-    private readonly AOEShapeCross cross = new(30f, 3f);  // 3 base range + 9 * 3 from status effect, TODO: verify
+    private readonly AOEShapeCross cross = new(30f, 3f);  // 3 base range + 9 * 3 from status effect
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
@@ -223,6 +228,7 @@ sealed class WoodsEmbrace(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
+[SkipLocalsInit]
 sealed class DD20ForgivenEmulationStates : StateMachineBuilder
 {
     public DD20ForgivenEmulationStates(BossModule module) : base(module)
@@ -253,6 +259,7 @@ GroupID = 1033u,
 NameID = 13973u,
 SortOrder = 1,
 PlanLevel = 0)]
+[SkipLocalsInit]
 public sealed class DD20ForgivenEmulation(WorldState ws, Actor primary) : BossModule(ws, primary, arenaCenter, new ArenaBoundsCustom([new Polygon(arenaCenter, 14.709f, 72)]))
 {
     private static readonly WPos arenaCenter = new(-300f, -300f);

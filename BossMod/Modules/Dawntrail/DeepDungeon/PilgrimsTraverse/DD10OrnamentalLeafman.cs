@@ -26,8 +26,10 @@ public enum AID : uint
     Leafmash = 44057 // Helper->self, 1.9s cast, range 15 circle
 }
 
+[SkipLocalsInit]
 sealed class HedgeMazing(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HedgeMazing1, (uint)AID.HedgeMazing2], 14f, riskyWithSecondsLeft: 5d);
 
+[SkipLocalsInit]
 sealed class Leafmash(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(4);
@@ -72,6 +74,7 @@ sealed class Leafmash(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
+[SkipLocalsInit]
 sealed class LittleLeafmash(BossModule module) : Components.GenericStackSpread(module)
 {
     private bool active;
@@ -122,6 +125,7 @@ sealed class LittleLeafmash(BossModule module) : Components.GenericStackSpread(m
     }
 }
 
+[SkipLocalsInit]
 sealed class DD10OrnamentalLeafmanStates : StateMachineBuilder
 {
     public DD10OrnamentalLeafmanStates(BossModule module) : base(module)
@@ -150,6 +154,7 @@ GroupID = 1032u,
 NameID = 13979u,
 SortOrder = 1,
 PlanLevel = 0)]
+[SkipLocalsInit]
 public sealed class DD10OrnamentalLeafman : BossModule
 {
     private static readonly WPos arenaCenter = new(-300f, -300f);

@@ -112,7 +112,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     public readonly float MoveDistance = moveDistance;
     public readonly double SecondsBetweenActivations = secondsBetweenActivations;
     public int MaxCasts = maxCasts;
-    public BitMask ExcludedTargets; // any targets in this mask aren't considered to be possible targets
+    public BitMask ExcludedTargets = new(~0ul); // any targets in this mask aren't considered to be possible targets
     public readonly uint Icon = icon;
     public readonly double ActivationDelay = activationDelay;
     public readonly bool ResetExcludedTargets = resetExcludedTargets;
@@ -154,7 +154,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
             var (slot, target) = Raid.WithSlot().ExcludedFromMask(ExcludedTargets).MinBy(ip => (ip.Item2.Position - pos).LengthSq());
             if (target != null)
             {
-                Targets[Module.Raid.FindSlot(target.InstanceID)] = false;
+                Targets.Clear(Raid.FindSlot(target.InstanceID));
                 Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
                 ExcludedTargets[slot] = true;
             }
@@ -169,7 +169,7 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
             Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetExcludedTargets)
             {
-                ExcludedTargets = default;
+                ExcludedTargets = new(~0ul);
                 NumCasts = 0;
             }
         }
@@ -180,7 +180,8 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         if (iconID == Icon)
         {
             Activation = WorldState.FutureTime(ActivationDelay);
-            Targets[Module.Raid.FindSlot(targetID)] = false;
+            Targets.Set(Raid.FindSlot(targetID));
+            ExcludedTargets.Clear(Raid.FindSlot(targetID));
         }
     }
 }

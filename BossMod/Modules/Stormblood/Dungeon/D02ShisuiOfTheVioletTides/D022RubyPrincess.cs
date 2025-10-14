@@ -178,7 +178,7 @@ class SeduceCoriolisKick(BossModule module) : Components.GenericAOEs(module)
 
 class AbyssalVolcano(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AbyssalVolcano, 7f);
 
-class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.GeothermalFlatulenceFirst, (uint)AID.GeothermalFlatulenceRest, 3, 0.8f, 10, true, (uint)IconID.ChasingAOE)
+class GeothermalFlatulence(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.GeothermalFlatulenceFirst, (uint)AID.GeothermalFlatulenceRest, 3, 0.8d, 10, true, (uint)IconID.ChasingAOE)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
