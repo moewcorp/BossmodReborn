@@ -42,7 +42,7 @@ public enum AID : uint
 
 public enum IconID : uint
 {
-    ChasingAOE = 197 // player
+    LoomingNightmare = 197 // player
 }
 
 sealed class MaliciousMistArenaChange(BossModule module) : Components.GenericAOEs(module)
@@ -70,7 +70,7 @@ sealed class MaliciousMistArenaChange(BossModule module) : Components.GenericAOE
     }
 }
 
-sealed class LoomingNightmare(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.LoomingNightmareFirst, (uint)AID.LoomingNightmareRest, 3, 1.6f, 5, true, (uint)IconID.ChasingAOE)
+sealed class LoomingNightmare(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.LoomingNightmareFirst, (uint)AID.LoomingNightmareRest, 3, 1.6f, 5, true, (uint)IconID.LoomingNightmare)
 {
     private int totalChasers;
 
