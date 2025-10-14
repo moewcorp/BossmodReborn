@@ -78,29 +78,90 @@ sealed class BrutalHalo(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class BoundsOfIndulgence(BossModule module) : Components.Voidzone(module, 4f, GetVoidzones, 8f)
+sealed class BoundsOfIndulgence(BossModule module) : Components.GenericAOEs(module)
 {
-    private static Actor[] GetVoidzones(BossModule module)
-    {
-        var enemies = module.Enemies((uint)OID.BoundsOfIndulgence);
-        var count = enemies.Count;
-        if (count == 0)
-            return [];
+    private readonly List<Actor> voidzones = [];
+    private readonly AOEShapeCircle circle = new(4f);
+    private readonly AOEShapeArcCapsule arcCW = new(4f, 30f.Degrees(), new(-300f, -300f)), arcCCW = new(4f, -30f.Degrees(), new(-300f, -300f));
 
-        var voidzones = new Actor[count];
-        var index = 0;
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var count = voidzones.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var aoes = new AOEInstance[count];
+        var center = Arena.Center;
         for (var i = 0; i < count; ++i)
         {
-            var z = enemies[i];
-            if (z.Renderflags == 0)
-                voidzones[index++] = z;
+            var vz = voidzones[i];
+            var pos = vz.Position;
+            if (vz.LastFrameMovement == default)
+            {
+                aoes[i] = new(circle, pos.Quantized());
+            }
+            else
+            {
+                var dir = pos - center;
+                var ccw = vz.Rotation.ToDirection().OrthoR().Dot(dir) < 0f;
+                aoes[i] = new(ccw ? arcCCW : arcCW, pos.Quantized());
+            }
         }
-        return voidzones[..index];
+        return aoes;
+    }
+
+    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
+    {
+        if (actor.OID == (uint)OID.BoundsOfIndulgence)
+        {
+            switch (id)
+            {
+                case 0x1E46:
+                    voidzones.Add(actor);
+                    break;
+                case 0x1E3C:
+                    voidzones.Remove(actor);
+                    break;
+            }
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var count = voidzones.Count;
+        if (count == 0)
+        {
+            return;
+        }
+        var forbiddenNearFuture = WorldState.FutureTime(1.1d);
+        var forbiddenSoon = WorldState.FutureTime(3d);
+        var forbiddenFarFuture = DateTime.MaxValue;
+        var center = Arena.Center;
+        var a15 = 15f.Degrees();
+        var a25 = 25f.Degrees();
+        var a35 = 35f.Degrees();
+        for (var i = 0; i < count; ++i)
+        {
+            var vz = voidzones[i];
+            var pos = vz.Position;
+            var dir = pos - center;
+            var ccw = vz.Rotation.ToDirection().OrthoR().Dot(dir) < 0f;
+            var mult = ccw ? -1f : 1f;
+            var mov = vz.LastFrameMovement != default;
+            if (mov)
+            {
+                hints.AddForbiddenZone(new SDArcCapsule(pos, center, mult * a15, 4f), forbiddenNearFuture);
+                hints.AddForbiddenZone(new SDArcCapsule(pos, center, mult * a25, 4f), forbiddenSoon);
+                hints.AddForbiddenZone(new SDArcCapsule(pos, center, mult * a35, 4f), forbiddenFarFuture);
+            }
+            hints.TemporaryObstacles.Add(new SDCircle(pos.Quantized(), mov ? 4f : 5f));
+        }
     }
 }
 
 [SkipLocalsInit]
-class DivineFavor(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.DivineFavorFirst, (uint)AID.DivineFavorRest, 3.5f, 0.6d, 8, true, (uint)IconID.DivineFavor);
+sealed class DivineFavor(BossModule module) : Components.StandardChasingAOEs(module, 4f, (uint)AID.DivineFavorFirst, (uint)AID.DivineFavorRest, 3.5f, 0.6d, 8, true, (uint)IconID.DivineFavor);
 
 [SkipLocalsInit]
 sealed class GripOfSalvationsReach(BossModule module) : Components.GenericAOEs(module)

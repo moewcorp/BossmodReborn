@@ -93,6 +93,18 @@ public abstract class ArenaBounds(float radius, float mapResolution, float scale
         return ClipAndTriangulate(points);
     }
 
+    public List<RelTriangle> ClipAndTriangulateArcCapsule(WDir startOffset, WDir toOrbitCenter, Angle angularLength, float radius)
+    {
+        var points = CurveApprox.ArcCapsule(toOrbitCenter, angularLength, radius, MaxApproxError);
+        var len = points.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            points[i] += startOffset;
+        }
+
+        return ClipAndTriangulate(points);
+    }
+
     public List<RelTriangle> ClipAndTriangulateDonut(WDir centerOffset, float innerRadius, float outerRadius)
     {
         if (innerRadius < outerRadius && innerRadius >= 0f)

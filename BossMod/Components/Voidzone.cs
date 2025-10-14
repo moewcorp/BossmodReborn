@@ -41,11 +41,13 @@ public class Voidzone(BossModule module, float radius, Func<BossModule, IEnumera
             var forbiddenFarFarFuture = DateTime.MaxValue;
             foreach (var s in Sources(Module))
             {
-                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength * 0.5f, radius), forbiddenNearFuture);
-                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, MovementHintLength, radius), forbiddenSoon);
-                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 2f * MovementHintLength, radius), forbiddenFarFuture);
-                hints.AddForbiddenZone(new SDCapsule(s.Position, s.Rotation, 3f * MovementHintLength, radius), forbiddenFarFarFuture);
-                hints.TemporaryObstacles.Add(new SDCircle(s.Position, radius));
+                var pos = s.Position;
+                var rot = s.Rotation;
+                hints.AddForbiddenZone(new SDCapsule(pos, rot, MovementHintLength * 0.5f, radius), forbiddenNearFuture);
+                hints.AddForbiddenZone(new SDCapsule(pos, rot, MovementHintLength, radius), forbiddenSoon);
+                hints.AddForbiddenZone(new SDCapsule(pos, rot, 2f * MovementHintLength, radius), forbiddenFarFuture);
+                hints.AddForbiddenZone(new SDCapsule(pos, rot, 3f * MovementHintLength, radius), forbiddenFarFarFuture);
+                hints.TemporaryObstacles.Add(new SDCircle(pos, radius));
             }
         }
     }

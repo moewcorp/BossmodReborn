@@ -239,6 +239,26 @@ public sealed class AOEShapeCapsule(float radius, float length, Angle directionO
     public override ShapeDistance InvertedDistance(WPos origin, Angle rotation) => new SDInvertedCapsule(origin, rotation, Length, Radius);
 }
 
+[SkipLocalsInit]
+public sealed class AOEShapeArcCapsule(float radius, Angle angularLength, WPos orbitCenter, bool invertForbiddenZone = false) : AOEShape(invertForbiddenZone)
+{
+    public readonly float Radius = radius;
+    public readonly Angle AngularLength = angularLength;
+    public readonly WPos OrbitCenter = orbitCenter;
+
+    public override string ToString() => $"Capsule: radius={Radius:f3}, length={AngularLength}, orbitCenter={OrbitCenter}, ifz={InvertForbiddenZone}";
+    public override bool Check(WPos position, WPos origin, Angle rotation) => position.InArcCapsule(origin, -(origin - OrbitCenter), AngularLength, Radius);
+
+    public override void Draw(MiniArena arena, WPos origin, Angle rotation, uint color = default) => arena.ZoneArcCapsule(origin, OrbitCenter, AngularLength, Radius, color);
+    public override void Outline(MiniArena arena, WPos origin, Angle rotation, uint color = default, float thickness = 1f)
+        => arena.AddArcCapsule(origin, OrbitCenter, AngularLength, Radius, color, thickness);
+    public override ShapeDistance Distance(WPos origin, Angle rotation)
+    {
+        return !InvertForbiddenZone ? new SDArcCapsule(origin, -(origin - OrbitCenter), AngularLength, Radius) : new SDInvertedArcCapsule(origin, -(origin - OrbitCenter), AngularLength, Radius);
+    }
+    public override ShapeDistance InvertedDistance(WPos origin, Angle rotation) => new SDInvertedArcCapsule(origin, -(origin - OrbitCenter), AngularLength, Radius);
+}
+
 public enum OperandType
 {
     Union,
