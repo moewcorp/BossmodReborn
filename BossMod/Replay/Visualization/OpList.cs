@@ -203,7 +203,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
             ClientState.OpBozjaHolsterChange op => $"Player bozja holster change: {GetOpBozjaHolsterChangeString(op.Contents)}",
             WorldState.OpMapEffect op => $"MapEffect: {op.Index:X2} {op.State:X8}",
             WorldState.OpLegacyMapEffect op => $"MapEffect (legacy): seq={op.Sequence} param={op.Param} data={GetOpLegacyMapEffectString(op.Data)}",
-            WorldState.OpSystemLogMessage op => $"LogMessage {op.MessageID}: \"{Service.LuminaRow<Lumina.Excel.Sheets.LogMessage>(op.MessageID)?.Text}\"",
+            WorldState.OpSystemLogMessage op => $"LogMessage {op.MessageID}: \"{Service.LuminaRow<Lumina.Excel.Sheets.LogMessage>(op.MessageID)?.Text}\" [{string.Join(", ", op.Args)}]",
             _ => DumpOp(o)
         };
     }

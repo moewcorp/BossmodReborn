@@ -6,6 +6,7 @@ namespace BossMod;
 public sealed class ZoneModuleWindow : UIWindow
 {
     private readonly ZoneModuleManager _zmm;
+    private bool _wasOpen;
 
     public ZoneModuleWindow(ZoneModuleManager zmm) : base("Zone module###Zone module", false, new(400, 400))
     {
@@ -16,6 +17,7 @@ public sealed class ZoneModuleWindow : UIWindow
     public override void PreOpenCheck()
     {
         IsOpen = _zmm.ActiveModule?.WantDrawExtra() ?? false;
+        _wasOpen = IsOpen;
         if (IsOpen)
         {
             var title = _zmm.ActiveModule!.WindowName();
@@ -28,7 +30,7 @@ public sealed class ZoneModuleWindow : UIWindow
     public override void PostDraw()
     {
         // user closed window
-        if (_zmm.ActiveModule?.WantDrawExtra() == true && !IsOpen)
+        if (_wasOpen && !IsOpen)
             _zmm.ActiveModule?.OnWindowClose();
     }
 

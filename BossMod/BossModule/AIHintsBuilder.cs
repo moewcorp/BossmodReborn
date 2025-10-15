@@ -132,6 +132,11 @@ public sealed class AIHintsBuilder : IDisposable
                 priority = priorityPassive; // Default undesirable
 
             var enemy = hints.Enemies[index] = new(actor, priority, playerIsDefaultTank);
+
+            // maybe unnecessary?
+            if (actor.FateID > 0 && actor.FateID == allowedFateID && !Utils.IsBossFate(actor.FateID))
+                enemy.ForbidDOTs = true;
+
             hints.PotentialTargets.Add(enemy);
         }
     }
