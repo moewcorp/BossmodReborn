@@ -144,7 +144,7 @@ sealed class CoffinScratch(BossModule module) : Components.StandardChasingAOEs(m
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Targets[slot])
+        if (TargetsMask[slot])
         {
             var center = Arena.Center;
             hints.AddForbiddenZone(new SDRect(center + new WDir(18.5f, default), center + new WDir(-18.5f, default), 20f), Activation);

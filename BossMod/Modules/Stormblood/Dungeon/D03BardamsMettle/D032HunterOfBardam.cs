@@ -62,7 +62,7 @@ class CometChase(BossModule module) : Components.StandardChasingAOEs(module, 4f,
             Advance(spell.LocXZ, MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0)
             {
-                ExcludedTargets = new(~0ul);
+                Targets.Clear();
                 NumCasts = 0;
             }
         }

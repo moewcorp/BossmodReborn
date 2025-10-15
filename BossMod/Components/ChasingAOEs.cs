@@ -19,9 +19,10 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
 
         public WPos PredictedPosition()
         {
-            var offset = Target.Position - PrevPos;
+            var loc = Target.Position;
+            var offset = loc - PrevPos;
             var distance = offset.Length();
-            var pos = distance > MoveDist ? PrevPos + MoveDist * offset / distance : Target.Position;
+            var pos = distance > MoveDist ? PrevPos + MoveDist * offset / distance : loc;
             return pos.Quantized();
         }
     }
@@ -34,7 +35,9 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
         for (var i = 0; i < count; ++i)
         {
             if (Chasers[i].Target == actor)
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -50,20 +53,50 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
             var c = Chasers[i];
             var pos = c.PredictedPosition();
             var off = pos - c.PrevPos;
-            aoes[i] = new(c.Shape, pos, off.LengthSq() > 0 ? Angle.FromDirection(off) : default, c.NextActivation);
+            aoes[i] = new(c.Shape, pos, off.LengthSq() > 0f ? Angle.FromDirection(off) : default, c.NextActivation);
         }
         return aoes;
     }
 
-    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => Chasers.Any(c => c.Target == player) ? PlayerPriority.Interesting : PlayerPriority.Irrelevant;
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
+    {
+        var count = Chasers.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Chasers[i];
+            if (c.Target == player)
+            {
+                return PlayerPriority.Interesting;
+            }
+        }
+        return PlayerPriority.Irrelevant;
+    }
 
     // return false if chaser was not found
     public bool Advance(WPos pos, float moveDistance, DateTime currentTime, bool removeWhenFinished = true)
     {
         ++NumCasts;
-        var c = Chasers.MinBy(c => (c.PredictedPosition() - pos).LengthSq());
+        Chaser? c = null;
+        var minDistSq = float.MaxValue;
+
+        var count = Chasers.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var chaser = Chasers[i];
+            var predicted = chaser.PredictedPosition();
+            var distSq = (predicted - pos).LengthSq();
+
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                c = chaser;
+            }
+        }
+
         if (c == null)
+        {
             return false;
+        }
 
         if (--c.NumRemaining <= 0 && removeWhenFinished)
         {
@@ -90,21 +123,29 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
     private void AddForbiddenZones(Actor actor, AIHints hints, bool isTarget)
     {
         // sort of a hack to prevent the AI from getting "stuck" inside the AOE because all paths to safety have equal distance
-        foreach (var c in Chasers.Where(c => c.Target == actor == isTarget))
+        var count = Chasers.Count;
+        var circle = (AOEShapeCircle)Chasers[0].Shape;
+        var radius = circle.Radius;
+        for (var i = 0; i < count; ++i)
         {
-            var circle = (AOEShapeCircle)c.Shape;
-            var radius = isTarget ? MoveDistance + circle.Radius : circle.Radius + 1;
-            var position = isTarget ? c.PredictedPosition() - circle.Radius * actor.Rotation.ToDirection() : c.PredictedPosition();
-            hints.AddForbiddenZone(new SDCircle(position, radius), c.NextActivation);
+            var c = Chasers[i];
+            if (c.Target == actor == isTarget)
+            {
+                var radiusAdj = isTarget ? MoveDistance + radius : radius + 1f;
+                var predicted = c.PredictedPosition();
+                var position = isTarget ? predicted - radius * actor.Rotation.ToDirection() : predicted;
+                hints.AddForbiddenZone(new SDCircle(position, radiusAdj), c.NextActivation);
+            }
         }
     }
 }
 
 // standard chasing aoe; first cast is long - assume it is baited on the nearest allowed target; successive casts are instant
 [SkipLocalsInit]
-public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, double activationDelay = 5.1d) : GenericChasingAOEs(module, moveDistance)
+public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetTargets = false, uint icon = default, double activationDelay = 5.1d) : GenericChasingAOEs(module, moveDistance)
 {
-    public StandardChasingAOEs(BossModule module, float radius, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, double activationDelay = 5.1d) : this(module, new AOEShapeCircle(radius), actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetExcludedTargets, icon, activationDelay) { }
+    public StandardChasingAOEs(BossModule module, float radius, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetTargets = false, uint icon = default, double activationDelay = 5.1d)
+    : this(module, new AOEShapeCircle(radius), actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetTargets, icon, activationDelay) { }
 
     public readonly AOEShape Shape = shape;
     public readonly uint ActionFirst = actionFirst;
@@ -112,24 +153,28 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     public readonly float MoveDistance = moveDistance;
     public readonly double SecondsBetweenActivations = secondsBetweenActivations;
     public int MaxCasts = maxCasts;
-    public BitMask ExcludedTargets = new(~0ul); // any targets in this mask aren't considered to be possible targets
     public readonly uint Icon = icon;
     public readonly double ActivationDelay = activationDelay;
-    public readonly bool ResetExcludedTargets = resetExcludedTargets;
-    public BitMask Targets; // to keep track of the icon before mechanic starts for handling custom forbidden zones
+    public readonly bool ResetTargets = resetTargets;
+    public readonly List<Actor> Targets = [];
+    public BitMask TargetsMask; // to keep track of the icon before mechanic starts for handling custom forbidden zones
     public DateTime Activation;
 
     public override void Update()
     {
         var count = Chasers.Count;
-        if (count == 0)
+        if (Chasers.Count == 0)
+        {
             return;
+        }
 
         for (var i = count - 1; i >= 0; --i)
         {
             var c = Chasers[i];
             if ((c.Target.IsDestroyed || c.Target.IsDead) && c.NumRemaining < MaxCasts)
+            {
                 Chasers.RemoveAt(i);
+            }
         }
     }
 
@@ -137,7 +182,9 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     {
         var count = Chasers.Count;
         if (Chasers.Count == 0)
+        {
             return;
+        }
 
         for (var i = 0; i < count; ++i)
         {
@@ -151,12 +198,25 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         if (spell.Action.ID == ActionFirst)
         {
             var pos = spell.LocXZ;
-            var (slot, target) = Raid.WithSlot().ExcludedFromMask(ExcludedTargets).MinBy(ip => (ip.Item2.Position - pos).LengthSq());
+            Actor? target = null;
+            var minDistance = float.MaxValue;
+
+            var count = Targets.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var t = Targets[i];
+                var distanceSq = (t.Position - pos).LengthSq();
+                if (distanceSq < minDistance)
+                {
+                    minDistance = distanceSq;
+                    target = t;
+                }
+            }
             if (target != null)
             {
-                Targets.Clear(Raid.FindSlot(target.InstanceID));
+                Targets.Remove(target);
+                TargetsMask.Clear(Raid.FindSlot(target.InstanceID));
                 Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
-                ExcludedTargets[slot] = true;
             }
         }
     }
@@ -167,9 +227,9 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         {
             var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
             Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
-            if (Chasers.Count == 0 && ResetExcludedTargets)
+            if (Chasers.Count == 0 && ResetTargets)
             {
-                ExcludedTargets = new(~0ul);
+                Targets.Clear();
                 NumCasts = 0;
             }
         }
@@ -180,58 +240,8 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
         if (iconID == Icon)
         {
             Activation = WorldState.FutureTime(ActivationDelay);
-            Targets.Set(Raid.FindSlot(targetID));
-            ExcludedTargets.Clear(Raid.FindSlot(targetID));
-        }
-    }
-}
-
-// since open world players don't count towards party, we need to make a new component
-[SkipLocalsInit]
-public abstract class OpenWorldChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, float secondsBetweenActivations, int maxCasts, bool resetExcludedTargets = false, uint icon = default, float activationDelay = 5.1f) : StandardChasingAOEs(module, shape, actionFirst, actionRest, moveDistance, secondsBetweenActivations, maxCasts, resetExcludedTargets, icon, activationDelay)
-{
-    public new HashSet<Actor> ExcludedTargets = []; // any targets in this hashset aren't considered to be possible targets
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == ActionFirst)
-        {
-            var pos = spell.TargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ;
-            Actor? target = null;
-            var minDistanceSq = float.MaxValue;
-
-            foreach (var actor in WorldState.Actors.Actors.Values)
-            {
-                if (actor.OID == 0 && !ExcludedTargets.Contains(actor))
-                {
-                    var distanceSq = (actor.Position - pos).LengthSq();
-                    if (distanceSq < minDistanceSq)
-                    {
-                        minDistanceSq = distanceSq;
-                        target = actor;
-                    }
-                }
-            }
-            if (target != null)
-            {
-                Targets[Module.Raid.FindSlot(target.InstanceID)] = false;
-                Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
-                ExcludedTargets.Add(target);
-            }
-        }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == ActionFirst || spell.Action.ID == ActionRest)
-        {
-            var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
-            Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
-            if (Chasers.Count == 0 && ResetExcludedTargets)
-            {
-                ExcludedTargets.Clear();
-                NumCasts = 0;
-            }
+            Targets.Add(actor);
+            TargetsMask.Set(Raid.FindSlot(targetID));
         }
     }
 }
