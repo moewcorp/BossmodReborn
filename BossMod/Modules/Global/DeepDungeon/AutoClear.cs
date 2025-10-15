@@ -398,7 +398,7 @@ public abstract class AutoClear : ZoneModule
         }
     }
 
-    private bool CanAutoUse(PomanderID p) => Palace.Party.Count(p => p.EntityId > 0) == 1 && _config.AutoPoms[(int)p];
+    private bool CanAutoUse(PomanderID p) => Palace.Party.Count(p => p.EntityId > 0) == 1 && Config.AutoPoms[(int)p];
 
     private void IterAndExpire<T>(List<T> items, Func<T, bool> expire, Action<T> action, Action<T>? onRemove = null)
     {
@@ -464,7 +464,7 @@ public abstract class AutoClear : ZoneModule
         if (canNavigate)
             HandleFloorPathfind(player, hints);
 
-        if (!_config.Enable)
+        if (Config.Enable)
             return;
 
         CalculateExtraHints(playerSlot, player, hints);
@@ -579,9 +579,9 @@ public abstract class AutoClear : ZoneModule
         }
 
         var zones = hints.ForbiddenZones;
-        var count = zones.Count;
+        var countZ = zones.Count;
         var playerInAOE = false;
-        for (var i = 0; i < count; ++i)
+        for (var i = 0; i < countZ; ++i)
         {
             var z = zones[i];
             if (z.shapeDistance.Contains(player.Position))
@@ -591,7 +591,7 @@ public abstract class AutoClear : ZoneModule
             }
         }
 
-        if (Config.AllowPomander && !isStunned && pomanderToUseHere is PomanderID p2 && player.FindStatus((uint)SID.ItemPenalty) == null && !playerInAOE)
+        if (!isStunned && pomanderToUseHere is PomanderID p2 && player.FindStatus((uint)SID.ItemPenalty) == null && !playerInAOE)
             hints.ActionsToExecute.Push(new ActionID(ActionType.Pomander, (uint)p2), null, ActionQueue.Priority.VeryHigh);
 
         Actor? wantCoffer = null;

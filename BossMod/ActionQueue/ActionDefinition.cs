@@ -379,7 +379,7 @@ public sealed class ActionDefinitions : IDisposable
         for (var i = 0; i < countFZ; ++i)
         {
             ref var fz = ref forbiddenZones[i];
-            if (fz.shapeDistance.Distance(to) <= 0f)
+            if (fz.shapeDistance.Contains(to))
             {
                 return true;
             }
@@ -388,7 +388,7 @@ public sealed class ActionDefinitions : IDisposable
         var countVZ = voidZones.Length;
         for (var i = 0; i < countVZ; ++i)
         {
-            if (voidZones[i].Distance(to) <= 0f)
+            if (voidZones[i].Contains(to))
             {
                 return true;
             }

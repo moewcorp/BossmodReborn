@@ -185,12 +185,12 @@ public sealed class DeepDungeonAI(RotationModuleManager manager, Actor player) :
                 break;
             case Transformation.Bomb:
                 numTargets = 1;
-                goal = Hints.GoalSingleTarget(primaryTarget, 14);
+                goal = AIHints.GoalSingleTarget(primaryTarget, 14f);
                 attack = ActionID.MakeSpell(Roleplay.AID.BigBurst);
                 break;
             case Transformation.Mudball:
                 numTargets = 1;
-                goal = Hints.GoalSingleTarget(primaryTarget.Position, 25);
+                goal = AIHints.GoalSingleTarget(primaryTarget.Position, 25f);
                 attack = ActionID.MakeSpell(Roleplay.AID.RockyRoll);
                 break;
             default:
