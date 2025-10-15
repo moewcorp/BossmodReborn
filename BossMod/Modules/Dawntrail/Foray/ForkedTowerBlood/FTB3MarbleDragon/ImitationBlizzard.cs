@@ -134,12 +134,12 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         var id = status.ID;
         if (id == (uint)SID.WickedWater)
         {
-            wickedWater[Raid.FindSlot(actor.InstanceID)] = true;
+            wickedWater.Set(Raid.FindSlot(actor.InstanceID));
             WickedWaterActive = true;
         }
         else if (id == (uint)SID.GelidGaol)
         {
-            gelidGaol[Raid.FindSlot(actor.InstanceID)] = true;
+            gelidGaol.Set(Raid.FindSlot(actor.InstanceID));
         }
     }
 
@@ -148,11 +148,11 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         var id = status.ID;
         if (id == (uint)SID.WickedWater)
         {
-            wickedWater[Raid.FindSlot(actor.InstanceID)] = false;
+            wickedWater.Clear(Raid.FindSlot(actor.InstanceID));
         }
         else if (id == (uint)SID.GelidGaol)
         {
-            gelidGaol[Raid.FindSlot(actor.InstanceID)] = false;
+            gelidGaol.Clear(Raid.FindSlot(actor.InstanceID));
         }
     }
 

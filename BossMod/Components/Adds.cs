@@ -2,7 +2,7 @@
 
 // generic component used for drawing adds
 [SkipLocalsInit]
-public class Adds(BossModule module, uint oid, int priority = 0) : BossComponent(module)
+public class Adds(BossModule module, uint oid, int priority = 0, bool forbidDots = false) : BossComponent(module)
 {
     public readonly List<Actor> Actors = module.Enemies(oid);
     public List<Actor> ActiveActors
@@ -25,9 +25,9 @@ public class Adds(BossModule module, uint oid, int priority = 0) : BossComponent
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (priority != 0)
+        if (priority >= 0)
         {
-            hints.PrioritizeTargetsByOID(oid, priority);
+            hints.PrioritizeTargetsByOIDAndForbidDOTs(oid, priority, forbidDots);
         }
     }
 

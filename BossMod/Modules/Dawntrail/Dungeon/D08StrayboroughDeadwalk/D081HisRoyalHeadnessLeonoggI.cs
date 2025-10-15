@@ -90,7 +90,7 @@ sealed class LoomingNightmare(BossModule module) : Components.StandardChasingAOE
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        if (Targets[slot])
+        if (TargetsMask[slot])
         {
             hints.AddForbiddenZone(new SDCircle(Arena.Center, 13.5f), Activation);
         }

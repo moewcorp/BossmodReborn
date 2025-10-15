@@ -132,6 +132,11 @@ public sealed class AIHintsBuilder : IDisposable
                 priority = priorityPassive; // Default undesirable
 
             var enemy = hints.Enemies[index] = new(actor, priority, playerIsDefaultTank);
+
+            // maybe unnecessary?
+            if (actor.FateID > 0u && actor.FateID == allowedFateID && !Utils.IsBossFate(actor.FateID))
+                enemy.ForbidDOTs = true;
+
             hints.PotentialTargets.Add(enemy);
         }
     }
@@ -153,8 +158,8 @@ public sealed class AIHintsBuilder : IDisposable
             {
                 resolution = fate.Radius switch
                 {
-                    > 60 => 2,
-                    > 30 => 1,
+                    > 60f => 2,
+                    > 30f => 1,
                     _ => resolution
                 };
             }
@@ -247,7 +252,7 @@ public sealed class AIHintsBuilder : IDisposable
         var data = GetSpellData(actionID);
 
         // gaze
-        if (data.VFX == 25)
+        if (data.VFX == 25u)
         {
             if (GuessShape(ref data, ref actor) is AOEShape sh)
                 _activeGazes[actor.InstanceID] = (actor, _ws.Actors.Find(castInfo.TargetID), sh);

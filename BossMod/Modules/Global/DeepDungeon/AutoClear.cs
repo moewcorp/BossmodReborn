@@ -44,9 +44,9 @@ public abstract class AutoClear : ZoneModule
         // EO
         1541, 1542, 1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552, 1553, 1554,
         // PT
-        1884, 1885, 1886, 1887, 1888
+        1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1906, 1907
     ];
-    public static readonly HashSet<uint> RevealedTrapOIDs = [0x1EA08E, 0x1EA08F, 0x1EA090, 0x1EA091, 0x1EA092, 0x1EA9A0, 0x1EB864];
+    public static readonly HashSet<uint> RevealedTrapOIDs = [0x1EA08E, 0x1EA08F, 0x1EA090, 0x1EA091, 0x1EA092, 0x1EA9A0, 0x1EB864, 0x1EBEDB];
 
     protected readonly List<(Actor Source, float Inner, float Outer, Angle HalfAngle)> Donuts = [];
     protected readonly List<(Actor Source, float Radius)> Circles = [];
@@ -208,8 +208,13 @@ public abstract class AutoClear : ZoneModule
             case 7256u: // sight used
                 _trapsHidden = false;
                 break;
+            case 9208u: // magicite overcap
             case 10287u: // demiclone overcap
                 _lastChestMagicite = true;
+                break;
+            case 11251:
+                if (op.Args[1] == 4) // mazeroot balm used, reveals map and traps
+                    _trapsHidden = false;
                 break;
         }
     }
@@ -288,7 +293,8 @@ public abstract class AutoClear : ZoneModule
 
             return Palace.DungeonId switch
             {
-                DeepDungeonState.DungeonType.HOH or DeepDungeonState.DungeonType.EO or DeepDungeonState.DungeonType.PT => Palace.Floor >= 7, // per-dungeon gimmick items start dropping on floor 7
+                DeepDungeonState.DungeonType.PT => true,
+                DeepDungeonState.DungeonType.HOH or DeepDungeonState.DungeonType.EO => Palace.Floor >= 7, // per-dungeon gimmick items start dropping on floor 7
                 _ => false,
             };
         }
@@ -325,7 +331,7 @@ public abstract class AutoClear : ZoneModule
         var maxPull = Config.MaxPull;
 
         ImGui.SetNextItemWidth(200);
-        if (ImGui.DragInt("Max mobs to pull", ref maxPull, 0.05f, 0, 15))
+        if (ImGui.DragInt("Max mobs to pull", ref maxPull, 0.05f, 1, 15))
         {
             Config.MaxPull = maxPull;
             Config.Modified.Fire();
@@ -392,25 +398,7 @@ public abstract class AutoClear : ZoneModule
         }
     }
 
-    private readonly List<PomanderID> AutoUsable = [
-        PomanderID.Steel,
-        PomanderID.Strength,
-        PomanderID.Sight,
-        PomanderID.Raising,
-        PomanderID.Fortune,
-        PomanderID.Concealment,
-        PomanderID.Affluence,
-        PomanderID.Frailty,
-        PomanderID.ProtoSteel,
-        PomanderID.ProtoStrength,
-        PomanderID.ProtoSight,
-        PomanderID.ProtoRaising,
-        PomanderID.ProtoLethargy,
-        PomanderID.ProtoFortune,
-        PomanderID.ProtoAffluence
-    ];
-
-    private bool CanAutoUse(PomanderID p) => Palace.Party.Count(p => p.EntityId > 0) == 1 && AutoUsable.Contains(p);
+    private bool CanAutoUse(PomanderID p) => Palace.Party.Count(p => p.EntityId > 0) == 1 && Config.AutoPoms[(int)p];
 
     private void IterAndExpire<T>(List<T> items, Func<T, bool> expire, Action<T> action, Action<T>? onRemove = null)
     {
@@ -475,6 +463,9 @@ public abstract class AutoClear : ZoneModule
 
         if (canNavigate)
             HandleFloorPathfind(player, hints);
+
+        if (Config.Enable)
+            return;
 
         CalculateExtraHints(playerSlot, player, hints);
 
@@ -587,7 +578,20 @@ public abstract class AutoClear : ZoneModule
             }
         }
 
-        if (Config.AllowPomander && !isStunned && pomanderToUseHere is PomanderID p2 && player.FindStatus((uint)SID.ItemPenalty) == null)
+        var zones = hints.ForbiddenZones;
+        var countZ = zones.Count;
+        var playerInAOE = false;
+        for (var i = 0; i < countZ; ++i)
+        {
+            var z = zones[i];
+            if (z.shapeDistance.Contains(player.Position))
+            {
+                playerInAOE = true;
+                break;
+            }
+        }
+
+        if (!isStunned && pomanderToUseHere is PomanderID p2 && player.FindStatus((uint)SID.ItemPenalty) == null && !playerInAOE)
             hints.ActionsToExecute.Push(new ActionID(ActionType.Pomander, (uint)p2), null, ActionQueue.Priority.VeryHigh);
 
         Actor? wantCoffer = null;
@@ -613,7 +617,8 @@ public abstract class AutoClear : ZoneModule
         {
             wantCoffer = xxx;
             hints.GoalZones.Add(AIHints.GoalSingleTarget(xxx.Position, 25f));
-            hints.InteractWithTarget ??= coffer;
+            if (!playerInAOE)
+                hints.InteractWithTarget ??= coffer;
         }
 
         if (revealedTraps.Count > 0)

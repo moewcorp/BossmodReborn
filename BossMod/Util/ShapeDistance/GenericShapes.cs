@@ -2013,7 +2013,7 @@ public sealed class SDArcCapsule : ShapeDistance
     private readonly float p0x, p0z, p1x, p1z;
     // centerline radius and tube
     private readonly float R, tube, tubeSq, Rin, Rout, RinSq, RoutSq;
-    // wedge side normals (match SDDonutSector convention)
+    // wedge side normals
     private readonly float coneFactor, nlX, nlZ, nrX, nrZ;
 
     public SDArcCapsule(WPos Start, WDir ToOrbitCenter, Angle AngularLength, float TubeRadius) : this(Start, Start + ToOrbitCenter, AngularLength, TubeRadius) { }
