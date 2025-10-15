@@ -182,6 +182,10 @@ public sealed class DD10OrnamentalLeafman : BossModule
                 (uint)OID.StrikingShrublet => 1,
                 _ => 0
             };
+            if (e.Priority == 1)
+            {
+                e.ForbidDOTs = true;
+            }
         }
     }
 }
