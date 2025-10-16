@@ -1,5 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
+[SkipLocalsInit]
 sealed class P2Nisi : BossComponent
 {
     public enum Nisi { None, Alpha, Beta, Gamma, Delta }
@@ -43,7 +44,7 @@ sealed class P2Nisi : BossComponent
         var partner = Raid[PassPartnerSlot(pcSlot)];
         if (partner != null)
         {
-            Arena.AddLine(pc.Position, partner.Position, Colors.Danger);
+            Arena.AddLine(pc.Position, partner.Position);
         }
     }
 
