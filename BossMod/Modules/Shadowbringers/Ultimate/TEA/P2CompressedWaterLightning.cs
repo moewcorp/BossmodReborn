@@ -1,5 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
+[SkipLocalsInit]
 sealed class P2CompressedWaterLightning(BossModule module) : Components.GenericStackSpread(module)
 {
     public bool ResolveImminent; // we want to show hints shortly before next resolve

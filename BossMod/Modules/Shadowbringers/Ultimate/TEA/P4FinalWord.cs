@@ -1,5 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
+[SkipLocalsInit]
 sealed class P4FinalWordDebuffs(BossModule module) : P4ForcedMarchDebuffs(module)
 {
     protected override WDir SafeSpotDirection(int slot) => Debuffs[slot] switch
@@ -44,6 +45,7 @@ sealed class P4FinalWordDebuffs(BossModule module) : P4ForcedMarchDebuffs(module
     }
 }
 
+[SkipLocalsInit]
 sealed class P4FinalWordStillnessMotion(BossModule module) : Components.StayMove(module)
 {
     private Requirement _first;

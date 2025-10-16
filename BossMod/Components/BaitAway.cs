@@ -26,7 +26,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
 
     public readonly bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player
     public readonly bool CenterAtTarget = centerAtTarget; // if true, aoe source is at target
-    public readonly bool OnlyShowOutlines = onlyShowOutlines; // if true only show outlines
+    public bool OnlyShowOutlines = onlyShowOutlines; // if true only show outlines
     public bool AllowDeadTargets = true; // if false, baits with dead targets are ignored
     public bool EnableHints = true;
     public bool IgnoreOtherBaits; // if true, don't show hints/aoes for baits by others

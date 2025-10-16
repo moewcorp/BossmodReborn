@@ -1,5 +1,6 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
+[SkipLocalsInit]
 sealed class P3Inception1(BossModule module) : Components.CastCounter(module, (uint)AID.JudgmentCrystalAOE)
 {
     private readonly List<Actor> _plasmaspheres = [];

@@ -248,7 +248,8 @@ public class SimpleAOEGroupsByTimewindow(BossModule module, uint[] aids, AOEShap
         var index = 0;
         while (index < count)
         {
-            if (aoes[index].Activation >= deadline)
+            ref var aoe = ref aoes[index];
+            if (aoe.Activation >= deadline)
             {
                 break;
             }
