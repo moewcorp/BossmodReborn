@@ -60,7 +60,7 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, (uint)AID.
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.PolyExchange)
         {
@@ -73,7 +73,7 @@ class Polyominoid(BossModule module) : Components.GenericAOEs(module, (uint)AID.
         }
     }
 
-    //public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    //public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     //{
     //    if (tether.ID == (uint)TetherID.PolyExchange)
     //    {

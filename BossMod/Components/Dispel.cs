@@ -23,13 +23,13 @@ public class Dispel(BossModule module, uint statusID, uint action = default) : C
             hints.Add($"Dispel {Targets[0].Name}!");
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == statusID)
             Targets.Add(actor);
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == statusID)
             Targets.Remove(actor);

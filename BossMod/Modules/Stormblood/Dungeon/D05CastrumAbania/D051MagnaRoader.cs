@@ -132,7 +132,7 @@ class WildSpeedHaywire(BossModule module) : Components.GenericAOEs(module)
             AOEs.RemoveAt(0);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Fetters && actor == Module.PrimaryActor)
             AOEs.Clear();

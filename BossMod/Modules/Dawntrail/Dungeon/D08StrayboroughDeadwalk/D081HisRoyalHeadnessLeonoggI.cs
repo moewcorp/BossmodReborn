@@ -45,7 +45,7 @@ public enum IconID : uint
     LoomingNightmare = 197 // player
 }
 
-sealed class MaliciousMistArenaChange(BossModule module) : Components.GenericAOEs(module)
+sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
 {
     private static readonly AOEShapeDonut donut = new(14f, 20f);
     private AOEInstance[] _aoe = [];
@@ -123,7 +123,7 @@ sealed class FallingNightmare(BossModule module) : Components.GenericAOEs(module
 
 sealed class SpiritedCharge(BossModule module) : Components.GenericAOEs(module)
 {
-    private static readonly AOEShapeRect rect = new(6f, 1f);
+    private readonly AOEShapeRect rect = new(6f, 1f);
     private readonly List<Actor> _charges = [];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -198,7 +198,7 @@ sealed class D081HisRoyalHeadnessLeonoggIStates : StateMachineBuilder
     public D081HisRoyalHeadnessLeonoggIStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<MaliciousMistArenaChange>()
+            .ActivateOnEnter<ArenaChange>()
             .ActivateOnEnter<MaliciousMist>()
             .ActivateOnEnter<LoomingNightmare>()
             .ActivateOnEnter<EvilScheme>()

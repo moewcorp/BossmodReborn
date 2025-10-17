@@ -47,7 +47,7 @@ class Ka(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Ka, new AO
 class GaseousBomb(BossModule module) : Components.StackWithIcon(module, (uint)IconID.Stack, (uint)AID.GaseousBomb, 5f, 4.1d, 4, 4);
 class BallisticMissile(BossModule module) : Components.UniformStackSpread(module, 4f, default, 2, 2)
 {
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Bind)
             AddStack(actor, WorldState.FutureTime(6.2d));

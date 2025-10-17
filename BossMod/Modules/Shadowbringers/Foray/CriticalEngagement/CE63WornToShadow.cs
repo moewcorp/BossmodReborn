@@ -50,7 +50,7 @@ sealed class Stormcall(BossModule module) : Components.GenericAOEs(module, (uint
         return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.OrbMovement)
         {

@@ -68,7 +68,7 @@ sealed class HydrowaveBait(BossModule module) : Components.BaitAwayTethers(modul
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether) { } // snapshot is ~0.6s after tether disappears
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether) { } // snapshot is ~0.6s after tether disappears
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

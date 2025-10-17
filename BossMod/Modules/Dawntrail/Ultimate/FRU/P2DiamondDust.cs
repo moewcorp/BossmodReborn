@@ -575,7 +575,7 @@ sealed class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.ThinIce)
             _thinIce[Raid.FindSlot(actor.InstanceID)] = true;

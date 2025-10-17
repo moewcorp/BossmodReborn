@@ -65,7 +65,7 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
 {
     private readonly BlueBolt _stack = module.FindComponent<BlueBolt>()!;
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (source.OID != (uint)OID.AkaNoShiki)
         {
@@ -79,7 +79,7 @@ sealed class RedRush(BossModule module) : Components.BaitAwayTethers(module, new
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         if (source.OID != (uint)OID.AkaNoShiki)
         {

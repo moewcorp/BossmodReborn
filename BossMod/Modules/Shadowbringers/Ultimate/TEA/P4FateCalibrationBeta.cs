@@ -12,7 +12,7 @@ sealed class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebu
     private readonly int[] _nearTethers = [-1, -1];
     private int _sharedSentence = -1;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {
@@ -37,7 +37,7 @@ sealed class P4FateCalibrationBetaDebuffs(BossModule module) : P4ForcedMarchDebu
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         switch (tether.ID)
         {

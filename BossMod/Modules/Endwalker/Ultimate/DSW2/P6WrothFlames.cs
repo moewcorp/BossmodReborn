@@ -125,7 +125,7 @@ sealed class P6SpreadingEntangledFlames(BossModule module) : Components.UniformS
             Arena.AddCircle(p, 1f, Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         // TODO: activation
         switch (status.ID)

@@ -133,7 +133,7 @@ public class DirectionalParry(BossModule module, uint[] actorOID) : AddsMulti(mo
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == ParrySID)
         {
@@ -143,7 +143,7 @@ public class DirectionalParry(BossModule module, uint[] actorOID) : AddsMulti(mo
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == ParrySID)
         {

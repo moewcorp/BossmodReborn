@@ -70,7 +70,7 @@ class Crack(BossModule module) : Components.GenericBaitAway(module, tankbuster: 
 {
     private static readonly AOEShapeRect rect = new(80f, 1.5f);
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Crack)
         {

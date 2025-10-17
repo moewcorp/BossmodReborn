@@ -93,7 +93,7 @@ sealed class IceScreamFrozenSwirl(BossModule module) : Components.GenericAOEs(mo
             _aoes.Add(new(shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Freeze)
         {

@@ -42,7 +42,7 @@ class P5ViscousAetheroplasmTriple(BossModule module) : Components.UniformStackSp
     public int NumCasts;
     private readonly List<(Actor target, DateTime resolve)> _aetheroplasms = [];
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.ViscousAetheroplasm)
         {

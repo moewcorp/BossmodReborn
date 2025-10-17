@@ -158,7 +158,7 @@ sealed class P2Intermission(BossModule module) : Components.GenericBaitAway(modu
         Arena.Actor(IceVeil, _iceVeilInvincible ? Colors.Object : default);
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Invincibility)
         {

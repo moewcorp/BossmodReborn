@@ -69,7 +69,7 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 
     private bool ShouldActivateAOEs => NumCasts == 1 ? tiles.Length > 0 : tiles.Length > 8;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Transporting)
         {
@@ -77,7 +77,7 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Transporting)
         {

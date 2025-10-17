@@ -60,7 +60,7 @@ sealed class ParticleConcentration(BossModule module) : Components.GenericTowers
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {
@@ -73,7 +73,7 @@ sealed class ParticleConcentration(BossModule module) : Components.GenericTowers
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

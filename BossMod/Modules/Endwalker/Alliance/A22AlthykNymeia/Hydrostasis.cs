@@ -24,7 +24,7 @@ class Hydrostasis(BossModule module) : Components.GenericKnockback(module)
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.HydrostasisQuick)
             AddSource(source.Position, WorldState.FutureTime(12d));

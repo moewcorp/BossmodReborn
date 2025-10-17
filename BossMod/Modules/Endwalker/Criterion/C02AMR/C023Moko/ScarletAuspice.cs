@@ -28,7 +28,7 @@ sealed class InvocationOfVengeance(BossModule module) : Components.UniformStackS
         hints.Add($"Debuff order: {orderHint}");
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

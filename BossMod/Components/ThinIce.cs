@@ -19,7 +19,7 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
         return [];
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == StatusID)
         {
@@ -27,7 +27,7 @@ public abstract class ThinIce(BossModule module, float distance, bool createforb
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == StatusID)
         {

@@ -7,7 +7,7 @@ sealed class Adds(BossModule module) : BossComponent(module)
     public BitMask Windpack;
     private BitMask stonepack;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Windpack)
         {
@@ -21,7 +21,7 @@ sealed class Adds(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Windpack)
         {
@@ -33,7 +33,7 @@ sealed class Adds(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Windtether)
         {
@@ -124,7 +124,7 @@ sealed class EarthWindborneEnd(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID is (uint)SID.WindborneEnd or (uint)SID.EarthborneEnd)
         {
@@ -145,7 +145,7 @@ sealed class EarthWindborneEnd(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID is (uint)SID.WindborneEnd or (uint)SID.EarthborneEnd)
         {

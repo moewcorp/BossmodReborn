@@ -100,7 +100,7 @@ sealed class MassMacabre(BossModule module) : Components.GenericTowers(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MagicVulnerabilityUp && Raid.FindSlot(actor.InstanceID) is var slot)
         {

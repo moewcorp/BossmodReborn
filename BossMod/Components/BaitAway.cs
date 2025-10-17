@@ -344,7 +344,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null && (EnemyOID == default || enemy.OID == EnemyOID))
@@ -366,7 +366,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether) // TODO: this is problematic because untethering can happen many frames before the actual cast event, maybe there is a better solution?
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether) // TODO: this is problematic because untethering can happen many frames before the actual cast event, maybe there is a better solution?
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)

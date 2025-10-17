@@ -5,9 +5,9 @@ sealed class P1Throttle(BossModule module) : Components.CleansableDebuff(module,
 {
     public bool Applied;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
-        base.OnStatusGain(actor, status);
+        base.OnStatusGain(actor, ref status);
         if (status.ID == (uint)SID.Throttle)
         {
             Applied = true;
