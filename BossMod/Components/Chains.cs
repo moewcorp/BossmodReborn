@@ -20,7 +20,7 @@ public class Chains(BossModule module, uint tetherID, uint aid = default, float 
         return _partner[pcSlot] == player ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == TID)
         {
@@ -40,7 +40,7 @@ public class Chains(BossModule module, uint tetherID, uint aid = default, float 
             Arena.AddLine(pc.Position, partner.Position, spreadChains ? default : Colors.Safe);
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == TID)
         {

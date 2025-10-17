@@ -63,7 +63,7 @@ sealed class P3TemporalStasis(BossModule module) : Components.GenericBaitAway(mo
         Arena.AddCircle(SafeSpot(pcSlot, pc), 1f, Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

@@ -52,7 +52,7 @@ sealed class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpr
             Arena.AddLine(pc.Position, partner.Position, (partner.Position - pc.Position).LengthSq() < 900f ? 0 : Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

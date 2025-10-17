@@ -27,7 +27,7 @@ sealed class P2CompressedWaterLightning(BossModule module) : Components.GenericS
             base.DrawArenaForeground(pcSlot, pc);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

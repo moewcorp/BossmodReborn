@@ -6,9 +6,9 @@ sealed class InfernGale(BossModule module) : Components.GenericKnockback(module)
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => _kb;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
-        base.OnStatusGain(actor, status);
+        base.OnStatusGain(actor, ref status);
         if (status.ID == (uint)SID.MechanicStatus && status.Extra == 0x1CA)
         {
             _kb = [new(actor.Position.Quantized(), 20f, WorldState.FutureTime(5.6d))];
@@ -47,7 +47,7 @@ sealed class InfernWellPull(BossModule module) : Components.GenericKnockback(mod
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) => kbInit ? _kb : [];
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MechanicStatus && status.Extra == 0x1CB)
         {
@@ -99,7 +99,7 @@ sealed class InfernWellAOE(BossModule module) : Components.GenericAOEs(module)
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEInit ? AOE : [];
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MechanicStatus && status.Extra == 0x1CB)
         {

@@ -139,7 +139,7 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.LightningCrossing)
         {
@@ -148,7 +148,7 @@ sealed class RushingRumbleRampage(BossModule module) : Components.GenericAOEs(mo
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.LightningCrossing)
         {

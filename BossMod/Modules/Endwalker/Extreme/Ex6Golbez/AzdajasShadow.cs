@@ -57,7 +57,7 @@ class FlamesOfEventide(BossModule module) : Components.GenericBaitAway(module, (
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if ((SID)status.ID == SID.FlamesOfEventide && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
@@ -67,7 +67,7 @@ class FlamesOfEventide(BossModule module) : Components.GenericBaitAway(module, (
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if ((SID)status.ID == SID.FlamesOfEventide && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {

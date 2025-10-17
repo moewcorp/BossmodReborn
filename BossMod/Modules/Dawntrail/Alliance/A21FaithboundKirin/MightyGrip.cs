@@ -29,7 +29,7 @@ sealed class DeadlyHold(BossModule module) : Components.GenericTowers(module, da
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.StandingFirm)
         {
@@ -40,7 +40,7 @@ sealed class DeadlyHold(BossModule module) : Components.GenericTowers(module, da
 
 sealed class Bury(BossModule module) : Components.SingleTargetInstant(module, (uint)AID.Bury, 8.5d)
 {
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.StandingFirm)
         {

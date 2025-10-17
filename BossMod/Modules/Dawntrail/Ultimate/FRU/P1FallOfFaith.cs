@@ -88,7 +88,7 @@ sealed class P1FallOfFaith(BossModule module) : Components.CastCounter(module, d
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var id = tether.ID;
         if (id is (uint)TetherID.Fire or (uint)TetherID.Lightning)

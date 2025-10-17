@@ -183,7 +183,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.SphereStatus)
         {

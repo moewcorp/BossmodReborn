@@ -77,7 +77,7 @@ class MortalFlame(BossModule module) : BossComponent(module)
         return module.Enemies(D093Lugus.FurnitureA);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MortalFlame)
         {
@@ -86,7 +86,7 @@ class MortalFlame(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MortalFlame)
             burning[Raid.FindSlot(actor.InstanceID)] = false;

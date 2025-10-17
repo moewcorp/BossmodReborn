@@ -34,7 +34,7 @@ class FlukeGale(BossModule module) : Components.GenericKnockback(module)
             _safeZone.Draw(Arena, c, default, Colors.SafeFromAOE);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var debuff = status.ID switch
         {

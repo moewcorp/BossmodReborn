@@ -85,7 +85,7 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
         return CollectionsMarshal.AsSpan(AOEs)[..max];
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID != (uint)SID.Touchdown)
         {
@@ -189,7 +189,7 @@ sealed class WoodsEmbrace(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.AreaOfInfluenceUp)
         {

@@ -42,7 +42,7 @@ class InvincibleStatus(BossModule module, uint statusId, string hint = "Attackin
 
     protected override ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor) => CollectionsMarshal.AsSpan(_actors);
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == statusId && !_actors.Contains(actor))
         {
@@ -50,7 +50,7 @@ class InvincibleStatus(BossModule module, uint statusId, string hint = "Attackin
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == statusId)
         {

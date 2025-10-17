@@ -47,7 +47,7 @@ sealed class LightningBolt(BossModule module) : Components.GenericBaitAway(modul
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.LightningRod)
         {
@@ -64,7 +64,7 @@ sealed class LightningBolt(BossModule module) : Components.GenericBaitAway(modul
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.LightningRod)
         {

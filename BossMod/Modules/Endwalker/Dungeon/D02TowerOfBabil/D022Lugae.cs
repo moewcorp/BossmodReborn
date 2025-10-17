@@ -60,7 +60,7 @@ sealed class DownpourMagitekChakram(BossModule module) : Components.GenericAOEs(
         return aoes;
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID is (uint)SID.Breathless or (uint)SID.Minimum)
         {
@@ -68,7 +68,7 @@ sealed class DownpourMagitekChakram(BossModule module) : Components.GenericAOEs(
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID is (uint)SID.Breathless or (uint)SID.Minimum)
         {

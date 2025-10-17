@@ -137,7 +137,7 @@ sealed class P5OmegaNearDistantWorld(BossModule module) : P5NearDistantWorld(mod
     public void ShowFirst() => Reset(Raid[(_near & _first).LowestSetBit()], Raid[(_distant & _first).LowestSetBit()], _firstActivation);
     public void ShowSecond() => Reset(Raid[(_near & _second).LowestSetBit()], Raid[(_distant & _second).LowestSetBit()], _secondActivation);
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {
@@ -263,7 +263,7 @@ sealed class P5OmegaBlaster : Components.BaitAwayTethers
             Arena.AddCircle(p, 1f, Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.QuickeningDynamis && status.Extra >= 3)
             ForbiddenPlayers.Clear(Raid.FindSlot(actor.InstanceID));

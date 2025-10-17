@@ -132,7 +132,7 @@ public class TankbusterTether(BossModule module, uint aid, uint tetherID, AOESha
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides is (int, Actor, Actor) side)
@@ -144,7 +144,7 @@ public class TankbusterTether(BossModule module, uint aid, uint tetherID, AOESha
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides is (int, Actor, Actor) side)
@@ -315,12 +315,12 @@ public class InterceptTetherAOE(BossModule module, uint aid, uint tetherID, floa
         for (var i = 0; i < count; ++i)
         {
             var side = Tethers[i];
-            Arena.AddLine(side.Enemy.Position, side.Player.Position, Raid.WithoutSlot().Exclude(exclude).Contains(side.Player) ? Colors.Safe : 0);
+            Arena.AddLine(side.Enemy.Position, side.Player.Position, Raid.WithoutSlot().Exclude(exclude).Contains(side.Player) ? Colors.Safe : default);
             Arena.AddCircle(side.Player.Position, Radius);
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides != null)
@@ -330,7 +330,7 @@ public class InterceptTetherAOE(BossModule module, uint aid, uint tetherID, floa
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides != null)
@@ -393,7 +393,7 @@ public class InterceptTether(BossModule module, uint aid, uint tetherIDBad = 84u
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides != null)
@@ -403,7 +403,7 @@ public class InterceptTether(BossModule module, uint aid, uint tetherIDBad = 84u
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         var sides = DetermineTetherSides(source, tether);
         if (sides != null)
@@ -461,7 +461,7 @@ public class StretchTetherDuo(BossModule module, float minimumDistance, double a
 
     public bool IsImmune(int slot, DateTime time) => KnockbackImmunity && PlayerImmunes[slot].ImmuneAt(time);
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot >= 0)
@@ -482,7 +482,7 @@ public class StretchTetherDuo(BossModule module, float minimumDistance, double a
             }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
         if (slot >= 0)
@@ -536,7 +536,7 @@ public class StretchTetherDuo(BossModule module, float minimumDistance, double a
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null && (enemyOID == default || _enemies.Contains(source)))
@@ -561,7 +561,7 @@ public class StretchTetherDuo(BossModule module, float minimumDistance, double a
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)

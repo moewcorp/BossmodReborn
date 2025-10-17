@@ -84,7 +84,7 @@ sealed class LamentOfTheCloseDistant(BossModule module) : BossComponent(module)
         return Partners[pcSlot].Item1 == player ? PlayerPriority.Danger : PlayerPriority.Irrelevant;
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID is (uint)TetherID.GreenChains or (uint)TetherID.BlueChains)
         {
@@ -107,7 +107,7 @@ sealed class LamentOfTheCloseDistant(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID is (uint)TetherID.GreenChains or (uint)TetherID.BlueChains)
         {

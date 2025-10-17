@@ -7,7 +7,7 @@ sealed class CallousCrossfire(BossModule module) : Components.SingleTargetCast(m
 
 sealed class ReactiveMunition(BossModule module) : Components.StayMove(module)
 {
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.AccelerationBomb)
         {
@@ -16,7 +16,7 @@ sealed class ReactiveMunition(BossModule module) : Components.StayMove(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.AccelerationBomb)
         {

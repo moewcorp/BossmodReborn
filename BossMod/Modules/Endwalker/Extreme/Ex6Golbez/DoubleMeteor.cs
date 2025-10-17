@@ -102,7 +102,7 @@ class Cauterize(BossModule module) : Components.GenericBaitAway(module, (uint)AI
 {
     private static readonly AOEShapeRect rect = new(50f, 6f);
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Cauterize && WorldState.Actors.Find(tether.Target) is var target && target != null)
         {

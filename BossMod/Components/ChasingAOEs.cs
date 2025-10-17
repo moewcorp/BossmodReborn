@@ -225,8 +225,8 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     {
         if (spell.Action.ID is var id && id == ActionFirst || id == ActionRest)
         {
-            var pos = spell.MainTargetID == caster.InstanceID ? caster.Position : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
-            Advance(pos.Quantized(), MoveDistance, WorldState.CurrentTime);
+            var pos = spell.MainTargetID == caster.InstanceID ? caster.Position.Quantized() : WorldState.Actors.Find(spell.MainTargetID)?.Position ?? spell.TargetXZ;
+            Advance(pos, MoveDistance, WorldState.CurrentTime);
             if (Chasers.Count == 0 && ResetTargets)
             {
                 Targets.Clear();

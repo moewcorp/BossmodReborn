@@ -129,7 +129,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var id = status.ID;
         if (id == (uint)SID.WickedWater)
@@ -143,7 +143,7 @@ sealed class ImitationBlizzard(BossModule module) : Components.GenericAOEs(modul
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         var id = status.ID;
         if (id == (uint)SID.WickedWater)

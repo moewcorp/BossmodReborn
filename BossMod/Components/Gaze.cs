@@ -258,14 +258,14 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
             _casters.Remove(caster);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var statusKind = Array.IndexOf(Statuses, status.ID);
         if (statusKind >= 0)
             _playerWeakpoints[actor.InstanceID] = statusKind * 90f.Degrees();
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         var statusKind = Array.IndexOf(Statuses, status.ID);
         if (statusKind >= 0)

@@ -44,13 +44,13 @@ class RootsOfAtopy(BossModule module) : Components.GenericStackSpread(module)
             Stacks.Add(new(WorldState.Actors.Find(spell.TargetID)!, 6f, 8, 8, activation: Module.CastFinishAt(spell), forbiddenPlayers: _forbidden));
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.PiercingResistanceDownII)
             _forbidden[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.PiercingResistanceDownII)
             _forbidden[Raid.FindSlot(actor.InstanceID)] = false;

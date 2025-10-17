@@ -73,7 +73,7 @@ sealed class P3Inception1(BossModule module) : Components.CastCounter(module, (u
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Plasmasphere && source.OID == (uint)OID.Plasmasphere)
         {

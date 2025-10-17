@@ -48,7 +48,7 @@ sealed class P2Nisi : BossComponent
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var nisi = NisiForSID(status.ID);
         if (nisi != Nisi.None && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
@@ -74,7 +74,7 @@ sealed class P2Nisi : BossComponent
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         var nisi = NisiForSID(status.ID);
         if (nisi != Nisi.None && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0 && nisi == _current[slot])

@@ -158,7 +158,7 @@ sealed class Teleporters(BossModule module) : BossComponent(module)
         return [.. positions];
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.ImmobileSuit)
         {
@@ -166,7 +166,7 @@ sealed class Teleporters(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.ImmobileSuit)
         {

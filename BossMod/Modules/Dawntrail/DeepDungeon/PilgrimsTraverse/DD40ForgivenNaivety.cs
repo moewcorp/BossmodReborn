@@ -57,18 +57,24 @@ sealed class SaltwaterShot(BossModule module) : Components.SimpleKnockbacks(modu
         var count = Casters.Count;
         if (count != 0)
         {
-            ref readonly var c = ref Casters.Ref(0);
-            var act = c.Activation;
-            if (!IsImmune(slot, act))
+            var casters = CollectionsMarshal.AsSpan(Casters);
+            for (var i = 0; i < count; ++i)
             {
-                if (count > 1)
+                ref readonly var c = ref casters[i];
+                var act = c.Activation;
+                var center = Arena.Center;
+                if (!IsImmune(slot, act))
                 {
-                    ref readonly var c2 = ref Casters.Ref(1);
-                    hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOriginIntoDirection(Arena.Center, c.Origin, 21f, 16.5f, (c2.Origin - c.Origin).Normalized(), 15f.Degrees()), act);
-                }
-                else
-                {
-                    hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOrigin(Arena.Center, c.Origin, 21f, 16.5f), act);
+                    if (count > i + 1)
+                    {
+                        ref readonly var c2 = ref casters[i + 1];
+                        hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOriginIntoDirection(center, c.Origin, 21f, 16.5f, (c2.Origin - c.Origin).Normalized(), 15f.Degrees()), act);
+                    }
+                    else
+                    {
+                        hints.AddForbiddenZone(new SDKnockbackInCircleAwayFromOrigin(center, c.Origin, 21f, 16.5f), act);
+                    }
+                    return;
                 }
             }
         }

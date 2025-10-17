@@ -27,7 +27,7 @@ sealed class ScreamOfTheFallen(BossModule module) : Components.UniformStackSprea
                 Arena.AddCircle(t.Position, _towerRadius, Colors.Safe, 2f);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

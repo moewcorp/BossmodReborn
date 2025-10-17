@@ -28,7 +28,7 @@ sealed class ProwlingGale(BossModule module) : Components.CastTowers(module, (ui
 {
     private BitMask forbidden;
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (forbidden.NumSetBits() < 4 && source.OID == (uint)OID.WolfOfWind1 && tether.ID is (uint)TetherID.WindsOfDecayGood or (uint)TetherID.WindsOfDecayBad)
         {
@@ -88,7 +88,7 @@ sealed class WindsOfDecayBait(BossModule module) : Components.GenericBaitAway(mo
     private static readonly AOEShapeCone cone = new(40f, 15f.Degrees());
     private readonly AeroIII _kb = module.FindComponent<AeroIII>()!;
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (CurrentBaits.Count < 4 && source.OID == (uint)OID.WolfOfWind1 && tether.ID is (uint)TetherID.WindsOfDecayGood or (uint)TetherID.WindsOfDecayBad)
         {

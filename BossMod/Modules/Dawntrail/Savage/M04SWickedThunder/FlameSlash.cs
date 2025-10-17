@@ -52,7 +52,7 @@ sealed class ChainLightning(BossModule module) : Components.GenericAOEs(module)
         return CollectionsMarshal.AsSpan(_aoes)[..max];
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID is (uint)TetherID.ChainLightning1 or (uint)TetherID.ChainLightning2)
         {

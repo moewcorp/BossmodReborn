@@ -42,7 +42,7 @@ sealed class BlackCatCrossing(BossModule module) : Components.GenericAOEs(module
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.Extra != 0x307 && _currentPattern == Pattern.None)
         {

@@ -51,7 +51,7 @@ sealed class CantTouchThis(BossModule module) : Components.GenericStackSpread(mo
 {
     private readonly List<Actor> participants = [];
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.CantTouchThis)
             Stacks.Add(new(actor, 6f, 2, activation: WorldState.FutureTime(16d)));

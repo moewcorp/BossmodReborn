@@ -6,7 +6,7 @@ public abstract class TemporaryMisdirection(BossModule module, uint aid, string 
 {
     private BitMask mask;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID is 1422u or 2936u or 3694u or 3909u)
         {
@@ -14,7 +14,7 @@ public abstract class TemporaryMisdirection(BossModule module, uint aid, string 
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID is 1422u or 2936u or 3694u or 3909u)
         {
