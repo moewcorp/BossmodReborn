@@ -283,8 +283,7 @@ sealed class DD50OgbunabaliStates : StateMachineBuilder
             .ActivateOnEnter<Quicksand>()
             .ActivateOnEnter<PitAmbush>()
             .ActivateOnEnter<FallingRock>()
-            .ActivateOnEnter<BitingWindKB>()
-        ;
+            .ActivateOnEnter<BitingWindKB>();
     }
 }
 
