@@ -129,7 +129,7 @@ sealed class PathoCircuitCrossPurge(BossModule module) : Components.GenericAOEs(
     {
         var sdf = _aoes.Count == 0 || shape != donut ? shape.Distance(origin, rotation) : new SDDonut(origin, 5.5f, 40f);
         _aoes.Add(new(shape, origin, rotation, activation, shapeDistance: sdf));
-        _aoes.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+        SortHelpers.SortAOEByActivation(_aoes);
         UpdateAOE();
     }
 

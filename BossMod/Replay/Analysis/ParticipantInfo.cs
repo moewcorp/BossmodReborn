@@ -199,12 +199,13 @@ sealed class ParticipantInfo : CommonEnumInfo
         sb.AppendLine($"    Helper = 0x233C,");
         sb.AppendLine("}");
         sb.AppendLine();
+        sb.AppendLine("[SkipLocalsInit]");
         sb.AppendLine($"sealed class {name}States : StateMachineBuilder");
         sb.AppendLine("{");
         sb.AppendLine($"    public {name}States(BossModule module) : base(module)");
         sb.AppendLine("    {");
         if (withStates)
-            sb.AppendLine($"        DeathPhase(0, SinglePhase);");
+            sb.AppendLine($"        DeathPhase(default, SinglePhase);");
         else
             sb.AppendLine($"        TrivialPhase();");
         sb.AppendLine("    }");
@@ -213,7 +214,7 @@ sealed class ParticipantInfo : CommonEnumInfo
             sb.AppendLine();
             sb.AppendLine("    private void SinglePhase(uint id)");
             sb.AppendLine("    {");
-            sb.AppendLine("        SimpleState(id + 0xFF0000u, 10000, \"???\");");
+            sb.AppendLine("        SimpleState(id + 0xFF0000u, 10000f, \"???\");");
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    //private void XXX(uint id, float delay)");
@@ -237,6 +238,7 @@ sealed class ParticipantInfo : CommonEnumInfo
         sb.AppendLine($"NameID = {(data.Names.Count != 0 ? data.Names[0].id : default)}u,");
         sb.AppendLine("SortOrder = 1,");
         sb.AppendLine("PlanLevel = 0)]");
+        sb.AppendLine("[SkipLocalsInit]");
         sb.AppendLine($"public sealed class {name}(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));");
         return sb;
     }

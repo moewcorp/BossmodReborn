@@ -261,8 +261,8 @@ public sealed class AIHints
     {
         PotentialTargets.Sort(static (b, a) => a.Priority.CompareTo(b.Priority));
         HighestPotentialTargetPriority = Math.Max(0, PotentialTargets.FirstOrDefault()?.Priority ?? 0);
-        ForbiddenZones.Sort(static (a, b) => a.activation.CompareTo(b.activation));
-        ForbiddenDirections.Sort(static (a, b) => a.activation.CompareTo(b.activation));
+        SortHelpers.SortForbiddenZonesByActivation(ForbiddenZones);
+        SortHelpers.SortForbiddenDirectionsByActivation(ForbiddenDirections);
         PredictedDamage.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
     }
 

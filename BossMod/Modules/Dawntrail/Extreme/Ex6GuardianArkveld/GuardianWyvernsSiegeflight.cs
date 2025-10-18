@@ -54,7 +54,7 @@ sealed class GuardianWyvernsSiegeflight(BossModule module) : Components.GenericA
             }
             else if (count == 3)
             {
-                _aoes.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                SortHelpers.SortAOEByActivation(_aoes);
             }
         }
     }

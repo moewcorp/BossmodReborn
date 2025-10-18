@@ -245,7 +245,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
             AOEs.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(13.2d)));
-            AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+            SortHelpers.SortAOEByActivation(AOEs);
         }
     }
 
@@ -267,7 +267,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
                 if (aoe.Origin.AlmostEqual(pos, 1f))
                 {
                     AOEs.Ref(i).Activation = WorldState.FutureTime(delay);
-                    AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                    SortHelpers.SortAOEByActivation(AOEs);
                     return;
                 }
             }

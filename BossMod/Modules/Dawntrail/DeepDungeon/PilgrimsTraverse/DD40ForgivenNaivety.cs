@@ -34,7 +34,7 @@ public enum AID : uint
 }
 
 [SkipLocalsInit]
-sealed class Chaser(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Chaser1, (uint)AID.Chaser2], 3f);
+sealed class Chaser(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.Chaser1, (uint)AID.Chaser2], 5f);
 [SkipLocalsInit]
 sealed class NearTide(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NearTide, 13f);
 [SkipLocalsInit]
