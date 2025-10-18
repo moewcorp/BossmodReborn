@@ -188,7 +188,7 @@ public class SimpleAOEGroups(BossModule module, uint[] aids, AOEShape shape, int
                 Casters.Add(new(Shape, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: Shape.Distance(origin, rotation)));
                 if (Casters.Count >= ExpectedNumCasters)
                 {
-                    Casters.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                    SortHelpers.SortAOEByActivation(Casters);
                 }
                 return;
             }
@@ -289,7 +289,7 @@ public class SimpleChargeAOEGroups(BossModule module, uint[] aids, float halfWid
                 Casters.Add(new(shape, origin, rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID, shapeDistance: shape.Distance(origin, rotation)));
                 if (Casters.Count == ExpectedNumCasters)
                 {
-                    Casters.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                    SortHelpers.SortAOEByActivation(Casters);
                 }
                 return;
             }

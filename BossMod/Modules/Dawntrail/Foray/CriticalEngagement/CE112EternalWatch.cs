@@ -159,7 +159,7 @@ sealed class WindStoneLightSurge(BossModule module) : Components.GenericAOEs(mod
                 }
                 if (i == 0)
                 {
-                    AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                    SortHelpers.SortAOEByActivation(AOEs);
                 }
             }
         }
