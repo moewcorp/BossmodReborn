@@ -69,7 +69,7 @@ sealed class BrutalHalo(BossModule module) : Components.GenericAOEs(module)
             AOEs.Add(new(donut, pos, actorID: actor.InstanceID, activation: count == 0 ? activation : AOEs.Ref(count - 1).Activation.AddSeconds(2.5d), shapeDistance: donut.Distance(pos, default)));
 
             // actors spawn about 0.4s apart. Sort by instance ID to ensure correct order if player is lagging
-            SortHelpers.SortAOEByActorID(AOEs);
+            SortHelpers.SortAOEsByActorID(AOEs);
         }
     }
 
@@ -111,7 +111,7 @@ sealed class BrutalHalo(BossModule module) : Components.GenericAOEs(module)
 sealed class OctupleSwipe(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = new(8);
-    private static readonly AOEShapeCone cone = new(40f, 45f.Degrees());
+    private readonly AOEShapeCone cone = new(40f, 45f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
