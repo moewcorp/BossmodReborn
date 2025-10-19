@@ -199,4 +199,57 @@ public readonly struct WPos(float x, float z)
         var proj = origin + t * direction;
         return (this - proj).LengthSq() <= radius * radius;
     }
+
+    public readonly bool InArcCapsule(WPos start, WDir toOrbitCenter, Angle angularLength, float tubeRadius)
+        => InArcCapsule(start, start + toOrbitCenter, angularLength, tubeRadius);
+    public readonly bool InArcCapsule(WPos start, WPos orbitCenter, Angle angularLength, float tubeRadius)
+    {
+        var tube2 = tubeRadius * tubeRadius;
+
+        // centers and radius
+        var ox = orbitCenter.X;
+        var oz = orbitCenter.Z;
+        var s = start;
+        var r0 = new WDir(s.X - ox, s.Z - oz); // orbit -> start
+        var R = r0.Length();
+
+        // end center
+        var r1 = r0.Rotate(angularLength);
+        var end = new WPos(ox + r1.X, oz + r1.Z);
+
+        // cap disks
+        var ds = (this - start).LengthSq() <= tube2;
+        if (ds)
+        {
+            return true;
+        }
+        var de = (this - end).LengthSq() <= tube2;
+        if (de)
+        {
+            return true;
+        }
+
+        // annulus band
+        var vx = X - ox;
+        var vz = Z - oz;
+        var r2 = vx * vx + vz * vz;
+        var Rin = R - tubeRadius;
+        var Rout = R + tubeRadius;
+        if (r2 < Rin * Rin || r2 > Rout * Rout)
+        {
+            return false;
+        }
+
+        // wedge (reuse donut-sector convention: union for >180°, intersection for ≤180°)
+        var half = angularLength.Abs() * 0.5f;
+        var coneFactor = half.Rad > Angle.HalfPi ? -1f : 1f;
+        var mid = Angle.FromDirection(r0) + angularLength * 0.5f;
+        var a90 = 90f.Degrees();
+        var nl = coneFactor * (mid + half + a90).ToDirection(); // left side normal
+        var nr = coneFactor * (mid - half - a90).ToDirection(); // right side normal
+        var sL = vx * nl.X + vz * nl.Z;
+        var sR = vx * nr.X + vz * nr.Z;
+
+        return coneFactor > 0f ? (sL <= 0f && sR <= 0f) : (sL >= 0f || sR >= 0f);
+    }
 }

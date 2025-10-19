@@ -211,7 +211,7 @@ sealed class WorrisomeWavePlayer(BossModule module) : Components.GenericBaitAway
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         base.AddHints(slot, actor, hints);
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
         {
             hints.Add("Bait away!");
         }

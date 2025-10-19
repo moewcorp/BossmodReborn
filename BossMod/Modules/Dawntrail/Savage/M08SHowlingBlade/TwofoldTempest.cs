@@ -74,7 +74,7 @@ sealed class TwofoldTempestTetherAOE(BossModule module) : Components.InterceptTe
         Arena.AddCircle(side.Player.Position, Radius, Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MagicVulnerabilityUp)
         {
@@ -82,7 +82,7 @@ sealed class TwofoldTempestTetherAOE(BossModule module) : Components.InterceptTe
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MagicVulnerabilityUp)
         {
@@ -170,7 +170,7 @@ sealed class TwofoldTempestRect(BossModule module) : Components.GenericBaitStack
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MagicVulnerabilityUp)
         {
@@ -178,7 +178,7 @@ sealed class TwofoldTempestRect(BossModule module) : Components.GenericBaitStack
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MagicVulnerabilityUp)
         {

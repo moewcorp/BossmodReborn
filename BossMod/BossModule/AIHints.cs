@@ -180,6 +180,27 @@ public sealed class AIHints
         }
     }
 
+    public void PrioritizeTargetsByOIDAndForbidDOTs(uint oid, int priority = default, bool forbidDots = false)
+    {
+        var count = PotentialTargets.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var h = PotentialTargets[i];
+            if (h.Actor.OID == oid)
+            {
+                ref var hPriority = ref h.Priority;
+                // Math.Max(priority, h.Priority)
+                var diff = priority - hPriority;
+                var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
+                hPriority = priority - (diff & mask);
+                if (forbidDots)
+                {
+                    h.ForbidDOTs = true;
+                }
+            }
+        }
+    }
+
     public void PrioritizeTargetsByOID(uint[] oids, int priority = default)
     {
         var count = PotentialTargets.Count;
@@ -240,8 +261,8 @@ public sealed class AIHints
     {
         PotentialTargets.Sort(static (b, a) => a.Priority.CompareTo(b.Priority));
         HighestPotentialTargetPriority = Math.Max(0, PotentialTargets.FirstOrDefault()?.Priority ?? 0);
-        ForbiddenZones.Sort(static (a, b) => a.activation.CompareTo(b.activation));
-        ForbiddenDirections.Sort(static (a, b) => a.activation.CompareTo(b.activation));
+        SortHelpers.SortForbiddenZonesByActivation(ForbiddenZones);
+        SortHelpers.SortForbiddenDirectionsByActivation(ForbiddenDirections);
         PredictedDamage.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
     }
 

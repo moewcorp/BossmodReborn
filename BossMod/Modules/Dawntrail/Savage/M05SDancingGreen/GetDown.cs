@@ -64,7 +64,7 @@ sealed class GetDownBait(BossModule module) : Components.GenericBaitAway(module,
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (First && status.ID is (uint)SID.WavelengthAlpha or (uint)SID.WavelengthBeta)
         {

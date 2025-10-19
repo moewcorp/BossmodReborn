@@ -1,8 +1,11 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
+[SkipLocalsInit]
 sealed class P3WormholeLimitCut(BossModule module) : LimitCut(module, 2.7d);
-sealed class P3WormholeSacrament(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SacramentWormhole, new AOEShapeCross(100, 8));
+[SkipLocalsInit]
+sealed class P3WormholeSacrament(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SacramentWormhole, new AOEShapeCross(100f, 8f));
 
+[SkipLocalsInit]
 sealed class P3WormholeRepentance(BossModule module) : BossComponent(module)
 {
     public int NumSoaks;
@@ -134,8 +137,10 @@ sealed class P3WormholeRepentance(BossModule module) : BossComponent(module)
     }
 }
 
+[SkipLocalsInit]
 sealed class P3WormholeIncineratingHeat(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.IncineratingHeat, 5f, 8, 8);
 
+[SkipLocalsInit]
 sealed class P3WormholeEnumeration(BossModule module) : Components.UniformStackSpread(module, 5f, default, 3, 3, raidwideOnResolve: false) // TODO: verify enumeration radius
 {
     private BitMask _targets; // we start showing stacks only after incinerating heat is resolved

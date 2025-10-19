@@ -35,7 +35,7 @@ abstract class Chess(BossModule module) : Components.GenericAOEs(module)
         return aoes.AsSpan()[..index];
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.MovementIndicator)
         {
@@ -98,9 +98,9 @@ sealed class QueensEdict(BossModule module) : Chess(module)
             Arena.AddLine(m.from, m.to, m.color);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
-        base.OnStatusGain(actor, status);
+        base.OnStatusGain(actor, ref status);
         switch (status.ID)
         {
             case (uint)SID.Stun:
@@ -127,7 +127,7 @@ sealed class QueensEdict(BossModule module) : Chess(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Stun)
             --NumStuns;

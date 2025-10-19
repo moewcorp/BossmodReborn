@@ -8,7 +8,7 @@ sealed class AdvancedNox(BossModule module) : Components.SimpleExaflare(module, 
 
 sealed class AccelerationBomb(BossModule module) : Components.StayMove(module, 2.5d)
 {
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.AccelerationBomb && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {
@@ -16,7 +16,7 @@ sealed class AccelerationBomb(BossModule module) : Components.StayMove(module, 2
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.AccelerationBomb && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0)
         {

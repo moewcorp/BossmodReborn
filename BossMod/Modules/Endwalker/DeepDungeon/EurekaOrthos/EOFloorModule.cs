@@ -61,7 +61,7 @@ public enum SID : uint
     IceSpikes = 198
 }
 
-public abstract class EOFloorModule(WorldState ws, bool autoRaiseOnEnter = false) : AutoClear(ws, 90)
+public abstract class EOFloorModule(WorldState ws) : AutoClear(ws, 90)
 {
     protected override void OnCastStarted(Actor actor)
     {
@@ -108,15 +108,15 @@ public abstract class EOFloorModule(WorldState ws, bool autoRaiseOnEnter = false
             // donut AOEs
             case (uint)AID.TheDragonsVoice:
             case (uint)AID.TheDragonsVoice2:
-                Donuts.Add((actor, 8f, 30f));
+                AddDonut(actor, 8f, 30f);
                 HintDisabled.Add(actor);
                 break;
             case (uint)AID.ElectricCachexia:
-                Donuts.Add((actor, 8f, 44f));
+                AddDonut(actor, 8f, 44f);
                 HintDisabled.Add(actor);
                 break;
             case (uint)AID.ElectricWhorl:
-                Donuts.Add((actor, 8f, 60f));
+                AddDonut(actor, 8f, 60f);
                 HintDisabled.Add(actor);
                 break;
 
@@ -241,19 +241,6 @@ public abstract class EOFloorModule(WorldState ws, bool autoRaiseOnEnter = false
                 break;
         }
     }
-
-    public override void CalculateAIHints(int playerSlot, Actor player, AIHints hints)
-    {
-        base.CalculateAIHints(playerSlot, player, hints);
-        if (!Config.Enable || !Config.AllowPomander)
-            return;
-        if (autoRaiseOnEnter && Palace.Floor % 10 == 1)
-        {
-            var raising = Palace.GetPomanderState(PomanderID.ProtoRaising);
-            if (!raising.Active && raising.Count > 0)
-                hints.ActionsToExecute.Push(new ActionID(ActionType.Pomander, (uint)PomanderID.ProtoRaising), player, ActionQueue.Priority.VeryHigh);
-        }
-    }
 }
 
 [ZoneModuleInfo(BossModuleInfo.Maturity.WIP, 897)]
@@ -271,8 +258,8 @@ public class EO60(WorldState ws) : EOFloorModule(ws);
 [ZoneModuleInfo(BossModuleInfo.Maturity.WIP, 903)]
 public class EO70(WorldState ws) : EOFloorModule(ws);
 [ZoneModuleInfo(BossModuleInfo.Maturity.WIP, 904)]
-public class EO80(WorldState ws) : EOFloorModule(ws, true);
+public class EO80(WorldState ws) : EOFloorModule(ws);
 [ZoneModuleInfo(BossModuleInfo.Maturity.WIP, 905)]
-public class EO90(WorldState ws) : EOFloorModule(ws, true);
+public class EO90(WorldState ws) : EOFloorModule(ws);
 [ZoneModuleInfo(BossModuleInfo.Maturity.WIP, 906)]
-public class EO100(WorldState ws) : EOFloorModule(ws, true);
+public class EO100(WorldState ws) : EOFloorModule(ws);

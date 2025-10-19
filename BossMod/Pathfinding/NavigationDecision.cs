@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Buffers;
 
 namespace BossMod.Pathfinding;
@@ -25,13 +25,17 @@ public struct NavigationDecision
     public float LeewaySeconds; // can be used for finishing casts / slidecasting etc.
     public float TimeToGoal;
 
+    public TimeSpan RasterizeTime;
+    public TimeSpan PathfindTime;
+
     public const float ActivationTimeCushion = 1f; // reduce time between now and activation by this value in seconds; increase for more conservativeness
 
-    public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, float playerSpeed = 6f, float forbiddenZoneCushion = default)
+    public static NavigationDecision Build(Context ctx, DateTime currentTime, AIHints hints, Actor player, float playerSpeed = 6f, float forbiddenZoneCushion = default)
     {
-        // build a pathfinding map: rasterize all forbidden zones and goals
-        hints.InitPathfindMap(ctx.Map);
+        var startTime = DateTime.Now;
 
+        hints.InitPathfindMap(ctx.Map);
+        var pos = player.Position;
         // make local copies of forbidden zones and goals to ensure no race conditions during async pathfinding
         if (hints.TemporaryObstacles.Count != 0)
         {
@@ -39,11 +43,11 @@ public struct NavigationDecision
         }
         if (hints.ForbiddenZones.Count != 0)
         {
-            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], ws.CurrentTime);
+            RasterizeForbiddenZones(ctx.Map, [.. hints.ForbiddenZones], currentTime);
         }
         if (player.CastInfo == null) // don't rasterize goal zones if casting or if inside a very dangerous pixel
         {
-            var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(player.Position));
+            var index = ctx.Map.GridToIndex(ctx.Map.WorldToGrid(pos));
             var len = ctx.Map.PixelMaxG.Length;
             if (index >= 0 && len > index && ctx.Map.PixelMaxG[index] >= 1f || index < 0 || index >= len) // prioritize safety over uptime
             {
@@ -57,17 +61,21 @@ public struct NavigationDecision
                 }
             }
         }
-        var speed = 1.0f / playerSpeed;
+
         if (hints.Teleporters.Count != 0)
         {
             ctx.Map.BuildTeleporterEdges([.. hints.Teleporters]);
         }
+
+        var rasterFinish = DateTime.Now;
+
         // execute pathfinding
-        ctx.ThetaStar.Start(ctx.Map, player.Position, speed);
+        ctx.ThetaStar.Start(ctx.Map, pos, 1f / playerSpeed);
         var bestNodeIndex = ctx.ThetaStar.Execute();
         ref var bestNode = ref ctx.ThetaStar.NodeByIndex(bestNodeIndex);
-        var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, player.Position);
-        return new() { Destination = waypoints.first, NextWaypoint = waypoints.second, LeewaySeconds = bestNode.PathLeeway, TimeToGoal = bestNode.GScore };
+        var waypoints = GetFirstWaypoints(ctx.ThetaStar, ctx.Map, bestNodeIndex, pos);
+        var finishTime = DateTime.Now;
+        return new NavigationDecision() { Destination = waypoints.first, NextWaypoint = waypoints.second, LeewaySeconds = bestNode.PathLeeway, TimeToGoal = bestNode.GScore, PathfindTime = finishTime - rasterFinish, RasterizeTime = rasterFinish - startTime };
     }
 
     private static void AvoidForbiddenZone(Map map, float forbiddenZoneCushion)
@@ -167,9 +175,10 @@ public struct NavigationDecision
     {
         // very slight difference in activation times cause issues for pathfinding - cluster them together
         var lenZones = zones.Length;
-        var zonesFixed = new (ShapeDistance shapeDistance, float g)[lenZones];
+        var zonesFixed = new ShapeDistance[lenZones];
+        var gFixed = new float[lenZones];
         DateTime clusterEnd = default, globalStart = current, globalEnd = current.AddSeconds(120d);
-        float clusterG = 0;
+        float clusterG = default;
 
         for (var i = 0; i < lenZones; ++i)
         {
@@ -180,7 +189,8 @@ public struct NavigationDecision
                 clusterG = ActivationToG(activation, current);
                 clusterEnd = activation.AddSeconds(0.5d);
             }
-            zonesFixed[i] = (zone.shapeDistance, clusterG);
+            zonesFixed[i] = zone.shapeDistance;
+            gFixed[i] = clusterG;
         }
 
         var width = map.Width;
@@ -208,153 +218,155 @@ public struct NavigationDecision
             // allocate local scratch for rowsToCompute + 1 (extra row if available)
             var scratchRows = rowsToCompute + 1; // the +1 may correspond to row ys+rowsToCompute (i.e., ye)
             var localScratch = ArrayPool<float>.Shared.Rent(scratchRows * width);
+            Span<int> idxBuf0 = stackalloc int[lenZones];
+            Span<int> idxBuf1 = stackalloc int[lenZones];
+            var prevIdx = idxBuf0;
+            var curIdx = idxBuf1;
+            var prevCount = 0;
+            var curCount = 0;
+
             try
             {
-                var shapesInRowBuf = new List<(ShapeDistance shapeDistance, float g)>(lenZones);
-                // compute top-edge mins for rows ys .. ys+rowsToCompute (if row < height)
+                // for r in [0..scratchRows), compute row r's scratch + active set,
+                // then immediately process row (r-1) using prev active set and row r as bottom edge.
                 for (var r = 0; r < scratchRows; ++r)
                 {
                     var row = ys + r;
 
-                    if (row >= height)
+                    // build active set for current row (unless beyond bottom)
+                    if (row < height)
                     {
-                        // beyond bottom; treat as outside arena
-                        var baseIdx = r * width;
-                        for (var x1 = 0; x1 < width; ++x1)
+                        var rowCenter = topLeft + (row + 0.5f) * dy;
+                        curCount = 0;
+                        for (var i = 0; i < lenZones; ++i)
                         {
-                            localScratch[baseIdx + x1] = float.MaxValue;
+                            if (zonesFixed[i].RowIntersectsShape(rowCenter, dx, width, cushion))
+                            {
+                                curIdx[curCount++] = i;
+                            }
                         }
-                        continue;
+                    }
+                    else
+                    {
+                        // past the arena bottom; no active shapes for this pseudo-row
+                        curCount = 0;
                     }
 
-                    shapesInRowBuf.Clear();
-                    var rowCenter = topLeft + (row + 0.5f) * dy;
-                    for (var i = 0; i < lenZones; ++i)
+                    // fill top-edge scratch for row r
                     {
-                        ref var zone = ref zonesFixed[i];
-                        if (zone.shapeDistance.RowIntersectsShape(rowCenter, dx, width, cushion))
-                        {
-                            shapesInRowBuf.Add(zone);
-                        }
-                    }
-                    if (shapesInRowBuf.Count == 0)
-                    {
-                        // no zones affect this row → scratch float max value
-                        var baseIdx = r * width;
-                        for (var x1 = 0; x1 < width; ++x1)
-                        {
-                            localScratch[baseIdx + x1] = float.MaxValue;
-                        }
-                        continue;
-                    }
+                        var baseIndex = r * width;
 
-                    var rowStartPos = topLeft + row * dy;
-                    var leftPos = rowStartPos;
-                    var leftG = CalculateMaxG(shapesInRowBuf, leftPos);
-                    var baseIndex = r * width;
-                    var x = 0;
-                    while (x < width)
-                    {
-                        var idx = row * width + x;
-                        if (pixelMaxG[idx] < 0f)
+                        if (row >= height || curCount == 0)
                         {
-                            // start of a blocked run
-                            var runStart = x;
-                            do
+                            // either out of bounds or no zones affect this row
+                            for (var x = 0; x < width; ++x)
                             {
                                 localScratch[baseIndex + x] = float.MaxValue;
-                                leftPos += dx;
-                                ++x;
-                                idx = row * width + x;
                             }
-                            while (x < width && pixelMaxG[idx] < 0f);
-
-                            // compute right corner once at the run boundary
-                            if (x < width)
-                            {
-                                var rightG2 = CalculateMaxG(shapesInRowBuf, leftPos);
-                                // advance chain: leftG becomes boundary corner
-                                leftG = rightG2;
-                            }
-                            continue;
-                        }
-
-                        // normal cell
-                        var rightPos = leftPos + dx;
-                        var rightG = CalculateMaxG(shapesInRowBuf, rightPos);
-                        localScratch[baseIndex + x] = Math.Min(leftG, rightG);
-                        leftPos = rightPos;
-                        leftG = rightG;
-                        ++x;
-                    }
-                }
-
-                // Now process rows ys .. ye-1 using top-edge (localScratch[row-ys]) and bottom-edge (localScratch[row+1-ys] or direct calc if bottom-most)
-                for (var y = ys; y < ye; ++y)
-                {
-                    if (y >= height)
-                    {
-                        break;
-                    }
-
-                    shapesInRowBuf.Clear();
-                    var rowCenter = topLeft + (y + 0.5f) * dy;
-
-                    for (var i = 0; i < lenZones; ++i)
-                    {
-                        ref var zone = ref zonesFixed[i];
-                        if (zone.shapeDistance.RowIntersectsShape(rowCenter, dx, width, cushion))
-                        {
-                            shapesInRowBuf.Add(zone);
-                        }
-                    }
-                    if (shapesInRowBuf.Count == 0)
-                    {
-                        continue; // whole row unaffected
-                    }
-                    var rowBase = (y - ys) * width;
-                    var nextRowBase = rowBase + width; // index for row+1 within localScratch
-
-                    for (var x = 0; x < width; ++x)
-                    {
-                        var idx = y * width + x;
-                        if (pixelMaxG[idx] < 0f)
-                        {
-                            continue;
-                        }
-                        var topG = localScratch[rowBase + x];
-
-                        float bottomG;
-                        if (y + 1 < height)
-                        {
-                            bottomG = localScratch[nextRowBase + x];
                         }
                         else
                         {
-                            // bottom-most row: compute corner at y+1 == height
-                            var cornerPos = topLeft + (y + 1) * dy + x * dx;
-                            bottomG = CalculateMaxG(shapesInRowBuf, cornerPos);
-                        }
+                            var slice = curIdx[..curCount];
+                            var rowStartPos = topLeft + row * dy;
+                            var leftPos = rowStartPos;
+                            var leftG = CalculateMaxG(slice, zonesFixed, gFixed, leftPos);
+                            var x = 0;
 
-                        // merge with existing PixelMaxG
-                        var cellEdgeG = Math.Min(Math.Min(topG, bottomG), pixelMaxG[idx]);
-
-                        // center check with cushion, this is needed for shapes that can intersect cells between corners
-                        var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
-                        var centerG = CalculateMaxGCenter(shapesInRowBuf, centerPos, cushion);
-
-                        var finalG = Math.Min(cellEdgeG, centerG);
-
-                        var oldVal = pixelMaxG[idx];
-                        if (finalG < oldVal)
-                        {
-                            pixelMaxG[idx] = finalG;
-                            if (oldVal == float.MaxValue)
+                            while (x < width)
                             {
-                                pixelPriority[idx] = float.MinValue;
+                                var idx = row * width + x;
+                                if (pixelMaxG[idx] < 0f)
+                                {
+                                    // blocked run
+                                    do
+                                    {
+                                        localScratch[baseIndex + x] = float.MaxValue;
+                                        leftPos += dx;
+                                        ++x;
+                                        if (x >= width)
+                                        {
+                                            break;
+                                        }
+                                        idx = row * width + x;
+                                    } while (pixelMaxG[idx] < 0f);
+
+                                    if (x < width)
+                                    {
+                                        var rightG2 = CalculateMaxG(slice, zonesFixed, gFixed, leftPos);
+                                        leftG = rightG2; // advance boundary corner
+                                    }
+                                    continue;
+                                }
+
+                                // normal cell
+                                var rightPos = leftPos + dx;
+                                var rightG = CalculateMaxG(slice, zonesFixed, gFixed, rightPos);
+                                localScratch[baseIndex + x] = Math.Min(leftG, rightG);
+                                leftPos = rightPos;
+                                leftG = rightG;
+                                ++x;
                             }
                         }
                     }
+
+                    // process previous real row (y = ys + r - 1) as soon as bottom edge (row r) is ready
+                    if (r > 0)
+                    {
+                        var y = ys + r - 1;
+                        if (y < height)
+                        {
+                            var rowBase = (r - 1) * width; // top edge for row y
+                            var nextRowBase = r * width; // bottom edge for row y
+                            var slicePrev = prevIdx[..prevCount];
+
+                            for (var x = 0; x < width; ++x)
+                            {
+                                var idx = y * width + x;
+                                if (pixelMaxG[idx] < 0f)
+                                {
+                                    continue;
+                                }
+
+                                var topG = localScratch[rowBase + x];
+
+                                float bottomG;
+                                if (y + 1 < height)
+                                {
+                                    bottomG = localScratch[nextRowBase + x];
+                                }
+                                else
+                                {
+                                    // bottom-most real row: compute corner directly
+                                    var cornerPos = topLeft + (y + 1) * dy + x * dx;
+                                    bottomG = CalculateMaxG(slicePrev, zonesFixed, gFixed, cornerPos);
+                                }
+
+                                var cellEdgeG = Math.Min(Math.Min(topG, bottomG), pixelMaxG[idx]);
+
+                                // center check (needed for shapes like cones that might not intersect a corner
+                                var centerPos = topLeft + (y + 0.5f) * dy + (x + 0.5f) * dx;
+                                var centerG = CalculateMaxGCenter(slicePrev, zonesFixed, gFixed, centerPos, cushion);
+
+                                var finalG = Math.Min(cellEdgeG, centerG);
+
+                                var oldVal = pixelMaxG[idx];
+                                if (finalG < oldVal)
+                                {
+                                    pixelMaxG[idx] = finalG;
+                                    if (oldVal == float.MaxValue)
+                                    {
+                                        pixelPriority[idx] = float.MinValue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // swap ring slots
+                    var tmpIdx = prevIdx;
+                    prevIdx = curIdx;
+                    curIdx = tmpIdx;
+                    (prevCount, curCount) = (curCount, prevCount);
                 }
             }
             finally
@@ -386,34 +398,34 @@ public struct NavigationDecision
             }
         }
 
-        static float CalculateMaxGCenter(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p, float cushion = default)
+        static float CalculateMaxGCenter(ReadOnlySpan<int> idx, ShapeDistance[] shapeDistance, float[] g, in WPos p, float cushion = default)
         {
             // assumes signed distance: inside < 0; on boundary == 0; outside > 0.
             // threshold > 0 inflates by that margin (used for center cushion).
             // zones are already sorted by activation time in AIHints.Normalize(), so we can exit early on first match
-            var count = zones.Count;
+            var count = idx.Length;
             var threshold = cushion;
             for (var i = 0; i < count; ++i)
             {
-                var z = zones[i];
-                if (z.shapeDistance.Distance(p) <= threshold)
+                var id = idx[i];
+                if (shapeDistance[id].Distance(p) <= threshold)
                 {
-                    return z.g;
+                    return g[id];
                 }
             }
             return float.MaxValue;
         }
 
-        static float CalculateMaxG(List<(ShapeDistance shapeDistance, float g)> zones, in WPos p)
+        static float CalculateMaxG(ReadOnlySpan<int> idx, ShapeDistance[] shapeDistance, float[] g, in WPos p)
         {
             // pip test for corners
-            var count = zones.Count;
+            var count = idx.Length;
             for (var i = 0; i < count; ++i)
             {
-                var z = zones[i];
-                if (z.shapeDistance.Contains(p))
+                var id = idx[i];
+                if (shapeDistance[id].Contains(p))
                 {
-                    return z.g;
+                    return g[id];
                 }
             }
             return float.MaxValue;
@@ -547,28 +559,28 @@ public struct NavigationDecision
             var ys = range.Item1;
             var ye = range.Item2;
 
-            var shapesInRow = new List<ShapeDistance>(len);
+            Span<int> activeIdx = stackalloc int[len];
+            var count = 0;
+            var slice = activeIdx;
 
             for (var y = ys; y < ye; ++y)
             {
                 var rowCenter = topLeft + (y + 0.5f) * dy;
-                shapesInRow.Clear();
-
-                for (var j = 0; j < len; ++j)
+                count = 0;
+                for (var i = 0; i < len; ++i)
                 {
-                    var s = zones[j];
-                    if (s.RowIntersectsShape(rowCenter, dx, width, cushion))
+                    ref var z = ref zones[i];
+                    if (z.RowIntersectsShape(rowCenter, dx, width, cushion))
                     {
-                        shapesInRow.Add(s);
+                        activeIdx[count++] = i;
                     }
                 }
 
-                var count = shapesInRow.Count;
                 if (count == 0)
                 {
                     continue;
                 }
-
+                slice = activeIdx[..count];
                 var rowBaseIndex = y * width;
                 var rowTopLeft = topLeft + y * dy;
 
@@ -591,7 +603,7 @@ public struct NavigationDecision
 
                     for (var j = 0; j < count; ++j)
                     {
-                        var shape = shapesInRow[j];
+                        ref var shape = ref zones[slice[j]];
 
                         // center with cushion, corners without
                         if (shape.Distance(center) <= cushion || shape.Contains(tl) || shape.Contains(br) || shape.Contains(tr) || shape.Contains(bl))

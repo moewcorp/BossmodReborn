@@ -135,13 +135,17 @@ sealed class ForlornImpact(BossModule module) : Components.GenericBaitAway(modul
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (CurrentBaits.Count != 0 && spell.Action.ID is (uint)AID.ForlornImpact1 or (uint)AID.ForlornImpact2 or (uint)AID.ForlornImpact3 or (uint)AID.ForlornImpact4)
+        {
             CurrentBaits.RemoveAt(0);
+        }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID is >= (uint)IconID.Target1 and <= (uint)IconID.Target4)
+        {
             CurrentBaits.Add(new(Module.PrimaryActor, actor, rect, WorldState.FutureTime(7.2d)));
+        }
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -168,8 +172,10 @@ sealed class ForlornImpact(BossModule module) : Components.GenericBaitAway(modul
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         base.DrawArenaForeground(pcSlot, pc);
-        if (ActiveBaitsOn(pc).Count == 0)
+        if (!IsBaitTarget(pc))
+        {
             return;
+        }
         var cages = Module.Enemies((uint)OID.IronCage);
         var count = cages.Count;
         for (var i = 0; i < count; ++i)
@@ -181,8 +187,10 @@ sealed class ForlornImpact(BossModule module) : Components.GenericBaitAway(modul
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
+        {
             hints.Add("Bait away, avoid intersecting cage hitboxes!");
+        }
     }
 }
 

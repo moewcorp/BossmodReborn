@@ -112,50 +112,69 @@ public abstract class GenericKnockback(BossModule module, uint aid = default, in
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    enum ImmuneKind { None, Role, Job, Duty }
+
+    private static ImmuneKind GetImmuneKind(uint id)
+    => id switch
+    {
+        3054u // Guard (PvP)
+        or (uint)WHM.SID.Surecast
+        or (uint)WAR.SID.ArmsLength => ImmuneKind.Role,
+
+        1722u // BLU Diamondback
+        or (uint)WAR.SID.InnerStrength => ImmuneKind.Job,
+
+        2345u  // Lost Manawall (Bozja)
+            => ImmuneKind.Duty,
+
+        _ => ImmuneKind.None
+    };
+
+    private void ApplyImmuneExpire(Actor actor, ImmuneKind kind, DateTime expireAt)
     {
         var slot = Raid.FindSlot(actor.InstanceID);
-        if (slot >= 0)
+        if (slot < 0)
         {
-            switch (status.ID)
-            {
-                case 3054u: //Guard in PVP
-                case (uint)WHM.SID.Surecast:
-                case (uint)WAR.SID.ArmsLength:
-                    PlayerImmunes[slot].RoleBuffExpire = status.ExpireAt;
-                    break;
-                case 1722u: //Bluemage Diamondback
-                case (uint)WAR.SID.InnerStrength:
-                    PlayerImmunes[slot].JobBuffExpire = status.ExpireAt;
-                    break;
-                case 2345u: //Lost Manawall in Bozja
-                    PlayerImmunes[slot].DutyBuffExpire = status.ExpireAt;
-                    break;
-            }
+            return;
+        }
+
+        ref var p = ref PlayerImmunes[slot];
+        SelectExpireRef(ref p, kind) = expireAt;
+    }
+
+    private static ref DateTime SelectExpireRef(ref PlayerImmuneState s, ImmuneKind kind)
+    {
+        switch (kind)
+        {
+            case ImmuneKind.Role:
+                return ref s.RoleBuffExpire;
+            case ImmuneKind.Job:
+                return ref s.JobBuffExpire;
+            case ImmuneKind.Duty:
+                return ref s.DutyBuffExpire;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind));
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
-        var slot = Raid.FindSlot(actor.InstanceID);
-        if (slot >= 0)
+        var kind = GetImmuneKind(status.ID);
+        if (kind == ImmuneKind.None)
         {
-            switch (status.ID)
-            {
-                case 3054u: //Guard in PVP
-                case (uint)WHM.SID.Surecast:
-                case (uint)WAR.SID.ArmsLength:
-                    PlayerImmunes[slot].RoleBuffExpire = default;
-                    break;
-                case 1722u: //Bluemage Diamondback
-                case (uint)WAR.SID.InnerStrength:
-                    PlayerImmunes[slot].JobBuffExpire = default;
-                    break;
-                case 2345u: //Lost Manawall in Bozja
-                    PlayerImmunes[slot].DutyBuffExpire = default;
-                    break;
-            }
+            return;
         }
+        ApplyImmuneExpire(actor, kind, status.ExpireAt);
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
+    {
+        var kind = GetImmuneKind(status.ID);
+        if (kind == ImmuneKind.None)
+        {
+            return;
+        }
+        ApplyImmuneExpire(actor, kind, default);
     }
 
     public List<(WPos from, WPos to)> CalculateMovements(int slot, Actor actor)

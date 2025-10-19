@@ -7,7 +7,7 @@ sealed class AbsoluteAuthorityExpansionBoot(BossModule module) : Components.Unif
     public int NumCasts;
     private readonly Ex3QueenEternalConfig _config = Service.Config.Get<Ex3QueenEternalConfig>();
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

@@ -119,16 +119,18 @@ public abstract class BossModule : IDisposable
                 comp.OnActorRenderflagsChange(actor, actor.Renderflags);
                 comp.OnActorEventStateChange(actor, actor.EventState);
             }
-            ref var tether = ref actor.Tether;
+            ref readonly var tether = ref actor.Tether;
             if (tether.ID != default)
+            {
                 comp.OnTethered(actor, tether);
+            }
             var len = actor.Statuses.Length;
             for (var i = 0; i < len; ++i)
             {
                 ref var status = ref actor.Statuses[i];
                 if (status.ID != default)
                 {
-                    comp.OnStatusGain(actor, status);
+                    comp.OnStatusGain(actor, ref status);
                 }
             }
         }
@@ -312,7 +314,7 @@ public abstract class BossModule : IDisposable
         return hints;
     }
 
-    public BossComponent.MovementHints CalculateMovementHintsForRaidMember(int slot, ref Actor actor)
+    public BossComponent.MovementHints CalculateMovementHintsForRaidMember(int slot, Actor actor)
     {
         BossComponent.MovementHints hints = [];
         var count = Components.Count;
@@ -330,7 +332,7 @@ public abstract class BossModule : IDisposable
         return hints;
     }
 
-    public void CalculateAIHints(int slot, ref Actor actor, ref PartyRolesConfig.Assignment assignment, ref AIHints hints)
+    public void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         hints.PathfindMapCenter = Center;
         hints.PathfindMapBounds = Bounds;
@@ -727,7 +729,7 @@ public abstract class BossModule : IDisposable
         {
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
-                Components[i].OnStatusGain(actor, actor.Statuses[index]);
+                Components[i].OnStatusGain(actor, ref actor.Statuses[index]);
         }
     }
 
@@ -737,7 +739,7 @@ public abstract class BossModule : IDisposable
         {
             var count = Components.Count;
             for (var i = 0; i < count; ++i)
-                Components[i].OnStatusLose(actor, actor.Statuses[index]);
+                Components[i].OnStatusLose(actor, ref actor.Statuses[index]);
         }
     }
 

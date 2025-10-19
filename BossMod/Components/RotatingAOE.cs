@@ -42,7 +42,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
             var sequences = CollectionsMarshal.AsSpan(Sequences);
             for (var j = 0; j < count; ++j)
             {
-                ref readonly var s = ref sequences[j];
+                ref var s = ref sequences[j];
                 var remaining = s.NumRemainingCasts;
                 var num = Math.Min(remaining, s.MaxShownAOEs);
                 var rot = s.Rotation;
@@ -99,7 +99,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         var sequences = CollectionsMarshal.AsSpan(Sequences);
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var s = ref sequences[i];
+            ref var s = ref sequences[i];
             if (s.Origin.AlmostEqual(origin, 1f) && s.Rotation.AlmostEqual(rotation, 0.05f))
             {
                 AdvanceSequence(i, currentTime, removeWhenFinished);
@@ -115,7 +115,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         var sequences = CollectionsMarshal.AsSpan(Sequences);
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var s = ref sequences[i];
+            ref var s = ref sequences[i];
             if (s.ActorID == instanceID && s.Origin.AlmostEqual(origin, 1f) && s.Rotation.AlmostEqual(rotation, 0.05f))
             {
                 AdvanceSequence(i, currentTime, removeWhenFinished);
@@ -131,7 +131,7 @@ public class GenericRotatingAOE(BossModule module) : GenericAOEs(module)
         var sequences = CollectionsMarshal.AsSpan(Sequences);
         for (var i = 0; i < count; ++i)
         {
-            ref readonly var s = ref sequences[i];
+            ref var s = ref sequences[i];
             if (s.ActorID == instanceID)
             {
                 AdvanceSequence(i, currentTime, removeWhenFinished);

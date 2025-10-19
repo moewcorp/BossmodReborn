@@ -25,7 +25,7 @@ class EngravementOfSouls1Spread(BossModule module) : Components.UniformStackSpre
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var type = status.ID switch
         {

@@ -59,7 +59,7 @@ sealed class QuicksandDoubleStylePaintBomb(BossModule module) : BossComponent(mo
 {
     public BitMask Targets;
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.ActivateMechanicDoubleStyle2)
         {
@@ -96,7 +96,7 @@ sealed class QuicksandDoubleStyleHeavenBomb(BossModule module) : Components.Gene
         return [];
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.ActivateMechanicDoubleStyle1)
         {

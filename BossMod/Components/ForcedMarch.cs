@@ -141,7 +141,7 @@ public class StatusDrivenForcedMarch(BossModule module, float duration, uint sta
     public float Duration = duration;
     public readonly uint[] Statuses = [statusForward, statusLeft, statusBackward, statusRight, statusForced, statusForcedNPCs]; // 5 elements: fwd, left, back, right, forced, forcedNPCs
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var statusKind = Array.IndexOf(Statuses, status.ID);
         if (statusKind >= 4)
@@ -154,7 +154,7 @@ public class StatusDrivenForcedMarch(BossModule module, float duration, uint sta
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         var statusKind = Array.IndexOf(Statuses, status.ID);
         if (statusKind >= 4)
@@ -189,7 +189,7 @@ public class ActionDrivenForcedMarch(BossModule module, uint aid, float duration
     public readonly uint StatusForcedNPCs = statusForcedNPCs;
     public readonly uint Aid = aid;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == StatusForced || status.ID == StatusForcedNPCs)
         {
@@ -207,7 +207,7 @@ public class ActionDrivenForcedMarch(BossModule module, uint aid, float duration
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == StatusForced || status.ID == StatusForcedNPCs)
             DeactivateForcedMovement(actor);

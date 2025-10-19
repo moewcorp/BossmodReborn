@@ -16,7 +16,7 @@ sealed class StickyMousse(BossModule module) : Components.GenericStackSpread(mod
                 var p = party[i];
                 if (p.Role != Role.Tank) // never targets tanks unless pretty much everyone is dead, but then there are worse issues
                 {
-                    Spreads.Add(new(party[i], 4f, act));
+                    Spreads.Add(new(p, 4f, act));
                 }
             }
         }

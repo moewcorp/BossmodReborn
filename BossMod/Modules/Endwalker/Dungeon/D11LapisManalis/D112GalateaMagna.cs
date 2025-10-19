@@ -85,7 +85,7 @@ sealed class ScarecrowChase(BossModule module) : Components.GenericAOEs(module)
             if (_aoes.Count is var count && (count == 4 || count == 2 && first))
             {
                 first = false;
-                _aoes.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                SortHelpers.SortAOEByActivation(_aoes);
             }
         }
     }
@@ -170,7 +170,7 @@ sealed class GlassyEyed(BossModule module) : Components.GenericGaze(module)
         return eyes;
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.GlassyEyed)
         {
@@ -179,7 +179,7 @@ sealed class GlassyEyed(BossModule module) : Components.GenericGaze(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.GlassyEyed)
         {

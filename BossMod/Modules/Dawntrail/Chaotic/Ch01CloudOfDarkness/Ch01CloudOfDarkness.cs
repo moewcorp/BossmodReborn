@@ -9,6 +9,7 @@ sealed class FloodOfDarknessAdd(BossModule module) : Components.CastInterruptHin
 sealed class Excruciate(BossModule module) : Components.BaitAwayCast(module, (uint)AID.Excruciate, 4f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 sealed class LoomingChaos(BossModule module) : Components.CastCounter(module, (uint)AID.LoomingChaosAOE);
 sealed class Phaser(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.Phaser], new AOEShapeCone(23f, 30f.Degrees()));
+sealed class FeintParticleBeam(BossModule module) : Components.StandardChasingAOEs(module, 3f, (uint)AID.FeintParticleBeamAOEFirst, (uint)AID.FeintParticleBeamAOERest, 2.1f, 0.4d, 18, icon: (uint)IconID.FeintParticleBeam);
 
 // TODO: tankswap hints component for phase1
 // TODO: phase 2 teleport zones?

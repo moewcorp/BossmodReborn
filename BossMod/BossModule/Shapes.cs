@@ -1,5 +1,3 @@
-using Clipper2Lib;
-
 namespace BossMod;
 
 [SkipLocalsInit]
@@ -34,14 +32,14 @@ public sealed record class Circle(WPos Center, float Radius) : Shape
 
 // for custom polygons defined by an IReadOnlyList of vertices
 [SkipLocalsInit]
-public sealed record class PolygonCustom(IReadOnlyList<WPos> Vertices) : Shape
+public sealed record class PolygonCustom(WPos[] Vertices) : Shape
 {
     public override List<WDir> Contour(WPos center)
     {
         var vertices = Vertices;
-        var count = vertices.Count;
-        var result = new List<WDir>(count);
-        for (var i = 0; i < count; ++i)
+        var len = vertices.Length;
+        var result = new List<WDir>(len);
+        for (var i = 0; i < len; ++i)
         {
             result.Add(vertices[i] - center);
         }
@@ -51,9 +49,9 @@ public sealed record class PolygonCustom(IReadOnlyList<WPos> Vertices) : Shape
     public override string ToString()
     {
         var vertices = Vertices;
-        var count = vertices.Count;
-        var sb = new StringBuilder("PolygonCustom:", 14 + count * 9);
-        for (var i = 0; i < count; ++i)
+        var len = vertices.Length;
+        var sb = new StringBuilder("PolygonCustom:", 14 + len * 9);
+        for (var i = 0; i < len; ++i)
         {
             var vertex = vertices[i];
             sb.Append(vertex).Append(';');
@@ -64,16 +62,16 @@ public sealed record class PolygonCustom(IReadOnlyList<WPos> Vertices) : Shape
 }
 
 [SkipLocalsInit]
-public sealed record class PolygonCustomRel(IReadOnlyList<WDir> Vertices) : Shape
+public sealed record class PolygonCustomRel(WDir[] Vertices) : Shape
 {
     public override List<WDir> Contour(WPos center) => [.. Vertices];
 
     public override string ToString()
     {
         var vertices = Vertices;
-        var count = vertices.Count;
-        var sb = new StringBuilder("PolygonCustomRel:", 17 + count * 9);
-        for (var i = 0; i < count; ++i)
+        var len = vertices.Length;
+        var sb = new StringBuilder("PolygonCustomRel:", 17 + len * 9);
+        for (var i = 0; i < len; ++i)
         {
             var vertex = vertices[i];
             sb.Append(vertex).Append(';');
@@ -295,7 +293,7 @@ public sealed record class DonutSegmentV(WPos Center, float InnerRadius, float O
         var angleIncrement = 2f * HalfAngle.Rad / edges;
         var startAngle = CenterDir.Rad - HalfAngle.Rad;
         var n = Edges + 1;
-        var vertices = new WDir[2 * edges + 2];
+        Span<WDir> vertices = stackalloc WDir[2 * edges + 2];
         var innerRadius = InnerRadius;
         var outerRadius = OuterRadius;
         var offset = Center - center;
@@ -323,7 +321,7 @@ public sealed record class DonutV(WPos Center, float InnerRadius, float OuterRad
     {
         var edges = Edges;
         var angleIncrement = Angle.DoublePI / edges;
-        var vertices = new WDir[2 * edges + 2];
+        Span<WDir> vertices = stackalloc WDir[2 * edges + 2];
         var initialRotation = Rotation.Rad;
         var innerRadius = InnerRadius;
         var outerRadius = OuterRadius;
@@ -382,7 +380,7 @@ public sealed record class Capsule(WPos Center, float HalfHeight, float HalfWidt
 {
     public override List<WDir> Contour(WPos center)
     {
-        var vertices = new WDir[2 * Edges];
+        Span<WDir> vertices = stackalloc WDir[2 * Edges];
         var angleIncrement = MathF.PI / Edges;
         var (sinRot, cosRot) = ((float, float))Math.SinCos(Rotation.Rad);
         var halfWidth = HalfWidth;

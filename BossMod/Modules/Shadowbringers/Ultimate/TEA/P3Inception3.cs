@@ -1,13 +1,14 @@
 ﻿namespace BossMod.Shadowbringers.Ultimate.TEA;
 
 // note: boss moves to position around the component activation time
+[SkipLocalsInit]
 sealed class P3Inception3Sacrament(BossModule module) : Components.GenericAOEs(module, (uint)AID.SacramentInception)
 {
     public bool Active => _source != null;
 
     private readonly Actor? _source = ((TEA)module).AlexPrime();
     private readonly DateTime _activation = module.WorldState.FutureTime(4.1d);
-    private static readonly AOEShapeCross _shape = new(100f, 8f);
+    private readonly AOEShapeCross _shape = new(100f, 8f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -17,6 +18,7 @@ sealed class P3Inception3Sacrament(BossModule module) : Components.GenericAOEs(m
     }
 }
 
+[SkipLocalsInit]
 sealed class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpread(module)
 {
     private Actor? _sharedSentence;
@@ -50,7 +52,7 @@ sealed class P3Inception3Debuffs(BossModule module) : Components.GenericStackSpr
             Arena.AddLine(pc.Position, partner.Position, (partner.Position - pc.Position).LengthSq() < 900f ? 0 : Colors.Safe);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

@@ -42,7 +42,7 @@ sealed class GuardianResonanceTowers(BossModule module) : Components.GenericTowe
         {
             var loc = spell.LocXZ;
             Towers.Add(new(loc, radius, forbiddenSoakers: radius == 2f ? forbidden : ~forbidden, activation: Module.CastFinishAt(spell), actorID: (ulong)radius,
-            shapeDistance: new SDCircle(loc, radius + 5f), invertedShapeDistance: new SDInvertedCircle(loc, radius)));
+            shapeDistance: new SDCircle(loc, radius + 4.5f), invertedShapeDistance: new SDInvertedCircle(loc, radius)));
         }
         else if (id == (uint)AID.GuardianResonanceAOE)
         {

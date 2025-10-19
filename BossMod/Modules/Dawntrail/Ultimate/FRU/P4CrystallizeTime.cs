@@ -19,7 +19,7 @@ sealed class P4CrystallizeTime(BossModule module) : BossComponent(module)
         return null;
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {
@@ -52,13 +52,13 @@ sealed class P4CrystallizeTime(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID is (uint)SID.Wyrmclaw or (uint)SID.Wyrmfang)
             Cleansed.Set(Raid.FindSlot(actor.InstanceID));
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.UltimateRelativitySlow && source.PosRot.Z < Arena.Center.Z)
             NorthSlowHourglass = source.Position - Arena.Center;
@@ -245,11 +245,11 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
         if (actor.OID == (uint)OID.SorrowsHourglass)
         {
             AOEs.Add(new(_shape, actor.Position.Quantized(), actor.Rotation, WorldState.FutureTime(13.2d)));
-            AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+            SortHelpers.SortAOEByActivation(AOEs);
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var delay = tether.ID switch
         {
@@ -267,7 +267,7 @@ sealed class P4CrystallizeTimeMaelstrom(BossModule module) : Components.GenericA
                 if (aoe.Origin.AlmostEqual(pos, 1f))
                 {
                     AOEs.Ref(i).Activation = WorldState.FutureTime(delay);
-                    AOEs.Sort(static (a, b) => a.Activation.CompareTo(b.Activation));
+                    SortHelpers.SortAOEByActivation(AOEs);
                     return;
                 }
             }
@@ -298,7 +298,7 @@ sealed class P4CrystallizeTimeDarkWater(BossModule module) : Components.UniformS
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.SpellInWaitingDarkWater)
         {
@@ -335,7 +335,7 @@ sealed class P4CrystallizeTimeDarkEruption(BossModule module) : Components.Gener
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.SpellInWaitingDarkEruption)
         {
@@ -366,7 +366,7 @@ sealed class P4CrystallizeTimeDarkAero(BossModule module) : Components.GenericKn
         return CollectionsMarshal.AsSpan(sources);
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.SpellInWaitingDarkAero)
         {
@@ -380,7 +380,7 @@ sealed class P4CrystallizeTimeUnholyDarkness(BossModule module) : Components.Uni
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { } // handled by other components
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.SpellInWaitingUnholyDarkness)
         {
@@ -729,7 +729,7 @@ sealed class P4CrystallizeTimeRewind(BossModule module) : Components.GenericKnoc
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         switch (status.ID)
         {

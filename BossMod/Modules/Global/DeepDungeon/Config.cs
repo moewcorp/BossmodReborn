@@ -1,4 +1,8 @@
-﻿namespace BossMod.Global.DeepDungeon;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility.Raii;
+using Lumina.Excel.Sheets;
+
+namespace BossMod.Global.DeepDungeon;
 
 [ConfigDisplay(Name = "Auto-DeepDungeon (Experimental)", Parent = typeof(ModuleConfig))]
 public sealed class AutoDDConfig : ConfigNode
@@ -27,9 +31,9 @@ public sealed class AutoDDConfig : ConfigNode
     [PropertyDisplay("Automatic mob targeting behavior")]
     public ClearBehavior AutoClear = ClearBehavior.Leveling;
 
-    [PropertyDisplay("Max number of mobs to pull before pausing navigation (set to 0 to disable navigation while in combat)")]
-    [PropertySlider(0, 15)]
-    public int MaxPull = 0;
+    [PropertyDisplay("Max number of mobs to pull before pausing navigation")]
+    [PropertySlider(1, 15)]
+    public int MaxPull = 1;
     [PropertyDisplay("Try to use terrain to LOS attacks")]
     public bool AutoLOS = false;
 
@@ -46,6 +50,36 @@ public sealed class AutoDDConfig : ConfigNode
 
     [PropertyDisplay("Reveal all rooms before proceeding to next floor")]
     public bool FullClear = false;
-    [PropertyDisplay("Allow automatic pomander use")]
-    public bool AllowPomander = false;
+
+    public BitMask AutoPoms;
+    public BitMask AutoMagicite;
+    public BitMask AutoDemiclone;
+
+    public override void DrawCustom(UITree tree, WorldState ws)
+    {
+        foreach (var _ in tree.Node("Automatic pomander usage"))
+        {
+            ImGui.TextWrapped("Highlighted pomanders will be used when a gold chest contains one that you can't carry.");
+            ImGui.TextWrapped("This feature is disabled in parties.");
+
+            for (var i = 1; i < (int)PomanderID.Count; i++)
+                using (ImRaii.PushId($"pom{i}"))
+                {
+                    var row = Service.LuminaRow<DeepDungeonItem>((uint)i)!.Value;
+                    var wrap = Service.Texture.GetFromGameIcon(row.Icon).GetWrapOrEmpty();
+                    ImGui.Image(wrap.Handle, new Vector2(32, 32), new Vector2(0, 0), tintCol: AutoPoms[i] ? new(1, 1, 1, 1) : new(1, 1, 1, 0.4f));
+                    if (ImGui.IsItemClicked())
+                    {
+                        AutoPoms.Toggle(i);
+                        Modified.Fire();
+                    }
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(row.Name.ToString());
+                    if (i % 8 > 0)
+                        ImGui.SameLine();
+                }
+
+            ImGui.Text(""); // undo last sameline
+        }
+    }
 }

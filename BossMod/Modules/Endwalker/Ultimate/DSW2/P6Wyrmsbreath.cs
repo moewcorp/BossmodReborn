@@ -87,7 +87,7 @@ abstract class P6Wyrmsbreath(BossModule module, bool allowIntersect) : Component
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID is (uint)TetherID.FlameBreath or (uint)TetherID.IceBreath or (uint)TetherID.FlameIceBreathNear)
         {

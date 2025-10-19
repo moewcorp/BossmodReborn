@@ -34,7 +34,7 @@ public enum SID : uint
 
 class CertainSolitude(BossModule module) : Components.GenericStackSpread(module)
 {
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.CravenCompanionship && Stacks.Count == 0)
             Stacks.Add(new(actor, 1.5f, 4, 4, activation: WorldState.FutureTime(5d)));

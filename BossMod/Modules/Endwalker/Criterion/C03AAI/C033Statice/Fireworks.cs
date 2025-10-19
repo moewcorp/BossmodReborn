@@ -21,7 +21,7 @@ class Fireworks(BossModule module) : Components.UniformStackSpread(module, 3f, 2
         base.DrawArenaForeground(pcSlot, pc);
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.Follow && Raid.FindSlot(tether.Target) is var slot && slot >= 0 && slot < TetheredAdds.Length)
             TetheredAdds[slot] = source;
@@ -78,13 +78,13 @@ class BurningChains(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.BurningChains)
             _chains[Raid.FindSlot(actor.InstanceID)] = true;
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.BurningChains)
             _chains[Raid.FindSlot(actor.InstanceID)] = false;

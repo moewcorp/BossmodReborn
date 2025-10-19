@@ -31,7 +31,7 @@ sealed class MorbolFruit(BossModule module) : BossComponent(module)
     private BitMask goldlung;
     private readonly List<Actor> _fruits = module.Enemies([(uint)OID.MorbolFruit1, (uint)OID.MorbolFruit2, (uint)OID.MorbolFruit3, (uint)OID.MorbolFruit4]);
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.GoldLung && status.Extra > 0x02)
         {
@@ -39,7 +39,7 @@ sealed class MorbolFruit(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.GoldLung && status.Extra > 0x02)
         {

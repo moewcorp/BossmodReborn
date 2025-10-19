@@ -134,7 +134,7 @@ class UltimaBlow(BossModule module) : Components.CastCounter(module, (uint)AID.U
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.ClassicalConceptsShapes && WorldState.Actors.Find(tether.Target) is var target && target != null)
         {

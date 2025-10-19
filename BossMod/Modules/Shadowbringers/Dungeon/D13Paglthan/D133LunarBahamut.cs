@@ -94,7 +94,7 @@ sealed class KanRhaiBait(BossModule module) : Components.GenericBaitAway(module,
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (ActiveBaitsOn(actor).Count != 0)
+        if (IsBaitTarget(actor))
         {
             hints.Add("Bait away and move!");
         }

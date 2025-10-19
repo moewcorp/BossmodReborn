@@ -2003,3 +2003,379 @@ public sealed class SDConvexPolygon : ShapeDistance
         return tmax > tmin + Epsilon;
     }
 }
+
+[SkipLocalsInit]
+public sealed class SDArcCapsule : ShapeDistance
+{
+    // orbit center
+    private readonly float ox, oz;
+    // start & end circle centers
+    private readonly float p0x, p0z, p1x, p1z;
+    // centerline radius and tube
+    private readonly float R, tube, tubeSq, Rin, Rout, RinSq, RoutSq;
+    // wedge side normals
+    private readonly float coneFactor, nlX, nlZ, nrX, nrZ;
+
+    public SDArcCapsule(WPos Start, WDir ToOrbitCenter, Angle AngularLength, float TubeRadius) : this(Start, Start + ToOrbitCenter, AngularLength, TubeRadius) { }
+
+    public SDArcCapsule(WPos Start, WPos OrbitCenter, Angle AngularLength, float TubeRadius)
+    {
+        // centers
+        p0x = Start.X;
+        p0z = Start.Z;
+        ox = OrbitCenter.X;
+        oz = OrbitCenter.Z;
+
+        // centerline radius
+        var r0x = p0x - ox; // vector orbit->start
+        var r0z = p0z - oz;
+        R = MathF.Sqrt(r0x * r0x + r0z * r0z);
+
+        // end center
+        var theta0 = Angle.FromDirection(new WDir(r0x, r0z));
+        var theta1 = theta0 + AngularLength;
+        var r1 = R * theta1.ToDirection();
+        p1x = ox + r1.X;
+        p1z = oz + r1.Z;
+
+        // tube & annulus
+        tube = TubeRadius;
+        tubeSq = tube * tube;
+        Rin = Math.Max(0f, R - tube);
+        Rout = R + tube;
+        RinSq = Rin * Rin;
+        RoutSq = Rout * Rout;
+
+        // wedge normals via center direction (mid-angle) and half-angle
+        var half = AngularLength.Abs() * 0.5f;
+        coneFactor = half.Rad > Angle.HalfPi ? -1f : 1f;
+        var mid = theta0 + AngularLength * 0.5f;
+        var a90 = 90f.Degrees();
+        var nl = coneFactor * (mid + half + a90).ToDirection();
+        var nr = coneFactor * (mid - half - a90).ToDirection();
+        nlX = nl.X;
+        nlZ = nl.Z;
+        nrX = nr.X;
+        nrZ = nr.Z;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(in WPos p)
+    {
+        // cap disks
+        var d0x = p.X - p0x;
+        var d0z = p.Z - p0z;
+        var d0 = MathF.Sqrt(d0x * d0x + d0z * d0z) - tube;
+
+        var d1x = p.X - p1x;
+        var d1z = p.Z - p1z;
+        var d1 = MathF.Sqrt(d1x * d1x + d1z * d1z) - tube;
+
+        // annulus band within wedge
+        var vx = p.X - ox;
+        var vz = p.Z - oz;
+        var sL = vx * nlX + vz * nlZ;
+        var sR = vx * nrX + vz * nrZ;
+        var inWedge = coneFactor > 0f ? (sL <= 0f && sR <= 0f) : (sL >= 0f || sR >= 0f);
+
+        var dBand = float.MaxValue;
+        if (inWedge)
+        {
+            var r = MathF.Sqrt(vx * vx + vz * vz);
+            dBand = Math.Abs(r - R) - tube;
+        }
+
+        // union: min of (band, start-cap, end-cap)
+        var m = d0 < d1 ? d0 : d1;
+        return dBand < m ? dBand : m;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p)
+    {
+        // caps
+        var dx0 = p.X - p0x;
+        var dz0 = p.Z - p0z;
+        if (dx0 * dx0 + dz0 * dz0 <= tubeSq)
+        {
+            return true;
+        }
+
+        var dx1 = p.X - p1x;
+        var dz1 = p.Z - p1z;
+        if (dx1 * dx1 + dz1 * dz1 <= tubeSq)
+        {
+            return true;
+        }
+
+        // band ∩ wedge
+        var vx = p.X - ox;
+        var vz = p.Z - oz;
+        var r2 = vx * vx + vz * vz;
+        if (r2 < RinSq || r2 > RoutSq)
+        {
+            return false;
+        }
+        var sL = vx * nlX + vz * nlZ;
+        var sR = vx * nrX + vz * nrZ;
+        return coneFactor > 0f ? (sL <= 0f && sR <= 0f) : (sL >= 0f || sR >= 0f);
+    }
+
+    public override bool RowIntersectsShape(WPos rowStart, WDir dxVec, float width, float cushion = default)
+    {
+        // quick: two cap-disks
+        if (SegmentIntersectsDisk(rowStart, dxVec, width, p0x, p0z, tube + cushion))
+        {
+            return true;
+        }
+        if (SegmentIntersectsDisk(rowStart, dxVec, width, p1x, p1z, tube + cushion))
+        {
+            return true;
+        }
+
+        // exact annulus ∩ wedge
+        var a = rowStart;
+        var b = rowStart + width * dxVec;
+        var ax = a.X - ox;
+        var az = a.Z - oz;
+        var dx = b.X - a.X;
+        var dz = b.Z - a.Z;
+        var A = dx * dx + dz * dz;
+
+        if (A <= Epsilon)
+        {
+            return Distance(rowStart) <= cushion + Epsilon;
+        }
+
+        // radial annulus window(s) against outer disk
+        var RoutC = Rout + cushion;
+        var RoutC2 = RoutC * RoutC;
+
+        var B = 2f * (ax * dx + az * dz);
+        var Couter = ax * ax + az * az - RoutC2;
+        var DiscOuter = B * B - 4f * A * Couter;
+        if (DiscOuter < -Epsilon)
+        {
+            return false;
+        }
+        var sqrtOut = MathF.Sqrt(DiscOuter < 0f ? 0f : DiscOuter);
+        var inv2A = 0.5f / A;
+        var tOut1 = (-B - sqrtOut) * inv2A;
+        var tOut2 = (-B + sqrtOut) * inv2A;
+        if (tOut1 > tOut2)
+        {
+            (tOut2, tOut1) = (tOut1, tOut2);
+        }
+        var u0 = Math.Max(0f, tOut1);
+        var u1 = Math.Min(1f, tOut2);
+        if (u1 <= u0 + Epsilon)
+        {
+            return false;
+        }
+
+        // subtract inner disk interval
+        var RinC = Math.Max(0f, Rin - cushion);
+        var RinC2 = RinC * RinC;
+        var Cinner = ax * ax + az * az - RinC2;
+        var DiscInner = B * B - 4f * A * Cinner;
+
+        Span<(float a, float b)> annulus = stackalloc (float a, float b)[2];
+        var annN = 0;
+
+        if (DiscInner < -Epsilon)
+        {
+            // no inner disk hit → full outer window
+            annulus[annN++] = (u0, u1);
+        }
+        else
+        {
+            var sqrt = MathF.Sqrt(DiscInner < 0f ? 0f : DiscInner);
+            var t1 = (-B - sqrt) * inv2A;
+            var t2 = (-B + sqrt) * inv2A;
+            if (t1 > t2)
+            {
+                (t2, t1) = (t1, t2);
+            }
+
+            var v0 = Math.Max(0f, t1);
+            var v1 = Math.Min(1f, t2);
+
+            if (v1 <= v0 + Epsilon)
+            {
+                annulus[annN++] = (u0, u1);
+            }
+            else if (v1 <= u0 || v0 >= u1)
+            {
+                annulus[annN++] = (u0, u1);
+            }
+            else if (v0 <= u0 && v1 >= u1)
+            {
+                // fully removed
+            }
+            else if (v0 <= u0)
+            {
+                annulus[annN++] = (v1, u1);
+            }
+            else if (v1 >= u1)
+            {
+                annulus[annN++] = (u0, v0);
+            }
+            else
+            {
+                annulus[annN++] = (u0, v0);
+                annulus[annN++] = (v1, u1);
+            }
+        }
+
+        if (annN == 0)
+        {
+            return false;
+        }
+
+        // wedge clip
+        if (coneFactor > 0f)
+        {
+            for (var i = 0; i < annN; ++i)
+            {
+                float t0 = annulus[i].a, t1 = annulus[i].b;
+                if (!ClipHalfplaneLE(nlX, nlZ, ax, az, dx, dz, cushion, ref t0, ref t1) || !ClipHalfplaneLE(nrX, nrZ, ax, az, dx, dz, cushion, ref t0, ref t1))
+                {
+                    continue;
+                }
+                if (t1 > t0 + Epsilon)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            float l0 = 0f, l1 = 1f;
+            var lOk = ClipHalfplaneGE(nlX, nlZ, ax, az, dx, dz, -cushion, ref l0, ref l1);
+            float r0 = 0f, r1 = 1f;
+            var rOk = ClipHalfplaneGE(nrX, nrZ, ax, az, dx, dz, -cushion, ref r0, ref r1);
+            if (!lOk && !rOk)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < annN; ++i)
+            {
+                var a0 = annulus[i].a;
+                var a1 = annulus[i].b;
+                if (lOk && Math.Min(l1, a1) > Math.Max(l0, a0) + Epsilon)
+                {
+                    return true;
+                }
+                if (rOk && Math.Min(r1, a1) > Math.Max(r0, a0) + Epsilon)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool SegmentIntersectsDisk(WPos a, WDir dx, float width, float cx, float cz, float r)
+        {
+            var ax = a.X - cx;
+            var az = a.Z - cz;
+            var bx = a.X + width * dx.X;
+            var bz = a.Z + width * dx.Z;
+            var dxs = bx - a.X;
+            var dzs = bz - a.Z;
+            var A = dxs * dxs + dzs * dzs;
+            var r2 = r * r;
+
+            if (A <= Epsilon)
+            {
+                return ax * ax + az * az <= r2 + Epsilon;
+            }
+            var t = -(ax * dxs + az * dzs) / A;
+            if (t < 0f)
+            {
+                t = 0f;
+            }
+            else if (t > 1f)
+            {
+                t = 1f;
+            }
+            var cxp = ax + t * dxs;
+            var czp = az + t * dzs;
+            return (cxp * cxp + czp * czp) <= r2 + Epsilon;
+        }
+
+        // Solve n·((a-o) + t d) <= c
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool ClipHalfplaneLE(float nX, float nZ, float ax, float az, float dx, float dz, float c, ref float tmin, ref float tmax)
+        {
+            var s0 = nX * ax + nZ * az;
+            var s1 = nX * dx + nZ * dz;
+            if (NearlyZero(s1))
+            {
+                return s0 <= c + Epsilon;
+            }
+            var bound = (c - s0) / s1;
+            if (s1 > 0f)
+            {
+                tmax = Math.Min(tmax, bound);
+            }
+            else
+            {
+                tmin = Math.Max(tmin, bound);
+            }
+            return tmax > tmin + Epsilon;
+        }
+
+        // Solve n·((a-o) + t d) >= v
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool ClipHalfplaneGE(float nX, float nZ, float ax, float az, float dx, float dz, float v, ref float tmin, ref float tmax)
+        {
+            var s0 = nX * ax + nZ * az;
+            var s1 = nX * dx + nZ * dz;
+            if (NearlyZero(s1))
+            {
+                if (s0 >= v - Epsilon)
+                {
+                    return true;
+                }
+                tmin = 1f;
+                tmax = 0f;
+                return false;
+            }
+            var bound = (v - s0) / s1;
+            if (s1 > 0f)
+            {
+                tmin = Math.Max(tmin, bound);
+            }
+            else
+            {
+                tmax = Math.Min(tmax, bound);
+            }
+            return tmax > tmin + Epsilon;
+        }
+    }
+}
+
+[SkipLocalsInit]
+public sealed class SDInvertedArcCapsule : ShapeDistance
+{
+    private readonly SDArcCapsule _core;
+
+    public SDInvertedArcCapsule(WPos Start, WDir ToOrbitCenter, Angle AngularLength, float TubeRadius)
+        => _core = new SDArcCapsule(Start, ToOrbitCenter, AngularLength, TubeRadius);
+
+    public SDInvertedArcCapsule(WPos Start, WPos OrbitCenter, Angle AngularLength, float TubeRadius)
+        => _core = new SDArcCapsule(Start, OrbitCenter, AngularLength, TubeRadius);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override float Distance(in WPos p) => -_core.Distance(p);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Contains(in WPos p) => !_core.Contains(p);
+
+    // inverted shapes very rarely do not intersect a row, so we always return true
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool RowIntersectsShape(WPos rowStart, WDir dx, float width, float cushion = default) => true;
+}

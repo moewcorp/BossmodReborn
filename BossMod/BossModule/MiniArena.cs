@@ -232,6 +232,55 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
         drawList.PathStroke(color != default ? color : Colors.Danger, ImDrawFlags.Closed, thickness);
     }
 
+    public void AddArcCapsule(WPos start, WPos orbitCenter, Angle angularLength, float radius, uint color = default, float thickness = 1f)
+    {
+        thickness *= Config.ThicknessScale;
+
+        // centerline geometry
+        var r0 = start - orbitCenter; // orbit -> start
+        var R = r0.Length();
+
+        var theta0 = r0.ToAngle();
+        var theta1 = theta0 + angularLength;
+
+        var u0 = r0 / R;
+        var u1 = u0.Rotate(angularLength);
+        var end = orbitCenter + u1 * R;
+
+        var outerR = R + radius;
+        var innerR = Math.Max(R - radius, 1e-4f);
+
+        var s = Math.Sign(angularLength.Rad);
+        if (s == 0)
+        {
+            s = 1;
+        }
+
+        // tangents at start/end (follow sweep direction)
+        var t0 = s > 0 ? u0.OrthoL() : u0.OrthoR();
+        var t1 = s > 0 ? u1.OrthoL() : u1.OrthoR();
+        var a90 = 90f.Degrees();
+
+        // begin at outer boundary start
+        PathLineTo(orbitCenter + outerR * u0);
+
+        // outer arc (orbit center)
+        PathArcTo(orbitCenter, outerR, theta0.Rad, theta1.Rad);
+
+        // end cap around 'end' (semicircle aligned to tangent)
+        var t1Ang = t1.ToAngle();
+        PathArcTo(end, radius, (t1Ang - a90).Rad, (t1Ang + a90).Rad);
+
+        // inner arc back (orbit center)
+        PathArcTo(orbitCenter, innerR, theta1.Rad, theta0.Rad);
+
+        // start cap around 'start' (reverse to connect inner→outer)
+        var t0Ang = t0.ToAngle();
+        PathArcTo(start, radius, (t0Ang + a90).Rad, (t0Ang - a90).Rad);
+
+        PathStroke(true, color != default ? color : Colors.Danger, thickness);
+    }
+
     public void AddPolygon(ReadOnlySpan<WPos> vertices, uint color = default, float thickness = 1f)
     {
         thickness *= Config.ThicknessScale;
@@ -434,6 +483,16 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     {
         ref var tri = ref _triCache.Get(11, start, direction, radius, length);
         tri ??= _bounds.ClipAndTriangulateCapsule(start - Center, direction, radius, length);
+        Zone(tri, color);
+    }
+
+    public void ZoneArcCapsule(WPos start, WPos orbitCenter, Angle angularLength, float radius, uint color)
+    {
+        ref var tri = ref _triCache.Get(13, start, orbitCenter, angularLength, radius);
+        // startOffset: local translation; toOrbitCenter: vector from start to orbit center
+        var startOffset = start - Center;
+        var toOrbitCenter = orbitCenter - start;
+        tri ??= _bounds.ClipAndTriangulateArcCapsule(startOffset, toOrbitCenter, angularLength, radius);
         Zone(tri, color);
     }
 

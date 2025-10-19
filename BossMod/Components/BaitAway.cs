@@ -26,7 +26,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
 
     public readonly bool AlwaysDrawOtherBaits = alwaysDrawOtherBaits; // if false, other baits are drawn only if they are clipping a player
     public readonly bool CenterAtTarget = centerAtTarget; // if true, aoe source is at target
-    public readonly bool OnlyShowOutlines = onlyShowOutlines; // if true only show outlines
+    public bool OnlyShowOutlines = onlyShowOutlines; // if true only show outlines
     public bool AllowDeadTargets = true; // if false, baits with dead targets are ignored
     public bool EnableHints = true;
     public bool IgnoreOtherBaits; // if true, don't show hints/aoes for baits by others
@@ -82,6 +82,26 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
         return activeBaitsOnTarget;
     }
 
+    public bool IsBaitTarget(Actor target)
+    {
+        var count = CurrentBaits.Count;
+        if (count == 0)
+        {
+            return false;
+        }
+
+        var curBaits = CollectionsMarshal.AsSpan(CurrentBaits);
+        for (var i = 0; i < count; ++i)
+        {
+            ref var bait = ref curBaits[i];
+            if (!bait.Source.IsDead && bait.Target == target)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<Bait> ActiveBaitsNotOn(Actor target)
     {
         var count = CurrentBaits.Count;
@@ -131,7 +151,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             return;
         if (ForbiddenPlayers[slot])
         {
-            if (ActiveBaitsOn(actor).Count != 0)
+            if (IsBaitTarget(actor))
             {
                 hints.Add("Avoid baiting!");
             }
@@ -324,7 +344,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         }
     }
 
-    public override void OnTethered(Actor source, ActorTetherInfo tether)
+    public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null && (EnemyOID == default || enemy.OID == EnemyOID))
@@ -346,7 +366,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether) // TODO: this is problematic because untethering can happen many frames before the actual cast event, maybe there is a better solution?
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether) // TODO: this is problematic because untethering can happen many frames before the actual cast event, maybe there is a better solution?
     {
         var (player, enemy) = DetermineTetherSides(source, tether);
         if (player != null && enemy != null)

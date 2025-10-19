@@ -68,7 +68,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
     private readonly CellBlock _cell = module.FindComponent<CellBlock>()!;
     private bool prisonsDisabled;
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Mechanic && status.Extra == 0x394)
         {
@@ -77,7 +77,7 @@ sealed class Prisons(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnStatusLose(Actor actor, ActorStatus status)
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Mechanic && status.Extra == 0x394)
         {
@@ -165,7 +165,7 @@ sealed class CellBlock(BossModule module) : Components.GenericAOEs(module)
         }
     }
 
-    public override void OnUntethered(Actor source, ActorTetherInfo tether)
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.CellBlock && Raid.FindSlot(source.InstanceID) is var slot && slot >= 0)
         {
@@ -174,7 +174,7 @@ sealed class CellBlock(BossModule module) : Components.GenericAOEs(module)
     }
 
     // fall back since players outside arena bounds do not get tethered but will still receive status effects
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         var id = status.ID;
         var boss = id switch

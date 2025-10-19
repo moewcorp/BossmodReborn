@@ -44,7 +44,7 @@ sealed class HuntersHarvestBait(BossModule module) : Components.GenericBaitAway(
         }
     }
 
-    public override void OnStatusGain(Actor actor, ActorStatus status)
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID.Bind)
         {

@@ -61,6 +61,8 @@ public sealed class RotationModuleManager : IDisposable
         404u, // "Transporting", not a transformation but prevents actions
         4235u, // "Rage" status from Phantom Berserker, prevents all actions and movement
         4376u, // "Transporting", variant in Occult Crescent
+        4586u, // "Away with the Fae", PT
+        4708u, // "Transfiguration", PT
     ];
 
     public static bool IsTransformStatus(ActorStatus st) => TransformationStatuses.Contains(st.ID);
@@ -235,6 +237,7 @@ public sealed class RotationModuleManager : IDisposable
         {
             return;
         }
+
         var count = ActiveModules.Count;
         for (var i = 0; i < count; ++i)
         {

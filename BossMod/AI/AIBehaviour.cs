@@ -29,6 +29,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
+
     private bool cancel; // used to cancel autorotation AI preset during async
 
     public void Dispose()
@@ -212,13 +213,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     autorot.Hints.GoalZones.Add(AIHints.GoalDonut(target.Position, min, max, 2f));
                 }
             }
-            return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, forbiddenZoneCushion: _config.PreferredDistance)).ConfigureAwait(false);
+            return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState.CurrentTime, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, forbiddenZoneCushion: _config.PreferredDistance)).ConfigureAwait(false);
         }
 
         // TODO: remove this once all rotation modules are fixed
         if (autorot.Hints.GoalZones.Count == 0 && targeting.Target != null)
             autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(targeting.Target.Actor, targeting.PreferredPosition, targeting.PreferredRange));
-        return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, _config.PreferredDistance)).ConfigureAwait(false);
+        return await Task.Run(() => NavigationDecision.Build(_naviCtx, WorldState.CurrentTime, autorot.Hints, player, autorot.Bossmods.WorldState.Client.MoveSpeed, _config.PreferredDistance)).ConfigureAwait(false);
     }
 
     private void FocusMaster(Actor master)
