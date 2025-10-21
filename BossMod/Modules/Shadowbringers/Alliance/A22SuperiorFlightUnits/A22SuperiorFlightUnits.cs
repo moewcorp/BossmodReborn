@@ -30,7 +30,7 @@ public sealed class A22SuperiorFlightUnits(WorldState ws, Actor primary) : BossM
     new(-268.255f, -168.063f), new(-269.127f, -165.233f), new(-269.569f, -162.305f), new(-269.569f, -159.344f), new(-269.127f, -156.416f),
     new(-268.255f, -153.586f), new(-267.149f, -151.245f), new(-266.611f, -150.343f), new(-265.093f, -148.25f), new(-263.288f, -146.301f),
     new(-260.973f, -144.455f), new(-258.408f, -142.974f), new(-255.652f, -141.893f), new(-252.765f, -141.234f), new(-250.75f, -141.083f),
-    new(-249.812f, -141.013f)])], AdjustForHitbox: true);
+    new(-249.812f, -141.013f)])], AdjustForHitboxInwards: true);
 
     public Actor? BossBeta;
     public Actor? BossChi;
