@@ -35,7 +35,7 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (state == 0x00010002u && actor.OID == (uint)OID.ArenaVoidzone)
         {
-            var bounds = new ArenaBoundsCustom(D152DotoliCiloc.DefaultBoundsP, D152DotoliCiloc.Difference, AdjustForHitbox: true);
+            var bounds = new ArenaBoundsCustom(D152DotoliCiloc.DefaultBoundsP, D152DotoliCiloc.Difference, AdjustForHitboxInwards: true);
             Arena.Bounds = bounds;
             Arena.Center = bounds.Center;
             _aoe = [];
@@ -246,7 +246,7 @@ sealed class D152DotoliCilocStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 182, NameID = 5269, SortOrder = 6)]
-public sealed class D152DotoliCiloc(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsCustom(StartingBoundsP, Difference, AdjustForHitbox: true))
+public sealed class D152DotoliCiloc(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, new ArenaBoundsCustom(StartingBoundsP, Difference, AdjustForHitboxInwards: true))
 {
     public static readonly WPos ArenaCenter = new(new(245.28799f, 13.62114f));
     public static readonly Polygon[] StartingBoundsP = [new Polygon(ArenaCenter, 30.414f, 16, 11.25f.Degrees())];

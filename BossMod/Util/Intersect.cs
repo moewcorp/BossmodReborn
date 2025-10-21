@@ -44,10 +44,12 @@ public static class Intersect
         // then if ray origin is outside box, ti1 = ti2 = +-inf (infinities of same sign)
         // if it's inside box, ti1 = -ti2 = +-inf (infinities of different sign)
         // if it's exactly on bound, either one of the ti is infinity, other is NaN
-        var tx1 = (-halfWidth - rayOriginOffset.X) * invX;
-        var tx2 = (+halfWidth - rayOriginOffset.X) * invX;
-        var tz1 = (-halfHeight - rayOriginOffset.Z) * invZ;
-        var tz2 = (+halfHeight - rayOriginOffset.Z) * invZ;
+        var offsetX = rayOriginOffset.X;
+        var offsetZ = rayOriginOffset.Z;
+        var tx1 = (-halfWidth - offsetX) * invX;
+        var tx2 = (+halfWidth - offsetX) * invX;
+        var tz1 = (-halfHeight - offsetZ) * invZ;
+        var tz2 = (+halfHeight - offsetZ) * invZ;
 
         // naive version - works fine for infinities, but not for nans - clip 'ray segment' to part between two lines
         // tmin = max(tmin, min(t1, t2));

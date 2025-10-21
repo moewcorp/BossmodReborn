@@ -40,7 +40,7 @@ sealed class IntermissionArena(BossModule module) : BossComponent(module)
                     break;
                 }
             }
-            Arena.Bounds = new ArenaBoundsCustom(baseArena, [.. walls], AdjustForHitbox: true);
+            Arena.Bounds = new ArenaBoundsCustom(baseArena, [.. walls], AdjustForHitboxInwards: true);
         }
     }
 }

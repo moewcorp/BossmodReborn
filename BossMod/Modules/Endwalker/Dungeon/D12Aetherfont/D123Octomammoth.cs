@@ -63,7 +63,7 @@ public sealed class D123Octomammoth(WorldState ws, Actor primary) : BossModule(w
     private static readonly ArenaBoundsCustom arena = new([new Polygon(new(-345f, -368f), 8f, 20), new Polygon(new(-352.322f, -350.322f), 8f, 20, 9f.Degrees()),
     new Polygon(new(-370f, -343f), 8f, 20), new Polygon(new(-387.678f, -350.322f), 8f, 20, 9f.Degrees()), new Polygon(new(-395f, -368f), 8f, 20),
     new PolygonCustom(bridge1), new PolygonCustom(WPos.GenerateRotatedVertices(arenaCenter, bridge1, -45f)),
-    new PolygonCustom(WPos.GenerateRotatedVertices(arenaCenter, bridge1, -90f)), new PolygonCustom(bridge5)], AdjustForHitbox: true);
+    new PolygonCustom(WPos.GenerateRotatedVertices(arenaCenter, bridge1, -90f)), new PolygonCustom(bridge5)], AdjustForHitboxInwards: true);
 
     protected override bool CheckPull() => Arena.InBounds(Raid.Player()!.Position);
 

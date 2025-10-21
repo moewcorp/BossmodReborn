@@ -43,6 +43,7 @@ sealed class Quicksand(BossModule module) : Components.GenericAOEs(module, warni
     private bool kbImminent;
     private DateTime kbActivation;
 
+    // extracted from collision data - material ID: 00007004 (only exact matches inside arena)
     private readonly WPos[] vertices1 = [new(-288.4317f, -303.03119f), new(-287.71945f, -302.6756f), new(-287.43317f, -302.2095f), new(-287.44647f, -302.14667f),
         new(-287.30231f, -302.01669f), new(-287.09418f, -301.97656f), new(-286.89252f, -302.23557f), new(-286.58737f, -302.08163f), new(-285.8587f, -300.55795f),
         new(-286.05823f, -299.90787f), new(-286.3049f, -299.59317f), new(-287.18127f, -299.4119f), new(-287.30084f, -299.21179f), new(-288.17279f, -298.67078f),

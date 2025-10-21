@@ -68,7 +68,7 @@ sealed class DD90MalacodaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified,
+[ModuleInfo(BossModuleInfo.Maturity.AISupport,
 StatesType = typeof(DD90MalacodaStates),
 ConfigType = null,
 ObjectIDType = typeof(OID),
