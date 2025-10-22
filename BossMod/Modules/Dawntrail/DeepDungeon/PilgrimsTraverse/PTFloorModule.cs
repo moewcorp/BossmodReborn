@@ -18,6 +18,9 @@ public enum AID : uint
     Accelerate = 42516, // 4927->location, 4.0s cast, range 6 circle
     Subduction = 42517, // 4927->self, no cast, range 5-10 donut
 
+    HailOfHeelsCast = 44759, // 4996->self, 3.0s cast, range 8 180-degree cone
+    HailOfHeels = 44760, // 4996->self, no cast, range 8 180-degree cone
+
     PeripheralLasers = 44758, // 4995->self, 5.0s cast, range 5-60 donut
     GrowingCirclesOfAblution1 = 42578, // 492A->self, 5.0s cast, range 10 circle
     GrowingCirclesOfAblution2 = 42749, // 492A->self, no cast, range 10-40 donut
@@ -28,6 +31,10 @@ public enum AID : uint
     RightSidedShockwave = 42215, // 4923->self, no cast, range 30 180-degree cone
     LeftSidedShockwaveCast = 42216, // 4923->self, 5.0s cast, range 30 180-degree cone
     LeftSidedShockwave = 42217, // 4923->self, no cast, range 30 180-degree cone
+
+    RollingBarrage = 42523, // 4929->self, 16.0s cast, range 45 circle
+
+    IncineratingLahar = 43133, // 492E->self, 16.0s cast, range 46 circle
 }
 
 public enum OID : uint
@@ -66,7 +73,6 @@ public abstract class PTFloorModule(WorldState ws) : AutoClear(ws, 100)
     protected override void OnCastStarted(Actor actor)
     {
         // TODO:
-        // X-sided shockwave (forgiven riot, 61-70)
         // crystalline stingers (LOS, maybe stun?, 61-70)
         // hail of heels -> multiple frontal cones
         // Passions' Heat -> targeted AOE (with marker) and applies pyretic
@@ -77,10 +83,12 @@ public abstract class PTFloorModule(WorldState ws) : AutoClear(ws, 100)
         {
             case (uint)AID.EarthenAuger:
                 AddDonut(actor, 3f, 30f, 135f.Degrees());
+                HintDisabled.Add(actor);
                 break;
 
             case (uint)AID.PeripheralLasers:
                 AddDonut(actor, 5f, 60f);
+                HintDisabled.Add(actor);
                 break;
 
             case (uint)AID.Malice:
@@ -90,6 +98,15 @@ public abstract class PTFloorModule(WorldState ws) : AutoClear(ws, 100)
 
             case (uint)AID.MagneticShock:
                 KnockbackZones.Add((actor, 15f));
+                HintDisabled.Add(actor);
+                break;
+
+            case (uint)AID.RollingBarrage:
+                Circles.Add((actor, 45));
+                break;
+
+            case (uint)AID.IncineratingLahar:
+                Circles.Add((actor, 46));
                 break;
 
             // stun for melee uptime
@@ -110,20 +127,34 @@ public abstract class PTFloorModule(WorldState ws) : AutoClear(ws, 100)
         switch (ev.Action.ID)
         {
             case (uint)AID.ShrinkingCirclesOfAblution1:
-                Voidzones.Add((actor, new AOEShapeCircle(10f)));
+                AddVoidzone(actor, new AOEShapeCircle(10f));
                 break;
             case (uint)AID.GrowingCirclesOfAblution1:
-                Voidzones.Add((actor, new AOEShapeDonut(10f, 40f)));
+                AddVoidzone(actor, new AOEShapeDonut(10f, 40f));
                 break;
             case (uint)AID.Accelerate:
-                Voidzones.Add((actor, new AOEShapeDonut(5f, 10f)));
+                AddVoidzone(actor, new AOEShapeDonut(5f, 10f));
                 break;
 
             case (uint)AID.RightSidedShockwaveCast:
-                Voidzones.Add((actor, new AOEShapeCone(30f, 90f.Degrees(), 90f.Degrees())));
+                AddVoidzone(actor, new AOEShapeCone(30f, 90f.Degrees(), 90f.Degrees()));
                 break;
             case (uint)AID.LeftSidedShockwaveCast:
-                Voidzones.Add((actor, new AOEShapeCone(30f, 90f.Degrees(), -90f.Degrees())));
+                AddVoidzone(actor, new AOEShapeCone(30f, 90f.Degrees(), -90f.Degrees()));
+                break;
+
+            case AID.HailOfHeelsCast:
+                AddVoidzone(actor, new AOEShapeCone(8, 90.Degrees()), 3);
+                break;
+
+            case AID.HailOfHeels:
+                var vz = Voidzones.FindIndex(v => v.Source.InstanceID == actor.InstanceID);
+                if (vz >= 0)
+                {
+                    Voidzones.Ref(vz).Counter--;
+                    if (Voidzones[vz].Counter <= 0)
+                        Voidzones.RemoveAt(vz);
+                }
                 break;
 
             case (uint)AID.ShrinkingCirclesOfAblution2:

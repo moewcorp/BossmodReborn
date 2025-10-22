@@ -163,6 +163,8 @@ public sealed class ActionDefinitions : IDisposable
     public ActionDefinition? this[ActionID action] => _definitions.GetValueOrDefault(action);
     public ActionDefinition? Spell<AID>(AID aid) where AID : Enum => _definitions.GetValueOrDefault(ActionID.MakeSpell(aid));
 
+    public readonly HashSet<uint> SupportedItems = [];
+
     public const int GCDGroup = 57;
     public const int PotionCDGroup = 58;
     public const int DutyAction0CDGroup = 80;
@@ -562,6 +564,9 @@ public sealed class ActionDefinitions : IDisposable
             Cooldown = cooldown * 0.9f,
             InstantAnimLock = animLock
         };
+
+        SupportedItems.Add(aidNQ.ID);
+        SupportedItems.Add(aidHQ.ID);
     }
 
     private void RegisterBozja(BozjaHolsterID id)

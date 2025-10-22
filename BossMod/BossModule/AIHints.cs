@@ -35,6 +35,7 @@ public sealed class AIHints
         NoMovement, // no movement allowed
         Freezing, // should be moving at activation time
         Misdirection, // temporary misdirection - if current time is greater than activation, use special pathfinding codepath
+        PyreticMove, // movement not allowed, but actions ok (e.g. caloric)
     }
 
     public enum PredictedDamageType
