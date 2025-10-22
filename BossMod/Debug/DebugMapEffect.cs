@@ -1,4 +1,5 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using System.Globalization;
@@ -27,7 +28,24 @@ sealed unsafe class DebugMapEffect : IDisposable
 
     public void Draw()
     {
-        ImGui.SetNextItemWidth(100);
+        if (ImGui.Button("Load effect list for current zone"))
+        {
+            var inst = EventFramework.Instance()->GetContentDirector();
+            if (inst == null)
+            {
+                Service.Log($"no content director available");
+                return;
+            }
+            var count = inst->MapEffects->ItemCount;
+            for (var i = 0; i < count; ++i)
+            {
+                var item = inst->MapEffects->Items[i];
+                var itemStr = $"LayoutId = {item.LayoutId:X}, State = {item.State:X}, Flags = {item.Flags:X}";
+                Service.Log($"effect {i}: {{ {itemStr} }}");
+            }
+        }
+
+        ImGui.SetNextItemWidth(100 * ImGuiHelpers.GlobalScale);
         ImGui.InputText("ii.ssssssss", ref _current, 12);
         ImGui.SameLine();
         if (ImGui.Button("Execute"))

@@ -228,7 +228,7 @@ public static partial class Utils
     public static float Lerp(float a, float b, float t) => a + (b - a) * t;
 
     // build an array with N copies of same element
-    public static T[] MakeArray<T>(int count, T value)
+    public static T[] MakeArray<T>(int count, T value) where T : struct
     {
         var res = new T[count];
         Array.Fill(res, value);

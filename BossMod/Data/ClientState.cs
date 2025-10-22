@@ -168,6 +168,19 @@ public sealed class ClientState
     public uint[] ContentKeyValueData = new uint[6]; // used for content-specific persistent player attributes, like bozja resistance rank
     public HateInfo CurrentTargetHate = new(default, new Hate[NumHateTargets]);
 
+    public readonly Dictionary<uint, uint> Inventory; // only tracks items in ActionDefinitions' SupportedItems set
+
+    public uint GetItemQuantity(uint itemId) => Inventory.TryGetValue(itemId, out var q) ? q : 0;
+
+    public ClientState()
+    {
+        Inventory = [];
+        foreach (var it in ActionDefinitions.Instance.SupportedItems)
+        {
+            Inventory[it] = default;
+        }
+    }
+
     // if an action has SecondaryCostType between 1 and 4, it's considered usable as long as the corresponding timer in this array is >0; the timer is set to 5 when certain ActionEffects are received and ticks down each frame
     // 1: unknown - referenced in ActionManager code but not present in sheets, included for completeness
     // 2: block
@@ -312,23 +325,23 @@ public sealed class ClientState
             ops.Add(new OpForcedMovementDirectionChange(ForcedMovementDirection));
         }
 
-        if (CurrentTargetHate.InstanceID != default)
+        ref readonly var hate = ref CurrentTargetHate;
+        if (hate.InstanceID != default)
         {
-            AddHateOp();
+            ops.Add(new OpHateChange(hate.InstanceID, hate.Targets));
         }
         else
         {
             for (var i = 0; i < NumHateTargets; ++i)
             {
-                ref readonly var target = ref CurrentTargetHate.Targets[i];
-                if (target != default)
+                ref readonly var h = ref hate.Targets[i];
+                if (h != default)
                 {
-                    AddHateOp();
+                    ops.Add(new OpHateChange(hate.InstanceID, hate.Targets));
                     break;
                 }
             }
         }
-        void AddHateOp() => ops.Add(new OpHateChange(CurrentTargetHate.InstanceID, CurrentTargetHate.Targets));
         return ops;
     }
 
@@ -719,6 +732,23 @@ public sealed class ClientState
         public override void Write(ReplayRecorder.Output output)
         {
             output.EmitFourCC("CLPR"u8).Emit(Value[0]).Emit(Value[1]).Emit(Value[2]).Emit(Value[3]);
+        }
+    }
+
+    public Event<OpInventoryChange> InventoryChanged = new();
+    public sealed class OpInventoryChange(uint itemId, uint quantity) : WorldState.Operation
+    {
+        public readonly uint ItemId = itemId;
+        public readonly uint Quantity = quantity;
+
+        protected override void Exec(WorldState ws)
+        {
+            ws.Client.Inventory[ItemId] = Quantity;
+            ws.Client.InventoryChanged.Fire(this);
+        }
+        public override void Write(ReplayRecorder.Output output)
+        {
+            output.EmitFourCC("INVT"u8).Emit(ItemId).Emit(Quantity);
         }
     }
 }
