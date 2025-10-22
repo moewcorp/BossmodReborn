@@ -143,11 +143,11 @@ public abstract class PTFloorModule(WorldState ws) : AutoClear(ws, 100)
                 AddVoidzone(actor, new AOEShapeCone(30f, 90f.Degrees(), -90f.Degrees()));
                 break;
 
-            case AID.HailOfHeelsCast:
+            case (uint)AID.HailOfHeelsCast:
                 AddVoidzone(actor, new AOEShapeCone(8, 90.Degrees()), 3);
                 break;
 
-            case AID.HailOfHeels:
+            case (uint)AID.HailOfHeels:
                 var vz = Voidzones.FindIndex(v => v.Source.InstanceID == actor.InstanceID);
                 if (vz >= 0)
                 {

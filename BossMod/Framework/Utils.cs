@@ -235,14 +235,6 @@ public static partial class Utils
         return res;
     }
 
-    public static T[] GenArray<T>(int count, Func<T> gen)
-    {
-        var res = new T[count];
-        for (var i = 0; i < count; i++)
-            res[i] = gen();
-        return res;
-    }
-
     public static bool TextMatch(string haystack, string needle) => haystack.Contains(needle, StringComparison.InvariantCultureIgnoreCase);
 
     // bounds-checking access

@@ -125,7 +125,6 @@ public abstract partial class AutoClear : ZoneModule
                 if (BetweenFloors)
                 {
                     LoadWalls();
-                    LoadGeometry();
                 }
                 BetweenFloors = false;
             })
@@ -308,14 +307,14 @@ public abstract partial class AutoClear : ZoneModule
 
     public override bool WantDrawExtra() => Config.EnableMinimap && !Palace.IsBossFloor;
 
-    public sealed override string WindowName() => "VBM DD minimap###VBMDD";
+    public sealed override string WindowName() => "BMR DD minimap###BMRDD";
 
     private bool CanAutoUse(PomanderID p, Actor player)
     {
         if (Palace.Party.Count(p => p.EntityId > 0ul) > 1)
             return false;
 
-        if (!_config.AutoPoms[(int)p])
+        if (!Config.AutoPoms[(int)p])
             return false;
 
         if (p is PomanderID.Purity or PomanderID.ProtoPurity)
@@ -388,7 +387,7 @@ public abstract partial class AutoClear : ZoneModule
         if (canNavigate)
             HandleFloorPathfind(player, hints);
 
-        if (_config.ForbidDOTs)
+        if (Config.ForbidDOTs)
             foreach (var hpt in hints.PotentialTargets)
                 hpt.ForbidDOTs = true;
 
@@ -476,7 +475,7 @@ public abstract partial class AutoClear : ZoneModule
 
                     if (!shouldIgnore)
                     {
-                        hints.AddForbiddenZone.Add(new SDCircle(trap, 2f));
+                        hints.AddForbiddenZone(new SDCircle(trap, 2f));
                     }
                 }
             }
@@ -595,7 +594,6 @@ public abstract partial class AutoClear : ZoneModule
                 }
             }
         }
-        hints.ForcedTarget = bestTarget;
     }
 
     private void DrawAOEs(int playerSlot, Actor player, AIHints hints)
@@ -800,3 +798,4 @@ public abstract partial class AutoClear : ZoneModule
 
         return false;
     }
+}

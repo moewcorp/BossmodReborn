@@ -275,7 +275,7 @@ public sealed class Plugin : IDalamudPlugin
         // see ActionManager.IsActionUnlocked
         var gameMain = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
         return link == 0
-            || Service.LuminaRow<Lumina.Excel.Sheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse.RowId == 31 // deep dungeons check is hardcoded in game
+            || Service.LuminaRow<Lumina.Excel.Sheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse.RowId == 31u // deep dungeons check is hardcoded in game
             || FFXIVClientStructs.FFXIV.Client.Game.UI.UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(link);
     }
 
@@ -293,16 +293,16 @@ public sealed class Plugin : IDalamudPlugin
 
             // 50 in-game units is the maximum distance before nameplates stop rendering (making the mob effectively untargetable)
             // we want to avoid targeting a mob that isn't visible, since it's bad UI
-            if (_ws.Party.Player() is { } player)
+            if (_ws.Party.Player() is Actor player)
             {
                 var distSq = (player.PosRot.XYZ() - _hints.ForcedTarget.PosRot.XYZ()).LengthSquared();
-                if (distSq < 2500)
+                if (distSq < 2500f)
                     FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->Target = obj;
             }
         }
         foreach (var s in _hints.StatusesToCancel)
         {
-            var res = FFXIVClientStructs.FFXIV.Client.Game.StatusManager.ExecuteStatusOff(s.statusId, s.sourceId != 0 ? (uint)s.sourceId : 0xE0000000);
+            var res = FFXIVClientStructs.FFXIV.Client.Game.StatusManager.ExecuteStatusOff(s.statusId, s.sourceId != default ? (uint)s.sourceId : 0xE0000000);
             Service.Log($"[ExecHints] Canceling status {s.statusId} from {s.sourceId:X} -> {res}");
         }
         if (_hints.WantJump && _ws.CurrentTime > _throttleJump)

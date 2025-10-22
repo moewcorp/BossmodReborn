@@ -332,9 +332,9 @@ public sealed class ClientState
         }
         else
         {
-            for (var i = 0; i < NumHateTargets)
+            for (var i = 0; i < NumHateTargets; ++i)
             {
-                ref readonly var h = hate.Targets[i];
+                ref readonly var h = ref hate.Targets[i];
                 if (h != default)
                 {
                     ops.Add(new OpHateChange(hate.InstanceID, hate.Targets));
@@ -342,6 +342,7 @@ public sealed class ClientState
                 }
             }
         }
+        return ops;
     }
 
     public void Tick(float dt)
@@ -735,8 +736,11 @@ public sealed class ClientState
     }
 
     public Event<OpInventoryChange> InventoryChanged = new();
-    public sealed record class OpInventoryChange(uint ItemId, uint Quantity) : WorldState.Operation
+    public sealed class OpInventoryChange(uint itemId, uint quantity) : WorldState.Operation
     {
+        public readonly uint ItemId = itemId;
+        public readonly uint Quantity = quantity;
+
         protected override void Exec(WorldState ws)
         {
             ws.Client.Inventory[ItemId] = Quantity;

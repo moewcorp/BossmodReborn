@@ -78,11 +78,13 @@ sealed class WorldStateGameSync : IDisposable
 
     private unsafe delegate void* ProcessSystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
     private readonly Hook<ProcessSystemLogMessageDelegate> _processSystemLogMessageHook;
+    private readonly unsafe delegate* unmanaged<ContainerInterface*, float> _calculateMoveSpeedMulti;
 
     private unsafe delegate void* ProcessPacketFateInfoDelegate(ulong fateId, long startTimestamp, ulong durationSecs);
     private readonly Hook<ProcessPacketFateInfoDelegate> _processPacketFateInfoHook;
 
-    private readonly unsafe delegate* unmanaged<ContainerInterface*, float> _calculateMoveSpeedMulti;
+    private unsafe delegate void InventoryAckDelegate(uint a1, void* a2);
+    private readonly Hook<InventoryAckDelegate> _inventoryAckHook;
 
     public unsafe WorldStateGameSync(WorldState ws, ActionManagerEx amex)
     {
