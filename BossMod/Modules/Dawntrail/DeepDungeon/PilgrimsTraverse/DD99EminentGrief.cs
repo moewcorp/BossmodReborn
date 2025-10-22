@@ -95,6 +95,7 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
     private readonly DD99EminentGrief bossmod = (DD99EminentGrief)module;
     private int numPartyMembersHalf;
     private float hpDifference;
+    private uint griefHP, eaterHP;
 
     // extracted from collision data - dark material ID: 00027004, light material ID: 20007004
     private readonly WPos[] light1 = [new(-602.77661f, -288.82251f), new(-602.86578f, -288.14209f), new(-603.28021f, -288.181f), new(-603.06482f, -287.6239f),
@@ -152,18 +153,15 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
 
     public void AddAOE()
     {
-        if (_aoes.Count == 0)
-        {
-            var center = Arena.Center;
-            var shapeLight = new AOEShapeCustom([new PolygonCustom(light1), new PolygonCustom(light2), new PolygonCustom(light3),
+        var center = Arena.Center;
+        var shapeLight = new AOEShapeCustom([new PolygonCustom(light1), new PolygonCustom(light2), new PolygonCustom(light3),
                 new PolygonCustom(light4), new PolygonCustom(light5)]);
-            _aoes.Add(new(shapeLight, center, color: Colors.Light, risky: false, shapeDistance: shapeLight.InvertedDistance(center, default)));
-            _sdfs.Add(shapeLight.Distance(center, default));
-            var shapeDark = new AOEShapeCustom([new PolygonCustom(dark1), new PolygonCustom(dark2), new PolygonCustom(dark3),
+        _aoes.Add(new(shapeLight, center, color: Colors.Light, risky: false, shapeDistance: shapeLight.InvertedDistance(center, default)));
+        _sdfs.Add(shapeLight.Distance(center, default));
+        var shapeDark = new AOEShapeCustom([new PolygonCustom(dark1), new PolygonCustom(dark2), new PolygonCustom(dark3),
                 new PolygonCustom(dark4), new PolygonCustom(dark5)]);
-            _aoes.Add(new(shapeDark, center, color: Colors.FutureVulnerable, risky: false, shapeDistance: shapeDark.InvertedDistance(center, default)));
-            _sdfs.Add(shapeDark.Distance(center, default));
-        }
+        _aoes.Add(new(shapeDark, center, color: Colors.FutureVulnerable, risky: false, shapeDistance: shapeDark.InvertedDistance(center, default)));
+        _sdfs.Add(shapeDark.Distance(center, default));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -277,7 +275,7 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
             {
                 if (numPartyMembersHalf == 0)
                 {
-                    numPartyMembersHalf = (int)MathF.Ceiling(Module.Raid.WithoutSlot(true, false, false).Length * 0.5f);
+                    numPartyMembersHalf = (int)MathF.Ceiling(Module.Raid.WithoutSlot(true, true, true).Length * 0.5f);
                 }
                 if (darkBuff[slot] && countD > numPartyMembersHalf || lightBuff[slot] && countL > numPartyMembersHalf)
                 {
@@ -296,15 +294,26 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
                 hints.Add(dark, !darkBuff[slot]);
             }
         }
-        else if (Math.Abs(hpDifference) > 25f || !combined[slot])
+        else if (!aetherdrainActive)
         {
-            if (hpDifference > 0f)
+            if (eaterHP <= 1u && !lightBuff[slot])
+            {
+                hints.Add(light);
+            }
+            else if (griefHP <= 1u && !darkBuff[slot])
             {
                 hints.Add(dark);
             }
-            else
+            else if (Math.Abs(hpDifference) > 25f || !combined[slot])
             {
-                hints.Add(light);
+                if (hpDifference > 0f)
+                {
+                    hints.Add(dark);
+                }
+                else
+                {
+                    hints.Add(light);
+                }
             }
         }
         else
@@ -325,9 +334,11 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
     {
         if (bossmod.BossEater is Actor eater)
         {
-            ref var eaterHP = ref eater.HPMP;
-            ref var primaryHP = ref Module.PrimaryActor.HPMP;
-            hpDifference = (int)(eaterHP.CurHP - primaryHP.CurHP) * 100f / primaryHP.MaxHP;
+            ref var eaterHPref = ref eater.HPMP;
+            ref var primaryHPref = ref Module.PrimaryActor.HPMP;
+            var eaterHPs = eaterHP = eaterHPref.CurHP;
+            var griefHPs = griefHP = primaryHPref.CurHP;
+            hpDifference = (int)(eaterHPs - griefHPs) * 100f / primaryHPref.MaxHP;
         }
     }
 
@@ -338,7 +349,8 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
         {
             var e = hints.PotentialTargets[i];
             var oid = e.Actor.OID;
-            e.Priority = darkBuff[slot] && oid == (uint)OID.DevouredEater ? 0
+            ref var hp = ref e.Actor.HPMP;
+            e.Priority = hp.CurHP <= 1u ? AIHints.Enemy.PriorityInvincible : darkBuff[slot] && oid == (uint)OID.DevouredEater ? 0
                 : lightBuff[slot] && oid == (uint)OID.EminentGrief ? 0 : oid == (uint)OID.VodorigaMinion ? 1 : AIHints.Enemy.PriorityInvincible;
         }
 
@@ -347,18 +359,29 @@ sealed class LightAndDark(BossModule module) : Components.GenericAOEs(module)
         ref var aoeDark = ref aoes[1];
         aoeDark.Risky = false;
         aoeLight.Risky = false;
-        if (!aetherdrainActive && (Math.Abs(hpDifference) > 25f || !combined[slot]))
+        if (!aetherdrainActive)
         {
-            if (hpDifference > 0f)
-            {
-                aoeDark.Risky = true;
-            }
-            else
+            if (eaterHP <= 1u && !lightBuff[slot])
             {
                 aoeLight.Risky = true;
             }
+            else if (griefHP <= 1u && !darkBuff[slot])
+            {
+                aoeDark.Risky = true;
+            }
+            else if (Math.Abs(hpDifference) > 25f || !combined[slot])
+            {
+                if (hpDifference > 0f)
+                {
+                    aoeDark.Risky = true;
+                }
+                else
+                {
+                    aoeLight.Risky = true;
+                }
+            }
         }
-        if (aetherdrainActive)
+        else
         {
             if (wantLight[0])
             {
@@ -403,7 +426,7 @@ sealed class ChainsOfCondemnation(BossModule module) : Components.StayMove(modul
         {
             PlayerStates[slot] = default;
 
-            // ensure people who never got the debuff are properly reset
+            // ensure players who never got the debuff are properly reset
             var party = Raid.WithSlot(true, false, false);
             var len = party.Length;
             for (var i = 0; i < len; ++i)
@@ -530,7 +553,7 @@ sealed class SpinelashBaitHint(BossModule module) : Components.GenericAOEs(modul
         if (iconID == (uint)IconID.Spinelash)
         {
             target = actor;
-            AOEShapeCustom shape = new([new Rectangle(new(-593f, -300f), 1f, 20f), new Rectangle(new(-607f, -300f), 1f, 20f)]);
+            AOEShapeCustom shape = new([new Rectangle(new(-593f, -300f), 1f, 16f), new Rectangle(new(-607f, -300f), 1f, 16f)]);
             var pos = Arena.Center;
             _aoe = [new(shape, pos, default, WorldState.FutureTime(6.3d), Colors.SafeFromAOE, shapeDistance: shape.InvertedDistance(pos, default))];
         }
@@ -716,8 +739,7 @@ sealed class DD99EminentGriefStates : StateMachineBuilder
             .ActivateOnEnter<SpinelashBait>()
             .ActivateOnEnter<TerrorEyeBallOfFire>()
             .ActivateOnEnter<BallOfFire>()
-            .ActivateOnEnter<AbyssalBlaze>()
-            ;
+            .ActivateOnEnter<AbyssalBlaze>();
     }
 }
 
@@ -739,7 +761,7 @@ NameID = 14037u,
 SortOrder = 1,
 PlanLevel = 0)]
 [SkipLocalsInit]
-public sealed class DD99EminentGrief : BossModule
+public sealed class DD99EminentGrief : BossModule // module also works in Final Verse normal, everything but the zone ID seem to be identical
 {
     public DD99EminentGrief(WorldState ws, Actor primary) : base(ws, primary, ArenaCenter, new ArenaBoundsCustom([new Rectangle(ArenaCenter, 20f, 15f)], AdjustForHitboxOutwards: true))
     {
