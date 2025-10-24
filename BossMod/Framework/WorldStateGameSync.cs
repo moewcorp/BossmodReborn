@@ -802,7 +802,7 @@ sealed class WorldStateGameSync : IDisposable
 
         void updateQuantity(uint itemId, uint count)
         {
-            if (itemId == 0)
+            if (itemId == default)
                 return;
             if (count != _ws.Client.GetItemQuantity(itemId))
                 _ws.Execute(new ClientState.OpInventoryChange(itemId, count));
@@ -814,7 +814,7 @@ sealed class WorldStateGameSync : IDisposable
             // update tracked items
             foreach (var id in ActionDefinitions.Instance.SupportedItems)
             {
-                var count = im->GetInventoryItemCount(id % 500000, id > 1000000, checkEquipped: false, checkArmory: false);
+                var count = im->GetInventoryItemCount(id % 500000u, id > 1000000u, checkEquipped: false, checkArmory: false);
                 updateQuantity(id, (uint)count);
             }
 

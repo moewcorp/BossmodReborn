@@ -53,8 +53,7 @@ public sealed class ClientState
         public readonly Vector3 Center = center;
         public readonly float Radius = radius;
         public readonly byte Progress = progress;
-        public readonly HandInCount = handInCount;
-        
+        public readonly byte HandInCount = handInCount;
 
         public static bool operator ==(Fate left, Fate right) => left.ID == right.ID;
         public static bool operator !=(Fate left, Fate right) => left.ID != right.ID;

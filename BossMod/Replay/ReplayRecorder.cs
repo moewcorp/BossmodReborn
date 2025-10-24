@@ -268,6 +268,8 @@ public sealed class ReplayRecorder : IDisposable
     private readonly EventSubscription _subscription;
 
     public const int Version = 28;
+    public uint CFCID;
+    public string LogPath;
 
     public ReplayRecorder(WorldState ws, ReplayLogFormat format, bool logInitialState, DirectoryInfo targetDirectory, string logPrefix)
     {
