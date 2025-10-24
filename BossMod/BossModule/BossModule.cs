@@ -67,6 +67,14 @@ public abstract class BossModule : IDisposable
         return relevantEnemies;
     }
 
+    public virtual Actor? GetDefaultTarget(int slot)
+    {
+        if (!PrimaryActor.IsDeadOrDestroyed && PrimaryActor.IsTargetable)
+            return PrimaryActor;
+
+        return null;
+    }
+
     // component management: at most one component of any given type can be active at any time
     public readonly List<BossComponent> Components = [];
 
