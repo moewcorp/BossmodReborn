@@ -162,8 +162,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
     private async Task<NavigationDecision> BuildNavigationDecision(Actor player, Actor master, Targeting targeting)
     {
-        if (_config.ForbidMovement || _config.ForbidAIMovementMounted && player.MountId != 0
-            || autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.NoMovement && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1d))
+        if (_config.ForbidMovement || _config.ForbidAIMovementMounted && player.MountId != default
+            || autorot.Hints.ImminentSpecialMode.mode is AIHints.SpecialMode.NoMovement or AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1d))
             return new() { LeewaySeconds = float.MaxValue };
 
         if (autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Freezing && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(2.1d))

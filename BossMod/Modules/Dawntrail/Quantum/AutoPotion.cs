@@ -1,6 +1,6 @@
 ﻿using BossMod.Autorotation;
 
-namespace BossMod.Dawntrail.Quantum.Q01TheFinalVerse;
+namespace BossMod.Dawntrail.Quantum.FinalVerse;
 
 sealed class AutoPotionModule(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
@@ -25,5 +25,5 @@ sealed class AutoPotionModule(RotationModuleManager manager, Actor player) : Rot
             Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionPilgrim, Player, opt.Priority(ActionQueue.Priority.Medium));
     }
 
-    private float RegenLeft() => Player.FindStatus(648) is { } stat ? StatusDuration(stat.ExpireAt) : 0;
+    private float RegenLeft() => Player.FindStatus(648u) is ActorStatus stat ? StatusDuration(stat.ExpireAt) : default;
 }
