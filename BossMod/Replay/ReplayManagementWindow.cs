@@ -228,8 +228,8 @@ public sealed class ReplayManagementWindow : UIWindow
         }
 
         // ignored duties
-        uint[] alwaysIgnoredDuties = [0u, 650u, 127u, 130u, 195u, 756u, 180u, 701u, 473u, 721u];
-        for (var i = 0; i < 10; ++i)
+        uint[] alwaysIgnoredDuties = [0u, 650u, 127u, 130u, 195u, 756u, 180u, 701u, 473u, 721u, 1065u];
+        for (var i = 0; i < 11; ++i)
         {
             map[alwaysIgnoredDuties[i]] = false;
         }

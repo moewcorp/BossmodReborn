@@ -71,7 +71,10 @@ sealed class Spineshot(BossModule module) : Components.GenericAOEs(module)
             AddAOE(loc, rot, act);
             AddAOE(loc, rot, act, 180f.Degrees());
             void AddAOE(WPos position, Angle rotation, DateTime activation, Angle offset = default)
-                => _aoes.Add(new(cone, position, rotation + offset, activation, shapeDistance: cone.Distance(position, rotation)));
+            {
+                var rotAdj = rotation + offset;
+                _aoes.Add(new(cone, position, rotAdj, activation, shapeDistance: cone.Distance(position, rotAdj)));
+            }
         }
     }
 

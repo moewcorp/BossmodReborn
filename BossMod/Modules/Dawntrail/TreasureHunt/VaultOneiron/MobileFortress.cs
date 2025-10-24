@@ -86,7 +86,7 @@ sealed class CarpetBomb : Components.SimpleAOEGroups
     }
 }
 
-sealed class QuietWorld(BossModule module) : Components.SimpleAOEs(module, (uint)AID.QuietWorld, new AOEShapeRect(10f, 20f), 4)
+sealed class QuietWorld(BossModule module) : Components.SimpleAOEs(module, (uint)AID.QuietWorld, new AOEShapeRect(10f, 20f))
 {
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -96,14 +96,15 @@ sealed class QuietWorld(BossModule module) : Components.SimpleAOEs(module, (uint
             return [];
         }
         var aoes = CollectionsMarshal.AsSpan(Casters);
-        ref readonly var aoe0 = ref aoes[0];
+        ref var aoe0 = ref aoes[0];
         var deadline = aoe0.Activation.AddSeconds(3.5d);
-        var rot = aoe0.Rotation;
+        var rot0 = aoe0.Rotation;
+        var rot1 = aoes[1].Rotation;
         var index = 0;
         while (index < count)
         {
             ref var aoe = ref aoes[index];
-            if (aoe.Activation >= deadline || index > 1 && aoe.Rotation == rot)
+            if (aoe.Activation >= deadline || index > 1 && aoe.Rotation == rot0 && aoe.Rotation == rot1)
             {
                 break;
             }
@@ -120,6 +121,7 @@ sealed class SystematicBombardment(BossModule module) : Components.GenericAOEs(m
 {
     private readonly AOEShapeRect rect = new(10f, 5f);
     private readonly List<AOEInstance> _aoes = new(16);
+
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         var count = _aoes.Count;

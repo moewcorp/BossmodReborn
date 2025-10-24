@@ -111,7 +111,7 @@ public sealed class NormalMovement : RotationModule
                 return; // pyretic is imminent, do not move
             }
 
-            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.PyreticMove && Hints.ImminentSpecialMode.activation <= World.FutureTime(1))
+            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.NoMovement && Hints.ImminentSpecialMode.activation <= World.FutureTime(1d))
                 return;
 
             if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Freezing && Hints.ImminentSpecialMode.activation <= World.FutureTime(0.5f))

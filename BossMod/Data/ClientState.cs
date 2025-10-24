@@ -47,11 +47,13 @@ public struct Cooldown(float elapsed, float total) : IEquatable<Cooldown>
 // this is generally not available for non-player party members, but we can try to guess
 public sealed class ClientState
 {
-    public readonly struct Fate(uint id, Vector3 center, float radius)
+    public readonly struct Fate(uint id, Vector3 center, float radius, byte progress, byte handInCount)
     {
         public readonly uint ID = id;
         public readonly Vector3 Center = center;
         public readonly float Radius = radius;
+        public readonly byte Progress = progress;
+        public readonly byte HandInCount = handInCount;
 
         public static bool operator ==(Fate left, Fate right) => left.ID == right.ID;
         public static bool operator !=(Fate left, Fate right) => left.ID != right.ID;
@@ -168,7 +170,7 @@ public sealed class ClientState
     public uint[] ContentKeyValueData = new uint[6]; // used for content-specific persistent player attributes, like bozja resistance rank
     public HateInfo CurrentTargetHate = new(default, new Hate[NumHateTargets]);
 
-    public readonly Dictionary<uint, uint> Inventory; // only tracks items in ActionDefinitions' SupportedItems set
+    public readonly Dictionary<uint, uint> Inventory; // tracks supported regular items and all key items
 
     public uint GetItemQuantity(uint itemId) => Inventory.TryGetValue(itemId, out var q) ? q : 0;
 
@@ -203,7 +205,7 @@ public sealed class ClientState
     public int ClassJobLevel(Class c)
     {
         var index = Service.LuminaRow<Lumina.Excel.Sheets.ClassJob>((uint)c)?.ExpArrayIndex ?? -1;
-        return index >= 0 && index < ClassJobLevels.Length ? ClassJobLevels[index] : -1;
+        return ClassJobLevels.BoundSafeAt(index, (short)-1);
     }
 
     // TODO: think about how to improve it...
@@ -627,7 +629,7 @@ public sealed class ClientState
             ws.Client.ActiveFate = Value;
             ws.Client.ActiveFateChanged.Fire(this);
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLAF"u8).Emit(Value.ID).Emit(Value.Center).Emit(Value.Radius, "f3");
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLAF"u8).Emit(Value.ID).Emit(Value.Center).Emit(Value.Radius, "f3").Emit(Value.Progress).Emit(Value.HandInCount);
     }
 
     public Event<OpActivePetChange> ActivePetChanged = new();
