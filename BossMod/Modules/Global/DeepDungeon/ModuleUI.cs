@@ -65,7 +65,7 @@ abstract partial class AutoClear : ZoneModule
             var countProblematic = ProblematicTrapLocations.Count;
             for (var i = 0; i < lenCurrent; ++i)
             {
-                ref readonly var trap = ref _trapsCurrentZone[i];
+                ref var trap = ref _trapsCurrentZone[i];
                 var isProblematic = false;
                 for (var j = 0; j < countProblematic; ++j)
                 {

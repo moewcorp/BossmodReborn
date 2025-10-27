@@ -116,8 +116,11 @@ sealed class IPCProvider : IDisposable
                         return false;
                     tempValue = new StrategyValueTrack() { Option = iOpt, Target = target, TargetParam = targetParam };
                     break;
-                case StrategyConfigScalar sc:
-                    tempValue = new StrategyValueScalar() { Value = Math.Clamp(float.Parse(value), sc.MinValue, sc.MaxValue) };
+                case StrategyConfigFloat sc:
+                    tempValue = new StrategyValueFloat() { Value = Math.Clamp(float.Parse(value), sc.MinValue, sc.MaxValue) };
+                    break;
+                case StrategyConfigInt si:
+                    tempValue = new StrategyValueInt() { Value = Math.Clamp(long.Parse(value), si.MinValue, si.MaxValue) };
                     break;
                 case var x:
                     throw new ArgumentException($"unhandled config type {x.GetType()}");
@@ -175,7 +178,7 @@ sealed class IPCProvider : IDisposable
             return true;
         });
 
-        Register("AI.SetPreset", (string name) => ai.SetAIPreset(autorotation.Database.Presets.VisiblePresets.FirstOrDefault(x => x.Name.Trim().Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))));
+        Register("AI.SetPreset", (string name) => ai.SetAIPreset(autorotation.Database.Presets.AllPresets.FirstOrDefault(x => x.Name.Trim().Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))));
         Register("AI.GetPreset", () => ai.GetAIPreset);
     }
 

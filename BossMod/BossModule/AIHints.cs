@@ -12,7 +12,17 @@ public sealed class AIHints
         public const int PriorityForbidden = -4; // attacking this enemy will probably lead to a wipe; autoattacks and actions that target it will be forcibly prevented (if custom queueing is enabled)
 
         public Actor Actor = actor;
-        public int Priority = priority;
+        private int _priority = priority;
+        public int Priority
+        {
+            get => _priority;
+            set
+            {
+                // we should never change priority if it has been set to pointless, since that means the target is dying and further actions targeting it are a waste
+                if (_priority != PriorityPointless)
+                    _priority = value;
+            }
+        }
         //public float TimeToKill;
         public float AttackStrength = 0.05f; // target's predicted HP percent is decreased by this amount (0.05 by default)
         public WPos DesiredPosition = actor.Position; // tank AI will try to move enemy to this position
@@ -26,6 +36,11 @@ public sealed class AIHints
         public bool ShouldBeDispelled; // if set, AI will try to cast a dispel action; only relevant for foray content
         public bool StayAtLongRange; // if set, players with ranged attacks don't bother coming closer than max range (TODO: reconsider)
         public bool Spikes; // if set, autoattacks will be prevented
+
+        public void ForcePriority(int priority)
+        {
+            _priority = priority;
+        }
     }
 
     public enum SpecialMode
@@ -73,6 +88,7 @@ public sealed class AIHints
     // forced target
     // this should be set only if either explicitly planned by user or by ai, otherwise it will be annoying to user
     public Actor? ForcedTarget;
+    public Actor? ForcedFocusTarget;
 
     // low-level forced movement - if set, character will move in specified direction (ignoring casts, uptime, forbidden zones, etc), or stay in place if set to default
     public Vector3? ForcedMovement;
@@ -143,6 +159,7 @@ public sealed class AIHints
         Array.Clear(Enemies);
         PotentialTargets.Clear();
         ForcedTarget = null;
+        ForcedFocusTarget = null;
         ForcedMovement = null;
         InteractWithTarget = null;
         ForbiddenZones.Clear();
@@ -171,11 +188,10 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                ref var hPriority = ref h.Priority;
                 // Math.Max(priority, h.Priority)
-                var diff = priority - hPriority;
+                var diff = priority - h.Priority;
                 var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                hPriority = priority - (diff & mask);
+                h.Priority = priority - (diff & mask);
             }
         }
     }
@@ -188,11 +204,10 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                ref var hPriority = ref h.Priority;
                 // Math.Max(priority, h.Priority)
-                var diff = priority - hPriority;
+                var diff = priority - h.Priority;
                 var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                hPriority = priority - (diff & mask);
+                h.Priority = priority - (diff & mask);
                 if (forbidDots)
                 {
                     h.ForbidDOTs = true;
@@ -212,11 +227,10 @@ public sealed class AIHints
             {
                 if (oids[j] == h.Actor.OID)
                 {
-                    ref var hPriority = ref h.Priority;
                     // Math.Max(priority, h.Priority)
-                    var diff = priority - hPriority;
+                    var diff = priority - h.Priority;
                     var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                    hPriority = priority - (diff & mask);
+                    h.Priority = priority - (diff & mask);
                     break;
                 }
             }
