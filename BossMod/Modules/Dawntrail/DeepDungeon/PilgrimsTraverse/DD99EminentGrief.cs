@@ -322,7 +322,7 @@ sealed class BoundsOfSinEnd(BossModule module) : Components.GenericAOEs(module)
         new(new(-606.06219f, -296.5f), radius, 64, 120f.Degrees()), //  ENVC 0x08
         new(new(-607.00012f, -300f), radius, 64, 89.98f.Degrees()), //  ENVC 0x09
         new(new(-606.06219f, -303.5f), radius, 64, 60f.Degrees()), // ENVC 0x0A
-        new(new(-603.5f, -306.06219f), radius, 64, 30f.Degrees())// ENVC 0x0B
+        new(new(-603.5f, -306.06219f), radius, 64, 30f.Degrees()) // ENVC 0x0B
     ];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
@@ -332,7 +332,7 @@ sealed class BoundsOfSinEnd(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.BoundsOfSinPull)
         {
             var loc = Arena.Center.Quantized();
-            _aoe = [new(circle, loc, default, WorldState.FutureTime(6d), shapeDistance: circle.Distance(loc, default))]; // true activation is 7.7, but slightly lower values seem to improve the pathfinding here
+            _aoe = [new(circle, loc, default, WorldState.FutureTime(6d), shapeDistance: circle.Distance(loc, default))]; // true activation is 11.7, but slightly lower values seem to improve the pathfinding here
         }
     }
 

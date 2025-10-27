@@ -35,8 +35,8 @@ public enum AID : uint
     ScourgingBlazeRest = 44119, // Helper/player->location, no cast, range 5 circle
 
     BoundsOfSinVisual = 44120, // DevouredEater->self, 3.3+0,7s cast, single-target
-    BoundsOfSinPull = 44121, // Helper->self, 4.0s cast, range 40 circle
-    BoundsOfSin = 44122, // Helper/player->self, 3.0s cast, range 3 circle, pull into middle
+    BoundsOfSinPull = 44121, // Helper->self, 4.0s cast, range 40 circle, pull into middle
+    BoundsOfSin = 44122, // Helper/player->self, 3.0s cast, range 3 circle
     BoundsOfSinEndCircle = 44123, // Helper->self, no cast, range 8 circle
     BoundsOfSinEndDonut = 44124, // Helper->self, no cast, range 8-30 donut
 
@@ -163,9 +163,9 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    _Gen_Icon_m0344trg_b0h = 78, // player->self
-    _Gen_Icon_m0344trg_a0h = 77, // player->self
-    _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
+    Dark = 78, // player->self
+    Light = 77, // player->self
+    SearingChains = 97, // player->self
     _Gen_Icon_lockon5_t0h = 23, // player->self
     _Gen_Icon_share_laser_3sec_0t = 527, // EminentGrief->player
 }
