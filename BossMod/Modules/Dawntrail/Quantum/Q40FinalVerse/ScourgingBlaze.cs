@@ -5,6 +5,7 @@ sealed class ScourgingBlaze(BossModule module) : Components.Exaflare(module, 5f)
 {
     private readonly List<(WDir, WPos)> crystals = new(12);
     private WDir next;
+    public int Direction;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -54,10 +55,12 @@ sealed class ScourgingBlaze(BossModule module) : Components.Exaflare(module, 5f)
             case (uint)AID.ScourgingBlazeVisualWE1:
             case (uint)AID.ScourgingBlazeVisualWE2:
                 next = new(1f, default);
+                ++Direction;
                 break;
             case (uint)AID.ScourgingBlazeVisualNS1:
             case (uint)AID.ScourgingBlazeVisualNS2:
                 next = new(default, 1f);
+                ++Direction;
                 break;
             case (uint)AID.ScourgingBlazeFirst:
                 var pos = caster.Position;
