@@ -188,11 +188,10 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                ref var hPriority = ref h.Priority;
                 // Math.Max(priority, h.Priority)
-                var diff = priority - hPriority;
+                var diff = priority - h.Priority;
                 var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                hPriority = priority - (diff & mask);
+                h.Priority = priority - (diff & mask);
             }
         }
     }
@@ -205,11 +204,10 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                ref var hPriority = ref h.Priority;
                 // Math.Max(priority, h.Priority)
-                var diff = priority - hPriority;
+                var diff = priority - h.Priority;
                 var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                hPriority = priority - (diff & mask);
+                h.Priority = priority - (diff & mask);
                 if (forbidDots)
                 {
                     h.ForbidDOTs = true;
@@ -229,11 +227,10 @@ public sealed class AIHints
             {
                 if (oids[j] == h.Actor.OID)
                 {
-                    ref var hPriority = ref h.Priority;
                     // Math.Max(priority, h.Priority)
-                    var diff = priority - hPriority;
+                    var diff = priority - h.Priority;
                     var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                    hPriority = priority - (diff & mask);
+                    h.Priority = priority - (diff & mask);
                     break;
                 }
             }

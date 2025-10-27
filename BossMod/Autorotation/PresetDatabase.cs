@@ -107,6 +107,7 @@ public sealed class PresetDatabase
                 if (pmj.Definition.Classes[(int)c])
                 {
                     presets.Add(vis);
+                    break;
                 }
             }
         }

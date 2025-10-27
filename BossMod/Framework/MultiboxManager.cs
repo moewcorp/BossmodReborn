@@ -23,11 +23,11 @@ internal sealed class MultiboxManager : IDisposable
 
     private void OnChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
     {
-        if (Service.IsDev && type == XivChatType.Echo && message.TextValue == "test")
+        if (type == XivChatType.Echo && message.TextValue == "test")
         {
             var leaderId = _ws.Party.Members[0].ContentId;
 
-            foreach (var p in _rotations.Presets)
+            foreach (var p in _rotations.Database.Presets.AllPresets)
             {
 #if DEBUG
                 var md = p.Modules.FirstOrDefault(m => m.Type == typeof(Autorotation.MiscAI.Multibox));

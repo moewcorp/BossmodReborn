@@ -317,10 +317,10 @@ public sealed class RotationModuleManager : IDisposable
 #endif
         }
 
-        if (cast.Action.ID == 6276 && Config.ClearPresetOnLuring)
+        if (cast.Action.ID == 6276u && Config.ClearPresetOnLuring)
         {
-            Service.Log($"[RMM] Luring Trap triggered, force-disabling from '{PresetNames}'");
-            SetForceDisabled();
+            Service.Log($"[RMM] Luring Trap triggered, force-disabling autorotation'");
+            Preset = ForceDisable;
         }
     }
 }
