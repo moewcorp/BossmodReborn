@@ -46,7 +46,7 @@ sealed class IrefulWind(BossModule module) : Components.SimpleKnockbacks(module,
 
 sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly Dictionary<Actor, DateTime> transportingCheckStartTimes = [];
+    private readonly DateTime[] transportingCheckStartTimes = new DateTime[4];
     private const float HalfSize = 5f;
     private static readonly WPos[] defaultGreenTiles =
     [
@@ -81,7 +81,12 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
     {
         if (status.ID == (uint)SID.Transporting)
         {
-            transporting.Clear(Raid.FindSlot(actor.InstanceID));
+            var slot = Raid.FindSlot(actor.InstanceID);
+            transporting.Clear(slot);
+            if (slot >= 0)
+            {
+                transportingCheckStartTimes[slot] = default;
+            }
         }
     }
 
@@ -155,7 +160,9 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
                 newTiles.Add(newTile);
 
                 if ((pos - newCenter).LengthSq() > 625f)
+                {
                     newTiles.Add(new(newCenter + offset, HalfSize));
+                }
             }
             tiles = [.. newTiles];
         }
@@ -194,13 +201,9 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
             }
             hints.InteractWithTarget = closest;
         }
-        else if (!shape.Check(actor.Position))
+        else if ((AI.AIManager.Instance?.Beh != null || Autorotation.MiscAI.NormalMovement.Instance != null) && !shape.Check(actor.Position)) // only automatically drop seeds if AI is on
         {
-            HandleTransportingActor(actor, hints);
-        }
-        else
-        {
-            transportingCheckStartTimes.Remove(actor);
+            HandleTransportingActor(slot, hints);
         }
     }
 
@@ -220,16 +223,17 @@ sealed class GreenTiles(BossModule module) : Components.GenericAOEs(module)
         return clippedSeeds;
     }
 
-    private void HandleTransportingActor(Actor actor, AIHints hints)
+    private void HandleTransportingActor(int slot, AIHints hints)
     {
-        if (!transportingCheckStartTimes.TryGetValue(actor, out var checkStartTime))
+        var time = transportingCheckStartTimes[slot];
+        if (time == default)
         {
-            transportingCheckStartTimes[actor] = WorldState.CurrentTime;
+            transportingCheckStartTimes[slot] = WorldState.CurrentTime;
         }
-        else if (WorldState.CurrentTime >= checkStartTime.AddSeconds(0.25d))  // we need to delay the drop or server lag will cause the seed to drop at an old position
+        else if (WorldState.CurrentTime >= time.AddSeconds(0.25d))  // we need to delay the drop or server lag will cause the seed to drop at an old position
         {
             hints.StatusesToCancel.Add(((uint)SID.Transporting, default));
-            transportingCheckStartTimes.Remove(actor);
+            transportingCheckStartTimes[slot] = default;
         }
     }
 
