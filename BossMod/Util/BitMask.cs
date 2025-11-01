@@ -69,7 +69,7 @@ public struct BitMask(ulong raw)
         var indices = new int[count];
         var index = 0;
 
-        while (v != 0)
+        while (v != default)
         {
             var bitIndex = BitOperations.TrailingZeroCount(v);
             indices[index++] = bitIndex;

@@ -478,6 +478,7 @@ sealed class BallOfFire(BossModule module) : Components.GenericBaitAway(module, 
 sealed class AbyssalBlaze(BossModule module) : Components.Exaflare(module, 5f)
 {
     private readonly List<(WDir, WPos)> crystals = new(8);
+    private AOEShapeCustom? shape;
     private WDir next;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -506,6 +507,7 @@ sealed class AbyssalBlaze(BossModule module) : Components.Exaflare(module, 5f)
                     if (Lines.Count == 16)
                     {
                         crystals.Clear();
+                        shape = null;
                     }
                     return;
                 }
@@ -518,7 +520,27 @@ sealed class AbyssalBlaze(BossModule module) : Components.Exaflare(module, 5f)
         if (actor.OID == (uint)OID.Crystal)
         {
             crystals.Add((next, actor.Position));
+            if (crystals.Count == 8)
+            {
+                var rects = new Rectangle[8];
+                for (var i = 0; i < 8; ++i)
+                {
+                    var c = crystals[i];
+                    rects[i] = new(c.Item2, 5f, 40f, c.Item1.ToAngle());
+                }
+                shape = new([new Rectangle(DD99EminentGrief.ArenaCenter, 20f, 15f)], rects);
+            }
         }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        if (shape == null)
+        {
+            return;
+        }
+
+        shape.Outline(Arena, Arena.Center, default, Colors.Safe, 2f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)

@@ -4,6 +4,7 @@ namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
 sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTraverse.LightAndDarkBase(module)
 {
     private readonly Q40EminentGrief bossmod = (Q40EminentGrief)module;
+    private bool boundsOfSinTowers;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 
@@ -98,6 +99,10 @@ sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTra
                 hints.Add(switchColor);
             }
         }
+        else if (boundsOfSinTowers)
+        {
+            hints.Add(light, !lightBuff[slot]);
+        }
         else if (aetherdrainActive)
         {
             if (wantLight[0])
@@ -158,9 +163,114 @@ sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTra
             var oid = e.Actor.OID;
             ref var hp = ref e.Actor.HPMP;
             e.Priority = hp.CurHP <= 1u ? AIHints.Enemy.PriorityInvincible : darkBuff[slot] && oid == (uint)OID.DevouredEater ? 0
-                : lightBuff[slot] && oid == (uint)OID.EminentGrief ? 0 : oid == (uint)OID.VodorigaMinion ? 1 : AIHints.Enemy.PriorityInvincible;
+                : lightBuff[slot] && oid == (uint)OID.EminentGrief ? 0 : oid is (uint)OID.VodorigaMinion or (uint)OID.BloodguardMinion ? 1 : AIHints.Enemy.PriorityInvincible;
         }
 
         base.AddAIHints(slot, actor, assignment, hints);
+    }
+
+    public override void OnMapEffect(byte index, uint state)
+    {
+        if (index == 0x1B)
+        {
+            switch (state)
+            {
+                case 0x00020001u:
+                    boundsOfSinTowers = true;
+                    break;
+                case 0x00080004u:
+                    boundsOfSinTowers = false;
+                    break;
+            }
+        }
+    }
+}
+
+[SkipLocalsInit]
+sealed class LightDarkNeutralize(BossModule module) : Components.GenericStackSpread(module)
+{
+    public int NumCasts;
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
+    {
+        if (iconID == (uint)IconID.Dark)
+        {
+            Stacks.Add(new(actor, 2f, 2, 2, WorldState.FutureTime(5.1d)));
+        }
+    }
+
+    public override void OnEventVFX(Actor actor, uint vfxID, ulong targetID)
+    {
+        if (vfxID == 40u)
+        {
+            ++NumCasts;
+        }
+    }
+}
+
+[SkipLocalsInit]
+sealed class BoundsOfSinTowers(BossModule module) : Components.GenericTowers(module, damageType: AIHints.PredictedDamageType.Raidwide)
+{
+    private BitMask forbidden = ~(BitMask)default;
+
+    public override void OnMapEffect(byte index, uint state)
+    {
+        if (index == 0x1B)
+        {
+            switch (state)
+            {
+                case 0x00020001u:
+                    var party = Raid.WithSlot(true, false, false);
+                    var len = party.Length;
+                    for (var i = 0; i < len; ++i)
+                    {
+                        ref var p = ref party[i];
+                        if (p.Item2.FindStatus((uint)SID.LightVengeance) == null)
+                        {
+                            forbidden.Clear(p.Item1);
+                        }
+                    }
+                    var act = WorldState.FutureTime(14.2d);
+                    var center = Arena.Center;
+                    var a45 = 45f.Degrees();
+                    var a90 = 90f.Degrees();
+                    for (var i = 0; i < 4; ++i)
+                    {
+                        Towers.Add(new(center + 11f * (i * a90 + a45).ToDirection(), 2f, 1, 1, forbidden, act));
+                    }
+                    break;
+                case 0x00080004u:
+                    ++NumCasts;
+                    break;
+            }
+        }
+    }
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.LightVengeance)
+        {
+            forbidden.Clear(Raid.FindSlot(actor.InstanceID));
+            UpdateTowers();
+        }
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.LightVengeance)
+        {
+            forbidden.Set(Raid.FindSlot(actor.InstanceID));
+            UpdateTowers();
+        }
+    }
+
+    private void UpdateTowers()
+    {
+        var count = Towers.Count;
+        var towers = CollectionsMarshal.AsSpan(Towers);
+        for (var i = 0; i < count; ++i)
+        {
+            towers[i].ForbiddenSoakers = forbidden;
+        }
     }
 }
