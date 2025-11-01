@@ -6,6 +6,16 @@ sealed class ScourgingBlaze(BossModule module) : Components.Exaflare(module, 5f)
     private readonly List<(WDir, WPos)> crystals = new(12);
     private WDir next;
     public int Direction;
+    private AOEShapeCustom? shape;
+    public bool Show;
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => Show ? _aoes : [];
+
+    public void ShowAOEs()
+    {
+        Show = true;
+        shape = null;
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -45,7 +55,27 @@ sealed class ScourgingBlaze(BossModule module) : Components.Exaflare(module, 5f)
         if (actor.OID == (uint)OID.Crystal)
         {
             crystals.Add((next, actor.Position));
+            if (crystals.Count == 12)
+            {
+                var rects = new Rectangle[12];
+                for (var i = 0; i < 12; ++i)
+                {
+                    var c = crystals[i];
+                    rects[i] = new(c.Item2, 5f, 40f, c.Item1.ToAngle());
+                }
+                shape = new([new Rectangle(Q40EminentGrief.ArenaCenter, 20f, 15f)], rects);
+            }
         }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        if (shape == null)
+        {
+            return;
+        }
+
+        shape.Outline(Arena, Arena.Center, default, Colors.Safe, 2f);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -64,7 +94,7 @@ sealed class ScourgingBlaze(BossModule module) : Components.Exaflare(module, 5f)
                 break;
             case (uint)AID.ScourgingBlazeFirst:
                 var pos = caster.Position;
-
+                ++NumCasts;
                 var count = Lines.Count - 1;
                 for (var i = count; i >= 0; --i)
                 {

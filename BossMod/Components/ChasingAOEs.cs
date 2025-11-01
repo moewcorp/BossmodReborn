@@ -163,11 +163,6 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     public override void Update()
     {
         var count = Chasers.Count;
-        if (Chasers.Count == 0)
-        {
-            return;
-        }
-
         for (var i = count - 1; i >= 0; --i)
         {
             var c = Chasers[i];
@@ -181,11 +176,6 @@ public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionF
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         var count = Chasers.Count;
-        if (Chasers.Count == 0)
-        {
-            return;
-        }
-
         for (var i = 0; i < count; ++i)
         {
             var c = Chasers[i];

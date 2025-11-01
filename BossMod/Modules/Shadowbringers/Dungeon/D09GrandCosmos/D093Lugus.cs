@@ -102,10 +102,12 @@ class MortalFlame(BossModule module) : BossComponent(module)
         for (var i = 0; i < count; ++i)
         {
             var h = furniture[i];
-            forbidden[i] = new SDInvertedCircle(h.Position, h.HitboxRadius - 0.1f);
+            forbidden[i] = new SDInvertedCircle(h.Position, 0.8f);
         }
         if (forbidden.Length != 0)
+        {
             hints.AddForbiddenZone(new SDIntersection(forbidden), _activation);
+        }
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)

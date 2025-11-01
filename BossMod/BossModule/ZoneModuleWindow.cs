@@ -22,6 +22,7 @@ public sealed class ZoneModuleWindow : UIWindow
         _wasOpen = IsOpen;
         if (IsOpen)
         {
+            Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
             if (config.TransparentMode)
             {
                 Flags |= ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground;
@@ -30,7 +31,7 @@ public sealed class ZoneModuleWindow : UIWindow
             {
                 Flags |= ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoInputs;
             }
-            ForceMainWindow = BossModuleManager.Config.TrishaMode; // NoBackground flag without ForceMainWindow works incorrectly for whatever reason
+            ForceMainWindow = config.TransparentMode; // NoBackground flag without ForceMainWindow works incorrectly for whatever reason
             var title = _zmm.ActiveModule!.WindowName();
             if (title.IsNullOrEmpty())
             {
