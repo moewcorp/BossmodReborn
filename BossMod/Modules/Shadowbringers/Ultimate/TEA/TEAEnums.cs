@@ -234,6 +234,7 @@ public enum SID : uint
     SharedSentence = 1122, // none->player, extra=0x0
     HouseArrest = 1123, // none->player, extra=0x0
     RestrainingOrder = 1124, // none->player, extra=0x0
+    EnigmaCodexHeart = 2147, // none->TrueHeart, extra=0x171
     FinalWordContactProhibition = 2152, // none->player, extra=0x0
     FinalWordContactRegulation = 2153, // none->player, extra=0x0
     FinalWordEscapeProhibition = 2154, // none->player, extra=0x0
@@ -244,7 +245,6 @@ public enum SID : uint
     EscapeDetectionOrdained = 3058, // none->player, extra=0x0
     FateCalibrationBeta = 2195, // none->player, extra=0x84 (light) / 0x85 (dark)
     TemporalPrison = 2165 // none->player, extra=0x0
-    //_Gen_EnigmaCodex = 2147, // none->TrueHeart, extra=0x171
     //_Gen_EnigmaCodex = 2146, // TrueHeart->player, extra=0x0
     //_Gen_DamageDown = 1016, // none->Plasmasphere, extra=0x1/0x2/0x3/0x4
     //_Gen_VulnerabilityDown = 406, // none->TrueHeart, extra=0x1/0x2/0x3/0x4

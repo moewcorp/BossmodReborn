@@ -25,10 +25,7 @@ public class Adds(BossModule module, uint oid, int priority = 0, bool forbidDots
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (priority >= 0)
-        {
-            hints.PrioritizeTargetsByOIDAndForbidDOTs(oid, priority, forbidDots);
-        }
+        hints.PrioritizeTargetsByOIDAndForbidDOTs(oid, priority, forbidDots);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
