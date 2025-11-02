@@ -444,10 +444,10 @@ sealed class TEAStates : StateMachineBuilder
             .DeactivateOnExit<P3Inception2>();
 
         // debuffs (restraining x2, aggravated x2, shared) appear right before cast start
-        ActorCast(id + 0x200u, _module.AlexPrime, (uint)AID.Inception, 2.2f, 5f, true);
+        ActorCast(id + 0x200u, _module.AlexPrime, (uint)AID.Inception, 2.2f, 5f, true)
+            .ActivateOnEnter<P3Inception3Sacrament>();
         Condition(id + 0x208u, 4.0f, () => _module.TrueHeart()?.IsDead ?? true, "Heart disappears");
         ComponentCondition<P3Inception3Sacrament>(id + 0x210u, 4.3f, comp => comp.NumCasts > 0, "Shared sentence")
-            .ActivateOnEnter<P3Inception3Sacrament>()
             .ActivateOnEnter<P3Inception3Debuffs>()
             .DeactivateOnExit<P3Inception3Debuffs>() // note: debuffs resolve ~0.3s before sacrament
             .DeactivateOnExit<P3Inception3Sacrament>();

@@ -49,7 +49,7 @@ sealed class P3Inception2 : Components.GenericBaitAway
                     _taken.Set(slot);
                     ForbiddenPlayers.Set(slot);
                 }
-                if (ForbiddenPlayers.Raw == 0xff)
+                if (ForbiddenPlayers.Raw == 0xffUL)
                 {
                     // assume after both tanks have taken, rest is taken by raid
                     ForbiddenPlayers = _taken;
