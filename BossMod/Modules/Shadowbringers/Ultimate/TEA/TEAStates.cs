@@ -434,7 +434,8 @@ sealed class TEAStates : StateMachineBuilder
         ActorCast(id + 0x30u, _module.AlexPrime, (uint)AID.JudgmentCrystal, 4.2f, 3f, true);
         // +0.7s: remaining 4 players get icon 96
         ComponentCondition<P3Inception1>(id + 0x40u, 5.8f, comp => comp.CrystalsDone, "Crystals");
-        ActorTargetable(id + 0x50u, _module.TrueHeart, true, 0.7f);
+        ActorTargetable(id + 0x50u, _module.TrueHeart, true, 0.7f)
+            .ActivateOnEnter<P3TrueHeart>();
 
         ComponentCondition<P3Inception2>(id + 0x100u, 10.6f, comp => comp.NumCasts >= 1, "Bait 1")
             .DeactivateOnExit<P3Inception1>();
@@ -446,7 +447,8 @@ sealed class TEAStates : StateMachineBuilder
         // debuffs (restraining x2, aggravated x2, shared) appear right before cast start
         ActorCast(id + 0x200u, _module.AlexPrime, (uint)AID.Inception, 2.2f, 5f, true)
             .ActivateOnEnter<P3Inception3Sacrament>();
-        Condition(id + 0x208u, 4.0f, () => _module.TrueHeart()?.IsDead ?? true, "Heart disappears");
+        Condition(id + 0x208u, 4.0f, () => _module.TrueHeart()?.IsDead ?? true, "Heart disappears")
+            .DeactivateOnExit<P3TrueHeart>();
         ComponentCondition<P3Inception3Sacrament>(id + 0x210u, 4.3f, comp => comp.NumCasts > 0, "Shared sentence")
             .ActivateOnEnter<P3Inception3Debuffs>()
             .DeactivateOnExit<P3Inception3Debuffs>() // note: debuffs resolve ~0.3s before sacrament
