@@ -60,6 +60,7 @@ public static class Colors
     public static uint Danger => _config.ArenaDanger.ABGR;
     public static uint Safe => _config.ArenaSafe.ABGR;
     public static uint Trap => _config.ArenaTrap.ABGR;
+    public static uint Light => _config.ArenaLight.ABGR;
     public static uint PC => _config.ArenaPC.ABGR;
     public static uint Enemy => _config.ArenaEnemy.ABGR;
     public static uint Object => _config.ArenaObject.ABGR;

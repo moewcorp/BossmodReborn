@@ -72,7 +72,7 @@ public sealed class D072Anthracite : BossModule
     {
         const float Radius = 3.3f;
         var arena = new ArenaBoundsCustom([new Square(new(-130f, -51f), 18f)], [new Square(new(-118.001f, -56.999f), Radius), new Square(new(-142.001f, -44.999f), Radius),
-        new Polygon(new(-124.001f, -38.999f), Radius, 20), new Polygon(new(-136.001f, -62.999f), Radius, 20)], AdjustForHitbox: true);
+        new Polygon(new(-124.001f, -38.999f), Radius, 20), new Polygon(new(-136.001f, -62.999f), Radius, 20)], AdjustForHitboxInwards: true);
         return (arena.Center, arena);
     }
 }

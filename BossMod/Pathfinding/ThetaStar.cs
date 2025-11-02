@@ -185,7 +185,8 @@ public sealed class ThetaStar
         while (_fallbackIndex == StartNodeIndex && ExecuteStep())
         {
             ref var nd = ref _nodes[_bestIndex]; // instead of only looking for the perfect cell we search for a cell that is reasonably better
-            if (nd.Score >= Score.SafeBetterPrio && nd.PathLeeway > 0f || nd.Score > _startScore && pixelMaxG[_bestIndex] > pixelMaxG[StartNodeIndex] + 2f || nd.HScore <= 0f)
+            var isLeeWayOverZero = nd.PathLeeway > 0f;
+            if (isLeeWayOverZero && nd.Score >= Score.SafeBetterPrio || !isLeeWayOverZero && nd.Score > _startScore && pixelMaxG[_bestIndex] > pixelMaxG[StartNodeIndex] + 2f || nd.HScore <= 0f)
             {
                 break;
             }
@@ -742,10 +743,10 @@ public sealed class ThetaStar
             Score = CalculateScore(destPixG, candidateMinG, candidateLeeway, nodeIndex)
         };
         ref var altnode = ref altNode;
-        if (currentParentNode.Score >= Score.UnsafeAsStart && altnode.PathLeeway < 0f && altnode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
-        {
-            return;
-        }
+        // if (currentParentNode.Score >= Score.UnsafeAsStart && altnode.PathLeeway < 0f && altnode.Score == Score.JustBad) // don't leave safe cells if it requires going through bad cells
+        // {
+        //     return;
+        // }
 
         var grandParentIndex = currentParentNode.ParentIndex;
         ref var grandparentnode = ref _nodes[grandParentIndex];
@@ -813,10 +814,10 @@ public sealed class ThetaStar
         };
 
         ref var nalt = ref altnode;
-        if (parent.Score >= Score.UnsafeAsStart && nalt.PathLeeway < 0f && nalt.Score == Score.JustBad)
-        {
-            return;
-        }
+        // if (parent.Score >= Score.UnsafeAsStart && nalt.PathLeeway < 0f && nalt.Score == Score.JustBad)
+        // {
+        //     return;
+        // }
 
         ref var destNode = ref _nodes[edge.DestIndex];
         var visit = destNode.OpenHeapIndex == 0 || CompareNodeScores(ref altnode, ref destNode) < (destNode.OpenHeapIndex < 0 ? -1 : 0);

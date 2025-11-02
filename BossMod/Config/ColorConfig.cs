@@ -34,6 +34,9 @@ public sealed class ColorConfig : ConfigNode
     [PropertyDisplay("Arena: trap")]
     public Color ArenaTrap = new(0x80000080);
 
+    [PropertyDisplay("Arena: light")]
+    public Color ArenaLight = new(0xffffffff);
+
     [PropertyDisplay("Arena: vulnerable, needs special attention")]
     public Color ArenaVulnerable = new(0xffff00ff);
 

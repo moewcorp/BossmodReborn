@@ -303,7 +303,7 @@ public sealed class ModuleViewer : IDisposable
 
     private void Customize(BossModuleInfo.Expansion expansion, uint iconId, ReadOnlySeString name) => _expansions[(int)expansion] = (name.ToString(), iconId);
     private void Customize(BossModuleInfo.Category category, uint iconId, ReadOnlySeString name) => _categories[(int)category] = (name.ToString(), iconId);
-    private void Customize(BossModuleInfo.Category category, ContentType ct) => Customize(category, ct.Icon, ct.Name);
+    private void Customize(BossModuleInfo.Category category, ContentType ct, string? name = null) => Customize(category, ct.Icon, name ?? ct.Name);
     private void Customize(BossModuleInfo.Category category, CharaCardPlayStyle ps) => Customize(category, (uint)ps.Icon, ps.Name);
 
     //private static IDalamudTextureWrap? GetIcon(uint iconId) => iconId != 0 ? Service.Texture?.GetIcon(iconId, Dalamud.Plugin.Services.ITextureProvider.IconFlags.HiRes) : null;

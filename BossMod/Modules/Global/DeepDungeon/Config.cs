@@ -1,4 +1,5 @@
 ﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Lumina.Excel.Sheets;
 
@@ -31,9 +32,12 @@ public sealed class AutoDDConfig : ConfigNode
     [PropertyDisplay("Automatic mob targeting behavior")]
     public ClearBehavior AutoClear = ClearBehavior.Leveling;
 
-    [PropertyDisplay("Max number of mobs to pull before pausing navigation")]
-    [PropertySlider(1, 15)]
-    public int MaxPull = 1;
+    [PropertyDisplay("Disable DoTs on non-boss floors (only affects BMR autorotation)")]
+    public bool ForbidDOTs = false;
+
+    [PropertyDisplay("Max number of mobs to pull before pausing navigation (0 = do not navigate while in combat)")]
+    [PropertySlider(0, 15)]
+    public int MaxPull = 0;
     [PropertyDisplay("Try to use terrain to LOS attacks")]
     public bool AutoLOS = false;
 
@@ -67,7 +71,8 @@ public sealed class AutoDDConfig : ConfigNode
                 {
                     var row = Service.LuminaRow<DeepDungeonItem>((uint)i)!.Value;
                     var wrap = Service.Texture.GetFromGameIcon(row.Icon).GetWrapOrEmpty();
-                    ImGui.Image(wrap.Handle, new Vector2(32, 32), new Vector2(0, 0), tintCol: AutoPoms[i] ? new(1, 1, 1, 1) : new(1, 1, 1, 0.4f));
+                    var scale = new Vector2(32, 32) * ImGuiHelpers.GlobalScale;
+                    ImGui.Image(wrap.Handle, scale, new Vector2(0, 0), tintCol: AutoPoms[i] ? new(1, 1, 1, 1) : new(1, 1, 1, 0.4f));
                     if (ImGui.IsItemClicked())
                     {
                         AutoPoms.Toggle(i);

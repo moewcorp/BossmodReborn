@@ -25,10 +25,16 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("在游戏中显示位置提示", tooltip: "显示位置技能提示，指示移动到目标的侧面或后方")]
     public bool ShowPositionals = false;
 
+    [PropertyDisplay("死亡时自动禁用自动循环")]
+    public bool ClearPresetOnDeath = true;
+
     [PropertyDisplay("退出战斗时自动禁用自动循环")]
     public bool ClearPresetOnCombatEnd = false;
 
-    [PropertyDisplay("退出战斗时自动重新启用被强制禁用的自动循环")]
+    [PropertyDisplay("如果诱饵陷阱被触发时，自动禁用自动循环。", tooltip: "仅适用于深层迷宫")]
+    public bool ClearPresetOnLuring = false;
+
+    [PropertyDisplay("退出战斗时自动重新启用被手动禁用的自动循环")]
     public bool ClearForceDisableOnCombatEnd = true;
 
     [PropertyDisplay("提前开怪阈值", tooltip: "如果有人在倒计时超过此值时进入boss战斗，则视为抢怪，自动循环将被强制禁用")]

@@ -254,7 +254,7 @@ public sealed class DD30ForgivenTreachery : BossModule
     private static (WPos center, ArenaBoundsCustom arena) BuildArena()
     {
         var arena = new ArenaBoundsCustom([new DonutV(new WPos(-300f, -300f), 14f, 19f, 128), new Polygon(new(-283.51849f, -300f), 7.5f, 64),
-        new Polygon(new(-316.48102f, -300f), 7.5f, 64), new Rectangle(new(-300f, -281.5f), 5f, 9.5f), new Rectangle(new(-300f, -318.5f), 5f, 9.5f)], AdjustForHitbox: true);
+        new Polygon(new(-316.48102f, -300f), 7.5f, 64), new Rectangle(new(-300f, -281.5f), 5f, 9.5f), new Rectangle(new(-300f, -318.5f), 5f, 9.5f)], AdjustForHitboxInwards: true);
         return (arena.Center, arena);
     }
 }

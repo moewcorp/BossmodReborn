@@ -14,4 +14,10 @@ public sealed class ZoneModuleConfig : ConfigNode
 
     [PropertyDisplay("使用冲刺技能进行导航（速涂、回避跳跃等）")]
     public bool UseDash = true;
+
+    [PropertyDisplay("Lock zone module window movement and mouse interaction")]
+    public bool Lock = false;
+
+    [PropertyDisplay("Make zone module windows transparent", tooltip: "Removes the black window around zone module windows; this will not work if you move the radar to a different monitor")]
+    public bool TransparentMode = false;
 }
