@@ -253,4 +253,73 @@ public static class Intersect
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CircleDonutSector(in WPos circleCenter, float circleRadius, in WPos sectorCenter, float innerRadius, float outerRadius, in WDir sectorDir, Angle halfAngle)
     => CircleDonutSector(circleCenter - sectorCenter, circleRadius, innerRadius, outerRadius, sectorDir, halfAngle);
+
+    public static int RayCircleAnglesDeg(WPos centerC, float radius, WPos rayOriginO, WDir rayDirD, out float degEnter, out float degExit)
+    {
+        degEnter = degExit = default;
+
+        // shift to circle space: F = O - C
+        var F = rayOriginO - centerC;
+
+        // Quadratic coefficients for |F + tD|^2 = r^2
+        var A = rayDirD.Dot(rayDirD);
+        var B = 2f * F.Dot(rayDirD);
+        var C = F.Dot(F) - radius * radius;
+
+        var disc = B * B - 4f * A * C;
+        if (disc < 0f)
+        {
+            return 0; // no intersection
+        }
+
+        var s = MathF.Sqrt(Math.Max(0f, disc));
+        var inv2A = 0.5f / A;
+        var t0 = (-B - s) * inv2A; // entry (closest)
+        var t1 = (-B + s) * inv2A; // exit  (farthest)
+
+        // all forward intersections (t >= 0)
+        var t0Ok = t0 >= 0f;
+        var t1Ok = t1 >= 0f;
+
+        if (!t0Ok && !t1Ok)
+        {
+            return 0; // both behind origin
+        }
+
+        // Compute angle for a hit: from center to hit point
+        static float HitDeg(WPos C, WPos O, WDir D, float t)
+        {
+            var p = O + t * D;
+            var v = p - C; // vector from center to hit
+            var a = Angle.Atan2(v.X, v.Z).Normalized();
+            return a.Deg;
+        }
+
+        if (disc == 0f)
+        {
+            // Tangent: one forward hit (might be at t=0 if starting on the boundary)
+            var t = Math.Max(t0, t1); // both equal; ensures non-negative if one is 0
+            if (t < 0f)
+            {
+                return default;
+            }
+            degEnter = HitDeg(centerC, rayOriginO, rayDirD, t);
+            return 1;
+        }
+
+        // Two solutions; keep only those in front
+        if (t0Ok && t1Ok)
+        {
+            degEnter = HitDeg(centerC, rayOriginO, rayDirD, MathF.Min(t0, t1)); // entry
+            degExit = HitDeg(centerC, rayOriginO, rayDirD, MathF.Max(t0, t1)); // exit
+            return 2;
+        }
+        else
+        {
+            // Ray starts inside the circle: only the exit is valid
+            var t = Math.Max(t0, t1);
+            degExit = HitDeg(centerC, rayOriginO, rayDirD, t);
+            return 1;
+        }
+    }
 }

@@ -95,8 +95,6 @@ public static class AngleExtensions
 public static class CosPI
 {
     public const float Pi8th = 1.082392f; // 1 / Math.Cos(Math.PI / 8)
-    public const float Pi16th = 1.019591f; // 1 / Math.Cos(Math.PI / 16)
-    public const float Pi20th = 1.012465f; // 1 / Math.Cos(Math.PI / 20)
     public const float Pi28th = 1.006328f; // 1 / Math.Cos(Math.PI / 28)
     public const float Pi32th = 1.004839f; // 1 / Math.Cos(Math.PI / 32)
     public const float Pi36th = 1.00382f; // 1 / Math.Cos(Math.PI / 36)
