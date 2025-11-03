@@ -36,11 +36,11 @@ sealed class P3Inception3Sacrament(BossModule module) : Components.GenericAOEs(m
             if (last != default)
             {
                 ref var f = ref WorldState.Frame;
-                if (last.Length() / f.Duration > 6f && heart.FindStatus((uint)SID.EnigmaCodexHeart) != null)
+                if (last.Length() / f.Duration > 7f && heart.FindStatus((uint)SID.EnigmaCodexHeart) != null)
                 {
                     _ = Intersect.RayCircleAnglesDeg(Arena.Center, 20f, heart.Position, last, out _, out var exit);
                     var a = new Angle(MathF.Round(exit / 22.5f) * 22.5f * Angle.DegToRad); // alexander will appear at one of the 8 arena slices
-                    var pos = Arena.Center + 21.5f * a.ToDirection();
+                    var pos = (Arena.Center + 21.5f * a.ToDirection()).Quantized();
                     var angle = a + 180f.Degrees();
                     _aoe = [new(cross, pos, angle, WorldState.FutureTime(6.9d), shapeDistance: cross.Distance(pos, angle))];
                 }

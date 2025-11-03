@@ -1,19 +1,71 @@
-namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 [SkipLocalsInit]
-sealed class Q40EminentGriefStates : StateMachineBuilder
+sealed class Q1FinalVerseStates : StateMachineBuilder
 {
-    public Q40EminentGriefStates(BossModule module) : base(module)
+    private readonly Q1FinalVerse _module;
+
+    public Q1FinalVerseStates(Q1FinalVerse module) : base(module)
     {
+        _module = module;
         DeathPhase(default, SinglePhase)
             .ActivateOnEnter<TerrorEyeVoidTrapBallOfFire>()
             ;
     }
 
+    enum QuantumLevel
+    {
+        Level15,
+        Level20,
+        Level25,
+        Level30,
+        Level35,
+        Level40
+    }
+
     private void SinglePhase(uint id)
+    {
+        var dispatch = new Dictionary<QuantumLevel, (uint, Action<uint>)>
+        {
+            [QuantumLevel.Level15] = (1u, SinglePhaseRest),
+            [QuantumLevel.Level20] = (2u, SinglePhaseRest),
+            [QuantumLevel.Level25] = (3u, SinglePhaseRest),
+            [QuantumLevel.Level30] = (4u, SinglePhaseRest),
+            [QuantumLevel.Level35] = (5u, SinglePhaseRest),
+            [QuantumLevel.Level40] = (6u, SinglePhaseQ40),
+        };
+
+        ConditionFork(id, default, () => _module.FindComponent<Quantumlevel>() != null && _module.FindComponent<Quantumlevel>()!.QuantumLevel >= 15u, SelectCase, dispatch, "Select quantum level");
+    }
+
+    private QuantumLevel SelectCase()
+    {
+        return _module.FindComponent<Quantumlevel>()!.QuantumLevel switch
+        {
+            >= 35u and < 40u => QuantumLevel.Level35,
+            >= 30u and < 35u => QuantumLevel.Level30,
+            >= 25u and < 30u => QuantumLevel.Level25,
+            >= 20u and < 25u => QuantumLevel.Level20,
+            < 20u => QuantumLevel.Level15,
+            _ => QuantumLevel.Level40
+        };
+    }
+
+    private void SinglePhaseQ40(uint id)
     {
         BoundsOfSinScourgingBlaze(id, 12.1f);
         SimpleState(id + 0xFF0000u, 10000f, "???");
+    }
+
+    // private void SinglePhaseQ15(uint id)
+    // {
+    //     BoundsOfSinScourgingBlaze(id, 12.1f);
+    //     SimpleState(id + 0xFF0000u, 10000f, "???");
+    // }
+
+    private void SinglePhaseRest(uint id)
+    {
+        SimpleState(id + 0xFF0000u, 10000f, "Unsupported quantum level (upload replays!)");
     }
 
     private void BoundsOfSinScourgingBlaze(uint id, float delay)

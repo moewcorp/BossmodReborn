@@ -1,10 +1,10 @@
-namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 [SkipLocalsInit]
 sealed class TerrorEyeVoidTrapBallOfFire(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.TerrorEye, (uint)AID.BallOfFire, (uint)AID.VoidTrap], 6f);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(Q40EminentGriefStates),
+StatesType = typeof(Q1FinalVerseStates),
 ConfigType = null,
 ObjectIDType = typeof(OID),
 ActionIDType = typeof(AID),
@@ -21,10 +21,11 @@ NameID = 14037u,
 SortOrder = 1,
 PlanLevel = 0)]
 [SkipLocalsInit]
-public sealed class Q40EminentGrief : BossModule
+public sealed class Q1FinalVerse : BossModule
 {
-    public Q40EminentGrief(WorldState ws, Actor primary) : base(ws, primary, ArenaCenter, new ArenaBoundsCustom([new Rectangle(ArenaCenter, 20f, 15f)], AdjustForHitboxOutwards: true))
+    public Q1FinalVerse(WorldState ws, Actor primary) : base(ws, primary, ArenaCenter, new ArenaBoundsCustom([new Rectangle(ArenaCenter, 20f, 15f)], AdjustForHitboxOutwards: true))
     {
+        ActivateComponent<Quantumlevel>();
         ActivateComponent<LightAndDark>();
         FindComponent<LightAndDark>()!.AddAOE();
         vodorigas = Enemies((uint)OID.VodorigaMinion);
@@ -38,9 +39,10 @@ public sealed class Q40EminentGrief : BossModule
     private readonly List<Actor> bloodguards;
     private readonly List<Actor> fonts;
 
-    protected override void UpdateModule()
+    protected override bool CheckPull()
     {
         BossEater ??= GetActor((uint)OID.DevouredEater);
+        return base.CheckPull();
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
