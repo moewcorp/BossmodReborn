@@ -92,7 +92,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 }
 
                 var masterIsMoving = TrackMasterMovement(master);
-                var moveWithMaster = masterIsMoving && _followMaster && master != player;
+                var moveWithMaster = masterIsMoving && _followMaster;
                 ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? default : _naviDecision.LeewaySeconds;
 
                 if (_config.MoveDelay != 0d && !hadNavi && _naviDecision.Destination != null)
@@ -185,16 +185,17 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
 
         _followMaster = interactTarget == null && (_config.FollowDuringCombat || !master.InCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100f) && (_config.FollowDuringActiveBossModule || autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null) && (_config.FollowOutOfCombat || master.InCombat);
-
+        if (forceDestination != null && forceDestination != master && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
+        {
+            autorot.Hints.GoalZones.Add(AIHints.GoalProximity(forceDestination, 3.5f, 100f));
+        }
         if (_followMaster)
         {
-            if (forceDestination != null && forceDestination.OID != master.OID && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
-            {
-                autorot.Hints.GoalZones.Add(AIHints.GoalProximity(forceDestination, 3.5f, 100f));
-            }
             var target = autorot.WorldState.Actors.Find(player.TargetID);
-            if (!_config.FollowTarget || _config.FollowTarget && target == null)
+            if ((!_config.FollowTarget || _config.FollowTarget && target == null) && master != player)
+            {
                 autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(master, Positional.Any, _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot));
+            }
             else if (_config.FollowTarget && target != null && AIPreset == null)
             {
                 var positional = _config.DesiredPositional;

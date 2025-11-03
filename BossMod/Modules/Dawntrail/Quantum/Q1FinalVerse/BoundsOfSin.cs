@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 [SkipLocalsInit]
 sealed class BoundsOfSinSmallAOE : Components.SimpleAOEs
@@ -79,11 +79,11 @@ sealed class BoundsOfSinEnd(BossModule module) : Components.GenericAOEs(module)
             if (state == 0x00020001u)
             {
                 Pillars.Add(pillarPolygons[index]);
-                Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Q40EminentGrief.ArenaCenter, 20f, 15f)], [.. Pillars]);
+                Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Q1FinalVerse.ArenaCenter, 20f, 15f)], [.. Pillars]);
             }
             else if (index is 0x00 or 0x0C && state == 0x00080004u)
             {
-                Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Q40EminentGrief.ArenaCenter, 20f, 15f)], AdjustForHitboxOutwards: true);
+                Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Q1FinalVerse.ArenaCenter, 20f, 15f)], AdjustForHitboxOutwards: true);
                 Pillars.Clear();
             }
         }

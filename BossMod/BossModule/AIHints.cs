@@ -305,7 +305,9 @@ public sealed class AIHints
                     {
                         continue;
                     }
-                    map.PixelMaxG[map.GridToIndex(mx, my)] = -900f;
+                    var index = map.GridToIndex(mx, my);
+                    map.PixelMaxG[index] = -1000f;
+                    map.PixelPriority[index] = float.MinValue;
                 }
             }
         }
