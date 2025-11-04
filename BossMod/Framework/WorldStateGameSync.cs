@@ -166,7 +166,7 @@ sealed class WorldStateGameSync : IDisposable
         _processLegacyMapEffectHook.Enable();
         Service.Log($"[WSG] LegacyMapEffect address = {_processLegacyMapEffectHook.Address:X}");
 
-        _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10 41 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7", InventoryAckDetour);
+        _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("4c ?? ?? 8b ?? 48 ?? ?? ?? ?? ?? ?? e9", InventoryAckDetour);
         _inventoryAckHook.Enable();
         Service.Log($"[WSG] InventoryAck address = {_inventoryAckHook.Address:X}");
     }
@@ -174,6 +174,7 @@ sealed class WorldStateGameSync : IDisposable
     public void Dispose()
     {
         _inventoryAckHook.Dispose();
+        _processLegacyMapEffectHook.Dispose();
         _processMapEffect1Hook.Dispose();
         _processMapEffect2Hook.Dispose();
         _processMapEffect3Hook.Dispose();
