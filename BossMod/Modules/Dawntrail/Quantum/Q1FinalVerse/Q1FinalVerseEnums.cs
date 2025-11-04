@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 public enum OID : uint
 {
@@ -127,6 +127,11 @@ public enum AID : uint
 
 public enum SID : uint
 {
+    PhysicalDamageUp = 1018, // none->EminentGrief, extra=0x8
+    FireDamageUp = 4570, // none->EminentGrief/Flameborn, extra=0x8
+    DarkDamageUp = 4571, // none->EminentGrief, extra=0x8
+    HPBoost = 586, // none->ArcaneFont/EminentGrief/DevouredEater, extra=0x8
+    LightDamageUp = 4572, // none->DevouredEater, extra=0x8
     LightVengeance = 4560, // none->player, extra=0x0
     DarkVengeance = 4559, // none->player, extra=0x0
     _Gen_Suppuration = 4512, // Helper->player, extra=0x1/0x2/0x3/0x4/0x5
@@ -138,13 +143,10 @@ public enum SID : uint
     _Gen_ShackledHealing = 4564, // none->player, extra=0x0
     _Gen_DamageDown = 3304, // Helper->player, extra=0x1/0x2
     _Gen_HellishEarth = 4566, // none->player, extra=0x0
-    _Gen_HPBoost = 586, // none->ArcaneFont/EminentGrief/DevouredEater, extra=0x8
     _Gen2_ = 4684, // none->EminentGrief/DevouredEater, extra=0x0
-    _Gen_PhysicalDamageUp = 1018, // none->EminentGrief, extra=0x8
-    _Gen_FireDamageUp = 4570, // none->EminentGrief/Flameborn, extra=0x8
-    _Gen_DarkDamageUp = 4571, // none->EminentGrief, extra=0x8
+
     _Gen3_ = 3572, // EminentGrief->EminentGriefHelper, extra=0x19
-    _Gen_LightDamageUp = 4572, // none->DevouredEater, extra=0x8
+
     _Gen_Poison = 3462, // Helper->player, extra=0x1/0x2/0x3
     _Gen_Bleeding = 2088, // Helper->player, extra=0x0
     _Gen_SinBearer = 4567, // Helper->player, extra=0x1/0x2/0x3/0x4/0x5/0x6/0x7/0x8/0x9/0xA/0xB/0xC/0xD/0xE/0xF/0x10

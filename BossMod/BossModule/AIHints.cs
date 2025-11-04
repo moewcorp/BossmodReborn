@@ -188,10 +188,7 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                // Math.Max(priority, h.Priority)
-                var diff = priority - h.Priority;
-                var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                h.Priority = priority - (diff & mask);
+                h.Priority = priority;
             }
         }
     }
@@ -204,10 +201,7 @@ public sealed class AIHints
             var h = PotentialTargets[i];
             if (h.Actor.OID == oid)
             {
-                // Math.Max(priority, h.Priority)
-                var diff = priority - h.Priority;
-                var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                h.Priority = priority - (diff & mask);
+                h.Priority = priority;
                 if (forbidDots)
                 {
                     h.ForbidDOTs = true;
@@ -227,10 +221,7 @@ public sealed class AIHints
             {
                 if (oids[j] == h.Actor.OID)
                 {
-                    // Math.Max(priority, h.Priority)
-                    var diff = priority - h.Priority;
-                    var mask = diff >> 31; // mask is -1 if diff < 0, 0 if diff >= 0
-                    h.Priority = priority - (diff & mask);
+                    h.Priority = priority;
                     break;
                 }
             }
@@ -314,7 +305,9 @@ public sealed class AIHints
                     {
                         continue;
                     }
-                    map.PixelMaxG[map.GridToIndex(mx, my)] = -900f;
+                    var index = map.GridToIndex(mx, my);
+                    map.PixelMaxG[index] = -1000f;
+                    map.PixelPriority[index] = float.MinValue;
                 }
             }
         }

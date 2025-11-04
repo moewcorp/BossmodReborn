@@ -1,9 +1,9 @@
-namespace BossMod.Dawntrail.Quantum.FinalVerse.Q40EminentGrief;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 [SkipLocalsInit]
 sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTraverse.LightAndDarkBase(module)
 {
-    private readonly Q40EminentGrief bossmod = (Q40EminentGrief)module;
+    private readonly Q1FinalVerse bossmod = (Q1FinalVerse)module;
     private bool boundsOfSinTowers;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);

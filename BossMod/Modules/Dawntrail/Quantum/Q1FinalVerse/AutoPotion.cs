@@ -1,6 +1,6 @@
 ﻿using BossMod.Autorotation;
 
-namespace BossMod.Dawntrail.Quantum.FinalVerse;
+namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 sealed class AutoPotionModule(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
@@ -9,7 +9,7 @@ sealed class AutoPotionModule(RotationModuleManager manager, Actor player) : Rot
 
     public static RotationModuleDefinition Definition()
     {
-        var res = new RotationModuleDefinition("Auto-Potion", "Automatically use Pilgrim's Potions", "Encounter AI", "xan", RotationModuleQuality.WIP, new(~1ul), 100, 1, RotationModuleOrder.Actions, null);
+        var res = new RotationModuleDefinition("Auto-Potion", "Automatically use Pilgrim's Potions", "Encounter AI", "xan", RotationModuleQuality.WIP, new(~1ul), 100, 1, RotationModuleOrder.Actions, typeof(Q1FinalVerse));
 
         res.Define(Track.Potion).As<PotionStrategy>("Potion", "Potion")
             .AddOption(PotionStrategy.None, "None", "Don't use")

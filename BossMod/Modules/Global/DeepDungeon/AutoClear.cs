@@ -1,5 +1,4 @@
 ﻿using BossMod.Pathfinding;
-using Dalamud.Bindings.ImGui;
 
 using static FFXIVClientStructs.FFXIV.Client.Game.InstanceContent.InstanceContentDeepDungeon;
 
@@ -157,7 +156,7 @@ public abstract partial class AutoClear : ZoneModule
 
     private void OnActorStatusGain(Actor actor, int index)
     {
-        var status = actor.Statuses[index];
+        ref var status = ref actor.Statuses[index];
 
         switch (status.ID)
         {
@@ -262,7 +261,7 @@ public abstract partial class AutoClear : ZoneModule
 
     protected void AddGaze(Actor Source, AOEShape Shape) => Gazes.Add(new(Source, Shape));
     protected void AddGaze(Actor Source, float Radius) => AddGaze(Source, new AOEShapeCircle(Radius));
-    protected void AddDonut(Actor Source, float Inner, float Outer, Angle? HalfAngle = null) => Donuts.Add((Source, Inner, Outer, HalfAngle ?? 180.Degrees()));
+    protected void AddDonut(Actor Source, float Inner, float Outer, Angle? HalfAngle = null) => Donuts.Add((Source, Inner, Outer, HalfAngle ?? 180f.Degrees()));
     protected void AddVoidzone(Actor Source, AOEShape Shape, int Counter = 0) => Voidzones.Add((Source, Shape, Counter));
 
     protected void AddLOS(Actor Source, float Range)
@@ -390,9 +389,6 @@ public abstract partial class AutoClear : ZoneModule
         if (Config.ForbidDOTs)
             foreach (var hpt in hints.PotentialTargets)
                 hpt.ForbidDOTs = true;
-
-        if (Config.Enable)
-            return;
 
         CalculateExtraHints(playerSlot, player, hints);
 
@@ -541,7 +537,9 @@ public abstract partial class AutoClear : ZoneModule
             wantCoffer = xxx;
             hints.GoalZones.Add(AIHints.GoalSingleTarget(xxx.Position, 25f));
             if (!playerInAOE)
-                hints.InteractWithTarget ??= coffer;
+            {
+                hints.InteractWithTarget ??= xxx;
+            }
         }
 
         if (revealedTraps.Count > 0)
@@ -739,7 +737,7 @@ public abstract partial class AutoClear : ZoneModule
                 Direction.West => pp.X - p.X,
                 _ => 0,
             };
-            return improvement > 10 ? 10 : 0;
+            return improvement > 10f ? 10f : 0f;
         });
     }
 
