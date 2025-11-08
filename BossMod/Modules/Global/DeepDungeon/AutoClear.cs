@@ -310,7 +310,7 @@ public abstract partial class AutoClear : ZoneModule
 
     private bool CanAutoUse(PomanderID p, Actor player)
     {
-        if (Palace.Party.Count(p => p.EntityId > 0ul) > 1)
+        if (Palace.Party.Count(p => p.EntityId > 0ul) > 1 && !Config.AutomaticPomanderInParty)
             return false;
 
         if (!Config.AutoPoms[(int)p])

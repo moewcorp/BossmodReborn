@@ -5,55 +5,57 @@ using Lumina.Excel.Sheets;
 
 namespace BossMod.Global.DeepDungeon;
 
-[ConfigDisplay(Name = "Auto-DeepDungeon (Experimental)", Parent = typeof(ModuleConfig))]
+[ConfigDisplay(Name = "自动深层迷宫（实验性）", Parent = typeof(ModuleConfig))]
 public sealed class AutoDDConfig : ConfigNode
 {
     public enum ClearBehavior
     {
-        [PropertyDisplay("Do not auto target")]
+        [PropertyDisplay("不自动选中")]
         None,
-        [PropertyDisplay("Stop when passage opens")]
+        [PropertyDisplay("传送装置打开时停止")]
         Passage,
-        [PropertyDisplay("Target everything if not at level cap, otherwise stop when passage opens")]
+        [PropertyDisplay("如果等级未达到上限，则选中所有目标；否则，传送装置开启后停止选中。")]
         Leveling,
-        [PropertyDisplay("Target everything")]
+        [PropertyDisplay("选中所有目标")]
         All,
     }
 
-    [PropertyDisplay("Enable module", tooltip: "WARNING: This feature is very experimental and most likely will contain bugs or unintended behavior.\nTo enable this feature in its current state, you must activate 'Work-in-Progress' maturity modules in the `Full Duty Automation` tab.")]
+    [PropertyDisplay("启用模块", tooltip: "警告：此功能尚处于实验阶段，很可能存在错误或意外行为。\n要启用此功能，您必须在“完整任务自动化”选项卡中激活“开发中”成熟度模块。")]
     public bool Enable = true;
-    [PropertyDisplay("Enable minimap")]
+    [PropertyDisplay("启用小地图")]
     public bool EnableMinimap = true;
-    [PropertyDisplay("Try to avoid traps", tooltip: "Avoid known trap locations sourced from PalacePal data. Does not need PalacePal installed since data is included in BMR. (Traps revealed by a Pomander of Sight will always be avoided regardless of this setting.)")]
+    [PropertyDisplay("尽量避开陷阱", tooltip: "避开PalacePal数据中已知的陷阱位置。无需安装PalacePal，因为BMR中已包含这些数据。（无论此设置如何，使用“全景”发现的陷阱都会被避开。）")]
     public bool TrapHints = true;
-    [PropertyDisplay("Automatically navigate to Cairn of Passage")]
+    [PropertyDisplay("自动导航至传送装置")]
     public bool AutoPassage = true;
 
-    [PropertyDisplay("Automatic mob targeting behavior")]
+    [PropertyDisplay("自动选中怪物行为逻辑")]
     public ClearBehavior AutoClear = ClearBehavior.Leveling;
 
-    [PropertyDisplay("Disable DoTs on non-boss floors (only affects BMR autorotation)")]
+    [PropertyDisplay("禁止在非BOSS楼层的使用DoT技能（仅适用于BMR自动循环）")]
     public bool ForbidDOTs = false;
 
-    [PropertyDisplay("Max number of mobs to pull before pausing navigation (0 = do not navigate while in combat)")]
+    [PropertyDisplay("暂停导航前可拉的最大怪物数量（0 = 战斗中不进行导航）")]
     [PropertySlider(0, 15)]
     public int MaxPull = 0;
-    [PropertyDisplay("Try to use terrain to LOS attacks")]
+    [PropertyDisplay("尝试利用地形进行视线攻击")]
     public bool AutoLOS = false;
 
-    [PropertyDisplay("Automatically navigate to coffers")]
+    [PropertyDisplay("自动导航至宝箱")]
     public bool AutoMoveTreasure = true;
-    [PropertyDisplay("Prioritize opening coffers over Cairn of Passage")]
+    [PropertyDisplay("优先开启宝箱，而非传送装置")]
     public bool OpenChestsFirst = false;
-    [PropertyDisplay("Open gold coffers")]
+    [PropertyDisplay("打开金宝箱")]
     public bool GoldCoffer = true;
-    [PropertyDisplay("Open silver coffers")]
+    [PropertyDisplay("打开银宝箱")]
     public bool SilverCoffer = true;
-    [PropertyDisplay("Open bronze coffers")]
+    [PropertyDisplay("打开铜宝箱")]
     public bool BronzeCoffer = true;
 
-    [PropertyDisplay("Reveal all rooms before proceeding to next floor")]
+    [PropertyDisplay("在前往下一层之前，先探索所有房间")]
     public bool FullClear = false;
+
+    public bool AutomaticPomanderInParty = false;
 
     public BitMask AutoPoms;
     public BitMask AutoMagicite;
@@ -61,10 +63,13 @@ public sealed class AutoDDConfig : ConfigNode
 
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        foreach (var _ in tree.Node("Automatic pomander usage"))
+        foreach (var _ in tree.Node("自动使用魔陶器"))
         {
-            ImGui.TextWrapped("Highlighted pomanders will be used when a gold chest contains one that you can't carry.");
-            ImGui.TextWrapped("This feature is disabled in parties.");
+            ImGui.TextWrapped("当金宝箱中包含你无法携带的魔陶器时，将会使用高亮显示的魔陶器。");
+            if (ImGui.Checkbox("在组队中启用（确保小队中没有其他人同时启用该功能，否则可能重复使用）", ref Service.Config.Get<AutoDDConfig>().AutomaticPomanderInParty))
+            {
+                Modified.Fire();
+            }
 
             for (var i = 1; i < (int)PomanderID.Count; i++)
                 using (ImRaii.PushId($"pom{i}"))
