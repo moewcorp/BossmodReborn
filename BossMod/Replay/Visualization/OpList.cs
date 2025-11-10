@@ -218,12 +218,12 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
 
     private static string GetOpBlueMageSpellsChangeString(uint[] contents)
     {
-        var count = contents.Lengtj;
+        var count = contents.Length;
         var str = new string[count];
         for (var i = 0; i < count; ++i)
         {
             var c = contents[i];
-            str[i] = $"{new ActionID(ActionType.Spell, v)}";
+            str[i] = $"{new ActionID(ActionType.Spell, c)}";
         }
         return string.Join(", ", str);
     }

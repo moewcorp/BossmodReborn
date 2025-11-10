@@ -7,6 +7,8 @@ public sealed class GoToPositional(RotationModuleManager manager, Actor player) 
         Positional
     }
 
+    private static readonly Positional[] positionals = Enum.GetValues<Positional>();
+
     public static RotationModuleDefinition Definition()
     {
         RotationModuleDefinition def = new("Misc AI: Goes to specified positional", "Module for use with other rotation plugins.", "AI", "erdelf", RotationModuleQuality.Basic, new(~0ul), 1000);
@@ -14,7 +16,7 @@ public sealed class GoToPositional(RotationModuleManager manager, Actor player) 
         var track = def.Define(Tracks.Positional).As<Positional>("Positional", "Positional");
         for (var i = 0; i < 4; ++i)
         {
-            track.AddOption(positional);
+            track.AddOption(positionals[i]);
         }
         return def;
     }

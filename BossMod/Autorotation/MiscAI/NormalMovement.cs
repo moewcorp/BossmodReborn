@@ -59,11 +59,6 @@ public sealed class NormalMovement : RotationModule
             .AddOption(ForbiddenZoneCushionStrategy.Small, "Prefer to stay 0.5y away from forbidden zones")
             .AddOption(ForbiddenZoneCushionStrategy.Medium, "Prefer to stay 1.5y away from forbidden zones")
             .AddOption(ForbiddenZoneCushionStrategy.Large, "Prefer to stay 3y away from forbidden zones");
-
-            .AddOption(ForbiddenZoneCushionStrategy.None, "None", "Do not use any buffer in pathfinding")
-            .AddOption(ForbiddenZoneCushionStrategy.Small, "Small", "Prefer to stay 0.5y away from forbidden zones")
-            .AddOption(ForbiddenZoneCushionStrategy.Medium, "Medium", "Prefer to stay 1.5y away from forbidden zones")
-            .AddOption(ForbiddenZoneCushionStrategy.Large, "Large", "Prefer to stay 3y away from forbidden zones");
         return res;
     }
 

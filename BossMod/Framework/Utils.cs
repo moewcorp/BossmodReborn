@@ -58,8 +58,8 @@ public static partial class Utils
             ? world.Client.ElementalLevelSynced <= fate.ClassJobLevelMax
             : world.Party.Player()?.Level <= fate.ClassJobLevelMax;
     }
-    public static readonly Func<uint, bool> IsBossFate = Memoize((uint fateID) => Service.LuminaRow<Lumina.Excel.Sheets.Fate>(fateID)?.MapIcon is 60502 or 60802);
-    public static bool IsNonBossFate(uint fateID) => fateID > 0 && !IsBossFate(fateID);
+    public static readonly Func<uint, bool> IsBossFate = Memoize((uint fateID) => Service.LuminaRow<Lumina.Excel.Sheets.Fate>(fateID)?.MapIcon is 60502u or 60802u);
+    public static bool IsNonBossFate(uint fateID) => fateID > 0u && !IsBossFate(fateID);
 
     public static readonly Func<uint, uint> GetFateItem = Memoize((uint fateID) => Service.LuminaRow<Lumina.Excel.Sheets.Fate>(fateID)?.EventItem.RowId ?? 0);
 

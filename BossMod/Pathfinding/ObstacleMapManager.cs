@@ -7,10 +7,10 @@ namespace BossMod.Pathfinding;
 public sealed class ObstacleMapConfig : ConfigNode
 {
     [PropertyDisplay("Developer mode: load obstacle maps from source rather than from plugin distribution")]
-    public bool LoadFromSource;
+    public bool MapLoadFromSource;
 
     [PropertyDisplay("Developer mode: source path", tooltip: "Should be <repo root>/BossModReborn/Pathfinding/ObstacleMaps/maplist.json")]
-    public string SourcePath = "";
+    public string MapSourcePath = "";
 }
 
 public sealed class ObstacleMapManager : IDisposable

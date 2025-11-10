@@ -287,9 +287,9 @@ public abstract class RotationModule(RotationModuleManager manager, Actor player
 
 public abstract class TypedRotationModule<TValues>(RotationModuleManager manager, Actor player) : RotationModule(manager, player) where TValues : struct
 {
-    public abstract void Execute(TValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving);
+    public abstract void Execute(TValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving);
 
     protected abstract TValues FromValues(StrategyValues strategy);
 
-    public sealed override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving) => Execute(FromValues(strategy), ref primaryTarget, estimatedAnimLockDelay, isMoving);
+    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving) => Execute(FromValues(strategy), primaryTarget, estimatedAnimLockDelay, isMoving);
 }

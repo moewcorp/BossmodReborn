@@ -54,7 +54,7 @@ public sealed class ClientState
         public readonly float Radius = radius;
         public readonly byte Progress = progress;
         public readonly byte HandInCount = handInCount;
-        public readonly uint ObjectiveNpc = objectiveNpc
+        public readonly uint ObjectiveNpc = objectiveNpc;
 
         public static bool operator ==(Fate left, Fate right) => left.ID == right.ID;
         public static bool operator !=(Fate left, Fate right) => left.ID != right.ID;

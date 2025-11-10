@@ -1,4 +1,5 @@
 ﻿namespace BossMod.Autorotation.MiscAI;
+
 public sealed class FateUtils(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
     public enum Track { Handin, Collect }
@@ -19,7 +20,7 @@ public sealed class FateUtils(RotationModuleManager manager, Actor player) : Rot
         return res;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         if (strategy.Option(Track.Handin).As<Flag>() != Flag.Enabled)
             return;
