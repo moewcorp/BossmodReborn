@@ -6,6 +6,8 @@ namespace BossMod;
 
 public sealed class ReplayRecorder : IDisposable
 {
+    public const int Version = 28;
+
     public abstract class Output : IDisposable
     {
         public void Dispose()
@@ -267,7 +269,7 @@ public sealed class ReplayRecorder : IDisposable
     private readonly Output _logger;
     private readonly EventSubscription _subscription;
 
-    public const int Version = 28;
+    public const int Version = 29;
     public uint CFCID;
     public string LogPath;
 

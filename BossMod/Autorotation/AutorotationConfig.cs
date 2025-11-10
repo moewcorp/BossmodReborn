@@ -22,6 +22,8 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("Hide VBM Default preset", tooltip: "If you've created your own presets and no longer need the included default, this option will prevent it from being shown in the Autorotation and Preset Editor windows.")]
     public bool HideDefaultPreset = false;
 
+    public bool SuggestHealerAI = true;
+
     [PropertyDisplay("Show positional hints in world", tooltip: "Show tips for positional abilities, indicating to move to the flank or rear of your target")]
     public bool ShowPositionals = false;
 
