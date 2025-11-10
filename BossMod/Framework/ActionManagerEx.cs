@@ -572,15 +572,15 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     private bool UseBozjaFromHolsterDirectorDetour(PublicContentBozja* self, uint holsterIndex, uint slot)
     {
-        var state = PublicContentBozja.GetState();
-        if (state == null)
-            return false;
-        var action = new ActionID(holsterIndex == 0 ? ActionType.BozjaHolsterSlot0 : ActionType.BozjaHolsterSlot1, state->HolsterActions[(int)slot]);
-
-        if (_manualQueue.Push(action, 0xE0000000, 0, false, () => (0, null), () => 0xE0000000))
-            return true;
-
-        return UseBozjaHolsterNative(action);
+        var prevRot = GetPlayerRotation();
+        var res = _useBozjaFromHolsterDirectorHook.Original(self, holsterIndex, slot);
+        var currRot = GetPlayerRotation();
+        if (res)
+        {
+            var entry = (BozjaHolsterID)self->State.HolsterActions[(int)holsterIndex];
+            HandleActionRequest(ActionID.MakeBozjaHolster(entry, (int)slot), 0, 0xE0000000, default, prevRot, currRot);
+        }
+        return res;
     }
 
     private bool UseBozjaHolsterNative(ActionID action)
