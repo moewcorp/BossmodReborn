@@ -3,12 +3,13 @@
   "Name": "Bossmod Reborn",
   "InternalName": "BossModReborn",
   "Punchline": "大脑按摩用的(在线安装Only)",
-  "Description": "仅禁用了与后期软件冲突的代码（AI可用，自动循环可能失效）",
+  "Description": "后期软件兼容版",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
   "ImageUrls": [
     "https://raw.githubusercontent.com/awgil/ffxiv_bossmod/master/Data/image1.png",
     "https://raw.githubusercontent.com/awgil/ffxiv_bossmod/master/Data/image2.png",
     "https://raw.githubusercontent.com/awgil/ffxiv_bossmod/master/Data/image3.png"
-  ]
+  ],
+  "Changelog": "自动深层迷宫模块中的自动躲避陷阱功能的陷阱数据，已与PalacePal在线数据同步，请安装同仓库下的PalacePal最新版一同使用"
 }
