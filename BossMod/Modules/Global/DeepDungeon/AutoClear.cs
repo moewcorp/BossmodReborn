@@ -564,9 +564,6 @@ public abstract partial class AutoClear : ZoneModule
             _ => false
         };
 
-        if (player.InCombat)
-            return;
-
         var counttargets = hints.PotentialTargets.Count;
         for (var i = 0; i < counttargets; ++i)
         {
