@@ -1,5 +1,5 @@
 ﻿using BossMod.Pathfinding;
-
+using Dalamud.Plugin.Ipc;
 using static FFXIVClientStructs.FFXIV.Client.Game.InstanceContent.InstanceContentDeepDungeon;
 
 namespace BossMod.Global.DeepDungeon;
@@ -65,7 +65,7 @@ public abstract partial class AutoClear : ZoneModule
 
     protected static readonly AutoDDConfig Config = Service.Config.Get<AutoDDConfig>();
     private readonly EventSubscriptions _subscriptions;
-    private readonly WPos[] _trapsCurrentZone = [];
+    private WPos[] _trapsCurrentZone = [];
 
     private readonly Dictionary<ulong, PomanderID> _chestContentsGold = [];
     private readonly Dictionary<ulong, int> _chestContentsSilver = [];
@@ -98,6 +98,7 @@ public abstract partial class AutoClear : ZoneModule
 
     protected DeepDungeonState Palace => World.DeepDungeon;
 
+    private readonly ICallGateSubscriber<List<Vector3>> _updatePalacePal;
     protected AutoClear(WorldState ws, int LevelCap) : base(ws)
     {
         this.LevelCap = LevelCap;
@@ -133,6 +134,8 @@ public abstract partial class AutoClear : ZoneModule
 
         ProblematicTrapLocations.AddRange(ProblematicTrapLocations);
         IgnoreTraps.AddRange(ProblematicTrapLocations);
+
+        _updatePalacePal = Service.PluginInterface.GetIpcSubscriber<List<Vector3>>("PalacePal.Ipc");
     }
 
     protected override void Dispose(bool disposing)
@@ -452,6 +455,11 @@ public abstract partial class AutoClear : ZoneModule
         }
         if (Config.TrapHints && _trapsHidden)
         {
+            try
+            {
+                _trapsCurrentZone = _updatePalacePal.InvokeFunc()?.Select(v => new WPos(v.X, v.Z)).ToArray() ?? _trapsCurrentZone;
+            }
+            catch (Exception) { }
             var countTraps = _trapsCurrentZone.Length;
             for (var i = 0; i < countTraps; ++i)
             {
