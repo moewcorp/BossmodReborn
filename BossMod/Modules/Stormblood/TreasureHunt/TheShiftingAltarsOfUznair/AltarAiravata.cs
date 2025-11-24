@@ -100,8 +100,9 @@ sealed class Buffet2(BossModule module) : Components.BaitAwayCast(module, (uint)
             var prim = Module.PrimaryActor;
             var mPos = prim.Position;
             var len = (tPos - mPos).Length();
-            var min = t.HitboxRadius + prim.HitboxRadius;
-            hints.AddForbiddenZone(b.Shape, len > min ? tPos - min * prim.DirectionTo(t) : mPos, b.Rotation);
+            var max = t.HitboxRadius + prim.HitboxRadius;
+            var min = len > max ? len : Math.Clamp(len, 0f, max);
+            hints.AddForbiddenZone(b.Shape, tPos - min * prim.DirectionTo(t), b.Rotation);
         }
     }
 
@@ -115,8 +116,9 @@ sealed class Buffet2(BossModule module) : Components.BaitAwayCast(module, (uint)
             var prim = Module.PrimaryActor;
             var mPos = prim.Position;
             var len = (tPos - mPos).Length();
-            var min = t.HitboxRadius + prim.HitboxRadius;
-            b.Shape.Outline(Arena, len > min ? tPos - min * prim.DirectionTo(t) : mPos, b.Rotation);
+            var max = t.HitboxRadius + prim.HitboxRadius;
+            var min = len > max ? len : Math.Clamp(len, 0f, max);
+            b.Shape.Outline(Arena, tPos - min * prim.DirectionTo(t), b.Rotation);
         }
     }
 
@@ -130,8 +132,9 @@ sealed class Buffet2(BossModule module) : Components.BaitAwayCast(module, (uint)
             var prim = Module.PrimaryActor;
             var mPos = prim.Position;
             var len = (tPos - mPos).Length();
-            var min = t.HitboxRadius + prim.HitboxRadius;
-            b.Shape.Draw(Arena, len > min ? tPos - min * prim.DirectionTo(t) : mPos, b.Rotation);
+            var max = t.HitboxRadius + prim.HitboxRadius;
+            var min = len > max ? len : Math.Clamp(len, 0f, max);
+            b.Shape.Draw(Arena, tPos - min * prim.DirectionTo(t), b.Rotation);
         }
     }
 }
