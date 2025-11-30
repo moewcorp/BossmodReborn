@@ -94,7 +94,7 @@ public sealed class DebugObjects
         if (selected != null)
         {
             var h = new Vector3(0, Utils.GameObjectInternal(selected)->Height, 0);
-            Camera.Instance?.DrawWorldLine(Service.ClientState.LocalPlayer?.Position ?? default, selected.Position, Colors.TextColor3);
+            Camera.Instance?.DrawWorldLine(Service.ObjectTable.LocalPlayer?.Position ?? default, selected.Position, Colors.TextColor3);
             Camera.Instance?.DrawWorldCircle(selected.Position, selected.HitboxRadius, Colors.TextColor4);
             Camera.Instance?.DrawWorldCircle(selected.Position + h, selected.HitboxRadius, Colors.TextColor4);
             Camera.Instance?.DrawWorldCircle(selected.Position - h, selected.HitboxRadius, Colors.TextColor4);
