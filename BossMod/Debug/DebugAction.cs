@@ -1,8 +1,8 @@
-﻿using Dalamud.Game.Gui;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Game.Gui;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Dalamud.Bindings.ImGui;
 
 namespace BossMod;
 
@@ -97,7 +97,7 @@ sealed unsafe class DebugAction : IDisposable
         var hover = Service.GameGui.HoveredAction;
         if (hover.ActionID != 0)
         {
-            var mnemonic = Service.ObjectTable.LocalPlayer?.ClassJob.ValueNullable?.Abbreviation.ToString();
+            var mnemonic = Service.PlayerState.ClassJob.ValueNullable?.Abbreviation.ToString();
             var rotationType = mnemonic != null ? Type.GetType($"BossMod.{mnemonic}Rotation")?.GetNestedType("AID") : null;
             ImGui.TextUnformatted($"Hover action: {hover.ActionKind} {hover.ActionID} (base={hover.BaseActionID}) ({mnemonic}: {rotationType?.GetEnumName(hover.ActionID)})");
 

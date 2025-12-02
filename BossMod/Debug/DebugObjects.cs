@@ -98,7 +98,7 @@ public sealed class DebugObjects
             Camera.Instance?.DrawWorldCircle(selected.Position, selected.HitboxRadius, Colors.TextColor4);
             Camera.Instance?.DrawWorldCircle(selected.Position + h, selected.HitboxRadius, Colors.TextColor4);
             Camera.Instance?.DrawWorldCircle(selected.Position - h, selected.HitboxRadius, Colors.TextColor4);
-            var numSegments = CurveApprox.CalculateCircleSegments(selected.HitboxRadius, 360.Degrees(), 1);
+            var numSegments = CurveApprox.CalculateCircleSegments(selected.HitboxRadius, 360f.Degrees(), 1f);
             for (var i = 0; i < numSegments; ++i)
             {
                 var p = selected.Position + selected.HitboxRadius * (i * 360.0f / numSegments).Degrees().ToDirection().ToVec3();

@@ -4,7 +4,7 @@ namespace BossMod.Autorotation.MiscAI;
 
 public sealed class AutoTarget(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
-    public enum Track { General, Retarget, QuestBattle, DeepDungeon, EpicEcho, Hunt, FATE, TreasureHunt, Everything, CollectFATE }
+    public enum Track { General, Retarget, QuestBattle, DeepDungeon, EpicEcho, Hunt, FATE, TreasureHunt, Everything, CollectFATE, MaxTargets }
     public enum GeneralStrategy { Aggressive, Passive }
     public enum RetargetStrategy { NoTarget, Hostiles, Always, Never }
     public enum Flag { Disabled, Enabled }
@@ -43,7 +43,7 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
             .AddOption(Flag.Disabled)
             .AddOption(Flag.Enabled);
 
-        res.Define(Track.TreasureHunt).As<Flag>("TreasureHunt", "Prioritize mobs inside treasure hunt dungeons")
+        res.Define(Track.TreasureHunt).As<Flag>("TreasureHunt", "Prioritize mobs inside treasure hunt dungeons", renderer: typeof(DefaultOffRenderer))
             .AddOption(Flag.Disabled, "Disabled")
             .AddOption(Flag.Enabled, "Enabled");
 
@@ -55,6 +55,8 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
             .AddOption(Flag.Disabled)
             .AddOption(Flag.Enabled);
 
+        res.DefineInt(Track.MaxTargets, "Maximum targets to pull (0 = no max)", minValue: 0, maxValue: 30, uiPriority: -100);
+
         return res;
     }
 
@@ -64,6 +66,9 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
         var generalStrategy = generalOpt.As<GeneralStrategy>();
         if (generalStrategy == GeneralStrategy.Passive)
             return;
+
+        var maxTargets = strategy.GetInt(Track.MaxTargets);
+        var canPullMore = maxTargets == 0 || World.Actors.Count(a => a.AggroPlayer && !a.IsDead) < maxTargets;
 
         Actor? bestTarget = null; // non-null if we bump any priorities
         (int, float) bestTargetKey = (0, float.MinValue); // priority and negated squared distance
@@ -122,7 +127,7 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
                 continue;
             }
 
-            if (allowAll && !target.Actor.IsStrikingDummy && target.Priority == AIHints.Enemy.PriorityUndesirable)
+            if (canPullMore && allowAll && !target.Actor.IsStrikingDummy && target.Priority == AIHints.Enemy.PriorityUndesirable)
             {
                 prioritize(target, 0);
                 continue;
@@ -135,7 +140,7 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
                     prioritize(target, 1);
                     continue;
                 }
-                if (handinCount < 10 && !skipFate)
+                if (handinCount < 10 && !skipFate && canPullMore)
                 {
                     prioritize(target, 0);
                     continue;

@@ -6,6 +6,7 @@ using Dalamud.Game.Command;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using System.IO;
 using System.Reflection;
 
@@ -35,6 +36,7 @@ public sealed class Plugin : IDalamudPlugin
     private TimeSpan _prevUpdateTime;
     private DateTime _throttleJump;
     private DateTime _throttleInteract;
+    private DateTime _throttleFateSync;
 
     // windows
     private readonly ConfigUI _configUI; // TODO: should be a proper window!
@@ -315,6 +317,8 @@ public sealed class Plugin : IDalamudPlugin
                 _throttleInteract = _ws.FutureTime(1.1d);
             }
         }
+
+        HandleFateSync();
     }
 
     private unsafe void SetTarget(Actor? target, FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject** targetPtr)
@@ -346,6 +350,27 @@ public sealed class Plugin : IDalamudPlugin
             return player?.DistanceToHitbox(target) <= 2.09f;
 
         return EventFramework.Instance()->CheckInteractRange(playerObj, targetObj, 1, false);
+    }
+
+    private unsafe void HandleFateSync()
+    {
+        var fm = FateManager.Instance();
+        var fate = fm->CurrentFate;
+        if (fate == null)
+            return;
+
+        var shouldDoSomething = _hints.WantFateSync switch
+        {
+            AIHints.FateSync.Enable => !fm->IsSyncedToFate(fate),
+            AIHints.FateSync.Disable => fm->IsSyncedToFate(fate),
+            _ => false
+        };
+
+        if (shouldDoSomething && _ws.CurrentTime >= _throttleFateSync)
+        {
+            fm->LevelSync();
+            _throttleFateSync = _ws.FutureTime(0.5f);
+        }
     }
 
     private unsafe FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject* GetActorObject(Actor? actor)
