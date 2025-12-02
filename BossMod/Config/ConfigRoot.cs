@@ -12,7 +12,7 @@ public sealed class ConfigRoot
 
     public void Initialize()
     {
-        foreach (var t in Utils.GetDerivedTypes<ConfigNode>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract))
+        foreach (var t in Utils.GetDerivedTypes<ConfigNode>(Assembly.GetExecutingAssembly()).Where(static t => !t.IsAbstract))
         {
             if (Activator.CreateInstance(t) is not ConfigNode inst)
             {
@@ -111,7 +111,16 @@ public sealed class ConfigRoot
             List<ConfigNode> matchingNodes = [];
             foreach (var (t, n) in _nodes)
                 if (t.Name.Contains(args[0], StringComparison.CurrentCultureIgnoreCase))
+                {
+                    // check for exact match
+                    if (t.Name.Length == cmdType.Length)
+                    {
+                        matchingNodes.Clear();
+                        matchingNodes.Add(n);
+                        break;
+                    }
                     matchingNodes.Add(n);
+                }
             if (matchingNodes.Count == 0)
             {
                 result.Add("Config type not found. Valid types:");
@@ -135,8 +144,19 @@ public sealed class ConfigRoot
             {
                 List<FieldInfo> matchingFields = [];
                 foreach (var f in matchingNodes[0].GetType().GetFields().Where(f => f.GetCustomAttribute<PropertyDisplayAttribute>() != null))
+                {
                     if (f.Name.Contains(args[1], StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        // check for exact match
+                        if (f.Name.Length == cmdField.Length)
+                        {
+                            matchingFields.Clear();
+                            matchingFields.Add(f);
+                            break;
+                        }
                         matchingFields.Add(f);
+                    }
+                }
                 if (matchingFields.Count == 0)
                 {
                     result.Add($"Field not found {args[1]}, Valid fields:");
