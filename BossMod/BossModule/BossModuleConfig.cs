@@ -71,6 +71,9 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("Show waymarks on radar")]
     public bool ShowWaymarks = false;
 
+    [PropertyDisplay("Show signs on radar ('attack', 'bind', 'ignore', and shape markers)")]
+    public bool ShowSigns = false;
+
     [PropertyDisplay("Always show all alive party members")]
     public bool ShowIrrelevantPlayers = false;
 

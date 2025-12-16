@@ -87,20 +87,30 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
         var allowAll = strategy.Option(Track.Everything).As<Flag>() == Flag.Enabled;
 
         if (strategy.Option(Track.QuestBattle).As<Flag>() == Flag.Enabled)
-            allowAll |= Bossmods.ActiveModule?.Info?.Category == BossModuleInfo.Category.Quest;
+            allowAll |= Bossmods.LoadedModules is [{ Info.Category: BossModuleInfo.Category.Quest }];
 
         if (strategy.Option(Track.TreasureHunt).As<Flag>() == Flag.Enabled)
-            allowAll |= Bossmods.ActiveModule?.Info?.Category == BossModuleInfo.Category.TreasureHunt;
+            allowAll |= Bossmods.LoadedModules is [{ Info.Category: BossModuleInfo.Category.TreasureHunt }];
 
         if (strategy.Option(Track.DeepDungeon).As<Flag>() == Flag.Enabled)
-            allowAll |= Bossmods.ActiveModule?.Info?.Category == BossModuleInfo.Category.DeepDungeon && World.Party.WithoutSlot().Length == 1;
+            allowAll |= Bossmods.LoadedModules is [{ Info.Category: BossModuleInfo.Category.DeepDungeon }];
 
         if (strategy.Option(Track.EpicEcho).As<Flag>() == Flag.Enabled)
             allowAll |= Player.Statuses.Any(static s => s.ID == 2734u);
 
         ulong huntTarget = 0;
 
-        if (strategy.Option(Track.Hunt).As<Flag>() == Flag.Enabled && Bossmods.ActiveModule?.Info?.Category == BossModuleInfo.Category.Hunt && Bossmods.ActiveModule?.PrimaryActor is { InCombat: true, HPRatio: < 0.95f, InstanceID: var i })
+        if (strategy.Option(Track.Hunt).As<Flag>() == Flag.Enabled && Bossmods.ActiveModule is
+            {
+                Info.Category: BossModuleInfo.Category.Hunt,
+                PrimaryActor:
+                {
+                    InCombat: true,
+                    HPRatio: 0.95f,
+                    InstanceID: var i
+                }
+            }
+        )
             huntTarget = i;
 
         var targetFates = strategy.Option(Track.FATE).As<Flag>() == Flag.Enabled && Utils.IsPlayerSyncedToFate(World);
