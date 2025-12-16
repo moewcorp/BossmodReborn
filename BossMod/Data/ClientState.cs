@@ -111,6 +111,13 @@ public sealed class ClientState
         public override readonly int GetHashCode() => InstanceID.GetHashCode();
     }
 
+    public struct Companion(ulong instanceID, byte stance, float timeLeft)
+    {
+        public readonly ulong InstanceID = instanceID;
+        public byte Stance = stance;
+        public float TimeLeft = timeLeft;
+    }
+
     public readonly struct DutyAction(ActionID action, byte curCharges, byte maxCharges)
     {
         public readonly ActionID Action = action;
@@ -166,6 +173,7 @@ public sealed class ClientState
     public readonly short[] ClassJobLevels = new short[NumClassLevels];
     public Fate ActiveFate;
     public Pet ActivePet;
+    public Companion ActiveCompanion;
     public ulong FocusTargetId;
     public Angle ForcedMovementDirection; // used for temporary misdirection and spinning states
     public uint[] ContentKeyValueData = new uint[6]; // used for content-specific persistent player attributes, like bozja resistance rank
@@ -644,6 +652,17 @@ public sealed class ClientState
             ws.Client.ActivePetChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CPET"u8).Emit(Value.InstanceID, "X8").Emit(Value.Order).Emit(Value.Stance);
+    }
+
+    public Event<OpActiveCompanionChange> ActiveCompanionChanged = new();
+    public sealed record class OpActiveCompanionChange(Companion Value) : WorldState.Operation
+    {
+        protected override void Exec(WorldState ws)
+        {
+            ws.Client.ActiveCompanion = Value;
+            ws.Client.ActiveCompanionChanged.Fire(this);
+        }
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CHOC"u8).Emit(Value.InstanceID, "X8").Emit(Value.Stance).Emit(Value.TimeLeft);
     }
 
     public Event<OpFocusTargetChange> FocusTargetChanged = new();
