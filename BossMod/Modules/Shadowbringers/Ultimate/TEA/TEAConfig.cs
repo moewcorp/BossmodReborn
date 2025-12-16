@@ -16,7 +16,7 @@ public sealed class GroupAssignmentFourUnique : GroupAssignment
 
     public override bool Validate()
     {
-        var assigned = stackalloc int[5];
+        var assigned = new int[5];
 
         for (var i = 0; i < (int)PartyRolesConfig.Assignment.Unassigned; ++i)
         {

@@ -574,7 +574,7 @@ public abstract class BossModule : IDisposable
 
     private void DrawSigns()
     {
-        for (var i = Sign.Attack1; i < Sign.Count; i++)
+        for (var i = Sign.Attack1; i < Sign.Count; ++i)
         {
             var actor = WorldState.Actors.Find(WorldState.Waymarks[i]);
             if (actor == null)

@@ -11,9 +11,9 @@ sealed class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
     private readonly TOPConfig _config = Service.Config.Get<TOPConfig>();
 
     private DateTime _resolve;
-    private readonly ArcList[] _safeAngles = Utils.GenArray(PartyState.MaxPartySize, () => new ArcList(default, 50));
+    private readonly ArcList[] _safeAngles = Utils.GenArray(PartyState.MaxPartySize, () => new ArcList(default, 50f));
 
-    private static readonly AOEShapeCone _shape = new(40, 90.Degrees());
+    private static readonly AOEShapeCone _shape = new(40f, 90f.Degrees());
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
@@ -69,47 +69,6 @@ sealed class P3OversampledWaveCannon(BossModule module) : BossComponent(module)
         al.ForbidArc(dirToUnsafeCleave - 90.Degrees(), dirToUnsafeCleave + 90f.Degrees());
 
         foreach (var (min, max) in al.Allowed(2f.Degrees()))
-            hints.ForbiddenDirections.Add(((max + min) / 2f, (max - min) / 2f, _resolve));
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        hints.PredictedDamage.Add(new(Raid.WithSlot().Mask(), _resolve, AIHints.PredictedDamageType.Raidwide));
-
-        if (!IsMonitor(slot) || !_config.P3MonitorForbiddenDirections)
-            return;
-
-        var safeCW = _bossAngle.Rad > 0f;
-
-        var targetCW = (_config.P3LastMonitorSouth, _playerOrder[slot]) switch
-        {
-            (_, 1) => safeCW,
-            (_, 3) => !safeCW,
-            (true, 2) => !safeCW,
-            (false, 2) => safeCW,
-            _ => false
-        };
-
-        var al = _safeAngles[slot];
-        al.Forbidden.Clear();
-        al.Center = actor.Position;
-
-        var safeConePlayers = Raid.WithoutSlot().ClockOrder(actor, Arena.Center, !targetCW).Skip(2).Take(2).ToList();
-        if (targetCW)
-            safeConePlayers.Reverse();
-
-        var angleRight = actor.AngleTo(safeConePlayers[0]);
-        var angleLeft = actor.AngleTo(safeConePlayers[1]);
-
-        // forbid angle ranges that don't face the player toward or away from their intended targets
-        al.ForbidArc(angleLeft, (angleRight + 180.Degrees()).Normalized());
-        al.ForbidArc((angleLeft + 180.Degrees()).Normalized(), angleRight);
-
-        // forbid any angle that would hit the boss with the monitor; eliminates one of the two remaining facing cones
-        var dirToUnsafeCleave = actor.DirectionTo(Arena.Center).ToAngle() - _playerAngles[slot];
-        al.ForbidArc(dirToUnsafeCleave - 90f.Degrees(), dirToUnsafeCleave + 90f.Degrees());
-
-        foreach (var (min, max) in al.Allowed(2.Degrees()))
             hints.ForbiddenDirections.Add(((max + min) / 2f, (max - min) / 2f, _resolve));
     }
 

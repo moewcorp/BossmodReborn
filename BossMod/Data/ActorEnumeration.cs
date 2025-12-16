@@ -266,20 +266,20 @@ public static class ActorEnumeration
             ? range.OrderBy(r =>
             {
                 var (slot, actor) = r;
-                var thisAngle = (actor.Position - center).ToAngle();
-                if (actor != starting && thisAngle.Rad < startingAngle.Rad)
-                    thisAngle.Rad += MathF.PI * 2;
+                var thisAngle = (actor.Position - center).ToAngle().Rad;
+                if (actor != starting && thisAngle < startingAngle.Rad)
+                    thisAngle += Angle.DoublePI;
 
-                return thisAngle.Rad;
+                return thisAngle;
             })
             : range.OrderByDescending(r =>
             {
                 var (slot, actor) = r;
-                var thisAngle = (actor.Position - center).ToAngle();
-                if (actor != starting && thisAngle.Rad > startingAngle.Rad)
-                    thisAngle.Rad -= MathF.PI * 2;
+                var thisAngle = (actor.Position - center).ToAngle().Rad;
+                if (actor != starting && thisAngle > startingAngle.Rad)
+                    thisAngle -= Angle.DoublePI;
 
-                return thisAngle.Rad;
+                return thisAngle;
             });
     }
 

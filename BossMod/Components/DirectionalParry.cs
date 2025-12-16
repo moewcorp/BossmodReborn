@@ -19,7 +19,7 @@ public class DirectionalParry(BossModule module, uint[] actorOID, int forbiddenP
     public const uint ParrySID = 680u; // common 'directional parry' status
     public readonly int ForbiddenPriority = forbiddenPriority;
 
-    private readonly Dictionary<ulong, int> _actorStates = []; // value == active-side | (imminent-side << 4)
+    public readonly Dictionary<ulong, int> ActorStates = []; // value == active-side | (imminent-side << 4)
     public bool Active
     {
         get

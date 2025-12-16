@@ -13,7 +13,7 @@ sealed class P2PlasmaShield(BossModule module) : Components.DirectionalParry(mod
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var (id, _) in _actorStates)
+        foreach (var (id, _) in ActorStates)
         {
             var e = hints.Enemies.FirstOrDefault(d => d?.Actor.InstanceID == id);
             if (e == null)
@@ -32,7 +32,7 @@ sealed class P2PlasmaShield(BossModule module) : Components.DirectionalParry(mod
     {
         base.DrawArenaForeground(pcSlot, pc);
 
-        Arena.Actors(Module.Enemies((uint)OID.PlasmaShield), ArenaColor.Enemy);
+        Arena.Actors(Module.Enemies((uint)OID.PlasmaShield));
     }
 }
 

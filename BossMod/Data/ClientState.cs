@@ -111,11 +111,19 @@ public sealed class ClientState
         public override readonly int GetHashCode() => InstanceID.GetHashCode();
     }
 
-    public struct Companion(ulong instanceID, byte stance, float timeLeft)
+    public readonly struct Companion(ulong instanceID, byte stance, float timeLeft)
     {
         public readonly ulong InstanceID = instanceID;
-        public byte Stance = stance;
-        public float TimeLeft = timeLeft;
+        public readonly byte Stance = stance;
+        public readonly float TimeLeft = timeLeft;
+
+        public static bool operator ==(Companion left, Companion right) => left.InstanceID == right.InstanceID && left.Stance == right.Stance && left.TimeLeft == right.TimeLeft;
+        public static bool operator !=(Companion left, Companion right) => left.InstanceID != right.InstanceID || left.Stance != right.Stance || left.TimeLeft != right.TimeLeft;
+
+        public readonly bool Equals(Companion other) => this == other;
+        public override readonly bool Equals(object? obj) => obj is Companion other && Equals(other);
+        public override readonly int GetHashCode() => (InstanceID, Stance, TimeLeft).GetHashCode();
+        public override readonly string ToString() => $"ID: {InstanceID}, Stance: {Stance}";
     }
 
     public readonly struct DutyAction(ActionID action, byte curCharges, byte maxCharges)
@@ -655,7 +663,7 @@ public sealed class ClientState
     }
 
     public Event<OpActiveCompanionChange> ActiveCompanionChanged = new();
-    public sealed record class OpActiveCompanionChange(Companion Value) : WorldState.Operation
+    public sealed class OpActiveCompanionChange(Companion Value) : WorldState.Operation
     {
         protected override void Exec(WorldState ws)
         {

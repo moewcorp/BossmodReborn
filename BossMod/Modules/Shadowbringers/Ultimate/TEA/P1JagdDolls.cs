@@ -85,9 +85,9 @@ sealed class P1JagdDolls(BossModule module) : BossComponent(module)
         }
     }
 
-    public override void OnTargetable(Actor actor)
+    public override void OnActorTargetable(Actor actor)
     {
-        if ((OID)actor.OID == OID.JagdDoll)
+        if (actor.OID == (uint)OID.JagdDoll)
         {
             _dolls.Add(actor);
             if (_dolls.Count == 4)
@@ -104,7 +104,7 @@ sealed class P1JagdDolls(BossModule module) : BossComponent(module)
         if (pairs.Count == 0)
             return;
 
-        var rages = Module.Enemies(OID.LiquidRage).ToList();
+        var rages = Module.Enemies((uint)OID.LiquidRage).ToList();
         var ragesPos = rages.Select(r => r.Position).Aggregate((a, b) => new WPos(a.X + b.X, a.Z + b.Z));
         var average = new WPos(ragesPos.X / 3f, ragesPos.Z / 3f);
         var south = rages.MinBy(r => r.DistanceToPoint(average));

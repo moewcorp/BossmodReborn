@@ -114,6 +114,7 @@ sealed class P3TrueHeart(BossModule module) : Components.Adds(module, (uint)OID.
 sealed class P3Inception3EarlyHints(BossModule module) : BossComponent(module)
 {
     private WPos[]? _safespots;
+    private readonly TEA bossmod = (TEA)module;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
@@ -132,7 +133,7 @@ sealed class P3Inception3EarlyHints(BossModule module) : BossComponent(module)
         if (_safespots != null)
             return;
 
-        var h = Module.Enemies(OID.TrueHeart).FirstOrDefault();
+        var h = bossmod.TrueHeart();
         if (h != null && h.LastFrameMovement != default)
         {
             var dir = h.LastFrameMovement.Normalized();
@@ -152,7 +153,7 @@ sealed class P3Inception3EarlyHints(BossModule module) : BossComponent(module)
 
         foreach (var (slot, actor) in Raid.WithSlot())
         {
-            var safeSide = actor.Role is Role.Tank || actor.FindStatus((uint)SID.SharedSentence) != null ? 90f.Degrees() : -90f.Degrees();
+            var safeSide = actor.Role is Role.Tank || actor.FindStatus((uint)SID.SharedSentence) != null ? -90f.Degrees() : 90f.Degrees();
             _safespots[slot] = center + (relNorth + safeSide).ToDirection() * 18f;
         }
     }
