@@ -288,7 +288,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
     // see ActionEffectHandler.Receive - there are a few hardcoded actions here
     private bool ExpectAnimationLockUpdate(ActionEffectHandler.Header* header)
-        => header->SourceSequence != 0 && !(header->ActionType == CSActionType.Action && (NIN.AID)header->ActionId is NIN.AID.Ten1 or NIN.AID.Chi1 or NIN.AID.Jin1 or NIN.AID.Ten2 or NIN.AID.Chi2 or NIN.AID.Jin2)
+        => header->SourceSequence != 0 && !(header->ActionType == (byte)CSActionType.Action && (NIN.AID)header->ActionId is NIN.AID.Ten1 or NIN.AID.Chi1 or NIN.AID.Jin1 or NIN.AID.Ten2 or NIN.AID.Chi2 or NIN.AID.Jin2)
         || header->ForceAnimationLock;
 
     // perform some action transformations to simplify implementation of queueing; UseActionLocation expects some normalization to be already done
@@ -312,9 +312,9 @@ public sealed unsafe class ActionManagerEx : IDisposable
                     return id != 0 ? new(ActionType.Spell, id) : action;
                 }
                 // special case for lunar sprint, copied from UseGeneralAction
-                else if (action == ActionDefinitions.IDGeneralSprint && GameMain.Instance()->CurrentTerritoryIntendedUseId == 60)
+                else if (action == ActionDefinitions.IDGeneralSprint && GameMain.Instance()->CurrentTerritoryIntendedUseId == FFXIVClientStructs.FFXIV.Client.Enums.TerritoryIntendedUse.CosmicExploration)
                 {
-                    return new(ActionType.Spell, 43357);
+                    return new(ActionType.Spell, 43357u);
                 }
                 else if (action == ActionDefinitions.IDGeneralSprint || action == ActionDefinitions.IDGeneralDuty1 || action == ActionDefinitions.IDGeneralDuty2)
                 {
