@@ -455,6 +455,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("CLVL"u8)] = ParseClientClassJobLevels,
             [new("CLAF"u8)] = ParseClientActiveFate,
             [new("CPET"u8)] = ParseClientActivePet,
+            [new("CHOC"u8)] = ParseClientActiveCompanion,
             [new("CLFT"u8)] = ParseClientFocusTarget,
             [new("CLFD"u8)] = ParseClientForcedMovementDirection,
             [new("CLKV"u8)] = ParseClientContentKVData,
@@ -880,6 +881,7 @@ public sealed class ReplayParserLog : IDisposable
 
     private ClientState.OpActiveFateChange ParseClientActiveFate() => new(new(_input.ReadUInt(false), _input.ReadVec3(), _input.ReadFloat(), _version >= 27 ? _input.ReadByte(false) : default, _version >= 27 ? _input.ReadByte(false) : default, _version >= 29 ? _input.ReadUInt(false) : default));
     private ClientState.OpActivePetChange ParseClientActivePet() => new(new(_input.ReadULong(true), _input.ReadByte(false), _input.ReadByte(false)));
+    private ClientState.OpActiveCompanionChange ParseClientActiveCompanion() => new(new(_input.ReadULong(true), _input.ReadByte(false), _input.ReadFloat()));
     private ClientState.OpFocusTargetChange ParseClientFocusTarget() => new(_input.ReadULong(true));
     private ClientState.OpForcedMovementDirectionChange ParseClientForcedMovementDirection() => new(_input.ReadAngle());
     private ClientState.OpContentKVDataChange ParseClientContentKVData() => new([

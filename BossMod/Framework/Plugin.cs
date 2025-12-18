@@ -64,7 +64,11 @@ public sealed class Plugin : IDalamudPlugin
                 GetMethod("Get")!.Invoke(null, BindingFlags.Default, null, [], null);
         var dalamudStartInfo = dalamudRoot?.GetType().GetProperty("StartInfo", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(dalamudRoot) as DalamudStartInfo;
         var gameVersion = dalamudStartInfo?.GameVersion?.ToString() ?? "unknown";
-        InteropGenerator.Runtime.Resolver.GetInstance.Setup(Service.SigScanner.SearchBase, gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
+
+        // FIXME
+        dataManager.GameData.Options.PanicOnSheetChecksumMismatch = false;
+
+        InteropGenerator.Runtime.Resolver.GetInstance.Setup(sigScanner.SearchBase, gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
         FFXIVClientStructs.Interop.Generated.Addresses.Register();
         InteropGenerator.Runtime.Resolver.GetInstance.Resolve();
 
@@ -365,7 +369,11 @@ public sealed class Plugin : IDalamudPlugin
         if (targetObj->ObjectKind is FFXIVClientStructs.FFXIV.Client.Game.Object.ObjectKind.Treasure)
             return player?.DistanceToHitbox(target) <= 2.09f;
 
-        return EventFramework.Instance()->CheckInteractRange(playerObj, targetObj, 1, false);
+        // FIXME extra arg (int*) before logErrorsToUser
+        var checkFn = (delegate* unmanaged<EventFramework*, FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*, FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*, byte, int*, byte, byte>)EventFramework.MemberFunctionPointers.CheckInteractRange;
+
+        var ret = 0;
+        return checkFn(EventFramework.Instance(), playerObj, targetObj, 1, &ret, 0) == 1;
     }
 
     private unsafe void HandleFateSync()

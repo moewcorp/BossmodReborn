@@ -114,7 +114,8 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketEffectResultHook.Enable();
         Service.Log($"[WSG] ProcessPacketEffectResult address = 0x{_processPacketEffectResultHook.Address:X}");
 
-        _processPacketEffectResultBasicHook = Service.Hook.HookFromSignature<ProcessPacketEffectResultDelegate>("40 53 41 54 41 55 48 83 EC 40", ProcessPacketEffectResultBasicDetour);
+        _processPacketEffectResultBasicHook = Service.Hook.HookFromSignature<ProcessPacketEffectResultDelegate>("40 53 41 54 41 55 48 83 EC 40 83 3D ?? ?? ?? ?? ??", ProcessPacketEffectResultBasicDetour);
+        _processPacketEffectResultBasicHook = Service.Hook.HookFromSignature<ProcessPacketEffectResultDelegate>("40 53 41 54 41 55 48 83 EC 40 83 3D ?? ?? ?? ?? ??", ProcessPacketEffectResultBasicDetour);
         _processPacketEffectResultBasicHook.Enable();
         Service.Log($"[WSG] ProcessPacketEffectResultBasic address = 0x{_processPacketEffectResultBasicHook.Address:X}");
 
@@ -166,7 +167,7 @@ sealed class WorldStateGameSync : IDisposable
         _processLegacyMapEffectHook.Enable();
         Service.Log($"[WSG] LegacyMapEffect address = {_processLegacyMapEffectHook.Address:X}");
 
-        _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("4c ?? ?? 8b ?? 48 ?? ?? ?? ?? ?? ?? e9", InventoryAckDetour);
+        _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7", InventoryAckDetour);
         _inventoryAckHook.Enable();
         Service.Log($"[WSG] InventoryAck address = {_inventoryAckHook.Address:X}");
     }
@@ -312,7 +313,7 @@ sealed class WorldStateGameSync : IDisposable
         var nameID = chr != null ? chr->NameId : 0;
         var classID = chr != null ? (Class)chr->ClassJob : Class.None;
         var level = chr != null ? chr->Level : 0;
-        var posRot = new Vector4(obj->Position, obj->Rotation);
+        var posRot = new Vector4(*obj->GetPosition(), obj->Rotation);
         var hpmp = new ActorHPMP();
         var inCombat = false;
         if (chr != null)
@@ -325,7 +326,7 @@ sealed class WorldStateGameSync : IDisposable
             inCombat = chr->InCombat;
         }
         var targetable = obj->GetIsTargetable();
-        var renderflags = obj->RenderFlags;
+        var renderflags = (int)obj->RenderFlags;
         var friendly = chr == null || ActionManager.ClassifyTarget(chr) != ActionManager.TargetCategory.Enemy;
         var isDead = obj->IsDead();
         var hasAggro = _playerEnmity.IndexOf(obj->EntityId) >= 0;
@@ -766,7 +767,12 @@ sealed class WorldStateGameSync : IDisposable
         if (_ws.Client.ActivePet != pet)
             _ws.Execute(new ClientState.OpActivePetChange(pet));
 
-        ref var focusTarget = ref TargetSystem.Instance()->FocusTarget;
+        var chocoinfo = uiState->Buddy.CompanionInfo;
+        var chocobo = new ClientState.Companion(chocoinfo.Companion->EntityId, chocoinfo.ActiveCommand, chocoinfo.TimeLeft);
+        if (_ws.Client.ActiveCompanion != chocobo)
+            _ws.Execute(new ClientState.OpActiveCompanionChange(chocobo));
+
+        var focusTarget = TargetSystem.Instance()->FocusTarget;
         var focusTargetId = focusTarget != null ? SanitizedObjectID(focusTarget->GetGameObjectId()) : default;
         if (_ws.Client.FocusTargetId != focusTargetId)
             _ws.Execute(new ClientState.OpFocusTargetChange(focusTargetId));

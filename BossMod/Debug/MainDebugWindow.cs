@@ -49,6 +49,8 @@ sealed class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ZoneM
         var eventFwk = FFXIVClientStructs.FFXIV.Client.Game.Event.EventFramework.Instance();
         var instanceDirector = eventFwk != null ? eventFwk->GetInstanceContentDirector() : null;
         ImGui.TextUnformatted($"Content time left: {(instanceDirector != null ? $"{instanceDirector->ContentDirector.ContentTimeLeft:f1}" : "n/a")}");
+        if (instanceDirector != null)
+            ImGui.TextUnformatted($"Director address: 0x{(nint)instanceDirector:X}");
 
         if (ImGui.Button("Perform full dump"))
         {

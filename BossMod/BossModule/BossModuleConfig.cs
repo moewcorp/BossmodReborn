@@ -71,6 +71,9 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("在雷达上显示标记点")]
     public bool ShowWaymarks = false;
 
+    [PropertyDisplay("在雷达上显示信号（“攻击”、“止步”、“禁止”和形状标记）")]
+    public bool ShowSigns = false;
+
     [PropertyDisplay("始终显示所有存活的队员")]
     public bool ShowIrrelevantPlayers = false;
 
