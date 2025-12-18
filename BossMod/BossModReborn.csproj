@@ -14,7 +14,7 @@
 </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>x64</Platforms>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
@@ -48,9 +48,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="13.1.0" />
+    <PackageReference Include="DalamudPackager" Version="14.0.0" />
     <PackageReference Include="PInvoke.User32" Version="0.7.124" />
-    <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100" />
     <ProjectReference Include="..\FFXIVClientStructs\FFXIVClientStructs\FFXIVClientStructs.csproj" />
 
     <Reference Include="Dalamud">
@@ -95,13 +95,9 @@
 
   <Target Name="CopyOnlyPInvoke" AfterTargets="Build" Condition=" '$(CopyLocalLockFileAssemblies)' != 'true' ">
     <ItemGroup>
-      <_PInvokeFromNuGet Include="@(RuntimeCopyLocalItems)"
-                         Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'PInvoke.User32' 
-                                   and $([System.String]::Copy('%(RuntimeCopyLocalItems.Extension)').ToLower()) == '.dll'" />
+      <_PInvokeFromNuGet Include="@(RuntimeCopyLocalItems)" Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'PInvoke.User32' &#xD;&#xA;                                   and $([System.String]::Copy('%(RuntimeCopyLocalItems.Extension)').ToLower()) == '.dll'" />
     </ItemGroup>
-    <Copy SourceFiles="@(_PInvokeFromNuGet)"
-          DestinationFolder="$(OutputPath)"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PInvokeFromNuGet)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
   </Target>
   
 </Project>

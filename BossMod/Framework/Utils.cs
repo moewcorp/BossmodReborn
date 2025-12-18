@@ -358,18 +358,4 @@ public static partial class Utils
     }
 
     public static DateTime Clamp(this DateTime dt, DateTime min, DateTime max) => dt < min ? min : dt > max ? max : dt;
-
-    public static IEnumerable<T> Drain<T>(this List<T> list, Predicate<T> predicate)
-    {
-        for (var i = list.Count - 1; i >= 0; i--)
-            if (predicate(list[i]))
-            {
-                yield return list[i];
-                list.RemoveAt(i);
-            }
-    }
-
-    public static Vector3 ToSystem(this SharpDX.Vector3 v) => new(v.X, v.Y, v.Z);
-    public static Vector3 ToSystem(this Lumina.Data.Parsing.Common.Vector3 v) => new(v.X, v.Y, v.Z);
-    public static SharpDX.Vector3 ToSharpDX(this Vector3 v) => new(v.X, v.Y, v.Z);
 }
