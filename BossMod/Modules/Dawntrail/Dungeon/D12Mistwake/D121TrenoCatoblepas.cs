@@ -139,7 +139,7 @@ sealed class ThunderIII(BossModule module) : Components.BaitAwayCast(module, (ui
 }
 
 [SkipLocalsInit]
-sealed class RayOfLightning(BossModule module) : Components.LineStack(module, iconID: (uint)IconID.RayOfLightning, (uint)AID.RayOfLightning, 6.2d, 50f, 5f, 4, 4)
+sealed class RayOfLightning(BossModule module) : Components.LineStack(module, iconID: (uint)IconID.RayOfLightning, (uint)AID.RayOfLightning, 6.2d, 50f, 2.5f, 4, 4)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -156,7 +156,7 @@ sealed class RayOfLightning(BossModule module) : Components.LineStack(module, ic
             for (var i = 0; i < count; ++i)
             {
                 var r = rocks[i];
-                hints.AddForbiddenZone(new SDCone(b.Source.Position, 100f, b.Source.AngleTo(r), Angle.Asin((5f + r.HitboxRadius) / (r.Position - b.Source.Position).Length())), b.Activation);
+                hints.AddForbiddenZone(new SDCone(b.Source.Position, 100f, b.Source.AngleTo(r), Angle.Asin((2.5f + r.HitboxRadius) / (r.Position - b.Source.Position).Length())), b.Activation);
             }
         }
     }
