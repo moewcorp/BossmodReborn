@@ -62,4 +62,15 @@
 // SortOrder = 3,
 // PlanLevel = 0)]
 // [SkipLocalsInit]
-// public sealed class D123ThundergustGriffin(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));
+// public sealed class D123ThundergustGriffin : BossModule
+// {
+//     public D123ThundergustGriffin(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
+
+//     private D123ThundergustGriffin(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
+
+//     private static (WPos center, ArenaBoundsCustom arena) BuildArena()
+//     {
+//         var arena = new ArenaBoundsCustom([new Polygon(new(281f, -620f), 20f, 64)], [new Rectangle(new(281f, -590f), 8f, 1.25f)]);
+//         return (arena.Center, arena); // after arena transition radius 20
+//     }
+// }

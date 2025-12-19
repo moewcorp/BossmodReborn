@@ -31,22 +31,21 @@ public enum IconID : uint
 [SkipLocalsInit]
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
-    // TODO: collision not perfect yet, correct when collision debug is fixed
     private readonly List<Polygon> rocks =
     [
-        new(new(72f, 357.5f), 2.5f, 30),
-        new(new(84f, 359f), 2f, 30),
-        new(new(86f, 359f), 1.5f, 30),
-        new(new(94f, 355f), 2f, 30),
-        new(new(97f, 363f), 1.5f, 30),
-        new(new(71.5f, 370f), 2f, 30),
-        new(new(74.5f, 368f), 2.5f, 30),
-        new(new(90.5f, 370f), 1.5f, 30),
-        new(new(93f, 372f), 2f, 30),
-        new(new(75f, 378f), 2.5f, 30),
-        new(new(89.5f, 380f), 2f, 30),
-        new(new(71.5f, 383f), 2f, 30),
-        new(new(97.5f, 383f), 2.5f, 30),
+            new(new(72.00001f, 357.50009f), 2.5f, 16, 95.096f.Degrees()),
+            new(new(84.0001f, 359f), 2f, 16, -4.837f.Degrees()),
+            new(new(85.99999f, 359f), 1.5f, 16, 40f.Degrees()),
+            new(new(94.00008f, 354.99979f), 2f, 16, 140.886f.Degrees()),
+            new(new(97.00001f, 363f), 1.5f, 16, -60f.Degrees()),
+            new(new(71.50004f, 370.00009f), 2f, 16, -69.402f.Degrees()),
+            new(new(74.49998f, 368.00009f), 2.5f, 16, -39.322f.Degrees()),
+            new(new(90.5f, 370f), 1.5f, 16, 60f.Degrees()),
+            new(new(93.00002f, 372f), 2f, 16, -70f.Degrees()),
+            new(new(74.99999f, 378f), 2.5f, 16, -128.896f.Degrees()),
+            new(new(89.50005f, 380f), 2f, 16, 22.477f.Degrees()),
+            new(new(71.5f, 383f), 2f, 16, 80f.Degrees()),
+            new(new(96.99998f, 383f), 2.5f, 16, 175.832f.Degrees())
         ];
 
     public override void OnMapEffect(byte index, uint state)
@@ -73,7 +72,7 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
             var count = rocks.Count;
             for (var i = 0; i < count; ++i)
             {
-                if (rocks[i].Center == pos)
+                if (rocks[i].Center.AlmostEqual(pos, 1f))
                 {
                     rocks.RemoveAt(i);
                     break;
@@ -306,19 +305,19 @@ public sealed class D121TrenoCatoblepas : BossModule
     {
         Polygon[] rocks =
         [
-            new(new(72f, 357.5f), 2.5f, 30),
-            new(new(84f, 359f), 2f, 30),
-            new(new(86f, 359f), 1.5f, 30),
-            new(new(94f, 355f), 2f, 30),
-            new(new(97f, 363f), 1.5f, 30),
-            new(new(71.5f, 370f), 2f, 30),
-            new(new(74.5f, 368f), 2.5f, 30),
-            new(new(90.5f, 370f), 1.5f, 30),
-            new(new(93f, 372f), 2f, 30),
-            new(new(75f, 378f), 2.5f, 30),
-            new(new(89.5f, 380f), 2f, 30),
-            new(new(71.5f, 383f), 2f, 30),
-            new(new(97.5f, 383f), 2.5f, 30),
+            new(new(72.00001f, 357.50009f), 2.5f, 16, 95.096f.Degrees()),
+            new(new(84.0001f, 359f), 2f, 16, -4.837f.Degrees()),
+            new(new(85.99999f, 359f), 1.5f, 16, 40f.Degrees()),
+            new(new(94.00008f, 354.99979f), 2f, 16, 140.886f.Degrees()),
+            new(new(97.00001f, 363f), 1.5f, 16, -60f.Degrees()),
+            new(new(71.50004f, 370.00009f), 2f, 16, -69.402f.Degrees()),
+            new(new(74.49998f, 368.00009f), 2.5f, 16, -39.322f.Degrees()),
+            new(new(90.5f, 370f), 1.5f, 16, 60f.Degrees()),
+            new(new(93.00002f, 372f), 2f, 16, -70f.Degrees()),
+            new(new(74.99999f, 378f), 2.5f, 16, -128.896f.Degrees()),
+            new(new(89.50005f, 380f), 2f, 16, 22.477f.Degrees()),
+            new(new(71.5f, 383f), 2f, 16, 80f.Degrees()),
+            new(new(96.99998f, 383f), 2.5f, 16, 175.832f.Degrees())
         ];
         var arena = new ArenaBoundsCustom([new Square(ArenaCenter, 19.5f)], rocks);
         return (arena.Center, arena);
