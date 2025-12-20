@@ -50,9 +50,9 @@
 // ConfigType = null,
 // ObjectIDType = typeof(OID),
 // ActionIDType = typeof(AID),
-// StatusIDType = null, // replace null with typeof(SID) if applicable
-// TetherIDType = null, // replace null with typeof(TetherID) if applicable
-// IconIDType = null, // replace null with typeof(IconID) if applicable
+// StatusIDType = null,
+// TetherIDType = null,
+// IconIDType = null,
 // PrimaryActorOID = (uint)OID.Amdusias,
 // Contributors = "",
 // Expansion = BossModuleInfo.Expansion.Dawntrail,
@@ -63,4 +63,15 @@
 // SortOrder = 2,
 // PlanLevel = 0)]
 // [SkipLocalsInit]
-// public sealed class D122Amdusias(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));
+// public sealed class D122Amdusias : BossModule
+// {
+//     public D122Amdusias(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
+
+//     private D122Amdusias(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
+
+//     private static (WPos center, ArenaBoundsCustom arena) BuildArena()
+//     {
+//         var arena = new ArenaBoundsCustom([new Polygon(new(281f, -285f), 19.5f, 64)], [new Rectangle(new(281f, -305f), 8f, 1.25f), new Rectangle(new(281f, -265f), 8f, 1.25f)]);
+//         return (arena.Center, arena);
+//     }
+// }
