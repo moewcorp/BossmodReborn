@@ -31,6 +31,16 @@ public enum IconID : uint
 [SkipLocalsInit]
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
+    public readonly List<Actor> rocksActors = module.Enemies([(uint)OID.SmallRock, (uint)OID.MediumRock, (uint)OID.BigRock]);
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if (actor.OID is (uint)OID.SmallRock or (uint)OID.MediumRock or (uint)OID.BigRock)
+        {
+            rocksActors.Remove(actor);
+        }
+    }
+
     private readonly List<Polygon> rocks =
     [
             new(new(72.00001f, 357.50009f), 2.5f, 16, 95.096f.Degrees()),
@@ -86,8 +96,8 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
 [SkipLocalsInit]
 sealed class BedevilingLight(BossModule module) : Components.CastLineOfSightAOE(module, (uint)AID.BedevilingLight, 30f)
 {
-    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan([.. Module.Enemies((uint)OID.SmallRock),
-    .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)]);
+    private readonly ArenaChanges arena = module.FindComponent<ArenaChanges>()!;
+    public override ReadOnlySpan<Actor> BlockerActors() => CollectionsMarshal.AsSpan(arena.rocksActors);
 }
 
 [SkipLocalsInit]
@@ -96,12 +106,14 @@ sealed class Earthquake(BossModule module) : Components.RaidwideCast(module, (ui
 [SkipLocalsInit]
 sealed class ThunderIII(BossModule module) : Components.BaitAwayCast(module, (uint)AID.ThunderIII, 4f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
+    private readonly ArenaChanges arena = module.FindComponent<ArenaChanges>()!;
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (IsBaitTarget(actor))
         {
-            List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+            var rocks = arena.rocksActors;
             var count = rocks.Count;
             var act = CurrentBaits.Ref(0).Activation;
             for (var i = 0; i < count; ++i)
@@ -119,7 +131,7 @@ sealed class ThunderIII(BossModule module) : Components.BaitAwayCast(module, (ui
         {
             return;
         }
-        List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+        var rocks = arena.rocksActors;
         var count = rocks.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -132,7 +144,7 @@ sealed class ThunderIII(BossModule module) : Components.BaitAwayCast(module, (ui
     {
         if (IsBaitTarget(actor))
         {
-            hints.Add("Avoid intersecting safe rock hitboxes!");
+            hints.Add("Avoid intersecting rock hitboxes!");
         }
     }
 }
@@ -140,17 +152,15 @@ sealed class ThunderIII(BossModule module) : Components.BaitAwayCast(module, (ui
 [SkipLocalsInit]
 sealed class RayOfLightning(BossModule module) : Components.LineStack(module, iconID: (uint)IconID.RayOfLightning, (uint)AID.RayOfLightning, 6.2d, 50f, 2.5f, 4, 4)
 {
+    private readonly ArenaChanges arena = module.FindComponent<ArenaChanges>()!;
+
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (IsBaitTarget(actor))
         {
-            List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+            var rocks = arena.rocksActors;
             var count = rocks.Count;
-            if (count == 0)
-            {
-                return;
-            }
             ref var b = ref CurrentBaits.Ref(0);
             for (var i = 0; i < count; ++i)
             {
@@ -167,7 +177,7 @@ sealed class RayOfLightning(BossModule module) : Components.LineStack(module, ic
         {
             return;
         }
-        List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+        var rocks = arena.rocksActors;
         var count = rocks.Count;
         for (var i = 0; i < count; ++i)
         {
@@ -191,13 +201,14 @@ sealed class ThunderIIAOE(BossModule module) : Components.SimpleAOEs(module, (ui
 sealed class ThunderIISpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.ThunderIISpread, 5f)
 {
     private readonly ThunderIIAOE aoe = module.FindComponent<ThunderIIAOE>()!;
+    private readonly ArenaChanges arena = module.FindComponent<ArenaChanges>()!;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
         if (IsSpreadTarget(actor))
         {
-            List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+            var rocks = arena.rocksActors;
             var count = rocks.Count;
             var act = Spreads.Ref(0).Activation;
             var aoes = aoe.ActiveAOEs(slot, actor);
@@ -205,9 +216,10 @@ sealed class ThunderIISpread(BossModule module) : Components.SpreadFromCastTarge
             for (var i = 0; i < count; ++i)
             {
                 var r = rocks[i];
+                var pos = r.Position;
                 for (var j = 0; j < len; ++j)
                 {
-                    if (aoes[j].Check(r.Position))
+                    if (aoes[j].Check(pos))
                     {
                         goto skip;
                     }
@@ -226,21 +238,22 @@ sealed class ThunderIISpread(BossModule module) : Components.SpreadFromCastTarge
         {
             return;
         }
-        List<Actor> rocks = [.. Module.Enemies((uint)OID.SmallRock), .. Module.Enemies((uint)OID.MediumRock), .. Module.Enemies((uint)OID.BigRock)];
+        var rocks = arena.rocksActors;
         var count = rocks.Count;
         var aoes = aoe.ActiveAOEs(pcSlot, pc);
         var len = aoes.Length;
         for (var i = 0; i < count; ++i)
         {
             var r = rocks[i];
+            var pos = r.Position;
             for (var j = 0; j < len; ++j)
             {
-                if (aoes[j].Check(r.Position))
+                if (aoes[j].Check(pos))
                 {
                     goto skip;
                 }
             }
-            Arena.AddCircle(r.Position, r.HitboxRadius);
+            Arena.AddCircle(pos, r.HitboxRadius);
         skip:
             ;
         }
@@ -250,7 +263,7 @@ sealed class ThunderIISpread(BossModule module) : Components.SpreadFromCastTarge
     {
         if (IsSpreadTarget(actor))
         {
-            hints.Add("Avoid intersecting rock hitboxes!");
+            hints.Add("Avoid intersecting safe rock hitboxes!");
         }
     }
 }
@@ -284,7 +297,7 @@ StatusIDType = null,
 TetherIDType = null,
 IconIDType = typeof(IconID),
 PrimaryActorOID = (uint)OID.TrenoCatoblepas,
-Contributors = "",
+Contributors = "The Combat Reborn Team (Malediktus)",
 Expansion = BossModuleInfo.Expansion.Dawntrail,
 Category = BossModuleInfo.Category.Dungeon,
 GroupType = BossModuleInfo.GroupType.CFC,
