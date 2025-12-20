@@ -177,14 +177,16 @@ sealed class Crosshatch(BossModule module) : Components.GenericAOEs(module)
         var id = spell.Action.ID;
         if (spell.Action.ID is (uint)AID.HorizontalCrosshatch1 or (uint)AID.HorizontalCrosshatch2 or (uint)AID.VerticalCrosshatch1 or (uint)AID.VerticalCrosshatch2)
         {
-            Angle[] angles = [-90.004f.Degrees(), 89.999f.Degrees(), -0.003f.Degrees(), 180f.Degrees()];
+            IEnumerable<Angle> angles = [-90.004f.Degrees(), 89.999f.Degrees(), -0.003f.Degrees(), 180f.Degrees()];
             if (id is (uint)AID.VerticalCrosshatch1 or (uint)AID.VerticalCrosshatch2)
             {
-                angles.Reverse();
+                angles = angles.Reverse();
             }
-            for (var i = 0; i < 4; ++i)
+            var i = 0;
+            foreach (var angle in angles)
             {
-                _aoes.Add(new(ClawingShadow.Cone, spell.LocXZ, angles[i], Module.CastFinishAt(spell, i < 2 ? default : 2f), i < 2 ? Colors.Danger : default, i < 2));
+                _aoes.Add(new(ClawingShadow.Cone, spell.LocXZ, angle, Module.CastFinishAt(spell, i < 2 ? default : 2f), i < 2 ? Colors.Danger : default, i < 2));
+                i++;
             }
         }
     }
