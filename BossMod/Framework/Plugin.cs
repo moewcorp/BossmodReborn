@@ -15,6 +15,8 @@ public sealed class Plugin : IDalamudPlugin
 {
     public string Name => "BossMod Reborn";
 
+    private readonly ICommandManager CommandManager;
+
     private readonly RotationDatabase _rotationDB;
     private readonly WorldState _ws;
     private readonly AIHints _hints;
@@ -47,7 +49,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private bool isDev;
 
-    public unsafe Plugin(IDalamudPluginInterface dalamud)
+    public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
     {
 #if !DEBUG
         if (dalamud.IsDev || !dalamud.SourceRepository.Contains("NiGuangOwO/DalamudPlugins"))
@@ -65,13 +67,13 @@ public sealed class Plugin : IDalamudPlugin
         var dalamudStartInfo = dalamudRoot?.GetType().GetProperty("StartInfo", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(dalamudRoot) as DalamudStartInfo;
         var gameVersion = dalamudStartInfo?.GameVersion?.ToString() ?? "unknown";
 
-        InteropGenerator.Runtime.Resolver.GetInstance.Setup(Service.sigScanner.SearchBase, gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
+        InteropGenerator.Runtime.Resolver.GetInstance.Setup(sigScanner.SearchBase, gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
         FFXIVClientStructs.Interop.Generated.Addresses.Register();
         InteropGenerator.Runtime.Resolver.GetInstance.Resolve();
 
         Service.LogHandlerDebug = msg => Service.Logger.Debug(msg);
         Service.LogHandlerVerbose = msg => Service.Logger.Verbose(msg);
-        Service.LuminaGameData = Service.DataManager.GameData;
+        Service.LuminaGameData = dataManager.GameData;
         Service.WindowSystem = new("bmr");
         //Service.Device = pluginInterface.UiBuilder.Device;
         Service.Condition.ConditionChange += OnConditionChanged;
@@ -82,7 +84,8 @@ public sealed class Plugin : IDalamudPlugin
         Service.Config.LoadFromFile(dalamud.ConfigFile);
         Service.Config.Modified.Subscribe(() => Task.Run(() => Service.Config.SaveToFile(dalamud.ConfigFile)));
 
-        Service.CommandManager.AddHandler("/bmr", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod settings UI" });
+        CommandManager = commandManager;
+        CommandManager.AddHandler("/bmr", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod settings UI" });
 
         ActionDefinitions.Instance.UnlockCheck = QuestUnlocked; // ensure action definitions are initialized and set unlock check functor (we don't really store the quest progress in clientstate, for now at least)
 
@@ -114,10 +117,10 @@ public sealed class Plugin : IDalamudPlugin
         _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotation presets"));
         _wndDebug = new(_ws, _rotation, _zonemod, _amex, _movementOverride, _hintsBuilder, dalamud);
 
-        Service.PluginInterface.UiBuilder.DisableAutomaticUiHide = true;
-        Service.PluginInterface.UiBuilder.Draw += DrawUI;
-        Service.PluginInterface.UiBuilder.OpenMainUi += () => OpenConfigUI();
-        Service.PluginInterface.UiBuilder.OpenConfigUi += () => OpenConfigUI();
+        dalamud.UiBuilder.DisableAutomaticUiHide = true;
+        dalamud.UiBuilder.Draw += DrawUI;
+        dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
+        dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
         Service.Framework.Update += Framework_Update;
     }
 
@@ -149,7 +152,7 @@ public sealed class Plugin : IDalamudPlugin
         _zonemod.Dispose();
         _bossmod.Dispose();
         ActionDefinitions.Instance.Dispose();
-        Service.CommandManager.RemoveHandler("/bmr");
+        CommandManager.RemoveHandler("/bmr");
         GarbageCollection();
     }
 
