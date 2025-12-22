@@ -47,7 +47,9 @@ sealed class ArenaChange(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.Thunderspark && Arena.Bounds.Radius > 20f)
         {
-            _aoe = [new(new AOEShapeDonut(20f, 30f), D123ThundergustGriffin.ArenaCenter, default, Module.CastFinishAt(spell, 0.7d))];
+            var shape = new AOEShapeDonut(20f, 30f);
+            var pos = D123ThundergustGriffin.ArenaCenter;
+            _aoe = [new(shape, pos, default, Module.CastFinishAt(spell, 0.7d), shapeDistance: shape.Distance(pos, default))];
         }
     }
 
