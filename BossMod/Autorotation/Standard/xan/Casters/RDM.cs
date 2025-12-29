@@ -123,7 +123,7 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
             : 20;
 
         if (primaryTarget is { } tar && Manafication < GCD && (Swordplay > 0 || LowestMana >= comboMana || InCombo))
-            Hints.GoalZones.Add(Hints.GoalSingleTarget(tar.Actor, 3));
+            Hints.GoalZones.Add(GoalSingleTarget(tar.Actor, 3));
 
         GoalZoneSingle(25);
 
