@@ -50,7 +50,7 @@
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="14.0.1" />
     <PackageReference Include="PInvoke.User32" Version="0.7.124" />
-    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.6" />
     <ProjectReference Include="..\FFXIVClientStructs\FFXIVClientStructs\FFXIVClientStructs.csproj" />
 
     <Reference Include="Dalamud">
