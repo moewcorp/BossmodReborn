@@ -1,6 +1,7 @@
 ﻿//TODO: Account for Dead Wake's shortening arena.
 
 namespace BossMod.Modules.Dawntrail.Raid.M09NVampFatale;
+
 sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 {
     private AOEInstance[] _aoe = [];
@@ -20,17 +21,17 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnMapEffect(byte index, uint state)
     {
-        if (index == 0x00 && state == 0x00020001)
+        if (index == 0x00 && state == 0x00020001u)
         {
             Arena.Bounds = new ArenaBoundsRect(10f, 20f);
             _aoe = [];
         }
-        if ((index == 0x00 || index == 0x10) && state == 0x00080004)
+        else if ((index == 0x00 || index == 0x10) && state == 0x00080004u)
         {
             Arena.Bounds = new ArenaBoundsSquare(20f);
             _aoe = [];
         }
-        if (index == 0x10 && state == 0x00020001)
+        else if (index == 0x10 && state == 0x00020001u)
         {
             Arena.Bounds = new ArenaBoundsCircle(20f);
         }
