@@ -1,10 +1,10 @@
 ﻿namespace BossMod.Modules.Dawntrail.Raid.M09NVampFatale;
 
-sealed class KillerVoice(BossModule module) : Components.RaidwideCast(module, (uint)AID.KillerVoice, "Raidwide");
+sealed class KillerVoice(BossModule module) : Components.RaidwideCast(module, (uint)AID.KillerVoice);
 
-sealed class HalfMoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HalfMoon1, (uint)AID.HalfMoon2, (uint)AID.HalfMoon4, (uint)AID.HalfMoon5, (uint)AID.HalfMoon7, (uint)AID.HalfMoon8], new AOEShapeCone(64f, 90f.Degrees()), 1);
+sealed class HalfMoon(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.HalfMoon1, (uint)AID.HalfMoon2, (uint)AID.HalfMoon3, (uint)AID.HalfMoon4, (uint)AID.HalfMoon5, (uint)AID.HalfMoon6, (uint)AID.HalfMoon7, (uint)AID.HalfMoon8], new AOEShapeCone(64f, 90f.Degrees()), 1);
 
-sealed class VampStomp(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VampStomp1, new AOEShapeCircle(10f));
+sealed class VampStomp(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VampStomp1, 10f);
 
 sealed class Hardcore(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Hardcore1, 6f);
 
@@ -24,7 +24,7 @@ sealed class BrutalRain(BossModule module) : Components.StackWithIcon(module, (u
 
 sealed class CrowdKill(BossModule module) : Components.RaidwideCast(module, (uint)AID.CrowdKill); // Doesn't seem to like this, might need to do after yell?
 
-sealed class PulpingPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PulpingPulse, new AOEShapeCircle(5f));
+sealed class PulpingPulse(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PulpingPulse, 5f);
 
 sealed class AetherlettingHit(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.Aetherletting1, 6f);
 
@@ -76,7 +76,7 @@ sealed class CoffinMaker(BossModule module) : Components.Voidzone(module, 3f, Ge
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(VampFataleStates),
+StatesType = typeof(M09VampFataleStates),
 ConfigType = null, // replace null with typeof(VampFataleConfig) if applicable
 ObjectIDType = typeof(OID),
 ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
