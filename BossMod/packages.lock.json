@@ -22,22 +22,26 @@
       },
       "TerraFX.Interop.Windows": {
         "type": "Direct",
-        "requested": "[10.0.26100, )",
-        "resolved": "10.0.26100",
-        "contentHash": "e68m5ATmbNpMO3ojSpFIvtEm+qIGRHCQRBDTH8iUZzhdRfZn8RTzkO1hZxPAqqR9rN5WXA4VCrRgnlGJ1RMqhQ=="
+        "requested": "[10.0.26100.6, )",
+        "resolved": "10.0.26100.6",
+        "contentHash": "QjL9vliSWmscUv6A7bjvsryHjYnY0norqvCNcLXSdEy1VIIzMF6FiS7BuvLTBuGUeN9FY4zJbU65OsHEv7jG9A=="
       },
       "PInvoke.Kernel32": {
         "type": "Transitive",
         "resolved": "0.7.124",
         "contentHash": "3yQudp7J20HH8oW2WsGdNlcRCJAG6Slens3n4P7c6m53m0SkXLyD5ry/bXYAFXYeIym9b0LIOvrmKjmzptmkWw==",
         "dependencies": {
-          "PInvoke.Windows.Core": "0.7.124"
+          "PInvoke.Windows.Core": "0.7.124",
+          "System.Threading.Tasks.Extensions": "4.5.4"
         }
       },
       "PInvoke.Windows.Core": {
         "type": "Transitive",
         "resolved": "0.7.124",
-        "contentHash": "er/PkwUBie3nXlwiKOfOxmdAj6ae8eFCLUgI5g6+9RAbyMoXMQnwAPx1atq0ZxU2LeozBdWtMQjogqcMNJhg1w=="
+        "contentHash": "er/PkwUBie3nXlwiKOfOxmdAj6ae8eFCLUgI5g6+9RAbyMoXMQnwAPx1atq0ZxU2LeozBdWtMQjogqcMNJhg1w==",
+        "dependencies": {
+          "System.Memory": "4.5.4"
+        }
       },
       "PInvoke.Windows.ShellScalingApi": {
         "type": "Transitive",
@@ -46,6 +50,16 @@
         "dependencies": {
           "PInvoke.Windows.Core": "0.7.124"
         }
+      },
+      "System.Memory": {
+        "type": "Transitive",
+        "resolved": "4.5.4",
+        "contentHash": "1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw=="
+      },
+      "System.Threading.Tasks.Extensions": {
+        "type": "Transitive",
+        "resolved": "4.5.4",
+        "contentHash": "zteT+G8xuGu6mS+mzDzYXbzS7rd3K6Fjb9RiZlYlJPam2/hU7JCBZBVEcywNuR+oZ1ncTvc/cq0faRr3P01OVg=="
       },
       "Validation": {
         "type": "Transitive",
