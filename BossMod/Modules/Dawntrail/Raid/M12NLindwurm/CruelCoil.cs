@@ -13,6 +13,7 @@ sealed class CruelCoil(BossModule module) : BossComponent(module)
 
     private bool _active = false;
     private readonly AOEShapeCircle skincoil = new(13f);
+
     public override void OnStatusGain(Actor actor, ref ActorStatus status)
     {
         if (status.ID == (uint)SID._Gen_Bind)
@@ -38,7 +39,7 @@ sealed class CruelCoil(BossModule module) : BossComponent(module)
     {
         if (index == 0x0A)
         {
-            if (state == 0x00010001)
+            if (state == 0x00010001u)
                 _active = false;
             else
                 _active = true;
@@ -122,5 +123,7 @@ sealed class CruelCoil(BossModule module) : BossComponent(module)
         }
 
         Arena.Bounds = new ArenaBoundsCustom([.. union], [.. diff], [.. plus]);
+        //better:
+        // Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Arena.Center, 20f, 15f)], [new DonutSegmentV(Arena.Center, 9.5f, 13.5f, 45f.Degrees(), 160f.Degrees(), 128)]);
     }
 }

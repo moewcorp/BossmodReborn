@@ -2,7 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x4AF7, // R13.800, x?
+    Lindwurm = 0x4AF7, // R13.800, x?
     BurstBlob = 0x1EBF29, // R0.500, x0 (spawn during fight), EventObj type
     _Gen_Lindwurm = 0x233C, // R0.500, x?, Helper type
     _Gen_Lindwurm1 = 0x4AE4, // R1.000, x?
@@ -10,18 +10,19 @@ public enum OID : uint
     _Gen_Lindwurm3 = 0x4AF8, // R4.000, x?, Helper type
     _Gen_Lindwurm4 = 0x4AFA, // R0.000, x?, Part type
 }
+
 public enum AID : uint
 {
     _AutoAttack_ = 46225, // 4AFA->player, no cast, single-target
-    TheFixer = 46228, // 4AF7->self, 5.0s cast, range 60 circle
-    _Weaponskill_Bloodshed = 46182, // 4AF7->self, 0.5+6.0s cast, single-target (boss arm regen visuals)
-    SerpentineScourgeLeft = 46183, // 4AF7->self, 1.0+1.0s cast, single-target, left
-    SerpentineScourgeRight = 46184, // 4AF7->self, 1.0+1.0s cast, single-target, right
+    TheFixer = 46228, // Lindwurm->self, 5.0s cast, range 60 circle
+    _Weaponskill_Bloodshed = 46182, // Lindwurm->self, 0.5+6.0s cast, single-target (boss arm regen visuals)
+    SerpentineScourgeLeft = 46183, // Lindwurm->self, 1.0+1.0s cast, single-target, left
+    SerpentineScourgeRight = 46184, // Lindwurm->self, 1.0+1.0s cast, single-target, right
     SerpentineScourge = 47547, // 233C->self, 2.0s cast, range 30 width 20 rect
-    _Weaponskill_RavenousReach = 46185, // 4AF7->self, 1.0+10.7s cast, single-target
+    _Weaponskill_RavenousReach = 46185, // Lindwurm->self, 1.0+10.7s cast, single-target
     _Weaponskill_ = 46186, // 4AF8->self, no cast, single-target
     _Weaponskill_RavenousReach1 = 46390, // 4AF8->self, no cast, single-target
-    _Weaponskill_1 = 46190, // 4AF7->self, no cast, single-target
+    _Weaponskill_1 = 46190, // Lindwurm->self, no cast, single-target
     RavenousReach = 46189, // 233C->self, 10.6s cast, range 35 120.000-degree cone (assuming players stack middle, say risky at 5s?)
     Burst = 46191, // 233C->location, 2.5s cast, range 12 circle
     _Weaponskill_CruelCoil = 45339, // 4AF7->location, 3.0s cast, single-target
