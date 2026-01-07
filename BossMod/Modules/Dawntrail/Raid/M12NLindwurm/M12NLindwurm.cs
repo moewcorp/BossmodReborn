@@ -1,6 +1,4 @@
-﻿
-
-namespace BossMod.Dawntrail.Raid.M12NLindwurm;
+﻿namespace BossMod.Dawntrail.Raid.M12NLindwurm;
 
 sealed class TheFixer(BossModule module) : Components.RaidwideCast(module, (uint)AID.TheFixer);
 sealed class SerpentineScourge(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SerpentineScourge, new AOEShapeRect(30f, 10f));
@@ -19,7 +17,7 @@ sealed class Burst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     {
         if (actor.OID == (uint)OID.BurstBlob)
         {
-            if (state == 0x00100020)
+            if (state == 0x00100020u)
                 Casters.Add(new(Shape, actor.Position));
         }
     }
@@ -31,7 +29,23 @@ sealed class Burst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1074, NameID = 14378)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP,
+StatesType = typeof(M12NLindwurmStates),
+ConfigType = null,
+ObjectIDType = typeof(OID),
+ActionIDType = typeof(AID),
+StatusIDType = typeof(SID),
+TetherIDType = null,
+IconIDType = typeof(IconID),
+PrimaryActorOID = (uint)OID.Lindwurm,
+Contributors = "gynorhino",
+Expansion = BossModuleInfo.Expansion.Dawntrail,
+Category = BossModuleInfo.Category.Raid,
+GroupType = BossModuleInfo.GroupType.CFC,
+GroupID = 1074u,
+NameID = 14378u,
+SortOrder = 1,
+PlanLevel = 0)]
 public sealed class M12NLindwurm(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, ArenaBounds)
 {
     public static readonly WPos ArenaCenter = new(100f, 100f);
