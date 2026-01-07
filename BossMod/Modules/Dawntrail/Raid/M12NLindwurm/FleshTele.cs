@@ -75,9 +75,9 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
             }
         }
 
-        if (_burst.ActiveCasters.Length > 0)
+        if (_burst.AOEs.Count() > 0)
         {
-            foreach (var c in _burst.ActiveCasters)
+            foreach (var c in _burst.AOEs)
             {
                 if (c.Check(pos))
                     return true;

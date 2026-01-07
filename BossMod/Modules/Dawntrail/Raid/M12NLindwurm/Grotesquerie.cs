@@ -51,24 +51,19 @@ sealed class DirectedGrotesquerie(BossModule module) : Components.GenericBaitAwa
             _direction[Raid.FindSlot(actor.InstanceID)] = status.Extra;
         }
     }
-    // copied and modified from cenote boss 1
+
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID == (uint)IconID.Countdown)
         {
-            (int, Actor)[] party = Raid.WithSlot(false, true, true);
-            var len = party.Length;
-            for (var i = 0; i < len; i++)
-            {
-                var extra = _direction[party[i].Item1];
-                if (extra == 0)
-                    continue;
+            var slot = Raid.FindSlot(actor.InstanceID);
+            var extra = _direction[slot];
+            if (extra == 0)
+                return;
 
-                var rotation = ((extra - 0x408) * -90).Degrees();
-                AOEShapeCone cone = new(60f, 15.Degrees(), rotation);
-                var p = party[i].Item2;
-                CurrentBaits.Add(new(p, p, cone, WorldState.FutureTime(5.5d)));
-            }
+            var rotation = ((extra - 0x408) * -90).Degrees();
+            AOEShapeCone cone = new(60f, 15.Degrees(), rotation);
+            CurrentBaits.Add(new(actor, actor, cone, WorldState.FutureTime(5.5d)));
         }
     }
 
