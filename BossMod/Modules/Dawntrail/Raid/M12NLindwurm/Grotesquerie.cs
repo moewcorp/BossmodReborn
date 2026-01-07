@@ -1,7 +1,4 @@
-﻿
-using static BossMod.Components.GenericStackSpread;
-
-namespace BossMod.Dawntrail.Raid.M12NLindwurm;
+﻿namespace BossMod.Dawntrail.Raid.M12NLindwurm;
 
 sealed class BurstingGrotesquerie(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SpreadBurstingGrotesquerie, (uint)AID.DramaticLysis, 5f, 5d)
 {
