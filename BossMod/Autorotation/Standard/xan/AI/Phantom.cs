@@ -344,7 +344,7 @@ public sealed class PhantomAI(RotationModuleManager manager, Actor player) : AIB
         }
 
         if (DesiredRange < float.MaxValue && primaryTarget != null)
-            Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, DesiredRange, 1));
+            Hints.GoalZones.Add(AIHints.GoalSingleTarget(primaryTarget, DesiredRange, 1));
     }
 
     private bool EnoughHP => Player.HPMP.MaxHP * 0.9f < Player.HPMP.CurHP + Player.HPMP.Shield;
