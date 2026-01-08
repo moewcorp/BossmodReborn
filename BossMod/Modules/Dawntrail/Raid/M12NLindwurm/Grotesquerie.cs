@@ -61,8 +61,8 @@ sealed class DirectedGrotesquerie(BossModule module) : Components.GenericBaitAwa
             if (extra == 0)
                 return;
 
-            var rotation = ((extra - 0x408) * -90).Degrees();
-            AOEShapeCone cone = new(60f, 15.Degrees(), rotation);
+            var rotation = ((extra - 0x408) * -90f).Degrees();
+            AOEShapeCone cone = new(60f, 15f.Degrees(), rotation);
             CurrentBaits.Add(new(actor, actor, cone, WorldState.FutureTime(5.5d)));
         }
     }
@@ -94,7 +94,7 @@ sealed class DirectedGrotesquerie(BossModule module) : Components.GenericBaitAwa
         if (activeBaits.Length != 0)
         {
             ref var b = ref activeBaits[0];
-            (int, Actor)[] party = Raid.WithSlot(false, true, true);
+            var party = Raid.WithSlot(false, true, true);
             var lenP = party.Length;
             for (var j = 0; j < lenP; j++)
             {

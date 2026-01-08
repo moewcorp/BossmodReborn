@@ -18,7 +18,6 @@ sealed class CruelCoil(BossModule module) : BossComponent(module)
     {
         if (status.ID == (uint)SID._Gen_Bind)
             UpdateArena();
-
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -85,7 +84,7 @@ sealed class CruelCoil(BossModule module) : BossComponent(module)
 
     private void UpdateArena(int state = 0)
     {
-        Angle centerDir = (state == 0 ? 0 : (state - 0x02) * -45f).Degrees();
+        var centerDir = (state == 0 ? 0f : (state - 0x02) * -45f).Degrees();
         Arena.Bounds = new ArenaBoundsCustom([new Rectangle(Arena.Center, 20f, 15f)], [new DonutSegmentV(Arena.Center, 9.5f, 13.5f, centerDir, (state == 0 ? 180f : 160f).Degrees(), 128)]);
     }
 }
