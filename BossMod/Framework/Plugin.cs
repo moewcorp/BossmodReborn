@@ -369,11 +369,7 @@ public sealed class Plugin : IDalamudPlugin
         if (targetObj->ObjectKind is FFXIVClientStructs.FFXIV.Client.Game.Object.ObjectKind.Treasure)
             return player?.DistanceToHitbox(target) <= 2.09f;
 
-        // FIXME extra arg (int*) before logErrorsToUser
-        var checkFn = (delegate* unmanaged<EventFramework*, FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*, FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*, byte, int*, byte, byte>)EventFramework.MemberFunctionPointers.CheckInteractRange;
-
-        var ret = 0;
-        return checkFn(EventFramework.Instance(), playerObj, targetObj, 1, &ret, 0) == 1;
+        return EventFramework.Instance()->CheckInteractRange(playerObj, targetObj, 1, false);
     }
 
     private unsafe void HandleFateSync()
