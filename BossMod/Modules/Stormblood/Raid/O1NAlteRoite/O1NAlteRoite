@@ -1,0 +1,35 @@
+namespace BossMod.Modules.Stormblood.Raid.O1NAlteRoite;
+public enum OID : uint
+{
+    AlteRoite = 0x1A6F,
+    Helper = 0x233C,
+}
+
+[SkipLocalsInit]
+sealed class AlteRoiteStates : StateMachineBuilder
+{
+    public AlteRoiteStates(BossModule module) : base(module)
+    {
+        TrivialPhase();
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP,
+StatesType = typeof(AlteRoiteStates),
+ConfigType = null, // replace null with typeof(AlteRoiteConfig) if applicable
+ObjectIDType = typeof(OID),
+ActionIDType = null, // replace null with typeof(AID) if applicable
+StatusIDType = null, // replace null with typeof(SID) if applicable
+TetherIDType = null, // replace null with typeof(TetherID) if applicable
+IconIDType = null, // replace null with typeof(IconID) if applicable
+PrimaryActorOID = (uint)OID.AlteRoite,
+Contributors = "",
+Expansion = BossModuleInfo.Expansion.Placeholder,
+Category = BossModuleInfo.Category.Placeholder,
+GroupType = BossModuleInfo.GroupType.CFC,
+GroupID = 252u,
+NameID = 5629u,
+SortOrder = 1,
+PlanLevel = 0)]
+[SkipLocalsInit]
+public sealed class AlteRoite(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));
