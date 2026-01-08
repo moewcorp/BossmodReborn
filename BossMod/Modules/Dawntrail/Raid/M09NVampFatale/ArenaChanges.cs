@@ -45,6 +45,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         {
             Arena.Bounds = new ArenaBoundsRect(10f, 20f);
             _aoe = [];
+            Arena.Center = new WPos(100f, 100f);
             //Set our wake variables when we enter or leave the smaller arena, just in case.
             length = 20f;
             centerz = 100f;
@@ -53,6 +54,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         else if ((index == 0x00 || index == 0x10) && state == 0x00080004u)
         {
             Arena.Bounds = new ArenaBoundsSquare(20f);
+            Arena.Center = new WPos(100f, 100f);
             _aoe = [];
             //Set our wake variables when we enter or leave the smaller arena, just in case.
             length = 20f;
@@ -62,6 +64,7 @@ sealed class ArenaChanges(BossModule module) : Components.GenericAOEs(module)
         else if (index == 0x10 && state == 0x00020001u)
         {
             Arena.Bounds = new ArenaBoundsCircle(20f);
+            Arena.Center = new WPos(100f, 100f);
         }
     }
 }
