@@ -6,24 +6,24 @@ public enum OID : uint
 }
 
 [SkipLocalsInit]
-sealed class AlteRoiteStates : StateMachineBuilder
+sealed class O1NAlteRoiteStates : StateMachineBuilder
 {
-    public AlteRoiteStates(BossModule module) : base(module)
+    public O1NAlteRoiteStates(BossModule module) : base(module)
     {
         TrivialPhase();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(AlteRoiteStates),
-ConfigType = null, // replace null with typeof(AlteRoiteConfig) if applicable
+StatesType = typeof(O1NAlteRoiteStates),
+ConfigType = null, // replace null with typeof(O1NAlteRoiteConfig) if applicable
 ObjectIDType = typeof(OID),
-ActionIDType = null, // replace null with typeof(AID) if applicable
+ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
 StatusIDType = null, // replace null with typeof(SID) if applicable
 TetherIDType = null, // replace null with typeof(TetherID) if applicable
 IconIDType = null, // replace null with typeof(IconID) if applicable
 PrimaryActorOID = (uint)OID.AlteRoite,
-Contributors = "",
+Contributors = "JoeSparkx",
 Expansion = BossModuleInfo.Expansion.Placeholder,
 Category = BossModuleInfo.Category.Placeholder,
 GroupType = BossModuleInfo.GroupType.CFC,
