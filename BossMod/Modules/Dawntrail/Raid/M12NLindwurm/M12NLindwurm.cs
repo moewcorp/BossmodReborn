@@ -16,7 +16,9 @@ sealed class MindlessFlesh(BossModule module) : Components.SimpleAOEGroups(modul
 sealed class MindlessFleshBig(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MindlessFleshBig, new AOEShapeRect(30f, 17.5f), riskyWithSecondsLeft: 8d);
 sealed class Burst(BossModule module) : Components.GenericAOEs(module)
 {
+    private readonly AOEShapeCircle circle = new(12f);
     public readonly List<AOEInstance> AOEs = [];
+
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan([.. AOEs]);
 
     public override void OnActorEAnim(Actor actor, uint state)
@@ -24,7 +26,7 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
         if (actor.OID == (uint)OID.BurstBlob)
         {
             if (state == 0x00100020u)
-                AOEs.Add(new(new AOEShapeCircle(12f), actor.Position));
+                AOEs.Add(new(circle, actor.Position.Quantized()));
         }
     }
 
@@ -35,7 +37,7 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+[ModuleInfo(BossModuleInfo.Maturity.Contributed,
 StatesType = typeof(M12NLindwurmStates),
 ConfigType = null,
 ObjectIDType = typeof(OID),

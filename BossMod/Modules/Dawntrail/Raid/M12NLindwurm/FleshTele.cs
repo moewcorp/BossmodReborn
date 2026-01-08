@@ -66,24 +66,20 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
 
     private bool DestinationUnsafe(WPos pos)
     {
-        if (_reach.ActiveCasters.Length > 0)
+        var aoes = _reach.ActiveCasters;
+        var len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            foreach (var c in _reach.ActiveCasters)
-            {
-                if (c.Check(pos))
-                    return true;
-            }
+            if (aoes[i].Check(pos))
+                return true;
         }
-
-        if (_burst.AOEs.Count() > 0)
+        aoes = CollectionsMarshal.AsSpan(_burst.AOEs);
+        len = aoes.Length;
+        for (var i = 0; i < len; ++i)
         {
-            foreach (var c in _burst.AOEs)
-            {
-                if (c.Check(pos))
-                    return true;
-            }
+            if (aoes[i].Check(pos))
+                return true;
         }
-
         return !Arena.InBounds(pos);
     }
 
