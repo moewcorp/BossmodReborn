@@ -1,4 +1,7 @@
-﻿namespace BossMod.Dawntrail.Raid.M12NLindwurm;
+﻿
+using BossMod.Autorotation.xan;
+
+namespace BossMod.Dawntrail.Raid.M12NLindwurm;
 
 sealed class TheFixer(BossModule module) : Components.RaidwideCast(module, (uint)AID.TheFixer);
 sealed class SerpentineScourge(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SerpentineScourge, new AOEShapeRect(30f, 10f));
@@ -11,21 +14,24 @@ sealed class GrandEntrance(BossModule module) : Components.SimpleAOEGroups(modul
 sealed class VisceralBurst(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.TankBait, (uint)AID.VisceralBurst, 6f, 5d);
 sealed class MindlessFlesh(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.MindlessFlesh1, (uint)AID.MindlessFlesh2, (uint)AID.MindlessFlesh3, (uint)AID.MindlessFlesh4, (uint)AID.MindlessFlesh5], new AOEShapeRect(30f, 4f), 2);
 sealed class MindlessFleshBig(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MindlessFleshBig, new AOEShapeRect(30f, 17.5f), riskyWithSecondsLeft: 8d);
-sealed class Burst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burst, 12f)
+sealed class Burst(BossModule module) : Components.GenericAOEs(module)
 {
+    public readonly List<AOEInstance> AOEs = [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan([.. AOEs]);
+
     public override void OnActorEAnim(Actor actor, uint state)
     {
         if (actor.OID == (uint)OID.BurstBlob)
         {
             if (state == 0x00100020u)
-                Casters.Add(new(Shape, actor.Position));
+                AOEs.Add(new(new AOEShapeCircle(12f), actor.Position));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID.Burst)
-            Casters.Clear();
+            AOEs.Clear();
     }
 }
 
