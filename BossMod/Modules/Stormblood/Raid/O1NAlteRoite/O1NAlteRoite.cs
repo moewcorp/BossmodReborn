@@ -1,5 +1,6 @@
 using System.ComponentModel.Design.Serialization;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks.Dataflow;
 using Microsoft.VisualBasic;
 
 namespace BossMod.Stormblood.Raid.O1NAlteRoite;
@@ -9,7 +10,6 @@ public enum OID : uint
     Helper = 0x233C,
     BallOfFire = 0x1A71, // R1.000, x0 (spawn during fight)
 }
-class Adds(BossModule module) : Components.Adds(module, (uint)OID.BallOfFire);
 public enum AID : uint
 {
     Attack = 872, // Boss->player, no cast, single-target
@@ -27,27 +27,10 @@ public enum AID : uint
     Downburst = 7896, // Boss->self, 5.0s cast, single-target
 }
 class Roar(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar);
+class ThinIceO1N(BossModule module) : Components.ThinIce(module, 6f, createforbiddenzones: true, statusID: (uint)SID.ThinIce, stopAtWall: true);
 class Blaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Blaze, new AOEShapeCircle(6f));
 class Burn(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burn, new AOEShapeCircle(8f));
-sealed class BreathWing(BossModule module) : Components.GenericKnockback(module, (uint)AID.BreathWing)
-{
-    private DateTime _activation;
-
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
-        => _activation != default ? new Knockback[1] { new(Arena.Center, 10f, _activation, kind: Kind.TowardsOrigin) } : [];
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.BreathWing)
-            _activation = Module.CastFinishAt(spell);
-    }
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.BreathWing)
-            _activation = default;
-    }
-}
+sealed class BreathWing(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BreathWing, 10f, kind: Kind.DirForward, stopAtWall: true);
 
 
 public enum SID : uint
@@ -68,7 +51,8 @@ sealed class O1NAlteRoiteStates : StateMachineBuilder
             .ActivateOnEnter<Burn>()
             .ActivateOnEnter<Roar>()
             .ActivateOnEnter<Blaze>()
-            .ActivateOnEnter<BreathWing>();
+            .ActivateOnEnter<BreathWing>()
+            .ActivateOnEnter<ThinIceO1N>();
     }
 }
 
@@ -83,4 +67,6 @@ GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 252,
 NameID = 5629)]
 public class O1NAlteRoite(WorldState ws, Actor primary) : BossModule(ws, primary, new(00, 00), new ArenaBoundsCircle(20));
+
+
 
