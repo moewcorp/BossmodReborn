@@ -26,10 +26,10 @@ public enum AID : uint
     TheClassicalElements = 9184, // Boss->self, 5.0s cast, single-target
     Downburst = 7896, // Boss->self, 5.0s cast, single-target
 }
-class Roar(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar);
-class ThinIceO1N(BossModule module) : Components.ThinIce(module, 6f, createforbiddenzones: true, statusID: (uint)SID.ThinIce, stopAtWall: true);
-class Blaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Blaze, new AOEShapeCircle(6f));
-class Burn(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burn, new AOEShapeCircle(8f));
+sealed class Roar(BossModule module) : Components.RaidwideCast(module, (uint)AID.Roar);
+sealed class ThinIce(BossModule module) : Components.ThinIce(module, 6f, createforbiddenzones: true, statusID: (uint)SID.ThinIce, stopAtWall: true);
+sealed class Blaze(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Blaze, new AOEShapeCircle(6f));
+sealed class Burn(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Burn, new AOEShapeCircle(8f));
 sealed class BreathWing(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BreathWing, 10f, kind: Kind.DirForward, stopAtWall: true);
 
 
@@ -52,7 +52,7 @@ sealed class O1NAlteRoiteStates : StateMachineBuilder
             .ActivateOnEnter<Roar>()
             .ActivateOnEnter<Blaze>()
             .ActivateOnEnter<BreathWing>()
-            .ActivateOnEnter<ThinIceO1N>();
+            .ActivateOnEnter<ThinIce>();
     }
 }
 
