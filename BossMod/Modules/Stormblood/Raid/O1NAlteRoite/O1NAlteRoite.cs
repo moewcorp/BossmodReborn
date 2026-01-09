@@ -9,7 +9,7 @@ public enum OID : uint
     Helper = 0x233C,
     BallOfFire = 0x1A71, // R1.000, x0 (spawn during fight)
 }
-
+class Adds(BossModule module) : Components.Adds(module, (uint)OID.BallOfFire);
 public enum AID : uint
 {
     Attack = 872, // Boss->player, no cast, single-target
