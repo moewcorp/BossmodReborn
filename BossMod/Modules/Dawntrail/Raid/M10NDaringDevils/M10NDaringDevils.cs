@@ -6,49 +6,30 @@ namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 // Setup dual boss module for Red Hot and Deep Blue, element here at end of page and rest on states.cs
 // TODO: set correct IconID values if available
 
-static class ActorExt
-{
-    public static bool HasStatus(this Actor a, uint sid) => a.FindStatus(sid) != null;
-    public static bool HasIcon(this Actor a, uint iconID) => a.IncomingEffects.Any(e => e.Action.ID == iconID);
-}
 
+// Working -----------------------VVVV
 sealed class HotImpact : Components.CastSharedTankbuster
 {
     public HotImpact(BossModule module) : base(module, (uint)AID.HotImpact, 6f) { }
 }
 
-sealed class DeepImpact : Components.GenericBaitAway
+sealed class DeepImpact : Components.BaitAwayCast
 {
-    public DeepImpact(BossModule module) : base(module, (uint)AID.DeepImpact, CenterAtTarget: true, tankbuster: true) { }
-
-    public struct Bait(AOEShape shape)
-    {
-        public AOEShapeCircle Shape = new(6f);
-    }
+    public DeepImpact(BossModule module) : base(module, (uint)AID.DeepImpact, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster) { }
 }
+sealed class SickestTakeOff1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SickestTakeOff1, new AOEShapeRect(50f, 7.5f));
+
+sealed class SickSwell1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.SickSwell1, 10f, ignoreImmunes: false, maxCasts: int.MaxValue, kind: GenericKnockback.Kind.DirForward, stopAtWall: true);
 
 sealed class DiversDare : Components.RaidwideCast
 {
     public DiversDare(BossModule module) : base(module, (uint)AID.DiversDare) { }
 }
+// Needs Work -----------------------VVVV
+// Deep Varial Cone AOE - Sort of works, need to tweak shape parameters
+sealed class DeepVarial1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeepVarial1, new AOEShapeCone(20f, 120f.Degrees()));
 
-sealed class DeepVarial1 : Components.SimpleAOEs
-{
-    public DeepVarial1(BossModule module) : base(module, 0u, new AOEShapeCone(60f, 120.Degrees())) { }
-}
-
-sealed class SickestTakeOff1 : Components.SimpleAOEs
-{
-    public SickestTakeOff1(BossModule module) : base(module, 0u, new AOEShapeRect(50f, 15f)) { }
-}
-
-sealed class SickSwell1 : Components.SimpleKnockbacks
-{
-    public SickSwell1(BossModule module) : base(module, 0u, 10f, ignoreImmunes: false, maxCasts: int.MaxValue, shape: new AOEShapeRect(50f, 50f), kind: GenericKnockback.Kind.AwayFromOrigin, stopAtWall: true) { }
-
-
-}
-
+// Xtreme Spectacular Raidwide - Needs to be split into 4 separate casts with different timings - maybe. Yet to test.
 sealed class XtremeSpectacular3 : Components.RaidwideCast
 {
     public XtremeSpectacular3(BossModule module) : base(module, (uint)AID.XtremeSpectacular3, hint: "Raidwide") { }
@@ -58,17 +39,12 @@ sealed class XtremeSpectacular4 : Components.RaidwideCast
 {
     public XtremeSpectacular4(BossModule module) : base(module, (uint)AID.XtremeSpectacular4, hint: "Raidwide") { }
 }
+// Currently working on this bit ------------------------VVVV
+sealed class PyrotationStack(BossModule module) : Components.StackTogether(module, (uint)AID.Pyrotation, activationDelay: 5.0f, radius: 6f);
 
-sealed class Pyrotation : Components.StackTogether
-{
-    public Pyrotation(BossModule module) : base(module, (uint)IconID.Pyrotation, 5f, 6f) { }
-}
+sealed class PyrotationAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pyrotation1, new AOEShapeCircle(6f));
 
-sealed class Pyrotation1 : Components.SimpleAOEs
-{
-    public Pyrotation1(BossModule module) : base(module, 0u, new AOEShapeCircle(6f)) { }
-
-}
+// Module -----------------------VVVV
 
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
@@ -78,7 +54,7 @@ ObjectIDType = typeof(OID),
 ActionIDType = typeof(AID),
 StatusIDType = typeof(SID),
 TetherIDType = typeof(TetherID),
-IconIDType = typeof(IconID),
+IconIDType = null,
 PrimaryActorOID = (uint)OID.RedHot,
 Contributors = "JoeSparkx",
 Expansion = BossModuleInfo.Expansion.Dawntrail,
@@ -86,10 +62,11 @@ Category = BossModuleInfo.Category.Raid,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1070u,
 NameID = 14370u)]
+// Double Boss Info: Red Hot (Primary) + Deep Blue -----------VVVV
 [SkipLocalsInit]
 public sealed class M10NDaringDevils : BossModule
 {
-    public M10NDaringDevils(WorldState ws, Actor primary) : base(ws, primary, new(100.125f, 102.163f), new ArenaBoundsSquare(20f)) { }
+    public M10NDaringDevils(WorldState ws, Actor primary) : base(ws, primary, new(100.125f, 102.163f), new ArenaBoundsSquare(19f)) { }
 
     public Actor? DeepBlue;
 
@@ -103,4 +80,9 @@ public sealed class M10NDaringDevils : BossModule
         Arena.Actor(DeepBlue);
         Arena.Actor(PrimaryActor);
     }
+}
+static class ActorExt
+{
+    public static bool HasStatus(this Actor a, uint sid) => a.FindStatus(sid) != null;
+    public static bool HasIcon(this Actor a, uint iconID) => a.IncomingEffects.Any(e => e.Action.ID == iconID);
 }

@@ -1,6 +1,12 @@
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 // Struggling with Cutback Blaze and Persistent puddles, needs sorting.
-sealed class CutbackBlaze(BossModule module) : Components.GenericBaitAway(module, (uint)AID.CutbackBlaze, Shape: ConeShape, centerAtTarget: true, tankbuster: false)
+// Got the spread markers working, and the persistent cone AOE along with the Cleanse on Divers Dare.
+// Still need to fix the Baitaway for Cutback Blaze. Currently it shows an errant cone and Boss front indicator and does not show them on targets/players correctly.
+// Also need to fix the puddles for Alley Oop Inferno, they currently do not appear at all.
+// Will keep working on this one.
+// _aoes for Cutback Blaze Persistent - working, _puddles for Alley Oop Inferno puddles - not working.
+// Alleyoop Maelstrom AOEs here, need tweaking.
+sealed class CutbackBlaze(BossModule module) : Components.BaitAwayCast(module, (uint)AID.CutbackBlaze, ConeShape, centerAtTarget: true, damageType: AIHints.PredictedDamageType.None)
 {
     internal static readonly AOEShapeCone ConeShape = new(40f, 22.5f.Degrees());
 }
@@ -37,7 +43,7 @@ sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2 or (uint)AID.AlleyOopInferno && _puddles.Count != 0)
+        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2 or (uint)AID.AlleyOopInferno or (uint)AID.AlleyOopInferno1 && _puddles.Count != 0)
         {
             var activation = Module.CastFinishAt(spell);
             var puddles = CollectionsMarshal.AsSpan(_puddles);

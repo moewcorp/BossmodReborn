@@ -45,7 +45,7 @@ public enum AID : uint
     HotAerial2 = 46476,
     Ability_2 = 46460,
     SteamBurst = 46507,
-    
+    Pyrotation = 46472,
     Pyrotation1 = 46473,
     AlleyOopMaelstrom = 46495,
     AlleyOopMaelstrom1 = 46494,
@@ -88,5 +88,5 @@ public enum SID : uint
 }
 public enum IconID : uint
 {
-    Pyrotation = 46472, // placeholder; set to correct icon id if/when known
+    
 }
