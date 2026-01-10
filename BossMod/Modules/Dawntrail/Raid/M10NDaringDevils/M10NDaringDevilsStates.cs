@@ -9,6 +9,21 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
     {
         _module = module;
         TrivialPhase()
+            .ActivateOnEnter<HotImpact>()
+            .ActivateOnEnter<CutbackBlazePersistent>()
+            .ActivateOnEnter<AlleyOopInfernoSpread>()
+            .ActivateOnEnter<AlleyOopInfernoPuddles>()
+            .ActivateOnEnter<AlleyOopMaelstromAOEs>()
+            .ActivateOnEnter<CutbackBlaze>()
+            .ActivateOnEnter<DiversDare>()
+            .ActivateOnEnter<DeepImpact>()
+            .ActivateOnEnter<DeepVarial1>()
+            .ActivateOnEnter<SickestTakeOff1>()
+            .ActivateOnEnter<SickSwell1>()
+            .ActivateOnEnter<XtremeSpectacular3>()
+            .ActivateOnEnter<XtremeSpectacular4>()
+            .ActivateOnEnter<Pyrotation>()
+            .ActivateOnEnter<Pyrotation1>()
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.DeepBlue?.IsDeadOrDestroyed ?? true);
     }
 }
