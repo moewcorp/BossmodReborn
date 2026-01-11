@@ -1,89 +1,104 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using BossMod.Components;
-
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 
-// Setup dual boss module for Red Hot and Deep Blue, element here at end of page and rest on states.cs
-// TODO: set correct IconID values if available
+// =========================
+// Core mechanic components
+// =========================
 
+// Shared tankbuster (Red Hot -> players, 5s cast, range 6 circle)
+sealed class HotImpact(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.HotImpact, 6f);
 
-// Working -----------------------VVVV
-sealed class HotImpact : Components.CastSharedTankbuster
+// Tankbuster bait (Deep Blue -> player, 5s cast, range 6 circle)
+sealed class DeepImpact(BossModule module) : Components.BaitAwayCast(
+    module,
+    (uint)AID.DeepImpact,
+    6f,
+    centerAtTarget: true,
+    endsOnCastEvent: true,
+    tankbuster: true,
+    damageType: AIHints.PredictedDamageType.Tankbuster);
+
+// Raidwides
+sealed class DiversDare(BossModule module) : Components.RaidwideCast(module, (uint)AID.DiversDare);
+sealed class DiversDareBlue(BossModule module) : Components.RaidwideCast(module, (uint)AID.DiversDare1);
+
+// Deep Varial cone (helper cast, 6.8s, range 60, 120-degree cone)
+sealed class DeepVarialCone(BossModule module) : Components.SimpleAOEs(
+    module,
+    (uint)AID.DeepVarial1,
+    new AOEShapeCone(60f, 60f.Degrees()));
+
+// Sickest Take Off line (helper cast, range 50 width 15 rect)
+sealed class SickestTakeOffLine(BossModule module) : Components.SimpleAOEs(
+    module,
+    (uint)AID.SickestTakeOff1,
+    new AOEShapeRect(50f, 7.5f));
+
+// Sick Swell: log says rect (range 50 width 50), 
+sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
+    module,
+    (uint)AID.SickSwell1,   // boss cast is the clean trigger
+    distance: 15f,
+    stopAtWall: true);
+// Pyrotation stack marker (helper->players, no cast, range 6 circle).
+sealed class PyrotationStack(BossModule module) : Components.StackWithIcon(
+    module,
+    (uint)IconID._Gen_Icon_com_share_fire01s5_0c, // 659
+    (uint)AID.Pyrotation1,
+    activationDelay: 5f,
+    radius: 6f,
+    minStackSize: 2,
+    maxStackSize: 8);
+
+// Xtreme Spectacular “no cast” hits (these appear as event casts).
+// There isn’t a built-in “instant raidwide” component in this repo, so we count them and provide a global hint.
+sealed class XtremeSpectacularHits(BossModule module) : Components.CastCounterMulti(module, new uint[] { (uint)AID.XtremeSpectacular3, (uint)AID.XtremeSpectacular4 })
 {
-    public HotImpact(BossModule module) : base(module, (uint)AID.HotImpact, 6f) { }
+    public override void AddGlobalHints(GlobalHints hints)
+    {
+        
+        if (NumCasts > 0)
+            hints.Add("Raidwide damage (Xtreme Spectacular)");
+    }
 }
 
-sealed class DeepImpact : Components.BaitAwayCast
+// =========================
+// Module
+// =========================
+
+[ModuleInfo(
+    BossModuleInfo.Maturity.WIP,
+    StatesType = typeof(M10NDaringDevilsStates),
+    ConfigType = null,
+    ObjectIDType = typeof(OID),
+    ActionIDType = typeof(AID),
+    StatusIDType = typeof(SID),
+    TetherIDType = typeof(TetherID),
+    IconIDType = typeof(IconID),
+    PrimaryActorOID = (uint)OID.RedHot,
+    Contributors = "JoeSparkx",
+    Expansion = BossModuleInfo.Expansion.Dawntrail,
+    Category = BossModuleInfo.Category.Raid,
+    GroupType = BossModuleInfo.GroupType.CFC,
+    GroupID = 1070u,
+    NameID = 14370u)]
+public sealed class M10NDaringDevils(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsSquare(20f))
 {
-    public DeepImpact(BossModule module) : base(module, (uint)AID.DeepImpact, 6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster) { }
-}
-sealed class SickestTakeOff1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SickestTakeOff1, new AOEShapeRect(50f, 7.5f));
-
-sealed class SickSwell1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.SickSwell1, 10f, ignoreImmunes: false, maxCasts: int.MaxValue, kind: GenericKnockback.Kind.DirForward, stopAtWall: true);
-
-sealed class DiversDare : Components.RaidwideCast
-{
-    public DiversDare(BossModule module) : base(module, (uint)AID.DiversDare) { }
-}
-sealed class DeepVarial1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeepVarial1, new AOEShapeCone(60f, 60f.Degrees()));
-
-// Needs Work -----------------------VVVV
-
-// Xtreme Spectacular Raidwide - Needs to be split into 4 separate casts with different timings - maybe. Yet to test.
-sealed class XtremeSpectacular3 : Components.RaidwideCast
-{
-    public XtremeSpectacular3(BossModule module) : base(module, (uint)AID.XtremeSpectacular3, hint: "Raidwide") { }
-}
-
-sealed class XtremeSpectacular4 : Components.RaidwideCast
-{
-    public XtremeSpectacular4(BossModule module) : base(module, (uint)AID.XtremeSpectacular4, hint: "Raidwide") { }
-}
-// Currently working on this bit ------------------------VVVV
-[SkipLocalsInit]
-sealed class PyrotationStack(BossModule module) : Components.StackTogether(module, (uint)IconID.FireStack, 6f, 5f);
-
-
-
-// Module -----------------------VVVV
-
-
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(M10NDaringDevilsStates),
-ConfigType = null,
-ObjectIDType = typeof(OID),
-ActionIDType = typeof(AID),
-StatusIDType = typeof(SID),
-TetherIDType = typeof(TetherID),
-IconIDType = typeof(IconID),
-PrimaryActorOID = (uint)OID.RedHot,
-Contributors = "JoeSparkx",
-Expansion = BossModuleInfo.Expansion.Dawntrail,
-Category = BossModuleInfo.Category.Raid,
-GroupType = BossModuleInfo.GroupType.CFC,
-GroupID = 1070u,
-NameID = 14370u)]
-// Double Boss Info: Red Hot (Primary) + Deep Blue -----------VVVV
-[SkipLocalsInit]
-public sealed class M10NDaringDevils : BossModule
-{
-    public M10NDaringDevils(WorldState ws, Actor primary) : base(ws, primary, new(100.125f, 102.163f), new ArenaBoundsSquare(20f)) { }
-
-    public Actor? DeepBlue;
+    public Actor? DeepBlue { get; private set; }
 
     protected override void UpdateModule()
     {
+        // cache secondary boss
         DeepBlue ??= GetActor((uint)OID.DeepBlue);
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actor(DeepBlue);
+        if (DeepBlue != null)
+            Arena.Actor(DeepBlue);
         Arena.Actor(PrimaryActor);
     }
 }
+
 static class ActorExt
 {
     public static bool HasStatus(this Actor a, uint sid) => a.FindStatus(sid) != null;

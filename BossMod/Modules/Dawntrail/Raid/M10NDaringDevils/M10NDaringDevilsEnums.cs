@@ -23,7 +23,7 @@ public enum AID : uint
     HotImpact = 46464, // RedHot->players, 5.0s cast, range 6 circle
     AlleyOopInferno = 46470, // RedHot->self, 4.3+0.7s cast, single-target
     AlleyOopInferno1 = 46471, // Helper->player, 5.0s cast, range 5 circle
-    Ability_ = 46456, // RedHot->location, no cast, single-target
+    RedHotSurfboardMount = 46456, // RedHot->location, no cast, single-target
     CutbackBlaze = 46478, // RedHot->self, 4.3+0.7s cast, single-target
     CutbackBlaze1 = 46479, // Helper->self, no cast, range 60 ?-degree cone
     DiversDare = 46466, // RedHot->self, 5.0s cast, range 60 circle
@@ -31,8 +31,8 @@ public enum AID : uint
     SickSwell = 46480, // DeepBlue->self, 3.0s cast, single-target
     SickestTakeOff = 46482, // DeepBlue->self, 4.0s cast, single-target
     SickestTakeOff1 = 46483, // Helper->self, 7.0s cast, range 50 width 15 rect
-    SickSwell1 = 46481, // Helper->self, 7.0s cast, range 50 width 50 rect
-    Ability_1 = 46457, // DeepBlue->location, no cast, single-target
+    SickSwell1 = 46481, // Helper->self, 7.0s cast, Knockback range 50 width 50 rect
+    DeepBlueSurfboardMount = 46457, // DeepBlue->location, no cast, single-target
     DeepVarial = 47247, // DeepBlue->location, 5.3+1.0s cast, ???
     DeepVarial1 = 46488, // Helper->self, 6.8s cast, range 60 120.000-degree cone
     DeepImpact = 46465, // DeepBlue->player, 5.0s cast, range 6 circle
@@ -91,12 +91,11 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    _Gen_Icon_m0676trg_tw_d0t1p = 259, // player->self
+    FireStack = 259, // player->self
     _Gen_Icon_target_ae_5m_s5_fire0c = 660, // player->self
     _Gen_Icon_m0982trg_e0c = 664, // RedHot->player
     _Gen_Icon_tank_lockonae_6m_5s_01t = 344, // player->self
-    FireStack = 659, // player->self
-    _Gen_Icon_m0982trg_c3c = 662, // player->self
+    _Gen_Icon_com_share_fire01s5_0c = 659, // player->self
     _Gen_Icon_m0982trg_c2c = 661, // player->self
     _Gen_Icon_m0982trg_d0c = 651, // _Gen_->player
     _Gen_Icon_m0982trg_f0c = 665, // _Gen_->player

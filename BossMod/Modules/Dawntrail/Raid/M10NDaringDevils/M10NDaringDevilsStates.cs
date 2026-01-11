@@ -8,22 +8,29 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
     public M10NDaringDevilsStates(M10NDaringDevils module) : base(module)
     {
         _module = module;
+
         TrivialPhase()
             .ActivateOnEnter<HotImpact>()
+            .ActivateOnEnter<DeepImpact>()
+            .ActivateOnEnter<DiversDare>()
+            .ActivateOnEnter<DiversDareBlue>()
+
+            .ActivateOnEnter<CutbackBlaze>()
             .ActivateOnEnter<CutbackBlazePersistent>()
+
             .ActivateOnEnter<AlleyOopInfernoSpread>()
             .ActivateOnEnter<AlleyOopInfernoPuddles>()
-            .ActivateOnEnter<AlleyOopMaelstromAOEs>()
-            .ActivateOnEnter<CutbackBlaze>()
-            .ActivateOnEnter<DiversDare>()
-            .ActivateOnEnter<DeepImpact>()
-            .ActivateOnEnter<DeepVarial1>()
-            .ActivateOnEnter<SickestTakeOff1>()
-            .ActivateOnEnter<SickSwell1>()
-            .ActivateOnEnter<XtremeSpectacular3>()
-            .ActivateOnEnter<XtremeSpectacular4>()
+            .ActivateOnEnter<AlleyOopMaelstrom30>()
+            .ActivateOnEnter<AlleyOopMaelstrom15>()
+
+
+            .ActivateOnEnter<DeepVarialCone>()
+            .ActivateOnEnter<SickestTakeOffLine>()
+            .ActivateOnEnter<SickSwellKB>()
+
             .ActivateOnEnter<PyrotationStack>()
-            
+            .ActivateOnEnter<XtremeSpectacularHits>()
+
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.DeepBlue?.IsDeadOrDestroyed ?? true);
     }
 }

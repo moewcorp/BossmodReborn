@@ -1,105 +1,94 @@
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
-// Struggling with Cutback Blaze and Persistent puddles, needs sorting.
-// Got the spread markers working, and the persistent cone AOE along with the Cleanse on Divers Dare.
-// Still need to fix the Baitaway for Cutback Blaze. Currently it shows an errant cone and Boss front indicator and does not show them on targets/players correctly.
-// Also need to fix the puddles for Alley Oop Inferno, they currently do not appear at all.
-// Will keep working on this one.
-// _aoes for Cutback Blaze Persistent - working, _puddles for Alley Oop Inferno puddles - not working.
-// Alleyoop Maelstrom AOEs here, need tweaking.
-sealed class CutbackBlaze(BossModule module) : Components.BaitAwayCast(module, (uint)AID.CutbackBlaze, ConeShape, centerAtTarget: true, damageType: AIHints.PredictedDamageType.None)
+
+// Cutback Blaze Mechanic needs fixing.
+
+sealed class CutbackBlaze(BossModule module) : Components.BaitAwayCast(
+    module,
+    (uint)AID.CutbackBlaze,
+    Cone,
+    centerAtTarget: false, // important: origin at boss
+    endsOnCastEvent: true)
 {
-    internal static readonly AOEShapeCone ConeShape = new(40f, 22.5f.Degrees());
+    public static readonly AOEShapeCone Cone = new(60f, 22.5f.Degrees());
 }
+
+// Working persistent AOEs for Cutback Blaze cones.
 sealed class CutbackBlazePersistent(BossModule module) : Components.GenericAOEs(module, (uint)AID.CutbackBlaze1)
 {
     private readonly List<AOEInstance> _aoes = [];
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
-
-    internal static readonly AOEShapeCone ConeShape = new(40f, 22.5f.Degrees());
-
-    public override void OnEventCast(Actor actor, ActorCastEvent spell)
-    {
-        switch (spell.Action.ID)
-        {
-            case (uint)AID.CutbackBlaze1:
-                _aoes.Add(new(CutbackBlazePersistent.ConeShape, actor.Position, actor.Rotation));
-                break;
-            case (uint)AID.DiversDare:
-                _aoes.Clear();
-                break;
-        }
-    }
-}
-
-sealed class AlleyOopInfernoSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.AlleyOopInferno1, 5f);
-
-sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(module)
-{
-    private readonly List<AOEInstance> _puddles = [];
-    private static readonly AOEShapeCircle Shape = new(5f);
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_puddles);
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2 or (uint)AID.AlleyOopInferno or (uint)AID.AlleyOopInferno1 && _puddles.Count != 0)
-        {
-            var activation = Module.CastFinishAt(spell);
-            var puddles = CollectionsMarshal.AsSpan(_puddles);
-            for (var i = 0; i < puddles.Length; ++i)
-            {
-                ref var aoe = ref puddles[i];
-                aoe.Activation = activation;
-                aoe.Color = Colors.Danger;
-            }
-        }
-    }
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+        => CollectionsMarshal.AsSpan(_aoes);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         switch (spell.Action.ID)
         {
-            case (uint)AID.AlleyOopInferno1:
-                _puddles.Add(new(Shape, spell.TargetXZ));
+            case (uint)AID.CutbackBlaze1:
+                // NOTE: constructor signature in BossModReborn is (shape, pos, rot, activation, color, risky, actorID)
+                _aoes.Add(new(CutbackBlaze.Cone, caster.Position, caster.Rotation, WorldState.CurrentTime, Colors.Danger, true, caster.InstanceID));
                 break;
+
+            // Clear when Divers' Dare resolves (event cast is effectively "cast end" for NPCs)
             case (uint)AID.DiversDare:
-            case (uint)AID.AlleyOopMaelstrom:
-            case (uint)AID.AlleyOopMaelstrom2:
+            case (uint)AID.DiversDare1:
+                _aoes.Clear();
+                break;
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        var id = actor.InstanceID;
+        _aoes.RemoveAll(a => a.ActorID == id);
+    }
+}
+// Spread markers (helper -> player, 5s cast, range 5 circle)
+sealed class AlleyOopInfernoSpread(BossModule module)
+    : Components.SpreadFromCastTargets(module, (uint)AID.AlleyOopInferno1, 5f);
+
+// Persistent puddles from Alley-oop Inferno (spread resolves -> leaves puddle; burns if you linger).
+// Finally Working!
+sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _puddles = [];
+    private static readonly AOEShapeCircle Shape = new(6f); // tweak if needed
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+        => CollectionsMarshal.AsSpan(_puddles);
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        switch (spell.Action.ID)
+        {
+            case (uint)AID.AlleyOopInferno1: // 46471 helper -> player
+            {
+                // Create a puddle under each affected target at their CURRENT position (reliable)
+                foreach (var t in spell.Targets)
+                {
+                    var target = WorldState.Actors.Find(t.ID);
+                    if (target != null)
+                        _puddles.Add(new(Shape, target.Position, default, WorldState.CurrentTime, Colors.Danger, true));
+                }
+                break;
+            }
+
+            case (uint)AID.DiversDare:
+            case (uint)AID.DiversDare1:
                 _puddles.Clear();
                 break;
         }
     }
 }
 
-sealed class AlleyOopMaelstromAOEs(BossModule module) : Components.GenericAOEs(module)
-{
-    private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCone Shape = new(50f, 11.25f.Degrees());
+// Alley-oop Maelstrom cones. There are 2 cone widths in enums (30 and 15 degrees).
+// Helper cones (actual damaging AOEs) - To be refined, maybe using maxCasts?
+sealed class AlleyOopMaelstrom30(BossModule module) : Components.SimpleAOEs(
+    module,
+    (uint)AID.AlleyOopMaelstrom,
+    new AOEShapeCone(60f, 30f.Degrees()));
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2)
-            _aoes.Add(new(Shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2)
-        {
-            var count = _aoes.Count;
-            var id = caster.InstanceID;
-            var aoes = CollectionsMarshal.AsSpan(_aoes);
-            for (var i = 0; i < count; ++i)
-            {
-                if (aoes[i].ActorID == id)
-                {
-                    _aoes.RemoveAt(i);
-                    return;
-                }
-            }
-        }
-    }
-}
+sealed class AlleyOopMaelstrom15(BossModule module) : Components.SimpleAOEs(
+    module,
+    (uint)AID.AlleyOopMaelstrom2,
+    new AOEShapeCone(60f, 15f.Degrees()));
