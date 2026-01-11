@@ -26,7 +26,7 @@ sealed class CutbackBlazePersistent(BossModule module) : Components.GenericAOEs(
         {
             case (uint)AID.CutbackBlaze1:
                 // NOTE: constructor signature in BossModReborn is (shape, pos, rot, activation, color, risky, actorID)
-                _aoes.Add(new(CutbackBlaze.Cone, caster.Position, caster.Rotation, WorldState.CurrentTime, Colors.Danger, true, caster.InstanceID));
+                _aoes.Add(new(CutbackBlaze.Cone, caster.Position, caster.Rotation, WorldState.CurrentTime, Colors.AOE, true, caster.InstanceID));
                 break;
 
             // Clear when Divers' Dare resolves (event cast is effectively "cast end" for NPCs)
@@ -68,7 +68,7 @@ sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(
                 {
                     var target = WorldState.Actors.Find(t.ID);
                     if (target != null)
-                        _puddles.Add(new(Shape, target.Position, default, WorldState.CurrentTime, Colors.Danger, true));
+                        _puddles.Add(new(Shape, target.Position, default, WorldState.CurrentTime, Colors.AOE, true));
                 }
                 break;
             }
