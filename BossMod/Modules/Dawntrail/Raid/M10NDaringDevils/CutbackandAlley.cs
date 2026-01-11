@@ -75,7 +75,7 @@ sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(
 sealed class AlleyOopMaelstromAOEs(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
-    private static readonly AOEShapeCone Shape = new(20f, 11.25f.Degrees());
+    private static readonly AOEShapeCone Shape = new(50f, 11.25f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
 

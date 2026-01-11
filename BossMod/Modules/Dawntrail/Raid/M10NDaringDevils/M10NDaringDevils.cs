@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using BossMod.Components;
 
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
@@ -25,9 +27,9 @@ sealed class DiversDare : Components.RaidwideCast
 {
     public DiversDare(BossModule module) : base(module, (uint)AID.DiversDare) { }
 }
+sealed class DeepVarial1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeepVarial1, new AOEShapeCone(60f, 60f.Degrees()));
+
 // Needs Work -----------------------VVVV
-// Deep Varial Cone AOE - Sort of works, need to tweak shape parameters
-sealed class DeepVarial1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeepVarial1, new AOEShapeCone(20f, 120f.Degrees()));
 
 // Xtreme Spectacular Raidwide - Needs to be split into 4 separate casts with different timings - maybe. Yet to test.
 sealed class XtremeSpectacular3 : Components.RaidwideCast
@@ -40,9 +42,10 @@ sealed class XtremeSpectacular4 : Components.RaidwideCast
     public XtremeSpectacular4(BossModule module) : base(module, (uint)AID.XtremeSpectacular4, hint: "Raidwide") { }
 }
 // Currently working on this bit ------------------------VVVV
-sealed class PyrotationStack(BossModule module) : Components.StackTogether(module, (uint)AID.Pyrotation, activationDelay: 5.0f, radius: 6f);
+[SkipLocalsInit]
+sealed class PyrotationStack(BossModule module) : Components.StackTogether(module, (uint)IconID.FireStack, 6f, 5f);
 
-sealed class PyrotationAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Pyrotation1, new AOEShapeCircle(6f));
+
 
 // Module -----------------------VVVV
 
@@ -54,7 +57,7 @@ ObjectIDType = typeof(OID),
 ActionIDType = typeof(AID),
 StatusIDType = typeof(SID),
 TetherIDType = typeof(TetherID),
-IconIDType = null,
+IconIDType = typeof(IconID),
 PrimaryActorOID = (uint)OID.RedHot,
 Contributors = "JoeSparkx",
 Expansion = BossModuleInfo.Expansion.Dawntrail,
@@ -66,7 +69,7 @@ NameID = 14370u)]
 [SkipLocalsInit]
 public sealed class M10NDaringDevils : BossModule
 {
-    public M10NDaringDevils(WorldState ws, Actor primary) : base(ws, primary, new(100.125f, 102.163f), new ArenaBoundsSquare(19f)) { }
+    public M10NDaringDevils(WorldState ws, Actor primary) : base(ws, primary, new(100.125f, 102.163f), new ArenaBoundsSquare(20f)) { }
 
     public Actor? DeepBlue;
 

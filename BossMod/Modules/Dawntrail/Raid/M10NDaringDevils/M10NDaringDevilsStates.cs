@@ -23,7 +23,7 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
             .ActivateOnEnter<XtremeSpectacular3>()
             .ActivateOnEnter<XtremeSpectacular4>()
             .ActivateOnEnter<PyrotationStack>()
-            .ActivateOnEnter<PyrotationAOE>()
+            
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.DeepBlue?.IsDeadOrDestroyed ?? true);
     }
 }
