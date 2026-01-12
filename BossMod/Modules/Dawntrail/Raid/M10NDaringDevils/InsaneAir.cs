@@ -14,76 +14,77 @@ static class InsaneAirData
 // -----------------------
 // Baited conal telegraphs
 // -----------------------
-sealed class InsaneAirSnaps(BossModule module) : Components.GenericBaitAway(module)
 
+// Dynamic tracking cones during Insane Air: origin = closest surfboard marker, aim = marked player (updates every frame).
+
+sealed class InsaneAirSnaps(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<(ulong origin, ulong target)> _pairs = [];
-
-    private const uint IconFire = (uint)IconID._Gen_Icon_m0982trg_c1c; // 665 (fire target)
-    private const uint IconWater = (uint)IconID._Gen_Icon_m0982trg_c0c; // 651 (water target)
-
-    private static readonly uint[] SurfboardOIDs =
-    [
-        
-        
-        
-        (uint)OID.Actor1ebf35,
-    ];
-
-    public override void Update()
+    private struct Pair
     {
-        CurrentBaits.Clear();
-        foreach (var (o, t) in _pairs)
-        {
-            var origin = WorldState.Actors.Find(o);
-            var target = WorldState.Actors.Find(t);
-            if (origin != null && target != null)
-                CurrentBaits.Add(new(origin, target, InsaneAirData.SnapCone));
-        }
+        public ulong OriginID;
+        public ulong TargetID;
+        public uint Icon; // 651 (blue) or 665 (red)
+        public Pair(ulong o, ulong t, uint icon) { OriginID = o; TargetID = t; Icon = icon; }
     }
 
+    private readonly List<Pair> _pairs = [];
+    private readonly List<AOEInstance> _active = [];
+
+    private const uint IconBlue = 651; // confirmed from your log
+    private const uint IconRed  = 665; // confirmed from your log
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        _active.Clear();
+
+        foreach (var p in _pairs)
+        {
+            var origin = WorldState.Actors.Find(p.OriginID);
+            var target = WorldState.Actors.Find(p.TargetID);
+            if (origin == null || target == null)
+                continue;
+
+            var rot = Angle.FromDirection(target.Position - origin.Position);
+            var color = (p.Icon == IconRed) ? Colors.AOE : Colors.AOE;
+
+            _active.Add(new(InsaneAirData.SnapCone, origin.Position, rot, WorldState.CurrentTime, color, true, origin.InstanceID));
+        }
+
+        return CollectionsMarshal.AsSpan(_active);
+    }
+
+    // In your log, the ICON source is _Gen_ (OID 0x4AE7) and the target is the player.
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
-        if (iconID != IconFire && iconID != IconWater)
+        if (iconID != IconBlue && iconID != IconRed)
             return;
 
-        var wantSID = iconID == IconFire ? (uint)SID.Firesnaking : (uint)SID.Watersnaking;
-        if (actor.FindStatus(wantSID) == null)
+        // Make sure this is the surfboard marker actor, not a self-applied player icon (635/636 etc).
+        if ((uint)actor.OID != (uint)OID._Gen_)
             return;
 
-        var origin = FindBestSurfboardOrigin(actor);
-        if (origin != null)
-            _pairs.Add((origin.InstanceID, actor.InstanceID));
+        var target = WorldState.Actors.Find(targetID);
+        if (target == null)
+            return;
+
+        // Optional (but good): enforce the expected snake status mapping
+        if (iconID == IconBlue && target.FindStatus((uint)SID.Watersnaking) == null)
+            return;
+        if (iconID == IconRed && target.FindStatus((uint)SID.Firesnaking) == null)
+            return;
+
+        _pairs.Add(new(actor.InstanceID, targetID, iconID));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.BlastingSnap1)
-            _pairs.RemoveAll(p => WorldState.Actors.Find(p.target)?.FindStatus((uint)SID.Firesnaking) != null);
-
-        if (spell.Action.ID == (uint)AID.PlungingSnap1)
-            _pairs.RemoveAll(p => WorldState.Actors.Find(p.target)?.FindStatus((uint)SID.Watersnaking) != null);
-    }
-
-    private Actor? FindBestSurfboardOrigin(Actor target)
-    {
-        Actor? best = null;
-        float bestDist2 = float.MaxValue;
-
-        foreach (var oid in SurfboardOIDs)
-        {
-            foreach (var a in Module.Enemies(oid))
-            {
-                var d2 = (a.Position - target.Position).LengthSq();
-                if (d2 < bestDist2)
-                {
-                    bestDist2 = d2;
-                    best = a;
-                }
-            }
-        }
-
-        return best;
+        // When the snaps resolve, clear that color’s current pairs
+        if (spell.Action.ID == (uint)AID.PlungingSnap1)      // water cone resolves
+            _pairs.RemoveAll(p => p.Icon == IconBlue);
+        else if (spell.Action.ID == (uint)AID.BlastingSnap1) // fire cone resolves
+            _pairs.RemoveAll(p => p.Icon == IconRed);
+        else if (spell.Action.ID is (uint)AID.DiversDare or (uint)AID.DiversDare1)
+            _pairs.Clear();
     }
 }
 
