@@ -91,15 +91,17 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    FireStack = 259, // player->self
+    _Gen_Icon_m0676trg_tw_d0t1p = 259, // player->self
     _Gen_Icon_target_ae_5m_s5_fire0c = 660, // player->self
-    _Gen_Icon_m0982trg_e0c = 664, // RedHot->player
+    CutbackBlazeBait = 664, // RedHot->player
     _Gen_Icon_tank_lockonae_6m_5s_01t = 344, // player->self
-    _Gen_Icon_com_share_fire01s5_0c = 659, // player->self
+    FireStack = 659, // player->self
     _Gen_Icon_m0982trg_c2c = 661, // player->self
     _Gen_Icon_m0982trg_d0c = 651, // _Gen_->player
     _Gen_Icon_m0982trg_f0c = 665, // _Gen_->player
     _Gen_Icon_m0982trg_c0c = 635, // player->self
     _Gen_Icon_m0982trg_c1c = 636, // player->self
+    _Gen_Icon_m0982trg_c3c = 662, // player->self
+
 }
 

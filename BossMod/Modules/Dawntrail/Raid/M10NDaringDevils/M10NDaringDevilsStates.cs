@@ -15,13 +15,15 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
             .ActivateOnEnter<DiversDare>()
             .ActivateOnEnter<DiversDareBlue>()
 
-            .ActivateOnEnter<CutbackBlaze>()
+            .ActivateOnEnter<CutbackBlazeBait>()
             .ActivateOnEnter<CutbackBlazePersistent>()
 
             .ActivateOnEnter<AlleyOopInfernoSpread>()
             .ActivateOnEnter<AlleyOopInfernoPuddles>()
-            .ActivateOnEnter<AlleyOopMaelstrom30>()
-            .ActivateOnEnter<AlleyOopMaelstrom15>()
+            .ActivateOnEnter<AlleyOopMaelstromSequential>()
+            .ActivateOnEnter<SteamBurst>()
+            .ActivateOnEnter<HotAerialTowers>()
+            .ActivateOnEnter<HotAerialFirePuddles>()
 
 
             .ActivateOnEnter<DeepVarialCone>()
@@ -29,7 +31,9 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
             .ActivateOnEnter<SickSwellKB>()
 
             .ActivateOnEnter<PyrotationStack>()
+            .ActivateOnEnter<PyrotationPuddles>()
             .ActivateOnEnter<XtremeSpectacularHits>()
+            .ActivateOnEnter<XtremeSpectacularEdge>()
 
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.DeepBlue?.IsDeadOrDestroyed ?? true);
     }

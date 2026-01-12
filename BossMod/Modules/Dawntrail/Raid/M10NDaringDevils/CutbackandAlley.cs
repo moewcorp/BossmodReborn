@@ -1,13 +1,14 @@
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 
 // Cutback Blaze Mechanic needs fixing.
-
-sealed class CutbackBlaze(BossModule module) : Components.BaitAwayCast(
+// Icon-marked baited cones: origin at boss, aim at marked players, track them until resolve.
+sealed class CutbackBlazeBait(BossModule module) : Components.BaitAwayIcon(
     module,
-    (uint)AID.CutbackBlaze,
-    Cone,
-    centerAtTarget: false, // important: origin at boss
-    endsOnCastEvent: true)
+    new AOEShapeCone(60f, 22.5f.Degrees()),                 // tune angle if needed
+    (uint)IconID.CutbackBlazeBait,                    // 664
+    (uint)AID.CutbackBlaze1,                                 // remove bait when helper cones appear
+    activationDelay: 5.0d,                                   // matches 4.3+0.7s
+    centerAtTarget: false)                                   // IMPORTANT: cone tip stays on boss
 {
     public static readonly AOEShapeCone Cone = new(60f, 22.5f.Degrees());
 }
@@ -26,7 +27,7 @@ sealed class CutbackBlazePersistent(BossModule module) : Components.GenericAOEs(
         {
             case (uint)AID.CutbackBlaze1:
                 // NOTE: constructor signature in BossModReborn is (shape, pos, rot, activation, color, risky, actorID)
-                _aoes.Add(new(CutbackBlaze.Cone, caster.Position, caster.Rotation, WorldState.CurrentTime, Colors.AOE, true, caster.InstanceID));
+                _aoes.Add(new(CutbackBlazeBait.Cone, caster.Position, caster.Rotation, WorldState.CurrentTime, Colors.AOE, true, caster.InstanceID));
                 break;
 
             // Clear when Divers' Dare resolves (event cast is effectively "cast end" for NPCs)
@@ -81,14 +82,79 @@ sealed class AlleyOopInfernoPuddles(BossModule module) : Components.GenericAOEs(
     }
 }
 
-// Alley-oop Maelstrom cones. There are 2 cone widths in enums (30 and 15 degrees).
-// Helper cones (actual damaging AOEs) - To be refined, maybe using maxCasts?
-sealed class AlleyOopMaelstrom30(BossModule module) : Components.SimpleAOEs(
-    module,
-    (uint)AID.AlleyOopMaelstrom,
-    new AOEShapeCone(60f, 30f.Degrees()));
+// Show only 30° maelstroms while they are active; once they resolve, show 15° maelstroms.
+sealed class AlleyOopMaelstromSequential(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<Tracked> _tracked = [];
+    private readonly List<AOEInstance> _active = []; // reused each frame, no allocations
+    private static readonly AOEShapeCone Shape30 = new(60f, 15f.Degrees());
+    private static readonly AOEShapeCone Shape15 = new(60f, 7.5f.Degrees());
 
-sealed class AlleyOopMaelstrom15(BossModule module) : Components.SimpleAOEs(
-    module,
-    (uint)AID.AlleyOopMaelstrom2,
-    new AOEShapeCone(60f, 15f.Degrees()));
+    private struct Tracked
+    {
+        public AOEInstance AOE;
+        public uint AID;
+        public Tracked(AOEInstance aoe, uint aid) { AOE = aoe; AID = aid; }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        _active.Clear();
+
+        // priority: show all wide cones if any are present
+        bool have30 = false;
+        foreach (var t in _tracked)
+        {
+            if (t.AID == (uint)AID.AlleyOopMaelstrom)
+            {
+                have30 = true;
+                break;
+            }
+        }
+
+        uint want = have30 ? (uint)AID.AlleyOopMaelstrom : (uint)AID.AlleyOopMaelstrom2;
+
+        foreach (var t in _tracked)
+        {
+            if (t.AID == want)
+                _active.Add(t.AOE);
+        }
+
+        return CollectionsMarshal.AsSpan(_active);
+    }
+public override void OnEventCast(Actor caster, ActorCastEvent spell)
+{
+    if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2)
+    {
+        // event cast = actual resolve; remove the tracked AOE even if OnCastFinished never triggers
+        _tracked.RemoveAll(t => t.AOE.ActorID == caster.InstanceID && t.AID == spell.Action.ID);
+    }
+}
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        AOEShape? shape = spell.Action.ID switch
+        {
+            (uint)AID.AlleyOopMaelstrom => Shape30,   // 46495
+            (uint)AID.AlleyOopMaelstrom2 => Shape15,  // 46496
+            _ => null
+        };
+        if (shape == null)
+            return;
+
+        var activation = WorldState.FutureTime(spell.NPCRemainingTime);
+        var aoe = new AOEInstance(shape, caster.Position, spell.Rotation, activation, Colors.AOE, true, caster.InstanceID);
+        _tracked.Add(new(aoe, spell.Action.ID));
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.AlleyOopMaelstrom or (uint)AID.AlleyOopMaelstrom2)
+            _tracked.RemoveAll(t => t.AOE.ActorID == caster.InstanceID && t.AID == spell.Action.ID);
+    }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        var id = actor.InstanceID;
+        _tracked.RemoveAll(t => t.AOE.ActorID == id);
+    }
+}
