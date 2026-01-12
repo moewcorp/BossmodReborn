@@ -119,7 +119,7 @@ sealed class XtremeSpectacularHits(BossModule module) : Components.CastCounterMu
     TetherIDType = typeof(TetherID),
     IconIDType = typeof(IconID),
     PrimaryActorOID = (uint)OID.RedHot,
-    Contributors = "",
+    Contributors = "JoeSparkx",
     Expansion = BossModuleInfo.Expansion.Dawntrail,
     Category = BossModuleInfo.Category.Raid,
     GroupType = BossModuleInfo.GroupType.CFC,
