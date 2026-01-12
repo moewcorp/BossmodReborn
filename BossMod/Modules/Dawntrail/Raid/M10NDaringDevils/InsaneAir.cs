@@ -30,8 +30,8 @@ sealed class InsaneAirSnaps(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Pair> _pairs = [];
     private readonly List<AOEInstance> _active = [];
 
-    private const uint IconBlue = 651; // confirmed from your log
-    private const uint IconRed  = 665; // confirmed from your log
+    private const uint IconBlue = 651; 
+    private const uint IconRed  = 665; 
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -53,13 +53,13 @@ sealed class InsaneAirSnaps(BossModule module) : Components.GenericAOEs(module)
         return CollectionsMarshal.AsSpan(_active);
     }
 
-    // In your log, the ICON source is _Gen_ (OID 0x4AE7) and the target is the player.
+    
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
     {
         if (iconID != IconBlue && iconID != IconRed)
             return;
 
-        // Make sure this is the surfboard marker actor, not a self-applied player icon (635/636 etc).
+        
         if ((uint)actor.OID != (uint)OID._Gen_)
             return;
 
