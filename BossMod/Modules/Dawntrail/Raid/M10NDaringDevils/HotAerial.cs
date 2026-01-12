@@ -1,7 +1,6 @@
 namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 
 // Towers: 4 intercardinal, require at least 1 soaker.
-// 46476 is helper cast with range 6 circle at the tower location.
 sealed class HotAerialTowers(BossModule module) : Components.CastTowers(
     module,
     (uint)AID.HotAerial2,
@@ -11,7 +10,6 @@ sealed class HotAerialTowers(BossModule module) : Components.CastTowers(
     damageType: AIHints.PredictedDamageType.Raidwide);
 
 // Persistent fire puddles left behind after Red Hot jumps to each tower location.
-// These apply Burns (SID 3065/3066) in-game, and are removed by Divers' Dare resolve.
 sealed class HotAerialFirePuddles(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _puddles = [];

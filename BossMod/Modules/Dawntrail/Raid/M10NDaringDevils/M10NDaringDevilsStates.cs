@@ -35,6 +35,10 @@ sealed class M10NDaringDevilsStates : StateMachineBuilder
             .ActivateOnEnter<XtremeSpectacularHits>()
             .ActivateOnEnter<XtremeSpectacularEdge>()
 
+            .ActivateOnEnter<InsaneAirSnaps>()
+            .ActivateOnEnter<BlastingSnapPersistent>()
+
+
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.DeepBlue?.IsDeadOrDestroyed ?? true);
     }
 }
