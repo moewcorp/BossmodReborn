@@ -8,7 +8,7 @@ namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 static class InsaneAirData
 {
 
-    public static readonly AOEShapeCone SnapCone = new(60f, 15f.Degrees()); // total 30° default
+    public static readonly AOEShapeCone SnapCone = new(60f, 20f.Degrees()); // total 40 degrees
 }
 
 // -----------------------
