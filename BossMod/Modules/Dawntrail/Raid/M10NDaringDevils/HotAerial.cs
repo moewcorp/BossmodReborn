@@ -13,22 +13,21 @@ sealed class HotAerialTowers(BossModule module) : Components.CastTowers(
 sealed class HotAerialFirePuddles(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _puddles = [];
+    private readonly List<AOEInstance> _visible = []; // persistent buffer to return spans over
+
     private static readonly AOEShapeCircle Shape = new(6f);
     private static readonly float PuddleDelay = 1.5f;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        // Only show once "activation" time has passed
+        _visible.Clear();
         var now = WorldState.CurrentTime;
 
-        // NOTE: Returning a freshly built list avoids trying to mutate AOEInstance.
-        // If perf ever matters, we can switch to a cached temp list.
-        List<AOEInstance> res = [];
         foreach (var p in _puddles)
             if (now >= p.Activation)
-                res.Add(p);
+                _visible.Add(p);
 
-        return CollectionsMarshal.AsSpan(res);
+        return CollectionsMarshal.AsSpan(_visible);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -48,6 +47,7 @@ sealed class HotAerialFirePuddles(BossModule module) : Components.GenericAOEs(mo
             case (uint)AID.DiversDare:
             case (uint)AID.DiversDare1:
                 _puddles.Clear();
+                _visible.Clear();
                 break;
         }
     }
