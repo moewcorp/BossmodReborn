@@ -5,7 +5,7 @@ namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 // =========================
 
 // Shared tankbuster (Red Hot -> players, 5s cast, range 6 circle)
-sealed class HotImpact(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.HotImpact, 6f);
+sealed class HotImpact(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.HotImpact, 5f);
 
 // Tankbuster bait (Deep Blue -> player, 5s cast, range 6 circle)
 sealed class DeepImpact(BossModule module) : Components.BaitAwayCast(
@@ -35,7 +35,7 @@ sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
     (uint)AID.SickSwell1,   // boss cast is the clean trigger
     distance: 15f,
     kind: Components.SimpleKnockbacks.Kind.DirForward,
-    stopAtWall: true);
+    stopAtWall: false); // outside wall is deadly
 // Pyrotation stack marker (helper->players, no cast, range 6 circle).
 sealed class PyrotationStack(BossModule module) : Components.StackWithIcon(
     module,

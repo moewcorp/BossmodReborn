@@ -6,7 +6,7 @@ sealed class HotAerialTowers(BossModule module) : Components.CastTowers(
     (uint)AID.HotAerial2,
     radius: 6f,
     minSoakers: 1,
-    maxSoakers: 8,
+    maxSoakers: 1,
     damageType: AIHints.PredictedDamageType.Raidwide);
 
 // Persistent fire puddles left behind after Red Hot jumps to each tower location.
@@ -14,6 +14,7 @@ sealed class HotAerialFirePuddles(BossModule module) : Components.GenericAOEs(mo
 {
     private readonly List<AOEInstance> _puddles = [];
     private static readonly AOEShapeCircle Shape = new(6f);
+    private static readonly float PuddleDelay = 1.5f; //Added slight delay after jump before puddle appears
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
         => CollectionsMarshal.AsSpan(_puddles);
@@ -22,9 +23,15 @@ sealed class HotAerialFirePuddles(BossModule module) : Components.GenericAOEs(mo
     {
         switch (spell.Action.ID)
         {
-            // boss jump target locations (no cast) -> puddle appears
+            // boss jump target locations (no cast) -> puddle appears after delay
             case (uint)AID.HotAerial1:
-                _puddles.Add(new(Shape, spell.TargetXZ, default, WorldState.CurrentTime, Colors.AOE, true));
+                _puddles.Add(new AOEInstance(
+                    Shape,
+                    spell.TargetXZ,
+                    default,
+                    WorldState.CurrentTime.AddSeconds(PuddleDelay),
+                    Colors.AOE,
+                    true));
                 break;
 
             // arena cleanup
