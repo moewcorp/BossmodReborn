@@ -5,7 +5,7 @@ namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 // =========================
 
 // Shared tankbuster (Red Hot -> players, 5s cast, range 6 circle)
-sealed class HotImpact(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.HotImpact, 5f);
+sealed class HotImpact(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.HotImpact, 6f);
 
 // Tankbuster bait (Deep Blue -> player, 5s cast, range 6 circle)
 sealed class DeepImpact(BossModule module) : Components.BaitAwayCast(
