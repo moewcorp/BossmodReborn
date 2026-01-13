@@ -35,7 +35,7 @@ sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
     (uint)AID.SickSwell1,   // boss cast is the clean trigger
     distance: 15f,
     kind: Components.SimpleKnockbacks.Kind.DirForward,
-    stopAtWall: true);
+    stopAtWall: false); // outside wall is deadly
 // Pyrotation stack marker (helper->players, no cast, range 6 circle).
 sealed class PyrotationStack(BossModule module) : Components.StackWithIcon(
     module,

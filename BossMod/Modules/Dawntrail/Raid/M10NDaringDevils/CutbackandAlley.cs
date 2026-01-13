@@ -2,13 +2,13 @@ namespace BossMod.DawnTrail.Raid.M10NDaringDevils;
 
 sealed class CutbackBlazeBait(BossModule module) : Components.BaitAwayIcon(
     module,
-    new AOEShapeCone(60f, 22.5f.Degrees()),                 // tune angle if needed
+    new AOEShapeCone(60f, 30f.Degrees()),                 // tune angle if needed
     (uint)IconID.CutbackBlazeBait,                          
     (uint)AID.CutbackBlaze1,                                 
     activationDelay: 5.0d,                                   
     centerAtTarget: false)                                   
 {
-    public static readonly AOEShapeCone Cone = new(60f, 22.5f.Degrees());
+    public static readonly AOEShapeCone Cone = new(60f, 30f.Degrees());
 }
 
 sealed class CutbackBlazePersistent(BossModule module) : Components.GenericAOEs(module, (uint)AID.CutbackBlaze1)
