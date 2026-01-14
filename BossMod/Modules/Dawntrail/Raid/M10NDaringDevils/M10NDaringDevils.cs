@@ -35,7 +35,61 @@ sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
     (uint)AID.SickSwell1,   // boss cast is the clean trigger
     distance: 15f,
     kind: Components.SimpleKnockbacks.Kind.DirForward,
-    stopAtWall: false); // outside wall is deadly
+    stopAtWall: false) // outside wall is deadly
+{
+    // For AI: mark positions that would end up outside the arena after the knockback as forbidden.
+    // Using arena-specific inverse-knockback ShapeDistance helpers keeps pathfinding cheap and robust.
+    private RelSimplifiedComplexPolygon _poly;
+    private bool _polyInit;
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        base.OnCastFinished(caster, spell);
+        if (spell.Action.ID == WatchedAction)
+            _polyInit = false;
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (Casters.Count == 0)
+            return;
+
+        ref readonly var c = ref Casters.Ref(0);
+        var act = c.Activation;
+        if (IsImmune(slot, act))
+            return;
+
+        var center = Arena.Center;
+        var dir = 15f * c.Direction.ToDirection(); // direction includes distance, not normalized
+
+        switch (Arena.Bounds)
+        {
+            case ArenaBoundsCircle circle:
+                hints.AddForbiddenZone(new SDKnockbackInCircleFixedDirection(center, dir, circle.Radius), act);
+                break;
+
+            case ArenaBoundsSquare square:
+                hints.AddForbiddenZone(new SDKnockbackInSquareFixedDirection(center, dir, square.HalfWidth, square.Rotation), act);
+                break;
+
+            case ArenaBoundsRect rect:
+                // This helper is for axis-aligned rectangles; most rectangular arenas are not rotated.
+                // If you ever encounter a rotated rect here, consider switching arena bounds to custom polygon.
+                hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirection(center, dir, rect.HalfWidth - 0.5f, rect.HalfHeight - 0.5f), act);
+                break;
+
+            case ArenaBoundsCustom custom:
+                if (!_polyInit)
+                {
+                    _poly = custom.Polygon.Offset(-1f); // slightly smaller to avoid "sus" edge cases
+                    _polyInit = true;
+                }
+                hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(custom.Center, dir, _poly), act);
+                break;
+        }
+    }
+}
+
 // Pyrotation stack marker (helper->players, no cast, range 6 circle).
 sealed class PyrotationStack(BossModule module) : Components.StackWithIcon(
     module,
