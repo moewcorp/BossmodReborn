@@ -37,17 +37,8 @@ sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
     kind: Components.SimpleKnockbacks.Kind.DirForward,
     stopAtWall: false) // outside wall is deadly
 {
-    // For AI: mark positions that would end up outside the arena after the knockback as forbidden.
-    // Using arena-specific inverse-knockback ShapeDistance helpers keeps pathfinding cheap and robust.
-    private RelSimplifiedComplexPolygon _poly;
-    private bool _polyInit;
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
-    {
-        base.OnCastFinished(caster, spell);
-        if (spell.Action.ID == WatchedAction)
-            _polyInit = false;
-    }
+    // Conservative "treat all circles as this radius" for the PlusAOECircles helper.
+    private const float DangerRadius = 9f;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -56,39 +47,63 @@ sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
 
         ref readonly var c = ref Casters.Ref(0);
         var act = c.Activation;
+
         if (IsImmune(slot, act))
             return;
 
+        var square = (ArenaBoundsSquare)Arena.Bounds;
+
         var center = Arena.Center;
-        var dir = 15f * c.Direction.ToDirection(); // direction includes distance, not normalized
+        var dir = 15f * c.Direction.ToDirection(); // includes distance, not normalized
 
-        switch (Arena.Bounds)
+        var origins = BuildDangerCircleOrigins(slot, actor, act);
+
+        if (origins.Length > 0)
         {
-            case ArenaBoundsCircle circle:
-                hints.AddForbiddenZone(new SDKnockbackInCircleFixedDirection(center, dir, circle.Radius), act);
-                break;
+            hints.AddForbiddenZone(
+                new SDKnockbackInAABBSquareFixedDirectionPlusAOECircles(center, dir, square.HalfWidth, origins, DangerRadius, origins.Length),
+                act);
+        }
+        else
+        {
+            // Still forbid getting knocked out of bounds even if no circles are active.
+            hints.AddForbiddenZone(
+                new SDKnockbackInAABBSquareFixedDirection(center, dir, square.HalfWidth),
+                act);
+        }
+    }
 
-            case ArenaBoundsSquare square:
-                hints.AddForbiddenZone(new SDKnockbackInSquareFixedDirection(center, dir, square.HalfWidth, square.Rotation), act);
-                break;
+    private WPos[] BuildDangerCircleOrigins(int slot, Actor actor, DateTime act)
+    {
+        var res = new List<WPos>(32);
 
-            case ArenaBoundsRect rect:
-                // This helper is for axis-aligned rectangles; most rectangular arenas are not rotated.
-                // If you ever encounter a rotated rect here, consider switching arena bounds to custom polygon.
-                hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirection(center, dir, rect.HalfWidth - 0.5f, rect.HalfHeight - 0.5f), act);
-                break;
+        AddCircleOriginsFrom(Module.FindComponent<HotAerialFirePuddles>(), slot, actor, act, res);
+        AddCircleOriginsFrom(Module.FindComponent<PyrotationPuddles>(), slot, actor, act, res);
+        AddCircleOriginsFrom(Module.FindComponent<AlleyOopInfernoPuddles>(), slot, actor, act, res);
 
-            case ArenaBoundsCustom custom:
-                if (!_polyInit)
-                {
-                    _poly = custom.Polygon.Offset(-1f); // slightly smaller to avoid "sus" edge cases
-                    _polyInit = true;
-                }
-                hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(custom.Center, dir, _poly), act);
-                break;
+        return res.Count > 0 ? res.ToArray() : [];
+    }
+
+    private static void AddCircleOriginsFrom(Components.GenericAOEs? comp, int slot, Actor actor, DateTime act, List<WPos> dst)
+    {
+        if (comp == null)
+            return;
+
+        var aoes = comp.ActiveAOEs(slot, actor);
+        for (var i = 0; i < aoes.Length; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+
+            // Only include circles that will be active by knockback resolution time.
+            if (aoe.Activation > act)
+                continue;
+
+            if (aoe.Shape is AOEShapeCircle)
+                dst.Add(aoe.Origin);
         }
     }
 }
+
 
 // Pyrotation stack marker (helper->players, no cast, range 6 circle).
 sealed class PyrotationStack(BossModule module) : Components.StackWithIcon(
