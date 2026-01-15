@@ -33,7 +33,7 @@ sealed class SickestTakeOffLine(BossModule module) : Components.SimpleAOEs(
 sealed class SickSwellKB(BossModule module) : Components.SimpleKnockbacks(
     module,
     (uint)AID.SickSwell1,   // boss cast is the clean trigger
-    distance: 15f,
+    distance: 10f,
     kind: Components.SimpleKnockbacks.Kind.DirForward,
     stopAtWall: false) // outside wall is deadly
 {
