@@ -10,7 +10,7 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
         switch (index)
         {
             case 0x04 when state == 0x00020001u:
-                ++Car;
+                ++Car; // Car 2
                 WPos centerCar2 = new(100f, 150f);
                 Arena.Center = centerCar2;
                 Arena.Bounds = new ArenaBoundsCustom([new Rectangle(centerCar2, 10.5f, 15f)],
@@ -18,10 +18,26 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
                     new Square(new(97.5f, 147.5f), 2.01f), new Square(new(102.5f, 157.5f), 2.01f)], AdjustForHitboxInwards: true);
                 break;
             case 0x05 when state == 0x00020001u:
-                ++Car;
+                ++Car; // Car 3
                 Arena.Center = new(100f, 200f);
                 Arena.Bounds = new ArenaBoundsRect(10f, 14.5f);
                 break;
+        }
+    }
+
+    public override void OnActorTargetable(Actor actor)
+    {
+        if (actor.OID == (uint)OID.Aether)
+        {
+            // Intermission
+            Arena.Center = new(-400f, -400f);
+            Arena.Bounds = new ArenaBoundsCircle(15f);
+        }
+        else if (actor.OID == (uint)OID.Doomtrain && Car == 3)
+        {
+            // Return from intermission, back to car 3
+            Arena.Center = new(100f, 200f);
+            Arena.Bounds = new ArenaBoundsRect(10f, 14.5f);
         }
     }
 }
