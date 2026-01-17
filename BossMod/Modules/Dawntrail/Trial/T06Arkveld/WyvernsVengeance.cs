@@ -70,73 +70,70 @@ sealed class WyvernsWealPulses(BossModule module) : Components.GenericAOEs(modul
     }
 }
 
-// Wyvern's Weal: simple, deterministic "GTFO lane" using boss cast 45046/45047.
-// Draws an asymmetric lane that extends both forward and backward during the cast.
-// Warning is best-effort: we nudge AI early and show the lane as soon as the cast starts.
+// Wyvern's Weal: deterministic GTFO lane based on boss sweep cast.
+// 45046 = southeast/left sweep  → danger LEFT  → safe RIGHT
+// 45047 = north/right sweep     → danger RIGHT → safe LEFT
+// Lane extends 60y forward and 20y behind boss.
 sealed class WyvernsWealIrregularCastLane(BossModule module) : Components.GenericAOEs(module)
 {
     private const float LenFront = 60f;
-    private const float LenBack = 20f;   // behind the boss
+    private const float LenBack = 20f;
     private const float Narrow = 1f;
     private const float Wide = 60f;
-    private const float PullBack = 40f;  // tuned: shifts lane toward arena boundary
 
     private AOEShapeRect? _shape;
-    private ShapeDistance? _forbid;
-    private WPos _sdOrigin;   // reference origin for forward/back lengths (must match forbid)
-    private Angle _rot;
+    private SDRect? _forbid;
+    private WPos _origin;
+    private Angle _rotation;
     private DateTime _until;
-
-    // cached for the optional early-goal scoring; not required for rendering
-    private float _halfW;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_shape == null || WorldState.CurrentTime >= _until)
             return default;
 
-        var f = _rot.ToDirection();
-        var center = _sdOrigin + f * ((LenFront - LenBack) * 0.5f);
-        return new[] { new AOEInstance(_shape, center, _rot, _until) };
+        return new AOEInstance[] { new(_shape, _origin, _rotation, _until) };
     }
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (caster != Module.PrimaryActor)
             return;
 
-        // 45047 = north/right sweep -> danger on RIGHT (safe LEFT)
-        // 45046 = southeast/left sweep -> danger on LEFT (safe RIGHT)
-        if (spell.Action.ID is not (45046u or 45047u))
+        // Only the two sweep casts
+        if (spell.Action.ID != 45046u && spell.Action.ID != 45047u)
             return;
 
+        // 45047 = north/right sweep → danger RIGHT
+        // 45046 = southeast/left sweep → danger LEFT
         bool dangerOnRight = spell.Action.ID == 45047u;
 
-        _rot = spell.Rotation;
-        var f = _rot.ToDirection();
-        var left = new WDir(-f.Z, f.X);
+        _rotation = spell.Rotation;
+        var forward = _rotation.ToDirection();
+        var left = new WDir(-forward.Z, forward.X);
 
-        // asym lateral extents: allow s in [-lw .. +rw]
-        var lw = dangerOnRight ? Narrow : Wide;
-        var rw = dangerOnRight ? Wide : Narrow;
+        // asymmetric lateral extents
+        float lw = dangerOnRight ? Narrow : Wide;
+        float rw = dangerOnRight ? Wide : Narrow;
+        float halfW = (lw + rw) * 0.5f;
+        float lateralShift = (lw - rw) * 0.5f;
 
-        _halfW = (lw + rw) * 0.5f;
-        var lateralShift = (lw - rw) * 0.5f;
+        // origin shifted sideways so the narrow side is safe
+        _origin = caster.Position + lateralShift * left;
 
-        // SDRect origin is the point where forward/back lengths are measured
-        _sdOrigin = caster.Position + lateralShift * left;
+        // pull the lane backward so it covers behind boss
+        _origin -= forward * LenBack;
 
-        // pull the whole lane back so it starts closer to the boundary rather than from boss hitbox center
-        _sdOrigin -= f * PullBack;
+        // Build matching visual + forbidden shapes
+        _shape = new AOEShapeRect(LenFront, halfW, LenBack);
+        _forbid = new SDRect(_origin, forward, LenFront, LenBack, halfW);
 
-        _shape = new AOEShapeRect(LenFront + LenBack, _halfW);
-        _forbid = new SDRect(_sdOrigin, f, LenFront, LenBack, _halfW);
-
-        _until = Module.CastFinishAt(spell); // ~7s
+        _until = Module.CastFinishAt(spell); // ~7s cast
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (caster == Module.PrimaryActor && spell.Action.ID is (45046u or 45047u))
+        if (caster == Module.PrimaryActor && (spell.Action.ID == 45046u || spell.Action.ID == 45047u))
         {
             _shape = null;
             _forbid = null;
@@ -148,15 +145,7 @@ sealed class WyvernsWealIrregularCastLane(BossModule module) : Components.Generi
         if (_forbid == null || WorldState.CurrentTime >= _until)
             return;
 
-        // Hard forbid for the full cast duration: AI will GTFO immediately
+        // Hard forbid entire lane immediately
         hints.AddForbiddenZone(_forbid, _until);
-
-        // Optional: add a stronger "get out" bias early in the cast (first ~1.5s)
-        var remaining = _until - WorldState.CurrentTime;
-        if (remaining > TimeSpan.FromSeconds(5.5))
-        {
-            var forbid = _forbid;
-            hints.GoalZones.Add(pos => forbid.Contains(pos) ? -200f : 10f);
-        }
     }
 }
