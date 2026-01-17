@@ -30,8 +30,9 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
         if (actor.OID == (uint)OID.Aether)
         {
             // Intermission
-            Arena.Center = new(-400f, -400f);
-            Arena.Bounds = new ArenaBoundsCircle(15f);
+            var center = new WPos(-400f, -400f);
+            Arena.Center = center;
+            Arena.Bounds = new ArenaBoundsCustom([new Polygon(center, 14.495f, 64)]);
         }
         else if (actor.OID == (uint)OID.Doomtrain && Car == 3)
         {
@@ -40,4 +41,17 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
             Arena.Bounds = new ArenaBoundsRect(10f, 14.5f);
         }
     }
+
+    // car 4
+    // private static (WPos center, ArenaBoundsCustom arena) BuildArena()
+    // {
+    //     var arena = new ArenaBoundsCustom([new Rectangle(new(100f, 250f), 10.5f, 15f)],
+    //     [new Rectangle(new(107.5f, 250f), 2.297f, 4.797f), new Rectangle(new(100f, 252.5f), 5f, 1.95f),
+    //     new Rectangle(new(92.5f, 257.5f), 2.297f, 7.297f)], [new Square(new(107.5f, 247.5f), 2.5f), new Rectangle(new(107.75f, 252.5f), 2.25f, 2.5f),
+    //     new Rectangle(new(92.5f, 259.75f), 2.5f, 4.75f), new Rectangle(new(92.25f, 252.5f), 2.25f, 2.5f)], AdjustForHitboxInwards: true);
+    //     return (arena.Center, arena);
+    // }
+
+    // car 5: 92.5, 292.5, 97.5, 292.5, 97.5, 297.5
+    // 0x10         0x11                0x15
 }
