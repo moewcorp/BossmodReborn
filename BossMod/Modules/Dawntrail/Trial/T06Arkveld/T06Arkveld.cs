@@ -83,7 +83,6 @@ sealed class ResonanceTowerLarge(BossModule module)
     }
 }
 
-
 // Crystal detonations (spawned from cracked crystals).
 sealed class CrackedCrystalSmall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WyvernsRadiance10, new AOEShapeCircle(6f));
 sealed class CrackedCrystalLarge(BossModule module) : Components.SimpleAOEs(module, (uint)AID.WyvernsRadiance11, new AOEShapeCircle(12f));
@@ -97,7 +96,7 @@ StatusIDType = typeof(SID), // replace null with typeof(SID) if applicable
 TetherIDType = null, // replace null with typeof(TetherID) if applicable
 IconIDType = typeof(IconID), // replace null with typeof(IconID) if applicable
 PrimaryActorOID = (uint)OID.GuardianArkveld,
-Contributors = "",
+Contributors = "JoeSparkx",
 Expansion = BossModuleInfo.Expansion.Dawntrail,
 Category = BossModuleInfo.Category.Trial,
 GroupType = BossModuleInfo.GroupType.CFC,
