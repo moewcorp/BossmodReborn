@@ -1,12 +1,4 @@
-﻿
-using BossMod.Autorotation.xan;
-using BossMod.Dawntrail.Dungeon.D03SkydeepCenote.D033Maulskull;
-using BossMod.Global.DeepDungeon;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using TerraFX.Interop.Windows;
-using static BossMod.Components.GenericStackSpread;
-
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 sealed class SickestTakeOff(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SickestTakeOff, new AOEShapeRect(50f, 7.5f));
 sealed class SickSwell1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.SickSwell1, 10f, kind: Kind.DirForward);
@@ -136,20 +128,6 @@ sealed class AlleyOopWater(BossModule module) : Components.GenericBaitAway(modul
     {
         if (spell.Action.ID is (uint)AID.AlleyOopDoubleDipCast or (uint)AID.ReverseAlleyOopCast)
         {
-            /*
-            var waters = _debuffs.WaterPlayers;
-
-            IEnumerable<(int, Actor)> party;
-            if (waters.None())
-                party = Raid.WithSlot(false, true, true);
-            else
-                party = Raid.WithSlot(false, true, true).IncludedInMask(waters);
-
-            foreach (var (_, target) in party)
-            {
-                CurrentBaits.Add(new(caster, target, new AOEShapeCone(60f, 15f.Degrees()), Module.CastFinishAt(spell)));
-            }
-            */
             var targets = GetTargets();
             var len = targets.Length;
 
@@ -223,73 +201,6 @@ sealed class AlleyOopWaterAfter(BossModule module) : Components.GenericAOEs(modu
         }
     }
 }
-/*
-sealed class DeepImpact(BossModule module) : Components.GenericStackSpread(module, false, false)
-{
-    private Actor? deepblue;
-    public DateTime Activation;
-    public Actor? Target;
-
-    public override void Update()
-    {
-        if (deepblue == null)
-            return;
-
-        Spreads.Clear();
-
-        var party = Raid.WithoutSlot(false, true, true);
-        var len = party.Length;
-        Target = party.OrderByDescending(x => x.DistanceToPoint(deepblue.Position)).First();
-
-        if (Target == null)
-            return;
-
-        Spreads.Add(new(Target, 6f, Activation));
-    }
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.DeepImpactCast)
-        {
-            deepblue = caster;
-            Activation = Module.CastFinishAt(spell);
-        }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.DeepImpact)
-        {
-            Spreads.Clear();
-            deepblue = null;
-            Activation = default;
-        }
-    }
-}
-sealed class DeepImpactKnockback(BossModule module) : Components.GenericKnockback(module)
-{
-    private readonly DeepImpact _impact = module.FindComponent<DeepImpact>()!;
-
-    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor)
-    {
-        if (!_impact.Active)
-            return [];
-
-        var spreads = _impact.ActiveSpreads;
-        if (spreads.Count == 0)
-            return [];
-
-        var target = _impact.Target;
-        if (target == default)
-            return [];
-
-        if (target.InstanceID != actor.InstanceID)
-            return [];
-
-        Knockback[] kbs = [new(target.Position, 10f, _impact.Activation)];
-        return kbs;
-    }
-}
-*/
 
 sealed class DeepImpact(BossModule module) : Components.GenericBaitProximity(module)
 {

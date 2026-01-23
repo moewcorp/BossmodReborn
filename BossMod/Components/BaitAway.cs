@@ -1,9 +1,4 @@
-﻿using BossMod.Autorotation.xan;
-using Clipper2Lib;
-using TerraFX.Interop.Windows;
-using static BossMod.ActorCastEvent;
-
-namespace BossMod.Components;
+﻿namespace BossMod.Components;
 
 // generic component for mechanics that require baiting some aoe (by proximity, by tether, etc) away from raid
 // some players can be marked as 'forbidden' - if any of them is baiting, they are warned

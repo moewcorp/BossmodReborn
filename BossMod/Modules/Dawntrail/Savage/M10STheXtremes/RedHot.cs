@@ -1,7 +1,4 @@
-﻿
-using static BossMod.Autorotation.xan.RaiseUtil;
-
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 public class VoidzoneShape(BossModule module, uint OID, AOEShape shape) : Components.GenericAOEs(module, default, "GTFO from voidzone!")
 {

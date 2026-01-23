@@ -1,104 +1,14 @@
-﻿using BossMod.Shadowbringers.Foray.DelubrumReginae.DRN3QueensGuard;
-
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 sealed class M10STheXtremesStates : StateMachineBuilder
 {
-    // hot impact raidwide 8.98 - 13.99
-    // FlameFloater 1st tether 22.52 - FlameFloater 4 resolve 39.55 (leaves voidzone)
-    // AlleyOopInferno 47.79 - 52.815 (leaves voidzone)
-    // CutbackBlaze 57.29 - 61.46
-    // Pyrorotation 63.628 - 68.819 - 70.765 - 72.782 (5s cast then 2s inbetween)
-    // Diversdare raidwide 77.11 - 82.1
-    // Red Hot untargetable 88.62
-    // Deep Blue targetable 90.55
-    // Stack/Spread status gain at 102.066
-    // Sickest Takeoff / Sick Swell 108.18 - 115.29
-    // Stack/Spread 117.82
-    // (Reverse)AlleyOpp 1280.388 - 125.904 - 128.675
-    // Deep Impact 131.56 - 136.62 (kb on furthest player)
-    // Divers Dare Red 138.79 - 143.79
-    // Red Hot targetable 152.05
-    // Xtreme Spectacular 161.647 - 168.841 (proximity damage)
-    // Xtreme Spectacular rest 169.94 - 173.67 (7 hits)
-    // both targetable 177.568
-    // insane air 1 188.97 - 194.80 - 197.76 (actual mech)
-    // insane air 2 198.25 - 202.12 - 203.94 (actual mech)
-    // insane air 3 205.64 - 209.40 - 211.34 (actual mech)
-    // double divers dare raidwide 224.6 - 229.43
-    // water/fire snaking 240.45 - 245.24 - 245.86 status gain
-    // alleyoops 252.88 - 257.86 (fire) - 258.38 (water 1) - 261 (water 2)
-    // hot impact 2 shared tb 264.43 - 269.29
-    // deep varial 270.52 - 275.65
-    // double divers dare raidwide 316.48 - 321.57
-    // bosses untargetable / watery grave targetable 339.183
-    // tethers out 342.24 (cast start same time) - 347 cast end - 347.41 actual dash
-    // watery grave untargetable 390.88
-    // bosses targetable 392.04
-    // double divers dare raidwide 395.31 - 400.41
     private readonly M10STheXtremes _module;
     public M10STheXtremesStates(M10STheXtremes module) : base(module)
     {
         _module = module;
-        /*
-        TrivialPhase()
-            // Red Hot only
-            .ActivateOnEnter<ArenaChanges>()
-            .ActivateOnEnter<DebuffTracker>()
-            .ActivateOnEnter<FreakyPyrotation>()
-            .ActivateOnEnter<HotImpact>()
-            .ActivateOnEnter<FlameFloater>()
-            .ActivateOnEnter<FlameFloaterPuddle>()
-            .ActivateOnEnter<AlleyOopInferno>()
-            .ActivateOnEnter<AlleyOopInfernoPuddle>()
-            .ActivateOnEnter<CutbackBlaze>()
-            .ActivateOnEnter<CutbackBlazePuddle>()
-            .ActivateOnEnter<Pyrorotation>()
-            .ActivateOnEnter<PyrorotationPuddle>()
-            .ActivateOnEnter<DiversDareRed>()
-            // Deep Blue only
-            .ActivateOnEnter<SickestTakeOff>()
-            .ActivateOnEnter<SickSwell1>()
-            .ActivateOnEnter<AwesomeSplashSlab>()
-            .ActivateOnEnter<AlleyOopWater>()
-            .ActivateOnEnter<AlleyOopWaterAfter>()
-            .ActivateOnEnter<DeepImpact>()
-            .ActivateOnEnter<DiversDareBlue>()
-            // both
-            .ActivateOnEnter<XtremeSpectacular>()
-            //.ActivateOnEnter<InsaneAir>()
-            //.ActivateOnEnter<InsaneAirBlueUp>()
-            //.ActivateOnEnter<InsaneAirBlueMiddle>()
-            //.ActivateOnEnter<InsaneAirBlueDown>()
-            //.ActivateOnEnter<InsaneAirRedUp>()
-            //.ActivateOnEnter<InsaneAirRedMiddle>()
-            //.ActivateOnEnter<InsaneAirRedDown>()
-            .ActivateOnEnter<InsaneAirTest>()
-            // test over
-            .ActivateOnEnter<BlastingSnapPuddle>() // fire uses this for cones + pyrorotation puddle actor
-            .ActivateOnEnter<SteamBurst>()
-            .ActivateOnEnter<Firesnaking>()
-            .ActivateOnEnter<Watersnaking>()
-            .ActivateOnEnter<HotImpact2>()
-            .ActivateOnEnter<DeepVarial>()
-            .ActivateOnEnter<AwesomeSplashSlabAerial>()
-            .ActivateOnEnter<HotAerial>()
-            // aerial orb tether phase
-            .ActivateOnEnter<DeepAerial>()
-            .ActivateOnEnter<WateryGrave>()
-            .ActivateOnEnter<RedTether>()
-            .ActivateOnEnter<BlueTether>()
-            .ActivateOnEnter<FlameFloaterSplit>()
-            .ActivateOnEnter<XtremeFiresnaking>()
-            .ActivateOnEnter<XtremeWatersnaking>()
-            .ActivateOnEnter<Bailout>();
-        */
-
         DeathPhase(default, SinglePhase)
             .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<DebuffTracker>();
-            //.Raw.Update = () => AllDeadOrDestroyed(M10STheXtremes.Bosses);
-        
     }
 
     private void SinglePhase(uint id)

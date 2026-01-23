@@ -1,7 +1,4 @@
-﻿using TerraFX.Interop.Windows;
-using static BossMod.Dawntrail.Ultimate.FRU.P2MirrorMirrorHouseOfLight;
-
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 sealed class DeepAerial(BossModule module) : Components.CastTowers(module, (uint)AID.DeepAerial, 6f, 2, 2);
 sealed class WateryGrave(BossModule module) : Components.Adds(module, (uint)OID.WateryGrave)

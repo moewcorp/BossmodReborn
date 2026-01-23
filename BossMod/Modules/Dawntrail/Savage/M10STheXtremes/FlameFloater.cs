@@ -1,5 +1,4 @@
-﻿
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 sealed class FlameFloater(BossModule module) : Components.GenericAOEs(module)
 {
