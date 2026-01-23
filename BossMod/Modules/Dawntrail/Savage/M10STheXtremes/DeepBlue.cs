@@ -220,6 +220,7 @@ sealed class DeepImpact(BossModule module) : Components.GenericBaitProximity(mod
     {
         if (spell.Action.ID == (uint)AID.DeepImpact)
         {
+            ++NumCasts;
             CurrentBaits.Clear();
         }
     }
