@@ -4,7 +4,7 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
 {
     private readonly RavenousReach _reach = module.FindComponent<RavenousReach>()!;
     private readonly Burst _burst = module.FindComponent<Burst>()!;
-    private bool _active = false;
+    private DateTime _activation;
     private readonly Dictionary<ulong, bool> _jumps = [];
 
     private RelSimplifiedComplexPolygon _poly;
@@ -13,7 +13,7 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
     {
         if (spell.Action.ID == (uint)AID.Shockwave)
         {
-            _active = false;
+            _activation = default;
             _jumps.Clear();
         }
     }
@@ -24,13 +24,13 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
         {
             if (Arena.Bounds is ArenaBoundsCustom arena)
             {
-                _poly = arena.Polygon.Offset(-1f); // pretend polygon is 1y smaller than real for less suspect knockbacks
+                _poly = arena.Polygon.Offset(-1.5f); // pretend polygon is 1.5y smaller than real for less suspect knockbacks
             }
             else
             {
-                _poly = Arena.Bounds.ShapeSimplified.Offset(-1f);
+                _poly = Arena.Bounds.ShapeSimplified.Offset(-1.5f);
             }
-            _active = true;
+            _activation = WorldState.FutureTime(5d);
         }
     }
 
@@ -57,39 +57,40 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
     {
         if (actor.OID == Module.PrimaryActor.OID)
         {
-            _active = false;
+            _activation = default;
             _jumps.Clear();
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        if (!_active)
+        if (_activation == default)
             return;
+
         if (!_jumps.ContainsKey(pc.InstanceID))
             return;
 
-        var tp = GetTeleport(pc, _jumps[pc.InstanceID]);
+        var tp = GetTeleport(pc, 15f, _jumps[pc.InstanceID]);
         Arena.ActorProjected(tp.from, tp.to, tp.rotation, Colors.Danger);
         Arena.AddLine(tp.from, tp.to);
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (!_active)
+        if (_activation == default)
             return;
 
         if (!_jumps.ContainsKey(actor.InstanceID))
             return;
 
-        var tp = GetTeleport(actor, _jumps[actor.InstanceID]);
+        var tp = GetTeleport(actor, 15f, _jumps[actor.InstanceID]);
         if (DestinationUnsafe(tp.to))
             hints.Add("About to teleport into danger!");
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (!_active)
+        if (_activation == default)
             return;
 
         if (!_jumps.ContainsKey(actor.InstanceID))
@@ -98,27 +99,28 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
         var rot = actor.Rotation;
         var dir = rot.ToDirection() * 15f * (_jumps[actor.InstanceID] ? 1f : -1f);
 
-        var tp = GetTeleport(actor, _jumps[actor.InstanceID]);
-        if (DestinationUnsafe(tp.to))
-        {
-            hints.ForbiddenDirections.Add((dir.ToAngle(), 175f.Degrees(), WorldState.FutureTime(5d)));
-        }
+        var tp = GetTeleport(actor, 15f, _jumps[actor.InstanceID]);
 
-        hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(tp.from, dir, _poly), WorldState.FutureTime(5d));
+        // check if tp is in bounds; if not, need to rotate
+        // teleport just barely safe; -1 offset not enough, or just coincidence it was safe?
+        if (!Arena.InBounds(tp.to))
+        {
+            hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(Arena.Center, dir, _poly), _activation);
+        }
 
         var reach = _reach.ActiveCasters;
-        if (reach.Length > 0)
+        var reachLen = reach.Length;
+        if (reachLen > 0)
         {
-            hints.AddForbiddenZone(new SDKnockbackInComplexPolygonFixedDirection(tp.from, dir, _poly), _reach.ActiveAOEs(slot, actor)[0].Activation);
-            return;
+            // offset cone by teleport direction?
+            hints.AddForbiddenZone(reach[0].Shape, reach[0].Origin - dir, reach[0].Rotation, _activation);
         }
 
-        // burst doesn't happen during broken arena
-        var burst = _burst.AOEs;
-        if (burst.Count > 0)
+        var burst = CollectionsMarshal.AsSpan(_burst.AOEs);
+        var burstLen = burst.Length;
+        if (burstLen > 0)
         {
-            hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirection(Arena.Center, dir, 20f, 15f));
-            return;
+            hints.AddForbiddenZone(new SDKnockbackInAABBRectFixedDirectionPlusAOECircles(Arena.Center, dir, 20f, 15f, [.. _burst.AOEs.Select(x => x.Origin)], 12f, burstLen), _activation);
         }
     }
 
@@ -149,15 +151,15 @@ sealed class FleshTele(BossModule module) : BossComponent(module)
     private const float approxHitBoxRadius = 0.499f;
     private const float maxIntersectionError = 0.5f - approxHitBoxRadius;
 
-    private (WPos from, WPos to, Angle rotation) GetTeleport(Actor actor, bool isForward)
+    private (WPos from, WPos to, Angle rotation) GetTeleport(Actor actor, float distance, bool isForward)
     {
         var from = actor.Position;
         var rot = actor.Rotation;
         var dir = rot.ToDirection() * (isForward ? 1f : -1f);
 
         // stopAfterWall
-        var distance = Math.Min(15f, Arena.IntersectRayBounds(from, dir) + maxIntersectionError);
-        var to = from + distance * dir;
+        var dist = Math.Min(distance, Arena.IntersectRayBounds(from, dir) + maxIntersectionError);
+        var to = from + dist * dir;
 
         return (from, to, rot);
     }
