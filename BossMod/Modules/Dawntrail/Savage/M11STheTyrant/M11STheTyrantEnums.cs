@@ -15,6 +15,8 @@ public enum OID : uint
     _Gen_Exit = 0x1E850B, // R0.500, x?, EventObj type
     Maelstrom = 0x4AEF, // R1.000, x? ; These are the whirlwinds that spawn during ultimate trophy weapons
     _Gen_Actor0 = 0x0, // R340282346638528859811704183484516925440.000--340282346638528859811704183484516925440.000, x?, None type
+    AtomicImpactVoidZones = 0x1EBF24, // R0.500, x0 (spawn during fight), EventObj type 
+
 }
 
 public enum AID : uint
@@ -85,14 +87,33 @@ public enum AID : uint
     _Weaponskill_ = 46176, // 4AEC->self, no cast, single-target
     Flatliner = 46143, // 4AEC->self, 4.0+2.0s cast, single-target
     Flatliner1 = 47760, // 233C->self, 6.0s cast, range 60 circle
-    _Spell_MajesticMeteor = 46144, // 4AEC->self, 5.0s cast, single-target
-    _Spell_Explosion = 46148, // 233C->self, 10.0s cast, range 4 circle
+    MajesticMeteor = 46144, // 4AEC->self, 5.0s cast, single-target ; summons towers
+    ExplosionTower = 46148, // 233C->self, 10.0s cast, range 4 circle ; tower knockback explosions
     _Spell_UnmitigatedExplosion = 46149, // 233C->self, no cast, range 60 circle
-    _Spell_MajesticMeteor1 = 46145, // 233C->location, 3.0s cast, range 6 circle
+    MajesticMeteorBaits = 46145, // 233C->location, 3.0s cast, range 6 circle ; baited puddles
     FireBreath = 46150, // 4AEC->self, 8.0+1.0s cast, single-target
-    FireBreath1 = 46151, // 233C->self, no cast, range 60 width 6 rect
-    _Spell_MajesticMeteorain = 46146, // 233C->self, no cast, range 60 width 10 rect
-    _Spell_MajesticMeteowrath = 46147, // 233C->self, no cast, range 60 width 10 rect
+    FireBreath1 = 46151, // 233C->self, no cast, range 60 width 6 rect ; This might be the line AOEs at icon 244 during arena splits?
+    MajesticMeteorain = 46146, // 233C->self, no cast, range 60 width 10 rect ; This is the north-south line AOE from the portal
+    MajesticMeteowrathFirst = 46147, // 233C->self, no cast, range 60 width 10 rect ; This is the tether cast for tether 57/249
+    MassiveMeteor = 46152, // Boss->self, 5.0s cast, single-target ; start of 5-hit party share stacks icon 305
+    MassiveMeteorHit = 46153, // Helper->players, no cast, range 6 circle ; damage from dual party stacks, hits 5 times, icon 305
+    ArcadionAvalanche_Pick1 = 46154, // Boss->self, 6.0+9.5s cast, single-target
+    ArcadionAvalanche_Smash1 = 46155, // Helper->self, 15.5s cast, range 40 width 40 rect
+    ArcadionAvalanche_Pick2 = 46156, // Boss->self, 6.0+9.5s cast, single-target
+    ArcadionAvalanche_Smash2 = 46157, // Helper->self, 15.5s cast, range 40 width 40 rect
+    ArcadionAvalanche_Pick3 = 46158, // Boss->self, 6.0+9.5s cast, single-target ; boss selects which platform to destroy (he faces it?)
+    ArcadionAvalanche_Smash3 = 46159, // Helper->self, 15.5s cast, range 40 width 40 rect
+    ArcadionAvalanche_Pick4 = 46160, // Manually guessed based on pattern
+    ArcadionAvalanche_Smash4 = 46161, // Manually guessed based on pattern
+    EclipticStampede = 46162, // Boss->self, 5.0s cast, single-target ; starts final phase, summons corner meteors, puts 2 icons on farthest players
+    MammothMeteor = 46163, // Helper->location, 6.0s cast, range 60 circle ; These are proximity AOE meteors dropped in the corner at the start of Ecliptic Stampede
+    AtomicImpact = 46164, // Helper->player, no cast, range 5 circle ; AOE from icon 30, 6 hits which drop voidzones
+    MajesticMeteorStorm = 46165, // Helper->location, 3.0s cast, range 6 circle ; Meteors targeted on party
+    CosmicKissTower = 46166, // Helper->location, 5.0s cast, range 4 circle ; tank towers?
+    WeightyImpactTower = 46167, // Helper->location, 5.0s cast, range 4 circle ; DPS towers?
+    _Spell_UnmitigatedExplosion2 = 46168, // Helper->self, no cast, range 60 circle ; miss tower get bleed
+    MajesticMeteowrathSecond = 46169, // Helper->self, no cast, range 60 width 10 rect ; tether ID 57/249 rectangles during end
+    _Weaponskill_Rsv461701100SE2DC5B04EE2DC5B04 = 46170, // Boss->self, 6.0+1.0s cast, single-target
 }
 
 public enum IconID : uint
@@ -101,11 +122,13 @@ public enum IconID : uint
     CometIcon = 139, // player->self ; This is the icon for Comet spell 46100
     CosmicKissIcon = 244, // player->self ; This is the icon for Cosmic Kiss spell 46133 which drops comets
     FearsomeFireballIcon = 525, // Boss->player ; line stack icon for Fearsome Fireball 
+    MassiveMeteorIcon = 305, // player->self ; party stack icons on healers for Massive Meteor 5-hits
+    AtomicImpactIcon = 30, // player->self ; Atomic Impact, 6 casts at player, leaves void zones
 }
 
 public enum TetherID : uint
 {
     CometTether = 356, // _Gen_TheTyrant->_Gen_Comet/player ; This is the tether that tanks take off comets
-    _Gen_Tether_chn_arrow01f = 57, // _Gen_TheTyrant->player ; First tether in split arena
-    _Gen_Tether_chn_tergetfix2k1 = 249, // _Gen_TheTyrant->player ; Second tether in split arena
+    ShortTether = 57, // _Gen_TheTyrant->player ; Tether is too short
+    LongTether = 249, // _Gen_TheTyrant->player ; Tether is stretched enough
 }

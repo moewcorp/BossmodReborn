@@ -10,7 +10,7 @@ sealed class AssaultEvolvedSword(BossModule module) : Components.GenericAOEs(mod
 
     // Reborn-native shapes
     private static readonly AOEShapeCross Cross = new(40f, 5f);
-    private static readonly AOEShapeCone HealerCone = new(60f, 15.Degrees());
+    private static readonly AOEShapeRect HealerCone = new(60f, 2f);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {

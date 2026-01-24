@@ -21,9 +21,4 @@ NameID = 14305u,
 SortOrder = 1,
 PlanLevel = 0)]
 
-public sealed class M11STheTyrant(WorldState ws, Actor primary)
-    : BossModule(ws, primary, new WPos(100, 100), new ArenaBoundsSquare(20), new())
-{
-    public static readonly WPos ArenaCenter = new(100, 100);
-    public static readonly ArenaBounds InitialBounds = new ArenaBoundsSquare(20);
-}
+public sealed class M11STheTyrant(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaChanges.ArenaCenter, ArenaChanges.InitialBounds);
