@@ -16,7 +16,7 @@ public enum OID : uint
     Maelstrom = 0x4AEF, // R1.000, x? ; These are the whirlwinds that spawn during ultimate trophy weapons
     _Gen_Actor0 = 0x0, // R340282346638528859811704183484516925440.000--340282346638528859811704183484516925440.000, x?, None type
     AtomicImpactVoidZones = 0x1EBF24, // R0.500, x0 (spawn during fight), EventObj type 
-
+    HeartBreakTowerObj = 0x1EBF23, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint
@@ -82,9 +82,9 @@ public enum AID : uint
     TripleTyrannhilation1 = 46139, // 4AEC->self, no cast, single-target
     _Spell_Charybdis = 46118, // 233C->player, no cast, single-target
     TripleTyrannhilation2 = 46140, // 4AEC->self, 7.0+1.0s cast, single-target
-    _Weaponskill_Shockwave = 46141, // 233C->self, no cast, range 60 circle
-    _Ability_1 = 46142, // 4AED->self, no cast, single-target
-    _Weaponskill_ = 46176, // 4AEC->self, no cast, single-target
+    Shockwave = 46141, // 233C->self, no cast, range 60 circle ; Three burst attack from Triple Tyrannhilation, LOS with comets
+    Comet_Destroyed = 46142, // 4AED->self, no cast, single-target ; When shockwave destroys a comet
+    TripleTyrannhilationEnd = 46176, // 4AEC->self, no cast, single-target ; Ending the Triple Tryannhilation
     Flatliner = 46143, // 4AEC->self, 4.0+2.0s cast, single-target
     Flatliner1 = 47760, // 233C->self, 6.0s cast, range 60 circle
     MajesticMeteor = 46144, // 4AEC->self, 5.0s cast, single-target ; summons towers
@@ -113,7 +113,17 @@ public enum AID : uint
     WeightyImpactTower = 46167, // Helper->location, 5.0s cast, range 4 circle ; DPS towers?
     _Spell_UnmitigatedExplosion2 = 46168, // Helper->self, no cast, range 60 circle ; miss tower get bleed
     MajesticMeteowrathSecond = 46169, // Helper->self, no cast, range 60 width 10 rect ; tether ID 57/249 rectangles during end
-    _Weaponskill_Rsv461701100SE2DC5B04EE2DC5B04 = 46170, // Boss->self, 6.0+1.0s cast, single-target
+    FourWayFireballStart = 46170, // Boss->self, 6.0+1.0s cast, single-target
+    FourWayFireballEnd = 46171, // Helper->self, no cast, range 60 width 6 rect
+    TwoWayFireballStart = 47037, // Boss->self, 6.0+1.0s cast, single-target
+    TwoWayFireballEnd = 47038, // Helper->self, no cast, range 60 width 6 rect
+    _Weaponskill_1 = 46172, // Boss->self, no cast, single-target
+    HeartbreakKickTower = 46173, // Boss->self, 5.0+1.0s cast, single-target
+    HeartbreakKickDamage = 46174, // Helper->self, no cast, range 4 circle
+    _Weaponskill_ToughBreak = 46177, // Helper->self, no cast, range 60 circle
+    HeartBreakKickEnd = 46175, // Boss->self, no cast, single-target
+    EnrageCast = 46178, // Boss->self, 8.0s cast, single-target
+    HeartbreakKickEnrage = 46179, // Boss->self, no cast, range 60 circle
 }
 
 public enum IconID : uint

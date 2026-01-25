@@ -8,16 +8,27 @@ sealed class RawSteelTrophyAxe(BossModule module) : Components.GenericStackSprea
         if (spell.Action.ID == (uint)AID.RawSteelTrophy1)
         {
             NumCasts++;
-            var act = Module.CastFinishAt(spell, 0.1d);
+            var activation = Module.CastFinishAt(spell, 0.1d);
             var party = Module.WorldState.Party.WithoutSlot();
             var len = party.Length;
+            var tankAssigned = false;
+
             for (var i = 0; i < len; ++i)
             {
                 var p = party[i];
-                if (p.IsDead || p.Role != Role.Tank)
-                    Spreads.Add(new(p, 6f, act));
-                else
-                    Stacks.Add(new(p, 6f, 2, 2, act));
+                if (p.IsDead)
+                    continue;
+
+                if (p.Role == Role.Tank)
+                {
+                    if (!tankAssigned)
+                    {
+                        Stacks.Add(new(p, 6f, 2, 2, activation));
+                        tankAssigned = true;
+                    }
+                    continue;
+                }
+                Spreads.Add(new(p, 6f, activation));
             }
         }
     }

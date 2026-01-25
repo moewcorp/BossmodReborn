@@ -87,6 +87,9 @@ sealed class M11STheTyrantStates : StateMachineBuilder
             .ActivateOnExit<AtomicImpact>()
             .ActivateOnExit<AtomicImpactVoidZones>()
             .ActivateOnExit<CosmicKissTowers>()
-            .ActivateOnExit<WeightyImpactTowers>();
+            .ActivateOnExit<WeightyImpactTowers>()
+            .ActivateOnExit<TwoWayFireball>()
+            .ActivateOnExit<FourWayFireball>()
+            .ActivateOnExit<HeartBreakerTower>();
     }
 }
