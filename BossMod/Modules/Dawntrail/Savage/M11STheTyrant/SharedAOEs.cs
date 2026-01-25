@@ -26,7 +26,7 @@ sealed class GreatWallOfFireExplosion(BossModule module) : Components.SimpleAOEG
 sealed class FearsomeFireball(BossModule module) : Components.LineStack(module, (uint)IconID.FearsomeFireballIcon, (uint)AID.FearsomeFireball1, 5d, 60f, 4f, 4, 6, 1, true);
 sealed class OneAndOnly(BossModule module) : Components.RaidwideCast(module, (uint)AID.OneAndOnly, "Raidwide");
 sealed class Flatliner(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Flatliner, new AOEShapeRect(30f, 5f, 30f));
-sealed class FlatlinerKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Flatliner1, 15f, true, 1, new AOEShapeCircle(5f));
+sealed class FlatlinerKB(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Flatliner1, 15f, true, 1, new AOEShapeCircle(60f));
 sealed class ArcadionAvalanche(BossModule module) :
     Components.SimpleAOEGroups(module, [(uint)AID.ArcadionAvalanche_Pick1, (uint)AID.ArcadionAvalanche_Pick2,
     (uint)AID.ArcadionAvalanche_Pick3, (uint)AID.ArcadionAvalanche_Pick4], new AOEShapeRect(40f, 20f));
@@ -69,51 +69,52 @@ sealed class MaelstromVoidZones(BossModule module) : Components.GenericAOEs(modu
 }
 sealed class MaelstromGustCones(BossModule module) : Components.GenericAOEs(module)
 {
-    // Adjust angle/range if needed
     private static readonly AOEShapeCone GustCone = new(60f, 45.Degrees());
+
+    private readonly List<Actor> _maelstroms = new(4);
+    private readonly List<AOEInstance> _aoes = new(8);
     private bool _resolved;
+
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if ((AID)spell.Action.ID == AID.PowerfulGust)
             _resolved = true;
     }
+
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_resolved)
             return default;
-        // Find all active Maelstroms
-        var maelstroms = WorldState.Actors
-            .Where(a => (OID)a.OID == OID.Maelstrom)
-            .ToList();
 
-        // Only activate once all 4 are present
-        if (maelstroms.Count < 4)
+        _maelstroms.Clear();
+
+        // Gather maelstrom actors (no LINQ)
+        foreach (var a in WorldState.Actors)
+            if ((OID)a.OID == OID.Maelstrom)
+                _maelstroms.Add(a);
+
+        if (_maelstroms.Count < 4)
             return default;
 
-        var players = WorldState.Party.WithoutSlot()
-            .Where(p => !p.IsDead)
-            .ToList();
+        _aoes.Clear();
 
-        if (players.Count == 0)
-            return default;
-
-        var aoes = new List<AOEInstance>();
-
-        foreach (var m in maelstroms)
+        // For each maelstrom, find two closest players
+        foreach (var m in _maelstroms)
         {
-            // Find the two closest players to this Maelstrom
-            var targets = players
-                .OrderBy(p => (p.Position - m.Position).LengthSq())
-                .Take(2);
+            var found = 0;
 
-            foreach (var t in targets)
+            foreach (var p in Raid.WithoutSlot(false, true, true)
+                                  .SortedByRange(m.Position))
             {
-                var dir = Angle.FromDirection(t.Position - m.Position);
-                aoes.Add(new AOEInstance(GustCone, m.Position, dir));
+                var dir = Angle.FromDirection(p.Position - m.Position);
+                _aoes.Add(new AOEInstance(GustCone, m.Position, dir));
+
+                if (++found == 2)
+                    break;
             }
         }
 
-        return aoes.ToArray();
+        return CollectionsMarshal.AsSpan(_aoes);
     }
 }
 sealed class AtomicImpactVoidZones(BossModule module) :
