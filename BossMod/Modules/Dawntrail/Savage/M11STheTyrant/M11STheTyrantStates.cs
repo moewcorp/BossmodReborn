@@ -1,5 +1,3 @@
-using TerraFX.Interop.Windows;
-
 namespace BossMod.Dawntrail.Savage.M11STheTyrant;
 
 sealed class M11STheTyrantStates : StateMachineBuilder
