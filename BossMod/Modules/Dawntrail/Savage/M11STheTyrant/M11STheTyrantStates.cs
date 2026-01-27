@@ -1,3 +1,5 @@
+using TerraFX.Interop.Windows;
+
 namespace BossMod.Dawntrail.Savage.M11STheTyrant;
 
 sealed class M11STheTyrantStates : StateMachineBuilder
@@ -12,14 +14,14 @@ sealed class M11STheTyrantStates : StateMachineBuilder
     {
         CrownOfArcadia(id, 5.18f, 5.01f, 1);
         Flatliner(id + 0x10, 460f, 6f);
-        SimpleState(id + 0x20, 1000f, "Final Phase");
+        SplitArena(id + 0x20, 300f);
+        SimpleState(id + 0x30, 1000f, "Final Phase");
     }
     private void CrownOfArcadia(uint id, float delay, float cast, int seq)
     {
         Cast(id, (uint)AID.CrownOfArcadia, 0, 5f, "Crown of Arcadia")
             .SetHint(StateMachine.StateHint.Raidwide)
             .ActivateOnEnter<CrownOfArcadia>()
-            .ActivateOnExit<CrownOfArcadia>()
             .ActivateOnExit<RawSteelTrophyAxe>()
             .ActivateOnExit<RawSteelTrophyScythe>()
             .ActivateOnExit<AssaultWeaponTimeline>()
@@ -69,7 +71,6 @@ sealed class M11STheTyrantStates : StateMachineBuilder
             .DeactivateOnExit<TripleTyrannhilation>()
             .DeactivateOnExit<Flatliner>()
             .DeactivateOnExit<FlatlinerKB>()
-            .ActivateOnExit<CrownOfArcadia>()
             .ActivateOnExit<GreatWallOfFire>()
             .ActivateOnExit<GreatWallOfFireExplosion>()
             .ActivateOnExit<OrbitalOmen>()
@@ -86,6 +87,33 @@ sealed class M11STheTyrantStates : StateMachineBuilder
             .ActivateOnExit<ArcadionAvalanche>()
             .ActivateOnExit<ArcadionAvalancheSmash>()
             .ActivateOnExit<MajesticMeteorStorm>()
+            .ActivateOnExit<MammothMeteor>()
+            .ActivateOnExit<AtomicImpact>()
+            .ActivateOnExit<AtomicImpactVoidZones>()
+            .ActivateOnExit<CosmicKissTowers>()
+            .ActivateOnExit<WeightyImpactTowers>()
+            .ActivateOnExit<TwoWayFireball>()
+            .ActivateOnExit<FourWayFireball>()
+            .ActivateOnExit<HeartBreakerTower>();
+    }
+    private void SplitArena(uint id, float delay)
+    {
+        Condition(id, delay, () => Module.PrimaryActor.CastInfo?.Action.ID == (uint)AID.EclipticStampede, "Ecliptic Stampede", delay, 0)
+            .DeactivateOnExit<FireBreath>()
+            .DeactivateOnExit<MeteorainPortals>()
+            .DeactivateOnExit<MeteorMechanicHints>()
+            .DeactivateOnExit<ArcadionAvalanche>()
+            .DeactivateOnExit<ArcadionAvalancheSmash>()
+            .DeactivateOnExit<ExplosionTowers>()
+            .DeactivateOnExit<ExplosionTowerKnockback>()
+            .ActivateOnExit<CrownOfArcadia>()
+            .ActivateOnExit<GreatWallOfFire>()
+            .ActivateOnExit<GreatWallOfFireExplosion>()
+            .ActivateOnExit<OrbitalOmen>()
+            .ActivateOnExit<FireAndFury>()
+            .ActivateOnExit<Tether1>()
+            .ActivateOnExit<Tether2>()
+            .ActivateOnExit<MassiveMeteor>()
             .ActivateOnExit<MammothMeteor>()
             .ActivateOnExit<AtomicImpact>()
             .ActivateOnExit<AtomicImpactVoidZones>()
