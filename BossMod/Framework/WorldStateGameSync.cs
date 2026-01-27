@@ -86,6 +86,9 @@ sealed class WorldStateGameSync : IDisposable
     private unsafe delegate void InventoryAckDelegate(uint a1, void* a2);
     private readonly Hook<InventoryAckDelegate> _inventoryAckHook;
 
+    private unsafe delegate void ProcessPacketPlayActionTimelineSync(Network.ServerIPC.PlayActionTimelineSync* data);
+    private readonly Hook<ProcessPacketPlayActionTimelineSync> _processPlayActionTimelineSyncHook;
+
     public unsafe WorldStateGameSync(WorldState ws, ActionManagerEx amex)
     {
         _ws = ws;
@@ -170,10 +173,15 @@ sealed class WorldStateGameSync : IDisposable
         _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7", InventoryAckDetour);
         _inventoryAckHook.Enable();
         Service.Log($"[WSG] InventoryAck address = {_inventoryAckHook.Address:X}");
+
+        _processPlayActionTimelineSyncHook = Service.Hook.HookFromSignature<ProcessPacketPlayActionTimelineSync>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ?? 48 8B D7 45 33 C0 E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ??", ProcessPlayActionTimelineSyncDetour);
+        _processPlayActionTimelineSyncHook.Enable();
+        Service.Log($"[WSG] ProcessPlayActionTimelineSync address = {_processPlayActionTimelineSyncHook.Address:X}");
     }
 
     public void Dispose()
     {
+        _processPlayActionTimelineSyncHook.Dispose();
         _inventoryAckHook.Dispose();
         _processMapEffect1Hook.Dispose();
         _processMapEffect2Hook.Dispose();
@@ -1141,5 +1149,30 @@ sealed class WorldStateGameSync : IDisposable
     {
         _inventoryAckHook.Original(a1, a2);
         _needInventoryUpdate = true;
+    }
+
+    private unsafe void ProcessPlayActionTimelineSyncDetour(Network.ServerIPC.PlayActionTimelineSync* data)
+    {
+        _processPlayActionTimelineSyncHook.Original(data);
+        List<(ulong, ushort)> actions = [];
+
+        uint owner = default;
+        for (var i = 0; i < 10; ++i)
+        {
+            var id = data->EntityIds[i];
+            if (id == 0xE0000000)
+            {
+                break;
+            }
+            if (owner == default)
+            {
+                owner = id;
+            }
+
+            actions.Add((id, data->TimelineIds[i]));
+        }
+
+        if (owner > 0)
+            _actorOps.GetOrAdd(owner).Add(new ActorState.OpPlayActionTimelineSync(owner, actions));
     }
 }
