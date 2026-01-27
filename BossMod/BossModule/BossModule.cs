@@ -822,8 +822,9 @@ public abstract class BossModule : IDisposable
 
     private void OnActorPlayActionTimelineSync(Actor actor, List<(ulong, ushort)> events)
     {
-        foreach (var comp in _components)
-            comp.OnActorPlayActionTimelineSync(actor, events);
+        var count = Components.Count;
+        for (var i = 0; i < count; ++i)
+            Components[i].OnActorPlayActionTimelineSync(actor, events);
     }
 
     private void OnActorNpcYell(Actor actor, ushort id)

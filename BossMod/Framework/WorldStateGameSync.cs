@@ -1156,14 +1156,18 @@ sealed class WorldStateGameSync : IDisposable
         _processPlayActionTimelineSyncHook.Original(data);
         List<(ulong, ushort)> actions = [];
 
-        uint owner = 0;
-        for (var i = 0; i < 10; i++)
+        uint owner = default;
+        for (var i = 0; i < 10; ++i)
         {
             var id = data->EntityIds[i];
             if (id == 0xE0000000)
+            {
                 break;
-            if (owner == 0)
+            }
+            if (owner == default)
+            {
                 owner = id;
+            }
 
             actions.Add((id, data->TimelineIds[i]));
         }

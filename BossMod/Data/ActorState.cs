@@ -887,14 +887,20 @@ public sealed class ActorState : IEnumerable<Actor>
     }
 
     public Event<Actor, List<(ulong, ushort)>> PlayActionTimelineSync = new();
-    public sealed record class OpPlayActionTimelineSync(ulong InstanceID, List<(ulong, ushort)> Actions) : Operation(InstanceID)
+    public sealed class OpPlayActionTimelineSync(ulong instanceID, List<(ulong, ushort)> actions) : Operation(instanceID)
     {
+        public readonly List<(ulong, ushort)> Actions = actions;
+
         protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.PlayActionTimelineSync.Fire(actor, Actions);
         public override void Write(ReplayRecorder.Output output)
         {
             output.EmitFourCC("PATS"u8).EmitActor(InstanceID).Emit(Actions.Count);
-            foreach (var (actor, id) in Actions)
-                output.EmitActor(actor).Emit(id, "X4");
+            var count = Actions.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var a = Actions[i];
+                output.EmitActor(a.Item1).Emit(a.Item2, "X4");
+            }
         }
     }
 
