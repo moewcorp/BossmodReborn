@@ -1,9 +1,4 @@
-﻿
-using BossMod.Stormblood.Foray.Pyros;
-using TerraFX.Interop.Windows;
-using static BossMod.Shadowbringers.Foray.DelubrumReginae.DRS6TrinityAvowed.AllegiantArsenal;
-
-namespace BossMod.Dawntrail.Savage.M10STheXtremes;
+﻿namespace BossMod.Dawntrail.Savage.M10STheXtremes;
 
 sealed class SickestTakeOff(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SickestTakeOff, new AOEShapeRect(50f, 7.5f));
 sealed class SickSwell1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.SickSwell1, 10f, kind: Kind.DirForward);
