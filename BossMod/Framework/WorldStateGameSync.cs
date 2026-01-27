@@ -53,6 +53,7 @@ sealed class WorldStateGameSync : IDisposable
     private readonly Hook<ProcessPacketEffectResultDelegate> _processPacketEffectResultHook;
     private readonly Hook<ProcessPacketEffectResultDelegate> _processPacketEffectResultBasicHook;
 
+    // FIXME: use the CS version instead of manually hooking once it's released
     private delegate void ProcessPacketActorControlDelegate(uint actorID, uint category, uint p1, uint p2, uint p3, uint p4, uint p5, uint p6, uint p7, uint p8, ulong targetID, byte replaying);
     private readonly Hook<ProcessPacketActorControlDelegate> _processPacketActorControlHook;
 
@@ -170,7 +171,18 @@ sealed class WorldStateGameSync : IDisposable
         _processLegacyMapEffectHook.Enable();
         Service.Log($"[WSG] LegacyMapEffect address = {_processLegacyMapEffectHook.Address:X}");
 
+<<<<<<< HEAD
         _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7", InventoryAckDetour);
+=======
+        _applyKnockbackHook = Service.Hook.HookFromSignature<ApplyKnockbackDelegate>("E8 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? FF C6", ApplyKnockbackDetour);
+        //if (Service.IsDev)
+        //{
+        //    _applyKnockbackHook.Enable();
+        //    Service.Log($"[WSG] ApplyKnockback address = {_applyKnockbackHook.Address:X}");
+        //}
+
+        _inventoryAckHook = Service.Hook.HookFromSignature<InventoryAckDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10 41 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7", InventoryAckDetour);
+>>>>>>> merge
         _inventoryAckHook.Enable();
         Service.Log($"[WSG] InventoryAck address = {_inventoryAckHook.Address:X}");
 
