@@ -1,6 +1,4 @@
-﻿using static BossMod.Dawntrail.Extreme.Ex3QueenEternal.RadicalShift;
-
-namespace BossMod.Dawntrail.Savage.M09SVampFatale;
+﻿namespace BossMod.Dawntrail.Savage.M09SVampFatale;
 
 sealed class BlastBeat(BossModule module) : Components.GenericAOEs(module)
 {
