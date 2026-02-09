@@ -195,6 +195,7 @@ public enum PacketID
     EorzeaTimeOffset = 439,
     EquipDisplayFlags = 452,
     NpcYell = 453,
+    FateTrade = 455,
     FateInfo = 458,
     CompletedAchievements = 463,
     LandSetInitialize = 472,
@@ -572,6 +573,7 @@ public enum ActorControlCategory : ushort
     DespawnZoneScreenMsg = 207, // from dissector
     InstanceSelectDlg = 210, // from dissector
     ActorDespawnEffect = 212, // from dissector
+    GimmickJump = 220,
     ForcedMovement = 226,
     CompanionUnlock = 253, // from dissector
     ObtainBarding = 254, // from dissector

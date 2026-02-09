@@ -84,7 +84,10 @@ sealed class WorldStateGameSync : IDisposable
     private unsafe delegate void* ProcessPacketFateInfoDelegate(ulong fateId, long startTimestamp, ulong durationSecs);
     private readonly Hook<ProcessPacketFateInfoDelegate> _processPacketFateInfoHook;
 
-    private unsafe delegate void InventoryAckDelegate(uint a1, void* a2);
+    private unsafe delegate void ProcessPacketFateTradeDelegate(void* a1, ulong a2);
+    private readonly Hook<ProcessPacketFateTradeDelegate> _processPacketFateTradeHook;
+
+    private unsafe delegate void InventoryAckDelegate(InventoryManager* mgr, uint a1, void* a2);
     private readonly Hook<InventoryAckDelegate> _inventoryAckHook;
 
     private unsafe delegate void ProcessPacketPlayActionTimelineSync(Network.ServerIPC.PlayActionTimelineSync* data);
@@ -163,6 +166,10 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketFateInfoHook.Enable();
         Service.Log($"[WSG] ProcessPacketFateInfo address = 0x{_processPacketFateInfoHook.Address:X}");
 
+        _processPacketFateTradeHook = Service.Hook.HookFromSignature<ProcessPacketFateTradeDelegate>("48 89 5C 24 ?? 57 48 83 EC 20 48 8B DA 0F B7 F9", ProcessPacketFateTradeDetour);
+        _processPacketFateTradeHook.Enable();
+        Service.Log($"[WSG] ProcessPacketFateTrade address = 0x{_processPacketFateTradeHook.Address:X}");
+
         _calculateMoveSpeedMulti = (delegate* unmanaged<ContainerInterface*, float>)Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 44 0F 28 D8 45 0F 57 D2");
         Service.Log($"[WSG] CalculateMovementSpeedMultiplier address = 0x{(nint)_calculateMoveSpeedMulti:X}");
 
@@ -196,6 +203,7 @@ sealed class WorldStateGameSync : IDisposable
         _processPacketRSVDataHook.Dispose();
         _processSystemLogMessageHook.Dispose();
         _processPacketOpenTreasureHook.Dispose();
+        _processPacketFateTradeHook.Dispose();
         _processPacketFateInfoHook.Dispose();
         _subscriptions.Dispose();
         _netConfig.Dispose();
@@ -819,7 +827,7 @@ sealed class WorldStateGameSync : IDisposable
         {
             if (itemId == default)
                 return;
-            if (count != _ws.Client.GetItemQuantity(itemId))
+            if (count != _ws.Client.GetInventoryItemQuantity(itemId))
                 _ws.Execute(new ClientState.OpInventoryChange(itemId, count));
         }
 
@@ -835,14 +843,22 @@ sealed class WorldStateGameSync : IDisposable
 
             // update all key items (smaller set)
             var ic = im->GetInventoryContainer(InventoryType.KeyItems);
+            var heldKeyItems = _ws.Client.Inventory.Keys.Where(i => i > 2000000).ToHashSet();
             if (ic->IsLoaded)
             {
                 for (var i = 0; i < ic->Size; i++)
                 {
                     var keyItem = ic->GetInventorySlot(i);
                     if (keyItem != null)
-                        updateQuantity(keyItem->GetItemId(), keyItem->GetQuantity());
+                    {
+                        var iid = keyItem->GetItemId();
+                        heldKeyItems.Remove(iid);
+                        updateQuantity(iid, keyItem->GetQuantity());
+                    }
                 }
+                // delete items that disappeared from the inventory (e.g. after fate handin)
+                foreach (var remaining in heldKeyItems)
+                    updateQuantity(remaining, 0);
             }
             _needInventoryUpdate = false;
         }
@@ -1107,6 +1123,12 @@ sealed class WorldStateGameSync : IDisposable
         return res;
     }
 
+    private unsafe void ProcessPacketFateTradeDetour(void* a1, ulong a2)
+    {
+        _processPacketFateTradeHook.Original(a1, a2);
+        _needInventoryUpdate = true;
+    }
+
     private unsafe void ProcessMapEffect1Detour(ContentDirector* director, byte* packet)
     {
         _processMapEffect1Hook.Original(director, packet);
@@ -1140,15 +1162,13 @@ sealed class WorldStateGameSync : IDisposable
     private unsafe byte ProcessLegacyMapEffectDetour(EventFramework* fwk, EventId eventId, byte seq, byte unk, void* data, ulong length)
     {
         var res = _processLegacyMapEffectHook.Original(fwk, eventId, seq, unk, data, length);
-
         _globalOps.Add(new WorldState.OpLegacyMapEffect(seq, unk, new Span<byte>(data, (int)length).ToArray()));
-
         return res;
     }
 
-    private unsafe void InventoryAckDetour(uint a1, void* a2)
+    private unsafe void InventoryAckDetour(InventoryManager* mgr, uint a1, void* a2)
     {
-        _inventoryAckHook.Original(a1, a2);
+        _inventoryAckHook.Original(mgr, a1, a2);
         _needInventoryUpdate = true;
     }
 
