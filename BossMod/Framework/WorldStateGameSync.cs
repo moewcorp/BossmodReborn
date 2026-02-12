@@ -87,7 +87,7 @@ sealed class WorldStateGameSync : IDisposable
     private unsafe delegate void ProcessPacketFateTradeDelegate(void* a1, ulong a2);
     private readonly Hook<ProcessPacketFateTradeDelegate> _processPacketFateTradeHook;
 
-    private unsafe delegate void InventoryAckDelegate(InventoryManager* mgr, uint a1, void* a2);
+    private unsafe delegate void InventoryAckDelegate(uint a1, void* a2);
     private readonly Hook<InventoryAckDelegate> _inventoryAckHook;
 
     private unsafe delegate void ProcessPacketPlayActionTimelineSync(Network.ServerIPC.PlayActionTimelineSync* data);
@@ -1166,9 +1166,9 @@ sealed class WorldStateGameSync : IDisposable
         return res;
     }
 
-    private unsafe void InventoryAckDetour(InventoryManager* mgr, uint a1, void* a2)
+    private unsafe void InventoryAckDetour(uint a1, void* a2)
     {
-        _inventoryAckHook.Original(mgr, a1, a2);
+        _inventoryAckHook.Original(a1, a2);
         _needInventoryUpdate = true;
     }
 
