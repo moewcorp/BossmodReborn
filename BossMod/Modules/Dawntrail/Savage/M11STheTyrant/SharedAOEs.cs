@@ -1,3 +1,4 @@
+#pragma warning disable IDE0028
 namespace BossMod.Dawntrail.Savage.M11STheTyrant;
 
 sealed class Cometite : Components.SimpleAOEs
@@ -74,7 +75,7 @@ sealed class MaelstromGustCones(BossModule module) : Components.GenericAOEs(modu
 
     private readonly List<Actor> _maelstroms = new(4);
     private readonly List<AOEInstance> _aoes = new(8);
-    private bool _resolved;
+    public bool _resolved;
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
