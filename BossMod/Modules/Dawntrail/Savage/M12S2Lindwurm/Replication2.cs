@@ -6,18 +6,6 @@ class Replication2Staging(BossModule module)
     readonly M12S2LindwurmConfig _config = Service.Config.Get<M12S2LindwurmConfig>();
     readonly List<WurmClone> _sortedClones = [];
 
-    /*
-    protected override Replication2Role? DeterminePlayerRole(PlayerClone c)
-    {
-        if (!_config.Rep2Assignments.IsValid())
-            return null;
-
-        var relNorth = _config.Rep2Assignments.RelativeNorth;
-        var angleAdj = (c.Position - relNorth.Angle + 180.Degrees()).Normalized();
-
-        return _config.Rep2Assignments[Clockspot.GetClosest(angleAdj)];
-    }
-*/
     protected override Replication2Role? DeterminePlayerRole(PlayerClone c)
     {
         var eff = _config.GetReplication2();
@@ -32,7 +20,6 @@ class Replication2Staging(BossModule module)
         if (w.Shape == CloneShape.Boss)
             return Replication2Role.Boss;
 
-        //var northAngle = _config.Rep2Assignments.RelativeNorth.Angle;
         var northAngle = _config.GetReplication2().RelativeNorth.Angle;
 
         _sortedClones.Clear();

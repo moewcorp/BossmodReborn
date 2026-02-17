@@ -131,29 +131,6 @@ class Replication1SecondBait(BossModule module) : BossComponent(module)
             hints.Add($"Assignment: {assignment}", false);
     }
 
-    /*
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (_numFire >= 1 && _numDark >= 2)
-            return;
-
-        switch ((AID)spell.Action.ID)
-        {
-            case AID.TopTierSlamCast:
-                Clones.Add(new(caster, Assignment.Fire));
-                break;
-
-            case AID.MightyMagicCast:
-                Clones.Add(new(caster, Assignment.Dark));
-                break;
-
-            case AID.WingedScourgeCastVertical:
-            case AID.WingedScourgeCastHorizontal:
-                Clones.Add(new(caster, Assignment.None));
-                break;
-        }
-    }
-    */
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (_numFire >= 1 && _numDark >= 2)
