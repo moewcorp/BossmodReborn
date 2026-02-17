@@ -1,36 +1,41 @@
-//using Dalamud.Bindings.ImGui;
-//using Dalamud.Interface.Utility.Raii;
-
 namespace BossMod.Dawntrail.Savage.M12S2Lindwurm;
-//[ConfigDisplay(Parent = typeof(DawntrailConfig), Order = -1)]
+
 [ConfigDisplay(Order = 0x160, Parent = typeof(DawntrailConfig))]
 public sealed class M12S2LindwurmConfig : ConfigNode
 {
+    // ============================================================
+    // Replication 1 — Strategy Selection
+    // ============================================================
+
+    [PropertyDisplay("Replication 1 strategy")]
+    public Replication1Strategy Rep1Strategy = Replication1Strategy.CloneRelative;
+
+    public Replication1Effective GetReplication1()
+        => new(Rep1Strategy);
+
+    public enum Replication1Strategy
+    {
+        [PropertyDisplay("Clone Relative")]
+        CloneRelative,
+
+        [PropertyDisplay("DN")]
+        DN
+    }
+
+    public readonly struct Replication1Effective(Replication1Strategy strat)
+    {
+        public Replication1Strategy Strategy { get; } = strat;
+
+        public bool IsCloneRelative => Strategy == Replication1Strategy.CloneRelative;
+        public bool IsDN => Strategy == Replication1Strategy.DN;
+    }
+
     // ============================================================
     // Replication 2 — Strategy Selection
     // ============================================================
 
     [PropertyDisplay("Replication 2 strategy")]
     public Replication2Strategy Rep2Strategy = Replication2Strategy.DN;
-
-    // Custom overrides (used only if Strategy == Custom)
-
-    [PropertyDisplay("Replication 2: relative north (tether priority reference)")]
-    public Clockspot Rep2RelativeNorth = Clockspot.N;
-
-    [PropertyDisplay("Replication 2: clockspot → mechanic roles")]
-    [GroupDetails(["N", "NE", "E", "SE", "S", "SW", "W", "NW"])]
-    public Replication2Role[] Rep2Roles =
-    [
-        Replication2Role.Boss,
-        Replication2Role.Cone1,
-        Replication2Role.Stack1,
-        Replication2Role.Defam1,
-        Replication2Role.None,
-        Replication2Role.Defam2,
-        Replication2Role.Stack2,
-        Replication2Role.Cone2
-    ];
 
     // ============================================================
     // Replication 3 — Idyllic Dream
@@ -60,7 +65,6 @@ public sealed class M12S2LindwurmConfig : ConfigNode
         {
             Replication2Strategy.DN => Replication2Effective.FromPreset(Replication2Presets.DN),
             Replication2Strategy.BananaCodex => Replication2Effective.FromPreset(Replication2Presets.BC),
-            Replication2Strategy.Custom => new Replication2Effective(Rep2RelativeNorth, Rep2Roles),
             _ => Replication2Effective.FromPreset(Replication2Presets.DN)
         };
     }
@@ -81,10 +85,7 @@ public enum Replication2Strategy
     DN,
 
     [PropertyDisplay("Banana Codex (west = north)")]
-    BananaCodex,
-
-    [PropertyDisplay("Custom")]
-    Custom
+    BananaCodex
 }
 
 //
@@ -266,6 +267,10 @@ public static class WurmExtensions
         public bool IsCone => r is Replication2Role.Cone1 or Replication2Role.Cone2;
     }
 }
+
+//using Dalamud.Bindings.ImGui;
+//using Dalamud.Interface.Utility.Raii;
+//[ConfigDisplay(Parent = typeof(DawntrailConfig), Order = -1)]
 
 /*
 public class M12S2LindwurmConfig : ConfigNode

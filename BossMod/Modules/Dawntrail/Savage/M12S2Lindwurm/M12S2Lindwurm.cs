@@ -22,4 +22,4 @@ GroupID = 1075,
 NameID = 14379,
 SortOrder = 1,
 PlanLevel = 100)]
-public class RM12S2TheLindwurm(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));
+public class M12S2TheLindwurm(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));

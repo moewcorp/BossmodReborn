@@ -116,6 +116,8 @@ class Replication1SecondBait(BossModule module) : BossComponent(module)
 
     public record struct Clone(Actor Actor, Assignment Element);
     public readonly List<Clone> Clones = [];
+    public record struct FinalClone(Actor Actor, WPos Position, Assignment Element);
+    public readonly List<FinalClone> FinalClones = [];
 
     int _numFire;
     int _numDark;
@@ -129,6 +131,7 @@ class Replication1SecondBait(BossModule module) : BossComponent(module)
             hints.Add($"Assignment: {assignment}", false);
     }
 
+    /*
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (_numFire >= 1 && _numDark >= 2)
@@ -150,7 +153,34 @@ class Replication1SecondBait(BossModule module) : BossComponent(module)
                 break;
         }
     }
+    */
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (_numFire >= 1 && _numDark >= 2)
+            return;
 
+        switch ((AID)spell.Action.ID)
+        {
+            case AID.TopTierSlamCast:
+            case AID.MightyMagicCast:
+                {
+                    if (Clones.Count == 0)
+                        FinalClones.Clear();
+
+                    var element = spell.Action.ID == (uint)AID.TopTierSlamCast
+                        ? Assignment.Fire
+                        : Assignment.Dark;
+
+                    Clones.Add(new(caster, element));
+                    break;
+                }
+
+            case AID.WingedScourgeCastVertical:
+            case AID.WingedScourgeCastHorizontal:
+                Clones.Add(new(caster, Assignment.None));
+                break;
+        }
+    }
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         switch ((AID)spell.Action.ID)
@@ -166,8 +196,24 @@ class Replication1SecondBait(BossModule module) : BossComponent(module)
                 break;
 
             case AID.Dash:
-                _highlightClone = true;
-                break;
+                {
+                    _highlightClone = true;
+
+                    var clones = CollectionsMarshal.AsSpan(Clones);
+
+                    for (var i = 0; i < clones.Length; ++i)
+                    {
+                        ref var clone = ref clones[i];
+
+                        if (clone.Actor == caster && clone.Element != Assignment.None)
+                        {
+                            // Record authoritative final position
+                            FinalClones.Add(new(caster, spell.TargetXZ, clone.Element));
+                            break;
+                        }
+                    }
+                    break;
+                }
         }
     }
 
@@ -567,5 +613,370 @@ sealed class EsotericFinisher : Components.GenericBaitAway
             ++NumCasts;
             CurrentBaits.Clear();
         }
+    }
+}
+
+sealed class Replication1CloneRelativeGuidance : BossComponent
+{
+    const float InitialRadius = 7.5f;
+    const float PairOffset = 2.25f;
+    const float FireCenterOffset = 1.5f;
+    const float NearDarkOffset = 1.0f;
+
+    readonly Replication1SecondBait _bait;
+    readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
+    readonly PartyRolesConfig.Assignment[] _assignments;
+    readonly M12S2LindwurmConfig.Replication1Effective _rep1;
+
+    WPos Center => Module.Center;
+
+    // ------------------------------------------------------------
+    // FIXED CARDINAL MARKERS
+    // ------------------------------------------------------------
+
+    static readonly WPos[] Outer =
+    [
+        new(100, 86),  // 0 N
+        new(114, 100), // 1 E
+        new(100, 114), // 2 S
+        new(86, 100)   // 3 W
+    ];
+
+    static readonly WPos[] Inner =
+    [
+        new(100, 92),
+        new(108, 100),
+        new(100, 108),
+        new(92, 100)
+    ];
+
+    // DN selection orders (no stackalloc)
+    static readonly int[] OrderNESW = [0, 1, 2, 3];
+    static readonly int[] OrderWSEN = [3, 2, 1, 0];
+
+    public Replication1CloneRelativeGuidance(BossModule module) : base(module)
+    {
+        _bait = module.FindComponent<Replication1SecondBait>()!;
+        _assignments = _prc.AssignmentsPerSlot(Module.WorldState.Party);
+        _rep1 = Service.Config.Get<M12S2LindwurmConfig>().GetReplication1();
+    }
+
+    // ------------------------------------------------------------
+    // STATUS → BAIT TYPE
+    // ------------------------------------------------------------
+
+    Replication1SecondBait.Assignment BaitType(Actor actor)
+    {
+        if (actor.FindStatus(SID.DarkResistanceDownII, DateTime.MinValue) != null)
+            return Replication1SecondBait.Assignment.Fire;
+
+        if (actor.FindStatus(SID.FireResistanceDownII, DateTime.MinValue) != null)
+            return Replication1SecondBait.Assignment.Dark;
+
+        return Replication1SecondBait.Assignment.Dark;
+    }
+
+    // ------------------------------------------------------------
+    // INITIAL POSITIONS
+    // ------------------------------------------------------------
+
+    WPos InitialPosition(PartyRolesConfig.Assignment a)
+    {
+        var quadrant = a switch
+        {
+            PartyRolesConfig.Assignment.H1 or PartyRolesConfig.Assignment.R1 => 0,
+            PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.MT => 1,
+            PartyRolesConfig.Assignment.H2 or PartyRolesConfig.Assignment.R2 => 2,
+            PartyRolesConfig.Assignment.OT or PartyRolesConfig.Assignment.M2 => 3,
+            _ => 0
+        };
+
+        var angle = quadrant switch
+        {
+            0 => -135.Degrees(),
+            1 => 135.Degrees(),
+            2 => 45.Degrees(),
+            3 => -45.Degrees(),
+            _ => default
+        };
+
+        var center = Center;
+        var anchor = center + InitialRadius * angle.ToDirection();
+
+        var dir = (anchor - center).Normalized();
+        var perp = new WDir(-dir.Z, dir.X);
+
+        float sign = a switch
+        {
+            PartyRolesConfig.Assignment.H1 or
+            PartyRolesConfig.Assignment.M1 or
+            PartyRolesConfig.Assignment.OT or
+            PartyRolesConfig.Assignment.H2 => +1,
+            _ => -1
+        };
+
+        return anchor + sign * PairOffset * perp;
+    }
+
+    // ------------------------------------------------------------
+    // FORMATION FROM FINAL CLONES
+    // ------------------------------------------------------------
+
+    bool TryGetFormation(
+        out WPos nearFire, out WPos farFire,
+        out WPos nearDark, out WPos farDark)
+    {
+        nearFire = farFire = nearDark = farDark = default;
+
+        var list = _bait.FinalClones;
+        if (list.Count != 4)
+            return false;
+
+        var span = CollectionsMarshal.AsSpan(list);
+        var center = Center;
+
+        WPos f0 = default, f1 = default;
+        WPos d0 = default, d1 = default;
+        int nf = 0, nd = 0;
+
+        for (var i = 0; i < span.Length; ++i)
+        {
+            ref readonly var c = ref span[i];
+
+            if (c.Element == Replication1SecondBait.Assignment.Fire)
+            {
+                if (nf == 0)
+                    f0 = c.Position;
+                else
+                    f1 = c.Position;
+                ++nf;
+            }
+            else if (c.Element == Replication1SecondBait.Assignment.Dark)
+            {
+                if (nd == 0)
+                    d0 = c.Position;
+                else
+                    d1 = c.Position;
+                ++nd;
+            }
+        }
+
+        if (nf != 2 || nd != 2)
+            return false;
+
+        nearFire = (f0 - center).LengthSq() < (f1 - center).LengthSq() ? f0 : f1;
+        farFire = nearFire.Equals(f0) ? f1 : f0;
+
+        nearDark = (d0 - center).LengthSq() < (d1 - center).LengthSq() ? d0 : d1;
+        farDark = nearDark.Equals(d0) ? d1 : d0;
+
+        return true;
+    }
+
+    // ------------------------------------------------------------
+    // INNER DARK OFFSET
+    // ------------------------------------------------------------
+
+    WPos CornerOffset(int idx, WPos marker, WPos clone)
+    {
+        var x = marker.X;
+        var z = marker.Z;
+        var center = Center;
+
+        switch (idx)
+        {
+            case 0:
+            case 2:
+                z += (center.Z - marker.Z > 0 ? NearDarkOffset : -NearDarkOffset);
+                x += (marker.X - clone.X > 0 ? NearDarkOffset : -NearDarkOffset);
+                break;
+
+            case 1:
+            case 3:
+                x += center.X - marker.X > 0 ? NearDarkOffset : -NearDarkOffset;
+                z += marker.Z - clone.Z > 0 ? NearDarkOffset : -NearDarkOffset;
+                break;
+        }
+
+        return new WPos(x, z);
+    }
+
+    // ------------------------------------------------------------
+    // QUADRANT → FLANK CARDINALS
+    // ------------------------------------------------------------
+
+    void FlankingCardinals(WPos pos, out int cw, out int ccw)
+    {
+        var v = pos - Center;
+
+        if (v.X >= 0)
+        {
+            if (v.Z < 0)
+            {
+                cw = 1;
+                ccw = 0;
+            } // NE → E, N
+            else
+            {
+                cw = 2;
+                ccw = 1;
+            } // SE → S, E
+        }
+        else
+        {
+            if (v.Z >= 0)
+            {
+                cw = 3;
+                ccw = 2;
+            } // SW → W, S
+            else
+            {
+                cw = 0;
+                ccw = 3;
+            } // NW → N, W
+        }
+    }
+
+    static int SelectByOrder(int a, int b, int[] order)
+    {
+        for (var i = 0; i < order.Length; ++i)
+        {
+            var v = order[i];
+            if (v == a || v == b)
+                return v;
+        }
+        return a;
+    }
+
+    // ------------------------------------------------------------
+    // FINAL POSITION
+    // ------------------------------------------------------------
+
+    WPos? FinalPosition(int slot, Actor actor)
+    {
+        if (!TryGetFormation(out var nearFire, out var farFire,
+                             out var nearDark, out var farDark))
+            return null;
+
+        var assign = _assignments[slot];
+        var mech = BaitType(actor);
+
+        var inner =
+            assign is PartyRolesConfig.Assignment.MT
+                   or PartyRolesConfig.Assignment.OT
+                   or PartyRolesConfig.Assignment.M1
+                   or PartyRolesConfig.Assignment.M2;
+
+        var support =
+            assign is PartyRolesConfig.Assignment.MT
+                   or PartyRolesConfig.Assignment.OT
+                   or PartyRolesConfig.Assignment.H1
+                   or PartyRolesConfig.Assignment.H2;
+
+        var center = Center;
+
+        // ================= FIRE =================
+
+        if (mech == Replication1SecondBait.Assignment.Fire)
+        {
+            if (inner)
+            {
+                var dir = (nearFire - center).Normalized();
+                return center + FireCenterOffset * dir;
+            }
+
+            // OUTER FIRE — candidates ALWAYS from farFire
+
+            FlankingCardinals(farFire, out var cwFire, out var ccwFire);
+
+            int target;
+
+            if (_rep1.IsDN)
+            {
+                // DN: pick first valid in N→E→S→W
+                target = SelectByOrder(cwFire, ccwFire, OrderNESW);
+            }
+            else
+            {
+                // Clone Relative: always CCW from clone
+                target = ccwFire;
+            }
+
+            return Outer[target];
+        }
+
+        // ================= DARK =================
+
+        var clonePos = inner ? nearDark : farDark;
+
+        FlankingCardinals(clonePos, out var cwDark, out var ccwDark);
+
+        int targetDark;
+
+        if (_rep1.IsDN)
+        {
+            targetDark = support
+                ? SelectByOrder(cwDark, ccwDark, OrderNESW)
+                : SelectByOrder(cwDark, ccwDark, OrderWSEN);
+        }
+        else
+        {
+            targetDark = support ? ccwDark : cwDark;
+        }
+
+        if (inner)
+        {
+            var marker = Inner[targetDark];
+            return CornerOffset(targetDark, marker, clonePos);
+        }
+
+        return Outer[targetDark];
+    }
+
+    // ------------------------------------------------------------
+    // DRAW
+    // ------------------------------------------------------------
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        if (_assignments.Length != 8)
+            return;
+
+        var pos = DebuffsAssigned()
+            ? FinalPosition(pcSlot, pc)
+            : InitialPosition(_assignments[pcSlot]);
+
+        if (pos == null)
+            return;
+
+        Arena.AddCircle(pos.Value, 1.1f, Colors.Safe);
+        Arena.AddLine(pc.Position, pos.Value, Colors.Safe);
+    }
+
+    // ------------------------------------------------------------
+    // HINTS
+    // ------------------------------------------------------------
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
+        if (!DebuffsAssigned())
+            return;
+
+        var mech = BaitType(actor);
+        hints.Add($"Bait {mech}", false);
+    }
+
+    bool DebuffsAssigned()
+    {
+        var raid = Raid.WithoutSlot();
+        for (var i = 0; i < raid.Length; ++i)
+        {
+            var p = raid[i];
+            if (p.FindStatus(SID.FireResistanceDownII, DateTime.MinValue) != null)
+                return true;
+            if (p.FindStatus(SID.DarkResistanceDownII, DateTime.MinValue) != null)
+                return true;
+        }
+        return false;
     }
 }
