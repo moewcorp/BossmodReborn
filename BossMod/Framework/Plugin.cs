@@ -1,8 +1,8 @@
 ﻿using BossMod.Autorotation;
 using Dalamud.Common;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Interface;
 using Dalamud.Game.Command;
+using Dalamud.Interface;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
@@ -59,7 +59,6 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 #endif
-        dalamud.Create<Service>();
         if (!dalamud.ConfigDirectory.Exists)
             dalamud.ConfigDirectory.Create();
         var dalamudRoot = dalamud.GetType().Assembly.
@@ -72,6 +71,7 @@ public sealed class Plugin : IDalamudPlugin
         FFXIVClientStructs.Interop.Generated.Addresses.Register();
         InteropGenerator.Runtime.Resolver.GetInstance.Resolve();
 
+        dalamud.Create<Service>();
         Service.LogHandlerDebug = msg => Service.Logger.Debug(msg);
         Service.LogHandlerVerbose = msg => Service.Logger.Verbose(msg);
         Service.LuminaGameData = dataManager.GameData;
@@ -123,7 +123,6 @@ public sealed class Plugin : IDalamudPlugin
         dalamud.UiBuilder.Draw += DrawUI;
         dalamud.UiBuilder.OpenMainUi += () => OpenConfigUI();
         dalamud.UiBuilder.OpenConfigUi += () => OpenConfigUI();
-        Service.Framework.Update += Framework_Update;
     }
 
     public void Dispose()
@@ -132,8 +131,6 @@ public sealed class Plugin : IDalamudPlugin
         if (isDev)
             return;
 #endif
-        Service.Framework.Update -= Framework_Update;
-        Service.PluginInterface.UiBuilder.Draw -= DrawUI;
         Service.Condition.ConditionChange -= OnConditionChanged;
         _wndDebug.Dispose();
         _wndRotation.Dispose();
@@ -264,11 +261,12 @@ public sealed class Plugin : IDalamudPlugin
         _ = new UISimpleWindow("BossModReborn", _configUI.Draw, true, new(300, 300));
     }
 
-    private void Framework_Update(IFramework framework)
+    private void DrawUI()
     {
         var tsStart = DateTime.Now;
         var moveImminent = _movementOverride.IsMoveRequested() && (!ActionManagerEx.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
 
+        _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
@@ -280,21 +278,16 @@ public sealed class Plugin : IDalamudPlugin
         _broadcast.Update();
         _amex.FinishActionGather();
 
-        ExecuteHints();
-        _prevUpdateTime = DateTime.Now - tsStart;
-    }
-
-    private void DrawUI()
-    {
-        _dtr.Update();
-
         var uiHidden = Service.GameGui.GameUiHidden || Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.WatchingCutscene];
         if (!uiHidden)
         {
             Service.WindowSystem?.Draw();
         }
 
+        ExecuteHints();
+
         Camera.Instance?.DrawWorldPrimitives();
+        _prevUpdateTime = DateTime.Now - tsStart;
     }
 
     private unsafe bool QuestUnlocked(uint link)
