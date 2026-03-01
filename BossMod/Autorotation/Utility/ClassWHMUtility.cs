@@ -58,7 +58,7 @@ public sealed class ClassWHMUtility(RotationModuleManager manager, Actor player)
         return res;
     }
 
-    public override void Execute(StrategyValues strategy, ref Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         ExecuteShared(strategy, IDLimitBreak3, primaryTarget);
 
@@ -106,7 +106,7 @@ public sealed class ClassWHMUtility(RotationModuleManager manager, Actor player)
         {
             var medicaHotUp = StatusDetails(Player, WHM.SID.MedicaII, Player.InstanceID).Left > 0.1f || StatusDetails(Player, WHM.SID.MedicaIII, Player.InstanceID).Left > 0.1f;
             if (!medicaHotUp)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(medicaAction), Player, medica.Priority(), medica.Value.ExpireIn, castTime: 2);
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(medicaAction), Player, medica.Priority(), medica.Value.ExpireIn, castTime: 2f);
         }
 
         var asylum = strategy.Option(Track.Asylum);
