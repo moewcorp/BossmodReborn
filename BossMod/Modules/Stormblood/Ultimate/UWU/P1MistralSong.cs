@@ -1,4 +1,6 @@
-﻿namespace BossMod.Stormblood.Ultimate.UWU;
+﻿using static BossMod.Autorotation.xan.RaiseUtil;
+
+namespace BossMod.Stormblood.Ultimate.UWU;
 
 // TODO: this assumes everyone shares the cleave, OT is front; other strategies have people avoid it
 // TODO: verify width
@@ -21,6 +23,7 @@ class P1MistralSongBoss(BossModule module) : Components.GenericWildCharge(module
 // TODO: verify width
 class P1MistralSongAdds(BossModule module) : Components.CastCounter(module, (uint)AID.MistralSongAdds)
 {
+    private readonly UWUConfig _config = Service.Config.Get<UWUConfig>();
     private readonly List<Actor> _sisters = module.Enemies((uint)OID.GarudaSister);
     private readonly List<Actor> _targets = [];
 
@@ -51,6 +54,12 @@ class P1MistralSongAdds(BossModule module) : Components.CastCounter(module, (uin
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
         Arena.Actors(_sisters, Colors.Object, true);
+        if (_config.P1MistralSongFixedLocation && pc.Role != Role.Tank)
+        {
+            var loc = new WPos(107, 107);
+            var circle = new SDCircle(loc, 2f);
+            Arena.AddCircle(loc, 2f, circle.Contains(pc.Position) ? Colors.Safe : Colors.Danger);
+        }
     }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
