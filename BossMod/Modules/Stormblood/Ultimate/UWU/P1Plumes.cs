@@ -1,6 +1,4 @@
-﻿using BossMod.Dawntrail.Trial.T02ZoraalJa;
-
-namespace BossMod.Stormblood.Ultimate.UWU;
+﻿namespace BossMod.Stormblood.Ultimate.UWU;
 
 class P1Plumes(BossModule module) : BossComponent(module)
 {

@@ -1,6 +1,4 @@
-﻿using static BossMod.Autorotation.xan.RaiseUtil;
-
-namespace BossMod.Stormblood.Ultimate.UWU;
+﻿namespace BossMod.Stormblood.Ultimate.UWU;
 
 // TODO: this assumes everyone shares the cleave, OT is front; other strategies have people avoid it
 // TODO: verify width
