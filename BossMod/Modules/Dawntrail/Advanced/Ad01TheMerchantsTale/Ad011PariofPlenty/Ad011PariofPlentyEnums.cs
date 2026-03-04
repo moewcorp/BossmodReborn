@@ -3,16 +3,16 @@ public enum OID : uint
 {
     PariOfPlenty = 0x4A6D,
     Helper = 0x233C,
-    _Gen_FlyingCarpet = 0x4A74, // R4.356, x8
-    _Gen_FieryBauble = 0x4A6F, // R6.000, x8
-    _Gen_FalseFlame = 0x4A6E, // R4.356, x4
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
-    _Gen_Actor1e8fb8 = 0x1E8FB8, // R2.000, x1, EventObj type
-    _Gen_TheMerchantsTaleAbridged = 0x1EBFAB, // R0.500, x1, EventObj type
-    _Gen_Actor1ebf49 = 0x1EBF49, // R0.500, x1, EventObj type
-    _Gen_AetherialFlow = 0x1EBFA5, // R2.000, x1, EventObj type
-    _Gen_ = 0x4A75, // R1.000, x6
-    _Gen_Actor1ebf20 = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
+    FlyingCarpet = 0x4A74, // R4.356, x8
+    FieryBauble = 0x4A6F, // R6.000, x8
+    FalseFlame = 0x4A6E, // R4.356, x4
+    Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
+    Actor1e8fb8 = 0x1E8FB8, // R2.000, x1, EventObj type
+    TheMerchantsTaleAbridged = 0x1EBFAB, // R0.500, x1, EventObj type
+    Actor1ebf49 = 0x1EBF49, // R0.500, x1, EventObj type
+    AetherialFlow = 0x1EBFA5, // R2.000, x1, EventObj type
+    Actor4A75 = 0x4A75, // R1.000, x6
+    Actor1ebf20 = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 
@@ -72,14 +72,14 @@ public enum AID : uint
 
 public enum SID : uint
 {
-    _Gen_ = 2056, // PariOfPlenty/4A6E->PariOfPlenty/4A6F/4A6E, extra=0x3D9/0x448/0x3DA
-    _Gen_VulnerabilityUp = 1789, // Helper/PariOfPlenty/4A6F->player, extra=0x1/0x2/0x3/0x4
-    _Gen_BurningChains = 769, // none->player, extra=0x0
-    _Gen_DarkResistanceDown = 3619, // Helper->player, extra=0x0
-    _Gen_CurseOfCompanionship = 4616, // none->player, extra=0x0
-    _Gen_CurseOfSolitude = 4615, // none->player, extra=0x0
-    _Gen_MagicVulnerabilityUp = 2941, // Helper->player, extra=0x0
-    _Gen_Fury = 4627, // PariOfPlenty->PariOfPlenty, extra=0x16B
+    Unknown = 2056, // PariOfPlenty/4A6E->PariOfPlenty/4A6F/4A6E, extra=0x3D9/0x448/0x3DA
+    VulnerabilityUp = 1789, // Helper/PariOfPlenty/4A6F->player, extra=0x1/0x2/0x3/0x4
+    BurningChains = 769, // none->player, extra=0x0
+    DarkResistanceDown = 3619, // Helper->player, extra=0x0
+    CurseOfCompanionship = 4616, // none->player, extra=0x0
+    CurseOfSolitude = 4615, // none->player, extra=0x0
+    MagicVulnerabilityUp = 2941, // Helper->player, extra=0x0
+    Fury = 4627, // PariOfPlenty->PariOfPlenty, extra=0x16B
 
 }
 
