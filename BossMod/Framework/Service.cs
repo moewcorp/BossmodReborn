@@ -1,4 +1,5 @@
 ﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -45,7 +46,7 @@ public sealed class Service
     public static WindowSystem? WindowSystem;
 
     // TODO: remove this and use UiBuilder.IconFont once we switch to dalamock
-    public static ImFontPtr IconFont;
+    public static ImFontPtr IconFont => UiBuilder.IconFont;
 #pragma warning restore CA2211
 
     public static readonly ConfigRoot Config = new();
