@@ -11,7 +11,7 @@ public enum OID : uint
     TheMerchantsTaleAbridged = 0x1EBFAB, // R0.500, x1, EventObj type
     Actor1ebf49 = 0x1EBF49, // R0.500, x1, EventObj type
     AetherialFlow = 0x1EBFA5, // R2.000, x1, EventObj type
-    Actor4A75 = 0x4A75, // R1.000, x6
+    CarpetTetherTarget = 0x4A75, // R1.000, x6
     Actor1ebf20 = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
 }
 

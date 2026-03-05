@@ -2,8 +2,6 @@
 
 sealed class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 
-sealed class RightFireFlight(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RightFireflight, new AOEShapeRect(40f, 2f));
-
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
 StatesType = typeof(PariOfPlentyStates),
 ConfigType = null, // replace null with typeof(PariOfPlentyConfig) if applicable
