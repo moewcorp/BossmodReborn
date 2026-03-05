@@ -298,6 +298,6 @@ Category = BossModuleInfo.Category.VariantCriterion,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1066u,
 NameID = 14291u,
-SortOrder = 1,
+SortOrder = 4,
 PlanLevel = 0)]
-public class V13DaryaTheSeamaid(WorldState ws, Actor primary) : BossModule(ws, primary, new(375, 530), new ArenaBoundsSquare(20));
+public class V13DaryaTheSeamaid(WorldState ws, Actor primary) : BossModule(ws, primary, new(375, 530), new ArenaBoundsSquare(20f));

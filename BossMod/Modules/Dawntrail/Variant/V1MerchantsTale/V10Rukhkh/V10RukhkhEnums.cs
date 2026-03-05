@@ -8,6 +8,12 @@ public enum OID : uint
     _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1 (spawn during fight), EventObj type
     SandPearl = 0x4AD6, // R1.500-4.500, x3
     Growball = 0x4ADA, // R3.400, x0 (spawn during fight)
+    _Gen_BanditMissive = 0x1EBF2E, // R0.500, x1, EventObj type
+    _Gen_FallingRock = 0x4B76, // R1.000, x2
+    LargeExplosive = 0x4AD9, // R1.000, x3
+    _Gen_Thief = 0x4C4A, // R0.500, x1
+    _Gen_Thief1 = 0x4C49, // R0.500, x1
+    _Gen_Thief2 = 0x4AD7, // R0.500, x1
 }
 
 public enum AID : uint
@@ -35,6 +41,9 @@ public enum AID : uint
     Seedsprout = 47234, // Rukhkh->self, 7.0s cast, single-target
     SyrupSpout = 45762, // 4ADA->self, 1.0s cast, range 9 circle
     StreamingSands = 45764, // Rukhkh->self, 5.0s cast, range 40 circle
+    BigBurst = 45758, // 4AD9->self, 4.0s cast, range 15 circle
+    FallingRock = 45759, // Helper->self, no cast, range 9 width 6 rect
+    BitingScratch = 45763, // Rukhkh->self, 5.0s cast, range 40 90.000-degree cone
 }
 
 public enum TetherID : uint

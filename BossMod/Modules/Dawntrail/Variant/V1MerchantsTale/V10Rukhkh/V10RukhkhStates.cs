@@ -11,6 +11,9 @@ class V10RukhkhStates : StateMachineBuilder
             .ActivateOnEnter<SonicHowl>()
             .ActivateOnEnter<DryTyphoon>()
             .ActivateOnEnter<WindborneSeeds>()
-            .ActivateOnEnter<StreamingSands>();
+            .ActivateOnEnter<StreamingSands>()
+            .ActivateOnEnter<BitingScratch>()
+            .ActivateOnEnter<BigBurst>()
+            .ActivateOnEnter<FallingRock>();
     }
 }

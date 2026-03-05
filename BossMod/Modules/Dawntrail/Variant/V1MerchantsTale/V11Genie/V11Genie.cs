@@ -116,11 +116,10 @@ Category = BossModuleInfo.Category.VariantCriterion,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1066u,
 NameID = 14396u,
-SortOrder = 1,
+SortOrder = 2,
 PlanLevel = 0)]
 public class V11Genie(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -700f ? ArenaCenter1 : ArenaCenter2, new ArenaBoundsSquare(17.5f))
 {
     public static readonly WPos ArenaCenter1 = new(-750, -415);
     public static readonly WPos ArenaCenter2 = new(160f, 787f);
-    public static readonly WPos ArenaCenter3 = new(0f, 0f);
 }

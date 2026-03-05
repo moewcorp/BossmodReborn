@@ -133,6 +133,54 @@ sealed class WindborneSeeds(BossModule module) : Components.GenericAOEs(module)
     }
 }
 sealed class StreamingSands(BossModule module) : Components.RaidwideCast(module, (uint)AID.StreamingSands);
+sealed class BitingScratch(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BitingScratch, new AOEShapeCone(40f, 45f.Degrees()));
+sealed class BigBurst(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> _aoes = [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+    public override void OnActorPlayActionTimelineEvent(Actor actor, ushort id)
+    {
+        if (actor.OID == (uint)OID.LargeExplosive && id == 0x1E46)
+        {
+            _aoes.Add(new(new AOEShapeCircle(13f), actor.Position));
+        }
+    }
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.BigBurst)
+        {
+            _aoes.Clear();
+        }
+    }
+}
+sealed class FallingRock(BossModule module) : Components.GenericAOEs(module)
+{
+    // map effects 0-5
+    // 00020001 indicator, 00080004 imminent
+    // eventcast happens 4 times per row (12 total), repeats in middle for some reason
+    private int _counter = 0;
+    private readonly float _initialZ = -545f;
+    private readonly List<AOEInstance> _aoes = [];
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
+    public override void OnMapEffect(byte index, uint state)
+    {
+        if (index >= 0 && index <= 5 && state == 0x00020001)
+        {
+            _aoes.Add(new(new AOEShapeRect(60f, 3f), new(25f, _initialZ + index * 6f), Angle.AnglesCardinals[0]));
+        }
+    }
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.FallingRock)
+        {
+            _counter++;
+            if (_counter >= 12)
+            {
+                _aoes.Clear();
+            }
+        }
+    }
+}
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
 StatesType = typeof(V10RukhkhStates),
@@ -151,9 +199,8 @@ GroupID = 1066u,
 NameID = 14377u,
 SortOrder = 1,
 PlanLevel = 0)]
-public class V10Rukhkh(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter1, new ArenaBoundsCircle(17.5f))
+public class V10Rukhkh(WorldState ws, Actor primary) : BossModule(ws, primary, primary.Position.X < -500f ? ArenaCenter1 : ArenaCenter2, new ArenaBoundsCircle(17.5f))
 {
     public static readonly WPos ArenaCenter1 = new(-635, -415);
-    public static readonly WPos ArenaCenter2 = new(0f, 0f);
-    public static readonly WPos ArenaCenter3 = new(0f, 0f);
+    public static readonly WPos ArenaCenter2 = new(5f, -530f);
 }

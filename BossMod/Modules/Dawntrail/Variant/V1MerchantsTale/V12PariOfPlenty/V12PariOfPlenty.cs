@@ -345,6 +345,6 @@ Category = BossModuleInfo.Category.VariantCriterion,
 GroupType = BossModuleInfo.GroupType.CFC,
 GroupID = 1066u,
 NameID = 14274u,
-SortOrder = 1,
+SortOrder = 3,
 PlanLevel = 0)]
-public class V12PariOfPlenty(WorldState ws, Actor primary) : BossModule(ws, primary, new(-760, -805), new ArenaBoundsSquare(20));
+public class V12PariOfPlenty(WorldState ws, Actor primary) : BossModule(ws, primary, new(-760, -805), new ArenaBoundsSquare(20f));
