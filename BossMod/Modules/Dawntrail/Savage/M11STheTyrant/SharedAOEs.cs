@@ -42,6 +42,10 @@ sealed class OrbitalOmen : Components.SimpleAOEs
         MaxDangerColor = 2;
     }
 }
+sealed class AtomicImpactVoidZones(BossModule module) :
+    Components.Voidzone(module, 5f, module => module.Enemies((uint)OID.AtomicImpactVoidZones).Where(z => z.EventState != 7));
+sealed class DanceOfDomination(BossModule module) : Components.RaidwideCastsDelay(module, [(uint)AID.DanceOfDominationTrophy], [(uint)AID.DanceOfDomination, (uint)AID.DanceOfDomination1, (uint)AID.DanceOfDomination2, (uint)AID.DanceOfDomination3], 6f, "Multi-hit Raidwide");
+sealed class Charybdistopia(BossModule module) : Components.CastHint(module, (uint)AID.Charybdistopia, "Set hp to 1");
 sealed class MassiveMeteor(BossModule module) : Components.StackWithIcon(module, (uint)IconID.MassiveMeteorIcon, (uint)AID.MassiveMeteorHit, 6f, 5, 4, 4, 5);
 sealed class MaelstromVoidZones(BossModule module) : Components.GenericAOEs(module)
 {
@@ -119,7 +123,94 @@ sealed class MaelstromGustCones(BossModule module) : Components.GenericAOEs(modu
         return CollectionsMarshal.AsSpan(_aoes);
     }
 }
-sealed class AtomicImpactVoidZones(BossModule module) :
-    Components.Voidzone(module, 5f, module => module.Enemies((uint)OID.AtomicImpactVoidZones).Where(z => z.EventState != 7));
-sealed class DanceOfDomination(BossModule module) : Components.RaidwideCastsDelay(module, [(uint)AID.DanceOfDominationTrophy], [(uint)AID.DanceOfDomination, (uint)AID.DanceOfDomination1, (uint)AID.DanceOfDomination2, (uint)AID.DanceOfDomination3], 6f, "Multi-hit Raidwide");
-sealed class Charybdistopia(BossModule module) : Components.CastHint(module, (uint)AID.Charybdistopia, "Set hp to 1");
+
+sealed class MaelstromBaitSafeSpots(BossModule module) : BossComponent(module)
+{
+    private readonly PartyRolesConfig _roles = Service.Config.Get<PartyRolesConfig>();
+    private MaelstromGustCones? _cones;
+
+    private const float Distance = 6.5f;
+    private const float Radius = 1f;
+
+    public override void Update()
+    {
+        _cones ??= Module.FindComponent<MaelstromGustCones>();
+    }
+
+    public override void DrawArenaForeground(int slot, Actor pc)
+    {
+        if (pc == null || _cones == null || _cones._resolved)
+            return;
+
+        var assignments = _roles.AssignmentsPerSlot(WorldState.Party);
+        if (assignments.Length == 0 || (uint)slot >= (uint)assignments.Length)
+            return;
+
+        var role = assignments[slot];
+
+        var count = 0;
+        foreach (var a in WorldState.Actors)
+            if ((OID)a.OID == OID.Maelstrom)
+                ++count;
+
+        if (count < 4)
+            return;
+
+        foreach (var a in WorldState.Actors)
+        {
+            if ((OID)a.OID != OID.Maelstrom)
+                continue;
+
+            var pos = a.Position;
+            var delta = pos - Module.Center;
+
+            var dx = delta.X;
+            var dy = delta.Z;
+
+            WPos spot = default;
+
+            // WEST
+            if (MathF.Abs(dx) > MathF.Abs(dy) && dx < 0)
+            {
+                if (role == PartyRolesConfig.Assignment.H1)
+                    spot = Offset(pos, (-135).Degrees());
+                else if (role == PartyRolesConfig.Assignment.M1)
+                    spot = Offset(pos, (-45).Degrees());
+            }
+            // EAST
+            else if (MathF.Abs(dx) > MathF.Abs(dy) && dx > 0)
+            {
+                if (role == PartyRolesConfig.Assignment.R2)
+                    spot = Offset(pos, 135.Degrees());
+                else if (role == PartyRolesConfig.Assignment.H2)
+                    spot = Offset(pos, 45.Degrees());
+            }
+            // NORTH
+            else if (dy < 0)
+            {
+                if (role == PartyRolesConfig.Assignment.R1)
+                    spot = Offset(pos, (-135).Degrees());
+                else if (role == PartyRolesConfig.Assignment.MT)
+                    spot = Offset(pos, 135.Degrees());
+            }
+            // SOUTH
+            else
+            {
+                if (role == PartyRolesConfig.Assignment.M2)
+                    spot = Offset(pos, 45.Degrees());
+                else if (role == PartyRolesConfig.Assignment.OT)
+                    spot = Offset(pos, (-45).Degrees());
+            }
+
+            if (spot != default)
+            {
+                Arena.AddCircle(spot, Radius, Colors.Safe);
+                Arena.AddLine(pc.Position, spot, Colors.Safe);
+                return;
+            }
+        }
+    }
+
+    private static WPos Offset(WPos origin, Angle angle)
+        => origin + Distance * angle.ToDirection();
+}
