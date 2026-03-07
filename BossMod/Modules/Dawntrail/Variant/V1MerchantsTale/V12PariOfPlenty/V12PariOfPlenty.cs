@@ -41,10 +41,6 @@ sealed class CarpetRide(BossModule module) : Components.GenericAOEs(module)
             var rot = (_nextLanding - initial).ToAngle();
             var activation = _firstActivation.AddSeconds(2d * (len - 1));
 
-            // 66.384 -> 75.635
-            // 69.372 -> 77.623
-            // 72.435 -> 79.694
-            // 82.411
             _aoes.Add(new(new AOEShapeRect(dist, 5f), initial, rot, activation));
 
             if (_aoes.Count == 3)
@@ -71,20 +67,6 @@ sealed class CarpetRide(BossModule module) : Components.GenericAOEs(module)
             _firstActivation = default;
         }
     }
-    /*
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        base.AddAIHints(slot, actor, assignment, hints);
-
-        var aoes = ActiveAOEs(slot, actor);
-        var len = aoes.Length;
-        if (len == 0)
-            return;
-
-        var donut = aoes[len - 1];
-        hints.GoalZones.Add(AIHints.GoalProximity(donut.Origin, 12f, 9f));
-    }
-    */
 }
 sealed class LeftRightFireflight(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.LeftFireflightTwoNights, (uint)AID.LeftFireflightThreeNights, (uint)AID.RightFireflightTwoNights, (uint)AID.RightFireflightThreeNights], new AOEShapeRect(40f, 2f));
 sealed class WheelOfFireflight(BossModule module) : Components.GenericAOEs(module)
