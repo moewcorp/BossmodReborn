@@ -5,6 +5,22 @@ sealed class PariOfPlentyStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<HeatBurst>()
-            .ActivateOnEnter<RightFireFlight>();
+            .ActivateOnEnter<FireFlight>()
+            .ActivateOnEnter<BurningGleam>()
+            .ActivateOnEnter<CharmedChains>()
+            .ActivateOnEnter<SimpleFableFlight>()
+            .ActivateOnEnter<FireOfVictory>()
+            .ActivateOnEnter<LeftRightFireflight>()
+            .ActivateOnEnter<WheelOfFireflight>()
+            .ActivateOnEnter<FellSpark>()
+            .ActivateOnEnter<CurseOfCompanionshipSolitude>()
+            .ActivateOnEnter<DoubleFableFlight>()
+            .ActivateOnEnter<SpurningFlames>()
+            .ActivateOnEnter<ImpassionedSpark>()
+            .ActivateOnEnter<SparkPuddle>()
+            .ActivateOnEnter<BurningPillar>()
+            .ActivateOnEnter<FireWell>()
+            .ActivateOnEnter<ScouringScorn>()
+            .ActivateOnEnter<FireFlightFactOrFiction>();
     }
 }

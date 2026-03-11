@@ -12,9 +12,8 @@ public enum OID : uint
     Actor1ebf49 = 0x1EBF49, // R0.500, x1, EventObj type
     AetherialFlow = 0x1EBFA5, // R2.000, x1, EventObj type
     CarpetTetherTarget = 0x4A75, // R1.000, x6
-    Actor1ebf20 = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
+    SparkPuddle = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
 }
-
 
 public enum AID : uint
 {
@@ -29,7 +28,7 @@ public enum AID : uint
     CharmdChains = 45199, // PariOfPlenty->self, 4.0s cast, single-target
     LeftFableflight = 45429, // 4A6E->self, 10.5s cast, range 40 width 4 rect
     CarpetRide2 = 45431, // 4A6E/PariOfPlenty->location, no cast, single-target
-    CarpetRide3 = 45433, // Helper->location, 2.0s cast, ???
+    CarpetRide3 = 45433, // Helper->location, 2.0s cast, ??? -- Seems to be the actual 'cast' for the AOEs
     BurningGleam = 45499, // 4A6F->self, 7.0s cast, range 40 width 10 cross
     RightFableflight = 45428, // 4A6E->self, 10.5s cast, range 40 width 4 rect
     FireOfVictory = 45518, // PariOfPlenty->player, 5.0s cast, range 4 circle
@@ -85,7 +84,18 @@ public enum SID : uint
 
 public enum TetherID : uint
 {
-    _Gen_Tether_m0973_rug_chn01_e1 = 355, // 4A75->4A75
-    _Gen_Tether_chn_hfchain1f = 9, // player->player
-    _Gen_Tether_chn_teke01h = 84, // PariOfPlenty->player
+    Fireflight = 355, // 4A75->4A75
+    CharmedChain = 9, // player->player
+    FellSpark = 84, // PariOfPlenty->player
+}
+
+public enum IconID : uint
+{
+    _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
+    _Gen_Icon_tank_lockonae_4m_5s_01t = 342, // player->self
+    TurningRight = 624, // PariOfPlenty->self
+    TurningLeft = 625, // PariOfPlenty->self
+    TurningRRight = 644, // PariOfPlenty->self
+    TurningRLeft = 645, // PariOfPlenty->self
+    Stack = 318, // player->self
 }
