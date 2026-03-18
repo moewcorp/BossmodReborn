@@ -1,16 +1,20 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C011DaryaTheSeaMaid;
 
 // TODO (in-order of priority):
+//  - Add in missing enums (all of them) - check this ID - _Gen_Actor1ebf1e = 0x1EBF1E, // R0.500, x0 (spawn during fight), EventObj type - Is this another orb?
+//  - Clean up enums class
 //  - Implement Sea Shackles mechanic - Need to find a RP of how this works - currently people just skip it
+//      - Player with debuffs have the defam   
 //  - Improve timeline of fight (80% completed) - Just missing a couple of ones like AquaDropPuddles
 //      - Watch a full reply and if something is going off which is not given in the timeline add it
+//      - Can look at the reply feature to know where a reply transition is bad -> recommend having multiple fights tho
+//  -
 //  - Improve visual for CrossCurrent
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
 //  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it
 //  - Rewrite SunkenTreasure code (mechanic works fine)
 //      - Can just build a list and add them in order and on spell cast event remove it from the list
 //      - instead of tracking everytime eAnim happens
-//  - Clean up enums class
 
 class PiercingPlunge(BossModule module) : Components.RaidwideCast(module, (uint)AID.PiercingPlunge);
 
@@ -80,7 +84,7 @@ class AquaBall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Aqua
     PrimaryActorOID = (uint)OID.DaryaTheSeaMaid,
     Contributors = "Equilius",
     Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Uncategorized, // TODO update category
+    Category = BossModuleInfo.Category.VariantCriterion,
     GroupType = BossModuleInfo.GroupType.CFC,
     GroupID = 1079u,
     NameID = 14291u,

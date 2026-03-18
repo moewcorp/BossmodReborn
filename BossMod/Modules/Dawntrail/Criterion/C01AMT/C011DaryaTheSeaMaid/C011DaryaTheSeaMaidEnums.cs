@@ -14,6 +14,8 @@ public enum OID : uint {
     BlueSphere = 0x1EBF1C,// R0.500, x0 (spawn during fight), EventObj type
     DonutSphere = 0x1EBF1D, // R0.500, x0 (spawn during fight), EventObj type
     
+    _Gen_Actor1ebf1e = 0x1EBF1E, // R0.500, x0 (spawn during fight), EventObj type - Is this another orb?
+    
     _Gen_Actor1e8536 = 0x1E8536, // R2.000, x1, EventObj type
     _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
     _Gen_Shortcut = 0x1E873C, // R0.500, x1, EventObj type
@@ -67,6 +69,11 @@ public enum AID : uint {
     _Spell_ = 45859, // Helper->player, 6.0s cast, single-target
     _Spell_SphereShatter = 45850, // Helper->self, no cast, range 18 circle
     _Spell_SphereShatter1 = 45851, // Helper->self, no cast, range ?-20 donut
+    
+    _Ability_SeaShackles = 45856, // DaryaTheSeaMaid->self, 4.0+1.0s cast, range 70 circle
+    _Spell_Hydrobullet = 47088, // Helper->players, no cast, range 15 circle
+    _Spell_Explosion = 45857, // Helper->player, no cast, single-target
+
 }
 
 public enum SID : uint {
@@ -80,8 +87,21 @@ public enum SID : uint {
     _Gen_MagicVulnerabilityUp = 2941, // Helper->player, extra=0x0
     _Gen_DamageDown = 2911, // 4A9A/4A9C->player, extra=0x0
     _Gen_ForcedMarch = 1257, // none->player, extra=0x1/0x2/0x8
+    
+    _Gen_FarShoreShackles = 4725, // none->player, extra=0x0
+    _Gen_HydrobulletTarget = 4968, // none->player, extra=0x0
+    _Gen_NearShoreShackles = 4724, // none->player, extra=0x0
 }
 
 public enum IconID : uint {
     CrossCurrent = 20, // player->self
+    _Gen_Icon_lockon3_t0h = 22, // player->self
+    _Gen_Icon_m0561tag_a0t = 185, // player->self
+}
+
+public enum TetherID : uint
+{
+    _Gen_Tether_chn_closer_0v = 130, // player->player
+    _Gen_Tether_chn_leave_0v = 129, // player->player
+    _Gen_Tether_chn_water01f = 3, // player->player
 }
