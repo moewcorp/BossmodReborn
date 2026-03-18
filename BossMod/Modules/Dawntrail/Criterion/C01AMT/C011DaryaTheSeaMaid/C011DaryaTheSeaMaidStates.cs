@@ -12,6 +12,7 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         CeaselessCurrent(id + 0x300, 7.3f);
         AlluringOrder2(id + 0x400, 7.3f);
         AquaSpear1(id + 0x500, 6.7f);
+        SunkenTreasure1(id + 0x800, 7.3f);
         SimpleState(id + 0xFF0000, 9999, "Rest of Fight");
     }
 
@@ -74,7 +75,7 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
             .DeactivateOnExit<AlluringOrder>()
             .ActivateOnEnter<AlluringOrderForcedMarch>()
             .ActivateOnEnter<Tidalspout>();
-        
+
         Cast(id + 0x20, (uint)AID.SunkenTreasure, 5.2f, 4, "Spawns Spheres/Donuts")
             .ActivateOnEnter<SunkenTreasure>()
             .ActivateOnEnter<SurgingCurrent>();
@@ -116,6 +117,11 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         ComponentCondition<SurgingCurrent>(id + 0x160, 5.9f, o => o.NumCasts >= 4, "SurgingCurrent")
             .DeactivateOnExit<SurgingCurrent>()
             .DeactivateOnExit<AquaSpear>();
-        
+    }
+    
+    private void SunkenTreasure1(uint id, float delay) {
+        Cast(id, (uint)AID.SunkenTreasure, delay, 4, "Spawns Spheres/Donuts")
+            .ActivateOnEnter<SunkenTreasure2>();
+        ComponentCondition<SunkenTreasure2>(id + 0x160, 40.9f, o => o.NumCasts >= 6, "SurgingCurrent");
     }
 }

@@ -46,45 +46,43 @@ class SwimmingInTheAir(BossModule module) : Components.GenericAOEs(module) {
 
 class SunkenTreasure(BossModule module) : Components.GenericAOEs(module) {
     private List<AOEInstance> aoes = [];
-    private List<(ulong id, int eAnims)> BlueObjects = [];
+    private List<Actor> blueObjects = [];
+    public int maxShow = 5;
     
-    private static readonly AOEShapeCircle SphereAOE = new(18f);
-    private static readonly AOEShapeDonut DonutAOE = new(6f, 20f);
-    
-    public override void OnActorEAnim(Actor actor, uint state) {
-        if ((OID)actor.OID == OID.BlueSphere || (OID)actor.OID == OID.DonutSphere) {
-            int id = BlueObjects.FindIndex(t => t.id == actor.InstanceID);
-            if (id < 0) {
-                BlueObjects.Add((actor.InstanceID, 1));
-                return;
-            }
-
-            if (++BlueObjects.Ref(id).eAnims >= 3) {
-                BlueObjects.RemoveAt(id);
-                NumCasts++;
-            }
-        }
-    }
-
+    private AOEShapeCircle SphereAOE = new(18f);
+    private AOEShapeDonut DonutAOE = new(6f, 20f);
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
         aoes.Clear();
-        
+
         int shown = 0;
-        foreach (var t in BlueObjects) {
-            if (shown >= 5) {
+        foreach (var blueObject in blueObjects) {
+            if (shown >= maxShow) {
                 break;
             }
             
-            var blueObject = WorldState.Actors.Find(t.id);
-            if (blueObject == null) {
-                continue;
-            }
-
             var shape = ((OID)blueObject.OID == OID.BlueSphere) ? (AOEShape)SphereAOE : (AOEShape)DonutAOE;
             aoes.Add(new AOEInstance(shape, blueObject.Position));
             shown++;
         }
         
         return CollectionsMarshal.AsSpan(aoes);
+    }
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if ((OID)actor.OID == OID.BlueSphere || (OID)actor.OID == OID.DonutSphere) {
+            if (state == (uint)STATE.FirstState) {
+                blueObjects.Add(actor);
+            }
+
+            if (state == (uint)STATE.ThirdState) {
+                blueObjects.Remove(actor);
+            }
+        }
+    }
+}
+
+class SunkenTreasure2 : SunkenTreasure {
+    public SunkenTreasure2(BossModule module) : base(module) {
+        maxShow = 6;
     }
 }

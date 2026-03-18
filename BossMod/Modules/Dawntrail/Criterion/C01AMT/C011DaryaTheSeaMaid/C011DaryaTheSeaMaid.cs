@@ -8,11 +8,19 @@
 //      - Can look at the reply feature to know where a reply transition is bad -> recommend having multiple fights tho
 //  -
 //  - Improve visual for CrossCurrent
+//  - Improve visual for SurgingCurrent - Need to add one where the 2nd one is shown after the first one has gone - currently showing both and can make the rader hard to read
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
 //  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it - can use WaterTile OID 
-//  - Rewrite SunkenTreasure code (mechanic works fine)
-//      - Can just build a list and add them in order and on spell cast event remove it from the list
-//      - instead of tracking everytime eAnim happens
+
+// Sea Shackles mechanic:
+// - Boss casts Sea Shackles - apply tethers (far and near) of 28 seconds & hydrobullet target of 22 seconds
+// - Boss then casts Sunken Treasure
+//  - Spawns 8 objects - 4 donuts and 4 spheres  -> eAnim will happen on all donuts and only 2 spheres
+//  - Leaving 2 spots to be safe for each hydrobullet target
+// - Boss then cats Aqua ball - 3 drops need to be baited toward the safe spot
+// - Then 6 eAnims will blow up and the final 2 eAnims will blow up shortly after
+// - Finished
+// - Raid wide (Piercing Plunge) - normal one
 
 class PiercingPlunge(BossModule module) : Components.RaidwideCast(module, (uint)AID.PiercingPlunge);
 

@@ -14,6 +14,12 @@ public enum OID : uint {
     WaterTile = 0x1EBF1E, // R0.500, x0 (spawn during fight), EventObj type - bad tile
 }
 
+public enum STATE : uint { // States for BlueSphere & DonutSphere
+    FirstState = 1048608, 
+    SecondState = 4194432,
+    ThirdState = 262152,
+}
+
 public enum AID : uint {
     AutoAttack = 45838, // DaryaTheSeaMaid->player, no cast, single-target
     Ability = 45770, // DaryaTheSeaMaid->location, no cast, single-target
