@@ -1,8 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C011DaryaTheSeaMaid;
 
 // TODO (in-order of priority):
-//  - Add in missing enums (all of them) - check this ID - _Gen_Actor1ebf1e = 0x1EBF1E, // R0.500, x0 (spawn during fight), EventObj type - Is this another orb?
-//  - Clean up enums class
 //  - Implement Sea Shackles mechanic - Need to find a RP of how this works - currently people just skip it
 //      - Player with debuffs have the defam   
 //  - Improve timeline of fight (80% completed) - Just missing a couple of ones like AquaDropPuddles
@@ -11,7 +9,7 @@
 //  -
 //  - Improve visual for CrossCurrent
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
-//  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it
+//  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it - can use WaterTile OID 
 //  - Rewrite SunkenTreasure code (mechanic works fine)
 //      - Can just build a list and add them in order and on spell cast event remove it from the list
 //      - instead of tracking everytime eAnim happens
