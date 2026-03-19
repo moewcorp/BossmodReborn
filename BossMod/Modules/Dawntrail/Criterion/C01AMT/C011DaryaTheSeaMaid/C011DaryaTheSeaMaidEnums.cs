@@ -92,5 +92,5 @@ public enum IconID : uint {
 public enum TetherID : uint {
     Far = 129, // player->player
     Near = 130, // player->player
-    Tether_chn_water01f = 3, // player->player
+    Safe = 3, // player->player
 }

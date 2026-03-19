@@ -12,16 +12,6 @@
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
 //  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it - can use WaterTile OID 
 
-// Sea Shackles mechanic:
-// - Boss casts Sea Shackles - apply tethers (far and near) of 28 seconds & hydrobullet target of 22 seconds
-// - Boss then casts Sunken Treasure
-//  - Spawns 8 objects - 4 donuts and 4 spheres  -> eAnim will happen on all donuts and only 2 spheres
-//  - Leaving 2 spots to be safe for each hydrobullet target
-// - Boss then cats Aqua ball - 3 drops need to be baited toward the safe spot
-// - Then 6 eAnims will blow up and the final 2 eAnims will blow up shortly after
-// - Finished
-// - Raid wide (Piercing Plunge) - normal one
-
 class PiercingPlunge(BossModule module) : Components.RaidwideCast(module, (uint)AID.PiercingPlunge);
 
 class SurgingCurrent(BossModule module)
