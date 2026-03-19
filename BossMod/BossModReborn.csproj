@@ -97,7 +97,7 @@
     <EmbeddedResource Include="Pathfinding\ObstacleMaps\*" />
   </ItemGroup>
 
-  <Target Name="CleanupOutput" AfterTargets="Build">
+  <Target Name="CleanupOutput" AfterTargets="Build" BeforeTargets="DalamudPackage">
     <ItemGroup>
       <_ExtraOutputFiles Include="$(OutputPath)*" Exclude="$(OutputPath)BossModReborn.*;$(OutputPath)DefaultRotationPresets.json" />
     </ItemGroup>
