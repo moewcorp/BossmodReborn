@@ -76,6 +76,7 @@ class SunkenTreasure(BossModule module) : Components.GenericAOEs(module) {
 
             if (state == (uint)STATE.ThirdState) {
                 blueObjects.Remove(actor);
+                NumCasts++;
             }
         }
     }

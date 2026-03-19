@@ -1,8 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C011DaryaTheSeaMaid;
 
 // TODO (in-order of priority):
-//  - Implement Sea Shackles mechanic - Need to find a RP of how this works - currently people just skip it
-//      - Player with debuffs have the defam   
 //  - Improve timeline of fight (80% completed) - Just missing a couple of ones like AquaDropPuddles
 //      - Watch a full reply and if something is going off which is not given in the timeline add it
 //      - Can look at the reply feature to know where a reply transition is bad -> recommend having multiple fights tho
