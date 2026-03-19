@@ -4,29 +4,39 @@
 //  - Improve timeline of fight (80% completed) - Just missing a couple of ones like AquaDropPuddles
 //      - Watch a full reply and if something is going off which is not given in the timeline add it
 //      - Can look at the reply feature to know where a reply transition is bad -> recommend having multiple fights tho
+//      - Ensure every components that is active is deactivated
 //  -
 //  - Improve visual for CrossCurrent
-//  - Improve visual for SurgingCurrent - Need to add one where the 2nd one is shown after the first one has gone - currently showing both and can make the rader hard to read
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
 //  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it - can use WaterTile OID 
 
 class PiercingPlunge(BossModule module) : Components.RaidwideCast(module, (uint)AID.PiercingPlunge);
 
-class SurgingCurrent(BossModule module)
-    : Components.SimpleAOEs(module, (uint)AID.SurgingCurrent1, new AOEShapeCone(60f, 45.Degrees())) {
+class SurgingCurrent(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SurgingCurrent1, new AOEShapeCone(60f, 45.Degrees())) {
     private List<AOEInstance> aoes = [];
+    public int maxShow = 2;
     
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
         aoes.Clear();
         
         int show = 0;
         foreach (var caster in Casters) {
+            if (show >= maxShow) {
+                break;
+            }
+            
             uint colour = (show < 2) ? Colors.Danger : Colors.AOE;
             aoes.Add(new(caster.Shape, caster.Origin, caster.Rotation, caster.Activation, colour, (show < 2)));
             show++;
         }
         
         return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+class SurgingCurrent2 : SurgingCurrent {
+    public SurgingCurrent2(BossModule module) : base(module) {
+        maxShow = 2;
     }
 }
 

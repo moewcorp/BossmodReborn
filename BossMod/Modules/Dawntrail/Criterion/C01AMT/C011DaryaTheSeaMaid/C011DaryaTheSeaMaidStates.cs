@@ -57,12 +57,12 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
     private void CeaselessCurrent(uint id, float delay) {
         Cast(id + 0x10, (uint)AID.CeaselessCurrent, delay, 4, "CeaselessCurrent")
             .ActivateOnEnter<CeaselessCurrent>()
-            .ActivateOnEnter<SurgingCurrent>()
+            .ActivateOnEnter<SurgingCurrent2>()
             .ActivateOnEnter<CrossCurrent>();
         ComponentCondition<CeaselessCurrent>(id + 0x20, 8.2f, o => o.NumCasts > 0, "Exaflares start");
         ComponentCondition<CeaselessCurrent>(id + 0x30, 8.3f, o => o.NumCasts >= 10, "Exaflares end")
             .DeactivateOnExit<CeaselessCurrent>()
-            .DeactivateOnExit<SurgingCurrent>();
+            .DeactivateOnExit<SurgingCurrent2>();
     }
     
     private void AlluringOrder2(uint id, float delay) {
@@ -78,14 +78,14 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
 
         Cast(id + 0x20, (uint)AID.SunkenTreasure, 5.2f, 3, "Spawns Spheres/Donuts")
             .ActivateOnEnter<SunkenTreasure>()
-            .ActivateOnEnter<SurgingCurrent>();
+            .ActivateOnEnter<SurgingCurrent2>();
         
         ComponentCondition<AlluringOrderForcedMarch>(id + 0x30, 13, o => o.NumActiveForcedMarches > 0, "Controlled Walk");
         ComponentCondition<Tidalspout>(id + 0x40, 4.0f, o => !o.Active, "Sphere Shatter + Stack Resolves")
             .DeactivateOnExit<AlluringOrderForcedMarch>()
             .DeactivateOnExit<Tidalspout>();
         ComponentCondition<SurgingCurrent>(id + 0x50, 3.4f, o => o.NumCasts >= 4, "2nd SurgingCurrent Resolves")
-            .DeactivateOnExit<SurgingCurrent>();
+            .DeactivateOnExit<SurgingCurrent2>();
         ComponentCondition<SunkenTreasure>(id + 0x60, 3.4f, o => o.NumCasts >= 6, "2nd Sphere Shatter")
             .DeactivateOnExit<SunkenTreasure>();
     }
