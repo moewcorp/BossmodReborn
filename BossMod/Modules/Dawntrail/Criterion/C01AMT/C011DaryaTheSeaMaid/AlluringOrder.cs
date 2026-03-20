@@ -7,8 +7,6 @@ class AlluringOrderForcedMarch(BossModule module) : Components.StatusDrivenForce
 // TODO add priority order to this - DPS flex, but add configuration to module so it can be picked by the player
 //  - No need to decide who goes with what stack, just highlight their safe spot? - always 2 spots -> this way we can just check if one side has two stacks or not
 class Tidalspout(BossModule module) : Components.StatusStackSpread(module, (uint)SID.TidalspoutTarget, 0, 6, 0) {
-    private int NumCasts = 0;
-    
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.TidalspoutTarget) {
             AddStack(actor, status.ExpireAt);
@@ -18,7 +16,6 @@ class Tidalspout(BossModule module) : Components.StatusStackSpread(module, (uint
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.TidalspoutTarget) {
             Stacks.Clear();
-            NumCasts++;
         }
     }
 }
@@ -26,10 +23,12 @@ class Tidalspout(BossModule module) : Components.StatusStackSpread(module, (uint
 // TODO refer to Tidalspout TODO 
 class SwimmingInTheAir(BossModule module) : Components.GenericAOEs(module) {
     private List<AOEInstance> aoes = [];
+    public int activeAOEs = 0; // Used for the timeline
 
     public override void OnActorCreated(Actor actor) {
         if ((OID)actor.OID == OID.BlueOrb) {
             aoes.Add(new(new AOEShapeCircle(12f), actor.Position, default, default, Colors.AOE));
+            activeAOEs++;
         }
     }
 

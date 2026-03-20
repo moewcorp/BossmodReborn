@@ -69,6 +69,9 @@ public enum AID : uint {
     SeaShackles = 45856, // DaryaTheSeaMaid->self, 4.0+1.0s cast, range 70 circle
     Hydrobullet2 = 47088, // Helper->players, no cast, range 15 circle
     Explosion = 45857, // Helper->player, no cast, single-target
+    
+    PiercingPlungeEnrage = 45872, // Boss->self, 10.0s cast, range 70 circle
+    PiercingPlungeEnrage1 = 45873, // Boss->self, no cast, range 70 circle
 }
 
 public enum SID : uint {

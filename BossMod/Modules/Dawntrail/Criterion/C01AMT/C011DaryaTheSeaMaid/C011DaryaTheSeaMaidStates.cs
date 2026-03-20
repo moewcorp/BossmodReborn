@@ -9,11 +9,11 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
     private void SinglePhase(uint id) {
         FamilarCall(id, 7.1f);
         AlluringOrder1(id + 0x200, 6.3f);
-        CeaselessCurrent(id + 0x300, 7.3f);
+        CeaselessCurrent(id + 0x300, 7.4f);
         AlluringOrder2(id + 0x400, 7.0f);
         AquaSpear1(id + 0x500, 5.9f);
         SunkenTreasure1(id + 0x700, 5.2f);
-        SimpleState(id + 0xFF0000, 9999, "Rest of Fight");
+        Enrage(id + 0x1000, 1f);
     }
 
     private void FamilarCall(uint id, float delay) {
@@ -25,16 +25,16 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
             .ActivateOnEnter<EchoedSerenade>();
         Cast(id + 0x50, (uint)AID.EchoedSerenade, 5.1f, 8.5f)
             .ActivateOnEnter<Hydrobullet>();
-        ComponentCondition<EchoedSerenade>(id + 0x60, 3.5f, o => o.NumCasts > 0, "First add");
+        ComponentCondition<EchoedSerenade>(id + 0x60, 3.6f, o => o.NumCasts > 0, "First add");
         ComponentCondition<EchoedSerenade>(id + 0x70, 3.1f, o => o.NumCasts > 1, "Second add")
             .ActivateOnEnter<SurgingCurrent>();
-        ComponentCondition<Hydrobullet>(id + 0x80, 0.2f, hydrobullet => hydrobullet.NumFinishedSpreads > 0, "Spreads");
+        ComponentCondition<Hydrobullet>(id + 0x80, 0.1f, hydrobullet => hydrobullet.NumFinishedSpreads > 0, "Spreads");
         ComponentCondition<EchoedSerenade>(id + 0x90, 3.0f, o => o.NumCasts > 2, "Third add");
         ComponentCondition<EchoedSerenade>(id + 0x100, 3.2f, o => o.NumCasts > 3, "Fourth add")
             .DeactivateOnExit<EchoedSerenade>();
-        ComponentCondition<Hydrobullet>(id + 0x110, 0.2f, hydrobullet => hydrobullet.NumFinishedSpreads > 0, "Spreads")
+        ComponentCondition<Hydrobullet>(id + 0x110, 0.2f, hydrobullet => hydrobullet.NumFinishedSpreads > 4, "Spreads")
             .DeactivateOnExit<Hydrobullet>();
-        ComponentCondition<SurgingCurrent>(id + 0x120, 8.1f, o => o.NumCasts >= 4, "SurgingCurrent")
+        ComponentCondition<SurgingCurrent>(id + 0x120, 8.0f, o => o.NumCasts >= 4, "SurgingCurrent")
             .DeactivateOnExit<SurgingCurrent>();
     }
 
@@ -46,10 +46,10 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
             .ActivateOnEnter<Tidalspout>();
         Cast(id + 0x10, (uint)AID.SwimmingInTheAir, 5.4f, 4, "SwimmingInTheAir")
             .ActivateOnEnter<SwimmingInTheAir>();
-        ComponentCondition<AlluringOrderForcedMarch>(id + 0x20, 9.7f, o => o.NumActiveForcedMarches > 0, "Controlled Walk");
-        ComponentCondition<SwimmingInTheAir>(id + 0x30, 4.1f, o => o.NumCasts > 0, "Puddles")
-            .DeactivateOnExit<SwimmingInTheAir>();
-        ComponentCondition<Tidalspout>(id + 0x40, 0.2f, o => !o.Active, "Stacks")
+        ComponentCondition<SwimmingInTheAir>(id + 0x20, 7.0f, o => o.activeAOEs >= 7, "Puddles Spawn");
+        ComponentCondition<AlluringOrderForcedMarch>(id + 0x30, 2.7f, o => o.NumActiveForcedMarches > 0, "Controlled Walk");
+        ComponentCondition<SwimmingInTheAir>(id + 0x40, 3.9f, o => o.NumCasts > 0, "Puddles + Stack Resolve")
+            .DeactivateOnExit<SwimmingInTheAir>()
             .DeactivateOnExit<Tidalspout>()
             .DeactivateOnExit<AlluringOrderForcedMarch>();
     }
@@ -59,7 +59,7 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
             .ActivateOnEnter<CeaselessCurrent>()
             .ActivateOnEnter<SurgingCurrent2>()
             .ActivateOnEnter<CrossCurrent>();
-        ComponentCondition<CeaselessCurrent>(id + 0x20, 8.2f, o => o.NumCasts > 0, "Exaflares start");
+        ComponentCondition<CeaselessCurrent>(id + 0x20, 8.1f, o => o.NumCasts > 0, "Exaflares start");
         ComponentCondition<CeaselessCurrent>(id + 0x30, 8.3f, o => o.NumCasts >= 10, "Exaflares end")
             .DeactivateOnExit<CeaselessCurrent>()
             .DeactivateOnExit<SurgingCurrent2>();
@@ -105,7 +105,7 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         ComponentCondition<EchoedSerenade>(id + 0x60, 3.1f, o => o.NumCasts > 2, "Third add");
         ComponentCondition<EchoedSerenade>(id + 0x70, 3.1f, o => o.NumCasts > 3, "Fourth add");
 
-        Cast(id + 0x100, (uint)AID.FamiliarCall, 14.0f, 3, "Adds spawn")
+        Cast(id + 0x100, (uint)AID.FamiliarCall, 13.9f, 3, "Adds spawn")
             .DeactivateOnExit<AquaBall>();
         Cast(id + 0x110, (uint)AID.EchoedReprise, 6.2f, 4.0f);
         ComponentCondition<EchoedSerenade>(id + 0x120, 3.5f, o => o.NumCasts > 0, "First add");
@@ -127,14 +127,21 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
             .ActivateOnEnter<SunkenTreasure2>();
         Cast(id + 0x20, (uint)AID.AquaBall, 8.2f, 1.9f)
             .ActivateOnEnter<AquaBall>();
-        ComponentCondition<AquaBall>(id + 0x30, 2.2f, o => o.NumCasts > 0, "1st Aqua Ball Baits");
-        ComponentCondition<AquaBall>(id + 0x40, 1.9f, o => o.NumCasts >= 4, "2nd Aqua Ball Baits");
-        ComponentCondition<AquaBall>(id + 0x50, 2.0f, o => o.NumCasts >= 8,
+        ComponentCondition<AquaBall>(id + 0x30, 1.1f, o => o.Casters.Count > 0, "1st Aqua Ball Baits");
+        ComponentCondition<AquaBall>(id + 0x40, 2.0f, o => o.Casters.Count >= 8, "2nd Aqua Ball Baits");
+        ComponentCondition<AquaBall>(id + 0x50, 2.5f, o => o.Casters.Count >= 8 && o.NumCasts >= 4,
             "3rd Aqua Ball Baits + 1st Spheres/Donuts resolve")
             .DeactivateOnExit<HydrobulletStack>();
-        ComponentCondition<SunkenTreasure2>(id + 0x60, 5.0f, o => o.NumCasts >= 8, "2nd Sphere Shatter + Tethers resolve")
+        ComponentCondition<SunkenTreasure2>(id + 0x60, 6.8f, o => o.NumCasts >= 8, "2nd Sphere Shatter + Tethers resolve")
             .DeactivateOnExit<SunkenTreasure2>()
             .DeactivateOnExit<AquaBall>()
             .DeactivateOnExit<SeaShackles>();
+    }
+
+    private void Enrage(uint id, float delay) {
+        Cast(id, (uint)AID.PiercingPlunge, delay, 5, "Raidwide")
+            .ActivateOnEnter<PiercingPlunge>()
+            .DeactivateOnExit<PiercingPlunge>();
+        Cast(id, (uint)AID.PiercingPlungeEnrage, 9.1f, 10, "Enrage"); // TODO: check if this is correct
     }
 }
