@@ -1,11 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C011DaryaTheSeaMaid;
 
 // TODO (in-order of priority):
-//  - Improve timeline of fight (80% completed) - Just missing a couple of ones like AquaDropPuddles
-//      - Watch a full reply and if something is going off which is not given in the timeline add it
-//      - Can look at the reply feature to know where a reply transition is bad -> recommend having multiple fights tho
-//      - Ensure every components that is active is deactivated
-//  -
 //  - Improve visual for CrossCurrent
 //  - Add priority order to Tidalspout mechanic - DPS flex, but add configuration to module so it can be picked by the player
 //  - Rewrite AquaSpear code (mechanic works fine) - Remove grid map or improve it - can use WaterTile OID 
