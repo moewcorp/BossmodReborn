@@ -26,13 +26,13 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         Cast(id + 0x50, (uint)AID.EchoedSerenade, 5.1f, 8.5f)
             .ActivateOnEnter<Hydrobullet>();
         ComponentCondition<EchoedSerenade>(id + 0x60, 3.6f, o => o.NumCasts > 0, "First add");
-        ComponentCondition<EchoedSerenade>(id + 0x70, 3.1f, o => o.NumCasts > 1, "Second add")
-            .ActivateOnEnter<SurgingCurrent>();
+        ComponentCondition<EchoedSerenade>(id + 0x70, 3.1f, o => o.NumCasts > 1, "Second add");
         ComponentCondition<Hydrobullet>(id + 0x80, 0.1f, hydrobullet => hydrobullet.NumFinishedSpreads > 0, "Spreads");
         ComponentCondition<EchoedSerenade>(id + 0x90, 3.0f, o => o.NumCasts > 2, "Third add");
         ComponentCondition<EchoedSerenade>(id + 0x100, 3.2f, o => o.NumCasts > 3, "Fourth add")
             .DeactivateOnExit<EchoedSerenade>();
         ComponentCondition<Hydrobullet>(id + 0x110, 0.2f, hydrobullet => hydrobullet.NumFinishedSpreads > 4, "Spreads")
+            .ActivateOnEnter<SurgingCurrent>()
             .DeactivateOnExit<Hydrobullet>();
         ComponentCondition<SurgingCurrent>(id + 0x120, 8.0f, o => o.NumCasts >= 4, "SurgingCurrent")
             .DeactivateOnExit<SurgingCurrent>();

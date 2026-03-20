@@ -27,6 +27,10 @@ class SeaShackles(BossModule module) : Components.StretchTetherDuo(module, minim
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (ActiveBaits.Count <= 1) {
+            return;
+        }
+        
         base.DrawArenaForeground(pcSlot, pc);
 
         var baits = ActiveBaits;
@@ -64,6 +68,10 @@ class SeaShackles(BossModule module) : Components.StretchTetherDuo(module, minim
     }
     
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) {
+        if (ActiveBaits.Count <= 1) {
+            return PlayerPriority.Irrelevant;
+        }
+        
         if (player == pc) {
             return PlayerPriority.Normal;
         }
@@ -78,6 +86,10 @@ class SeaShackles(BossModule module) : Components.StretchTetherDuo(module, minim
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (ActiveBaits.Count <= 1) {
+            return;
+        }
+        
         var bait = CurrentBaits.FirstOrDefault(b => b.Source == actor || b.Target == actor);
         if (bait.Target == null || bait.Source == null) {
             return;
