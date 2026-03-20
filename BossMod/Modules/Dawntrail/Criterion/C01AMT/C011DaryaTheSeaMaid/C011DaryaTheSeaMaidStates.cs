@@ -62,7 +62,8 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         ComponentCondition<CeaselessCurrent>(id + 0x20, 8.1f, o => o.NumCasts > 0, "Exaflares start");
         ComponentCondition<CeaselessCurrent>(id + 0x30, 8.3f, o => o.NumCasts >= 10, "Exaflares end")
             .DeactivateOnExit<CeaselessCurrent>()
-            .DeactivateOnExit<SurgingCurrent2>();
+            .DeactivateOnExit<SurgingCurrent2>()
+            .DeactivateOnExit<CrossCurrent>();
     }
     
     private void AlluringOrder2(uint id, float delay) {
@@ -106,7 +107,8 @@ sealed class DaryaTheSeaMaidStates : StateMachineBuilder {
         ComponentCondition<EchoedSerenade>(id + 0x70, 3.1f, o => o.NumCasts > 3, "Fourth add");
 
         Cast(id + 0x100, (uint)AID.FamiliarCall, 13.9f, 3, "Adds spawn")
-            .DeactivateOnExit<AquaBall>();
+            .DeactivateOnExit<AquaBall>()
+            .DeactivateOnExit<CrossCurrent>();
         Cast(id + 0x110, (uint)AID.EchoedReprise, 6.2f, 4.0f);
         ComponentCondition<EchoedSerenade>(id + 0x120, 3.5f, o => o.NumCasts > 0, "First add");
         ComponentCondition<EchoedSerenade>(id + 0x130, 3.1f, o => o.NumCasts > 1, "Second add");
