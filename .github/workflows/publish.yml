@@ -40,10 +40,10 @@ jobs:
         run: Get-ChildItem .\build\* -Exclude BossModReborn.*,DefaultRotationPresets.json,PInvoke.User32.dll | Remove-Item -Force -Recurse
 
       - name: Zip Plugin
-        run: Compress-Archive -Path .\build\* -DestinationPath .\build\BossModReborn.zip
+        run: Compress-Archive -Path .\build\* -DestinationPath .\build\latest.zip
 
       - name: Publish Plugin
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build/BossModReborn.zip
+          files: ./build/latest.zip
           token: ${{ secrets.GITHUB_TOKEN }}
