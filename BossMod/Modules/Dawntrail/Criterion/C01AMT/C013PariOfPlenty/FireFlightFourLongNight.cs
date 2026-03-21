@@ -104,3 +104,67 @@ class WitchHuntStack(BossModule module) : Components.GenericBaitStack(module, (u
         CurrentBaits.Add(new(target, target, new AOEShapeCircle(3), NextActivation));
     }
 }
+
+class FireFlightFourLongNight(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
+    private List<Angle> rotations = [];
+    bool startLeft = false;
+    private IconID lastAction = 0;
+    private Angle bossAngle;
+    
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if ((AID)spell.Action.ID == AID.FireflightFourLongNightsRight) {
+            startLeft = false;
+            return;
+        }
+        
+        if ((AID)spell.Action.ID == AID.FireflightFourLongNightsLeft) {
+            startLeft = true;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if ((AID)spell.Action.ID == AID.WheelOfFireflight || (AID)spell.Action.ID == AID.WheelOfFireflight1 ||
+            (AID)spell.Action.ID == AID.WheelOfFireflight2 || (AID)spell.Action.ID == AID.WheelOfFireflight3) {
+            if (rotations.Count > 0) {
+                rotations.RemoveAt(0);
+            }
+        }
+    }
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if ((IconID)iconID == IconID.TurnLeft || (IconID)iconID == IconID.TurnRight 
+                                              || (IconID)iconID == IconID.TurnRLeft 
+                                              || (IconID)iconID == IconID.TurnRRight) {
+            if (lastAction == 0) {
+                if (startLeft) {
+                    bossAngle = iconID is (uint)IconID.TurnRight or (uint)IconID.TurnRRight ? 180.Degrees() : 0.Degrees();
+                }
+
+                if (!startLeft) {
+                    bossAngle = iconID is (uint)IconID.TurnRight or (uint)IconID.TurnRRight ? 0.Degrees() : 180.Degrees();
+                }
+            }
+            
+            if (lastAction == (IconID)iconID) {
+                bossAngle += 180.Degrees();
+            }
+
+            rotations.Add(bossAngle);
+            lastAction = (IconID)iconID;
+        }
+    }
+    
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        aoes.Clear();
+        
+        int shown = 0;
+        foreach (var rotation in rotations.Take(2)) {
+            uint colour = (shown == 0) ? Colors.Danger : Colors.AOE;
+            aoes.Add(new AOEInstance(new AOEShapeCone(40, 90.Degrees()), Module.PrimaryActor.Position, rotation, default, colour));
+            shown++;
+        }
+        
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}

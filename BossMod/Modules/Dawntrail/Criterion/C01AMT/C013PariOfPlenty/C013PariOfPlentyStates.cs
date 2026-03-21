@@ -22,6 +22,7 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
             .ActivateOnEnter<WheelofFableFlightStackSpread>()
             .ActivateOnEnter<FireOfVictory>()
             .ActivateOnEnter<WitchHunt>()
-            .ActivateOnEnter<WitchHuntStack>();
+            .ActivateOnEnter<WitchHuntStack>()
+            .ActivateOnEnter<FireFlightFourLongNight>();
     }
 }

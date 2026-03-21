@@ -39,10 +39,10 @@ public enum AID : uint {
     WheelOfFableflightRight = 45478, // _Gen_FalseFlame->self, 11.0s cast, range 40 width 4 rect
     WheelOfFableflightLeft = 45479, // 4A71->self, 11.0s cast, range 40 width 4 rect
     
-    WheelOfFireflight = 45469, // 4A71->self, no cast, range 40 ?-degree cone
-    WheelOfFireflight1 = 45470, // 4A71->self, no cast, range 40 ?-degree cone
-    WheelOfFireflight2 = 45471, // 4A71->self, no cast, range 40 ?-degree cone
-    WheelOfFireflight3 = 45472, // 4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight = 45469, // PariOfPlenty/4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight1 = 45470, // PariOfPlenty/4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight2 = 45471, // PariOfPlenty/4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight3 = 45472, // PariOfPlenty/4A71->self, no cast, range 40 ?-degree cone
     
     KindledFlameStack = 45538, // Boss->self, 8.0s cast, single-target
     ScatteredKindlingSpread = 45536, // PariOfPlenty->self, 8.0s cast, single-target
@@ -55,11 +55,7 @@ public enum AID : uint {
     FireflightFourLongNightsLeft = 45468, // Boss->self, 17.0s cast, range 40 width 4 rect
     FellFirework = 45476, // Helper->player, no cast, range 3 circle
     FireWell = 45477, // Helper->players, no cast, range 3 circle
-
     
-    _Ability_WheelOfFireflight2 = 45470, // PariOfPlenty->self, no cast, range 40 ?-degree cone
-    
-    _Ability_WheelOfFireflight3 = 45469, // PariOfPlenty->self, no cast, range 40 ?-degree cone
     _Ability_ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
     _Ability_CharmingBaubles = 45503, // PariOfPlenty->self, 3.0s cast, single-target
     _Ability_ThievesWeave = 46754, // PariOfPlenty->self, 3.0s cast, single-target
@@ -98,20 +94,18 @@ public enum IconID : uint
 {
     FalseFlameRight = 628, // _Gen_FalseFlame->self
     FalseFlameLeft = 629, // _Gen_FalseFlame->self
+    FalseFlameRRight = 646, // _Gen_FalseFlame->self
+    FalseFlameRLeft = 647, // _Gen_FalseFlame->self
     
-    
-    FalseFlameRRight = 646, // _Gen_FalseFlame->self // TODO orange
-    FalseFlameRLeft = 647, // _Gen_FalseFlame->self // TODO 
-
+    TurnRight = 624, // Boss->self
+    TurnLeft = 625, // Boss->self
+    TurnRLeft = 645, // Boss->self
+    TurnRRight = 644, // Boss->self
     
     _Gen_Icon_tank_lockonae_4m_5s_01t = 342, // player->self
-    _Gen_Icon_m0973_turning_r_left_3sec_c0e1 = 645, // Boss->self
-    _Gen_Icon_m0973_turning_r_right_3sec_c0e1 = 644, // Boss->self
     _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
     _Gen_Icon_m0489trg_c0c = 138, // player->self
     _Gen_Icon_m6d1_rug01_8s_c0e1 = 631, // player->self
-    _Gen_Icon_m0973_turning_right_3sec_c0e1 = 624, // Boss->self
-    _Gen_Icon_m0973_turning_left_3sec_c0e1 = 625, // Boss->self
     _Gen_Icon_com_share3t = 161, // player->self
 }
 

@@ -3,6 +3,10 @@
 // TODO
 //  - Fix hints for witch hunt - currently says "Stack" "Bait" etc at the same time - most likely just disable for now until priority is added
 //  - Fix timeline
+//  - Clean up enums + add missing ones
+//  - FireflightStackSpread - find out who gets the stack
+//  - WheelofFableFlight - find out who gets the stack + clean up
+//  - Improve angle working out for FireFlightFourLongNight?
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
