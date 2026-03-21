@@ -51,10 +51,14 @@ public enum AID : uint {
     
     FireOfVictory = 45519, // PariOfPlenty->player, 5.0s cast, range 4 circle
     
-    _Ability_FireflightFourLongNights = 45467, // PariOfPlenty->self, 17.0s cast, range 40 width 4 rect
-    _Ability_FellFirework = 45476, // Helper->player, no cast, range 3 circle
+    FireflightFourLongNightsRight = 45467, // Boss->self, 17.0s cast, range 40 width 4 rect
+    FireflightFourLongNightsLeft = 45468, // Boss->self, 17.0s cast, range 40 width 4 rect
+    FellFirework = 45476, // Helper->player, no cast, range 3 circle
+    FireWell = 45477, // Helper->players, no cast, range 3 circle
+
+    
     _Ability_WheelOfFireflight2 = 45470, // PariOfPlenty->self, no cast, range 40 ?-degree cone
-    _Ability_FireWell = 45477, // Helper->players, no cast, range 3 circle
+    
     _Ability_WheelOfFireflight3 = 45469, // PariOfPlenty->self, no cast, range 40 ?-degree cone
     _Ability_ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
     _Ability_CharmingBaubles = 45503, // PariOfPlenty->self, 3.0s cast, single-target
@@ -109,6 +113,11 @@ public enum IconID : uint
     _Gen_Icon_m0973_turning_right_3sec_c0e1 = 624, // Boss->self
     _Gen_Icon_m0973_turning_left_3sec_c0e1 = 625, // Boss->self
     _Gen_Icon_com_share3t = 161, // player->self
+}
+
+public enum SID : uint {
+    WitchHunt = 2970, // none->Boss, extra=0x3F5/0x3F4
+    DarkResistanceDown = 3619, // Helper->player, extra=0x0
 }
 
 public enum TetherID : uint

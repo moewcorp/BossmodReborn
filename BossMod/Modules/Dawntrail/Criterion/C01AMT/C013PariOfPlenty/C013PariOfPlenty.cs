@@ -1,7 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
-class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
+// TODO
+//  - Fix hints for witch hunt - currently says "Stack" "Bait" etc at the same time - most likely just disable for now until priority is added
+//  - Fix timeline
 
+class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
