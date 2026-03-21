@@ -39,10 +39,18 @@ public enum AID : uint {
     WheelOfFableflightRight = 45478, // _Gen_FalseFlame->self, 11.0s cast, range 40 width 4 rect
     WheelOfFableflightLeft = 45479, // 4A71->self, 11.0s cast, range 40 width 4 rect
     
-    _Ability_ScatteredKindling = 45536, // PariOfPlenty->self, 8.0s cast, single-target
+    WheelOfFireflight = 45469, // 4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight1 = 45470, // 4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight2 = 45471, // 4A71->self, no cast, range 40 ?-degree cone
+    WheelOfFireflight3 = 45472, // 4A71->self, no cast, range 40 ?-degree cone
+    
+    KindledFlameStack = 45538, // Boss->self, 8.0s cast, single-target
+    ScatteredKindlingSpread = 45536, // PariOfPlenty->self, 8.0s cast, single-target
+    _Ability_KindledFlame1 = 45539, // Helper->players, no cast, range 6 circle
     _Ability_ScatteredKindling1 = 45537, // Helper->player, no cast, range 6 circle
-    _Ability_WheelOfFireflight = 45472, // 4A71->self, no cast, range 40 ?-degree cone
-    _Ability_WheelOfFireflight1 = 45471, // 4A71->self, no cast, range 40 ?-degree cone
+    
+    
+
     _Ability_FireOfVictory = 45519, // PariOfPlenty->player, 5.0s cast, range 4 circle
     _Ability_FireflightFourLongNights = 45467, // PariOfPlenty->self, 17.0s cast, range 40 width 4 rect
     _Ability_FellFirework = 45476, // Helper->player, no cast, range 3 circle
@@ -78,8 +86,8 @@ public enum AID : uint {
     _Ability_CarpetRide4 = 46573, // Helper->location, 2.1s cast, ???
     _Ability_Fableflight3 = 45452, // 4A71->self, 15.0s cast, range 40 width 4 rect
     _Ability_Fableflight4 = 45451, // 4A71->self, 15.0s cast, range 40 width 4 rect
-    _Ability_KindledFlame = 45540, // PariOfPlenty->self, 5.0s cast, single-target
-    _Ability_KindledFlame1 = 45541, // Helper->players, no cast, range 6 circle
+    _Ability_KindledFlame3 = 45540, // PariOfPlenty->self, 5.0s cast, single-target
+    _Ability_KindledFlame2 = 45541, // Helper->players, no cast, range 6 circle
     _Ability_CharmdFlightFourNights = 47031, // PariOfPlenty->self, 17.5s cast, range 40 width 4 rect
 }
 
