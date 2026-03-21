@@ -35,6 +35,11 @@ class Fireflight(BossModule module) : Components.GenericAOEs(module) {
         if (tether.ID == (uint)TetherID.CarpetRideTether) {
             PathAOE pathAoe = new PathAOE();
             Actor? actor = WorldState.Actors.Find(tether.Target);
+
+            if (actor == null) {
+                return;
+            }
+            
             pathAoe.actor = actor;
             pathAoe.startPosition = source.Position;
             pathAoe.endPosition = actor.Position;
