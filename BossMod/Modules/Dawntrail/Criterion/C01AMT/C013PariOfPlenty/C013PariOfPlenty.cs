@@ -2,6 +2,8 @@
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 
+class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
+
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(PariOfPlentyStates),
     ConfigType = null, // replace null with typeof(PariOfPlentyConfig) if applicable

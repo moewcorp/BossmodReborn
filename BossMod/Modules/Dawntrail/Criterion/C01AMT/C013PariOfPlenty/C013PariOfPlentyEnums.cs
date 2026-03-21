@@ -49,9 +49,8 @@ public enum AID : uint {
     _Ability_KindledFlame1 = 45539, // Helper->players, no cast, range 6 circle
     _Ability_ScatteredKindling1 = 45537, // Helper->player, no cast, range 6 circle
     
+    FireOfVictory = 45519, // PariOfPlenty->player, 5.0s cast, range 4 circle
     
-
-    _Ability_FireOfVictory = 45519, // PariOfPlenty->player, 5.0s cast, range 4 circle
     _Ability_FireflightFourLongNights = 45467, // PariOfPlenty->self, 17.0s cast, range 40 width 4 rect
     _Ability_FellFirework = 45476, // Helper->player, no cast, range 3 circle
     _Ability_WheelOfFireflight2 = 45470, // PariOfPlenty->self, no cast, range 40 ?-degree cone
