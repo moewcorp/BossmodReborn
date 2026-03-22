@@ -27,6 +27,7 @@ class Fireflight(BossModule module) : Components.GenericAOEs(module) {
         if ((AID)spell.Action.ID == AID.CarpetRide1 || (AID)spell.Action.ID == AID.CarpetRide2) {
             if (pathAOEs.Count > 0) {
                 pathAOEs.RemoveAt(0);
+                NumCasts++;
             }
         }
     }

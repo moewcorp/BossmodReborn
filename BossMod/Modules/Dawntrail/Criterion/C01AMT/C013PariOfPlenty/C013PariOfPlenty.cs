@@ -7,6 +7,12 @@
 //  - FireflightStackSpread - find out who gets the stack
 //  - WheelofFableFlight - find out who gets the stack + clean up
 //  - Improve angle working out for FireFlightFourLongNight?
+//  - Improve angle working for Fireflight first mechanic?
+
+/*
+ class RedCrystals(BossModule module)
+    : Components.StandardAOEs(module, AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 3, highlightImminent: true);
+ */
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);

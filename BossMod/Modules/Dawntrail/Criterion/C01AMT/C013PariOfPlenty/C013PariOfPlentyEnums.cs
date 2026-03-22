@@ -36,7 +36,7 @@ public enum AID : uint {
 
     _Ability_CarpetRide = 45441, // PariOfPlenty/4A71->location, no cast, single-target
     
-    WheelOfFableflightRight = 45478, // _Gen_FalseFlame->self, 11.0s cast, range 40 width 4 rect
+    WheelOfFableflightRight = 45478, // 4A71->self, 11.0s cast, range 40 width 4 rect
     WheelOfFableflightLeft = 45479, // 4A71->self, 11.0s cast, range 40 width 4 rect
     
     WheelOfFireflight = 45469, // PariOfPlenty/4A71->self, no cast, range 40 ?-degree cone
@@ -46,8 +46,8 @@ public enum AID : uint {
     
     KindledFlameStack = 45538, // Boss->self, 8.0s cast, single-target
     ScatteredKindlingSpread = 45536, // PariOfPlenty->self, 8.0s cast, single-target
-    _Ability_KindledFlame1 = 45539, // Helper->players, no cast, range 6 circle
-    _Ability_ScatteredKindling1 = 45537, // Helper->player, no cast, range 6 circle
+    KindledFlame1 = 45539, // Helper->players, no cast, range 6 circle
+    ScatteredKindling1 = 45537, // Helper->player, no cast, range 6 circle
     
     FireOfVictory = 45519, // PariOfPlenty->player, 5.0s cast, range 4 circle
     
@@ -56,14 +56,19 @@ public enum AID : uint {
     FellFirework = 45476, // Helper->player, no cast, range 3 circle
     FireWell = 45477, // Helper->players, no cast, range 3 circle
     
-    _Ability_ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
+    ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
     _Ability_CharmingBaubles = 45503, // PariOfPlenty->self, 3.0s cast, single-target
     _Ability_ThievesWeave = 46754, // PariOfPlenty->self, 3.0s cast, single-target
+    
+    _Ability_Fableflight = 45438, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
+    _Ability_Fableflight5 = 45439, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
+    
+    
+
     _Ability_1 = 45504, // 4A74->self, 1.0s cast, single-target
     _Ability_2 = 47153, // 4A74->location, no cast, single-target
     _Ability_CharmingBaubles1 = 45497, // PariOfPlenty->self, no cast, single-target
     _Ability_Unravel = 45506, // 4A74->self, 3.0s cast, single-target
-    _Ability_Fableflight = 45439, // 4A71->self, 24.1s cast, range 40 width 4 rect
     _Ability_BurningGleam = 45548, // 4A72->self, 7.0s cast, range 40 width 10 cross
     _Ability_ChillingGleam = 45501, // 4A73->self, 2.0s cast, range 40 width 10 cross
     _Ability_HighFirePowder = 45524, // Helper->location, no cast, range 15 circle
@@ -112,6 +117,10 @@ public enum IconID : uint
 public enum SID : uint {
     WitchHunt = 2970, // none->Boss, extra=0x3F5/0x3F4
     DarkResistanceDown = 3619, // Helper->player, extra=0x0
+    
+    _Gen_CurseOfSolitude = 4615, // none->player, extra=0x0
+    _Gen_CurseOfImmolation = 4617, // none->player, extra=0x0
+    _Gen_CurseOfCompanionship = 4616, // none->player, extra=0x0
 }
 
 public enum TetherID : uint

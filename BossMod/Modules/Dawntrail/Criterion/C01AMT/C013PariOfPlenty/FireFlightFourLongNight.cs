@@ -45,6 +45,7 @@ class WitchHunt(BossModule module) : Components.GenericBaitAway(module, (uint)AI
                 Order.RemoveAt(0);
                 if (Order.Count > 0) {
                     NextActivation = WorldState.FutureTime(3.1f);
+                    NumCasts++;
                 }
             }
         }
@@ -128,6 +129,7 @@ class FireFlightFourLongNight(BossModule module) : Components.GenericAOEs(module
             (AID)spell.Action.ID == AID.WheelOfFireflight2 || (AID)spell.Action.ID == AID.WheelOfFireflight3) {
             if (rotations.Count > 0) {
                 rotations.RemoveAt(0);
+                NumCasts++;
             }
         }
     }

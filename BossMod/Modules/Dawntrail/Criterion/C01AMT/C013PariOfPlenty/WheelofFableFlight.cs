@@ -52,8 +52,8 @@ class WheelOfFableFlight(BossModule module) : Components.GenericAOEs(module) {
             (AID)spell.Action.ID == AID.WheelOfFireflight1 || 
             (AID)spell.Action.ID == AID.WheelOfFireflight2 || 
             (AID)spell.Action.ID == AID.WheelOfFireflight3) {
-            
             aoes.Clear();
+            NumCasts++;
         }
     }
 
@@ -75,14 +75,14 @@ class WheelofFableFlightStackSpread(BossModule module) : Components.UniformStack
         }
     }
     
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
-        if ((AID)spell.Action.ID == AID.KindledFlameStack) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if ((AID)spell.Action.ID == AID.KindledFlame1) {
             Stacks.Clear();
             return;
         }
         
-        if ((AID)spell.Action.ID == AID.ScatteredKindlingSpread) {
+        if ((AID)spell.Action.ID == AID.ScatteredKindling1) {
             Spreads.Clear();
-        }       
+        }
     }
 }
