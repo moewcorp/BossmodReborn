@@ -8,6 +8,7 @@
 //  - WheelofFableFlight - find out who gets the stack + clean up
 //  - Improve angle working out for FireFlightFourLongNight?
 //  - Improve angle working for Fireflight first mechanic?
+//  - Improve visual for SpurningFlames? - Really not needed, but could add indictors on the direction to go instead of showing the AOEs (assumes BD)
 
 /*
  class RedCrystals(BossModule module)

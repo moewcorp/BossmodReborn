@@ -67,6 +67,9 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
     }
 
     private void ParisCurse(uint id, float delay) {
-        Cast(id, (uint)AID.ParisCurse, delay, 5, "Pari's Curse");
+        Cast(id, (uint)AID.ParisCurse, delay, 5, "Pari's Curse")
+            .ActivateOnEnter<ImpassionedSparks>()
+            .ActivateOnEnter<BurningPillar>()
+            .ActivateOnEnter<FireChains>();
     }
 }
