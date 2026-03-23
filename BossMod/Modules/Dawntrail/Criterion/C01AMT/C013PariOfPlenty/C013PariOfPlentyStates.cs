@@ -76,7 +76,7 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
 
     private void SpurningFlames(uint id, float delay) {
         Cast(id, (uint)AID.SpurningFlames, delay, 7, "Spurning Flames")
-            .DeactivateOnExit<ParisCurse>()
+            .DeactivateOnExit<ParisCurse>() // TODO remove once timeline is fixed for ParisCurse
             .ActivateOnEnter<SpurningFlames>()
             .DeactivateOnExit<SpurningFlames>()
             .ActivateOnExit<ImpassionedSparks>()
@@ -100,11 +100,14 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
             .ActivateOnEnter<Doubling>();
         ComponentCondition<Doubling>(id + 0x10, 14.2f, o => o.NumCasts > 0, "1st Towers");
         ComponentCondition<Doubling>(id + 0x20, 7.0f, o => o.NumCasts > 4, "2nd Towers")
-            .DeactivateOnExit<Doubling>();
-    }
-    
-    /*
+            .DeactivateOnExit<Doubling>()
             .ActivateOnEnter<RedCrystals>()
-            .ActivateOnEnter<FireFlightFourLongNight>()
-     */
+            .ActivateOnEnter<KindleFlameStackIcon>();
+        ComponentCondition<RedCrystals>(id + 0x30, 11.7f, o => o.NumCasts > 0, "Stacks + Crystals resolve")
+            .DeactivateOnExit<RedCrystals>()
+            .DeactivateOnExit<KindleFlameStackIcon>();
+        CastMulti(id + 0x40, [(uint)AID.CharmedFlightFourNightsLeft, (uint)AID.CharmedFlightFourNightsRight], 5.0f, 17.5f, "CharmedFlightFourNights")
+            .ActivateOnEnter<CharmedFlightFourNights>()
+            .ActivateOnEnter<RedCrystals2>();
+    }
 }

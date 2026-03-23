@@ -16,12 +16,25 @@
 //      - Show one at time and see how it looks? Then compare it to two
 // - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
 
-
-class RedCrystals(BossModule module) : Components.SimpleAOEs(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 2, 2.0f);
-
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
+
+class RedCrystals(BossModule module) : Components.SimpleAOEs(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 3);
+
+class RedCrystals2 : Components.SimpleAOEs {
+    public RedCrystals2(BossModule module) : base(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 2) {
+        Color = Colors.Danger;
+    }
+}
+
+class KindleFlameStackIcon(BossModule module) : Components.StackTogether(module, (uint)IconID._Gen_Icon_com_share3t, 5, 6) {
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        foreach (var target in Targets) {
+            Arena.AddCircle(target.Position, Radius, Colors.Safe);
+        }
+    }
+}
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(PariOfPlentyStates),

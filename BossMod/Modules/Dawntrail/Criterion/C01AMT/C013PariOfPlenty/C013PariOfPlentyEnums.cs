@@ -93,7 +93,9 @@ public enum AID : uint {
     _Ability_CarpetRide4 = 46573, // Helper->location, 2.1s cast, ???
     _Ability_KindledFlame3 = 45540, // PariOfPlenty->self, 5.0s cast, single-target
     _Ability_KindledFlame2 = 45541, // Helper->players, no cast, range 6 circle
-    _Ability_CharmdFlightFourNights = 47031, // PariOfPlenty->self, 17.5s cast, range 40 width 4 rect
+    CharmedFlightFourNightsRight = 47031, // PariOfPlenty->self, 17.5s cast, range 40 width 4 rect
+    CharmedFlightFourNightsLeft = 47032, // PariOfPlenty->self, 17.5s cast, range 40 width 4 rect
+
 }
 
 public enum IconID : uint
