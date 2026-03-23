@@ -21,4 +21,4 @@ class BurningPillar(BossModule module) : Components.GenericAOEs(module) {
     }
 }
 
-class FireChains(BossModule module) : Components.Chains(module, (uint)TetherID._Gen_Tether_chn_hfchain1f, default, 15F);
+class FireChains(BossModule module) : Components.Chains(module, (uint)TetherID.FireChain, default, 15F);

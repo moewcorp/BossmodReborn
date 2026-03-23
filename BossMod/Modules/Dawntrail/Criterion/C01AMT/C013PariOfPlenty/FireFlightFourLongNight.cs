@@ -172,8 +172,6 @@ class FireFlightFourLongNight(BossModule module) : Components.GenericAOEs(module
 }
 
 class CharmedFlightFourNights : FireFlightFourLongNight {
-
-    
     public CharmedFlightFourNights(BossModule module) : base(module) {}
     
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {

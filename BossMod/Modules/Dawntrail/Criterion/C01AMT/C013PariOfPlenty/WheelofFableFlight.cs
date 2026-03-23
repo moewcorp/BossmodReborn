@@ -1,19 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
-// spell 45479 - left - other one is most likely right from direction of looking forward (the actor point of view)
-
-// 628 - ORANGE
-// 629 - BLUE
-
-// Cause the aoe to from
-// D4 - 180 -> 629 -> -0
-// D5 - -90 -> 629 -> 90
-// D6 - 0 -> 628 -> -180
-// D7 - 90 -> 628 -> -90
-
-// TODO clean up class after testing has been completed
 // TODO figure out who gets the stack - its always support / DPS - but can we tell who?
-
 class WheelOfFableFlight(BossModule module) : Components.GenericAOEs(module) {
     private List<AOEInstance> aoes = [];
     private Angle offset;

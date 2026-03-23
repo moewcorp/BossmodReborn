@@ -1,19 +1,31 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
 // TODO
+//  - FireFlight:
+//        - find out who gets the stack
+//        - Add Enums value for left and right instead of using side number int
+//  - WheelOfFableFlight - find out who gets the stack
+
+/*
+ Add Prey icon - during chains & baits - now we have the Status ID for it (Prey = 2939)	
+Look into _Gen_ = 2056
+Figure out what these two items are:
+    _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
+    _Gen_Icon_m0489trg_c0c = 138, // player->self
+Confirm this is the tankBuster TankBuster = 342, // player->self
+
+Clean up Enums OID
+ 
+ */
+
 //  - Fix hints for witch hunt - currently says "Stack" "Bait" etc at the same time - most likely just disable for now until priority is added
 //  - Fix timeline
 //  - Clean up enums + add missing ones
-//  - FireflightStackSpread - find out who gets the stack
-//  - WheelofFableFlight - find out who gets the stack + clean up
 //  - Improve angle working out for FireFlightFourLongNight?
 //  - Improve angle working for Fireflight first mechanic?
 //  - Improve visual for SpurningFlames? - Really not needed, but could add indictors on the direction to go instead of showing the AOEs (assumes BD)
 
 // - Clean up towers + add to timeline + add cleave from enemies
-// - Implement mechanic after towers - just red crystals + stacks - with icon
-// - Implement final mechanic - turning (most likely need to use cast ID for new position the boss faces?) + red crystals - highlight bright yellow
-//      - Show one at time and see how it looks? Then compare it to two
 // - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
@@ -28,7 +40,7 @@ class RedCrystals2 : Components.SimpleAOEs {
     }
 }
 
-class KindleFlameStackIcon(BossModule module) : Components.StackTogether(module, (uint)IconID._Gen_Icon_com_share3t, 5, 6) {
+class KindleFlameStackIcon(BossModule module) : Components.StackTogether(module, (uint)IconID.StackIcon, 5, 6) {
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         foreach (var target in Targets) {
             Arena.AddCircle(target.Position, Radius, Colors.Safe);
