@@ -11,6 +11,8 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
         WheelOfFableFlight(id + 0x100, 12.7f);
         FireFlightFourLongNight(id + 0x200, 7.0f);
         ParisCurse(id + 0x300, 9.3f);
+        SpurningFlames(id + 0x400, 35.0f);
+        Doubling(id + 0x500, 7.2f);
         SimpleState(id + 0xFF0000u, 10000f, "???");
     }
 
@@ -68,8 +70,41 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
 
     private void ParisCurse(uint id, float delay) {
         Cast(id, (uint)AID.ParisCurse, delay, 5, "Pari's Curse")
-            .ActivateOnEnter<ImpassionedSparks>()
-            .ActivateOnEnter<BurningPillar>()
-            .ActivateOnEnter<FireChains>();
+            .ActivateOnEnter<ParisCurse>();
+        ComponentCondition<ParisCurse>(id + 0x10, 20.0f, o => o.NumCasts > 0, "FIX ME");
     }
+
+    private void SpurningFlames(uint id, float delay) {
+        Cast(id, (uint)AID.SpurningFlames, delay, 7, "Spurning Flames")
+            .DeactivateOnExit<ParisCurse>()
+            .ActivateOnEnter<SpurningFlames>()
+            .DeactivateOnExit<SpurningFlames>()
+            .ActivateOnExit<ImpassionedSparks>()
+            .ActivateOnExit<BurningPillar>();
+        ComponentCondition<BurningPillar>(id + 0x10, 20.0f, o => o.NumCasts > 0, "Baits 1");
+        ComponentCondition<BurningPillar>(id + 0x20, 5.0f, o => o.NumCasts > 2, "Baits 2");
+        ComponentCondition<BurningPillar>(id + 0x30, 5.0f, o => o.NumCasts > 4, "Baits 3");
+        ComponentCondition<BurningPillar>(id + 0x40, 5.0f, o => o.NumCasts > 6, "Baits 4")
+            .ActivateOnEnter<FireChains>();
+        ComponentCondition<FireChains>(id + 0x50, 3.7f, o => o.TethersAssigned, "Chains");
+        Cast(id + 0x60, (uint)AID.ScouringScorn, 5.6f, 6.0f, "Raidwide")
+            .ActivateOnEnter<ScouringScorn>()
+            .DeactivateOnExit<ScouringScorn>()
+            .DeactivateOnExit<ImpassionedSparks>()
+            .DeactivateOnExit<BurningPillar>()
+            .DeactivateOnExit<FireChains>();
+    }
+
+    private void Doubling(uint id, float delay) {
+        Cast(id, (uint)AID.Doubling, delay, 3, "Doubling")
+            .ActivateOnEnter<Doubling>();
+        ComponentCondition<Doubling>(id + 0x10, 14.2f, o => o.NumCasts > 0, "1st Towers");
+        ComponentCondition<Doubling>(id + 0x20, 7.0f, o => o.NumCasts > 4, "2nd Towers")
+            .DeactivateOnExit<Doubling>();
+    }
+    
+    /*
+            .ActivateOnEnter<RedCrystals>()
+            .ActivateOnEnter<FireFlightFourLongNight>()
+     */
 }

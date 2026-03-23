@@ -10,12 +10,17 @@
 //  - Improve angle working for Fireflight first mechanic?
 //  - Improve visual for SpurningFlames? - Really not needed, but could add indictors on the direction to go instead of showing the AOEs (assumes BD)
 
-/*
- class RedCrystals(BossModule module)
-    : Components.StandardAOEs(module, AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 3, highlightImminent: true);
- */
+// - Clean up towers + add to timeline + add cleave from enemies
+// - Implement mechanic after towers - just red crystals + stacks - with icon
+// - Implement final mechanic - turning (most likely need to use cast ID for new position the boss faces?) + red crystals - highlight bright yellow
+//      - Show one at time and see how it looks? Then compare it to two
+// - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
+
+
+class RedCrystals(BossModule module) : Components.SimpleAOEs(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 2, 2.0f);
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
+
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,

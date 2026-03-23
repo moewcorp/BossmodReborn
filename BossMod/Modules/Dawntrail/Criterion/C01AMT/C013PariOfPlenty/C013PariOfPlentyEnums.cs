@@ -33,7 +33,6 @@ public enum AID : uint {
     
     SunCirclet = 45448, // PariOfPlenty->self, 2.0s cast, range ?-60 donut
     
-
     _Ability_CarpetRide = 45441, // PariOfPlenty/4A71->location, no cast, single-target
     
     WheelOfFableflightRight = 45478, // 4A71->self, 11.0s cast, range 40 width 4 rect
@@ -81,13 +80,14 @@ public enum AID : uint {
     HotFoot = 45542, // Helper->player, no cast, range 10 circle
     ScouringScorn = 45491, // PariOfPlenty->self, 6.0s cast, range 40 circle
 
-    _Ability_Doubling = 47041, // PariOfPlenty->self, 3.0s cast, single-target
-    _Ability_Fableflight1 = 45450, // 4A71->self, 8.0s cast, range 40 width 4 rect
-    _Ability_Fableflight2 = 45449, // 4A71->self, 8.0s cast, range 40 width 4 rect
-    _Ability_Fableflight3 = 45452, // 4A71->self, 15.0s cast, range 40 width 4 rect
-    _Ability_Fableflight4 = 45451, // 4A71->self, 15.0s cast, range 40 width 4 rect
+    Doubling = 47041, // PariOfPlenty->self, 3.0s cast, single-target
+    TowerExplosion = 45532, // Helper->self, 8.0s cast, range 4 circle
     
-    _Ability_Explosion = 45532, // Helper->self, 8.0s cast, range 4 circle
+    _Ability_FableflightLeft = 45450, // 4A71->self, 8.0s cast, range 40 width 4 rect
+    _Ability_FableflightLeft2 = 45452, // 4A71->self, 15.0s cast, range 40 width 4 rect
+    _Ability_FableflightRight = 45449, // 4A71->self, 8.0s cast, range 40 width 4 rect
+    _Ability_FableflightRight1 = 45451, // 4A71->self, 15.0s cast, range 40 width 4 rect
+    
     _Ability_CarpetRide2 = 45440, // 4A71->location, no cast, single-target
     _Ability_CarpetRide3 = 46574, // Helper->location, 2.1s cast, ???
     _Ability_CarpetRide4 = 46573, // Helper->location, 2.1s cast, ???
@@ -128,5 +128,5 @@ public enum TetherID : uint
 {
     CarpetRideTether = 355, // _Gen_->_Gen_
     _Gen_Tether_chn_hfchain1f = 9, // player->player
-    _Gen_Tether_chn_tergetfix1f = 17, // _Gen_FalseFlame->player
+    TowerTether = 17, // _Gen_FalseFlame->player
 }
