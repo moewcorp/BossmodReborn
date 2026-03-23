@@ -3,17 +3,12 @@
 public enum OID : uint {
     PariOfPlenty = 0x4A70, // R5.016, x1
     Helper = 0x233C, // R0.500, x32, Helper type
-    
-    _Gen_FieryBauble = 0x4A72, // R6.000, x8
-    _Gen_Actor1e8fb8 = 0x1E8FB8, // R2.000, x1, EventObj type
-    _Gen_FlyingCarpet = 0x4A74, // R4.356, x8
-    _Gen_ = 0x4A75, // R1.000, x6
-    _Gen_FalseFlame = 0x4A71, // R5.016, x4
-    _Gen_Actor1ebf49 = 0x1EBF49, // R0.500, x1, EventObj type
-    _Gen_Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
-    _Gen_IcyBauble = 0x4A73, // R5.000, x1
-    _Gen_Exit = 0x1E850B, // R0.500, x1, EventObj type
-    _Gen_Actor1ebf20 = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
+    FlyingCarpet = 0x4A74, // R4.356, x8
+    FalseFlame = 0x4A71, // R5.016, x4
+    FieryBauble = 0x4A72, // R6.000, x8
+    IcyBauble = 0x4A73, // R5.000, x1
+    PathPoints = 0x4A75, // R1.000, x6 - Used for pathing mainly in the fight
+    BurnPuddle = 0x1EBF20, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint {
@@ -123,12 +118,12 @@ public enum IconID : uint {
     TurnRLeft = 645, // Boss->self
     TurnRRight = 644, // Boss->self
     
+    ChainsAppearing = 97, // player->self
+    HotFootSpread = 138, // player->self
+    
     BlueRug = 631, // player->self
     
     StackIcon = 161, // player->self
-    
-    _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
-    _Gen_Icon_m0489trg_c0c = 138, // player->self
 }
 
 public enum TetherID : uint {

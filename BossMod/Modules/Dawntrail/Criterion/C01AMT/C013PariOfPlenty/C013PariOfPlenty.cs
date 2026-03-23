@@ -5,28 +5,12 @@
 //        - find out who gets the stack
 //        - Add Enums value for left and right instead of using side number int
 //  - WheelOfFableFlight - find out who gets the stack
-
-/*
- Add Prey icon - during chains & baits - now we have the Status ID for it (Prey = 2939)	
-Look into _Gen_ = 2056
-Figure out what these two items are:
-    _Gen_Icon_m0376trg_fire3_a0p = 97, // player->self
-    _Gen_Icon_m0489trg_c0c = 138, // player->self
-Confirm this is the tankBuster TankBuster = 342, // player->self
-
-Clean up Enums OID
- 
- */
-
 //  - Fix hints for witch hunt - currently says "Stack" "Bait" etc at the same time - most likely just disable for now until priority is added
-//  - Fix timeline
-//  - Clean up enums + add missing ones
-//  - Improve angle working out for FireFlightFourLongNight?
-//  - Improve angle working for Fireflight first mechanic?
+//  - Clean up Enums - Just actions left
+//  - Complete timeline
 //  - Improve visual for SpurningFlames? - Really not needed, but could add indictors on the direction to go instead of showing the AOEs (assumes BD)
-
-// - Clean up towers + add to timeline + add cleave from enemies
-// - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
+//  - Towers add cleaves
+//  - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 
