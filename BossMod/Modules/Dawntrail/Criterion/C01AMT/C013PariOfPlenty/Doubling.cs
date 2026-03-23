@@ -23,13 +23,13 @@ public class Doubling(BossModule module) : Components.CastTowers(module, (uint)A
         base.OnCastStarted(caster, spell);
 
         // Only check the north actor to see which side is safe since
-        if ((AID)spell.Action.ID == AID._Ability_FableflightLeft || (AID)spell.Action.ID == AID._Ability_FableflightLeft2) {
+        if ((AID)spell.Action.ID == AID.FableflightLeft || (AID)spell.Action.ID == AID.FableflightLeft1) {
             if (caster.Position.AlmostEqual(northPos, 1.0f)) {
                 side = 1;
             }
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_FableflightRight || (AID)spell.Action.ID == AID._Ability_FableflightRight1) {
+        if ((AID)spell.Action.ID == AID.FableflightRight || (AID)spell.Action.ID == AID.FableflightRight1) {
             if (caster.Position.AlmostEqual(northPos, 1.0f)) {
                 side = 2;
             }
@@ -89,7 +89,7 @@ public class Doubling(BossModule module) : Components.CastTowers(module, (uint)A
     }
     
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
-        if ((IconID)iconID == IconID._Gen_Icon_m6d1_rug01_8s_c0e1) {
+        if ((IconID)iconID == IconID.BlueRug) {
             priorityPlayers.Add(targetID);
         }
     }
@@ -116,6 +116,9 @@ public class Doubling(BossModule module) : Components.CastTowers(module, (uint)A
 
     // Orders the tower on that specific side, with the 1st slot being the closer tower & the 2nd slot being the further tower
     private void sortTowerOrder() {
+        eastTowers.Clear();
+        westTowers.Clear();
+        
         foreach (var tower in Towers) {
             if (tower.Position.X > Module.Center.X) {
                 eastTowers.Add(tower);
