@@ -21,4 +21,6 @@ class BurningPillar(BossModule module) : Components.GenericAOEs(module) {
     }
 }
 
+class BurningPillarSpreads(BossModule module) : Components.IconStackSpread(module, default, (uint)IconID.HotFootSpread, default, (uint)AID.HotFoot, default, 10f, default);
+
 class FireChains(BossModule module) : Components.Chains(module, (uint)TetherID.FireChain, default, 15F);

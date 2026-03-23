@@ -85,6 +85,7 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
         ComponentCondition<BurningPillar>(id + 0x20, 5.0f, o => o.NumCasts > 2, "Baits 2");
         ComponentCondition<BurningPillar>(id + 0x30, 5.0f, o => o.NumCasts > 4, "Baits 3");
         ComponentCondition<BurningPillar>(id + 0x40, 5.0f, o => o.NumCasts > 6, "Baits 4")
+            .ActivateOnEnter<BurningPillarSpreads>()
             .ActivateOnEnter<FireChains>();
         ComponentCondition<FireChains>(id + 0x50, 3.7f, o => o.TethersAssigned, "Chains");
         Cast(id + 0x60, (uint)AID.ScouringScorn, 5.6f, 6.0f, "Raidwide")
