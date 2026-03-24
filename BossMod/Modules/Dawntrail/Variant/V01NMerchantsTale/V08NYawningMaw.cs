@@ -39,7 +39,7 @@ class GemHints(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AvailableGems.Any() && _succ)
+        if (AvailableGems.Any() && !_succ)
         {
             var closestGem = AvailableGems.MinBy(actor.DistanceToHitbox);
             if (closestGem != null)
