@@ -1,16 +1,17 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
 // TODO
+//  - Curse - Add cleave
+//  - Clean up Enums - Just actions left
+//  - Complete timeline - don't forgot about turning off paris curse in the next phase
+//  - Towers add cleaves
 //  - FireFlight:
 //        - find out who gets the stack
 //        - Add Enums value for left and right instead of using side number int
 //  - WheelOfFableFlight - find out who gets the stack
 //  - Fix hints for witch hunt - currently says "Stack" "Bait" etc at the same time - most likely just disable for now until priority is added
-//  - Clean up Enums - Just actions left
-//  - Complete timeline
 //  - Improve visual for SpurningFlames? - Really not needed, but could add indictors on the direction to go instead of showing the AOEs (assumes BD)
-//  - Towers add cleaves
-//  - Add Pari's Curse mechanic with no prio at the moment - just remove it for now + draw tiles
+//  - Pari's Curse - Mechanic works fine, just a lot of stuff for solving it - Remove gridMap if possible and find a different way to do it
 
 class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.HeatBurst);
 
