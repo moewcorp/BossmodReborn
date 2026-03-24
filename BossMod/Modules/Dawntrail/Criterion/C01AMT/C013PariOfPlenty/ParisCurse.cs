@@ -161,6 +161,10 @@ class ParisCurse(BossModule module) : Components.GenericAOEs(module) {
     private int? assignment;
     
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        if ((AID)spell.Action.ID == AID.ChillingGleam) {
+            NumCasts++;
+        }
+        
         if ((AID)spell.Action.ID == AID.CharmingBaubles) {
             Actor? actor = Module.WorldState.Actors.FirstOrDefault(a => a.OID == (uint)OID.IcyBauble);
             if (actor != null) {
@@ -168,7 +172,7 @@ class ParisCurse(BossModule module) : Components.GenericAOEs(module) {
             }
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_1) {
+        if ((AID)spell.Action.ID == AID.CarpetTeleport) {
             if (blueCrystal == null) {
                 return;
             }
@@ -188,20 +192,20 @@ class ParisCurse(BossModule module) : Components.GenericAOEs(module) {
             gridMap = new GridMap(4, 10, Module.Center);
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_Unravel) {
+        if ((AID)spell.Action.ID == AID.Unravel) {
             safeTiles = generateSafeSpots();
             assignment = ResolvePlayerAssignment(safeTiles);
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_BurningGleam) {
+        if ((AID)spell.Action.ID == AID.BurningGleam) {
             redCrystals.Add(caster);
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_Fableflight5) {
+        if ((AID)spell.Action.ID == AID.CurseFableflightRight) {
             safeHalf = SafeHalf.North;
         }
         
-        if ((AID)spell.Action.ID == AID._Ability_Fableflight) {
+        if ((AID)spell.Action.ID == AID.CurseFableflightLeft) {
             safeHalf = SafeHalf.South;
         }
     }
@@ -402,5 +406,55 @@ class ParisCurse(BossModule module) : Components.GenericAOEs(module) {
         }
         
         return null;
+    }
+}
+
+class Fableflight : Fireflight {
+    public Fableflight(BossModule module) : base(module) { }
+    
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if ((AID)spell.Action.ID == AID.CurseFableflightLeft) {
+            side = -1;
+            return;
+        }
+        
+        if ((AID)spell.Action.ID == AID.CurseFableflightRight) {
+            side = 1;
+        }
+    }
+
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether) { }
+
+    public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID == (uint)TetherID.CarpetRideTether) {
+            PathAOE pathAoe = new PathAOE();
+            Actor? actor = WorldState.Actors.Find(tether.Target);
+
+            if (actor == null) {
+                return;
+            }
+            
+            pathAoe.actor = actor;
+            pathAoe.startPosition = source.Position;
+            pathAoe.endPosition = actor.Position;
+            pathAoe.aoePosition = pathAOEs.Count + 1;
+            pathAOEs.Add(pathAoe);
+        }
+    }
+
+    // This function is needed for this version as "OnUntethered" doesn't happen until the AOE resolves, which is too late
+    // and OnTethered is normally too early before the actor moves giving the wrong position
+    public override void Update() {
+        foreach (var pathAOE in pathAOEs) {
+            var target = pathAOE.actor;
+            if (target == null) {
+                continue;
+            }
+            
+            var pos = target.Position;
+            if (!pathAOE.endPosition.Equals(pos)) {
+                pathAOE.endPosition = pos;
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
         WheelOfFableFlight(id + 0x100, 12.7f);
         FireFlightFourLongNight(id + 0x200, 7.0f);
         ParisCurse(id + 0x300, 9.3f);
-        SpurningFlames(id + 0x400, 35.0f);
+        SpurningFlames(id + 0x400, 8.4f);
         Doubling(id + 0x500, 7.2f);
         SimpleState(id + 0xFF0000u, 10000f, "???");
     }
@@ -28,14 +28,14 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
             ], 10.1f, 10.0f, "Fireflight")
             .ActivateOnEnter<Fireflight>()
             .ActivateOnEnter<FireflightStackSpread>();
-        ComponentCondition<Fireflight>(id + 0x20, 2.0f, o => o.NumCasts > 0, "Cleave 1");
-        ComponentCondition<Fireflight>(id + 0x30, 2.0f, o => o.NumCasts > 1, "Cleave 2");
+        ComponentCondition<Fireflight>(id + 0x20, 2.6f, o => o.NumCasts > 0, "Cleave 1");
+        ComponentCondition<Fireflight>(id + 0x30, 2.1f, o => o.NumCasts > 1, "Cleave 2");
         ComponentCondition<Fireflight>(id + 0x40, 2.0f, o => o.NumCasts > 2, "Cleave 3")
             .ActivateOnEnter<SunCirclet>()
             .DeactivateOnExit<Fireflight>();
-        Cast(id + 0x50, (uint)AID.SunCirclet, 2.5f, 2.0f, "SunCirclet")
+        Cast(id + 0x50, (uint)AID.SunCirclet, 1.7f, 2.0f, "SunCirclet")
             .DeactivateOnExit<SunCirclet>();
-        ComponentCondition<FireflightStackSpread>(id + 0x60, 1.0f, o => !o.Active, "Spread/Stack")
+        ComponentCondition<FireflightStackSpread>(id + 0x60, 1.1f, o => !o.Active, "Spread/Stack")
             .DeactivateOnExit<FireflightStackSpread>()
             .ActivateOnEnter<WheelOfFableFlight>(); // Easier to just activate this here rather than adding a condition for when the four clones move in-game
     }
@@ -59,7 +59,7 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
             .ActivateOnEnter<FireFlightFourLongNight>()
             .ActivateOnEnter<WitchHunt>()
             .ActivateOnEnter<WitchHuntStack>();
-        ComponentCondition<FireFlightFourLongNight>(id + 0x10, 2.0f, o => o.NumCasts > 0, "Bait 1");
+        ComponentCondition<FireFlightFourLongNight>(id + 0x10, 2.1f, o => o.NumCasts > 0, "Bait 1");
         ComponentCondition<FireFlightFourLongNight>(id + 0x20, 3.0f, o => o.NumCasts > 1, "Bait 2");
         ComponentCondition<FireFlightFourLongNight>(id + 0x30, 3.0f, o => o.NumCasts > 2, "Bait 3");
         ComponentCondition<FireFlightFourLongNight>(id + 0x40, 3.0f, o => o.NumCasts > 3, "Bait 4")
@@ -70,13 +70,14 @@ sealed class PariOfPlentyStates : StateMachineBuilder {
 
     private void ParisCurse(uint id, float delay) {
         Cast(id, (uint)AID.ParisCurse, delay, 5, "Pari's Curse")
-            .ActivateOnEnter<ParisCurse>();
-        ComponentCondition<ParisCurse>(id + 0x10, 20.0f, o => o.NumCasts > 0, "FIX ME");
+            .ActivateOnEnter<ParisCurse>()
+            .ActivateOnEnter<Fableflight>();
+        ComponentCondition<ParisCurse>(id + 0x10, 32.0f, o => o.NumCasts > 0, "Spread/Stack Resolve")
+            .DeactivateOnExit<ParisCurse>();
     }
 
     private void SpurningFlames(uint id, float delay) {
         Cast(id, (uint)AID.SpurningFlames, delay, 7, "Spurning Flames")
-            .DeactivateOnExit<ParisCurse>() // TODO remove once timeline is fixed for ParisCurse
             .ActivateOnEnter<SpurningFlames>()
             .DeactivateOnExit<SpurningFlames>()
             .ActivateOnExit<ImpassionedSparks>()

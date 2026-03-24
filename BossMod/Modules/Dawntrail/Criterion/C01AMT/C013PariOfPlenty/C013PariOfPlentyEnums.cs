@@ -42,6 +42,20 @@ public enum AID : uint {
     FellFirework = 45476, // Helper->player, no cast, range 3 circle
     FireWell = 45477, // Helper->players, no cast, range 3 circle
     
+    ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
+    CharmingBaubles = 45503, // PariOfPlenty->self, 3.0s cast, single-target
+    CharmingBaubles1 = 45497, // PariOfPlenty->self, no cast, single-target
+    BurningGleam = 45548, // 4A72->self, 7.0s cast, range 40 width 10 cross
+    ChillingGleam = 45501, // 4A73->self, 2.0s cast, range 40 width 10 cross
+    ThievesWeave = 46754, // PariOfPlenty->self, 3.0s cast, single-target
+    CurseFableflightLeft = 45438, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
+    CurseFableflightRight = 45439, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
+    CarpetTeleport = 45504, // 4A74->self, 1.0s cast, single-target
+    CarpetTeleport1 = 47153, // 4A74->location, no cast, single-target
+    Unravel = 45506, // 4A74->self, 3.0s cast, single-target
+    HighFirePowder = 45524, // Helper->location, no cast, range 15 circle
+    FirePowder = 45523, // Helper->self, no cast, range 15 circle
+    
     SpurningFlames = 45482, // PariOfPlenty->self, 7.0s cast, range 40 circle
     ImpassionedSparks = 45483, // PariOfPlenty->self, 5.0s cast, single-target
     ImpassionedSparks1 = 45484, // PariOfPlenty->self, no cast, single-target
@@ -70,20 +84,6 @@ public enum AID : uint {
     CarpetRide3 = 45440, // 4A71->location, no cast, single-target
     CarpetRide4 = 46574, // Helper->location, 2.1s cast, ???
     CarpetRide5 = 46573, // Helper->location, 2.1s cast, ???
-    
-    ParisCurse = 45551, // PariOfPlenty->self, 5.0s cast, range 60 circle
-    CharmingBaubles = 45503, // PariOfPlenty->self, 3.0s cast, single-target
-    ThievesWeave = 46754, // PariOfPlenty->self, 3.0s cast, single-target
-    _Ability_Fableflight = 45438, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
-    _Ability_Fableflight5 = 45439, // _Gen_FalseFlame->self, 24.1s cast, range 40 width 4 rect
-    _Ability_1 = 45504, // 4A74->self, 1.0s cast, single-target
-    _Ability_2 = 47153, // 4A74->location, no cast, single-target
-    _Ability_CharmingBaubles1 = 45497, // PariOfPlenty->self, no cast, single-target
-    _Ability_Unravel = 45506, // 4A74->self, 3.0s cast, single-target
-    _Ability_BurningGleam = 45548, // 4A72->self, 7.0s cast, range 40 width 10 cross
-    _Ability_ChillingGleam = 45501, // 4A73->self, 2.0s cast, range 40 width 10 cross
-    _Ability_HighFirePowder = 45524, // Helper->location, no cast, range 15 circle
-    _Ability_FirePowder = 45523, // Helper->self, no cast, range 15 circle
 }
 
 public enum SID : uint {

@@ -1,10 +1,11 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
 // TODO
-//  - Curse - Add cleave
-//  - Clean up Enums - Just actions left
-//  - Complete timeline - don't forgot about turning off paris curse in the next phase
+//  - Complete timeline - end of fight - need enrage log
+//  - Pari's Curse - Add stack/spread AOEs?
 //  - Towers add cleaves
+//  - Improve text hints on some mechanics
+//  - Change colour on WheelOfFableFlight - hard to see spreads/stacks currently
 //  - FireFlight:
 //        - find out who gets the stack
 //        - Add Enums value for left and right instead of using side number int
@@ -17,10 +18,10 @@ class HeatBurst(BossModule module) : Components.RaidwideCast(module, (uint)AID.H
 
 class FireOfVictory(BossModule module) : Components.BaitAwayCast(module, (uint)AID.FireOfVictory, 4f, true, true, true, AIHints.PredictedDamageType.Tankbuster);
 
-class RedCrystals(BossModule module) : Components.SimpleAOEs(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 3);
+class RedCrystals(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BurningGleam, new AOEShapeCross(40, 5), 3);
 
 class RedCrystals2 : Components.SimpleAOEs {
-    public RedCrystals2(BossModule module) : base(module, (uint)AID._Ability_BurningGleam, new AOEShapeCross(40, 5), 2) {
+    public RedCrystals2(BossModule module) : base(module, (uint)AID.BurningGleam, new AOEShapeCross(40, 5), 2) {
         Color = Colors.Danger;
     }
 }
