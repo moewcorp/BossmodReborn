@@ -45,9 +45,9 @@ public enum AID : uint
 public enum SID : uint
 {
     ChargeTelegraph = 2195, //ex 0x3F8
-    _Gen_Bind = 2518, // 4AD1->player, extra=0x0
-    _Gen_Dropsy = 2087, // 4AD1->player, extra=0x0
-    _Gen_BubbleGaol = 5047, // none->player, extra=0xB6
+    Bind = 2518, // 4AD1->player, extra=0x0
+    Dropsy = 2087, // 4AD1->player, extra=0x0
+    BubbleGaol = 5047, // none->player, extra=0xB6
 }
 public enum IconID : uint
 {
@@ -115,8 +115,8 @@ class StingingTentacle(BossModule module) : Components.GenericAOEs(module)
     private readonly List<Actor> _tents = [];
     private readonly List<AOEInstance> _aoes = [];
     private readonly AOEShapeRect rect = new(50f, 7f);
-    private DateTime _activation = default;
-    private bool _active = false;
+    private DateTime _activation;
+    private bool _active;
 
     private static readonly Angle InwardOffset = 27f.Degrees();
 

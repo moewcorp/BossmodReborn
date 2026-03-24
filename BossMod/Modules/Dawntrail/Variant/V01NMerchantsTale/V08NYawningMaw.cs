@@ -28,7 +28,7 @@ class GemHints(BossModule module) : BossComponent(module)
     private IEnumerable<Actor> Gems => Module.Enemies(OID.Gems);
     private readonly List<Actor> _disabledGems = [];
     public bool AllGemsDisabled => !AvailableGems.Any();
-    private bool _succ = false;
+    private bool _succ;
 
     private static readonly WPos Gems36 = new(295.17f, 691.57f);
     private static readonly WPos Gems37 = new(287.13f, 684.47f);
@@ -39,7 +39,7 @@ class GemHints(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (AvailableGems.Count() != 0 && _succ)
+        if (AvailableGems.Any() && _succ)
         {
             var closestGem = AvailableGems.MinBy(actor.DistanceToHitbox);
             if (closestGem != null)

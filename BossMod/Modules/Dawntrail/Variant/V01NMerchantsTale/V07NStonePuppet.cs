@@ -16,7 +16,7 @@ public enum IconID : uint
 }
 class ForbiddenGolem(BossModule module) : Components.GenericInvincible(module)
 {
-    private bool _rocksCharged = false;
+    private bool _rocksCharged;
     protected override IEnumerable<Actor> ForbiddenTargets(int slot, Actor actor)
     {
         if (!_rocksCharged)
@@ -42,7 +42,7 @@ class MagneticRock(BossModule module) : Components.BaitAwayIcon(module, new AOES
 class RockHints(BossModule module) : BossComponent(module)
 {
     private IEnumerable<Actor> Rocks => Module.Enemies(OID.Rock);
-    private Actor? MagneticTarget = null;
+    private Actor? MagneticTarget;
 
     private readonly List<Actor> _disabledRocks = [];
 
@@ -60,7 +60,7 @@ class RockHints(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (actor == MagneticTarget && AvailableRocks.Count() != 0)
+        if (actor == MagneticTarget && AvailableRocks.Any())
         {
             var closestRock = AvailableRocks.MinBy(actor.DistanceToHitbox);
             if (closestRock != null)
