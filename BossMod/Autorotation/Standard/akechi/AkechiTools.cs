@@ -166,9 +166,9 @@ public abstract class AkechiTools<AID, TraitID>(RotationModuleManager manager, A
     protected Actor? AOETargetChoice(Actor? manual, Actor? auto, StrategyValues.OptionRef track, StrategyValues strategy) => ResolveTargetOverride(track.Value) ?? (strategy.AutoTarget() ? auto : manual);
 
     //position checks
-    protected PositionCheck IsSplashTarget => (primary, other) => Hints.TargetInAOECircle(other, primary.Position, 5f);
-    protected PositionCheck Is10ySplashTarget => (primary, other) => Hints.TargetInAOECircle(other, primary.Position, 10f);
-    protected PositionCheck ConeTargetCheck(float range) => (primary, other) => Hints.TargetInAOECone(other, Player.Position, range, Player.DirectionTo(primary), 45f.Degrees());
+    protected PositionCheck IsSplashTarget => (primary, other) => TargetInAOECircle(other, primary.Position, 5f);
+    protected PositionCheck Is10ySplashTarget => (primary, other) => TargetInAOECircle(other, primary.Position, 10f);
+    protected PositionCheck ConeTargetCheck(float range) => (primary, other) => TargetInAOECone(other, Player.Position, range, Player.DirectionTo(primary), 45f.Degrees());
     protected PositionCheck Is12yConeTarget => ConeTargetCheck(12f);
     protected PositionCheck LineTargetCheck(float range, float halfWidth = 2f) => (primary, other) => TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), range, halfWidth);
     protected PositionCheck Is10yRectTarget => LineTargetCheck(10f);
