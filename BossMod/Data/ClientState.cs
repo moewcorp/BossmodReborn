@@ -37,7 +37,7 @@ public sealed class ClientState
     public record struct Gauge(ulong Low, ulong High);
     public record struct Stats(int SkillSpeed, int SpellSpeed, int Haste);
     public record struct Pet(ulong InstanceID, byte Order, byte Stance);
-    public record struct Companion(ulong InstanceID, byte Stance, float TimeLeft);
+    public record struct Companion(ulong InstanceID, byte Stance, float TimeLeft, bool Stabled);
     public record struct DutyAction(ActionID Action, byte CurCharges, byte MaxCharges);
     public record struct HateInfo(ulong InstanceID, Hate[] Targets)
     {
