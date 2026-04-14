@@ -1,5 +1,6 @@
-﻿using BossMod.AI;
+using BossMod.AI;
 using BossMod.Autorotation;
+using BossMod.Pathfinding;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,7 +11,7 @@ sealed class IPCProvider : IDisposable
 {
     private Action? _disposeActions;
 
-    public IPCProvider(RotationModuleManager autorotation, ActionManagerEx amex, MovementOverride movement, AIManager ai)
+    public IPCProvider(RotationModuleManager autorotation, ActionManagerEx amex, MovementOverride movement, AIManager ai, ObstacleMapManager obstacles)
     {
         Register("HasModuleByDataId", (uint dataId) => BossModuleRegistry.FindByOID(dataId) != null);
         Register("Configuration", (IReadOnlyList<string> args, bool save) => Service.Config.ConsoleCommand(string.Join(' ', args), save));
@@ -219,6 +220,10 @@ sealed class IPCProvider : IDisposable
                 ms.TransientSettings.Clear();
             return true;
         });
+
+        Register("ObstacleMap.Generate", (Vector3 centerWorld, float radius, bool writeToFile) => obstacles.GenerateMap(centerWorld, radius, writeToFile));
+        Register("ObstacleMap.GetGenerationStatus", () => obstacles.GenerationStatus);
+        Register("ObstacleMap.HasTempMap", obstacles.HasTempMap);
     }
 
     public void Dispose() => _disposeActions?.Invoke();
