@@ -46,17 +46,20 @@ public sealed class ObstacleMapManager : IDisposable
     public bool CanEditDatabase() => _config.MapLoadFromSource;
     public uint ZoneKey(ushort zoneId, ushort cfcId) => ((uint)zoneId << 16) | cfcId;
     public uint CurrentKey() => ZoneKey(World.CurrentZone, World.CurrentCFCID);
-    public TaskStatus GetGenerationStatus() => _generationTask?.Status ?? TaskStatus.RanToCompletion;
+    public TaskStatus GenerationStatus => _generationTask?.Status ?? TaskStatus.RanToCompletion;
     public bool HasTempMap()
     {
         lock (_tempMapLock)
             return _tempMap != null;
     }
 
-    public (string Filename, int Width, int Height)? GetTempMapMeta()
+    public (string Filename, int Width, int Height)? TempMapMeta
     {
-        lock (_tempMapLock)
-            return _tempMap is { } t ? (t.entry.Filename, t.data.Width, t.data.Height) : null;
+        get
+        {
+            lock (_tempMapLock)
+                return _tempMap is { } t ? (t.entry.Filename, t.data.Width, t.data.Height) : null;
+        }
     }
 
     public bool TryCloneTempMap(out ObstacleMapDatabase.Entry entry, out Bitmap bitmap)

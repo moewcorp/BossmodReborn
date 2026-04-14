@@ -206,7 +206,7 @@ sealed class IPCProvider : IDisposable
         });
 
         Register("ObstacleMap.Generate", (Vector3 centerWorld, float radius, float margin, bool writeToFile) => obstacles.GenerateMap(centerWorld, radius, margin, writeToFile));
-        Register("ObstacleMap.GetGenerationStatus", obstacles.GetGenerationStatus);
+        Register("ObstacleMap.GetGenerationStatus", () => obstacles.GenerationStatus);
         Register("ObstacleMap.HasTempMap", obstacles.HasTempMap);
     }
 

@@ -146,7 +146,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
         {
             var player = _owner.Obstacles.World.Party.Player();
             ImGui.TextUnformatted("IPC temp map");
-            ImGui.TextUnformatted($"Generation task: {_owner.Obstacles.GetGenerationStatus()}");
+            ImGui.TextUnformatted($"Generation task: {_owner.Obstacles.GenerationStatus}");
             ImGui.TextUnformatted($"Key: {_e.Filename}");
             ImGui.TextUnformatted($"Bounds min {_e.MinBounds}  max {_e.MaxBounds}");
             ImGui.TextUnformatted($"Origin {_e.Origin}  grid {Bitmap.Width}x{Bitmap.Height}  cell {Bitmap.PixelSize:F3} yalms");
@@ -197,10 +197,10 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
 
         ImGui.Separator();
         ImGui.TextUnformatted("Temp map (IPC / memory)");
-        var gen = Obstacles.GetGenerationStatus();
+        var gen = Obstacles.GenerationStatus;
         if (gen is not TaskStatus.RanToCompletion)
             ImGui.TextUnformatted($"Build task: {gen}");
-        if (Obstacles.GetTempMapMeta() is not { } meta)
+        if (Obstacles.TempMapMeta is not { } meta)
         {
             ImGui.TextDisabled("No temp map loaded.");
         }
