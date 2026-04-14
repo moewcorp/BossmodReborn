@@ -20,20 +20,20 @@ sealed class IPCProvider : IDisposable
         Register("Configuration.LastModified", () => lastModified);
 
         Register("Configuration.DisableModule", (string name, bool disable) =>
-                                                {
-                                                    ref var disabledModules = ref Service.Config.Get<BossModuleConfig>().DisabledModules;
+        {
+            var disabledModules = Service.Config.Get<BossModuleConfig>().DisabledModules;
 
-                                                    if (!disable)
-                                                        return disabledModules.Remove(name);
+            if (!disable)
+                return disabledModules.Remove(name);
 
-                                                    if (!disabledModules.Contains(name))
-                                                    {
-                                                        disabledModules.Add(name);
-                                                        return true;
-                                                    }
+            if (!disabledModules.Contains(name))
+            {
+                disabledModules.Add(name);
+                return true;
+            }
 
-                                                    return false;
-                                                });
+            return false;
+        });
 
         Register("Rotation.ActionQueue.HasEntries", () => autorotation.Hints.ActionsToExecute.Entries.Any(x => !x.Manual));
 
