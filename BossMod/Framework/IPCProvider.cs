@@ -1,4 +1,3 @@
-using BossMod.AI;
 using BossMod.Autorotation;
 using BossMod.Pathfinding;
 using System.IO;
@@ -11,12 +10,12 @@ sealed class IPCProvider : IDisposable
 {
     private Action? _disposeActions;
 
-    public IPCProvider(RotationModuleManager autorotation, ActionManagerEx amex, MovementOverride movement, AIManager ai, ObstacleMapManager obstacles)
+    public IPCProvider(RotationModuleManager autorotation, ObstacleMapManager obstacles)
     {
         Register("HasModuleByDataId", (uint dataId) => BossModuleRegistry.FindByOID(dataId) != null);
         Register("Configuration", (IReadOnlyList<string> args, bool save) => Service.Config.ConsoleCommand(string.Join(' ', args), save));
 
-        DateTime lastModified = DateTime.Now;
+        var lastModified = DateTime.Now;
         Service.Config.Modified.Subscribe(() => lastModified = DateTime.Now);
         Register("Configuration.LastModified", () => lastModified);
 

@@ -474,16 +474,16 @@ class FourLongNightsBait(BossModule module) : Components.UniformStackSpread(modu
 
         if (_baits.Count > 0)
         {
-            var ordered = Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position);
+            var ordered = Raid.WithoutSlot().SortedByRange(Module.PrimaryActor.Position).ToList();
             if (_baits[0].Item1 == Bait.Close)
             {
-                AddSpread(ordered.First(), _baits[0].Item2);
-                AddStack(ordered.Last(), _baits[0].Item2);
+                AddSpread(ordered[0], _baits[0].Item2);
+                AddStack(ordered[^1], _baits[0].Item2);
             }
             else
             {
-                AddStack(ordered.First(), _baits[0].Item2);
-                AddSpread(ordered.Last(), _baits[0].Item2);
+                AddStack(ordered[0], _baits[0].Item2);
+                AddSpread(ordered[^1], _baits[0].Item2);
             }
         }
     }
