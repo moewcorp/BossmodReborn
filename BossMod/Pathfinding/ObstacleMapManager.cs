@@ -128,7 +128,7 @@ public sealed class ObstacleMapManager : IDisposable
         }
     }
 
-    public bool GenerateMap(Vector3 centerWorld, float radius, float margin, bool writeToFile)
+    public bool GenerateMap(Vector3 centerWorld, float radius, bool writeToFile)
     {
         if (_generationTask is { IsCompleted: false })
             return false;
@@ -137,9 +137,8 @@ public sealed class ObstacleMapManager : IDisposable
 
         _generationTask = Service.Framework.RunOnTick(() =>
         {
-            var effectiveRadius = MathF.Max(1, radius + margin);
-            var minBounds = new Vector3(centerWorld.X - effectiveRadius, -1024, centerWorld.Z - effectiveRadius);
-            var maxBounds = new Vector3(centerWorld.X + effectiveRadius, 1024, centerWorld.Z + effectiveRadius);
+            var minBounds = new Vector3(centerWorld.X - radius, -1024, centerWorld.Z - radius);
+            var maxBounds = new Vector3(centerWorld.X + radius, 1024, centerWorld.Z + radius);
             var pixelSize = 0.5f;
             var filename = writeToFile ? GeneratePersistentMapName() : Path.GetRandomFileName() + ".bmp";
             var fullPath = writeToFile ? RootPath + filename : Path.Combine(Path.GetTempPath(), filename);
