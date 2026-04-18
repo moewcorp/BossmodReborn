@@ -97,7 +97,7 @@ public sealed class Plugin : IDalamudPlugin
         _rotation = new(_rotationDB, _bossmod, _hints);
         _ai = new(_rotation, _amex, _movementOverride);
         _broadcast = new();
-        _ipc = new(_bossmod, _hints, _rotation, _amex, _movementOverride, _ai);
+        _ipc = new(_bossmod, _hints, _rotation, _amex, _movementOverride, _ai, _hintsBuilder.Obstacles);
         _dtr = new(_rotation, _ai);
         _mbox = new(_rotation, _ws);
         _wndBossmod = new(_bossmod, _zonemod);
