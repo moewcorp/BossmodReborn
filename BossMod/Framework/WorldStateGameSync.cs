@@ -182,7 +182,7 @@ sealed class WorldStateGameSync : IDisposable
         _inventoryAckHook.Enable();
         Service.Log($"[WSG] InventoryAck address = {_inventoryAckHook.Address:X}");
 
-        _processPlayActionTimelineSyncHook = Service.Hook.HookFromSignature<ProcessPacketPlayActionTimelineSync>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ?? 48 8B D7 45 33 C0 E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ??", ProcessPlayActionTimelineSyncDetour);
+        _processPlayActionTimelineSyncHook = Service.Hook.HookFromSignature<ProcessPacketPlayActionTimelineSync>("48 8D 4F 10 E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ?? 45 33 C0 48 8B D7 E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B9 ?? ?? ?? ??", ProcessPlayActionTimelineSyncDetour);
         _processPlayActionTimelineSyncHook.Enable();
         Service.Log($"[WSG] ProcessPlayActionTimelineSync address = {_processPlayActionTimelineSyncHook.Address:X}");
     }
@@ -230,7 +230,7 @@ sealed class WorldStateGameSync : IDisposable
         ));
         if (_ws.CurrentZone != Service.ClientState.TerritoryType || _ws.CurrentCFCID != GameMain.Instance()->CurrentContentFinderConditionId)
         {
-            _ws.Execute(new WorldState.OpZoneChange(Service.ClientState.TerritoryType, GameMain.Instance()->CurrentContentFinderConditionId));
+            _ws.Execute(new WorldState.OpZoneChange((ushort)Service.ClientState.TerritoryType, GameMain.Instance()->CurrentContentFinderConditionId));
         }
         var proxy = fwk->NetworkModuleProxy->ReceiverCallback;
         var scramble = Network.IDScramble.Get();
