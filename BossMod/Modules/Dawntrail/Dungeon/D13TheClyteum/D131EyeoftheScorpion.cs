@@ -67,6 +67,7 @@ sealed class MotionTracker(BossModule module) : Components.StayMove(module)
             PlayerStates[slot] = default;
         }
     }
+    //TODO: Figure out best way to display the beam.  This works but doesn't communicate very well to the player what should happen. Likely a voidzone on the actor with a hint?
 }
 
 sealed class D131EyeOfTheScorpionStates : StateMachineBuilder
