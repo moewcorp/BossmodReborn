@@ -51,15 +51,6 @@
         "type": "Transitive",
         "resolved": "2.4.15",
         "contentHash": "KQFOtJKKhaXzuSiZhkFaFzQEdYsA+EN/XqKZDYwsGDOrS0Nxu6qzCvNTsDF4xtkiZbBA6u7I59QnsuP2O2fZgg=="
-      },
-      "ffxivclientstructs": {
-        "type": "Project",
-        "dependencies": {
-          "InteropGenerator.Runtime": "[1.0.0, )"
-        }
-      },
-      "interopgenerator.runtime": {
-        "type": "Project"
       }
     }
   }
