@@ -1,8 +1,4 @@
-﻿using BossMod.AST;
-using System.Diagnostics.Tracing;
-using System.Reflection;
-
-namespace BossMod.Modules.Dawntrail.Dungeon.D13TheClyteum;
+﻿namespace BossMod.Dawntrail.Dungeon.D13TheClyteum.D131EyeOfTheScorpion;
 
 public enum OID : uint
 {
