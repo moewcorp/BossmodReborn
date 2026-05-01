@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Dungeon.D13Clyteum.D132Chort;
+namespace BossMod.Dawntrail.Dungeon.D13TheClyteum.D132Chort;
 
 public enum OID : uint
 {
@@ -76,7 +76,7 @@ sealed class D132ChortStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
+[ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(D132ChortStates),
     ConfigType = null, // replace null with typeof(ChortConfig) if applicable
     ObjectIDType = typeof(OID),
