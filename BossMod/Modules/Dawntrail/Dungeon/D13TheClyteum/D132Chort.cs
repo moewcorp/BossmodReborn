@@ -43,9 +43,9 @@ public enum IconID : uint
 }
 
 sealed class MortifyingFlesh(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh, new AOEShapeRect(40f, 4f));
-sealed class MortifyingFlesh1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh1, new AOEShapeRect(40f, 7f));
+sealed class MortifyingFlesh1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh1, new AOEShapeRect(40f, 8f));
 
-sealed class MortifyingFlesh2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh2, new AOEShapeRect(40f, 7f));
+sealed class MortifyingFlesh2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh2, new AOEShapeRect(40f, 8f));
 
 //TODO Would prefer if it moves automatically to where it needs to be. Shows indicator, doesn't seem to move.
 sealed class BodyWeightExorcism1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BodyweightExorcism1, 11, true);
