@@ -48,7 +48,16 @@ sealed class MortifyingFlesh1(BossModule module) : Components.SimpleAOEs(module,
 sealed class MortifyingFlesh2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MortifyingFlesh2, new AOEShapeRect(40f, 8f));
 
 //TODO Would prefer if it moves automatically to where it needs to be. Shows indicator, doesn't seem to move.
-sealed class BodyWeightExorcism1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BodyweightExorcism1, 11, true);
+sealed class BodyWeightExorcism1(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.BodyweightExorcism1, 11)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var src in ActiveKnockbacks(slot, actor))
+            if (!IsImmune(slot, src.Activation))
+                hints.AddForbiddenZone(new AOEShapeCircle(7f, true), Arena.Center);
+
+    }
+}
 
 sealed class BasicVomit(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BasicVomit, new AOEShapeCone(50f, 60f.Degrees()));
 
