@@ -214,3 +214,162 @@ sealed class MaelstromBaitSafeSpots(BossModule module) : BossComponent(module)
     private static WPos Offset(WPos origin, Angle angle)
         => origin + Distance * angle.ToDirection();
 }
+
+sealed class AtomicImpactBaitPath(BossModule module) : BossComponent(module)
+{
+    private int _baitSlot1 = -1;
+    private int _baitSlot2 = -1;
+
+    private int _baitCount1;
+    private int _baitCount2;
+
+    private bool _northIsWest = true;
+    private bool _quadrantLocked;
+
+    private readonly MammothMeteor? _meteors = module.FindComponent<MammothMeteor>();
+
+    private static readonly WPos[] NorthPathWest =
+    [
+        new(93f, 81f),
+        new(97f, 81f),
+        new(103f, 81f),
+        new(107f, 81f),
+        new(102f, 88f),
+        new(98f, 88f)
+    ];
+
+    private static readonly WPos[] NorthPathEast =
+    [
+        new(111f, 81f),
+        new(107f, 81f),
+        new(101f, 81f),
+        new(97f, 81f),
+        new(102f, 88f),
+        new(106f, 88f)
+    ];
+
+    private static readonly WPos[] SouthPathWest =
+    [
+        new(93f, 119f),
+        new(97f, 119f),
+        new(103f, 119f),
+        new(107f, 119f),
+        new(102f, 112f),
+        new(98f, 112f)
+    ];
+
+    private static readonly WPos[] SouthPathEast =
+    [
+        new(111f, 119f),
+        new(107f, 119f),
+        new(101f, 119f),
+        new(97f, 119f),
+        new(102f, 112f),
+        new(106f, 112f)
+    ];
+
+    public override void Update()
+    {
+        TryLockQuadrant();
+    }
+
+    private void TryLockQuadrant()
+    {
+        if (_quadrantLocked || _meteors == null)
+            return;
+
+        var aoes = _meteors.ActiveCasters;
+        if (aoes.Length < 2)
+            return;
+
+        bool nw = false;
+
+        for (var i = 0; i < aoes.Length; ++i)
+        {
+            ref readonly var aoe = ref aoes[i];
+
+            if (aoe.Origin.Z < 100f && aoe.Origin.X < 100f)
+            {
+                nw = true;
+                break;
+            }
+        }
+
+        _northIsWest = !nw;
+        _quadrantLocked = true;
+    }
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
+    {
+        if (iconID != (uint)IconID.AtomicImpactIcon)
+            return;
+
+        var slot = Raid.FindSlot(actor.InstanceID);
+        if (slot < 0)
+            return;
+
+        if (slot == _baitSlot1 || slot == _baitSlot2)
+            return;
+
+        if (_baitSlot1 < 0)
+            _baitSlot1 = slot;
+        else
+            _baitSlot2 = slot;
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID != (uint)AID.AtomicImpact)
+            return;
+
+        var slot = Raid.FindSlot(spell.MainTargetID);
+
+        if (slot == _baitSlot1)
+            ++_baitCount1;
+        else if (slot == _baitSlot2)
+            ++_baitCount2;
+    }
+
+    private WPos NextTarget(int slot, Actor actor)
+    {
+        var north = actor.Position.Z < 100f;
+        var west = _northIsWest;
+
+        var index = slot == _baitSlot1 ? _baitCount1 : _baitCount2;
+
+        if (index >= 6)
+            return Module.Arena.Center;
+
+        if (north)
+            return west ? NorthPathWest[index] : NorthPathEast[index];
+        else
+            return west ? SouthPathWest[index] : SouthPathEast[index];
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (slot != _baitSlot1 && slot != _baitSlot2)
+            return;
+
+        var target = NextTarget(slot, actor);
+        hints.GoalZones.Add(AIHints.GoalProximity(target, 1f, 1000f));
+    }
+
+    public override void AddMovementHints(int slot, Actor actor, MovementHints hints)
+    {
+        if (slot != _baitSlot1 && slot != _baitSlot2)
+            return;
+
+        var target = NextTarget(slot, actor);
+        hints.Add(actor.Position, target, Colors.Safe);
+    }
+
+    public override void DrawArenaForeground(int slot, Actor actor)
+    {
+        if (slot != _baitSlot1 && slot != _baitSlot2)
+            return;
+
+        var target = NextTarget(slot, actor);
+        Module.Arena.AddCircle(target, 1.2f, Colors.Safe);
+    }
+}
