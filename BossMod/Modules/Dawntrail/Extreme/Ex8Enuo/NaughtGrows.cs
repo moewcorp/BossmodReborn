@@ -7,7 +7,7 @@ sealed class NaughtGrowsWildCharge(BossModule module) : Components.GenericWildCh
         switch (iconID)
         {
             case (uint)IconID.NaughtGrowsWildChargeSingle:
-                Source = module.PrimaryActor;
+                Source = Module.PrimaryActor;
                 PlayerRoles[Raid.FindSlot(targetID)] = PlayerRole.TargetNotFirst;
                 break;
         }
