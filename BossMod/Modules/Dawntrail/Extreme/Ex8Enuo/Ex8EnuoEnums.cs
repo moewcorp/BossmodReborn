@@ -101,26 +101,59 @@ public enum AID : uint
 public enum TetherID : uint
 {
     NaughtGrowsWildCharge = 430, // player->Enuo
-    _Gen_Tether_chn_z5fd11_0a1 = 395, // 4DB8->Enuo
-    _Gen_Tether_chn_z5fd09_0a1 = 393, // 4DB8->Enuo
-    _Gen_Tether_chn_z5fd16_0a1 = 406, // 4DC5/4DC6->Enuo
-    _Gen_Tether_chn_z5fd17_0a1 = 407, // 4DC5/4DC6->Enuo
-    _Gen_Tether_chn_tergetfix1f = 284, // 4DC9/4DCA/4DC8->player
-    _Gen_Tether_chn_z5fd10_0a1 = 394, // 4DB8->Enuo
-    _Gen_Tether_chn_z5fd12_0a1 = 396, // 4DB8->Enuo
-    _Gen_Tether_chn_z5fd14_0a1 = 404, // 4EB5->player
-    _Gen_Tether_chn_z5fd15_0a1 = 405, // player->player
+    Tether_chn_z5fd11_0a1 = 395, // 4DB8->Enuo
+    Tether_chn_z5fd09_0a1 = 393, // 4DB8->Enuo
+    Tether_chn_z5fd16_0a1 = 406, // 4DC5/4DC6->Enuo
+    Tether_chn_z5fd17_0a1 = 407, // 4DC5/4DC6->Enuo
+    Tether_chn_tergetfix1f = 284, // 4DC9/4DCA/4DC8->player
+    Tether_chn_z5fd10_0a1 = 394, // 4DB8->Enuo
+    Tether_chn_z5fd12_0a1 = 396, // 4DB8->Enuo
+    Tether_chn_z5fd14_0a1 = 404, // 4EB5->player
+    Tether_chn_z5fd15_0a1 = 405, // player->player
 }
 
 public enum IconID : uint
 {
     NaughtGrowsWildChargeSingle = 702, // Enuo->player
     NaughtGrowsWildChargeDouble = 701, // Enuo->player
-    _Gen_Icon_m0742trg_b1t1 = 327, // player->self
-    _Gen_Icon_com_trg07_0a1 = 721, // player->self
-    _Gen_Icon_tank_laser_5sec_lockon_c0a1 = 471, // player->self
-    _Gen_Icon_com_share3_6s0p = 318, // player->self
-    _Gen_Icon_share_laser_5s_small_c0a1 = 719, // Enuo->player
-    _Gen_Icon_com_trg06_0v = 172, // player->self
+    Icon_m0742trg_b1t1 = 327, // player->self
+    Icon_com_trg07_0a1 = 721, // player->self
+    Icon_tank_laser_5sec_lockon_c0a1 = 471, // player->self
+    Icon_com_share3_6s0p = 318, // player->self
+    Icon_share_laser_5s_small_c0a1 = 719, // Enuo->player
+    Icon_com_trg06_0v = 172, // player->self
 }
 
+public enum SID : uint
+{
+    MagicVulnerabilityUp = 2941, // Void/Helper/Void1/Void2/Void3->player, extra=0x0
+    ChainsOfCondemnation = 4562, // Enuo->player, extra=0x0
+    UnknownVoid2_3 = 2234, // none->Void2/Void3, extra=0x58/0x4B
+    FreezingUp = 3523, // Enuo->player, extra=0x0
+    DirectionalDisregard = 3808, // none->Enuo, extra=0x0
+    Unknown_Shadows = 2056, // none->AggressiveShadow/SoothingShadow/ProtectiveShadow/LoomingShadow, extra=0x46B
+    Unbecoming = 4882, // none->player, extra=0x0
+    DarkResistanceDownII = 3323, // Helper->player, extra=0x0
+    GauntletTaken = 5364, // none->player, extra=0x0
+    GauntletTaken1 = 5362, // none->player, extra=0x0
+    GauntletTaken2 = 5361, // none->player, extra=0x0
+    GauntletTaken3 = 5363, // none->player, extra=0x0
+    GauntletThrown = 5369, // none->AggressiveShadow, extra=0x0
+    GauntletThrown1 = 5371, // none->AggressiveShadow, extra=0x0
+    GauntletThrown2 = 5372, // none->AggressiveShadow, extra=0x0
+    GauntletThrown3 = 5370, // none->AggressiveShadow, extra=0x0
+    GauntletTaken4 = 5360, // none->player, extra=0x0
+    GauntletTaken5 = 5357, // none->player, extra=0x0
+    GauntletTaken6 = 5358, // none->player, extra=0x0
+    GauntletTaken7 = 5359, // none->player, extra=0x0
+    GauntletThrown4 = 5368, // none->SoothingShadow, extra=0x0
+    GauntletThrown5 = 5366, // none->ProtectiveShadow, extra=0x0
+    GauntletThrown6 = 5365, // none->ProtectiveShadow, extra=0x0
+    GauntletThrown7 = 5367, // none->SoothingShadow, extra=0x0
+    QuantumEntanglement = 4884, // none->player, extra=0x0
+    QuantumNullification = 4883, // none->SoothingShadow, extra=0x0
+    Disease = 3943, // Helper->player, extra=0x32
+    InEvent = 1268, // none->player, extra=0x0
+    VulnerabilityUp = 1789, // Helper/Void5/YawningVoid1/YawningVoid->player, extra=0x1/0x2/0x3/0x4/0x5
+
+}
