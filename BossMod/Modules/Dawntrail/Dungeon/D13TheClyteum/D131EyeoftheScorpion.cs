@@ -39,7 +39,7 @@ public enum SID : uint
 
 [SkipLocalsInit]
 
-sealed class PetrifyingBeam(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PetrifyingBeam, (uint)AID.PetrifyingBeam2], new AOEShapeCone(70f, 50f.Degrees()));
+sealed class PetrifyingBeam(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.PetrifyingBeam, (uint)AID.PetrifyingBeam2], new AOEShapeCone(70f, 50f.Degrees()), maxCasts: 2);
 
 sealed class EyesOnMe(BossModule module) : Components.RaidwideCast(module, (uint)AID.EyesOnMe);
 
@@ -86,7 +86,7 @@ sealed class MotionTracker(BossModule module) : Components.StayMove(module)
         {
             var _rect = new AOEShapeRect(9f, 20f, 9f);
             _rect.Draw(Arena, TrackingBeam.Position, TrackingBeam.Rotation);
-            if (pc.Position.InRect(TrackingBeam.Position, TrackingBeam.Rotation, 9f, 9f, 20f))
+            if (pc.Position.InRect(TrackingBeam.Position, TrackingBeam.Rotation, 10f, 10f, 20f))
             {
                 PlayerStates[pcSlot] = new(Requirement.Stay, WorldState.CurrentTime);
             }
@@ -119,7 +119,7 @@ sealed class D131EyeOfTheScorpionStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+[ModuleInfo(BossModuleInfo.Maturity.Verified,
 StatesType = typeof(D131EyeOfTheScorpionStates),
 ConfigType = null, // replace null with typeof(EyeOfTheScorpionConfig) if applicable
 ObjectIDType = typeof(OID),

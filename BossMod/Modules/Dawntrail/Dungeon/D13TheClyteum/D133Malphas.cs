@@ -98,7 +98,7 @@ sealed class D133MalphasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
+[ModuleInfo(BossModuleInfo.Maturity.Verified,
 StatesType = typeof(D133MalphasStates),
 ConfigType = null, // replace null with typeof(MalphasConfig) if applicable
 ObjectIDType = typeof(OID),
