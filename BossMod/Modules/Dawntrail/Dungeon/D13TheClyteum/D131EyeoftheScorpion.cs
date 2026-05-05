@@ -1,15 +1,10 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using TerraFX.Interop.Windows;
-
-namespace BossMod.Dawntrail.Dungeon.D13TheClyteum.D131EyeOfTheScorpion;
+﻿namespace BossMod.Dawntrail.Dungeon.D13TheClyteum.D131EyeOfTheScorpion;
 
 public enum OID : uint
 {
     EyeOfTheScorpion = 0x4C2C,
-    Helper = 0x233C,
-    Actor1e8f2f = 0x1E8F2F, // R0.500, x1, EventObj type
-    Actor1e8fb8 = 0x1E8FB8, // R2.000, x2, EventObj type
     MotionScanner = 0x4C2D, // R1.000, x2
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -30,11 +25,10 @@ public enum AID : uint
     Launch = 48895, // Helper->player, no cast, single-target
     AntiPersonnelMissile = 48899, // Helper->player, 5.0s cast, range 6 circle
 }
+
 public enum SID : uint
 {
-    DirectionalDisregard = 3808, // none->EyeOfTheScorpion, extra=0x0
     MotionTracker = 5191, // none->41EF/41F0/41F1/player, extra=0x0
-    VulnerabilityUp = 1789, // Helper->player, extra=0x1/0x2
 }
 
 [SkipLocalsInit]
@@ -70,13 +64,16 @@ sealed class MotionTracker(BossModule module) : Components.StayMove(module)
 
     public override void OnActorRenderflagsChange(Actor actor, int renderflags)
     {
-        if (renderflags == 0 && actor.OID == (uint)OID.MotionScanner)
+        if (actor.OID == (uint)OID.MotionScanner)
         {
-            TrackingBeam = actor;
-        }
-        if (renderflags == 16384 && actor.OID == (uint)OID.MotionScanner)
-        {
-            TrackingBeam = null;
+            if (renderflags == 0)
+            {
+                TrackingBeam = actor;
+            }
+            else if (renderflags == 16384)
+            {
+                TrackingBeam = null;
+            }
         }
     }
 
