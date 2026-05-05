@@ -64,9 +64,24 @@ sealed class DeepFreeze(BossModule module) : Components.StayMove(module)
     }
 }
 
+sealed class LightlessWorld(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightlessWorldCastbar);
+
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
-
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.LoomingEmptinessKillzone)
+        {
+            Arena.Bounds = new ArenaBoundsCircle(40f); // encompasses the towers, haven't tested for a real border.
+        }
+    }
+    public override void OnActorDeath(Actor actor)
+    {
+        if (actor.OID == (uint)OID.BeaconInTheDark)
+        {
+            Arena.Bounds = new ArenaBoundsCircle(20f); // back to normal when the last add dies
+        }
+    }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
@@ -87,5 +102,17 @@ NameID = 14749u,
 SortOrder = 1,
 PlanLevel = 0)]
 [SkipLocalsInit]
-public sealed class Ex8Enuo(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f));
+public sealed class Ex8Enuo(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f))
+{
+    private Actor? _castingadd;
+    private Actor? _breachadd;
+    public Actor? CastingAdd() => _castingadd;
+    public Actor? BeaconAdd() => _breachadd;
+
+    protected override void UpdateModule()
+    {
+        _castingadd ??= GetActor((uint)OID.LoomingShadow);
+        _breachadd ??= GetActor((uint)OID.BeaconInTheDark);
+    }
+}
 
