@@ -9,8 +9,8 @@ public enum OID : uint
     _Gen_Exit = 0x1E850B, // R0.500, x1, EventObj type
     _Gen_ = 0x4DB8, // R5.000, x2
     _Gen_Actor1e8536 = 0x1E8536, // R2.000, x1, EventObj type
-    _Gen_Void = 0x4EB4, // R0.850, x0 (spawn during fight), Helper type
-    _Gen_Void1 = 0x4DBB, // R0.850, x0 (spawn during fight), Helper type
+    _Gen_Void = 0x4EB4, // R0.850, x0 (spawn during fight), Helper type : Endless chase caster
+    _Gen_Void1 = 0x4DBB, // R0.850, x0 (spawn during fight), Helper type : Endless Chase caster
     _Gen_UncastShadow = 0x4DBD, // R5.000, x0 (spawn during fight)
     _Gen_LoomingShadow = 0x4DBC, // R12.500, x0 (spawn during fight)
 }
@@ -32,7 +32,7 @@ public enum AID: uint
     NaughtHunts = 49939, // Enuo->self, 6.0+1.0s cast, single-target
     EndlessChaseFirst = 48474, // _Gen_Void->self, 6.0s cast, range 6 circle : chasing aoe
     EndlessChaseRest = 49940, // _Gen_Void->location, no cast, range 6 circle
-    _Weaponskill_NaughtHuntsAnother = 49941, // Enuo->self, 5.0+1.0s cast, single-target
+    NaughtHuntsAnother = 49941, // Enuo->self, 5.0+1.0s cast, single-target
     _Spell_ShroudedHoly = 49967, // Enuo->self, 4.0+1.0s cast, single-target
     ShroudedHolyStack = 49968, // Helper->players, 5.0s cast, range 6 circle
     _Spell_Meltdown = 49962, // Enuo->self, 4.0+1.0s cast, single-target
@@ -93,11 +93,11 @@ public enum SID : uint
 
 public enum IconID : uint
 {
-    _Gen_Icon_m0742trg_b1t1 = 327, // player->self triangle bait away candidate deep freeze
+    DeepFreezeFlareIcon = 327, // player->self triangle bait away candidate deep freeze
     EndlessChaseIcon = 172, // player->self : endless chase
     ShroudedHolyStackIcon = 161, // player->self
     MeltdownSpreadIcon = 558, // player->self
-    _Gen_Icon_share_laser_5s_small_c0a1 = 719, // Enuo->player
+    _Gen_Icon_share_laser_5s_small_c0a1 = 719, // Enuo->player : Line Stack Icon?
 }
 
 
@@ -106,8 +106,8 @@ public enum IconID : uint
 public enum TetherID : uint
 {
     _Gen_Tether_chn_z5fd07_0a1 = 391, // _Gen_->Enuo
-    _Gen_Tether_chn_z5fd14_0a1 = 404, // _Gen_Void->player
-    _Gen_Tether_chn_z5fd15_0a1 = 405, // player->player
+    _Gen_Tether_chn_z5fd14_0a1 = 404, // _Gen_Void->player : Naught hunts tether
+    NaughtHuntsAnotherTether = 405, // player->player : Naught hunts another tether with arrows on it.
     _Gen_Tether_chn_tergetfix1f = 284, // _Gen_LoomingShadow->player
     _Gen_Tether_chn_z5fd18_0a1 = 425, // 4DC0->4DBF
     _Gen_Tether_chn_z5fd08_0a1 = 392, // _Gen_->Enuo
@@ -121,18 +121,90 @@ sealed class NaughtGrowsAOE(BossModule module) : Components.SimpleAOEs(module, (
 //Set to show 6 cones at a time.  Seems like the AOE might fade a little to soon?
 sealed class GazeOfTheVoidCones(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GazeOfTheVoidCones, (uint)AID.GazeOfTheVoid1], new AOEShapeCone(20f, 22.5f.Degrees()), 6, 11);
 
-sealed class DeepFreeze(BossModule module) : Components.BaitAwayCast(module, (uint)AID.DeepFreeze,new AOEShapeCircle(6), true);
+// Flare marker : tank buster magic damage
+sealed class DeepFreeze(BossModule module) : Components.BaitAwayCast(module, (uint)AID.DeepFreeze,new AOEShapeCircle(8), true, true);
 
 //Naughthunts - chasing AOE with red 3 prong icon/
-// Develops a new tether with directional arrows and latches onto a new target midway.
-//TODO needs logic for switching tethers and clearing chasing aoes from radar if it finishes early.Radius of circle should be larger than 4. try 6.
-class EndlessChase(BossModule module) : Components.StandardChasingAOEs(module, 6f, (uint)AID.EndlessChaseFirst,
-    (uint)AID.EndlessChaseRest, 6f, 1.5d, 22, true, (uint)IconID.EndlessChaseIcon);
+//TODO: Should update Chaser.target on Haunts Another
+// I seem to have highlighted the new targets with an aoe shape.  They will need to be getting line drawn to them and old targets not highlighted.
+sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(module, 7f, (uint)AID.EndlessChaseFirst,
+    (uint)AID.EndlessChaseRest, 2.9f, 1.5d, 24, true, (uint)IconID.EndlessChaseIcon)
+//sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(module, 7f, (uint)AID.EndlessChaseRest, default, 2.9f, 1.5d, 12, true, (uint)IconID.EndlessChaseIcon)
+{
+    //Default behavior is to draw line from original Chaser.target  Should draw line to new target on switch.
+    /*public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID is (uint)AID.EndlessChaseFirst or (uint)AID.EndlessChaseRest)
+        //if (spell.Action.ID is (uint)AID.EndlessChaseRest)// or (uint)AID.NaughtHuntsAnother)
+        {
+            //This position is being guessed off the very first spell and used to define who the target is without checking for change
+            var pos = spell.TargetID == caster.InstanceID ? caster.Position.Quantized() : WorldState.Actors.Find(spell.TargetID)?.Position ?? spell.LocXZ;
+            Actor? target = null;
+            var minDistance = float.MaxValue;
 
-//49941 Naught Haunts Another
+            var count = Targets.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                var t = Targets[i];
+                var distanceSq = (t.Position - pos).LengthSq();
+                if (distanceSq < minDistance)
+                {
+                    minDistance = distanceSq;
+                    target = t;
+                }
+            }
+            if (target != null)
+            {
+                Targets.Remove(target);
+                TargetsMask.Clear(Raid.FindSlot(target.InstanceID));
+                Chasers.Add(new(Shape, target, pos, 0, MaxCasts, Module.CastFinishAt(spell), SecondsBetweenActivations)); // initial cast does not move anywhere
+            }
+        }
+    }
+    public override void Update()
+    {
+        var count = Chasers.Count;
+        for (var i = count - 1; i >= 0; --i)
+        {
+            var c = Chasers[i];
+            if ((c.Target.IsDestroyed || c.Target.IsDead))// && c.NumRemaining < MaxCasts)
+            {
+                Chasers.RemoveAt(i);
+            }
+        }
+    }
+
+
+
+    /*public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        var count = Chasers.Count;
+        for (var i = 0; i < count; ++i)
+        {
+            var c = Chasers[i];
+            Arena.AddLine(c.PrevPos, c.Target.Position);
+        }
+    }*/
+}
+
+//sealed class EndlessChaseRest(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EndlessChaseRest, new AOEShapeCircle(6f));
+//sealed class EndlessChaseFirst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EndlessChaseFirst, new AOEShapeCircle(6f));
+
+
+//49941 Naught Haunts Another => This is the naught hunts chase aoe switching targets here. Uses a different icon
+/**
+ * Should extend this to look for the tether and switch chase aoe to follow the character on other end of tether when
+ * Naught Haunts Another cast finishes.
+ */
+//TODO the handoff isn't working yet
+
+//sealed class NaughtHuntsAnother(BossModule module) : Components.StandardChasingAOEs(module, 7f, (uint)AID.NaughtHuntsAnother, default, 2.9f, 1.5d, 13, false, (uint)IconID._Gen_Icon_share_laser_5s_small_c0a1);
+
+
+
 
 //enshrouded holy - stack marker
-sealed class ShroudedHoly(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ShroudedHolyStackIcon, (uint)AID.ShroudedHolyStack, 6, 0);
+sealed class ShroudedHoly(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ShroudedHolyStackIcon, (uint)AID.ShroudedHolyStack, 7, 0);
 
 
 // meltdown spread marker.  TODO Should show initial aoe and then aoe after moving
@@ -151,6 +223,9 @@ sealed class EnuoStates : StateMachineBuilder
             .ActivateOnEnter<GazeOfTheVoidCones>()
             .ActivateOnEnter<DeepFreeze>()
             .ActivateOnEnter<EndlessChase>()
+            //.ActivateOnEnter<EndlessChaseRest>()
+            //.ActivateOnEnter<EndlessChaseFirst>()
+            //.ActivateOnEnter<NaughtHuntsAnother>()
             .ActivateOnEnter<ShroudedHoly>()
 
 
