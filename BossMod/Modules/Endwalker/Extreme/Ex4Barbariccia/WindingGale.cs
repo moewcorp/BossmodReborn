@@ -5,7 +5,7 @@ class WindingGale(BossModule module) : Components.GenericAOEs(module, (uint)AID.
 {
     private readonly List<Actor> _casters = [];
 
-    private static readonly AOEShapeDonutSector _shape = new(9f, 11f, 45f.Degrees());
+    private static readonly AOEShapeDonutSector _shape = new(9f, 11f, 90f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
