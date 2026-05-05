@@ -46,9 +46,9 @@ public enum AID : uint
     Burst = 50006, // 4DC5->self, no cast, range 5 circle
     ViolentBurst = 50007, // 4DC6->self, no cast, range 6 circle
     Vacuum = 49994, // 4DC1->self, 2.0+1.0s cast, single-target
-    SilentTorrent = 49996, // 4DC4->location, 3.5s cast, single-target
-    SilentTorrent1 = 49997, // 4DC4->location, 3.5s cast, single-target
-    SilentTorrent2 = 49995, // 4DC4->location, 3.5s cast, single-target
+    SilentTorrentDash = 49996, // 4DC4->location, 3.5s cast, single-target
+    SilentTorrentDash2 = 49997, // 4DC4->location, 3.5s cast, single-target
+    SilentTorrentDash3 = 49995, // 4DC4->location, 3.5s cast, single-target
     SilentTorrentArc1 = 49999, // 233C->self, 4.0s cast, range ?-19 donut
     SilentTorrentArc2 = 50000, // 233C->self, 4.0s cast, range ?-19 donut
     SilentTorrentArc3 = 49998, // 233C->self, 4.0s cast, range ?-19 donut

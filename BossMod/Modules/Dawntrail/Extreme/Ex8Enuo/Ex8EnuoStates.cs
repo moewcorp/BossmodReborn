@@ -71,7 +71,8 @@ sealed class Ex8EnuoStates : StateMachineBuilder
             .ActivateOnEnter<VacuumAOE>()
             .ActivateOnEnter<VacuumArc1>()
             .ActivateOnEnter<VacuumArc2>()
-            .ActivateOnEnter<VacuumArc3>();
+            .ActivateOnEnter<VacuumArc3>()
+            .ActivateOnEnter<VacuumTelegraph>();
     }
 
     private void DeepFreeze(uint id, float delay)

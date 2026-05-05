@@ -32,6 +32,7 @@ sealed class VacuumArc1(BossModule module) : Components.SimpleAOEs(module, (uint
 sealed class VacuumArc2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc2, new AOEShapeDonutSector(17f, 19f, 30f.Degrees()));
 
 sealed class VacuumArc3(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc3, new AOEShapeDonutSector(17f, 19f, 10f.Degrees()));
+sealed class VacuumTelegraph(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SilentTorrentDash, (uint)AID.SilentTorrentDash2, (uint)AID.SilentTorrentDash3], new AOEShapeCircle(7f));
 
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
