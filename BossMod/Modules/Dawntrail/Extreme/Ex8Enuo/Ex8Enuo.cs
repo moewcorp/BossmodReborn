@@ -2,7 +2,67 @@
 
 sealed class Meteorain(BossModule module) : Components.RaidwideCast(module, (uint)AID.Meteorain);
 
-sealed class GazeOfTheVoidAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GazeOfTheVoid2, new AOEShapeCone(40f, 22.5f.Degrees()), 7);
+sealed class VacuumAOE(BossModule module) : Components.Voidzone(module, 7f, FindVacuums)
+{
+    private static Actor[] FindVacuums(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.VoidVacuum);
+        var count = enemies.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var vacs = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < enemies.Count; i++)
+        {
+            var z = enemies[i];
+            // These appear at the start of the mechanic at Arena.Center and zoom out to their final locations, we only care about showing them while they're standing still and not in the Center. They die after exploding.
+            if (z.Renderflags == 0 && !z.Position.AlmostEqual(module.Arena.Center, 2f) && z.LastFrameMovement == new WDir(0f, 0f))
+            {
+                vacs[index++] = z;
+            }
+        }
+        return vacs[..index];
+    }
+}
+
+sealed class VacuumArc1(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc1, new AOEShapeDonutSector(17f, 19f, 20f.Degrees()));
+
+sealed class VacuumArc2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc2, new AOEShapeDonutSector(17f, 19f, 30f.Degrees()));
+
+sealed class VacuumArc3(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc3, new AOEShapeDonutSector(17f, 19f, 10f.Degrees()));
+sealed class VacuumTelegraph(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SilentTorrentDash, (uint)AID.SilentTorrentDash2, (uint)AID.SilentTorrentDash3], new AOEShapeCircle(7f));
+
+sealed class DeepFreezeFlares(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.DeepFreeze, 10f);
+
+sealed class DeepFreeze(BossModule module) : Components.StayMove(module)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.DeepFreeze)
+        {
+            for (var i = 0; i < PlayerStates.Length; i++)
+            {
+                PlayerStates[i] = new(Requirement.Move, WorldState.FutureTime(spell.RemainingTime));
+            }
+        }
+    }
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.FreezingUp)
+        {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = new(Requirement.Move, WorldState.CurrentTime, finish: status.ExpireAt);
+        }
+    }
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.FreezingUp)
+        {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
+        }
+    }
+}
 
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
