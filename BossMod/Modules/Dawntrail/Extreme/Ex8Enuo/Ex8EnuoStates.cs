@@ -77,7 +77,9 @@ sealed class Ex8EnuoStates : StateMachineBuilder
 
     private void DeepFreeze(uint id, float delay)
     {
-        Cast(id, (uint)AID.DeepFreeze, delay, 5f, "Deep Freeze");
+        Cast(id, (uint)AID.DeepFreezeCastBar, delay, 5f, "Deep Freeze")
+            .ActivateOnEnter<DeepFreezeFlares>()
+            .ActivateOnEnter<DeepFreeze>();
     }
 
     //private void XXX(uint id, float delay)

@@ -34,6 +34,36 @@ sealed class VacuumArc2(BossModule module) : Components.SimpleAOEs(module, (uint
 sealed class VacuumArc3(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentArc3, new AOEShapeDonutSector(17f, 19f, 10f.Degrees()));
 sealed class VacuumTelegraph(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.SilentTorrentDash, (uint)AID.SilentTorrentDash2, (uint)AID.SilentTorrentDash3], new AOEShapeCircle(7f));
 
+sealed class DeepFreezeFlares(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.DeepFreeze, 10f);
+
+sealed class DeepFreeze(BossModule module) : Components.StayMove(module)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.DeepFreeze)
+        {
+            for (var i = 0; i < PlayerStates.Length; i++)
+            {
+                PlayerStates[i] = new(Requirement.Move, WorldState.FutureTime(spell.RemainingTime));
+            }
+        }
+    }
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.FreezingUp)
+        {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = new(Requirement.Move, WorldState.CurrentTime, finish: status.ExpireAt);
+        }
+    }
+    public override void OnStatusLose(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.FreezingUp)
+        {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
+        }
+    }
+}
+
 sealed class ArenaChanges(BossModule module) : BossComponent(module)
 {
 

@@ -55,8 +55,8 @@ public enum AID : uint
     VacuumExplode = 50001, // 4DC4->self, 1.5s cast, range 7 circle
     DenseEmptiness = 50033, // 4DC1->self, 4.0+1.0s cast, single-target
     DenseEmptiness1 = 50035, // 233C->self, no cast, range 60 ?-degree cone
-    DeepFreeze = 50043, // 4DC1->self, 5.0+1.0s cast, range 40 circle
-    DeepFreeze1 = 50044, // 233C->players, 6.0s cast, range 40 circle
+    DeepFreezeCastBar = 50043, // 4DC1->self, 5.0+1.0s cast, range 40 circle
+    DeepFreeze = 50044, // 233C->players, 6.0s cast, range 40 circle
     AllForNaught = 50010, // 4DC1->self, 5.0s cast, single-target
     LoomingEmptiness = 50011, // 4DC7->self, 5.0s cast, single-target
     LoomingEmptiness1 = 49982, // 233C->self, 6.0s cast, range 100 circle
