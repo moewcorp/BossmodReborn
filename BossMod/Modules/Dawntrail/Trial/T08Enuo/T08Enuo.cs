@@ -36,16 +36,17 @@ public enum AID: uint
     _Spell_ShroudedHoly = 49967, // Enuo->self, 4.0+1.0s cast, single-target
     ShroudedHolyStack = 49968, // Helper->players, 5.0s cast, range 6 circle
     _Spell_Meltdown = 49962, // Enuo->self, 4.0+1.0s cast, single-target
-    _Spell_Meltdown1 = 49963, // Helper->location, 5.0s cast, range 5 circle
+    MeltdownAOE = 49963, // Helper->location, 5.0s cast, range 5 circle
     MeltdownSpread = 49964, // Helper->players, 5.0s cast, range 5 circle
-    _Weaponskill_Vacuum = 49942, // Enuo->self, 2.0+1.0s cast, single-target
-    _Weaponskill_SilentTorrent1 = 49944, // _Gen_Void1->location, 3.5s cast, single-target
-    _Weaponskill_SilentTorrent2 = 49943, // _Gen_Void1->location, 3.5s cast, single-target
-    _Weaponskill_SilentTorrent = 49945, // _Gen_Void1->location, 3.5s cast, single-target
-    _Weaponskill_SilentTorrent5 = 49947, // Helper->self, 4.0s cast, range ?-19 donut
-    _Weaponskill_SilentTorrent4 = 49948, // Helper->self, 4.0s cast, range ?-19 donut
-    _Weaponskill_SilentTorrent3 = 49946, // Helper->self, 4.0s cast, range ?-19 donut
-    _Weaponskill_Vacuum1 = 49949, // _Gen_Void1->self, 1.5s cast, range 7 circle
+    VacuumSingleTargetAnimation = 49942, // Enuo->self, 2.0+1.0s cast, single-target
+    // Start points for these vacuum arcs come from the outside and terminate at the center
+    SilentTorrentFirst1 = 49944, // _Gen_Void1->location, 3.5s cast, single-target Vacuum arc -medium arc x 4 (nw, sw, se, ne)
+    SilentTorrentFirst2 = 49943, // _Gen_Void1->location, 3.5s cast, single-target Vacuum arc - shortest arc x  (n)
+    SilentTorrentFirst = 49945, // _Gen_Void1->location, 3.5s cast, single-target Vacuum arc - longest arc x 3 (,s,w, e)
+    SilentTorrentRest5 = 49947, // Helper->self, 4.0s cast, range ?-19 donut vacuum
+    SilentTorrentRest4 = 49948, // Helper->self, 4.0s cast, range ?-19 donut vacuum
+    SilentTorrentRest3 = 49946, // Helper->self, 4.0s cast, range ?-19 donut vacuum
+    VacuumCircle = 49949, // _Gen_Void1->self, 1.5s cast, range 7 circle
     _Weaponskill_AllForNaught = 49954, // Enuo->self, 5.0s cast, single-target
     _Weaponskill_LoomingEmptiness = 49955, // _Gen_LoomingShadow->self, 6.0s cast, single-target
     _Weaponskill_LoomingEmptiness1 = 49981, // Helper->self, 7.0s cast, range 100 circle
@@ -119,7 +120,7 @@ class Meteorain(BossModule module) : Components.RaidwideCast(module, (uint)AID.M
 sealed class NaughtGrowsAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.NaughtGrowsAOE, new AOEShapeCircle(40f));
 
 //Set to show 6 cones at a time.  Seems like the AOE might fade a little to soon?
-sealed class GazeOfTheVoidCones(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GazeOfTheVoidCones, (uint)AID.GazeOfTheVoid1], new AOEShapeCone(20f, 22.5f.Degrees()), 6, 11);
+sealed class GazeOfTheVoidCones(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GazeOfTheVoidCones, (uint)AID.GazeOfTheVoid1], new AOEShapeCone(20f, 22.5f.Degrees()), 7, 11);
 
 // Flare marker : tank buster magic damage
 sealed class DeepFreeze(BossModule module) : Components.BaitAwayCast(module, (uint)AID.DeepFreeze,new AOEShapeCircle(8), true, true);
@@ -127,12 +128,19 @@ sealed class DeepFreeze(BossModule module) : Components.BaitAwayCast(module, (ui
 //Naughthunts - chasing AOE with red 3 prong icon/
 //TODO: Should update Chaser.target on Haunts Another
 // I seem to have highlighted the new targets with an aoe shape.  They will need to be getting line drawn to them and old targets not highlighted.
+/**
+ * goes icon, 12(ish) casts of aoe movement. Naught haunts another boss cast on boss.
+ * tether cast from player to player to transfer chase aoe.
+ * Base implementation would track the aoe but not move the chaser.target to new chase aoe target.
+ * There is also a culling issue if the target dies during. chaser for dead person wasn't clearing from radar.
+ * Note from Mal: yes, you probably need to track the remaining casts of each chaser and hope switching targets doesnt mess with the amount of casts they do
+*/
 sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(module, 7f, (uint)AID.EndlessChaseFirst,
-    (uint)AID.EndlessChaseRest, 2.9f, 1.5d, 24, true, (uint)IconID.EndlessChaseIcon)
+    (uint)AID.EndlessChaseRest, 2.9f, 1.5d, 24, true, (uint)IconID.EndlessChaseIcon);
 //sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(module, 7f, (uint)AID.EndlessChaseRest, default, 2.9f, 1.5d, 12, true, (uint)IconID.EndlessChaseIcon)
-{
+/*{
     //Default behavior is to draw line from original Chaser.target  Should draw line to new target on switch.
-    /*public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID is (uint)AID.EndlessChaseFirst or (uint)AID.EndlessChaseRest)
         //if (spell.Action.ID is (uint)AID.EndlessChaseRest)// or (uint)AID.NaughtHuntsAnother)
@@ -185,7 +193,7 @@ sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(mo
             Arena.AddLine(c.PrevPos, c.Target.Position);
         }
     }*/
-}
+//}
 
 //sealed class EndlessChaseRest(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EndlessChaseRest, new AOEShapeCircle(6f));
 //sealed class EndlessChaseFirst(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EndlessChaseFirst, new AOEShapeCircle(6f));
@@ -204,13 +212,37 @@ sealed class EndlessChase(BossModule module) : Components.StandardChasingAOEs(mo
 
 
 //enshrouded holy - stack marker
-sealed class ShroudedHoly(BossModule module) : Components.StackWithIcon(module, (uint)IconID.ShroudedHolyStackIcon, (uint)AID.ShroudedHolyStack, 7, 0);
+sealed class ShroudedHoly(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.ShroudedHolyStack, 7, 4);
 
 
 // meltdown spread marker.  TODO Should show initial aoe and then aoe after moving
-sealed class MeltdownSpread(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.MeltdownSpreadIcon, (uint)AID.MeltdownSpread, 4, 5);
+sealed class MeltdownSpread(BossModule module) : Components.SpreadFromCastTargets(module, (uint)AID.MeltdownSpread, 5f);
+
+sealed class MeltdownAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.MeltdownAOE, new AOEShapeCircle(5f));
 
 
+
+//vacuum arc
+//vacuum orbs
+//sealed class SilentTorrentCircle1(BossModule module) : Components.SimpleExaflare(module, [(uint)AID._Weaponskill_SilentTorrent3, (uint)AID._Weaponskill_SilentTorrent3, (uint)AID._Weaponskill_SilentTorrent3], new AOEShapeCircle(7f));
+
+sealed class VacuumCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VacuumCircle, new AOEShapeCircle(7f));
+
+/**
+ * Single target explosion animation centered on Enuo first
+ * Vacuum gets cast and then all the silent torrent skills get cast in the background. Lays down arcs and then circle explosions.
+ * At the outside ends of the arcs
+ * 49943-49948 : 46,47,38 have 3.70 cast time (orbs). 43,44,45 have 3.2 cast time (arcs).
+ * These are the first and rest casts
+ */
+
+sealed class VacuumArc(BossModule module) : Components.SimpleExaflare(module, new AOEShapeRect(5,2), (uint)AID.SilentTorrentFirst1, (uint)AID.SilentTorrentRest5, 6f, 1.6d, 8, 8, locationBased: true);
+
+
+//exaflare might not be the thing
+// maybe just aoe donutsectors?
+//new AOEShapeDonutSector(5f, 10f, 45f.Degrees()), expectedNumCasters: 4
+sealed class VacuumArcSmall(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SilentTorrentFirst1, new AOEShapeDonutSector(8f, 11f, 60f.Degrees(), 220f.Degrees()));
 
 [SkipLocalsInit]
 sealed class EnuoStates : StateMachineBuilder
@@ -222,7 +254,7 @@ sealed class EnuoStates : StateMachineBuilder
             .ActivateOnEnter<NaughtGrowsAOE>()
             .ActivateOnEnter<GazeOfTheVoidCones>()
             .ActivateOnEnter<DeepFreeze>()
-            .ActivateOnEnter<EndlessChase>()
+            //.ActivateOnEnter<EndlessChase>() // leaving this out for now to keep from being distracted.
             //.ActivateOnEnter<EndlessChaseRest>()
             //.ActivateOnEnter<EndlessChaseFirst>()
             //.ActivateOnEnter<NaughtHuntsAnother>()
@@ -230,6 +262,10 @@ sealed class EnuoStates : StateMachineBuilder
 
 
             .ActivateOnEnter<MeltdownSpread>()
+            .ActivateOnEnter<MeltdownAOE>()
+            .ActivateOnEnter<VacuumArc>() // - arc aoes (maybe?)
+            .ActivateOnEnter<VacuumCircle>()
+            .ActivateOnEnter<VacuumArcSmall>()
 
             ;
     }
