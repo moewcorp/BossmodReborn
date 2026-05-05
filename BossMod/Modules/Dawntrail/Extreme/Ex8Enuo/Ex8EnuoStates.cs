@@ -61,12 +61,17 @@ sealed class Ex8EnuoStates : StateMachineBuilder
     private void GazeOfTheVoid(uint id, float delay)
     {
         Cast(id, (uint)AID.GazeOfTheVoid, delay, 6f, "Gaze of the Void")
-            .ActivateOnEnter<GazeOfTheVoidAOE>();
+            .ActivateOnEnter<GazeOfTheVoidAOE>()
+            .ActivateOnEnter<GazeOfTheVoidSoaks>();
     }
 
     private void Vacuum(uint id, float delay)
     {
-        Cast(id, (uint)AID.Vacuum, delay, 2.0f, "Vacuum");
+        Cast(id, (uint)AID.Vacuum, delay, 2.0f, "Vacuum")
+            .ActivateOnEnter<VacuumAOE>()
+            .ActivateOnEnter<VacuumArc1>()
+            .ActivateOnEnter<VacuumArc2>()
+            .ActivateOnEnter<VacuumArc3>();
     }
 
     private void DeepFreeze(uint id, float delay)

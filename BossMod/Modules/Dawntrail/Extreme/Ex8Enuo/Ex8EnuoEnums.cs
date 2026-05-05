@@ -11,9 +11,9 @@ public enum OID : uint
     Unknown = 0x4DB8, // R5.000, x2
     Void = 0x4BFA, // R2.000, x0 (spawn during fight), Helper type
     Void1 = 0x4BF7, // R1.000, x0 (spawn during fight), Helper type
-    Void2 = 0x4DC5, // R0.850, x0 (spawn during fight)
-    Void3 = 0x4DC6, // R1.750, x0 (spawn during fight)
-    Void4 = 0x4DC4, // R0.850, x0 (spawn during fight), Helper type
+    VoidSoakSmall = 0x4DC5, // R0.850, x0 (spawn during fight)
+    VoidSoakLarge = 0x4DC6, // R1.750, x0 (spawn during fight)
+    VoidVacuum = 0x4DC4, // R0.850, x0 (spawn during fight), Helper type
     AggressiveShadow = 0x4DC9, // R5.000, x0 (spawn during fight)
     SoothingShadow = 0x4DCA, // R5.000, x0 (spawn during fight)
     ProtectiveShadow = 0x4DC8, // R5.000, x0 (spawn during fight)
@@ -49,10 +49,10 @@ public enum AID : uint
     SilentTorrent = 49996, // 4DC4->location, 3.5s cast, single-target
     SilentTorrent1 = 49997, // 4DC4->location, 3.5s cast, single-target
     SilentTorrent2 = 49995, // 4DC4->location, 3.5s cast, single-target
-    SilentTorrent3 = 49999, // 233C->self, 4.0s cast, range ?-19 donut
-    SilentTorrent4 = 50000, // 233C->self, 4.0s cast, range ?-19 donut
-    SilentTorrent5 = 49998, // 233C->self, 4.0s cast, range ?-19 donut
-    Vacuum1 = 50001, // 4DC4->self, 1.5s cast, range 7 circle
+    SilentTorrentArc1 = 49999, // 233C->self, 4.0s cast, range ?-19 donut
+    SilentTorrentArc2 = 50000, // 233C->self, 4.0s cast, range ?-19 donut
+    SilentTorrentArc3 = 49998, // 233C->self, 4.0s cast, range ?-19 donut
+    VacuumExplode = 50001, // 4DC4->self, 1.5s cast, range 7 circle
     DenseEmptiness = 50033, // 4DC1->self, 4.0+1.0s cast, single-target
     DenseEmptiness1 = 50035, // 233C->self, no cast, range 60 ?-degree cone
     DeepFreeze = 50043, // 4DC1->self, 5.0+1.0s cast, range 40 circle
