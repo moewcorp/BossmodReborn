@@ -117,7 +117,7 @@ sealed class ArenaChanges(BossModule module) : BossComponent(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+[ModuleInfo(BossModuleInfo.Maturity.Contributed,
 StatesType = typeof(Ex8EnuoStates),
 ConfigType = null, // replace null with typeof(EnuoConfig) if applicable
 ObjectIDType = typeof(OID),
