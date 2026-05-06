@@ -1,4 +1,7 @@
-﻿namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
+﻿using BossMod.Dawntrail.Trial.T08Enuo;
+using TerraFX.Interop.Windows;
+
+namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
 
 [SkipLocalsInit]
 
@@ -10,7 +13,7 @@ sealed class Ex8EnuoStates : StateMachineBuilder
         _module = module;
         SimplePhase(default, Phase1, "P1")
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || (Module.PrimaryActor.CastInfo?.IsSpell(AID.AllForNaught) ?? false);
-        SimplePhase(1u, AddPhase, "Adds")
+        SimplePhase(2u, AddPhase, "Adds")
             .ActivateOnEnter<ArenaChanges>()
             .ActivateOnEnter<LoomingShadowAdd>()
             .ActivateOnEnter<AggressiveShadowAdd>()
@@ -25,8 +28,9 @@ sealed class Ex8EnuoStates : StateMachineBuilder
             .ActivateOnEnter<CurseoftheFlesh>()
             .ActivateOnEnter<BeaconAdd>()
             .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed || (Module.PrimaryActor.CastInfo?.IsSpell(AID.LightlessWorldCastbar) ?? false);
-        SimplePhase(2u, Phase2, "P2")
-            .ActivateOnEnter<ArenaChanges>();
+        SimplePhase(3u, Phase2, "P2")
+            .ActivateOnEnter<ArenaChanges>()
+            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed;
     }
 
     private void Phase1(uint id)
@@ -57,6 +61,21 @@ sealed class Ex8EnuoStates : StateMachineBuilder
     private void Phase2(uint id)
     {
         LightlessWorld(id, 96.84f);
+        Almagest(id + 0x01, 10.18f);
+        DoubleNaughtGrows(id + 0x02, 5.82f);
+        NaughtWakesActive(id + 0x03, 7.29f);
+        ShroudedHoly(id + 0x04, 19.48f);
+        DoubleNaughtGrows(id + 0x05, 8.52f);
+        DimensionZero(id + 0x06, 7.17f);
+        VacuumMeltdown(id + 0x07, 10.97f);
+        GazeOfTheVoid(id + 0x09, 13.32f);
+        Almagest(id + 0x10, 28.30f);
+        NaughtWakesActive(id + 0x11, 8.43f);
+        NaughtHunts(id + 0x12, 2.12f);
+        Emptiness(id + 0x13, 23.27f);
+        NaughtHunts(id + 0x13, 6.26f);
+        Emptiness(id + 0x14, 23.24f);
+
     }
 
     private void Meteorain(uint id, float delay)
@@ -121,6 +140,41 @@ sealed class Ex8EnuoStates : StateMachineBuilder
     {
         Cast(id, (uint)AID.LightlessWorldCastbar, delay, 10f, "Lightless World")
             .ActivateOnEnter<LightlessWorld>();
+    }
+    private void Almagest(uint id, float delay)
+    {
+        Cast(id, (uint)AID.Almagest, delay, 5f, "Almagest");
+    }
+
+    private void DoubleNaughtGrows(uint id, float delay)
+    {
+        Cast(id, (uint)AID.NaughtGrowsDoubleCast, delay, 8f, "Double Naught Grows");
+    }
+
+    private void NaughtWakesActive(uint id, float delay)
+    {
+        Cast(id, (uint)AID.NaughtWakes, delay, 2f, "Naught Wakes AOEs");
+    }
+
+    private void ShroudedHoly(uint id, float delay)
+    {
+        Cast(id, (uint)AID.ShroudedHolyCastbar, delay, 6f, "Shrouded Holy");
+    }
+
+    private void DimensionZero(uint id, float delay)
+    {
+        Cast(id, (uint)AID.DimensionZeroCastbar, delay, 5f, "Dimension Zero");
+    }
+
+    private void VacuumMeltdown(uint id, float delay)
+    {
+        Cast(id, (uint)AID.Vacuum, delay, 3f, "Vacuum/Meltdown");
+        Cast(id + 0x0010, (uint)AID.Meltdown, 2.21f, 4f, "Meltdown");
+    }
+
+    private void NaughtHunts(uint id, float delay)
+    {
+        Cast(id, (uint)AID.NaughtHunts, delay, 7f);
     }
 
     //private void XXX(uint id, float delay)
