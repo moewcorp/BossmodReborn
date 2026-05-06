@@ -80,18 +80,18 @@ public enum AID : uint
     LightlessWorld2 = 50031, // 233C->self, no cast, range 40 circle
     Almagest = 49972, // 4DC1->self, 5.0s cast, range 40 circle
     NaughtGrowsDoubleCast = 49976, // 4DC1->self, 7.0+1.0s cast, single-target
-    NaughtGrows4 = 49980, // 233C->self, 8.0s cast, range 6-40 donut
+    NaughtGrowsBossDonut = 49980, // 233C->self, 8.0s cast, range 6-40 donut
     PassageOfNaught = 49987, // 233C->self, 6.0s cast, range 80 width 16 rect
     PassageOfNaught1 = 49986, // 4DC3->self, 6.0s cast, range 80 width 16 rect
     PassageOfNaught2 = 49985, // 4DC2->self, 7.0s cast, range 80 width 16 rect
     ShroudedHolyCastbar = 50045, // 4DC1->self, 5.0+1.0s cast, single-target
     ShroudedHolyTargets = 50046, // 233C->players, 6.0s cast, range 6 circle
-    NaughtGrows5 = 49979, // 233C->self, 8.0s cast, range 12 circle
+    NaughtGrowsBossCircle = 49979, // 233C->self, 8.0s cast, range 12 circle
     DimensionZeroCastbar = 50047, // 4DC1->self, 5.0s cast, single-target
     DimensionZeroHits = 50048, // 4DC1->self, no cast, range 60 width 8 rect
     NaughtHunts = 49992, // 4DC1->self, 6.0+1.0s cast, single-target
-    EndlessChase = 48475, // 4EB5->self, 6.0s cast, range 6 circle
-    EndlessChase1 = 49993, // 4EB5->location, no cast, range 6 circle
+    EndlessChaseCast = 48475, // 4EB5->self, 6.0s cast, range 6 circle
+    EndlessChaseInstant = 49993, // 4EB5->location, no cast, range 6 circle
     GazeOfTheVoid3 = 50003, // 233C->self, 7.0s cast, single-target
     WeightOfNothing = 50021, // 233C->player, 5.0s cast, range 100 width 8 rect
     DrainTouch = 50018, // 4DC8->self, 5.0s cast, single-target
@@ -108,8 +108,8 @@ public enum TetherID : uint
     Tether_chn_tergetfix1f = 284, // 4DC9/4DCA/4DC8->player
     Tether_chn_z5fd10_0a1 = 394, // 4DB8->Enuo
     Tether_chn_z5fd12_0a1 = 396, // 4DB8->Enuo
-    Tether_chn_z5fd14_0a1 = 404, // 4EB5->player
-    Tether_chn_z5fd15_0a1 = 405, // player->player
+    NaughtHuntFirst = 404, // 4EB5->player
+    NaughtHuntJump = 405, // player->player
 }
 
 public enum IconID : uint
@@ -119,9 +119,9 @@ public enum IconID : uint
     Icon_m0742trg_b1t1 = 327, // player->self
     VoidTurbulanceCone = 721, // player->self
     Icon_tank_laser_5sec_lockon_c0a1 = 471, // player->self
-    Icon_com_share3_6s0p = 318, // player->self
-    Icon_share_laser_5s_small_c0a1 = 719, // Enuo->player
-    Icon_com_trg06_0v = 172, // player->self
+    SharedHoly = 318, // player->self
+    DimensionZeroTarget = 719, // Enuo->player
+    NaughtHuntTarget = 172, // player->self
 }
 
 public enum SID : uint

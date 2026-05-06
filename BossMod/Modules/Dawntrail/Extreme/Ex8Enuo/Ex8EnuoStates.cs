@@ -1,7 +1,4 @@
-﻿using BossMod.Dawntrail.Trial.T08Enuo;
-using TerraFX.Interop.Windows;
-
-namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
+﻿namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
 
 [SkipLocalsInit]
 
@@ -54,7 +51,7 @@ sealed class Ex8EnuoStates : StateMachineBuilder
         Cast(id, (uint)AID.AllForNaught, 0f, 5f, "Add Transition");
         ActorCast(id + 0x01, _module.CastingAdd, (uint)AID.LoomingEmptinessKnockback, 14.223f, 5.0f, default, "Knockback");
         ActorCast(id + 0x02, _module.CastingAdd, (uint)AID.VoidalTurbulenceCastBar, 3.229f, 7f, default, "Cones + Towers");
-        ActorCast(id + 0x03, _module.CastingAdd, (uint)AID.VoidalTurbulenceCastBar, 13.607f, 7f, default, "Cones + Towers (again)");
+        ActorCast(id + 0x03, _module.CastingAdd, (uint)AID.VoidalTurbulenceCastBar, 13.607f, 7f, default, "Cones + Towers (again)"); // Timing on this one could be 'fun'
         SimpleState(id + 0x04, 60f, "Add Enrage?"); // I have no idea when this would actually go off.
     }
 
@@ -73,8 +70,8 @@ sealed class Ex8EnuoStates : StateMachineBuilder
         NaughtWakesActive(id + 0x11, 8.43f);
         NaughtHunts(id + 0x12, 2.12f);
         Emptiness(id + 0x13, 23.27f);
-        NaughtHunts(id + 0x13, 6.26f);
-        Emptiness(id + 0x14, 23.24f);
+        NaughtHunts(id + 0x14, 6.26f);
+        Emptiness(id + 0x15, 23.24f);
 
     }
 
@@ -143,7 +140,13 @@ sealed class Ex8EnuoStates : StateMachineBuilder
     }
     private void Almagest(uint id, float delay)
     {
-        Cast(id, (uint)AID.Almagest, delay, 5f, "Almagest");
+        Cast(id, (uint)AID.Almagest, delay, 5f, "Almagest")
+            .ActivateOnEnter<NaughtGrowsWildCharge>()
+            .ActivateOnEnter<NaughtGrowsCircle>()
+            .ActivateOnEnter<NaughtGrowsDonut>()
+            .ActivateOnEnter<NaughtGrowsBossCircle>()
+            .ActivateOnEnter<NaughtGrowsBossDonut>()
+            .ActivateOnEnter<Almagest>();
     }
 
     private void DoubleNaughtGrows(uint id, float delay)
@@ -153,12 +156,17 @@ sealed class Ex8EnuoStates : StateMachineBuilder
 
     private void NaughtWakesActive(uint id, float delay)
     {
-        Cast(id, (uint)AID.NaughtWakes, delay, 2f, "Naught Wakes AOEs");
+        Cast(id, (uint)AID.NaughtWakes, delay, 2f, "Naught Wakes AOEs")
+            .ActivateOnEnter<PassageOfNaught>()
+            .ActivateOnEnter<NaughtHunts>()
+            ;
     }
 
     private void ShroudedHoly(uint id, float delay)
     {
-        Cast(id, (uint)AID.ShroudedHolyCastbar, delay, 6f, "Shrouded Holy");
+        Cast(id, (uint)AID.ShroudedHolyCastbar, delay, 6f, "Shrouded Holy")
+            .ActivateOnEnter<ShroudedHoly>()
+            .ActivateOnEnter<DimensionZero>();
     }
 
     private void DimensionZero(uint id, float delay)
@@ -168,13 +176,21 @@ sealed class Ex8EnuoStates : StateMachineBuilder
 
     private void VacuumMeltdown(uint id, float delay)
     {
-        Cast(id, (uint)AID.Vacuum, delay, 3f, "Vacuum/Meltdown");
-        Cast(id + 0x0010, (uint)AID.Meltdown, 2.21f, 4f, "Meltdown");
+        Cast(id, (uint)AID.Vacuum, delay, 3f, "Vacuum/Meltdown")
+            .ActivateOnEnter<VacuumAOE>()
+            .ActivateOnEnter<VacuumArc1>()
+            .ActivateOnEnter<VacuumArc2>()
+            .ActivateOnEnter<VacuumArc3>()
+            .ActivateOnEnter<VacuumTelegraph>()
+            .ActivateOnEnter<MeltdownAoE>()
+            .ActivateOnEnter<MeltdownSpread>()
+            .ActivateOnEnter<MeltdownWait>();
+        Cast(id + 0x000001, (uint)AID.Meltdown, 2.21f, 4f, "Meltdown");
     }
 
     private void NaughtHunts(uint id, float delay)
     {
-        Cast(id, (uint)AID.NaughtHunts, delay, 7f);
+        Cast(id, (uint)AID.NaughtHunts, delay, 7f, "Naught Hunts");
     }
 
     //private void XXX(uint id, float delay)
