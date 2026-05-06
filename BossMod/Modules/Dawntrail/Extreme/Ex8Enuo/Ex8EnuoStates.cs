@@ -72,6 +72,9 @@ sealed class Ex8EnuoStates : StateMachineBuilder
         Emptiness(id + 0x13, 23.27f);
         NaughtHunts(id + 0x14, 6.26f);
         Emptiness(id + 0x15, 23.24f);
+        DimensionZero(id + 0x17, 5.2f);
+        Almagest(id + 0x17, 10.1f);
+        DoubleNaughtGrows(id + 0x18, 5.7f);
 
     }
 

@@ -19,7 +19,7 @@ public enum OID : uint
     ProtectiveShadow = 0x4DC8, // R5.000, x0 (spawn during fight)
     LoomingShadow = 0x4DC7, // R12.500, x0 (spawn during fight)
     BeaconInTheDark = 0x4DCB, // R5.000, x0 (spawn during fight)
-    Void5 = 0x4EB5, // R0.850, x0 (spawn during fight), Helper type
+    NaughtHuntChaser = 0x4EB5, // R0.850, x0 (spawn during fight), Helper type
 
 }
 

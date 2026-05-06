@@ -82,6 +82,7 @@ sealed class DimensionZero(BossModule module) : Components.GenericBaitStack(modu
             var p = WorldState.Actors.Find(targetID);
             if (p != null)
             {
+                hits = 0; //reset your counter, dummy.
                 CurrentBaits.Add(new(Module.PrimaryActor, p, new AOEShapeRect(60f, 4f)));
             }
         }
@@ -91,7 +92,7 @@ sealed class DimensionZero(BossModule module) : Components.GenericBaitStack(modu
         if (spell.Action.ID == (uint)AID.DimensionZeroHits)
         {
             hits++;
-            if (hits <= 3)
+            if (hits >= 3)
             {
                 CurrentBaits.Clear();
             }
