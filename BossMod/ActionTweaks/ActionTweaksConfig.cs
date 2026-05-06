@@ -1,4 +1,7 @@
-﻿namespace BossMod;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility.Raii;
+
+namespace BossMod;
 
 [ConfigDisplay(Name = "技能调整", Order = 4)]
 public sealed class ActionTweaksConfig : ConfigNode
@@ -51,8 +54,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("对鼠标悬停的目标使用技能")]
     public bool PreferMouseover = false;
 
-    [PropertyDisplay("智能技能目标选择", tooltip: "如果通常的目标（鼠标悬停/主要目标）不适合使用某个技能，则自动选择下一个最佳目标（例如为副坦使用Shirk）")]
-    public bool SmartTargets = true;
+    public bool SmartTargeting = false;
 
     [PropertyDisplay("为手动按下的技能使用自定义队列", tooltip: "此设置可以更好地与自动循环结合，并防止在自动循环过程中按下治疗技能时出现三插或卡GCD的情况")]
     public bool UseManualQueue = false;
@@ -84,4 +86,28 @@ public sealed class ActionTweaksConfig : ConfigNode
     public GroundTargetingMode GTMode = GroundTargetingMode.Manual;
 
     public bool ActivateAnticheat = true;
+
+    private static bool IsRSREnabled()
+    {
+        try
+        {
+            const string rsrName = "Rotation Solver Reborn";
+            foreach (var p in Service.PluginInterface.InstalledPlugins)
+                if ((p.Name.Equals(rsrName, StringComparison.OrdinalIgnoreCase) || p.InternalName.Equals(rsrName, StringComparison.OrdinalIgnoreCase)) && p.IsLoaded)
+                    return true;
+        }
+        catch { }
+        return false;
+    }
+
+    public override void DrawCustom(UITree tree, WorldState ws)
+    {
+        ImGui.AlignTextToFramePadding();
+        UIMisc.HelpMarker("If the usual (mouseover/primary) target is not valid for an action, select the next best target automatically (e.g. co-tank for Shirk)");
+        ImGui.SameLine();
+        var rsrEnabled = IsRSREnabled();
+        using var color = ImRaii.PushColor(ImGuiCol.Text, 0xFF0000FFu, rsrEnabled);
+        if (ImGui.Checkbox("Smart ability targeting (Do not use with RSR)", ref SmartTargeting))
+            Modified.Fire();
+    }
 }
