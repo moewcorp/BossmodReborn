@@ -2,19 +2,38 @@
 
 // May want some additional signaling to the secondary target?  But this seems to work.
 
-sealed class NaughtHunts(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(6f), (uint)AID.EndlessChaseCast, (uint)AID.EndlessChaseInstant, 2.9f, 0.7d, 12, icon: (uint)IconID.NaughtHuntTarget, activationDelay: 6d)
+sealed class NaughtHunts(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(6f), (uint)AID.EndlessChaseCast, (uint)AID.EndlessChaseInstant, 2.9f, 0.7d, 13, icon: (uint)IconID.NaughtHuntTarget, activationDelay: 6d)
 {
+    private int _tethercount = 0;
     public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
         if (tether.ID == (uint)TetherID.NaughtHuntFirst)
         {
             var p = WorldState.Actors.Find(tether.Target);
+            if (_tethercount == 2)
+            {
+                Chasers.Clear();
+            }
             if (p != null)
             {
                 Chasers.Add(new(Shape, p, source.Position, 0, MaxCasts, WorldState.FutureTime(ActivationDelay), SecondsBetweenActivations));
+                ++_tethercount;
+            }
+            if (_tethercount == 4)
+            {
+                _tethercount = 0;
             }
         }
     }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if (actor.OID == (uint)OID.NaughtHuntChaser)
+        {
+            Chasers.Clear(); // This'll happen twice per cycle but who cares?
+        }
+    }
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == ActionFirst)
