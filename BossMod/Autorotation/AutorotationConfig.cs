@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Autorotation;
 
-[ConfigDisplay(Name = "Autorotation", Order = 5)]
+[ConfigDisplay(Name = "Autorotation (Unsupported by Combat Reborn)", Order = 5)]
 public sealed class AutorotationConfig : ConfigNode
 {
     [PropertyDisplay("Show in-game UI")]
