@@ -175,7 +175,7 @@ sealed class SusanoStates : StateMachineBuilder
     TetherIDType = typeof(TetherID),
     IconIDType = typeof(IconID),
     PrimaryActorOID = (uint)OID.Susano,
-    Contributors = "",
+    Contributors = "wen",
     Expansion = BossModuleInfo.Expansion.Stormblood,
     Category = BossModuleInfo.Category.Trial,
     GroupType = BossModuleInfo.GroupType.CFC,
