@@ -1,6 +1,6 @@
 namespace BossMod.QuestBattle.ARealmReborn.ClassJobQuests.PLD;
 
-[ZoneModuleInfo(315, 254)]
+[ZoneModuleInfo(BossModuleInfo.Maturity.Contributed, 315u, 254u)]
 internal class ThatOldFamiliarFeeling(WorldState ws) : QuestBattle(ws)
 {
     private const uint StoutAttacker = 0x277;
