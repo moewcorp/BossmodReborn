@@ -38,6 +38,7 @@ public enum AID : uint
     Shock = 8259, // 1B9B->self, no cast, range 6 circle
     AmeNoMurakumoRaidwide = 8226, // 1AF8->self, no cast, range 40+R circle
     AmeNoMurakumoRectAOE = 8588, // 1BA1->self, 4.0s cast, range 40+R width 6 rect
+    // Rectangle tank buster with icon
     Stormsplitter = 8227, // 1AF7->self/player, 5.0s cast, range 20+R width 4 rect
     // The gates are the rock game.
     _Ability_TheHiddenGate = 8228, // 1AF7->self, no cast, single-target
@@ -62,7 +63,7 @@ public enum IconID : uint
 {
     _Gen_Icon_lockon5_t0h = 23, // player->self : Knockback icon?
     _Gen_Icon_com_share0c = 62, // player->self
-    _Gen_Icon_tank_laser_lockon01p = 230, // player->self : Stormsplitter? After icon is cast it is followed up with Spell 8227 'Stormsplitter'
+    StormsplitterIcon = 230, // player->self : Caution Tankbuster: After icon is cast it is followed up with Spell 8227 'Stormsplitter'
     _Gen_Icon_m0372trg_t2j = 112, // AmaNoIwato1->self : 1C20/Ama-no-iwato
 }
 
@@ -131,7 +132,8 @@ sealed class SeaSplitter1(BossModule module) : Components.SimpleAOEs(module, (ui
 sealed class SeaSplitter2(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Seasplitter2, new AOEShapeRect(27f, 20f));
 sealed class SeaSplitter3(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Seasplitter3, new AOEShapeRect(27f, 20f));
 
-sealed class StormSplitter(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Stormsplitter, new AOEShapeRect(40f, 2f));
+sealed class StormSplitter(BossModule module) : Components.IconSharedTankbuster(module, (uint)IconID.StormsplitterIcon, (uint)AID.Stormsplitter, new AOEShapeRect(40f, 2f));
+
 
 sealed class SheerForce(BossModule module) : Components.RaidwideInstant(module, (uint)AID.SheerForce);
 
@@ -166,7 +168,7 @@ sealed class SusanoStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+[ModuleInfo(BossModuleInfo.Maturity.Contributed,
     StatesType = typeof(SusanoStates),
     ConfigType = null, // replace null with typeof(SusanoConfig) if applicable
     ObjectIDType = typeof(OID),
