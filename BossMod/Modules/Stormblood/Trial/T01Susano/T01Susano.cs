@@ -134,8 +134,6 @@ sealed class SeaSplitter3(BossModule module) : Components.SimpleAOEs(module, (ui
 
 sealed class StormSplitter(BossModule module) : Components.IconSharedTankbuster(module, (uint)IconID.StormsplitterIcon, (uint)AID.Stormsplitter, new AOEShapeRect(40f, 2f));
 
-//sealed class GreatWallOfFire(BossModule module) : Components.IconSharedTankbuster(module, (uint)IconID.WallOfFireTankbuster, (uint)AID._Weaponskill_GreatWallOfFire, new AOEShapeRect(60, 3f));
-
 
 sealed class SheerForce(BossModule module) : Components.RaidwideInstant(module, (uint)AID.SheerForce);
 
