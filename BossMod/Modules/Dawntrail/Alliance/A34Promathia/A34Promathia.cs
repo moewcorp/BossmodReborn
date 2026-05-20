@@ -43,7 +43,7 @@ sealed class BastionOfTwilight(BossModule module) : Components.GenericAOEs(modul
         {
             return [];
         }
-        AOEInstance[]? _aoes = [new(new AOEShapeDonut(13f, 50f), Module.PrimaryActor.Position, default, WorldState.FutureTime(10.5d))];
+        AOEInstance[]? _aoes = [new(new AOEShapeDonut(8f, 50f), Module.PrimaryActor.Position, default, WorldState.FutureTime(10.5d))];
         return _aoes;
     }
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
