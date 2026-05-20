@@ -1,8 +1,4 @@
-﻿using BossMod.Autorotation.xan;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using TerraFX.Interop.DirectX;
-
-namespace BossMod.Dawntrail.Alliance.A34Promathia;
+﻿namespace BossMod.Dawntrail.Alliance.A34Promathia;
 
 sealed class EmptySalvation(BossModule module) : Components.RaidwideCast(module, (uint)AID.EmptySalvation);
 
