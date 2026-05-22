@@ -43,20 +43,20 @@ sealed class SlickshellCaptainStates : StateMachineBuilder
             .ActivateOnEnter<Kasaya>()
             .ActivateOnEnter<BlizzardIIIIcon>()
             .ActivateOnEnter<BlizzardIIICast>()
-            .Raw.Update = () => AllDeadOrDestroyed(SlickshellCaptain.Opponents);
+            .Raw.Update = () => module.WorldState.CurrentCFCID != 469u;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68563u, NameID = 6891u)]
 public sealed class SlickshellCaptain(WorldState ws, Actor primary) : BossModule(ws, primary, arena.Center, arena)
 {
-    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(464.25f, 320.19f), new(455.65f, 313.35f), new(457.72f, 308.20f), new(445.00f, 292.92f), new(468.13f, 283.56f),
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom([new(464.25f, 320.19f), new(455.65f, 313.35f), new(457.72f, 308.20f), new(445f, 292.92f), new(468.13f, 283.56f),
     new(495.55f, 299.63f), new(487.19f, 313.73f)])]);
-    public static readonly uint[] Opponents = [(uint)OID.Boss, (uint)OID.SoftshellOfTheRed1, (uint)OID.SoftshellOfTheRed2, (uint)OID.SoftshellOfTheRed3];
+    private static readonly uint[] opponents = [(uint)OID.Boss, (uint)OID.SoftshellOfTheRed1, (uint)OID.SoftshellOfTheRed2, (uint)OID.SoftshellOfTheRed3];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        Arena.Actors(this, Opponents);
+        Arena.Actors(this, opponents);
     }
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
