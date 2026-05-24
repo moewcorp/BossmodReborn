@@ -63,7 +63,7 @@ public sealed class A33Awaern(WorldState ws, Actor primary) : BossModule(ws, pri
 {
     public static readonly WPos ArenaCenter = new(-720f, 720f);
 
-    public static readonly uint[] GardenofRuHmetMobs = [(uint)OID.Awzdei, (uint)OID.Awzdei];
+    public static readonly uint[] GardenofRuHmetMobs = [(uint)OID.Awaern, (uint)OID.Awzdei];
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
