@@ -11,7 +11,7 @@ sealed class A30ShantotoStates : StateMachineBuilder
             .ActivateOnEnter<SuperiorStoneIITelegraph>()
             .ActivateOnEnter<SuperiorStoneIIArena>()
             .ActivateOnEnter<GroundBreakingQuake>()
-            .ActivateOnEnter<CircumscribedFire>()
+            .ActivateOnEnter<DiagrammaticDoorway>()
             .ActivateOnEnter<LocalizedBlizzard>()
             .ActivateOnEnter<ThunderAndError>()
             .ActivateOnEnter<SmallSpecimen>()
