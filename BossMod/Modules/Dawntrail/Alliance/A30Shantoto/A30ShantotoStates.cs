@@ -19,6 +19,7 @@ sealed class A30ShantotoStates : StateMachineBuilder
             .ActivateOnEnter<StardustSpecimen>()
             .ActivateOnEnter<Shockwave>()
             .ActivateOnEnter<FallingRubble>()
+            .ActivateOnEnter<FallingRubble1>()
             .ActivateOnEnter<FallingRubble2>()
             .ActivateOnEnter<FallingRubble3>()
             .ActivateOnEnter<AeroDynamics>()
