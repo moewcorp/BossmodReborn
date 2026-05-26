@@ -1,8 +1,18 @@
-﻿namespace BossMod;
+﻿using Dalamud.Bindings.ImGui;
+
+namespace BossMod;
 
 [ConfigDisplay(Name = "Boss模块和雷达", Order = 1)]
 public sealed class BossModuleConfig : ConfigNode
 {
+    public override void DrawCustom(UITree tree, WorldState ws)
+    {
+        if (ImGui.Button("Recenter Window"))
+        {
+            Service.BossModWindow?.RecenterWindow();
+        }
+    }
+
     // boss module settings
     [PropertyDisplay("模块加载的最低成熟度", tooltip: "某些模块将处于\"WIP\"状态，除非你更改此设置，否则不会自动加载")]
     public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
