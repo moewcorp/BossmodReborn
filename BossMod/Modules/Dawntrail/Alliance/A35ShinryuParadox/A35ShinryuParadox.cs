@@ -90,7 +90,6 @@ public enum AID : uint
     SuperNova = 49183, // Helper->players, no cast, range 6 circle
 }
 
-
 public enum SID : uint
 {
     Bleeding1 = 3077, // none->player, extra=0x0
@@ -123,7 +122,6 @@ public enum TetherID : uint
     Tether_chn_fire001f = 5, // UnknownActor->HollowKing
 }
 
-
 // Puts AOE or Safezone over launchpad to avoid room wide aoe
 abstract class FloorAOE(BossModule module, uint action) : Components.GenericAOEs(module, action)
 {
@@ -149,7 +147,7 @@ abstract class FloorAOE(BossModule module, uint action) : Components.GenericAOEs
             else if (danger == 0 && floor == 0)
                 // hop up to top floor from lower floor
                 return new ReadOnlySpan<AOEInstance>([new AOEInstance(new AOEShapeDonut(2, 100), Arena.Center - new WDir(0, 6), default, activation)]);
-            else if(danger == 0 && floor == 1)
+            else if (danger == 0 && floor == 1)
                 // stay on top floor to avoid danger on lower floor
                 return new ReadOnlySpan<AOEInstance>([new AOEInstance(new AOEShapeCircle(6), Arena.Center - new WDir(0, 6), default, activation)]);
         }
@@ -195,10 +193,10 @@ class AtomicTailArena(BossModule module) : BossComponent(module)
         {
             Shape[] arenaOutline = [new Rectangle(Arena.Center, 30f, 20f)];
             // Set a boundary to keep pc from jumping down into atomic tail.
-            Shape[] circleOfDanger = [new Circle((Arena.Center - new WDir(0, 6)), 6)];
+            Shape[] circleOfDanger = [new Circle(Arena.Center - new WDir(0, 6), 6)];
 
             // Take the arena rectangle and give it a difference for the hole to prevent jumping down.
-            ArenaBoundsCustom atomicTailArenaBounds = new(arenaOutline , circleOfDanger);
+            ArenaBoundsCustom atomicTailArenaBounds = new(arenaOutline, circleOfDanger);
             Arena.Bounds = atomicTailArenaBounds;
         }
 
@@ -285,7 +283,6 @@ class VortexLook(BossModule module) : Components.GenericGaze(module)
     }
 }
 
-
 // Icon to look away from the boss
 class VortexNoLook(BossModule module) : Components.GenericGaze(module)
 {
@@ -338,7 +335,10 @@ class VortexStayMove(BossModule module) : Components.StayMove(module)
 
         var p = Raid.FindSlot(actor.InstanceID);
         if (p >= 0)
-            SetState(p, new(r, WorldState.FutureTime(7)));
+        {
+            var state = new PlayerState(r, WorldState.FutureTime(7));
+            SetState(p, in state);
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -447,9 +447,9 @@ class AtomicRay(BossModule module) : Components.GenericAOEs(module, (uint)AID.At
 
         for (var i = 0; i < count; i++)
         {
-            Actor c =_predicted[i].Caster;
-            WPos p = _predicted[i].Predicted;
-            DateTime d = _predicted[i].Activation;
+            var c = _predicted[i].Caster;
+            var p = _predicted[i].Predicted;
+            var d = _predicted[i].Activation;
             _aoes.Add(new AOEInstance(new AOEShapeRect(60, 7.5f), p, c.Rotation, d));
         }
         return CollectionsMarshal.AsSpan(_aoes);
@@ -518,16 +518,12 @@ class SuperNova(BossModule module) : Components.StackWithIcon(module, (uint)Icon
 
 class StarflareTimeGroupsP2(BossModule module) : Components.SimpleAOEGroupsByTimewindow(module, [(uint)AID.StarflareP2Fast, (uint)AID.StarflareP2Slow], new AOEShapeRect(60, 5), expectedNumCasters: 5);
 
-
 [SkipLocalsInit]
 sealed class ShinryuParadoxStates : StateMachineBuilder
 {
-    readonly A35ShinryuParadox _module;
 
     public ShinryuParadoxStates(A35ShinryuParadox module) : base(module)
     {
-        _module = module;
-
         TrivialPhase()
             .ActivateOnEnter<CosmicBreath>()
             .ActivateOnEnter<CosmicTail>()
@@ -559,7 +555,6 @@ sealed class ShinryuParadoxStates : StateMachineBuilder
     }
 }
 
-
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(ShinryuParadoxStates),
     ConfigType = null, // replace null with typeof(ShinryuParadoxConfig) if applicable
@@ -578,7 +573,6 @@ sealed class ShinryuParadoxStates : StateMachineBuilder
     SortOrder = 6,
     PlanLevel = 0)]
 
-
 // Set up base logic for what level of arena and which phase boss pc is fighting.
 public class A35ShinryuParadox(WorldState ws, Actor primary)
     : BossModule(ws, primary, new(820f, -820f), new ArenaBoundsRect(30f, 20f))
@@ -595,11 +589,11 @@ public class A35ShinryuParadox(WorldState ws, Actor primary)
     protected override void UpdateModule()
     {
         Groin ??= Enemies((uint)OID.ShinryuGroin).FirstOrDefault();
-        _bossP2 = Enemies((uint)OID.HollowKing).FirstOrDefault();
+        _bossP2 ??= Enemies((uint)OID.HollowKing).FirstOrDefault();
     }
 
     // If we are on the 0 level we fight the tail.
-   protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment,
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment,
         AIHints hints)
     {
         var pBoss = 0;
