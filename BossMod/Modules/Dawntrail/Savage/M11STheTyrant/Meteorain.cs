@@ -154,8 +154,44 @@ sealed class TripleTyrannhilation(BossModule module)
     }
 }
 
-sealed class CosmicKissTowers(BossModule module) : Components.CastTowers(module, (uint)AID.CosmicKissTower, 4f, 1, 1, AIHints.PredictedDamageType.Tankbuster);
-sealed class WeightyImpactTowers(BossModule module) : Components.CastTowers(module, (uint)AID.WeightyImpactTower, 4f, 2, 2, AIHints.PredictedDamageType.Shared);
+sealed class CosmicKissTowers(BossModule module) : Components.CastTowers(module, (uint)AID.CosmicKissTower, 4f, 1, 1, AIHints.PredictedDamageType.Tankbuster)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == WatchedAction)
+        {
+            var badsoakers = new BitMask();
+            var raid = Raid.WithoutSlot();
+            for (var i = 0; i < raid.Length; i++)
+            {
+                if (raid[i].Role != Role.Tank)
+                {
+                    badsoakers.Set(i);
+                }
+            }
+            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell), actorID: caster.InstanceID, forbiddenSoakers: badsoakers));
+        }
+    }
+}
+sealed class WeightyImpactTowers(BossModule module) : Components.CastTowers(module, (uint)AID.WeightyImpactTower, 4f, 2, 2, AIHints.PredictedDamageType.Shared)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == WatchedAction)
+        {
+            var badsoakers = new BitMask();
+            var raid = Raid.WithoutSlot();
+            for (var i = 0; i < raid.Length; i++)
+            {
+                if (raid[i].Role == Role.Tank)
+                {
+                    badsoakers.Set(i);
+                }
+            }
+            Towers.Add(new(spell.LocXZ, Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell), actorID: caster.InstanceID, forbiddenSoakers: badsoakers));
+        }
+    }
+}
 sealed class HeartBreakerTower(BossModule module) : Components.GenericTowers(module)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
