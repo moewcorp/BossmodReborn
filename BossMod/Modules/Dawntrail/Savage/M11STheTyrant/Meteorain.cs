@@ -8,7 +8,7 @@ sealed class Tether2(BossModule module) : Components.StretchTetherSingle(module,
 sealed class FireBreath(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(60f, 3f), (uint)IconID.CosmicKissIcon, (uint)AID.FireBreath1);
 sealed class MajesticMeteor : Components.SimpleAOEs
 {
-    public MajesticMeteor(BossModule module) : base(module, (uint)AID.MajesticMeteorBaits, 3f, 24)
+    public MajesticMeteor(BossModule module) : base(module, (uint)AID.MajesticMeteorBaits, 6f, 24)
     {
         MaxDangerColor = 8;
     }
