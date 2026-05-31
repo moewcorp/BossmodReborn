@@ -8,7 +8,7 @@ public class PartyRolesConfig : ConfigNode
 {
     public enum Assignment { MT, OT, H1, H2, M1, M2, R1, R2, Unassigned }
 
-    [PropertyDisplay("Automatically assign roles on zone change")]
+    [PropertyDisplay("切换区域时自动分配职能")]
     public bool AutoAssignOnDutyEnter = false;
 
     public Dictionary<ulong, Assignment> Assignments = [];
@@ -211,12 +211,12 @@ public class PartyRolesConfig : ConfigNode
 
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        if (ImGui.Button("Auto-Assign Roles"))
+        if (ImGui.Button("自动分配职能"))
         {
             AutoAssignRoles(ws.Party);
         }
         ImGui.SameLine();
-        ImGui.TextUnformatted("Click to automatically assign party roles based on job and party order");
+        ImGui.TextUnformatted("点击根据职业和队伍顺序自动分配队伍职能");
 
         using (var table = ImRaii.Table("tab2", 10, ImGuiTableFlags.SizingFixedFit))
         {

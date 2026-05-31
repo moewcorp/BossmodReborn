@@ -3,7 +3,7 @@
   "Name": "BossMod Reborn",
   "InternalName": "BossModReborn",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
-  "Description": "A bunch of utilities to simplify boss mechanics",
+  "Description": "简化Boss机制的一系列实用工具",
   "ApplicableVersion": "any",
   "Tags": [
     "combat",
@@ -21,7 +21,7 @@
   "LoadPriority": 0,
   "IsTestingExclusive": false,
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
-  "Punchline": "Don't fail at raid mechanics anymore",
+  "Punchline": "从此告别副本机制失败",
   "AcceptsFeedback": true,
   "ImageUrls": [
     "https://raw.githubusercontent.com/FFXIV-CombatReborn/BossmodReborn/master/Data/image1.png",
