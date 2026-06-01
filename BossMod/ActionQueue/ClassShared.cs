@@ -67,6 +67,7 @@ public enum AID : uint
     SmokeScreen = 7816,
     MagitekPulse = 7962, // MarkXLIIIMiniCannon->location, 1.0s cast, range 6 circle, Castrum Abania, 1st boss
     AethericSiphon = 9102,
+    Vril = 9345,
     Shatterstone = 9823,
     Deflect = 10006,
     DeflectVeryEasy = 18863,
@@ -82,6 +83,10 @@ public enum AID : uint
     VariantCure2 = 33862, // available in mount rokkon and aloalo island
     VariantSpiritDart2 = 33863, // available in mount rokkon and aloalo island
     VariantRampart2 = 33864, // available in mount rokkon and aloalo island
+    VariantCure3 = 46939, // available in merchant's tale
+    VariantSpiritDart3 = 46940, // available in merchant's tale
+    VariantRampart3 = 46941, // available in merchant's tale
+    VariantEagleEyeShot = 46942, // available in merchant's tale
 
     #region PvP
     ElixirPvP = 29055,
@@ -135,6 +140,8 @@ public enum SID : uint
     Raise = 148, // applied by Raise to target
 
     // Variant
+    EnmityUp = 3358, // applied by Variant Ultimatum to self, budget tank stance
+    SustainedDamage = 3359, // applied by Variant Spirit Dart to targets
     VulnerabilityDown = 3360, // applied by Variant Rampart to self
 
     // Bozja
@@ -238,6 +245,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.MagitekPulse);
         d.RegisterSpell(AID.SmokeScreen);
         d.RegisterSpell(AID.AethericSiphon);
+        d.RegisterSpell(AID.Vril);
         d.RegisterSpell(AID.Shatterstone);
         d.RegisterSpell(AID.Deflect);
         d.RegisterSpell(AID.DeflectVeryEasy);
@@ -253,6 +261,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.VariantCure2);
         d.RegisterSpell(AID.VariantSpiritDart2);
         d.RegisterSpell(AID.VariantRampart2);
+        d.RegisterSpell(AID.VariantCure3);
+        d.RegisterSpell(AID.VariantSpiritDart3);
+        d.RegisterSpell(AID.VariantRampart3);
+        d.RegisterSpell(AID.VariantEagleEyeShot);
         #endregion
 
         #region PvP
@@ -282,8 +294,12 @@ public sealed class Definitions : IDisposable
 
         #region Phantom actions
         foreach (var action in typeof(PhantomID).GetEnumValues())
+        {
             if ((uint)action > 0)
+            {
                 d.RegisterSpell((PhantomID)action);
+            }
+        }
         #endregion
 
         Customize(d);
@@ -294,7 +310,7 @@ public sealed class Definitions : IDisposable
     private void Customize(ActionDefinitions d)
     {
         d.Spell(AID.Interject)!.ForbidExecute = (_, _, act, _) => !(act.Target?.CastInfo?.Interruptible ?? false); // don't use interject if target is not casting interruptible spell
-        d.Spell(AID.Reprisal)!.ForbidExecute = (_, player, _, hints) => !hints.PotentialTargets.Any(e => e.Actor.Position.InCircle(player.Position, 5 + e.Actor.HitboxRadius)); // don't use reprisal if no one would be hit; TODO: consider checking only target?..
+        d.Spell(AID.Reprisal)!.ForbidExecute = (_, player, _, hints) => { foreach (var e in hints.PotentialTargets) { if (e.Actor.Position.InCircle(player.Position, 5 + e.Actor.HitboxRadius)) { return false; } } return true; }; // don't use reprisal if no one would be hit; TODO: consider checking only target?
         d.Spell(AID.Shirk)!.SmartTarget = ActionDefinitions.SmartTargetCoTank;
 
         //d.Spell(AID.Repose)!.EffectDuration = 30;
@@ -320,10 +336,14 @@ public sealed class Definitions : IDisposable
             var cfg = Service.Config.Get<ActionTweaksConfig>();
             var target = action.Target;
             if (target == null || !cfg.DashSafety)
+            {
                 return false;
+            }
 
             if (player.PendingKnockbacks.Count > 0)
+            {
                 return true;
+            }
 
             var dir = player.DirectionTo(target).Normalized() * 15;
             return ActionDefinitions.IsDashDangerous(player.Position, player.Position + dir, hints);

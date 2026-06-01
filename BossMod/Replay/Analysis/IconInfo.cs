@@ -49,7 +49,7 @@ sealed class IconInfo : CommonEnumInfo
         {
             tree.LeafNode($"Source IDs: {OIDListString(data.SourceOIDs)}");
             tree.LeafNode($"Target IDs: {(data.TargetOIDs.Count == 0 ? "???" : data.SeenTargetNonSelf ? OIDListString(data.TargetOIDs) : "self")}");
-            tree.LeafNode($"VFX: {Service.LuminaRow<Lockon>(iid)?.Unknown0}");
+            tree.LeafNode($"VFX: {Service.LuminaRow<Lockon>(iid)?.IconName}");
         }
     }
 
@@ -59,7 +59,10 @@ sealed class IconInfo : CommonEnumInfo
         {
             var sb = new StringBuilder("public enum IconID : uint\n{\n");
             foreach (var (iid, data) in _data)
+            {
                 sb.Append($"    {EnumMemberString(iid, data)}\n");
+            }
+
             sb.Append("}\n");
             ImGui.SetClipboardText(sb.ToString());
         }
@@ -68,14 +71,17 @@ sealed class IconInfo : CommonEnumInfo
         {
             var sb = new StringBuilder();
             foreach (var (iid, data) in _data.Where(kv => _iidType?.GetEnumName(kv.Key) == null))
+            {
                 sb.AppendLine(EnumMemberString(iid, data));
+            }
+
             ImGui.SetClipboardText(sb.ToString());
         }
     }
 
     private string EnumMemberString(uint iid, IconData data)
     {
-        string generateIconName() => Service.LuminaRow<Lockon>(iid)?.Unknown0.ToString() ?? iid.ToString();
+        string generateIconName() => Service.LuminaRow<Lockon>(iid)?.IconName.ToString() ?? iid.ToString();
 
         var name = _iidType?.GetEnumName(iid) ?? $"_Gen_Icon_{generateIconName()}";
         return $"{name} = {iid}, // {OIDListString(data.SourceOIDs)}->{(data.TargetOIDs.Count == 0 ? "???" : data.SeenTargetNonSelf ? OIDListString(data.TargetOIDs) : "self")}";

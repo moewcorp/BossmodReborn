@@ -111,11 +111,12 @@ public sealed class ClientState
         public override readonly int GetHashCode() => InstanceID.GetHashCode();
     }
 
-    public readonly struct Companion(ulong instanceID, byte stance, float timeLeft)
+    public readonly struct Companion(ulong instanceID, byte stance, float timeLeft, bool stabled)
     {
         public readonly ulong InstanceID = instanceID;
         public readonly byte Stance = stance;
         public readonly float TimeLeft = timeLeft;
+        public readonly bool Stabled = stabled;
 
         public static bool operator ==(Companion left, Companion right) => left.InstanceID == right.InstanceID && left.Stance == right.Stance && left.TimeLeft == right.TimeLeft;
         public static bool operator !=(Companion left, Companion right) => left.InstanceID != right.InstanceID || left.Stance != right.Stance || left.TimeLeft != right.TimeLeft;
@@ -231,7 +232,10 @@ public sealed class ClientState
         T res = default;
         ((ulong*)&res)[1] = gauge.Low;
         if (sizeof(T) > 16)
+        {
             ((ulong*)&res)[2] = gauge.High;
+        }
+
         return res;
     }
     public unsafe T GetGauge<T>() where T : unmanaged => GetGauge<T>(GaugePayload);
@@ -367,16 +371,22 @@ public sealed class ClientState
     public void Tick(float dt)
     {
         if (CountdownRemaining != null)
+        {
             CountdownRemaining = CountdownRemaining.Value - dt;
+        }
 
         if (AnimationLock > 0f)
+        {
             AnimationLock = Math.Max(0, AnimationLock - dt);
+        }
 
         if (ComboState.Remaining > 0f)
         {
             ComboState.Remaining -= dt;
             if (ComboState.Remaining <= 0f)
+            {
                 ComboState = default;
+            }
         }
 
         // TODO: update cooldowns only if 'timestop' status is not active...
@@ -384,7 +394,9 @@ public sealed class ClientState
         {
             cd.Elapsed += dt;
             if (cd.Elapsed >= cd.Total)
+            {
                 cd.Elapsed = cd.Total = default;
+            }
         }
     }
 
@@ -434,9 +446,13 @@ public sealed class ClientState
         public override void Write(ReplayRecorder.Output output)
         {
             if (Value != null)
+            {
                 output.EmitFourCC("CDN+"u8).Emit(Value.Value);
+            }
             else
+            {
                 output.EmitFourCC("CDN-"u8);
+            }
         }
     }
 
@@ -505,7 +521,10 @@ public sealed class ClientState
         protected override void Exec(WorldState ws)
         {
             if (Reset)
+            {
                 Array.Fill(ws.Client.Cooldowns, default);
+            }
+
             var count = Cooldowns.Count;
             for (var i = 0; i < count; ++i)
             {
@@ -620,7 +639,10 @@ public sealed class ClientState
             Array.Fill(ws.Client.ClassJobLevels, default);
             var len = Values.Length;
             for (var i = 0; i < len; ++i)
+            {
                 ws.Client.ClassJobLevels[i] = Values[i];
+            }
+
             ws.Client.ClassJobLevelsChanged.Fire(this);
         }
 
@@ -670,7 +692,7 @@ public sealed class ClientState
             ws.Client.ActiveCompanion = Value;
             ws.Client.ActiveCompanionChanged.Fire(this);
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CHOC"u8).Emit(Value.InstanceID, "X8").Emit(Value.Stance).Emit(Value.TimeLeft);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CHOC"u8).Emit(Value.InstanceID, "X8").Emit(Value.Stance).Emit(Value.TimeLeft).Emit(Value.Stabled);
     }
 
     public Event<OpFocusTargetChange> FocusTargetChanged = new();
@@ -714,7 +736,9 @@ public sealed class ClientState
             output.EmitFourCC("CLKV"u8);
             var len = Value.Length;
             for (var i = 0; i < len; ++i)
+            {
                 output.Emit(Value[i]);
+            }
         }
     }
 
@@ -745,7 +769,9 @@ public sealed class ClientState
             var countNonEmpty = Array.IndexOf(Targets, default);
             output.Emit(countNonEmpty);
             for (var i = 0; i < countNonEmpty; ++i)
+            {
                 output.EmitActor(Targets[i].InstanceID).Emit(Targets[i].Enmity);
+            }
         }
     }
 
@@ -759,10 +785,7 @@ public sealed class ClientState
             ws.Client.ProcTimers = Value;
             ws.Client.ProcTimersChanged.Fire(this);
         }
-        public override void Write(ReplayRecorder.Output output)
-        {
-            output.EmitFourCC("CLPR"u8).Emit(Value[0]).Emit(Value[1]).Emit(Value[2]).Emit(Value[3]);
-        }
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLPR"u8).Emit(Value[0]).Emit(Value[1]).Emit(Value[2]).Emit(Value[3]);
     }
 
     public Event<OpInventoryChange> InventoryChanged = new();
@@ -776,9 +799,16 @@ public sealed class ClientState
             ws.Client.Inventory[ItemId] = Quantity;
             ws.Client.InventoryChanged.Fire(this);
         }
-        public override void Write(ReplayRecorder.Output output)
-        {
-            output.EmitFourCC("INVT"u8).Emit(ItemId).Emit(Quantity);
-        }
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("INVT"u8).Emit(ItemId).Emit(Quantity);
+    }
+
+    public Event<OpActionFailedLoS> ActionFailedLoS = new();
+    public sealed class OpActionFailedLoS(uint actionId, ulong targetId) : WorldState.Operation
+    {
+        public readonly uint ActionId = actionId;
+        public readonly ulong TargetId = targetId;
+
+        protected override void Exec(WorldState ws) => ws.Client.ActionFailedLoS.Fire(this);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("FLOS"u8).Emit(ActionId).EmitActor(TargetId);
     }
 }

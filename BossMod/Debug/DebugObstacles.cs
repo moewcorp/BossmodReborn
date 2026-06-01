@@ -1,7 +1,7 @@
-﻿using BossMod.Pathfinding;
+using BossMod.Pathfinding;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin;
-using Dalamud.Bindings.ImGui;
 using System.IO;
 
 namespace BossMod;
@@ -17,14 +17,25 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
             base.DrawSidebar();
 
             if (ImGui.InputFloat3("Min bounds", ref e.MinBounds))
+            {
                 owner.MarkModified();
+            }
+
             if (ImGui.InputFloat3("Max bounds", ref e.MaxBounds))
+            {
                 owner.MarkModified();
+            }
+
             ImGui.TextUnformatted($"Map area: {e.Origin} + {Bitmap.Width}x{Bitmap.Height} * {Bitmap.PixelSize}");
             if (ImGui.InputInt("Half-width in cells", ref e.ViewWidth))
+            {
                 owner.MarkModified();
+            }
+
             if (ImGui.InputInt("Half-height in cells", ref e.ViewHeight))
+            {
                 owner.MarkModified();
+            }
 
             ImGui.TextUnformatted($"Change resolution:");
             ImGui.SameLine();
@@ -129,6 +140,56 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
         }
     }
 
+    sealed class TempMapViewer : UIBitmapEditor
+    {
+        private readonly DebugObstacles _owner;
+        private readonly ObstacleMapDatabase.Entry _e;
+
+        public TempMapViewer(DebugObstacles owner, Bitmap bm, ObstacleMapDatabase.Entry e) : base(bm)
+        {
+            _owner = owner;
+            _e = e;
+            CurrentMode = PanModeId;
+        }
+
+        protected override void DrawSidebar()
+        {
+            var player = _owner.Obstacles.World.Party.Player();
+            ImGui.TextUnformatted("IPC temp map");
+            ImGui.TextUnformatted($"Generation task: {_owner.Obstacles.GenerationStatus}");
+            ImGui.TextUnformatted($"Key: {_e.Filename}");
+            ImGui.TextUnformatted($"Bounds min {_e.MinBounds}  max {_e.MaxBounds}");
+            ImGui.TextUnformatted($"Origin {_e.Origin}  grid {Bitmap.Width}x{Bitmap.Height}  cell {Bitmap.PixelSize:F3} yalms");
+
+            if (player != null)
+            {
+                var playerOffset = ((player.Position - _e.Origin) / Bitmap.PixelSize).Floor();
+                ImGui.TextUnformatted($"Player cell: {playerOffset.X}x/{playerOffset.Z}z");
+            }
+
+            if (HoveredPixel.x >= 0 && HoveredPixel.y >= 0)
+            {
+                ImGui.TextUnformatted($"Hovered cell: {HoveredPixel.x}x{HoveredPixel.y}");
+                var y = player?.PosRot.Y ?? 0;
+                var tl = _e.Origin + new WDir(HoveredPixel.x, HoveredPixel.y) * Bitmap.PixelSize;
+                var br = tl + new WDir(Bitmap.PixelSize, Bitmap.PixelSize);
+                Camera.Instance?.DrawWorldLine(new(tl.X, y, tl.Z), new(tl.X, y, br.Z), 0xff00ffff);
+                Camera.Instance?.DrawWorldLine(new(tl.X, y, br.Z), new(br.X, y, br.Z), 0xff00ffff);
+                Camera.Instance?.DrawWorldLine(new(br.X, y, br.Z), new(br.X, y, tl.Z), 0xff00ffff);
+                Camera.Instance?.DrawWorldLine(new(br.X, y, tl.Z), new(tl.X, y, tl.Z), 0xff00ffff);
+            }
+        }
+
+        protected override IEnumerable<(int x, int y, Color c)> HighlighedCells()
+        {
+            if (_owner.Obstacles.World.Party.Player() is { } player)
+            {
+                var playerOffset = ((player.Position - _e.Origin) / Bitmap.PixelSize).Floor();
+                yield return ((int)playerOffset.X, (int)playerOffset.Z, new(0xff00ff00));
+            }
+        }
+    }
+
     internal readonly ObstacleMapManager Obstacles = obstacles;
     private readonly UITree _tree = new();
     private readonly Func<Vector3, string, float, Vector3, Vector3, (Vector3, Vector3)> _createMap = (startingPos, filename, pixelSize, minBounds, maxBounds) => dalamud.GetIpcSubscriber<Vector3, string, float, Vector3, Vector3, (Vector3, Vector3)>("vnavmesh.Nav.BuildBitmapBounded").InvokeFunc(startingPos, filename, pixelSize, minBounds, maxBounds);
@@ -144,27 +205,63 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
     {
         ImGui.TextUnformatted($"Database root: {Obstacles.RootPath}");
 
+        ImGui.Separator();
+        ImGui.TextUnformatted("Temp map (IPC / memory)");
+        var gen = Obstacles.GenerationStatus;
+        if (gen is not TaskStatus.RanToCompletion)
+        {
+            ImGui.TextUnformatted($"Build task: {gen}");
+        }
+
+        if (Obstacles.TempMapMeta is not { } meta)
+        {
+            ImGui.TextDisabled("No temp map loaded.");
+        }
+        else
+        {
+            ImGui.TextUnformatted($"{meta.Filename}  {meta.Width}x{meta.Height} cells");
+            if (ImGui.Button("Open viewer##tempObstacle") && Obstacles.TryCloneTempMap(out var ent, out var bmp))
+            {
+                _ = new UISimpleWindow($"Temp obstacle map: {ent.Filename}", new TempMapViewer(this, bmp, ent).Draw, true, new(1000, 1000));
+            }
+        }
+
         var curZoneEntries = Obstacles.Database.Entries.GetValueOrDefault(Obstacles.CurrentKey());
         using (ImRaii.Disabled(!Obstacles.CanEditDatabase()))
         {
             if (ImGui.Button("Create new region"))
+            {
                 CreateRegion();
+            }
+
             ImGui.SameLine();
             using (ImRaii.Disabled(!_dbModified))
+            {
                 if (ImGui.Button("Save"))
+                {
                     SaveDatabase();
+                }
+            }
+
             ImGui.SameLine();
             if (ImGui.Button(_dbModified ? "Revert" : "Reload"))
+            {
                 ReloadDatabase();
+            }
         }
 
         ImGui.DragFloat3("Map min bounds", ref _minBounds, 1, -1024, 1024);
         ImGui.DragFloat3("Map max bounds", ref _maxBounds, 1, -1024, 1024);
 
         foreach (var n in _tree.Node($"Current zone: {Obstacles.World.CurrentZone}.{Obstacles.World.CurrentCFCID}###curr", curZoneEntries == null || curZoneEntries.Count == 0))
+        {
             DrawEntries(curZoneEntries ?? []);
+        }
+
         foreach (var n in _tree.Nodes(Obstacles.Database.Entries, kv => new($"Zone {kv.Key >> 16}.{kv.Key & 0xFFFF}", kv.Value.Count == 0)))
+        {
             DrawEntries(n.Value);
+        }
     }
 
     internal void MarkModified() => _dbModified = true;
@@ -173,23 +270,39 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
     {
         Action? modifications = null;
         using var disableScope = ImRaii.Disabled(!Obstacles.CanEditDatabase());
-        for (int i = 0; i < entries.Count; ++i)
+        for (var i = 0; i < entries.Count; ++i)
         {
             using var id = ImRaii.PushId(i);
             var index = i;
             using (ImRaii.Disabled(i == 0))
+            {
                 if (ImGui.Button("Move up"))
+                {
                     modifications += () => (entries[index], entries[index - 1]) = (entries[index - 1], entries[index]);
+                }
+            }
+
             ImGui.SameLine();
             using (ImRaii.Disabled(i == entries.Count - 1))
+            {
                 if (ImGui.Button("Move down"))
+                {
                     modifications += () => (entries[index], entries[index + 1]) = (entries[index + 1], entries[index]);
+                }
+            }
+
             ImGui.SameLine();
             if (ImGui.Button("Delete"))
+            {
                 modifications += () => DeleteMap(entries, index);
+            }
+
             ImGui.SameLine();
             if (ImGui.Button("Edit"))
+            {
                 OpenEditor(entries[index]);
+            }
+
             ImGui.SameLine();
             ImGui.TextUnformatted($"[{i}] {entries[i]}");
         }
@@ -231,11 +344,13 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
 
     private string GenerateMapName()
     {
-        for (int i = 1; ; ++i)
+        for (var i = 1; ; ++i)
         {
             var name = $"{Obstacles.World.CurrentZone}.{Obstacles.World.CurrentCFCID}.{i}.bmp";
             if (!new FileInfo(Obstacles.RootPath + name).Exists)
+            {
                 return name;
+            }
         }
     }
 

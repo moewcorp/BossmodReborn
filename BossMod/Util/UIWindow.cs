@@ -1,5 +1,5 @@
-﻿using Dalamud.Interface.Windowing;
-using Dalamud.Bindings.ImGui;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Windowing;
 
 namespace BossMod;
 
@@ -28,7 +28,17 @@ public abstract class UIWindow : Window, IDisposable
         {
             TitleBarButtons = titleBarButtons;
         }
-        var existingWindow = Service.WindowSystem!.Windows.FirstOrDefault(w => w.WindowName == WindowName);
+        Window? existingWindow = null;
+        var windows = Service.WindowSystem!.Windows;
+        for (var wi = 0; wi < windows.Count; ++wi)
+        {
+            if (windows[wi].WindowName == WindowName)
+            {
+                existingWindow = (Window)windows[wi];
+                break;
+            }
+        }
+
         if (existingWindow == null)
         {
             // standard case - just register window in window system
@@ -57,7 +67,9 @@ public abstract class UIWindow : Window, IDisposable
     public override void OnClose()
     {
         if (DisposeOnClose)
+        {
             Dispose();
+        }
     }
 
     public void OpenAndBringToFront()
@@ -71,7 +83,7 @@ public abstract class UIWindow : Window, IDisposable
 }
 
 // utility: window that uses custom delegate to perform drawing - allows avoiding creating derived classes in simple cases
-public class UISimpleWindow(string name, Action draw, bool detached, Vector2 initialSize, ImGuiWindowFlags flags = ImGuiWindowFlags.None, List<Window.TitleBarButton>? titleBarButtons = null)
+public class UISimpleWindow(string name, Action draw, bool detached, Vector2 initialSize, ImGuiWindowFlags flags = ImGuiWindowFlags.None, List<TitleBarButton>? titleBarButtons = null)
     : UIWindow(name, detached, initialSize, flags, titleBarButtons)
 {
     private readonly Action _draw = draw;

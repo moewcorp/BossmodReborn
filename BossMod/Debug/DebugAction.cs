@@ -1,8 +1,8 @@
 ﻿using Dalamud.Bindings.ImGui;
-using Dalamud.Game.Gui;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Dalamud.Game.Gui;
 
 namespace BossMod;
 
@@ -45,7 +45,10 @@ sealed unsafe class DebugAction : IDisposable
         ImGui.TextUnformatted($"Anim lock: {amr->AnimationLock:f3}");
         ImGui.TextUnformatted($"Cast: {aidCastAction} / {aidCastSpell}, progress={amr->CastTimeElapsed:f3}/{amr->CastTimeTotal:f3}, target={amr->CastTargetId:X}/{Utils.Vec3String(amr->CastTargetPosition)}");
         if (pcCast != null)
+        {
             ImGui.TextUnformatted($"Cast (obj): {pcCast->IsCasting} {new ActionID((ActionType)pcCast->ActionType, pcCast->ActionId)}, progress={pcCast->CurrentCastTime:f3}/{pcCast->BaseCastTime:f3}/{pcCast->TotalCastTime:f3}");
+        }
+
         ImGui.TextUnformatted($"Combo: {aidCombo}, {_amex.ComboTimeLeft:f3}");
         ImGui.TextUnformatted($"Queue: {(amr->ActionQueued ? "active" : "inactive")}, {aidQueued} @ {(ulong)amr->QueuedTargetId:X} [{amr->QueueType}], combo={amr->QueuedComboRouteId}");
         ImGui.TextUnformatted($"GT: {aidGTAction} / {aidGTSpell}, arg={Utils.ReadField<uint>(amr, 0x94)}, targ={amr->AreaTargetingExecuteAtObject:X}/{amr->AreaTargetingExecuteAtCursor}, a0={Utils.ReadField<byte>(amr, 0xA0):X2}, bc={Utils.ReadField<byte>(amr, 0xBC):X}");
@@ -95,63 +98,68 @@ sealed unsafe class DebugAction : IDisposable
         }
 
         var hover = Service.GameGui.HoveredAction;
-        if (hover.ActionID != 0)
+        if (hover.ActionId != 0)
         {
             var mnemonic = Service.PlayerState.ClassJob.ValueNullable?.Abbreviation.ToString();
             var rotationType = mnemonic != null ? Type.GetType($"BossMod.{mnemonic}Rotation")?.GetNestedType("AID") : null;
-            ImGui.TextUnformatted($"Hover action: {hover.ActionKind} {hover.ActionID} (base={hover.BaseActionID}) ({mnemonic}: {rotationType?.GetEnumName(hover.ActionID)})");
+            ImGui.TextUnformatted($"Hover action: {hover.DetailKind} {hover.ActionId} (base={hover.BaseActionId}) ({mnemonic}: {rotationType?.GetEnumName(hover.ActionId)})");
 
-            string name = "";
+            var name = "";
             var type = FFXIVClientStructs.FFXIV.Client.Game.ActionType.None;
             uint unlockLink = 0;
-            if ((int)hover.ActionKind == 24) // action
+            if (hover.DetailKind == DetailKind.Action) // action
             {
-                var data = Service.LuminaRow<Lumina.Excel.Sheets.Action>(hover.ActionID);
+                var data = Service.LuminaRow<Lumina.Excel.Sheets.Action>(hover.ActionId);
                 name = data?.Name.ToString() ?? "";
                 type = FFXIVClientStructs.FFXIV.Client.Game.ActionType.Action;
                 unlockLink = data?.UnlockLink.RowId ?? 0;
             }
-            else if (hover.ActionKind == HoverActionKind.GeneralAction)
+            else if (hover.DetailKind == DetailKind.GeneralAction)
             {
-                var data = Service.LuminaRow<Lumina.Excel.Sheets.GeneralAction>(hover.ActionID);
+                var data = Service.LuminaRow<Lumina.Excel.Sheets.GeneralAction>(hover.ActionId);
                 name = data?.Name.ToString() ?? "";
                 type = FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction;
                 unlockLink = data?.UnlockLink ?? 0;
             }
-            else if (hover.ActionKind == HoverActionKind.Trait)
+            else if (hover.DetailKind == DetailKind.Trait)
             {
-                var data = Service.LuminaRow<Lumina.Excel.Sheets.Trait>(hover.ActionID);
+                var data = Service.LuminaRow<Lumina.Excel.Sheets.Trait>(hover.ActionId);
                 name = data?.Name.ToString() ?? "";
                 unlockLink = data?.Quest.RowId ?? 0;
             }
 
             ImGui.TextUnformatted($"Name: {name}");
             ImGui.TextUnformatted($"Unlock: {unlockLink} ({Service.LuminaRow<Lumina.Excel.Sheets.Quest>(unlockLink)?.Name}) = {FFXIVClientStructs.FFXIV.Client.Game.QuestManager.IsQuestComplete(unlockLink)}");
-            if (hover.ActionKind == HoverActionKind.Action)
+            if (hover.DetailKind == DetailKind.Action)
             {
-                ImGui.TextUnformatted($"Range: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionRange(hover.ActionID)}");
-                ImGui.TextUnformatted($"Stacks: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(hover.ActionID, 0)}");
-                ImGui.TextUnformatted($"Adjusted ID: {mgr->GetAdjustedActionId(hover.ActionID)}");
+                ImGui.TextUnformatted($"Range: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionRange(hover.ActionId)}");
+                ImGui.TextUnformatted($"Stacks: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(hover.ActionId, 0)}");
+                ImGui.TextUnformatted($"Adjusted ID: {mgr->GetAdjustedActionId(hover.ActionId)}");
+                ImGui.TextUnformatted($"Range: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionRange(hover.ActionId)}");
+                ImGui.TextUnformatted($"Stacks: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(hover.ActionId, 0)}");
+                ImGui.TextUnformatted($"Adjusted ID: {mgr->GetAdjustedActionId(hover.ActionId)}");
             }
 
             if (type != FFXIVClientStructs.FFXIV.Client.Game.ActionType.None)
             {
                 //ImGui.TextUnformatted($"Cost: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionCost(type, hover.ActionID, 0, 0, 0, 0)}");
-                var action = new ActionID((ActionType)type, hover.ActionID);
+                var action = new ActionID((ActionType)type, hover.ActionId);
                 DrawStatus("Status RC", action, true, true);
                 DrawStatus("Status R-", action, true, false);
                 DrawStatus("Status -C", action, false, true);
                 DrawStatus("Status --", action, false, false);
-                ImGui.TextUnformatted($"Adjusted recast: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetAdjustedRecastTime(type, hover.ActionID):f2}");
-                ImGui.TextUnformatted($"Adjusted cast: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetAdjustedCastTime(type, hover.ActionID):f2}");
-                ImGui.TextUnformatted($"Recast: {mgr->GetRecastTime(type, hover.ActionID):f2}");
-                ImGui.TextUnformatted($"Recast elapsed: {mgr->GetRecastTimeElapsed(type, hover.ActionID):f2}");
-                ImGui.TextUnformatted($"Recast active: {mgr->IsRecastTimerActive(type, hover.ActionID)}");
-                var groupID = mgr->GetRecastGroup((int)type, hover.ActionID);
+                ImGui.TextUnformatted($"Adjusted recast: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetAdjustedRecastTime(type, hover.ActionId):f2}");
+                ImGui.TextUnformatted($"Adjusted cast: {FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetAdjustedCastTime(type, hover.ActionId):f2}");
+                ImGui.TextUnformatted($"Recast: {mgr->GetRecastTime(type, hover.ActionId):f2}");
+                ImGui.TextUnformatted($"Recast elapsed: {mgr->GetRecastTimeElapsed(type, hover.ActionId):f2}");
+                ImGui.TextUnformatted($"Recast active: {mgr->IsRecastTimerActive(type, hover.ActionId)}");
+                var groupID = mgr->GetRecastGroup((int)type, hover.ActionId);
                 ImGui.TextUnformatted($"Recast group: {groupID}");
                 var group = mgr->GetRecastGroupDetail(groupID);
                 if (group != null)
+                {
                     ImGui.TextUnformatted($"Recast group details: active={group->IsActive}, action={group->ActionId}, elapsed={group->Elapsed:f3}, total={group->Total:f3}, cooldown={group->Total - group->Elapsed:f3}");
+                }
             }
         }
         else if (Service.GameGui.HoveredItem != 0)
@@ -171,7 +179,9 @@ sealed unsafe class DebugAction : IDisposable
             ImGui.TextUnformatted($"Recast group: {groupID}");
             var group = mgr->GetRecastGroupDetail(groupID);
             if (group != null)
+            {
                 ImGui.TextUnformatted($"Recast group details: active={group->IsActive}, action={group->ActionId}, elapsed={group->Elapsed}, total={group->Total}");
+            }
         }
         else
         {
@@ -194,7 +204,7 @@ sealed unsafe class DebugAction : IDisposable
         }
         ImGui.TextUnformatted($"Excel rows: pending={cd->DutyActionManager.PendingContentExActionRowId}, current={cd->DutyActionManager.CurrentContentExActionRowId}");
         ImGui.TextUnformatted($"Num valid slots: {cd->DutyActionManager.NumValidSlots}, actions present={cd->DutyActionManager.ActionActive[0] && cd->DutyActionManager.NumValidSlots > 0}");
-        for (int i = 0; i < cd->DutyActionManager.NumValidSlots; ++i)
+        for (var i = 0; i < cd->DutyActionManager.NumValidSlots; ++i)
         {
             var chargeText = i < 2 ? $"{cd->DutyActionManager.CurCharges[i]}/{cd->DutyActionManager.MaxCharges[i]}" : "?/?";
             ImGui.TextUnformatted($"[{i}]: action={new ActionID(ActionType.Spell, cd->DutyActionManager.ActionId[i])}, active={cd->DutyActionManager.ActionActive[i]}, charges={chargeText}");
@@ -205,7 +215,10 @@ sealed unsafe class DebugAction : IDisposable
     {
         var aa = UIState.Instance()->WeaponState.AutoAttackState.IsAutoAttacking;
         if (_autoAttack != aa)
+        {
             Service.Log($"AA state changed: {_autoAttack} -> {aa}");
+        }
+
         _autoAttack = aa;
         ImGui.TextUnformatted($"Auto-attack: {aa}");
     }
@@ -221,8 +234,13 @@ sealed unsafe class DebugAction : IDisposable
     {
         foreach (var nr in _tree.Node(tag))
         {
-            foreach (var a in Service.LuminaSheet<Lumina.Excel.Sheets.Action>()!.Where(filter))
+            foreach (var a in Service.LuminaSheet<Lumina.Excel.Sheets.Action>()!)
             {
+                if (!filter(a))
+                {
+                    continue;
+                }
+
                 _tree.LeafNode($"#{a.RowId} {a.Name}");
             }
         }
