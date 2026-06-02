@@ -11,8 +11,8 @@ sealed class KefkaStates : StateMachineBuilder
     {
         SimpleState(id + 0xFF0000u, 10000f, "???")
             .ActivateOnEnter<GravenImage>()
-            .ActivateOnEnter<StackSpreadOrbs>();
-        //    .ActivateOnEnter<BlizzardSafeSpot>()
+            .ActivateOnEnter<StackSpreadOrbs>()
+            .ActivateOnEnter<BlizzardSafeSpots>();
     }
 
     //private void XXX(uint id, float delay)

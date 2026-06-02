@@ -61,14 +61,12 @@ public enum IconID : uint {
     stackIcon = 128, // player->self // Stack
     FireRingQuestionMark = 673, // Kefka->self // Questionmark - 2A1
     FireRingBlueOrb = 674, // Kefka->self // Blue orb - 2A2
-
+    BlueRingQuestionMark = 675, // Kefka->self // Questionmark - 2A3
+    BlueRingBlueOrb = 676, // Kefka->self // Blue orb - 2A4
 
     _Gen_Icon_tank_lockon02k1 = 218, // player->self
-    _Gen_Icon_m0462trg_c03c = 675, // Kefka->self // Questionmark - most likely upper ring - 2A3
-    _Gen_Icon_m0462trg_c04c = 676, // Kefka->self // Blue orb - most likely upper ring - 2A4
     _Gen_Icon_m0462trg_c06c = 678, // Kefka->self
     _Gen_Icon_m0462trg_c05c = 677, // Kefka->self
-
 }
 
 public enum TetherID : uint {
