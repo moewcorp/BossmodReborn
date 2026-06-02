@@ -57,11 +57,10 @@ public enum SID : uint {
 }
 
 public enum IconID : uint {
-    _Gen_Icon_m0462trg_c01c = 673, // Kefka->self // Questionmark - most likely lower ring - 2A1
-    _Gen_Icon_m0462trg_c02c = 674, // Kefka->self // Blue orb - most likely lower ring - 2A2
-
-    _Gen_Icon_m0462trg_a0c = 127, // player->self // Spread
-    _Gen_Icon_m0462trg_b0c = 128, // player->self // Stack
+    spreadIcon = 127, // player->self // Spread
+    stackIcon = 128, // player->self // Stack
+    FireRingQuestionMark = 673, // Kefka->self // Questionmark - 2A1
+    FireRingBlueOrb = 674, // Kefka->self // Blue orb - 2A2
 
 
     _Gen_Icon_tank_lockon02k1 = 218, // player->self
@@ -73,5 +72,5 @@ public enum IconID : uint {
 }
 
 public enum TetherID : uint {
-    _Gen_Tether_chn_elem0f = 45, // 4C31->player
+    GravenImageTether = 45, // 4C31->player
 }
