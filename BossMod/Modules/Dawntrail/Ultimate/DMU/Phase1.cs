@@ -323,3 +323,46 @@ class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
         return CollectionsMarshal.AsSpan(aoes);
     }
 }
+
+// TODO bosses hitbox for non debuff
+// TODO can most likely add a slight offset for debuff players
+
+// DoubleTroubleTrap = 5078, // none->player, extra=0x0
+
+// DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
+// DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
+
+class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.DoubleTroubleTrap) {
+            AddStack(actor, status.ExpireAt);
+        }
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.DoubleTroubleTrap) {
+            Stacks.Clear();
+        }
+    }
+}
+
+class DoubleTroubleTrapKnockback(BossModule module) : Components.GenericKnockback(module, (uint)AID.DoubleTroubleTrap1) {
+    private List<Knockback> knockbacks = [];
+
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) {
+        knockbacks.Clear();
+
+        var stack = Module.FindComponent<DoubleTroubleTrapStacks>();
+        if (stack == null) {
+            return [];
+        }
+
+        foreach (var stackPoint in stack.Stacks) {
+            if (actor.Position.InCircle(stackPoint.Target.Position.Quantized(), stackPoint.Radius)) {
+                knockbacks.Add(new(stackPoint.Target.Position, 10f, stackPoint.Activation, actorID: stackPoint.Target.InstanceID));
+            }
+        }
+
+        return CollectionsMarshal.AsSpan(knockbacks);
+    }
+}

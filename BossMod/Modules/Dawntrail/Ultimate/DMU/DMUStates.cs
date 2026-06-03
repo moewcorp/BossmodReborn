@@ -33,6 +33,8 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<WaveCannon>()
             .ActivateOnEnter<WaveCannonTowers>()
             .ActivateOnEnter<BlizzardSafeSpots>()
-            .ActivateOnEnter<LightningSafeSpots>();
+            .ActivateOnEnter<LightningSafeSpots>()
+            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
+            .ActivateOnEnter<DoubleTroubleTrapStacks>();
     }
 }

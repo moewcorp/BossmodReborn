@@ -34,14 +34,14 @@ public enum AID : uint {
     TowerExplosion = 47786, // Helper->self, 3.0s cast, range 4 circle
     UnmitigatedExplosion = 47787, // Helper->self, no cast, range 100 circle
 
-    _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
+    DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
+    DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
 
     ThrummingThunderIII = 47775, // Helper->self, 5.0s cast, range 40 width 10 rect
     ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
     ThrummingThunderIII2 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
 
     _Ability_LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
-    _Ability_DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
     _Ability_Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
     _Ability_BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target
     _Ability_Gravitas = 47788, // 4C31->player, no cast, range 5 circle
@@ -50,9 +50,10 @@ public enum AID : uint {
 }
 
 public enum SID : uint {
+    DoubleTroubleTrap = 5078, // none->player, extra=0x0
+
     _Gen_DamageDown = 2911, // Helper->player, extra=0x0
     _Gen_MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
-    _Gen_DoubleTroubleTrap = 5078, // none->player, extra=0x0
 }
 
 public enum IconID : uint {
