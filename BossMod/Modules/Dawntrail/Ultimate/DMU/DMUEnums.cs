@@ -28,7 +28,7 @@ public enum AID : uint {
     BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone - Questionmark zone
     MysteryMagic = 47764, // Kefka->self, 5.0s cast, single-target
     FlagrantFireIII = 47779, // Helper->players, no cast, range 6 circle - Stack / Spread
-    
+
     _Ability_WaveCannon = 47784, // 4C31->self, no cast, range 100 width 6 rect
     _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
     _Ability_Explosion = 47786, // Helper->self, 3.0s cast, range 4 circle

@@ -102,64 +102,70 @@ class GravenImage(BossModule module) : BossComponent(module) {
     }
 }
 
-// TODO fix sizing of AOEs - they're not this big
-// TODO remove valueSet variable - shouldn't be needed
 // TODO make it so the function cleans up
 class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 4, 4) {
-    private bool spread = false;
-    private bool valueSet = false;
+    private bool? spread = null;
+    private IconID? iconID = null;
 
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
-        if (iconID == (uint)IconID.spreadIcon) {
-            spread = true;
-            valueSet = true;
-        }
-
-        if (iconID == (uint)IconID.stackIcon) {
-            spread = false;
-            valueSet = true;
+    public override void Update() {
+        if (spread == null || iconID == null) {
+            return;
         }
 
         // We do the opposite of whatever we are told
-        if (iconID == (uint)IconID.FireRingQuestionMark) {
-            if (valueSet == true) {
-                if (spread == true) {
-                    var support = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsSupport());
-                    var dps = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsDD());
+        if (iconID == IconID.FireRingQuestionMark) {
+            if (spread == true) {
+                var support = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsSupport());
+                var dps = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsDD());
 
-                    if (support == null || dps == null) {
-                        return;
-                    }
-
-                    AddStack(support, default);
-                    AddStack(dps, default);
+                if (support == null || dps == null) {
+                    return;
                 }
 
-                if (spread == false) {
-                    AddSpreads(Raid.WithoutSlot(true, true, true), default);
-                }
+                AddStack(support);
+                AddStack(dps);
+            }
+
+            if (spread == false) {
+                AddSpreads(Raid.WithoutSlot(true, true, true));
             }
         }
 
         // We do what we are told
-        if (iconID == (uint)IconID.FireRingBlueOrb) {
-            if (valueSet == true) {
-                if (spread == false) {
-                    var support = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsSupport());
-                    var dps = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsDD());
+        if (iconID == IconID.FireRingBlueOrb) {
+            if (spread == false) {
+                var support = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsSupport());
+                var dps = Raid.WithoutSlot(true, true, true).FirstOrDefault(p => p.Class.IsDD());
 
-                    if (support == null || dps == null) {
-                        return;
-                    }
-
-                    AddStack(support, default);
-                    AddStack(dps, default);
+                if (support == null || dps == null) {
+                    return;
                 }
+
+                AddStack(support);
+                AddStack(dps);
             }
 
             if (spread == true) {
-                AddSpreads(Raid.WithoutSlot(true, true, true), default);
+                AddSpreads(Raid.WithoutSlot(true, true, true));
             }
+        }
+    }
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if (iconID == (uint)IconID.spreadIcon) {
+            spread = true;
+        }
+
+        if (iconID == (uint)IconID.stackIcon) {
+            spread = false;
+        }
+
+        if (iconID == (uint)IconID.FireRingQuestionMark) {
+            this.iconID = (IconID)iconID;
+        }
+
+        if (iconID == (uint)IconID.FireRingBlueOrb) {
+            this.iconID = (IconID)iconID;
         }
     }
 }
