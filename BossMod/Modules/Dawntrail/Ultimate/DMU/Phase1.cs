@@ -72,20 +72,25 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
     }
 }
 
-// TODO improve hints so it glows red if the player will fall out of the map
-// TODO only show the players tether not everyones
-// TODO should be able to use the normal tether function or something - look around for knockback stuff
-class GravenImage(BossModule module) : BossComponent(module) {
-    private List<(Actor source, Actor player)> tethers = [];
+class GravenImage(BossModule module) : Components.GenericKnockback(module, (uint)AID.PulseWave) {
+    private List<(ulong SourceID, int slot)> tethers = [];
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
-        if (tether.ID == (uint)TetherID.GravenImageTether) {
-            var target = WorldState.Actors.Find(tether.Target);
-
-            if (target != null) {
-                tethers.Add((source, target));
-            }
+        if (tether.ID != (uint)TetherID.GravenImageTether) {
+            return;
         }
+
+        var target = WorldState.Actors.Find(tether.Target);
+        if (target == null) {
+            return;
+        }
+
+        var slot = Raid.FindSlot(tether.Target);
+        if (slot < 0) {
+            return;
+        }
+
+        tethers.Add((source.InstanceID, slot));
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -94,11 +99,21 @@ class GravenImage(BossModule module) : BossComponent(module) {
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        foreach (var (source, target) in tethers) {
-            var direction = (target.Position - source.Position).Normalized();
-            Arena.AddLine(target.Position, target.Position + direction * 9f, Colors.Danger);
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) {
+        foreach (var target in tethers) {
+            if (target.slot != slot) {
+                continue;
+            }
+
+            var source = WorldState.Actors.Find(target.SourceID);
+            if (source == null) {
+                continue;
+            }
+
+            return new Knockback[] { new(source.Position, 14f, actorID: source.InstanceID) };
         }
+
+        return [];
     }
 }
 
