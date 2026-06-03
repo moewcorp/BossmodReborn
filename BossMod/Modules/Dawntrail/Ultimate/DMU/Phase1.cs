@@ -104,15 +104,8 @@ class GravenImage(BossModule module) : BossComponent(module) {
 
 // TODO fix sizing of AOEs - they're not this big
 // TODO remove valueSet variable - shouldn't be needed
-// TODO figure out who actually gets the stack instead of randomly guessing
 // TODO make it so the function cleans up
-class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
-
-    //     _Gen_Icon_m0462trg_c01c = 673, // Kefka->self // Questionmark - most likely lower ring - 2A1
-    //     _Gen_Icon_m0462trg_c02c = 674, // Kefka->self // Blue orb - most likely lower ring - 2A2
-    //     _Gen_Icon_m0462trg_a0c = 127, // player->self // Spread
-    //     _Gen_Icon_m0462trg_b0c = 128, // player->self // Stack
-
+class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 4, 4) {
     private bool spread = false;
     private bool valueSet = false;
 
@@ -199,9 +192,9 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID._Ability_BlizzardIIIBlowout ||
-            spell.Action.ID == (uint)AID._Ability_BlizzardIIIBlowout1 ||
-            spell.Action.ID == (uint)AID._Ability_BlizzardIIIBlowout2) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
             AOEsAvailable.Add((spell.Action.ID, new AOEInstance(cone, caster.Position, caster.Rotation, default, actorID: caster.InstanceID)));;
         }
     }
@@ -213,13 +206,13 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
             var currentAOE = AOEsAvailable[i];
 
             if (questionMark == true) {
-                if (currentAOE.AID == (uint)AID._Ability_BlizzardIIIBlowout) {
+                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
 
             if (questionMark == false) {
-                if (currentAOE.AID == (uint)AID._Ability_BlizzardIIIBlowout1 || currentAOE.AID == (uint)AID._Ability_BlizzardIIIBlowout2) {
+                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout1 || currentAOE.AID == (uint)AID.BlizzardIIIBlowout2) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
