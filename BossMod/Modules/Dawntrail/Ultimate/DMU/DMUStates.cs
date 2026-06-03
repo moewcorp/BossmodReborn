@@ -10,6 +10,7 @@ sealed class KefkaStates : StateMachineBuilder
     private void SinglePhase(uint id)
     {
         SimpleState(id + 0xFF0000u, 10000f, "???")
+            .ActivateOnEnter<RevoltingRuinIII>()
             .ActivateOnEnter<GravenImage>()
             .ActivateOnEnter<StackSpreadOrbs>()
             .ActivateOnEnter<BlizzardSafeSpots>();

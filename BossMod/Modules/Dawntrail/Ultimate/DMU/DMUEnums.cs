@@ -19,7 +19,7 @@ public enum AID : uint {
     AutoAttack = 49746, // Kefka->player, no cast, single-target
     RevoltingRuinIII = 50179, // Kefka->self/players, 5.0s cast, range 100 ?-degree cone
     RevoltingRuinIII1 = 50401, // Kefka->self, no cast, range 100 ?-degree cone
-    _Ability_ = 50173, // Kefka->location, no cast, single-target
+    Ability = 50173, // Kefka->location, no cast, single-target
 
     GravenImage = 48370, // Kefka->self, 3.0s cast, single-target
     PulseWave = 47785, // 4C31->player, no cast, single-target
@@ -27,9 +27,6 @@ public enum AID : uint {
     _Ability_BlizzardIIIBlowout = 47774, // Helper->self, 5.0s cast, range 40 ?-degree cone - EMPTY ZONE
     _Ability_BlizzardIIIBlowout1 = 47771, // Helper->self, 5.0s cast, range 40 ?-degree cone - QUESTIONMARK ZONE
     _Ability_BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone - QUESTIONMARK ZONE
-
-
-
 
     _Ability_MysteryMagic = 47764, // Kefka->self, 5.0s cast, single-target
     _Ability_FlagrantFireIII = 47779, // Helper->players, no cast, range 6 circle
