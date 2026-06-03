@@ -102,7 +102,6 @@ class GravenImage(BossModule module) : BossComponent(module) {
     }
 }
 
-// TODO make it so the function cleans up
 class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
     private bool? spread = null;
     private IconID? iconID = null;
@@ -180,21 +179,9 @@ class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module,
     }
 }
 
-// TODO make it so the function cleans up
 class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
-
-    //      _Ability_BlizzardIIIBlowout = 47774, // Helper->self, 5.0s cast, range 40 ?-degree cone - EMPTY ZONE
-    //      _Ability_BlizzardIIIBlowout1 = 47771, // Helper->self, 5.0s cast, range 40 ?-degree cone - QUESTIONMARK ZONE
-    //      _Ability_BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone - QUESTIONMARK ZONE
-
-    //     _Gen_Icon_m0462trg_c03c = 675, // Kefka->self // Questionmark - most likely upper ring - 2A3
-    //     _Gen_Icon_m0462trg_c04c = 676, // Kefka->self // Blue orb - most likely upper ring - 2A4
-
-    // Questionmark means go into zone
-
     private bool questionMark = false;
-    private AOEShapeCone cone = new(40f, 45f.Degrees());
-    private List<(uint AID, AOEInstance AOE)> AOEsAvailable = [];
+    private List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
     private List<AOEInstance> aoes = [];
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
@@ -211,16 +198,22 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
         if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout ||
             spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
             spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
-            AOEsAvailable.Add((spell.Action.ID, new AOEInstance(cone, caster.Position, caster.Rotation, default, actorID: caster.InstanceID)));;
+            aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeCone(40f, 45f.Degrees()), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
+            aoesAvailable.Clear();
         }
     }
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
         aoes.Clear();
 
-        for (int i = 0; i < AOEsAvailable.Count; i++) {
-            var currentAOE = AOEsAvailable[i];
-
+        foreach (var currentAOE in aoesAvailable) {
             if (questionMark == true) {
                 if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout) {
                     aoes.Add(currentAOE.AOE);
