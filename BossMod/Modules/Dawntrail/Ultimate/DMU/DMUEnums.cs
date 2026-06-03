@@ -27,7 +27,8 @@ public enum AID : uint {
     BlizzardIIIBlowout1 = 47771, // Helper->self, 5.0s cast, range 40 ?-degree cone - Questionmark zone
     BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone - Questionmark zone
     MysteryMagic = 47764, // Kefka->self, 5.0s cast, single-target
-    FlagrantFireIII = 47779, // Helper->players, no cast, range 6 circle - Stack / Spread
+    FlagrantFireIIIStack = 47779, // Helper->players, no cast, range 6 circle - Stack
+    FlagrantFireIIISpread = 47778, // Helper->players, no cast, range 5 circle
 
     _Ability_WaveCannon = 47784, // 4C31->self, no cast, range 100 width 6 rect
     _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
@@ -37,7 +38,6 @@ public enum AID : uint {
     _Ability_LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
     _Ability_ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
     _Ability_ThrummingThunderIII2 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
-    _Ability_FlagrantFireIII1 = 47778, // Helper->players, no cast, range 5 circle
     _Ability_DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
     _Ability_Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
     _Ability_BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target

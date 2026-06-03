@@ -103,11 +103,21 @@ class GravenImage(BossModule module) : BossComponent(module) {
 }
 
 // TODO make it so the function cleans up
-class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 6f, 4, 4) {
+class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
     private bool? spread = null;
     private IconID? iconID = null;
 
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.FlagrantFireIIIStack || spell.Action.ID == (uint)AID.FlagrantFireIIISpread) {
+            spread = null;
+            iconID = null;
+        }
+    }
+
     public override void Update() {
+        Stacks.Clear();
+        Spreads.Clear();
+
         if (spread == null || iconID == null) {
             return;
         }
