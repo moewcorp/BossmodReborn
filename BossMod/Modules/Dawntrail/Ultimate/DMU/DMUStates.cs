@@ -46,11 +46,16 @@ sealed class KefkaStates : StateMachineBuilder {
         Cast(id + 0x90, (uint)AID.LightOfJudgment, 4.0f, 5.0f, "Raidwide")
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>()
+            .ActivateOnEnter<HyperDrive>();
+        ComponentCondition<HyperDrive>(id + 0x100, 3.0f, o => o.NumCasts > 0, "1st Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x110, 2.3f, o => o.NumCasts > 1, "2nd Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x120, 2.0f, o => o.NumCasts > 2, "3rd Tankbuster")
+            .DeactivateOnExit<HyperDrive>()
 
-            // TODO everything beyond this point is just to make further mechanics so what resolved, but have not been looked at yet fully.
-            .ActivateOnEnter<RevoltingRuinIII>()
-            .ActivateOnEnter<BlizzardSafeSpots>()
-            .ActivateOnEnter<LightningSafeSpots>()
-            .ActivateOnEnter<StackSpreadOrbs>();
+        // TODO everything beyond this point is just to make further mechanics so what resolved, but have not been looked at yet fully.
+        .ActivateOnEnter<RevoltingRuinIII>()
+        .ActivateOnEnter<BlizzardSafeSpots>()
+        .ActivateOnEnter<LightningSafeSpots>()
+        .ActivateOnEnter<StackSpreadOrbs>();
     }
 }
