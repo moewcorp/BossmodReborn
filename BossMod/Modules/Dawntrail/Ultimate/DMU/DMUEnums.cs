@@ -7,7 +7,7 @@ public enum OID : uint {
     _Gen_Actor1e8536 = 0x1E8536, // R0.500-2.000, x1, EventObj type
     _Gen_Actor1ebfb4 = 0x1EBFB4, // R0.500, x1, EventObj type
     _Gen_Exit = 0x1E850B, // R0.500, x1, EventObj type
-    _Gen_Actor1ebfbb = 0x1EBFBB, // R0.500, x2, EventObj type
+    StatueBodyOrb = 0x1EBFBB, // R0.500, x2, EventObj type
     _Gen_Actor1ebfbe = 0x1EBFBE, // R0.500, x2, EventObj type
     _Gen_Actor1ebfbd = 0x1EBFBD, // R0.500, x2, EventObj type
     _Gen_Actor1ebfbc = 0x1EBFBC, // R0.500, x2, EventObj type
@@ -30,15 +30,17 @@ public enum AID : uint {
     FlagrantFireIIIStack = 47779, // Helper->players, no cast, range 6 circle - Stack
     FlagrantFireIIISpread = 47778, // Helper->players, no cast, range 5 circle
 
-    _Ability_WaveCannon = 47784, // 4C31->self, no cast, range 100 width 6 rect
-    _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
-    _Ability_Explosion = 47786, // Helper->self, 3.0s cast, range 4 circle
-    _Ability_UnmitigatedExplosion = 47787, // Helper->self, no cast, range 100 circle
+    WaveCannon = 47784, // 4C31->self, no cast, range 100 width 6 rect
+    TowerExplosion = 47786, // Helper->self, 3.0s cast, range 4 circle
+    UnmitigatedExplosion = 47787, // Helper->self, no cast, range 100 circle
 
-    _Ability_ThrummingThunderIII = 47775, // Helper->self, 5.0s cast, range 40 width 10 rect
+    _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
+
+    ThrummingThunderIII = 47775, // Helper->self, 5.0s cast, range 40 width 10 rect
+    ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
+    ThrummingThunderIII2 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
+
     _Ability_LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
-    _Ability_ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
-    _Ability_ThrummingThunderIII2 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
     _Ability_DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
     _Ability_Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
     _Ability_BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target
@@ -60,10 +62,10 @@ public enum IconID : uint {
     FireRingBlueOrb = 674, // Kefka->self // Blue orb - 2A2
     BlueRingQuestionMark = 675, // Kefka->self // Questionmark - 2A3
     BlueRingBlueOrb = 676, // Kefka->self // Blue orb - 2A4
+    PurpleRingQuestionMark = 677, // Kefka->self // Questionmark
+    PurpleRingBlueOrb = 678, // Kefka->self // Blue orb
 
     _Gen_Icon_tank_lockon02k1 = 218, // player->self
-    _Gen_Icon_m0462trg_c06c = 678, // Kefka->self
-    _Gen_Icon_m0462trg_c05c = 677, // Kefka->self
 }
 
 public enum TetherID : uint {

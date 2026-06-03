@@ -254,9 +254,72 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
 // TODO this is a bit of a lazy way to do it, but unsure how you would actually figure out the 4 people who are getting hit at the moment
 // TODO however, its not needed to know who is getting hit as you can't get hit by a laser since you have to take a tower next
 class WaveCannon(BossModule module) : Components.BaitAwayEveryone(module,
-    module.Enemies((uint)OID._Gen_Actor1ebfbb).FirstOrDefault(), new AOEShapeRect(100f, 2f));
+    module.Enemies((uint)OID.StatueBodyOrb).FirstOrDefault(), new AOEShapeRect(100f, 2f),
+    (uint)AID.WaveCannon) {
 
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.WaveCannon) {
+            NumCasts++;
+            CurrentBaits.Clear();
+        }
+    }
+}
 
-// TODO 2nd mechanic - add wave cannon stuff
-// TODO 3rd mechanic
-// TODO 4th mechanic
+// TODO add priority system
+// TODO improve display of towers
+// TODO mostly will be combined with priority, but if you have a magic vuln debuff must highlight not to take a tower
+class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)AID.TowerExplosion, 4);
+
+class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
+
+    private bool questionMark = false;
+    private List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
+    private List<AOEInstance> aoes = [];
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if (iconID == (uint)IconID.PurpleRingQuestionMark) {
+            questionMark = true;
+        }
+
+        if (iconID == (uint)IconID.PurpleRingBlueOrb) {
+            questionMark = false;
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.ThrummingThunderIII ||
+            spell.Action.ID == (uint)AID.ThrummingThunderIII1 ||
+            spell.Action.ID == (uint)AID.ThrummingThunderIII2) {
+            aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeRect(40f, 5f), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.ThrummingThunderIII ||
+             spell.Action.ID == (uint)AID.ThrummingThunderIII1 ||
+             spell.Action.ID == (uint)AID.ThrummingThunderIII2) {
+            NumCasts++;
+            aoesAvailable.Clear();
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        aoes.Clear();
+
+        foreach (var currentAOE in aoesAvailable) {
+            if (questionMark == true) {
+                if (currentAOE.AID == (uint)AID.ThrummingThunderIII2) {
+                    aoes.Add(currentAOE.AOE);
+                }
+            }
+
+            if (questionMark == false) {
+                if (currentAOE.AID == (uint)AID.ThrummingThunderIII || currentAOE.AID == (uint)AID.ThrummingThunderIII1) {
+                    aoes.Add(currentAOE.AOE);
+                }
+            }
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}

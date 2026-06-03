@@ -25,7 +25,14 @@ sealed class KefkaStates : StateMachineBuilder {
         ComponentCondition<BlizzardSafeSpots>(id + 0x30, 2.3f, o => o.NumCasts > 0, "Blizzard safe spots")
             .DeactivateOnExit<BlizzardSafeSpots>();
         ComponentCondition<StackSpreadOrbs>(id + 0x40, 0.8f, o => !o.Active, "Stack / Spread")
-            .DeactivateOnExit<StackSpreadOrbs>();
-            //.ActivateOnEnter<WaveCannon>();
+            .DeactivateOnExit<StackSpreadOrbs>()
+
+        // TODO Everything beyond this point is not fully completed, so may have issues
+            .ActivateOnExit<WaveCannon>();
+        ComponentCondition<WaveCannon>(id + 0x50, 4.0f, o => o.NumCasts > 0, "Wave Cannon Spreads")
+            .DeactivateOnExit<WaveCannon>()
+            .ActivateOnEnter<WaveCannonTowers>()
+            .ActivateOnEnter<BlizzardSafeSpots>()
+            .ActivateOnEnter<LightningSafeSpots>();
     }
 }
