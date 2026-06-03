@@ -26,15 +26,31 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<BlizzardSafeSpots>();
         ComponentCondition<StackSpreadOrbs>(id + 0x40, 0.8f, o => !o.Active, "Stack / Spread")
             .DeactivateOnExit<StackSpreadOrbs>()
-
-        // TODO Everything beyond this point is not fully completed, so may have issues
-            .ActivateOnExit<WaveCannon>();
-        ComponentCondition<WaveCannon>(id + 0x50, 4.0f, o => o.NumCasts > 0, "Wave Cannon Spreads")
+            .ActivateOnExit<WaveCannon>()
+            .ActivateOnExit<DoubleTroubleTrapKnockback>()
+            .ActivateOnExit<DoubleTroubleTrapStacks>();
+        ComponentCondition<WaveCannon>(id + 0x50, 4.2f, o => o.NumCasts > 0, "Wave Cannon Spreads")
             .DeactivateOnExit<WaveCannon>()
-            .ActivateOnEnter<WaveCannonTowers>()
+            .ActivateOnEnter<WaveCannonTowers>();
+        ComponentCondition<WaveCannonTowers>(id + 0x60, 3.6f, o => o.NumCasts > 0, "Towers resolve")
+            .DeactivateOnExit<WaveCannonTowers>();
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x70, 3.8f, o => o.NumCasts > 0, "Stacks + Knockbacks")
+            .DeactivateOnExit<DoubleTroubleTrapStacks>()
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
+            .ActivateOnEnter<LightningSafeSpots>()
+            .ActivateOnEnter<BlizzardSafeSpots>();
+        ComponentCondition<BlizzardSafeSpots>(id + 0x80, 3.8f, o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardSafeSpots>();
+
+        Cast(id + 0x90, (uint)AID.LightOfJudgment, 4.0f, 5.0f, "Raidwide")
+            .ActivateOnEnter<LightOfJudgment>()
+            .DeactivateOnExit<LightOfJudgment>()
+
+            // TODO everything beyond this point is just to make further mechanics so what resolved, but have not been looked at yet fully.
+            .ActivateOnEnter<RevoltingRuinIII>()
             .ActivateOnEnter<BlizzardSafeSpots>()
             .ActivateOnEnter<LightningSafeSpots>()
-            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
-            .ActivateOnEnter<DoubleTroubleTrapStacks>();
+            .ActivateOnEnter<StackSpreadOrbs>();
     }
 }

@@ -326,12 +326,6 @@ class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
 
 // TODO bosses hitbox for non debuff
 // TODO can most likely add a slight offset for debuff players
-
-// DoubleTroubleTrap = 5078, // none->player, extra=0x0
-
-// DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
-// DoubleTroubleTrap1 = 47783, // Helper->player, no cast, range 6 circle
-
 class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.DoubleTroubleTrap) {

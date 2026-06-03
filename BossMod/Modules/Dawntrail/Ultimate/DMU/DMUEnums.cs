@@ -41,7 +41,8 @@ public enum AID : uint {
     ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
     ThrummingThunderIII2 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
 
-    _Ability_LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
+    LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
+
     _Ability_Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
     _Ability_BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target
     _Ability_Gravitas = 47788, // 4C31->player, no cast, range 5 circle

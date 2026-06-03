@@ -1,5 +1,7 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
+class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightOfJudgment);
+
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(KefkaStates),
     ConfigType = null, // replace null with typeof(KefkaConfig) if applicable
