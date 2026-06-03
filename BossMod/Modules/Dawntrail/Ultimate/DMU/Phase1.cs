@@ -30,11 +30,13 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.RevoltingRuinIII) {
+            NumCasts++;
             secondTB = true;
             activation = WorldState.FutureTime(0.3f); // TODO random guess find the actual timing
         }
 
         if (spell.Action.ID == (uint)AID.RevoltingRuinIII1) {
+            NumCasts++;
             source = null;
             CurrentBaits.Clear();
         }
@@ -95,6 +97,7 @@ class GravenImage(BossModule module) : Components.GenericKnockback(module, (uint
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.PulseWave) {
+            NumCasts++;
             tethers.Clear();
         }
     }
@@ -221,6 +224,7 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
         if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout ||
             spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
             spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
+            NumCasts++;
             aoesAvailable.Clear();
         }
     }
@@ -245,6 +249,13 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
         return CollectionsMarshal.AsSpan(aoes);
     }
 }
+
+// TODO ensure size is correct - it should be
+// TODO this is a bit of a lazy way to do it, but unsure how you would actually figure out the 4 people who are getting hit at the moment
+// TODO however, its not needed to know who is getting hit as you can't get hit by a laser since you have to take a tower next
+class WaveCannon(BossModule module) : Components.BaitAwayEveryone(module,
+    module.Enemies((uint)OID._Gen_Actor1ebfbb).FirstOrDefault(), new AOEShapeRect(100f, 2f));
+
 
 // TODO 2nd mechanic - add wave cannon stuff
 // TODO 3rd mechanic

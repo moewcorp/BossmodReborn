@@ -34,6 +34,7 @@ public enum AID : uint {
     _Ability_DoubleTroubleTrap = 47782, // Kefka->self, 3.0s cast, single-target
     _Ability_Explosion = 47786, // Helper->self, 3.0s cast, range 4 circle
     _Ability_UnmitigatedExplosion = 47787, // Helper->self, no cast, range 100 circle
+
     _Ability_ThrummingThunderIII = 47775, // Helper->self, 5.0s cast, range 40 width 10 rect
     _Ability_LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
     _Ability_ThrummingThunderIII1 = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
