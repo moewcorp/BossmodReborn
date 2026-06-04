@@ -45,13 +45,19 @@ public enum AID : uint {
     Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
 
     _Ability_BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target
-    _Ability_Gravitas = 47788, // 4C31->player, no cast, range 5 circle
+
+    Gravitas = 47788, // 4C31->player, no cast, range 5 circle - Purple puddle - Stack
+    Vitrophyre = 47792, // _Gen_GravenImage->players, no cast, range 5 circle - Rock - Spread
+    _Ability_GravityIII = 47791, // Helper->self, no cast, range 5 circle
+
+
+
     _Ability_GravitationalExplosion = 47789, // Helper->self, no cast, range 100 circle
     _Ability_GravitationalWave = 47793, // 4C31->self, no cast, range 100 ?-degree cone
 
-    _Ability_Vitrophyre = 47792, // _Gen_GravenImage->players, no cast, range 5 circle
+
     _Ability_IntemperateWill = 47794, // _Gen_GravenImage->self, no cast, range 100 ?-degree cone
-    _Ability_GravityIII = 47791, // Helper->self, no cast, range 5 circle
+
     _Ability_TeleTrouncing = 47801, // Kefka->self, 5.0s cast, single-target
     _Ability_TeleTrouncing1 = 47802, // Helper->players, no cast, range 2 circle
     _Weaponskill_ = 50516, // Kefka->self, 3.0s cast, single-target

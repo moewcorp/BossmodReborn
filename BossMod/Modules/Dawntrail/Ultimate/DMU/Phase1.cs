@@ -392,3 +392,104 @@ class HyperDrive(BossModule module) : Components.GenericBaitAway(module, (uint)A
         }
     }
 }
+
+// TODO Improve logic for stack green circles - ensure the 2nd circles are not inside the first AOE
+// TODO Improve logic for spread green circles - should only show role one not all 4
+// TODO party config settings required - if none set then just use what is already there
+class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 4, 4) {
+    private List<Spread> spreadsIncoming = [];
+    private int totalStacks = 0;
+
+    private enum TetherGroup { Support, DPS }
+    private TetherGroup tetherGroup = TetherGroup.Support;
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (Stacks.Count != 0) {
+            Arena.AddCircle(Module.Center + new WDir(0, 19.5f), 1.0f, Colors.Safe, 2);
+            Arena.AddCircle(Module.Center + new WDir(0, -19.5f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (Stacks.Count != 0 && totalStacks >= 5) {
+            Arena.AddCircle(Module.Center + new WDir(0, 13.0f), 1.0f, Colors.Safe, 2);
+            Arena.AddCircle(Module.Center + new WDir(0, -13.0f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (Spreads.Count != 0) {
+            if (tetherGroup == TetherGroup.Support ? pc.Class.IsSupport() : tetherGroup == TetherGroup.DPS && pc.Class.IsDD()) {
+                // MT/M1 - [90.054, 0.000, 100.718, -178.033]
+                Arena.AddCircle(new WPos(90.054f, 100.718f), 1.0f, Colors.Safe, 2);
+
+                // H1/R1 - [87.971, 0.000, 86.119, 37.967]
+                Arena.AddCircle(new WPos(87.971f, 86.119f), 1.0f, Colors.Safe, 2);
+
+                // OT/M2 - [109.197, 0.000, 99.618, -87.793]
+                Arena.AddCircle(new WPos(109.197f, 99.618f), 1.0f, Colors.Safe, 2);
+
+                // H2/R2 - [113.566, 0.000, 112.415, -133.273]
+                Arena.AddCircle(new WPos(113.566f, 112.415f), 1.0f, Colors.Safe, 2);
+            }
+            else {
+                // Middle
+                Arena.AddCircle(Module.Center, 1.0f, Colors.Safe, 2);
+            }
+        }
+    }
+
+    public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID != (uint)TetherID.GravenImageTether) {
+            return;
+        }
+
+        var target = WorldState.Actors.Find(tether.Target);
+        if (target == null) {
+            return;
+        }
+
+        var slot = Raid.FindSlot(tether.Target);
+        if (slot < 0) {
+            return;
+        }
+
+        if (source.Position.AlmostEqual(new(102.500f, 22.500f), 5)) {
+            AddStack(target, WorldState.FutureTime(6.5f));
+            totalStacks++;
+        }
+
+        if (source.Position.AlmostEqual(new(126.000f, 41.500f), 5)) {
+            spreadsIncoming.Add(new(target, 5, WorldState.FutureTime(10.6f)));
+            tetherGroup = target.Class.IsSupport() ? TetherGroup.Support : TetherGroup.DPS;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Gravitas) {
+            Stacks.Clear();
+            Spreads.AddRange(spreadsIncoming);
+            spreadsIncoming.Clear();
+        }
+
+        if (spell.Action.ID == (uint)AID.Vitrophyre) {
+            Spreads.Clear();
+        }
+    }
+}
+
+// TODO voidzone don't check for event cast sadly, maybe add it?
+// TODO needs to be cleaned up - change the colour during a specific point in time and maybe just count the number of times the spell has occured instead
+class GravitasPuddles(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 5,
+    m => m.Enemies((uint)OID._Gen_Actor1ec022).Where(e => e.EventState != 7), (uint)AID.Gravitas)  {
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc) {
+        var count = 0;
+        foreach (var puddles in Sources(Module)) {
+            count++;
+        }
+
+        var colour = count == 8 ? Colors.SafeFromAOE : default;
+        foreach (var puddles in Sources(Module)) {
+            Shape.Draw(Arena, puddles.Position, puddles.Rotation, colour);
+        }
+    }
+}
