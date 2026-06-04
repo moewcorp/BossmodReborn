@@ -335,7 +335,7 @@ class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread
 
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.DoubleTroubleTrap) {
-            Stacks.Clear();
+            Stacks.RemoveAt(0);
         }
     }
 }
@@ -399,6 +399,7 @@ class HyperDrive(BossModule module) : Components.GenericBaitAway(module, (uint)A
 class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 4, 4) {
     private List<Spread> spreadsIncoming = [];
     private int totalStacks = 0;
+    public int totalStacksGoneOff = 0; // TODO remove this, shouldn't be needed
 
     private enum TetherGroup { Support, DPS }
     private TetherGroup tetherGroup = TetherGroup.Support;
@@ -464,14 +465,15 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.Gravitas) {
-            Stacks.Clear();
+        if (spell.Action.ID == (uint)AID.Gravitas && Stacks.Count > 0) {
+            Stacks.RemoveAt(0);
+            totalStacksGoneOff++;
             Spreads.AddRange(spreadsIncoming);
             spreadsIncoming.Clear();
         }
 
-        if (spell.Action.ID == (uint)AID.Vitrophyre) {
-            Spreads.Clear();
+        if (spell.Action.ID == (uint)AID.Vitrophyre && Spreads.Count > 0) {
+            Spreads.RemoveAt(0);
         }
     }
 }
@@ -491,5 +493,30 @@ class GravitasPuddles(BossModule module) : Components.PersistentInvertibleVoidzo
         foreach (var puddles in Sources(Module)) {
             Shape.Draw(Arena, puddles.Position, puddles.Rotation, colour);
         }
+    }
+}
+
+class GravitationalWave(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if (actor.OID == 0x1EBFBD && state == (uint)Animations.PulseOrbStart) {
+            aoes.Add(new AOEInstance(new AOEShapeRect(40, 20), Arena.Center, 90.Degrees(), actorID: actor.InstanceID));
+        }
+
+        if (actor.OID == 0x1EBFBC && state == (uint)Animations.PulseOrbStart) {
+            aoes.Add(new AOEInstance(new AOEShapeRect(40, 20), Arena.Center, -90.Degrees(), actorID: actor.InstanceID));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID._Ability_GravitationalWave || spell.Action.ID == (uint)AID._Ability_IntemperateWill) {
+            NumCasts++;
+            aoes.Clear();
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
