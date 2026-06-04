@@ -593,7 +593,7 @@ sealed class EsotericFinisher : Components.GenericBaitAway
     }
 }
 
-sealed class Replication1CloneRelativeGuidance : BossComponent
+sealed class Replication1Guidance : BossComponent
 {
     const float InitialRadius = 7.5f;
     const float PairOffset = 2.25f;
@@ -631,7 +631,7 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     static readonly int[] OrderNESW = [0, 1, 2, 3];
     static readonly int[] OrderWSEN = [3, 2, 1, 0];
 
-    public Replication1CloneRelativeGuidance(BossModule module) : base(module)
+    public Replication1Guidance(BossModule module) : base(module)
     {
         _bait = module.FindComponent<Replication1SecondBait>()!;
         _assignments = _prc.AssignmentsPerSlot(Module.WorldState.Party);
@@ -835,6 +835,18 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
                              out var nearDark, out var farDark))
             return null;
 
+        if (_rep1.IsStatic)
+        {
+            return StaticFinalPosition(slot, actor, farDark);
+        }
+        else
+        {
+            return CloneRelativeOrDNFinalPosition(slot, actor, nearFire, farFire, nearDark, farDark);
+        }
+    }
+
+    WPos? CloneRelativeOrDNFinalPosition(int slot, Actor actor, WPos nearFire, WPos farFire, WPos nearDark, WPos farDark)
+    {
         var assign = _assignments[slot];
         var mech = BaitType(actor);
 
@@ -898,6 +910,7 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
         }
         else
         {
+            // Clone Relative (Static handled earlier)
             targetDark = support ? ccwDark : cwDark;
         }
 
@@ -911,6 +924,87 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     }
 
     // ------------------------------------------------------------
+    // STATIC STRATEGY
+    // ------------------------------------------------------------
+    //
+    // The dark clone closest to the wall (= farDark) defines a "new North".
+    // All 8 safe spots are expressed as offsets in that rotated local frame,
+    // where +Z = toward farDark (new North) and +X = 90° clockwise (new East).
+    //
+    // 3 spots reuse the existing Outer[] radius (distance 14 from center):
+    //   - H2/R2 dark  → relative-N outer
+    //   - H1/R1 dark  → relative-W outer
+    //   - H1/R1 + H2/R2 fire → SW outer corner (stacked)
+    //
+    // The remaining 4 inner spots are hand-tuned constants and may need
+    // in-game adjustment against the reference image.
+    //
+
+    const float StaticOuterRadius = 14f; // same magnitude as Outer[] markers
+
+    // Offsets in the new-north frame (X = new-east, Z = new-north).
+    static readonly WDir StaticH1R1Dark = new(-StaticOuterRadius, 0);                 // rel-W outer
+    static readonly WDir StaticH2R2Dark = new(0, StaticOuterRadius);                  // rel-N outer
+    static readonly WDir StaticRangedFire = new(-StaticOuterRadius * 0.5f, -StaticOuterRadius * 0.5f); // rel-SW outer (H1/R1 + H2/R2 stacked)
+
+    // Hand-tuned inner spots.
+    static readonly WDir StaticMTM1Fire = new(0, 1.5f);    // center, on northern line of center box
+    static readonly WDir StaticOTM2Fire = new(3f, 1.5f);   // east of center, on northern line
+    static readonly WDir StaticMTM1Dark = new(-3f, 3f);    // rel-NW inner, one box below new-north white line
+    static readonly WDir StaticOTM2Dark = new(3f, 3f);     // rel-NE inner, one box below new-north white line
+
+    bool BuildNewNorthBasis(WPos farDark, out WDir north, out WDir east)
+    {
+        var v = farDark - Center;
+        var lenSq = v.LengthSq();
+        if (lenSq < 0.0001f)
+        {
+            north = default;
+            east = default;
+            return false;
+        }
+        north = v / MathF.Sqrt(lenSq);
+        east = new WDir(-north.Z, north.X); // 90° clockwise
+        return true;
+    }
+
+    WPos? StaticFinalPosition(int slot, Actor actor, WPos farDark)
+    {
+        if (!BuildNewNorthBasis(farDark, out var north, out var east))
+            return null;
+
+        var assign = _assignments[slot];
+        var mech = BaitType(actor);
+
+        WDir local = (assign, mech) switch
+        {
+            // Dark baits
+            (PartyRolesConfig.Assignment.H1, Replication1SecondBait.Assignment.Dark) => StaticH1R1Dark,
+            (PartyRolesConfig.Assignment.R1, Replication1SecondBait.Assignment.Dark) => StaticH1R1Dark,
+            (PartyRolesConfig.Assignment.H2, Replication1SecondBait.Assignment.Dark) => StaticH2R2Dark,
+            (PartyRolesConfig.Assignment.R2, Replication1SecondBait.Assignment.Dark) => StaticH2R2Dark,
+            (PartyRolesConfig.Assignment.MT, Replication1SecondBait.Assignment.Dark) => StaticMTM1Dark,
+            (PartyRolesConfig.Assignment.M1, Replication1SecondBait.Assignment.Dark) => StaticMTM1Dark,
+            (PartyRolesConfig.Assignment.OT, Replication1SecondBait.Assignment.Dark) => StaticOTM2Dark,
+            (PartyRolesConfig.Assignment.M2, Replication1SecondBait.Assignment.Dark) => StaticOTM2Dark,
+
+            // Fire baits
+            (PartyRolesConfig.Assignment.MT, Replication1SecondBait.Assignment.Fire) => StaticMTM1Fire,
+            (PartyRolesConfig.Assignment.M1, Replication1SecondBait.Assignment.Fire) => StaticMTM1Fire,
+            (PartyRolesConfig.Assignment.OT, Replication1SecondBait.Assignment.Fire) => StaticOTM2Fire,
+            (PartyRolesConfig.Assignment.M2, Replication1SecondBait.Assignment.Fire) => StaticOTM2Fire,
+            (PartyRolesConfig.Assignment.H1, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
+            (PartyRolesConfig.Assignment.R1, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
+            (PartyRolesConfig.Assignment.H2, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
+            (PartyRolesConfig.Assignment.R2, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
+
+            _ => default
+        };
+
+        return Center + local.X * east + local.Z * north;
+    }
+
+    // ------------------------------------------------------------
     // DRAW
     // ------------------------------------------------------------
 
@@ -918,6 +1012,10 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     {
         if (_assignments.Length != 8)
             return;
+
+        // Mark the wall-dark clone as "new North" for Static strategy.
+        if (_rep1.IsStatic && TryGetFormation(out _, out _, out _, out var farDark))
+            Arena.AddCircle(farDark, 1.25f, Colors.Object);
 
         var pos = DebuffsAssigned()
             ? FinalPosition(pcSlot, pc)
