@@ -78,10 +78,8 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>();
 
-        // TODO currently just left it on since  it cleans itself - not sure if it will cause problems if the orbs are never popped
-        // .ActivateOnEnter<GravitasPuddles>(); - Needs to be turned off!
-
         Cast(id + 0x220, (uint)AID.LightOfJudgment, 4.0f, 5.0f, "Raidwide")
+            .DeactivateOnExit<GravitasPuddles>()
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>()
             .ActivateOnEnter<HyperDrive>();
@@ -90,10 +88,22 @@ sealed class KefkaStates : StateMachineBuilder {
         ComponentCondition<HyperDrive>(id + 0x120, 2.0f, o => o.NumCasts > 2, "3rd Tankbuster")
             .DeactivateOnExit<HyperDrive>();
 
+        Cast(id + 0x230, (uint)AID.TeleTrouncing, 10.0f, 5.0f, "TeleTrouncing")
+            .ActivateOnEnter<TeleTrouncing>();
+        ComponentCondition<TeleTrouncing>(id + 0x240, 6.0f, o => o.NumCasts > 0, "First Arrows");
+        ComponentCondition<TeleTrouncing>(id + 0x240, 3.5f, o => o.NumCasts > 9, "Second Arrows")
+            .DeactivateOnExit<TeleTrouncing>()
+            .ActivateOnExit<DoubleTroubleTrapKnockback>()
+            .ActivateOnExit<DoubleTroubleTrapStacks>();
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x250, 4.0f, o => o.NumCasts > 0, "Stacks + Knockbacks")
+            .DeactivateOnExit<DoubleTroubleTrapStacks>()
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
+            .ActivateOnEnter<GravenImage2>();
+        ComponentCondition<GravenImage2>(id + 0x260, 4.1f, o => !o.Active, "Sleeps + Confusion Spreads")
+            .DeactivateOnExit<GravenImage2>()
+            .ActivateOnExit<LightningSafeSpots>()
+            .ActivateOnExit<StackSpreadOrbs>();
 
-        // TODO everything beyond this point is just to make further mechanics so what resolved, but have not been looked at yet fully.
-        /*.
-        .ActivateOnEnter<LightningSafeSpots>()
-        .ActivateOnEnter<StackSpreadOrbs>();*/
+        // TODO finish timeline + gaze + disable safespots + stack/spreads
     }
 }

@@ -55,11 +55,13 @@ public enum AID : uint {
     _Ability_GravitationalWave = 47793, // 4C31->self, no cast, range 100 ?-degree cone - Purple left side
     _Ability_IntemperateWill = 47794, // _Gen_GravenImage->self, no cast, range 100 ?-degree cone - Yellow right side
 
-    _Ability_TeleTrouncing = 47801, // Kefka->self, 5.0s cast, single-target
-    _Ability_TeleTrouncing1 = 47802, // Helper->players, no cast, range 2 circle
+    TeleTrouncing = 47801, // Kefka->self, 5.0s cast, single-target
+    TeleTrouncing1 = 47802, // Helper->players, no cast, range 2 circle
+
+    _Ability_IdyllicWill = 47798, // _Gen_GravenImage->players, no cast, range 5 circle - Assume this is the sleep AOE
+
     _Weaponskill_ = 50516, // Kefka->self, 3.0s cast, single-target
     _Ability_IndulgentWill = 47797, // _Gen_GravenImage->player, no cast, single-target
-    _Ability_IdyllicWill = 47798, // _Gen_GravenImage->players, no cast, range 5 circle
     _Weaponskill_1 = 50517, // Kefka->self, no cast, single-target
     _Ability_IndolentWill = 47796, // _Gen_GravenImage->self, no cast, range 100 circle
     _Ability_LightOfJudgment = 47803, // Kefka->self, 5.0s cast, range 100 circle
@@ -69,6 +71,18 @@ public enum AID : uint {
 public enum SID : uint {
     DoubleTroubleTrap = 5078, // none->player, extra=0x0
 
+    TelePortentRIGHT = 4878, // Helper->player, extra=0x0
+    TelePortentUP = 4876, // Helper->player, extra=0x0
+    TelePortentDOWN = 4877, // Helper->player, extra=0x0
+    TelePortentLEFT = 4879, // Helper->player, extra=0x0
+    TelePortentUP2 = 5079, // Helper->player, extra=0x0
+    TelePortentDOWN2 = 5080, // Helper->player, extra=0x0
+    TelePortentLEFT2 = 5082, // Helper->player, extra=0x0
+    TelePortentRIGHT2 = 5081, // Helper->player, extra=0x0
+
+    _Gen_Bind = 2518, // none->player, extra=0x0
+    _Gen_Confused = 1283, // _Gen_GravenImage->player, extra=0x0
+    _Gen_Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
     _Gen_DamageDown = 2911, // Helper->player, extra=0x0
     _Gen_MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
 }
