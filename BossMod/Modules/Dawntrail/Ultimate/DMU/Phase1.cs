@@ -263,9 +263,30 @@ class WaveCannon(BossModule module) : Components.BaitAwayEveryone(module,
 }
 
 // TODO add priority system
-// TODO improve display of towers
-// TODO mostly will be combined with priority, but if you have a magic vuln debuff must highlight not to take a tower
-class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)AID.TowerExplosion, 4);
+class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)AID.TowerExplosion, 4) {
+    private DateTime[] magicVulnerability = new DateTime[PartyState.MaxPartySize];
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.MagicVulnerabilityUp) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                magicVulnerability[slot] = status.ExpireAt;
+            }
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        base.OnCastStarted(caster, spell);
+
+        if (spell.Action.ID == WatchedAction) {
+            for (int i = 0; i < Towers.Count; i++)
+            {
+                Towers.Ref(i).ForbiddenSoakers = Raid.WithSlot()
+                    .WhereSlot(player => magicVulnerability[player] > Towers[i].Activation).Mask();
+            }
+        }
+    }
+}
 
 class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
 
