@@ -321,8 +321,6 @@ class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
     }
 }
 
-// TODO bosses hitbox for non debuff
-// TODO can most likely add a slight offset for debuff players
 class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread(module, 6f, 5f, 4, 4) {
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.DoubleTroubleTrap) {
@@ -478,7 +476,7 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
 // TODO voidzone don't check for event cast sadly, maybe add it?
 // TODO needs to be cleaned up - change the colour during a specific point in time and maybe just count the number of times the spell has occured instead
 class GravitasPuddles(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 5,
-    m => m.Enemies((uint)OID._Gen_Actor1ec022).Where(e => e.EventState != 7), (uint)AID.Gravitas)  {
+    m => m.Enemies((uint)OID.PurplePuddles).Where(e => e.EventState != 7), (uint)AID.Gravitas)  {
 
     public override void DrawArenaBackground(int pcSlot, Actor pc) {
         var count = 0;
@@ -507,7 +505,7 @@ class GravitationalWave(BossModule module) : Components.GenericAOEs(module) {
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID._Ability_GravitationalWave || spell.Action.ID == (uint)AID._Ability_IntemperateWill) {
+        if (spell.Action.ID == (uint)AID.GravitationalWave || spell.Action.ID == (uint)AID.IntemperateWill) {
             NumCasts++;
             aoes.Clear();
         }

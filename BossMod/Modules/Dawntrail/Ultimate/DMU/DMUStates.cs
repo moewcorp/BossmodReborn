@@ -103,7 +103,5 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<GravenImage2>()
             .ActivateOnExit<LightningSafeSpots>()
             .ActivateOnExit<StackSpreadOrbs>();
-
-        // TODO finish timeline + gaze + disable safespots + stack/spreads
     }
 }
