@@ -250,11 +250,8 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
     }
 }
 
-// TODO ensure size is correct - it should be
-// TODO this is a bit of a lazy way to do it, but unsure how you would actually figure out the 4 people who are getting hit at the moment
-// TODO however, its not needed to know who is getting hit as you can't get hit by a laser since you have to take a tower next
 class WaveCannon(BossModule module) : Components.BaitAwayEveryone(module,
-    module.Enemies((uint)OID.StatueBodyOrb).FirstOrDefault(), new AOEShapeRect(100f, 2f),
+    module.Enemies((uint)OID.StatueBodyOrb).FirstOrDefault(), new AOEShapeRect(100f, 3f),
     (uint)AID.WaveCannon) {
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
