@@ -14,10 +14,11 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
             return;
         }
 
-        Actor? target = secondTB ? FindSecondAggroTarget(source) : this.target;
+        Actor? target = secondTB ? RaidByEnmity(source, true).Skip(1).FirstOrDefault() : this.target;
         if (target != null) {
             CurrentBaits.Add(new(source, target, new AOEShapeCone(30f, 45f.Degrees()), activation));
         }
+
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
@@ -40,37 +41,6 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
             source = null;
             CurrentBaits.Clear();
         }
-    }
-
-    private Actor? FindSecondAggroTarget(Actor boss) {
-        var hate = WorldState.Client.CurrentTargetHate;
-        if (hate.InstanceID != boss.InstanceID) {
-            return null;
-        }
-
-        Actor? mostHated = null;
-        int bestEnmity = int.MinValue;
-        Actor? secondMostHated = null;
-        int secondBestEnmity = int.MinValue;
-
-        foreach (var player in hate.Targets) {
-            var actor = WorldState.Actors.Find(player.InstanceID);
-            if (actor == null || Raid.FindSlot(actor.InstanceID) < 0) {
-                continue;
-            }
-
-            if (player.Enmity > bestEnmity) {
-                secondMostHated = mostHated; // The 1st person in aggro becomes the 2nd player in aggro
-                secondBestEnmity = bestEnmity;
-                mostHated = actor;
-                bestEnmity = player.Enmity;
-            } else if (player.Enmity > secondBestEnmity && (mostHated == null || actor.InstanceID != mostHated.InstanceID)) {
-                secondMostHated = actor;
-                secondBestEnmity = player.Enmity;
-            }
-        }
-
-        return secondMostHated;
     }
 }
 
