@@ -48,7 +48,7 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<LightOfJudgment>()
             .ActivateOnEnter<HyperDrive>();
         ComponentCondition<HyperDrive>(id + 0x100, 3.2f, o => o.NumCasts > 0, "1st Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x110, 2.3f, o => o.NumCasts > 1, "2nd Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x110, 2.1f, o => o.NumCasts > 1, "2nd Tankbuster");
         ComponentCondition<HyperDrive>(id + 0x120, 2.0f, o => o.NumCasts > 2, "3rd Tankbuster")
             .DeactivateOnExit<HyperDrive>();
 
@@ -78,31 +78,37 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>();
 
-        Cast(id + 0x220, (uint)AID.LightOfJudgment, 4.0f, 5.0f, "Raidwide")
+        Cast(id + 0x220, (uint)AID.LightOfJudgment, 9.1f, 5.0f, "Raidwide")
             .DeactivateOnExit<GravitasPuddles>()
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>()
             .ActivateOnEnter<HyperDrive>();
-        ComponentCondition<HyperDrive>(id + 0x100, 3.2f, o => o.NumCasts > 0, "1st Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x110, 2.3f, o => o.NumCasts > 1, "2nd Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x120, 2.0f, o => o.NumCasts > 2, "3rd Tankbuster")
+        ComponentCondition<HyperDrive>(id + 0x215, 3.2f, o => o.NumCasts > 0, "1st Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x220, 2.1f, o => o.NumCasts > 1, "2nd Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x225, 2.1f, o => o.NumCasts > 2, "3rd Tankbuster")
             .DeactivateOnExit<HyperDrive>();
 
-        Cast(id + 0x230, (uint)AID.TeleTrouncing, 10.0f, 5.0f, "TeleTrouncing")
+        Cast(id + 0x230, (uint)AID.TeleTrouncing, 6.8f, 5.0f, "TeleTrouncing")
             .ActivateOnEnter<TeleTrouncing>();
-        ComponentCondition<TeleTrouncing>(id + 0x240, 6.0f, o => o.NumCasts > 0, "First Arrows");
-        ComponentCondition<TeleTrouncing>(id + 0x240, 3.5f, o => o.NumCasts > 9, "Second Arrows")
+
+        //TODO fix times
+        ComponentCondition<TeleTrouncing>(id + 0x240, 7.8f, o => o.NumCasts > 0, "First Arrows");
+        ComponentCondition<TeleTrouncing>(id + 0x250, 3.0f, o => o.NumCasts > 9, "Second Arrows")
             .DeactivateOnExit<TeleTrouncing>()
             .ActivateOnExit<DoubleTroubleTrapKnockback>()
             .ActivateOnExit<DoubleTroubleTrapStacks>();
-        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x250, 4.0f, o => o.NumCasts > 0, "Stacks + Knockbacks")
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260, 5.4f, o => o.NumCasts > 0, "Stacks + Knockbacks")
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
             .ActivateOnExit<GravenImage2>();
-        ComponentCondition<GravenImage2>(id + 0x260, 4.1f, o => !o.Active, "Sleeps + Confusion Spreads")
+        ComponentCondition<GravenImage2>(id + 0x270, 5.6f, o => !o.Active, "Sleeps + Confusion Spreads")
             .DeactivateOnExit<GravenImage2>()
             .ActivateOnExit<LightningSafeSpots>()
             .ActivateOnExit<StackSpreadOrbs>()
             .ActivateOnExit<Gaze>();
+        ComponentCondition<Gaze>(id + 0x280, 13.1f, o => o.NumCasts > 0, "Stack/Spread + Blizzard + Gaze")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<StackSpreadOrbs>()
+            .DeactivateOnExit<Gaze>();
     }
 }

@@ -788,6 +788,8 @@ class Gaze(BossModule module) : Components.GenericGaze(module) {
     }
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) {
+        eyeAoe.Clear();
+
         if (eye == null) {
             return CollectionsMarshal.AsSpan(eyeAoe);
         }
