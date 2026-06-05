@@ -599,6 +599,8 @@ sealed class Replication1Guidance : BossComponent
     const float PairOffset = 2.25f;
     const float FireCenterOffset = 1.5f;
     const float NearDarkOffset = 1.0f;
+    // Spread-marker radius (matches UniformStackSpread(module, 5, 5) used by the bait components).
+    const float StaticSpreadRadius = 5f;
 
     readonly Replication1SecondBait _bait;
     readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
@@ -659,6 +661,16 @@ sealed class Replication1Guidance : BossComponent
 
     WPos InitialPosition(PartyRolesConfig.Assignment a)
     {
+        if (_rep1.IsStatic)
+            return StaticInitialPosition(a);
+        else
+        {
+            return CloneRelativeOrDNInitialPosition(a);
+        }
+    }
+
+    WPos CloneRelativeOrDNInitialPosition(PartyRolesConfig.Assignment a)
+    {
         var quadrant = a switch
         {
             PartyRolesConfig.Assignment.H1 or PartyRolesConfig.Assignment.R1 => 0,
@@ -693,6 +705,34 @@ sealed class Replication1Guidance : BossComponent
         };
 
         return anchor + sign * PairOffset * perp;
+    }
+
+    // Static preposition, expressed with angles like CloneRelativeOrDNInitialPosition.
+    // Fire stacks group up:  Melee M1/M2 share an SE point, Tanks MT/OT share an NW point (single shared point each).
+    // Dark spreads fan out:  Ranged R1/R2 around NE, Healers H1/H2 around SW, pushed out to the edge of
+    //                        their spread marker (InitialRadius + StaticSpreadRadius) and split by PairOffset.
+    WPos StaticInitialPosition(PartyRolesConfig.Assignment a)
+    {
+        var edgeRadius = InitialRadius + StaticSpreadRadius; // 12.5
+
+        var (angleDeg, radius, splitSign) = a switch
+        {
+            PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2 => (45f, InitialRadius, 0f),    // SE stack
+            PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT => (-135f, InitialRadius, 0f),  // NW stack
+            PartyRolesConfig.Assignment.R1 => (135f, edgeRadius, +1f),                                       // NE
+            PartyRolesConfig.Assignment.R2 => (135f, edgeRadius, -1f),
+            PartyRolesConfig.Assignment.H1 => (-45f, edgeRadius, -1f),                                       // SW
+            PartyRolesConfig.Assignment.H2 => (-45f, edgeRadius, +1f),
+            _ => (0f, InitialRadius, 0f)
+        };
+
+        var dir = angleDeg.Degrees().ToDirection();
+        var anchor = Center + radius * dir;
+        if (splitSign == 0f)
+            return anchor;
+
+        var perp = new WDir(-dir.Z, dir.X);
+        return anchor + splitSign * PairOffset * perp;
     }
 
     // ------------------------------------------------------------
@@ -835,14 +875,8 @@ sealed class Replication1Guidance : BossComponent
                              out var nearDark, out var farDark))
             return null;
 
-        if (_rep1.IsStatic)
-        {
-            return StaticFinalPosition(slot, actor, farDark);
-        }
-        else
-        {
-            return CloneRelativeOrDNFinalPosition(slot, actor, nearFire, farFire, nearDark, farDark);
-        }
+        return _rep1.IsStatic ? StaticFinalPosition(slot, actor, farDark)
+                              : CloneRelativeOrDNFinalPosition(slot, actor, nearFire, farFire, nearDark, farDark);
     }
 
     WPos? CloneRelativeOrDNFinalPosition(int slot, Actor actor, WPos nearFire, WPos farFire, WPos nearDark, WPos farDark)
@@ -927,31 +961,27 @@ sealed class Replication1Guidance : BossComponent
     // STATIC STRATEGY
     // ------------------------------------------------------------
     //
-    // The dark clone closest to the wall (= farDark) defines a "new North".
+    // The dark clone closest to the wall (farDark) defines a "new North".
     // All 8 safe spots are expressed as offsets in that rotated local frame,
-    // where +Z = toward farDark (new North) and +X = 90° clockwise (new East).
+    // where +Z = relative-North (toward farDark) and +X = relative-East (90° clockwise).
     //
-    // 3 spots reuse the existing Outer[] radius (distance 14 from center):
-    //   - H2/R2 dark  → relative-N outer
-    //   - H1/R1 dark  → relative-W outer
-    //   - H1/R1 + H2/R2 fire → SW outer corner (stacked)
+    // Ranged/healer:
+    //   - Dark (H1/R1 & H2/R2)  → behind-left cardinal waymark (rel-SW). new north @4 → C, @1 → D, ...
+    //   - Fire H1/R1            → left  flank cardinal waymark (rel-NW). new north @4 → D
+    //   - Fire H2/R2            → right flank cardinal waymark (rel-NE). new north @4 → A
     //
-    // The remaining 4 inner spots are hand-tuned constants and may need
-    // in-game adjustment against the reference image.
-    //
+    // Melee/tank:
+    //   - Fire debuff (baits dark) → on the boss's edge in melee range, split MT/M1 left (rel-West),
+    //                                OT/M2 right (rel-East), away from the stacked fire-baiters.
+    //   - Dark debuff (baits fire) → stack both together on the center box's north line.
 
-    const float StaticOuterRadius = 14f; // same magnitude as Outer[] markers
+    const float StaticWaymarkRadius = 13.65f;      // A/B/C/D cardinal waymark distance from center
 
-    // Offsets in the new-north frame (X = new-east, Z = new-north).
-    static readonly WDir StaticH1R1Dark = new(-StaticOuterRadius, 0);                 // rel-W outer
-    static readonly WDir StaticH2R2Dark = new(0, StaticOuterRadius);                  // rel-N outer
-    static readonly WDir StaticRangedFire = new(-StaticOuterRadius * 0.5f, -StaticOuterRadius * 0.5f); // rel-SW outer (H1/R1 + H2/R2 stacked)
-
-    // Hand-tuned inner spots.
-    static readonly WDir StaticMTM1Fire = new(0, 1.5f);    // center, on northern line of center box
-    static readonly WDir StaticOTM2Fire = new(3f, 1.5f);   // east of center, on northern line
-    static readonly WDir StaticMTM1Dark = new(-3f, 3f);    // rel-NW inner, one box below new-north white line
-    static readonly WDir StaticOTM2Dark = new(3f, 3f);     // rel-NE inner, one box below new-north white line
+    // Offsets in the new-north frame (X = rel-East, Z = rel-North).
+    static readonly WDir StaticH2R2Fire = StaticWaymarkRadius * new WDir(1f, 1f).Normalized(); // rel-NE flank (right) = A@4
+    static readonly WDir StaticH1R1Fire = StaticWaymarkRadius * new WDir(-1f, 1f).Normalized(); // rel-NW flank (left)  = D@4
+    static readonly WDir StaticRangedDark = StaticWaymarkRadius * new WDir(-1f, -1f).Normalized(); // rel-SW behind-left  = C@4
+    static readonly WDir StaticMeleeFire = new(0f, 1.5f); // baits fire: stack on the center box's north line
 
     bool BuildNewNorthBasis(WPos farDark, out WDir north, out WDir east)
     {
@@ -968,40 +998,130 @@ sealed class Replication1Guidance : BossComponent
         return true;
     }
 
+    static bool IsMeleeOrTank(PartyRolesConfig.Assignment a)
+        => a is PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT
+              or PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2;
+
     WPos? StaticFinalPosition(int slot, Actor actor, WPos farDark)
     {
         if (!BuildNewNorthBasis(farDark, out var north, out var east))
             return null;
 
         var assign = _assignments[slot];
-        var mech = BaitType(actor);
 
-        WDir local = (assign, mech) switch
+        // Baits dark ⇔ does NOT have Dark Resistance Down (i.e. has Fire Resistance Down, or none yet).
+        // Use BaitType so this matches the shared logic and doesn't depend on positively reading the
+        // fire debuff — relying on the dark debuff's absence is robust to timing/detection gaps.
+        var isDark = BaitType(actor) == Replication1SecondBait.Assignment.Dark;
+
+        // Melee/tank with the FIRE debuff (baits dark): stand on the boss's edge in melee range,
+        // split MT/M1 left (rel-West), OT/M2 right (rel-East), away from the stacked fire-baiters.
+        if (isDark && IsMeleeOrTank(assign))
         {
-            // Dark baits
-            (PartyRolesConfig.Assignment.H1, Replication1SecondBait.Assignment.Dark) => StaticH1R1Dark,
-            (PartyRolesConfig.Assignment.R1, Replication1SecondBait.Assignment.Dark) => StaticH1R1Dark,
-            (PartyRolesConfig.Assignment.H2, Replication1SecondBait.Assignment.Dark) => StaticH2R2Dark,
-            (PartyRolesConfig.Assignment.R2, Replication1SecondBait.Assignment.Dark) => StaticH2R2Dark,
-            (PartyRolesConfig.Assignment.MT, Replication1SecondBait.Assignment.Dark) => StaticMTM1Dark,
-            (PartyRolesConfig.Assignment.M1, Replication1SecondBait.Assignment.Dark) => StaticMTM1Dark,
-            (PartyRolesConfig.Assignment.OT, Replication1SecondBait.Assignment.Dark) => StaticOTM2Dark,
-            (PartyRolesConfig.Assignment.M2, Replication1SecondBait.Assignment.Dark) => StaticOTM2Dark,
+            var boss = Module.PrimaryActor;
+            var side = assign is PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.M1 ? -1f : 1f;
+            // On the boss on the correct side (MT/M1 left, OT/M2 right), keeping the bait/jump clear of the other
+            // players' circles: the dark-melee stack (north), the other side melee, and the ranged waymark spots.
+            WPos ToWorld(WDir o) => Center + o.X * east + o.Z * north;
+            var otherMelee = boss.Position + boss.HitboxRadius * (-side) * east;
+            Span<WPos> circles = [ToWorld(StaticMeleeFire), otherMelee, ToWorld(StaticRangedDark), ToWorld(StaticH1R1Fire), ToWorld(StaticH2R2Fire)];
+            return MeleeEdgeSpot(slot, actor, side * east, boss, circles, StaticSpreadRadius);
+        }
 
-            // Fire baits
-            (PartyRolesConfig.Assignment.MT, Replication1SecondBait.Assignment.Fire) => StaticMTM1Fire,
-            (PartyRolesConfig.Assignment.M1, Replication1SecondBait.Assignment.Fire) => StaticMTM1Fire,
-            (PartyRolesConfig.Assignment.OT, Replication1SecondBait.Assignment.Fire) => StaticOTM2Fire,
-            (PartyRolesConfig.Assignment.M2, Replication1SecondBait.Assignment.Fire) => StaticOTM2Fire,
-            (PartyRolesConfig.Assignment.H1, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
-            (PartyRolesConfig.Assignment.R1, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
-            (PartyRolesConfig.Assignment.H2, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
-            (PartyRolesConfig.Assignment.R2, Replication1SecondBait.Assignment.Fire) => StaticRangedFire,
+        WDir local = (assign, isDark) switch
+        {
+            // Dark baits — ranged/healers share the behind-left cardinal waymark
+            (PartyRolesConfig.Assignment.H1, true) or (PartyRolesConfig.Assignment.R1, true) or
+            (PartyRolesConfig.Assignment.H2, true) or (PartyRolesConfig.Assignment.R2, true) => StaticRangedDark,
+
+            // Fire ranged/healer flanks
+            (PartyRolesConfig.Assignment.H1, false) or (PartyRolesConfig.Assignment.R1, false) => StaticH1R1Fire,
+            (PartyRolesConfig.Assignment.H2, false) or (PartyRolesConfig.Assignment.R2, false) => StaticH2R2Fire,
+
+            // Melee/tank baiting fire (dark debuff): stack both together on the center box's north line
+            (PartyRolesConfig.Assignment.MT, false) or (PartyRolesConfig.Assignment.M1, false) or
+            (PartyRolesConfig.Assignment.OT, false) or (PartyRolesConfig.Assignment.M2, false) => StaticMeleeFire,
 
             _ => default
         };
 
-        return Center + local.X * east + local.Z * north;
+        var spot = Center + local.X * east + local.Z * north;
+        return AvoidCones(spot, slot, actor);
+    }
+
+    // Signed-distance fields for the active red-clone cones (WingedScourgeSecond). Negative = inside a cone.
+    ShapeDistance[] ConeHazards(int slot, Actor actor)
+    {
+        var ws = Module.FindComponent<WingedScourgeSecond>();
+        var cones = ws != null ? ws.ActiveAOEs(slot, actor) : default;
+
+        var sd = new ShapeDistance[cones.Length];
+        for (var i = 0; i < cones.Length; ++i)
+            sd[i] = cones[i].Shape.Distance(cones[i].Origin, cones[i].Rotation);
+        return sd;
+    }
+
+    // Nudge a static safe spot out of the active cones, keeping it as close to the marker as possible.
+    WPos AvoidCones(WPos spot, int slot, Actor actor)
+    {
+        var sd = ConeHazards(slot, actor);
+        if (sd.Length == 0)
+            return spot;
+
+        const float cushion = 2f;   // stay clearly outside the shape
+        if (ConeClear(sd, spot, cushion))
+            return spot;
+
+        // Nearest-safe search: smallest displacement that clears every hazard.
+        const float maxNudge = 10f;
+        const int dirs = 24;
+        for (var r = 0.5f; r <= maxNudge; r += 0.5f)
+            for (var d = 0; d < dirs; ++d)
+            {
+                var cand = spot + r * (d * (360f / dirs)).Degrees().ToDirection();
+                if (ConeClear(sd, cand, cushion))
+                    return cand;
+            }
+
+        return spot; // no safe spot within range — leave it on the marker
+    }
+
+    // The melee's spot: ON the boss (hitbox edge) on the correct side — tight uptime, just outside the central
+    // stack. It edges outward only as far as max melee if the close ring is blocked, sweeping around the boss so
+    // its bait/jump stays clear of the other players' circles. Cones are NOT dodged (one cone may clip by design).
+    WPos MeleeEdgeSpot(int slot, Actor actor, WDir baseDir, Actor boss, ReadOnlySpan<WPos> avoidCircles, float circleRadius)
+    {
+        var baseAngle = baseDir.ToAngle();
+        var circleSD = new ShapeDistance[avoidCircles.Length];
+        for (var j = 0; j < avoidCircles.Length; ++j)
+            circleSD[j] = new AOEShapeCircle(circleRadius).Distance(avoidCircles[j], default);
+
+        const float circleCushion = 0.25f; // just outside the others' AOEs so the jumps don't clip them
+        const float meleeReach = 3f;        // may edge out to max melee = hitbox + 3 if the boss edge is blocked
+        const float maxSweep = 80f;
+        const float stepDeg = 8f;
+
+        // Prefer the closest ring (boss edge), sweeping the angle; edge outward only if nothing there is clear.
+        for (var radius = boss.HitboxRadius; radius <= boss.HitboxRadius + meleeReach + 0.01f; radius += 1f)
+            for (var off = 0f; off <= maxSweep; off += stepDeg)
+                for (var s = -1; s <= 1; s += 2)
+                {
+                    var cand = boss.Position + radius * (baseAngle + (s * off).Degrees()).ToDirection();
+                    if (circleSD.Length == 0 || ConeClear(circleSD, cand, circleCushion))
+                        return cand;
+                    if (off == 0f)
+                        break;
+                }
+
+        return boss.Position + boss.HitboxRadius * baseDir; // fallback: on the boss edge, on the side
+    }
+
+    static bool ConeClear(ShapeDistance[] sd, WPos p, float cushion)
+    {
+        for (var i = 0; i < sd.Length; ++i)
+            if (sd[i].Distance(p) < cushion)
+                return false;
+        return true;
     }
 
     // ------------------------------------------------------------
@@ -1015,7 +1135,7 @@ sealed class Replication1Guidance : BossComponent
 
         // Mark the wall-dark clone as "new North" for Static strategy.
         if (_rep1.IsStatic && TryGetFormation(out _, out _, out _, out var farDark))
-            Arena.AddCircle(farDark, 1.25f, Colors.Object);
+            Arena.AddCircle(farDark, 1.25f, Colors.Other1);
 
         var pos = DebuffsAssigned()
             ? FinalPosition(pcSlot, pc)
