@@ -736,18 +736,20 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
         }
 
 
-        if (source.Position.AlmostEqual(new(126.000f, 41.500f), 5)) {
+        if (source.Position.AlmostEqual(new(107.000f, 43.000f), 5)) {
             AddSpread(target, WorldState.FutureTime(6.5f));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID._Ability_IdyllicWill) {
+        if (spell.Action.ID == (uint)AID.IdyllicWill) {
             Spreads.Clear();
         }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
         if (pc.Class.GetRole() == Role.Tank) {
             Arena.AddCircle(new WPos(96.019f, 89.193f), 1.0f, Colors.Safe, 2);
             Arena.AddCircle(new WPos(103.378f, 95.483f), 1.0f, Colors.Safe, 2);

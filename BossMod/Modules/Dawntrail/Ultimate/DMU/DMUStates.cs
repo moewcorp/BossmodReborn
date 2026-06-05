@@ -98,7 +98,7 @@ sealed class KefkaStates : StateMachineBuilder {
         ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x250, 4.0f, o => o.NumCasts > 0, "Stacks + Knockbacks")
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .ActivateOnEnter<GravenImage2>();
+            .ActivateOnExit<GravenImage2>();
         ComponentCondition<GravenImage2>(id + 0x260, 4.1f, o => !o.Active, "Sleeps + Confusion Spreads")
             .DeactivateOnExit<GravenImage2>()
             .ActivateOnExit<LightningSafeSpots>()
