@@ -102,6 +102,7 @@ sealed class KefkaStates : StateMachineBuilder {
         ComponentCondition<GravenImage2>(id + 0x260, 4.1f, o => !o.Active, "Sleeps + Confusion Spreads")
             .DeactivateOnExit<GravenImage2>()
             .ActivateOnExit<LightningSafeSpots>()
-            .ActivateOnExit<StackSpreadOrbs>();
+            .ActivateOnExit<StackSpreadOrbs>()
+            .ActivateOnExit<Gaze>();
     }
 }

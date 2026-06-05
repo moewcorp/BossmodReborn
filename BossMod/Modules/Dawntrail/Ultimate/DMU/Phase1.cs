@@ -702,15 +702,6 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     }
 }
 
-// TODO most likely will implement this at some point, but currently the RP uses static spots, so we don't care about the tethers at all
-// TODO add actual spots base on role config
-// TODO does 48370 - GravenImage to apply tethers
-// TODO LEFT tether is 1EBFBF
-// TODO RIGHT tether is 1EBFBE
-// TODO add the spreads from sleep to show the radius of it
-// TODO the tether AOE might be the wrong one - all of the RP changed - but it will still work fine, but should be fixed
-// TODO since all the same role type get the same tether type, you can just add the spread to one role type to show it
-
 /*
 Marker middle A - [89.393, 89.193]
 Hitbox of A - [96.019, 96.796]
@@ -769,5 +760,39 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
             Arena.AddCircle(new WPos(89.393f, 89.193f), 1.0f, Colors.Safe, 2);
             Arena.AddCircle(new WPos(110.024f, 89.869f), 1.0f, Colors.Safe, 2);
         }
+    }
+}
+
+class Gaze(BossModule module) : Components.GenericGaze(module) {
+    private Actor? eye;
+    private bool inverted = false;
+    private List<Eye> eyeAoe = [];
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if (actor.OID == (uint)OID.StatuePurpleEye && state == (uint)Animations.EyeStart) {
+            eye = actor;
+            inverted = false;
+        }
+
+        if (actor.OID == (uint)OID.StatueYellowEye && state == (uint)Animations.EyeStart) {
+            eye = actor;
+            inverted = true;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.IndolentWill || spell.Action.ID == (uint)AID.AveMaria) {
+            NumCasts++;
+            eye = null;
+        }
+    }
+
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) {
+        if (eye == null) {
+            return CollectionsMarshal.AsSpan(eyeAoe);
+        }
+
+        eyeAoe.Add(new Eye(eye.Position, inverted: inverted));
+        return CollectionsMarshal.AsSpan(eyeAoe);
     }
 }
