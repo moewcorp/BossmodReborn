@@ -563,85 +563,16 @@ DLEFT - [87.566, 106.333]
 4RIGHT - [93.390, 112.900]
 */
 
-// TODO make it so after the first one has gone off it removes the circle and leaves a puddle behind
-// TODO clean up this is a bit messy and can most likely be easier to setup
-// TODO Allow different configures
-// TODO remove slotList
+// TODO make it so after the first one has gone off it removes the circle of the first one
+// TODO make it so it leaves behind a puddle of the AOE
+// TODO allow different configures
+// TODO add support to allow different points of views for different players in the reply
+//      Not needed as it only helps with the development and testing, just need to expand the variables to list and store all players debuffs instead
 class TeleTrouncing(BossModule module) : BossComponent(module) {
     public int NumCasts = 0;
-
-    private uint[] TeleSIDs = [(uint)SID.TelePortentRIGHT, (uint)SID.TelePortentUP, (uint)SID.TelePortentDOWN, (uint)SID.TelePortentLEFT,
-        (uint)SID.TelePortentRIGHT2, (uint)SID.TelePortentUP2, (uint)SID.TelePortentDOWN2, (uint)SID.TelePortentLEFT2];
-
-    private bool IsTelePortent(uint sid) => Array.IndexOf(TeleSIDs, sid) >= 0;
-    private bool IsDown(uint sid) => sid is (uint)SID.TelePortentDOWN or (uint)SID.TelePortentDOWN2;
-    private bool IsLeft(uint sid) => sid is (uint)SID.TelePortentLEFT or (uint)SID.TelePortentLEFT2;
-    private bool IsUp(uint sid) => sid is (uint)SID.TelePortentUP or (uint)SID.TelePortentUP2;
-    private bool IsRight(uint sid) => sid is (uint)SID.TelePortentRIGHT or (uint)SID.TelePortentRIGHT2;
-
-    public override void OnStatusGain(Actor target, ref ActorStatus status) {
-        if (!IsTelePortent(status.ID)) {
-            return;
-        }
-
-        var slot = Raid.FindSlot(target.InstanceID);
-        if ((uint)slot >= PartyState.MaxPartySize) {
-            return;
-        }
-
-        GetOrCreateSlotList(slot).Add((status.ID, status.ExpireAt));
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        if (NumCasts == 16) {
-            return;
-        }
-
-        if (!activeBySlot.TryGetValue(pcSlot, out var sids) || sids.Count < 2) {
-            return;
-        }
-
-        var doubleDebuff = sids[0].SID == sids[1].SID;
-        if (doubleDebuff) {
-            if (IsDown(sids[0].SID)) {
-                Arena.AddCircle(new WPos(87.173f, 93.588f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(87.347f, 87.392f), 1.0f, Colors.AOE, 2);
-            }
-
-            if (IsLeft(sids[0].SID)) {
-                Arena.AddCircle(new WPos(112.704f, 87.231f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.611f, 87.215f), 1.0f, Colors.AOE, 2);
-            }
-
-            if (IsUp(sids[0].SID)) {
-                Arena.AddCircle(new WPos(112.631f, 112.776f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(112.787f, 106.504f), 1.0f, Colors.AOE, 2);
-            }
-
-            if (IsRight(sids[0].SID)) {
-                Arena.AddCircle(new WPos(87.219f, 112.880f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(93.390f, 112.900f), 1.0f, Colors.AOE, 2);
-            }
-
-            return;
-        }
-
-        if (DrawMixedCase(sids, IsUp, new WPos(93.696f, 93.692f), IsLeft, new WPos(94.219f, 87.589f))) {
-            return;
-        }
-
-        if (DrawMixedCase(sids, IsRight, new WPos(106.246f, 93.555f), IsUp, new WPos(112.405f, 93.744f))) {
-            return;
-        }
-
-        if (DrawMixedCase(sids, IsDown, new WPos(106.397f, 106.515f), IsRight, new WPos(106.261f, 112.634f))) {
-            return;
-        }
-
-        if (DrawMixedCase(sids, IsDown, new WPos(87.566f, 106.333f), IsLeft, new WPos(93.761f, 106.631f))) {
-            return;
-        }
-    }
+    private (Direction direction, DateTime activation)? Debuff1;
+    private (Direction direction, DateTime activation)? Debuff2;
+    private enum Direction { UP, DOWN, LEFT, RIGHT }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.TeleTrouncing1) {
@@ -649,47 +580,126 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
         }
     }
 
-    // TODO this can be removed once I have confirmed everything is working, just to check other player's hints
-    private Dictionary<int, List<(uint SID, DateTime ExpireAt)>> activeBySlot = [];
-
-    // TODO can be removed like above
-    private List<(uint SID, DateTime ExpireAt)> GetOrCreateSlotList(int slot) {
-        if (!activeBySlot.TryGetValue(slot, out var list)) {
-            activeBySlot[slot] = list = [];
-        }
-        return list;
-    }
-
-    // TODO most likely just move this logic into the Draw function
-    private bool DrawMixedCase(List<(uint SID, DateTime ExpireAt)> sids, Func<uint, bool> dir1Match, WPos point1, Func<uint, bool> dir2Match, WPos point2) {
-        if (!TryFindFirst(sids, dir1Match, out var d1) || !TryFindFirst(sids, dir2Match, out var d2)) {
-            return false;
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        var player = Raid.FindSlot(actor.InstanceID);
+        if (!(player >= 0 && player == PartyState.PlayerSlot)) {
+            return;
         }
 
-        var d1First = d1.ExpireAt <= d2.ExpireAt;
-        if (d1First) {
-            Arena.AddCircle(point1, 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(point2, 1.0f, Colors.AOE, 2);
+        Direction? dir = (SID)status.ID switch {
+            SID.TelePortentUP or SID.TelePortentUP2 => Direction.UP,
+            SID.TelePortentDOWN or SID.TelePortentDOWN2 => Direction.DOWN,
+            SID.TelePortentLEFT or SID.TelePortentLEFT2 => Direction.LEFT,
+            SID.TelePortentRIGHT or SID.TelePortentRIGHT2 => Direction.RIGHT,
+            _ => null
+        };
+
+        if (dir == null) {
+            return;
+        }
+
+        var duration = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds;
+        if (duration > 8) {
+            Debuff2 = ((dir.Value, status.ExpireAt));
         } else {
-            Arena.AddCircle(point2, 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(point1, 1.0f, Colors.AOE, 2);
+            Debuff1 = ((dir.Value, status.ExpireAt));
         }
-
-        return true;
     }
 
-    private bool TryFindFirst(List<(uint SID, DateTime ExpireAt)> sids, Func<uint, bool> match, out (uint SID, DateTime ExpireAt) entry) {
-        for (var i = 0; i < sids.Count; ++i) {
-            if (match(sids[i].SID)) {
-                entry = sids[i];
-                return true;
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (NumCasts == 16) {
+            return;
+        }
+
+        if (Debuff1 == null || Debuff2 == null) {
+            return;
+        }
+
+        // Case 1: Both debuffs are in the same direction
+        if (Debuff1.Value.direction == Debuff2.Value.direction) {
+            if (Debuff1.Value.direction == Direction.UP) {
+                Arena.AddCircle(new WPos(112.631f, 112.776f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(112.787f, 106.504f), 1.0f, Colors.AOE, 2);
+            }
+
+            if (Debuff1.Value.direction == Direction.DOWN) {
+                Arena.AddCircle(new WPos(87.347f, 87.392f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(87.173f, 93.588f), 1.0f, Colors.AOE, 2);
+            }
+
+            if (Debuff1.Value.direction == Direction.LEFT) {
+                Arena.AddCircle(new WPos(112.704f, 87.231f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.611f, 87.215f), 1.0f, Colors.AOE, 2);
+            }
+
+            if (Debuff1.Value.direction == Direction.RIGHT) {
+                Arena.AddCircle(new WPos(87.219f, 112.880f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(93.390f, 112.900f), 1.0f, Colors.AOE, 2);
+            }
+
+            return;
+        }
+
+        // Case 2: Both debuffs are in different directions
+        bool debuff1First = Debuff1.Value.activation <= Debuff2.Value.activation;
+
+        if ((Debuff1.Value.direction == Direction.UP || Debuff1.Value.direction == Direction.LEFT) &&
+            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.LEFT)) {
+
+            var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
+
+            if (upFirst) {
+                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.AOE, 2);
+            } else {
+                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.AOE, 2);
+                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.Safe, 2);
             }
         }
 
-        entry = default;
-        return false;
-    }
+        if ((Debuff1.Value.direction == Direction.UP || Debuff1.Value.direction == Direction.RIGHT) &&
+            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.RIGHT)) {
 
+            var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
+
+            if (upFirst) {
+                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.AOE, 2);
+            } else {
+                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.AOE, 2);
+            }
+        }
+
+        if ((Debuff1.Value.direction == Direction.DOWN || Debuff1.Value.direction == Direction.LEFT) &&
+            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.LEFT)) {
+
+            var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
+
+            if (downFirst) {
+                Arena.AddCircle(new WPos(87.566f, 106.333f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(93.761f, 106.631f), 1.0f, Colors.AOE, 2);
+            } else {
+                Arena.AddCircle(new WPos(93.761f, 106.631f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(87.566f, 106.333f), 1.0f, Colors.AOE, 2);
+            }
+        }
+
+        if ((Debuff1.Value.direction == Direction.DOWN || Debuff1.Value.direction == Direction.RIGHT) &&
+            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.RIGHT)) {
+
+            var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
+
+            if (downFirst) {
+                Arena.AddCircle(new WPos(106.397f, 106.515f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.261f, 112.634f), 1.0f, Colors.AOE, 2);
+            } else {
+                Arena.AddCircle(new WPos(106.261f, 112.634f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.397f, 106.515f), 1.0f, Colors.AOE, 2);
+            }
+        }
+
+    }
 }
 
 // TODO most likely will implement this at some point, but currently the RP uses static spots, so we don't care about the tethers at all
