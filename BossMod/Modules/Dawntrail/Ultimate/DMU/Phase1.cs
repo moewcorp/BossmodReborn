@@ -46,6 +46,7 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
 
 class GravenImage(BossModule module) : Components.GenericKnockback(module, (uint)AID.PulseWave) {
     private List<(ulong SourceID, int slot)> tethers = [];
+    private List<Knockback> knockbacks = [];
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
         if (tether.ID != (uint)TetherID.GravenImageTether) {
@@ -73,6 +74,8 @@ class GravenImage(BossModule module) : Components.GenericKnockback(module, (uint
     }
 
     public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) {
+        knockbacks.Clear();
+
         foreach (var target in tethers) {
             if (target.slot != slot) {
                 continue;
@@ -83,10 +86,11 @@ class GravenImage(BossModule module) : Components.GenericKnockback(module, (uint
                 continue;
             }
 
-            return new Knockback[] { new(source.Position, 14f, actorID: source.InstanceID) };
+            knockbacks.Add(new(source.Position, 14f, actorID: source.InstanceID));
+            return CollectionsMarshal.AsSpan(knockbacks);
         }
 
-        return [];
+        return CollectionsMarshal.AsSpan(knockbacks);
     }
 }
 
@@ -259,7 +263,6 @@ class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)
 }
 
 class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
-
     private bool questionMark = false;
     private List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
     private List<AOEInstance> aoes = [];
@@ -334,12 +337,12 @@ class DoubleTroubleTrapKnockback(BossModule module) : Components.GenericKnockbac
 
         var stack = Module.FindComponent<DoubleTroubleTrapStacks>();
         if (stack == null) {
-            return [];
+            return CollectionsMarshal.AsSpan(knockbacks);
         }
 
         foreach (var stackPoint in stack.Stacks) {
-            if (actor.Position.InCircle(stackPoint.Target.Position.Quantized(), stackPoint.Radius)) {
-                knockbacks.Add(new(stackPoint.Target.Position, 10f, stackPoint.Activation, actorID: stackPoint.Target.InstanceID));
+            if (actor.Position.InCircle(stackPoint.Target.Position, stackPoint.Radius)) {
+                knockbacks.Add(new(stackPoint.Target.Position, 14f, stackPoint.Activation, actorID: stackPoint.Target.InstanceID));
             }
         }
 
