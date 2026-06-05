@@ -409,13 +409,11 @@ class HyperDrive(BossModule module) : Components.GenericBaitAway(module, (uint)A
     }
 }
 
-// TODO Improve logic for stack green circles - ensure the 2nd circles are not inside the first AOE
-// TODO Improve logic for spread green circles - should only show role one not all 4
-// TODO party config settings required - if none set then just use what is already there
+// TODO party config settings for display of green circles for stacks & spreads
 class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 4, 4) {
     private List<Spread> spreadsIncoming = [];
     private int totalStacks = 0;
-    public int totalStacksGoneOff = 0; // TODO remove this, shouldn't be needed
+    public int NumCasts = 0;
 
     private enum TetherGroup { Support, DPS }
     private TetherGroup tetherGroup = TetherGroup.Support;
@@ -423,14 +421,32 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (Stacks.Count != 0) {
+        if (Stacks.Count != 0 && totalStacks == 4) {
             Arena.AddCircle(Module.Center + new WDir(0, 19.5f), 1.0f, Colors.Safe, 2);
             Arena.AddCircle(Module.Center + new WDir(0, -19.5f), 1.0f, Colors.Safe, 2);
         }
 
-        if (Stacks.Count != 0 && totalStacks >= 5) {
-            Arena.AddCircle(Module.Center + new WDir(0, 13.0f), 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(Module.Center + new WDir(0, -13.0f), 1.0f, Colors.Safe, 2);
+        if (Stacks.Count != 0 && totalStacks == 8) {
+            var puddles = Module.FindComponent<GravitasPuddles>();
+
+            if (puddles == null) {
+                return;
+            }
+
+            var puddleSources = puddles.Sources(Module).ToList();
+
+            var puddle1 = puddleSources.Where(p => p.Position.Z > Module.Center.Z).MinBy(p => (p.Position - Module.Center).Length());
+            if (puddle1 == null) {
+                return;
+            }
+
+            var puddle2 = puddleSources.Where(p => p.Position.Z < Module.Center.Z).MinBy(p => (p.Position - Module.Center).Length());
+            if (puddle2 == null) {
+                return;
+            }
+
+            Arena.AddCircle(puddle1.Position - (puddle1.Position - Module.Center) * 5.5f, 1.0f, Colors.Safe, 2);
+            Arena.AddCircle(puddle2.Position - (puddle2.Position - Module.Center) * 5.5f, 1.0f, Colors.Safe, 2);
         }
 
         if (Spreads.Count != 0) {
@@ -446,8 +462,7 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
 
                 // H2/R2 - [113.566, 0.000, 112.415, -133.273]
                 Arena.AddCircle(new WPos(113.566f, 112.415f), 1.0f, Colors.Safe, 2);
-            }
-            else {
+            } else {
                 // Middle
                 Arena.AddCircle(Module.Center, 1.0f, Colors.Safe, 2);
             }
@@ -483,7 +498,7 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.Gravitas && Stacks.Count > 0) {
             Stacks.RemoveAt(0);
-            totalStacksGoneOff++;
+            NumCasts++;
             Spreads.AddRange(spreadsIncoming);
             spreadsIncoming.Clear();
         }
@@ -561,7 +576,7 @@ D - [93.761, 106.631]
 DLEFT - [87.566, 106.333]
 4 - [87.219, 112.880]
 4RIGHT - [93.390, 112.900]
- */
+*/
 
 // TODO make it so after the first one has gone off it removes the circle and leaves a puddle behind
 // TODO clean up this is a bit messy and can most likely be easier to setup

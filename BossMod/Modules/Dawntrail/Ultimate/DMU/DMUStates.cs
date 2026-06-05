@@ -66,7 +66,7 @@ sealed class KefkaStates : StateMachineBuilder {
             .DeactivateOnExit<RevoltingRuinIII>();
         ComponentCondition<GravitationalWave>(id + 0x170, 0.85f, o => o.NumCasts > 0, "Left/Right Cleave")
             .DeactivateOnExit<GravitationalWave>();
-        ComponentCondition<Gravitas>(id + 0x180, 4.6f, o => o.totalStacksGoneOff > 4, "Stack");
+        ComponentCondition<Gravitas>(id + 0x180, 4.6f, o => o.NumCasts > 4, "Stack");
         ComponentCondition<Gravitas>(id + 0x190, 4.0f, o => !o.Active, "Spreads")
             .DeactivateOnExit<Gravitas>()
             .ActivateOnEnter<GravitationalWave>();
