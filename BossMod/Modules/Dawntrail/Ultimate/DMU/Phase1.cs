@@ -406,20 +406,20 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
                 return;
             }
 
-            var puddleSources = puddles.Sources(Module).ToList();
+            var puddleSources = puddles.puddles;
 
-            var puddle1 = puddleSources.Where(p => p.Position.Z > Module.Center.Z).MinBy(p => (p.Position - Module.Center).Length());
+            var puddle1 = puddleSources.Where(p => p.actor.Position.Z > Module.Center.Z).Select(p => p.actor).MinBy(p => (p.Position - Module.Center).Length());
             if (puddle1 == null) {
                 return;
             }
 
-            var puddle2 = puddleSources.Where(p => p.Position.Z < Module.Center.Z).MinBy(p => (p.Position - Module.Center).Length());
+            var puddle2 = puddleSources.Where(p => p.actor.Position.Z < Module.Center.Z).Select(p => p.actor).MinBy(p => (p.Position - Module.Center).Length());
             if (puddle2 == null) {
                 return;
             }
 
-            Arena.AddCircle(puddle1.Position - (puddle1.Position - Module.Center) * 5.5f, 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(puddle2.Position - (puddle2.Position - Module.Center) * 5.5f, 1.0f, Colors.Safe, 2);
+            Arena.AddCircle(puddle1.Position - (puddle1.Position - Module.Center).Normalized() * 5.5f, 1.0f, Colors.Safe, 2);
+            Arena.AddCircle(puddle2.Position - (puddle2.Position - Module.Center).Normalized() * 5.5f, 1.0f, Colors.Safe, 2);
         }
 
         if (Spreads.Count != 0) {
@@ -482,20 +482,32 @@ class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 
     }
 }
 
-// TODO voidzone don't check for event cast sadly, maybe add it?
-// TODO needs to be cleaned up - change the colour during a specific point in time and maybe just count the number of times the spell has occured instead
-class GravitasPuddles(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 5,
-    m => m.Enemies((uint)OID.PurplePuddles).Where(e => e.EventState != 7), (uint)AID.Gravitas)  {
+class GravitasPuddles(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 5, _ => [], (uint)AID.Gravitas) {
+    public List<(Actor actor, uint colour)> puddles = [];
 
-    public override void DrawArenaBackground(int pcSlot, Actor pc) {
-        var count = 0;
-        foreach (var puddles in Sources(Module)) {
-            count++;
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.PurplePuddles) {
+            puddles.Add((actor, Colors.AOE));
+        }
+    }
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleSoakReady) {
+            var puddle = puddles.FindIndex(p => p.actor.InstanceID == actor.InstanceID);
+            puddles[puddle] = (actor, Colors.SafeFromAOE);
         }
 
-        var colour = count == 8 ? Colors.SafeFromAOE : default;
-        foreach (var puddles in Sources(Module)) {
-            Shape.Draw(Arena, puddles.Position, puddles.Rotation, colour);
+        if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleExplosion) {
+            var puddle = puddles.FindIndex(p => p.actor.InstanceID == actor.InstanceID);
+            if (puddle >= 0) {
+                puddles.RemoveAt(puddle);
+            }
+        }
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc) {
+        foreach (var puddle in puddles) {
+            Shape.Draw(Arena, puddle.actor.Position, puddle.actor.Rotation, puddle.colour);
         }
     }
 }

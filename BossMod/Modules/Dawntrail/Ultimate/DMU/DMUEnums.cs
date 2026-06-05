@@ -98,7 +98,9 @@ public enum IconID : uint {
 
 public enum Animations : uint {
     PulseOrbStart = 4194432,
-    PulseOrbEnd = 16777728
+    PulseOrbEnd = 16777728,
+    PuddleSoakReady = 1048608,
+    PuddleExplosion = 262152,
 }
 
 public enum TetherID : uint {
