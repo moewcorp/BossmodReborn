@@ -1030,12 +1030,12 @@ sealed class Replication1Guidance : BossComponent
         WDir roleBasedPosition = (assign, isDark) switch
         {
             // Dark baits — ranged/healers share the behind-left cardinal waymark
-            (PartyRolesConfig.Assignment.H1, true) or (PartyRolesConfig.Assignment.R1, true) or
-            (PartyRolesConfig.Assignment.H2, true) or (PartyRolesConfig.Assignment.R2, true) => StaticRangedDark,
+            (PartyRolesConfig.Assignment.H1, false) or (PartyRolesConfig.Assignment.R1, false) or
+            (PartyRolesConfig.Assignment.H2, false) or (PartyRolesConfig.Assignment.R2, false) => StaticRangedDark,
 
             // Fire ranged/healer flanks
-            (PartyRolesConfig.Assignment.H1, false) or (PartyRolesConfig.Assignment.R1, false) => StaticH1R1Fire,
-            (PartyRolesConfig.Assignment.H2, false) or (PartyRolesConfig.Assignment.R2, false) => StaticH2R2Fire,
+            (PartyRolesConfig.Assignment.H1, true) or (PartyRolesConfig.Assignment.R1, true) => StaticH1R1Fire,
+            (PartyRolesConfig.Assignment.H2, true) or (PartyRolesConfig.Assignment.R2, true) => StaticH2R2Fire,
 
             // Melee/tank baiting fire (dark debuff): stack both together on the center box's north line
             (PartyRolesConfig.Assignment.MT, false) or (PartyRolesConfig.Assignment.M1, false) or
@@ -1044,47 +1044,9 @@ sealed class Replication1Guidance : BossComponent
             _ => default
         };
 
-        var spot = Center + roleBasedPosition.X * east + roleBasedPosition.Z * north;
-        return AvoidCones(spot, slot, actor);
-    }
-
-    // Builds a signed-distance field per currently-active fire clone cone (WingedScourgeSecond), so a point
-    // can be cheaply tested against all of them. Each field returns negative inside its cone, positive outside.
-    // Returns an empty array when no cones are active.
-    ShapeDistance[] FireCloneConeFields(int slot, Actor actor)
-    {
-        var ws = Module.FindComponent<WingedScourgeSecond>();
-        var cones = ws != null ? ws.ActiveAOEs(slot, actor) : default;
-
-        var fields = new ShapeDistance[cones.Length];
-        for (var i = 0; i < cones.Length; ++i)
-            fields[i] = cones[i].Shape.Distance(cones[i].Origin, cones[i].Rotation);
-        return fields;
-    }
-
-    // Nudge a static safe spot out of the active cones, keeping it as close to the marker as possible.
-    WPos AvoidCones(WPos spot, int slot, Actor actor)
-    {
-        var coneFields = FireCloneConeFields(slot, actor);
-        if (coneFields.Length == 0)
-            return spot;
-
-        const float cushion = 2f;   // stay clearly outside the cone
-        if (IsClearOf(coneFields, spot, cushion))
-            return spot;
-
-        // Nearest-safe search: smallest displacement that clears every cone.
-        const float maxNudge = 10f;
-        const int dirs = 24;
-        for (var r = 0.5f; r <= maxNudge; r += 0.5f)
-            for (var d = 0; d < dirs; ++d)
-            {
-                var cand = spot + r * (d * (360f / dirs)).Degrees().ToDirection();
-                if (IsClearOf(coneFields, cand, cushion))
-                    return cand;
-            }
-
-        return spot; // no safe spot within range — leave it on the marker
+        // Ranged/healers stand EXACTLY on their cardinal waymark (A/C/D rotated to new north) — never nudged
+        // off it for cones: the player body doesn't trigger the cone, only their AoE circle would.
+        return Center + roleBasedPosition.X * east + roleBasedPosition.Z * north;
     }
 
     // The melee's spot: ON the boss (hitbox edge) on the correct side — tight uptime, just outside the central stack.
