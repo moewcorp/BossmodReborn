@@ -11,7 +11,7 @@ class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint
     TetherIDType = typeof(TetherID),
     IconIDType = typeof(IconID),
     PrimaryActorOID = (uint)OID.Kefka,
-    Contributors = "",
+    Contributors = "Equilius",
     Expansion = BossModuleInfo.Expansion.Dawntrail,
     Category = BossModuleInfo.Category.Ultimate,
     GroupType = BossModuleInfo.GroupType.CFC,

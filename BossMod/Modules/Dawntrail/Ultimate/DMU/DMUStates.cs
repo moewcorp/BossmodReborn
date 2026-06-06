@@ -1,17 +1,21 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 [SkipLocalsInit]
-sealed class KefkaStates : StateMachineBuilder {
-    public KefkaStates(BossModule module) : base(module) {
+sealed class KefkaStates : StateMachineBuilder
+{
+    public KefkaStates(BossModule module) : base(module)
+    {
         DeathPhase(default, SinglePhase);
     }
 
-    private void SinglePhase(uint id) {
-        phase1(id, 10.1f);
+    private void SinglePhase(uint id)
+    {
+        Phase1(id, 10.1f);
         SimpleState(id + 0xFF0000u, 10000f, "???");
     }
 
-    private void phase1(uint id, float delay) {
+    private void Phase1(uint id, float delay)
+    {
         Cast(id, (uint)AID.RevoltingRuinIII, delay, 5, "1st Tankbuster")
             .ActivateOnEnter<RevoltingRuinIII>();
         ComponentCondition<RevoltingRuinIII>(id + 0x05, 3.25f, o => o.NumCasts > 1, "2nd Tankbuster")
