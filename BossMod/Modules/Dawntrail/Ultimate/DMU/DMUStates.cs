@@ -1,22 +1,28 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 [SkipLocalsInit]
-sealed class KefkaStates : StateMachineBuilder
-{
-    public KefkaStates(BossModule module) : base(module)
-    {
-        DeathPhase(default, SinglePhase);
+sealed class DMUStates : StateMachineBuilder {
+    private readonly DMU _module;
+
+    public DMUStates(DMU module) : base(module) {
+        _module = module;
+
+        SimplePhase(0, Phase1, "P1")
+            .Raw.Update = () => !Module.PrimaryActor.IsTargetable || Module.PrimaryActor.IsDeadOrDestroyed;
+        SimplePhase(1, Phase2, "P2")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
+            .Raw.Update = () => Module.PrimaryActor.IsTargetable || (_module.BossP2()?.IsDestroyed ?? false);
     }
 
-    private void SinglePhase(uint id)
-    {
-        Phase1(id, 10.1f);
-        SimpleState(id + 0xFF0000u, 10000f, "???");
+    private void Phase2(uint id) {
+        ActorTargetable(id, _module.BossP2, true, 10.3f, "Boss appears")
+            .SetHint(StateMachine.StateHint.DowntimeEnd);
+
+        Timeout(id + 0xFF0000, 10000, "P2");
     }
 
-    private void Phase1(uint id, float delay)
-    {
-        Cast(id, (uint)AID.RevoltingRuinIII, delay, 5, "1st Tankbuster")
+    private void Phase1(uint id) {
+        Cast(id, (uint)AID.RevoltingRuinIII, 10.1f, 5, "1st Tankbuster")
             .ActivateOnEnter<RevoltingRuinIII>();
         ComponentCondition<RevoltingRuinIII>(id + 0x05, 3.25f, o => o.NumCasts > 1, "2nd Tankbuster")
             .DeactivateOnExit<RevoltingRuinIII>();
@@ -114,5 +120,6 @@ sealed class KefkaStates : StateMachineBuilder
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<StackSpreadOrbs>()
             .DeactivateOnExit<Gaze>();
+        Targetable(id + 0x1000, false, 10.3f, "Boss disappears");
     }
 }

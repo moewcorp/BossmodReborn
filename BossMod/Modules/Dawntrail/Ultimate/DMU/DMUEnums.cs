@@ -15,6 +15,8 @@ public enum OID : uint
     Exit = 0x1E850B, // R0.500, x1, EventObj type
     YellowOrb = 0x1EBFBD, // R0.500, x2, EventObj type // Yellow orb
     PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
+
+    BossP2 = 0x4C32,
 }
 
 public enum AID : uint
