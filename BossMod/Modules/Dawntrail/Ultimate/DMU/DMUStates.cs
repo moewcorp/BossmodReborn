@@ -26,7 +26,8 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<ForsakenShapes>()
             .ActivateOnEnter<PathOfLight>()
             .ActivateOnEnter<ForsakenSolverSet1>()
-            .ActivateOnEnter<ForsakenSolverSet2>();
+            .ActivateOnEnter<ForsakenSolverSet2>()
+            .ActivateOnEnter<AllThingsEnding>();
 
         Timeout(id + 0xFF0000, 10000, "P2");
     }

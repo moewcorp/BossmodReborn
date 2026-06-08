@@ -1,11 +1,28 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
+// Past's End - Bait between midpoint of towers below a little
+// Future's End - bait cast max meel always from towers
+
+/*
+        // TODO use these values so the bait doesn't show during tower set 2 confusing people
+     _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
+    _Ability_FuturesEnd1 = 47830, // BossP2->players, no cast, range 5 circle
+    _Ability_FuturesEnd2 = 47832, // 4C39->players, no cast, range 5 circle
+    _Ability_PastsEnd2 = 47833, // 4C39->players, no cast, range 5 circle
+
+     PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
+    FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+
+    AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
+    AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
+ */
+
 class UltimateEmbrace(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.UltimateEmbrace, 5.0f);
 
 class Forsaken(BossModule module) : Components.RaidwideCast(module, (uint)AID.Forsaken);
 
 // Used for towers' spawn locations and marking them as SW or SE depending on the spawn point.
-class PathOfLight(BossModule module) : Components.GenericTowers(module, (uint)AID._Ability_ThePathOfLight) {
+class PathOfLight(BossModule module) : Components.GenericTowers(module, (uint)AID.ThePathOfLight) {
     public Tower? CurrentSW;
     public Tower? CurrentSE;
 
@@ -88,7 +105,7 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
     ];
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID._Ability_ThePathOfLight) {
+        if (spell.Action.ID == (uint)AID.ThePathOfLight) {
             if (towerSetLocked == false) {
                 lastTowerSetChange = WorldState.CurrentTime;
                 towerSetLocked = true;
@@ -446,15 +463,6 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
                 Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
             }
-
-            /*if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
-                Arena.AddCircle(swPosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }
-
-            if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT ||
-                assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
-                Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }*/
         }
 
         // Case: SW players with same debuffs (helpers)
@@ -493,15 +501,6 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
                 Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
             }
-
-            /*if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
-                Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }
-
-            if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT ||
-                assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
-                Arena.AddCircle(sePosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }*/
         }
 
         // Case: SE players with same debuffs (helpers)
@@ -552,5 +551,97 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
 
             towers.Towers[i] = t;
         }
+    }
+}
+
+// TODO figure out why we have to bait like this to improve hints - do we have to use cone to hit towers or not to active something?
+class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AllThingsEnding, new AOEShapeCone(100, 25.Degrees())) {
+    private List<AOEInstance> aoes = [];
+    private List<(Actor clone, ulong target)> clones = [];
+    private enum _bait { None, Far, Close }
+    private _bait currentBait = _bait.None;
+
+    private PathOfLight? towers = module.FindComponent<PathOfLight>();
+    private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.FuturesEnd) {
+            currentBait = _bait.Far;
+        }
+
+        if (spell.Action.ID == (uint)AID.PastsEnd) {
+            currentBait = _bait.Close;
+        }
+
+        if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
+            currentBait = _bait.None;
+            clones.Clear();
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID._Ability_PastsEnd1 || spell.Action.ID == (uint)AID._Ability_PastsEnd2 ||
+            spell.Action.ID == (uint)AID._Ability_FuturesEnd1 || spell.Action.ID == (uint)AID._Ability_FuturesEnd2) {
+            clones.Add((caster, spell.MainTargetID));
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (towers == null || shapes == null) {
+            return;
+        }
+
+        // TODO change this - its a lazy way of checking if we should draw the hint or not yet for past/future ending
+        if (shapes.currentTowerSet != 3 && shapes.currentTowerSet != 5 && shapes.currentTowerSet != 7 && shapes.currentTowerSet != 9) {
+            return;
+        }
+
+        if (shapes.currentTowerSet == 9) {
+            var waymark = WorldState.Waymarks.GetFieldMark((int)Waymark.A);
+            if (waymark == null) {
+                return;
+            }
+
+            Arena.AddCircle(waymark.Value.ToWPos(), 1.0f, Colors.PlayerInteresting, 2.0f);
+            return;
+        }
+
+        if (towers.Towers.Count != 2 || towers.CurrentSE == null || towers.CurrentSW == null) {
+            return;
+        }
+
+        var midpoint = new WPos((towers.CurrentSW.Value.Position.X + towers.CurrentSE.Value.Position.X) * 0.5f,
+            (towers.CurrentSW.Value.Position.Z + towers.CurrentSE.Value.Position.Z) * 0.5f);
+        var newSouth = (midpoint - Arena.Center).Normalized();
+
+        if (currentBait == _bait.Close) {
+            Arena.AddCircle(midpoint, 1.0f, Colors.PlayerInteresting, 2.0f);
+        }
+
+        if (currentBait == _bait.Far) {
+            Arena.AddCircle(midpoint - (newSouth * 10.0f), 1.0f, Colors.PlayerInteresting, 2.0f);
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        aoes.Clear();
+
+        if (clones.Count == 0) {
+            return CollectionsMarshal.AsSpan(aoes);
+        }
+
+        foreach (var (clone, target) in clones) {
+            var player = WorldState.Actors.Find(target);
+            if (player == null) {
+                continue;
+            }
+
+            var direction = clone.AngleTo(player);
+            aoes.Add(new(new AOEShapeCone(100, 20.Degrees()), clone.Position, direction));
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }

@@ -73,21 +73,25 @@ public enum AID : uint
     // Phase 2
     UltimateEmbrace = 49740, // BossP2->players, 5.0s cast, range 5 circle
     Forsaken = 47804, // BossP2->self, 7.0s cast, range 100 circle
+    ThePathOfLight = 47806, // Helper->self, no cast, range 4 circle
 
-    _Ability_ThePathOfLight = 47806, // Helper->self, no cast, range 4 circle
     _Ability_Spellscatter = 47809, // Helper->player, no cast, range 5 circle
     _Ability_Spelldriver = 47808, // Helper->player, no cast, range 5 circle
     _Ability_Spellwave = 47810, // Helper->self, no cast, range 40 ?-degree cone
 
     _Ability_TheRiverOfLight = 47807, // Helper->self, no cast, range 100 circle
-    _Ability_PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
-    _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
-    _Ability_AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
 
-    _Ability_FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+    // The cast starts
+    PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
+    FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+
+    AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
+    AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
+
+    // TODO these are spreads during the even tower sets
+    _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
     _Ability_FuturesEnd1 = 47830, // BossP2->players, no cast, range 5 circle
     _Ability_FuturesEnd2 = 47832, // 4C39->players, no cast, range 5 circle
-    _Ability_AllThingsEnding3 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
     _Ability_PastsEnd2 = 47833, // 4C39->players, no cast, range 5 circle
 }
 
