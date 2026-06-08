@@ -146,20 +146,55 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
             if (pair.role == TowerRole.Taker) {
                 // First set of towers (tower set odd)
                 if (currentTowerSet % 2 != 0) {
-                    // TODO most likely not needed anymore
-                    if (shapeA == Shape.None || shapeB == Shape.None || shapeA == shapeB)
-                    {
-                        continue;
+                    // Case: for the first set of towers no adjustment is needed between the Melee & Tank
+                    if (currentTowerSet == 1) {
+                        if (shapeA == Shape.Cone || shapeB == Shape.Cone) {
+                            swSoakers.Set(slotPlayer1);
+                            swSoakers.Set(slotPlayer2);
+                        }
+
+                        if (shapeA == Shape.Spread || shapeB == Shape.Spread) {
+                            seSoakers.Set(slotPlayer1);
+                            seSoakers.Set(slotPlayer2);
+                        }
                     }
 
-                    if (shapeA == Shape.Cone || shapeB == Shape.Cone) {
-                        swSoakers.Set(slotPlayer1);
-                        swSoakers.Set(slotPlayer2);
-                    }
+                    // Case: every odd tower beyond the first set, the Melee & Tank may need to adjust base on pair shapes
+                    if (currentTowerSet > 1) {
+                        Service.Logger.Info($"Tower set beyone 1 (odd set - 2nd)");
+                        // Cone and Spread are always forced
+                        if (shapeA == Shape.Cone) {
+                            swSoakers.Set(slotPlayer1);
+                        }
 
-                    if (shapeA == Shape.Spread || shapeB == Shape.Spread) {
-                        seSoakers.Set(slotPlayer1);
-                        seSoakers.Set(slotPlayer2);
+                        if (shapeB == Shape.Cone) {
+                            swSoakers.Set(slotPlayer2);
+                        }
+
+                        if (shapeA == Shape.Spread) {
+                            seSoakers.Set(slotPlayer1);
+                        }
+
+                        if (shapeB == Shape.Spread) {
+                            seSoakers.Set(slotPlayer2);
+                        }
+
+                        // If both of them are stacks, the melee & tank must swap
+                        if (shapeA == Shape.Stack && shapeB == Shape.Stack) {
+                            Service.Logger.Info($"Tower set beyone 1 (odd set - 2nd) - both stacks");
+                            // Supports
+                            if (pair.isSupport) {
+                                seSoakers.Set(slotPlayer1);
+                                swSoakers.Set(slotPlayer2);
+                            }
+
+                            // DPS
+                            if (pair.isSupport == false) {
+                                swSoakers.Set(slotPlayer1);
+                                seSoakers.Set(slotPlayer2);
+                            }
+
+                        }
                     }
                 }
 
@@ -255,7 +290,6 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
 
         var towardSW = (towers.CurrentSW.Value.Position - midpoint).Normalized();
         var towardSE = (towers.CurrentSE.Value.Position - midpoint).Normalized();
-        var leftRight = towardSW;
 
         // Case: SW players with different debuffs
         if (shapes.swSoakers[pcSlot]) {
