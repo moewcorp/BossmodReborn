@@ -666,62 +666,30 @@ class GravitationalWave(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-/*
-A1 MARK:
-A - [93.696, 93.692]
-1RIGHT - [94.219, 87.589]
-ALEFT - [87.173, 93.588]
-1 - [87.347, 87.392]
-
-B2 MARK:
-B - [106.246, 93.555]
-BRIGHT - [112.405, 93.744]
-2 - [112.704, 87.231]
-2LEFT - [106.611, 87.215]
-
-C3 MARK:
-C - [106.397, 106.515]
-3LEFT - [106.261, 112.634]
-3 - [112.631, 112.776]
-CRIGHT - [112.787, 106.504]
-
-D4 MARK:
-D - [93.761, 106.631]
-DLEFT - [87.566, 106.333]
-4 - [87.219, 112.880]
-4RIGHT - [93.390, 112.900]
-*/
-
 // TODO make it so after the first one has gone off it removes the circle of the first one
 // TODO make it so it leaves behind a puddle of the AOE
 // TODO allow different configures
 // TODO add support to allow different points of views for different players in the reply
 //      Not needed as it only helps with the development and testing, just need to expand the variables to list and store all players debuffs instead
-class TeleTrouncing(BossModule module) : BossComponent(module)
-{
+class TeleTrouncing(BossModule module) : BossComponent(module) {
     public int NumCasts = 0;
     private (Direction direction, DateTime activation)? Debuff1;
     private (Direction direction, DateTime activation)? Debuff2;
     private enum Direction { UP, DOWN, LEFT, RIGHT }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.TeleTrouncing1)
-        {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.TeleTrouncing1) {
             NumCasts++;
         }
     }
 
-    public override void OnStatusGain(Actor actor, ref ActorStatus status)
-    {
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
         var player = Raid.FindSlot(actor.InstanceID);
-        if (player is not (>= 0 and PartyState.PlayerSlot))
-        {
+        if (player is not (>= 0 and PartyState.PlayerSlot)) {
             return;
         }
 
-        Direction? dir = (SID)status.ID switch
-        {
+        Direction? dir = (SID)status.ID switch {
             SID.TelePortentUP or SID.TelePortentUP2 => Direction.UP,
             SID.TelePortentDOWN or SID.TelePortentDOWN2 => Direction.DOWN,
             SID.TelePortentLEFT or SID.TelePortentLEFT2 => Direction.LEFT,
@@ -729,59 +697,47 @@ class TeleTrouncing(BossModule module) : BossComponent(module)
             _ => null
         };
 
-        if (dir == null)
-        {
+        if (dir == null) {
             return;
         }
 
         var duration = (status.ExpireAt - WorldState.CurrentTime).TotalSeconds;
-        if (duration > 8)
-        {
+        if (duration > 8) {
             Debuff2 = (dir.Value, status.ExpireAt);
-        }
-        else
-        {
+        } else {
             Debuff1 = (dir.Value, status.ExpireAt);
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        if (NumCasts == 16)
-        {
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (NumCasts == 16) {
             return;
         }
 
-        if (Debuff1 == null || Debuff2 == null)
-        {
+        if (Debuff1 == null || Debuff2 == null) {
             return;
         }
 
         // Case 1: Both debuffs are in the same direction
-        if (Debuff1.Value.direction == Debuff2.Value.direction)
-        {
-            if (Debuff1.Value.direction == Direction.UP)
-            {
-                Arena.AddCircle(new WPos(112.631f, 112.776f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(112.787f, 106.504f), 1.0f, Colors.AOE, 2);
+        if (Debuff1.Value.direction == Debuff2.Value.direction) {
+            if (Debuff1.Value.direction == Direction.UP) { // C waymark
+                Arena.AddCircle(new WPos(111.989f, 112.003f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(112.125f, 106.306f), 1.0f, Colors.AOE, 2);
             }
 
-            if (Debuff1.Value.direction == Direction.DOWN)
-            {
-                Arena.AddCircle(new WPos(87.347f, 87.392f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(87.173f, 93.588f), 1.0f, Colors.AOE, 2);
+            if (Debuff1.Value.direction == Direction.DOWN) { // A waymark
+                Arena.AddCircle(new WPos(87.750f, 88.030f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(87.750f, 93.570f), 1.0f, Colors.AOE, 2);
             }
 
-            if (Debuff1.Value.direction == Direction.LEFT)
-            {
-                Arena.AddCircle(new WPos(112.704f, 87.231f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.611f, 87.215f), 1.0f, Colors.AOE, 2);
+            if (Debuff1.Value.direction == Direction.LEFT) { // B waymark
+                Arena.AddCircle(new WPos(112.135f, 87.993f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.579f, 87.922f), 1.0f, Colors.AOE, 2);
             }
 
-            if (Debuff1.Value.direction == Direction.RIGHT)
-            {
-                Arena.AddCircle(new WPos(87.219f, 112.880f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(93.390f, 112.900f), 1.0f, Colors.AOE, 2);
+            if (Debuff1.Value.direction == Direction.RIGHT) { // D waymark
+                Arena.AddCircle(new WPos(88.069f, 112.037f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(93.798f, 112.161f), 1.0f, Colors.AOE, 2);
             }
 
             return;
@@ -791,74 +747,55 @@ class TeleTrouncing(BossModule module) : BossComponent(module)
         var debuff1First = Debuff1.Value.activation <= Debuff2.Value.activation;
 
         if ((Debuff1.Value.direction == Direction.UP || Debuff1.Value.direction == Direction.LEFT) &&
-            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.LEFT))
-        {
+            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.LEFT)) {
 
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (upFirst)
-            {
-                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.AOE, 2);
-            }
-            else
-            {
-                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.AOE, 2);
+            if (upFirst) {
+                Arena.AddCircle(new WPos(93.781f, 93.593f), 1.0f, Colors.Safe, 2); // 1 waymark
+                Arena.AddCircle(new WPos(93.576f, 88.051f), 1.0f, Colors.AOE, 2); // non-waymark
+            } else {
+                Arena.AddCircle(new WPos(93.576f, 88.051f), 1.0f, Colors.Safe, 2); // non-waymark
+                Arena.AddCircle(new WPos(93.781f, 93.593f), 1.0f, Colors.AOE, 2); // 1 waymark
             }
         }
 
         if ((Debuff1.Value.direction == Direction.UP || Debuff1.Value.direction == Direction.RIGHT) &&
-            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.RIGHT))
-        {
-
+            (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.RIGHT)) {
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (upFirst)
-            {
-                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.AOE, 2);
-            }
-            else
-            {
-                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.AOE, 2);
+            if (upFirst) {
+                Arena.AddCircle(new WPos(111.955f, 93.877f), 1.0f, Colors.Safe, 2); // non-waymark
+                Arena.AddCircle(new WPos(106.422f, 93.756f), 1.0f, Colors.AOE, 2); // 2 waymark
+            } else {
+                Arena.AddCircle(new WPos(106.422f, 93.756f), 1.0f, Colors.Safe, 2); // 2 waymark
+                Arena.AddCircle(new WPos(111.955f, 93.877f), 1.0f, Colors.AOE, 2); // non-waymark
             }
         }
 
         if ((Debuff1.Value.direction == Direction.DOWN || Debuff1.Value.direction == Direction.LEFT) &&
-            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.LEFT))
-        {
-
+            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.LEFT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (downFirst)
-            {
-                Arena.AddCircle(new WPos(87.566f, 106.333f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(93.761f, 106.631f), 1.0f, Colors.AOE, 2);
-            }
-            else
-            {
-                Arena.AddCircle(new WPos(93.761f, 106.631f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(87.566f, 106.333f), 1.0f, Colors.AOE, 2);
+            if (downFirst) {
+                Arena.AddCircle(new WPos(88.103f, 106.377f), 1.0f, Colors.Safe, 2); // 4 non-waymark
+                Arena.AddCircle(new WPos(93.685f, 106.316f), 1.0f, Colors.AOE, 2); // 4 waymark
+            } else {
+                Arena.AddCircle(new WPos(93.685f, 106.316f), 1.0f, Colors.Safe, 2); // 4 waymark
+                Arena.AddCircle(new WPos(88.103f, 106.377f), 1.0f, Colors.AOE, 2); // 4 non-waymark
             }
         }
 
         if ((Debuff1.Value.direction == Direction.DOWN || Debuff1.Value.direction == Direction.RIGHT) &&
-            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.RIGHT))
-        {
-
+            (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.RIGHT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (downFirst)
-            {
-                Arena.AddCircle(new WPos(106.397f, 106.515f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.261f, 112.634f), 1.0f, Colors.AOE, 2);
-            }
-            else
-            {
-                Arena.AddCircle(new WPos(106.261f, 112.634f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.397f, 106.515f), 1.0f, Colors.AOE, 2);
+            if (downFirst) {
+                Arena.AddCircle(new WPos(106.413f, 106.444f), 1.0f, Colors.Safe, 2); // 3 waymark
+                Arena.AddCircle(new WPos(106.337f, 111.435f), 1.0f, Colors.AOE, 2); // 3 non-waymark
+            } else {
+                Arena.AddCircle(new WPos(106.337f, 111.435f), 1.0f, Colors.Safe, 2); // 3 non-waymark
+                Arena.AddCircle(new WPos(106.413f, 106.444f), 1.0f, Colors.AOE, 2); // 3 waymark
             }
         }
     }
