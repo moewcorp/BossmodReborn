@@ -69,10 +69,29 @@ public enum AID : uint
 
     Weaponskill2 = 50517, // Kefka->self, no cast, single-target
     LightOfJudgment2 = 47803, // Kefka->self, 5.0s cast, range 100 circle
+
+    // Phase 2
+    UltimateEmbrace = 49740, // BossP2->players, 5.0s cast, range 5 circle
+    Forsaken = 47804, // BossP2->self, 7.0s cast, range 100 circle
+
+    _Ability_ThePathOfLight = 47806, // Helper->self, no cast, range 4 circle
+    _Ability_Spellscatter = 47809, // Helper->player, no cast, range 5 circle
+    _Ability_Spelldriver = 47808, // Helper->player, no cast, range 5 circle
+    _Ability_Spellwave = 47810, // Helper->self, no cast, range 40 ?-degree cone
+
+    _Ability_TheRiverOfLight = 47807, // Helper->self, no cast, range 100 circle
+    _Ability_PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
+    _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
+    _Ability_AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
+
+    _Ability_FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+    _Ability_FuturesEnd1 = 47830, // BossP2->players, no cast, range 5 circle
+    _Ability_FuturesEnd2 = 47832, // 4C39->players, no cast, range 5 circle
+    _Ability_AllThingsEnding3 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
+    _Ability_PastsEnd2 = 47833, // 4C39->players, no cast, range 5 circle
 }
 
-public enum SID : uint
-{
+public enum SID : uint {
     DoubleTroubleTrap = 5078, // none->player, extra=0x0
     TelePortentRIGHT = 4878, // Helper->player, extra=0x0
     TelePortentUP = 4876, // Helper->player, extra=0x0
@@ -88,10 +107,14 @@ public enum SID : uint
     Confused = 1283, // _Gen_GravenImage->player, extra=0x0
     Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
     DamageDown = 2911, // Helper->player, extra=0x0
+
+    _Gen_SpellsTrouble = 5083, // none->player, extra=0x4/0x3
+    _Gen_1 = 5085, // none->player, extra=0x0
+    _Gen_2 = 5086, // none->player, extra=0x0
+    _Gen_3 = 5084, // none->player, extra=0x0
 }
 
-public enum IconID : uint
-{
+public enum IconID : uint {
     TankIcon = 218, // player->self
     spreadIcon = 127, // player->self // Spread
     stackIcon = 128, // player->self // Stack
@@ -101,10 +124,15 @@ public enum IconID : uint
     BlueRingBlueOrb = 676, // Kefka->self // Blue orb - 2A4
     PurpleRingQuestionMark = 677, // Kefka->self // Questionmark
     PurpleRingBlueOrb = 678, // Kefka->self // Blue orb
+
+    TowerStackIcon = 715, // player->self
+    TowerSpreadIcon = 716, // player->self
+    TowerConeIcon = 717, // player->self
+
+    _Gen_Icon_m0676trg_tw_d0t1p = 259, // player->self
 }
 
-public enum Animations : uint
-{
+public enum Animations : uint {
     PulseOrbStart = 4194432,
     PulseOrbEnd = 16777728,
     PuddleSoakReady = 1048608,

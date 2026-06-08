@@ -8,15 +8,25 @@ sealed class DMUStates : StateMachineBuilder {
         _module = module;
 
         SimplePhase(0, Phase1, "P1")
-            .Raw.Update = () => !Module.PrimaryActor.IsTargetable || Module.PrimaryActor.IsDeadOrDestroyed;
+            .Raw.Update = () => !_module.PrimaryActor.IsTargetable || _module.PrimaryActor.IsDeadOrDestroyed;
         SimplePhase(1, Phase2, "P2")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => Module.PrimaryActor.IsTargetable || (_module.BossP2()?.IsDestroyed ?? false);
+            // TODO this is some dumb way around it until I actually learn how to do it.
+            .Raw.Update = () =>
+            _module.BossP1()?.IsTargetable == true ||
+            (_module.BossP2()?.IsDeadOrDestroyed ?? (Module.StateMachine.TimeSincePhaseEnter > 10.0f && !_module.PrimaryActor.InCombat));
     }
 
-    private void Phase2(uint id) {
+    private void Phase2(uint id)
+    {
         ActorTargetable(id, _module.BossP2, true, 10.3f, "Boss appears")
-            .SetHint(StateMachine.StateHint.DowntimeEnd);
+            .SetHint(StateMachine.StateHint.DowntimeEnd)
+            .ActivateOnEnter<UltimateEmbrace>()
+            .ActivateOnEnter<Forsaken>()
+            .ActivateOnEnter<ForsakenShapes>()
+            .ActivateOnEnter<PathOfLight>()
+            .ActivateOnEnter<ForsakenSolverSet1>()
+            .ActivateOnEnter<ForsakenSolverSet2>();
 
         Timeout(id + 0xFF0000, 10000, "P2");
     }
@@ -120,6 +130,6 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<StackSpreadOrbs>()
             .DeactivateOnExit<Gaze>();
-        Targetable(id + 0x1000, false, 10.3f, "Boss disappears");
+        ActorCast(id + 0x1000, _module.BossP1, (uint)AID.LightOfJudgment2, 20.0f, 1.0f, true, "Enrage");
     }
 }

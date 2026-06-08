@@ -29,12 +29,9 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
     private Actor? bossP2;
     public Actor? BossP2() => bossP2;
 
-    protected override void UpdateModule() {
-        switch (StateMachine.ActivePhaseIndex) {
-            case 1:
-                bossP2 ??= GetActor((uint)OID.BossP2);
-                break;
-        }
+    protected override void UpdateModule()
+    {
+        bossP2 ??= Enemies((uint)OID.BossP2).FirstOrDefault();
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc) {
