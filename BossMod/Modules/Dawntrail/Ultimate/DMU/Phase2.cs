@@ -94,6 +94,10 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
                 towerSetLocked = true;
                 currentTowerSet++;
             }
+
+            if (currentTowerSet == 4 || currentTowerSet == 8) {
+                pairsSwapped = false;
+            }
         }
     }
 
@@ -130,7 +134,7 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
 
         SetupPairs(slots);
 
-        if (currentTowerSet == 4 && pairsSwapped == false) {
+        if ((currentTowerSet == 4 || currentTowerSet == 8) && pairsSwapped == false) {
             foreach (var pair in pairs) {
                 pair.role = pair.role switch {
                     TowerRole.Helper => TowerRole.Taker,
@@ -176,8 +180,7 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
 
                     // Case: every odd tower beyond the first set, the Melee & Tank may need to adjust base on pair shapes
                     if (currentTowerSet > 1) {
-                        Service.Logger.Info($"Tower set beyone 1 (odd set - 2nd)");
-                        // Cone and Spread are always forced
+                        // Cones and spreads are forced, where cone is always SW and spread is always SE
                         if (shapeA == Shape.Cone) {
                             swSoakers.Set(slotPlayer1);
                         }
@@ -194,21 +197,39 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
                             seSoakers.Set(slotPlayer2);
                         }
 
-                        // If both of them are stacks, the melee & tank must swap
-                        if (shapeA == Shape.Stack && shapeB == Shape.Stack) {
-                            Service.Logger.Info($"Tower set beyone 1 (odd set - 2nd) - both stacks");
-                            // Supports
+                        // If the pairs has the same shape, an adjustment is needed
+                        if (shapeA == shapeB) {
+                            // If supports are the same shape, MT/OT has to go to the SE tower
                             if (pair.isSupport) {
                                 seSoakers.Set(slotPlayer1);
                                 swSoakers.Set(slotPlayer2);
                             }
 
-                            // DPS
+                            // If dps are the same shape, M1/M2 goes to the SW tower
                             if (pair.isSupport == false) {
                                 swSoakers.Set(slotPlayer1);
                                 seSoakers.Set(slotPlayer2);
                             }
+                        } else { // Otherwise people just go to their default side
+                            if (pair.isSupport) {
+                                if (shapeA == Shape.Stack) {
+                                    swSoakers.Set(slotPlayer1);
+                                }
 
+                                if (shapeB == Shape.Stack) {
+                                    swSoakers.Set(slotPlayer2);
+                                }
+                            }
+
+                            if (pair.isSupport == false) {
+                                if (shapeA == Shape.Stack) {
+                                    seSoakers.Set(slotPlayer1);
+                                }
+
+                                if (shapeB == Shape.Stack) {
+                                    seSoakers.Set(slotPlayer2);
+                                }
+                            }
                         }
                     }
                 }
@@ -239,11 +260,6 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
                     }
                 }
             }
-        }
-
-        foreach (var pair in pairs)
-        {
-            Service.Logger.Info($"Pair {pair.player1Assignment} and {pair.player2Assignment} with shapes {shapes[slots[(int)pair.player1Assignment]]} and {shapes[slots[(int)pair.player2Assignment]]} is {(pair.role == TowerRole.Helper ? "Helper" : pair.role == TowerRole.Taker ? "Taker" : "Unknown")}");
         }
     }
 
@@ -290,7 +306,7 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
             return;
         }
 
-        if (shapes.swSoakers.None() || shapes.seSoakers.None() || towers.CurrentSW == null || towers.CurrentSE == null) {
+        if (towers.Towers.Count != 2 || shapes.swSoakers.None() || shapes.seSoakers.None() || towers.CurrentSW == null || towers.CurrentSE == null) {
             return;
         }
 
@@ -405,7 +421,7 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             return;
         }
 
-        if (shapes.swSoakers.None() || towers.CurrentSW == null || shapes.seSoakers.None() || towers.CurrentSE == null) {
+        if (towers.Towers.Count != 2 || shapes.swSoakers.None() || shapes.seSoakers.None() || towers.CurrentSW == null || towers.CurrentSE == null) {
             return;
         }
 
