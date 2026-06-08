@@ -803,8 +803,8 @@ class TeleTrouncing(BossModule module) : BossComponent(module)
             }
             else
             {
-                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.AOE, 2);
-                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(94.219f, 87.589f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(93.696f, 93.692f), 1.0f, Colors.AOE, 2);
             }
         }
 
@@ -816,13 +816,13 @@ class TeleTrouncing(BossModule module) : BossComponent(module)
 
             if (upFirst)
             {
-                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.AOE, 2);
+                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.AOE, 2);
             }
             else
             {
-                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.Safe, 2);
-                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.AOE, 2);
+                Arena.AddCircle(new WPos(106.246f, 93.555f), 1.0f, Colors.Safe, 2);
+                Arena.AddCircle(new WPos(112.405f, 93.744f), 1.0f, Colors.AOE, 2);
             }
         }
 
