@@ -61,7 +61,10 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
     public BitMask seSoakers;
     public BitMask supportHelpers;
     public BitMask dpsHelpers;
-    bool pairsLocked = false;
+
+    // TODO merge these together
+    public bool pairsLocked = false;
+    private bool pairsSwapped = false;
 
     public sealed class PairInfo {
         public PartyRolesConfig.Assignment player1Assignment;
@@ -126,6 +129,18 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
         }
 
         SetupPairs(slots);
+
+        if (currentTowerSet == 4 && pairsSwapped == false) {
+            foreach (var pair in pairs) {
+                pair.role = pair.role switch {
+                    TowerRole.Helper => TowerRole.Taker,
+                    TowerRole.Taker => TowerRole.Helper,
+                    _ => pair.role
+                };
+            }
+
+            pairsSwapped = true;
+        }
 
         foreach (var pair in pairs) {
             var slotPlayer1 = slots[(int)pair.player1Assignment];
@@ -408,14 +423,22 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
                 return;
             }
 
-            if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
+            if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Cone) {
+                Arena.AddCircle(swPosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
+            }
+
+            if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
+                Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
+            }
+
+            /*if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
                 Arena.AddCircle(swPosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT ||
                 assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
                 Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }
+            }*/
         }
 
         // Case: SW players with same debuffs (helpers)
@@ -447,14 +470,22 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
                 return;
             }
 
-            if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
+            if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Cone) {
+                Arena.AddCircle(sePosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
+            }
+
+            if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
+                Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
+            }
+
+            /*if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
                 Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT ||
                 assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
                 Arena.AddCircle(sePosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
-            }
+            }*/
         }
 
         // Case: SE players with same debuffs (helpers)
