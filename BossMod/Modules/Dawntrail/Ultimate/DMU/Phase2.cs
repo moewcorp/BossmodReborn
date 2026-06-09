@@ -394,6 +394,8 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
     private PathOfLight? towers = module.FindComponent<PathOfLight>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
+    public uint colourCircle = Colors.Safe;
+
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         if (shapes == null || towers == null) {
             return;
@@ -421,11 +423,11 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
             var shape = shapes.shapes[pcSlot];
 
             if (shape == ForsakenShapes.Shape.Stack) {
-                Arena.AddCircle(swPosition + (-towardSW * 0.5f) + (-newSouth * 1.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + (-towardSW * 0.5f) + (-newSouth * 1.0f), 1.0f, colourCircle, 2.0f);
             }
 
             if (shape == ForsakenShapes.Shape.Cone) {
-                Arena.AddCircle(swPosition + (newSouth * 3.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + (newSouth * 3.0f), 1.0f, colourCircle, 2.0f);
             }
         }
 
@@ -435,11 +437,11 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
             var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
             if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
-                Arena.AddCircle(swPosition + (newSouth * 4.5f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + (newSouth * 4.5f), 1.0f, colourCircle, 2.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT) {
-                Arena.AddCircle(swPosition + (-towardSW * 3.0f) + (-newSouth * 4.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + (-towardSW * 3.0f) + (-newSouth * 4.0f), 1.0f, colourCircle, 2.0f);
             }
         }
 
@@ -449,11 +451,11 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
             var shape = shapes.shapes[pcSlot];
 
             if (shape == ForsakenShapes.Shape.Stack) {
-                Arena.AddCircle(sePosition + (-towardSE * 2.5f) + (newSouth * 2.5f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + (-towardSE * 2.5f) + (newSouth * 2.5f), 1.0f, colourCircle, 2.0f);
             }
 
             if (shape == ForsakenShapes.Shape.Spread) {
-                Arena.AddCircle(sePosition + (towardSE * 2.0f) + (-newSouth * 3.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + (towardSE * 2.0f) + (-newSouth * 3.0f), 1.0f, colourCircle, 2.0f);
             }
         }
 
@@ -463,11 +465,11 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
             var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
             if (assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
-                Arena.AddCircle(sePosition + (-towardSE * 4.0f) + (newSouth * 3.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + (-towardSE * 4.0f) + (newSouth * 3.0f), 1.0f, colourCircle, 2.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
-                Arena.AddCircle(sePosition + (-towardSE * 4.0f) + (newSouth * 3.0f), 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + (-towardSE * 4.0f) + (newSouth * 3.0f), 1.0f, colourCircle, 2.0f);
             }
         }
     }
@@ -651,6 +653,7 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
         if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
             currentBait = _bait.None;
+            NumCasts++;
             clones.Clear();
         }
     }
@@ -680,7 +683,7 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
                 return;
             }
 
-            Arena.AddCircle(waymark.Value.ToWPos(), 1.0f, Colors.PlayerInteresting, 2.0f);
+            Arena.AddCircle(waymark.Value.ToWPos(), 1.0f, Colors.Safe, 2.0f);
             return;
         }
 
@@ -693,11 +696,11 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
         var newSouth = (midpoint - Arena.Center).Normalized();
 
         if (currentBait == _bait.Close) {
-            Arena.AddCircle(midpoint, 1.0f, Colors.PlayerInteresting, 2.0f);
+            Arena.AddCircle(midpoint, 1.0f, Colors.Safe, 2.0f);
         }
 
         if (currentBait == _bait.Far) {
-            Arena.AddCircle(midpoint - (newSouth * 10.0f), 1.0f, Colors.PlayerInteresting, 2.0f);
+            Arena.AddCircle(midpoint - (newSouth * 10.0f), 1.0f, Colors.Safe, 2.0f);
         }
     }
 

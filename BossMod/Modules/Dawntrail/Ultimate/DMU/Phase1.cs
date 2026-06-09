@@ -239,8 +239,7 @@ class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID is ((uint)AID.BlizzardIIIBlowout) or
-            ((uint)AID.BlizzardIIIBlowout1) or
+        if (spell.Action.ID is ((uint)AID.BlizzardIIIBlowout) or ((uint)AID.BlizzardIIIBlowout1) or
             ((uint)AID.BlizzardIIIBlowout2))
         {
             NumCasts++;
