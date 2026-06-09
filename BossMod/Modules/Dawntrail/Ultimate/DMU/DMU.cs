@@ -23,7 +23,7 @@ class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint
 public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 100f), new ArenaBoundsCircle(20f)) {
     public override bool ShouldPrioritizeAllEnemies => true;
 
-    private Actor? bossP1;
+    //private Actor? bossP1;
     public Actor? BossP1() => PrimaryActor;
 
     private Actor? bossP2;

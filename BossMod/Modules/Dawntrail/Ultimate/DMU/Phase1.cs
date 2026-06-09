@@ -475,7 +475,6 @@ class HyperDrive(BossModule module) : Components.GenericBaitAway(module, (uint)A
     }
 }
 
-// TODO party config settings for display of green circles for stacks & spreads
 class Gravitas(BossModule module) : Components.UniformStackSpread(module, 5, 5, 4, 4) {
     private readonly List<Spread> spreadsIncoming = [];
     private int totalStacks = 0;
@@ -843,9 +842,9 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
             if (downFirst) {
                 hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
-                hints.Add(new WPos(106.337f, 111.435f)); // 3 non-waymark
+                hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
             } else {
-                hints.Add(new WPos(106.337f, 111.435f)); // 3 non-waymark
+                hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
                 hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
             }
         }
@@ -897,80 +896,75 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     }
 }
 
-/*
-Marker middle A - [89.393, 89.193]
-Hitbox of A - [96.019, 96.796]
+class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5, 5, 1, 1) {
+    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
-Marker middle B - [110.024, 89.869]
-Hitbox of B - [103.378, 95.483]
-
-Marker middle C - [109.500, 109.772]
-Hitbox of C - [104.167, 103.239]
-
-Markers middle D - [89.765, 110.050]
-Hitbox of D - [96.912, 104.158]
- */
-class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5, 5, 1, 1)
-{
-    public override void OnTethered(Actor source, in ActorTetherInfo tether)
-    {
-        if (tether.ID != (uint)TetherID.GravenImageTether)
-        {
+    public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID != (uint)TetherID.GravenImageTether) {
             return;
         }
 
         var target = WorldState.Actors.Find(tether.Target);
-        if (target == null)
-        {
+        if (target == null) {
             return;
         }
 
-        if (source.Position.AlmostEqual(new(107.000f, 43.000f), 5))
-        {
+        if (source.Position.AlmostEqual(new(107.000f, 43.000f), 5)) {
             AddSpread(target, WorldState.FutureTime(6.5f));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.IdyllicWill)
-        {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.IdyllicWill) {
             Spreads.Clear();
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (pc.Class.GetRole() == Role.Tank)
-        {
-            Arena.AddCircle(new WPos(96.019f, 89.193f), 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(new WPos(103.378f, 95.483f), 1.0f, Colors.Safe, 2);
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length == 0) {
+            return;
         }
 
-        if (pc.Class.GetRole() == Role.Healer)
-        {
-            Arena.AddCircle(new WPos(109.500f, 109.772f), 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(new WPos(89.765f, 110.050f), 1.0f, Colors.Safe, 2);
+        var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+
+        if (assignment == PartyRolesConfig.Assignment.MT) {
+            Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
         }
 
-        if (pc.Class.GetRole() == Role.Melee)
-        {
-            Arena.AddCircle(new WPos(104.167f, 103.239f), 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(new WPos(96.912f, 104.158f), 1.0f, Colors.Safe, 2);
+        if (assignment == PartyRolesConfig.Assignment.OT) {
+            Arena.AddCircle(new WPos(104.000f, 93.636f), 1.0f, Colors.Safe, 2);
         }
 
-        if (pc.Class.GetRole() == Role.Ranged)
-        {
-            Arena.AddCircle(new WPos(89.393f, 89.193f), 1.0f, Colors.Safe, 2);
-            Arena.AddCircle(new WPos(110.024f, 89.869f), 1.0f, Colors.Safe, 2);
+        if (assignment == PartyRolesConfig.Assignment.H1) {
+            Arena.AddCircle(new WPos(90.500f, 106.364f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.H2) {
+            Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.M1) {
+            Arena.AddCircle(new WPos(96.500f, 106.364f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.M2) {
+            Arena.AddCircle(new WPos(106.364f, 104.000f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.R1) {
+            Arena.AddCircle(new WPos(93.636f, 91.000f), 1.0f, Colors.Safe, 2);
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.R2) {
+            Arena.AddCircle(new WPos(109.500f, 93.636f), 1.0f, Colors.Safe, 2);
         }
     }
 }
 
-class Gaze(BossModule module) : Components.GenericGaze(module)
-{
+class Gaze(BossModule module) : Components.GenericGaze(module) {
     private Actor? eye;
     private bool inverted = false;
     private readonly List<Eye> eyeAoe = [];
