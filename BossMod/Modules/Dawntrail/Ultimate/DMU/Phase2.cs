@@ -1,22 +1,5 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
-// Past's End - Bait between midpoint of towers below a little
-// Future's End - bait cast max meel always from towers
-
-/*
-        // TODO use these values so the bait doesn't show during tower set 2 confusing people
-     _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
-    _Ability_FuturesEnd1 = 47830, // BossP2->players, no cast, range 5 circle
-    _Ability_FuturesEnd2 = 47832, // 4C39->players, no cast, range 5 circle
-    _Ability_PastsEnd2 = 47833, // 4C39->players, no cast, range 5 circle
-
-     PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
-    FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
-
-    AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
-    AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
- */
-
 class UltimateEmbrace(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.UltimateEmbrace, 5.0f);
 
 class Forsaken(BossModule module) : Components.RaidwideCast(module, (uint)AID.Forsaken);
@@ -312,6 +295,99 @@ class ForsakenShapes(BossModule module) : BossComponent(module) {
     }
 }
 
+class ForsakenBaitsSpreadStacks(BossModule module) : Components.UniformStackSpread(module, 5, 5, 3) {
+    private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
+    private PathOfLight? towers = module.FindComponent<PathOfLight>();
+
+    public override void Update() {
+        if (towers == null || shapes == null) {
+            return;
+        }
+
+        Stacks.Clear();
+        Spreads.Clear();
+
+        foreach (var (i, player) in Raid.WithSlot()) {
+            if (towers.Towers.Any(t => player.Position.InCircle(t.Position, 4.00f))) {
+                if (shapes.shapes[i] == ForsakenShapes.Shape.Stack) {
+                    AddStack(player);
+                }
+
+                if (shapes.shapes[i] == ForsakenShapes.Shape.Spread) {
+                    AddSpread(player);
+                }
+            }
+        }
+    }
+}
+
+class ForsakenBaitsCone(BossModule module) : Components.GenericBaitAway(module, (uint)AID.Spellwave) {
+    private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
+    private PathOfLight? towers = module.FindComponent<PathOfLight>();
+
+    public override void Update() {
+        if (towers == null || shapes == null) {
+            return;
+        }
+
+        CurrentBaits.Clear();
+
+        foreach (var (i, player) in Raid.WithSlot()) {
+            if (towers.Towers.Any(t => player.Position.InCircle(t.Position, 4.00f))) {
+                if (shapes.shapes[i] == ForsakenShapes.Shape.Cone) {
+                    var closestPlayer = Raid.WithoutSlot().Exclude(player).Closest(player.Position);
+                    if (closestPlayer != null) {
+                        CurrentBaits.Add(new(player, closestPlayer, new AOEShapeCone(40, 45.Degrees())));
+                    }
+                }
+            }
+        }
+    }
+}
+
+class ForsakenBaitsBossClones(BossModule module) : Components.UniformStackSpread(module, 5, 5) {
+    private List<Actor> clones = new List<Actor>(); // Also includes the boss since he will cast the same spell
+    private List<Actor> baiters = new List<Actor>(); // List of players currently baiting - prevents dupes
+    private int NumCasts = 0;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.FuturesEnd || spell.Action.ID == (uint)AID.PastsEnd) {
+            foreach (var actor in WorldState.Actors) {
+                if (actor.OID == (uint)OID.BossP2 || actor.OID == (uint)OID.P2KefkaHelpers) {
+                    clones.Add(actor);
+                }
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.PastsEndSpread || spell.Action.ID == (uint)AID.PastsEndSpread1 ||
+            spell.Action.ID == (uint)AID.FuturesEndSpread || spell.Action.ID == (uint)AID.FuturesEndSpread1) {
+            NumCasts++;
+
+            if (NumCasts == 4) {
+                clones.Clear();
+                NumCasts = 0;
+            }
+        }
+    }
+
+    public override void Update() {
+        Spreads.Clear();
+        baiters.Clear();
+
+        if (clones.Count == 0) {
+            return;
+        }
+
+        foreach (var clone in clones) {
+            var baiter = Raid.WithoutSlot().Where(p => !baiters.Contains(p)).SortedByRange(clone.Position).Take(1).First();
+            baiters.Add(baiter);
+            AddSpread(baiter);
+        }
+    }
+}
+
 // Used for odd tower sets in figuring out what each player is responsible for
 class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
     private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
@@ -580,8 +656,8 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID._Ability_PastsEnd1 || spell.Action.ID == (uint)AID._Ability_PastsEnd2 ||
-            spell.Action.ID == (uint)AID._Ability_FuturesEnd1 || spell.Action.ID == (uint)AID._Ability_FuturesEnd2) {
+        if (spell.Action.ID == (uint)AID.PastsEndSpread || spell.Action.ID == (uint)AID.PastsEndSpread1 ||
+            spell.Action.ID == (uint)AID.FuturesEndSpread || spell.Action.ID == (uint)AID.FuturesEndSpread1) {
             clones.Add((caster, spell.MainTargetID));
         }
     }

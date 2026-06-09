@@ -27,7 +27,10 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<PathOfLight>()
             .ActivateOnEnter<ForsakenSolverSet1>()
             .ActivateOnEnter<ForsakenSolverSet2>()
-            .ActivateOnEnter<AllThingsEnding>();
+            .ActivateOnEnter<AllThingsEnding>()
+            .ActivateOnEnter<ForsakenBaitsSpreadStacks>()
+            .ActivateOnEnter<ForsakenBaitsCone>()
+            .ActivateOnEnter<ForsakenBaitsBossClones>();
 
         Timeout(id + 0xFF0000, 10000, "P2");
     }

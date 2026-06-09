@@ -1,7 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
-public enum OID : uint
-{
+public enum OID : uint {
     Kefka = 0x4C30, // R6.000, x1
     Helper = 0x233C, // R0.500, x37, Helper type
     GravenImage = 0x4C31, // R0.500, x9
@@ -17,10 +16,10 @@ public enum OID : uint
     PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
 
     BossP2 = 0x4C32,
+    P2KefkaHelpers = 0x4C39, // R3.500, x0 (spawn during fight)
 }
 
-public enum AID : uint
-{
+public enum AID : uint {
     AutoAttack = 49746, // Kefka->player, no cast, single-target
     Ability = 50173, // Kefka->location, no cast, single-target
 
@@ -74,25 +73,21 @@ public enum AID : uint
     UltimateEmbrace = 49740, // BossP2->players, 5.0s cast, range 5 circle
     Forsaken = 47804, // BossP2->self, 7.0s cast, range 100 circle
     ThePathOfLight = 47806, // Helper->self, no cast, range 4 circle
+    TheRiverOfLight = 47807, // Helper->self, no cast, range 100 circle
 
-    _Ability_Spellscatter = 47809, // Helper->player, no cast, range 5 circle
-    _Ability_Spelldriver = 47808, // Helper->player, no cast, range 5 circle
-    _Ability_Spellwave = 47810, // Helper->self, no cast, range 40 ?-degree cone
+    Spellscatter = 47809, // Helper->player, no cast, range 5 circle
+    Spelldriver = 47808, // Helper->player, no cast, range 5 circle
+    Spellwave = 47810, // Helper->self, no cast, range 40 ?-degree cone
 
-    _Ability_TheRiverOfLight = 47807, // Helper->self, no cast, range 100 circle
-
-    // The cast starts
     PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
     FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+    FuturesEndSpread = 47830, // BossP2->players, no cast, range 5 circle
+    FuturesEndSpread1 = 47832, // 4C39->players, no cast, range 5 circle
+    PastsEndSpread = 47831, // BossP2->player, no cast, range 5 circle
+    PastsEndSpread1 = 47833, // 4C39->players, no cast, range 5 circle
 
     AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
     AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
-
-    // TODO these are spreads during the even tower sets
-    _Ability_PastsEnd1 = 47831, // BossP2->player, no cast, range 5 circle
-    _Ability_FuturesEnd1 = 47830, // BossP2->players, no cast, range 5 circle
-    _Ability_FuturesEnd2 = 47832, // 4C39->players, no cast, range 5 circle
-    _Ability_PastsEnd2 = 47833, // 4C39->players, no cast, range 5 circle
 }
 
 public enum SID : uint {
@@ -145,7 +140,6 @@ public enum Animations : uint {
     EyeEnd = 16777728,
 }
 
-public enum TetherID : uint
-{
+public enum TetherID : uint {
     GravenImageTether = 45, // 4C31->player
 }
