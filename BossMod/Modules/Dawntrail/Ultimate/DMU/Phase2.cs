@@ -700,11 +700,11 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
         var newSouth = (midpoint - Arena.Center).Normalized();
 
         if (currentBait == _bait.Close) {
-            Arena.AddCircle(midpoint, 1.0f, Colors.Safe, 2.0f);
+            Arena.AddCircle(midpoint + (newSouth * 1.5f), 1.0f, Colors.Safe, 2.0f);
         }
 
         if (currentBait == _bait.Far) {
-            Arena.AddCircle(midpoint - (newSouth * 10.0f), 1.0f, Colors.Safe, 2.0f);
+            Arena.AddCircle(midpoint - (newSouth * 12.0f), 1.0f, Colors.Safe, 2.0f);
         }
     }
 
