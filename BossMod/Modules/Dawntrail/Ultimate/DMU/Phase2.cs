@@ -539,11 +539,11 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Cone) {
-                Arena.AddCircle(swPosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + toCenter.Normalized() * 3.5f, 0.75f, Colors.Safe, 1.0f);
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
-                Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
             }
         }
 
@@ -558,11 +558,11 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
-                Arena.AddCircle(swPosition + toCenter.Rotate(90f.Degrees()).Normalized() * 4.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + toCenter.Rotate(90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT) {
-                Arena.AddCircle(swPosition + toCenter.Rotate(35f.Degrees()).Normalized() * 9.8f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(swPosition + toCenter.Rotate(35.0f.Degrees()).Normalized() * 11.5f, 0.75f, Colors.Safe, 1.0f);
             }
         }
 
@@ -577,11 +577,11 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Cone) {
-                Arena.AddCircle(sePosition + toCenter.Normalized() * 3.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + toCenter.Normalized() * 3.5f, 0.75f, Colors.Safe, 1.0f);
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
-                Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
             }
         }
 
@@ -596,11 +596,11 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
-                Arena.AddCircle(sePosition + toCenter.Rotate(-90f.Degrees()).Normalized() * 4.5f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + toCenter.Rotate(-90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
             }
 
             if (assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
-                Arena.AddCircle(sePosition + toCenter.Rotate(-35f.Degrees()).Normalized() * 9.8f, 1.0f, Colors.Safe, 2.0f);
+                Arena.AddCircle(sePosition + toCenter.Rotate(-35.0f.Degrees()).Normalized() * 11.5f, 0.75f, Colors.Safe, 1.0f);
             }
         }
     }
@@ -726,5 +726,24 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
         }
 
         return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+class Trine(BossModule module) : BossComponent(module)
+{
+    // TODO
+
+    public override void OnActorCreated(Actor actor)
+    {
+        Service.Logger.Info("ACTOR CREATED: " + actor.OID);
+    }
+
+    public override void OnMapEffect(byte index, uint state)
+    {
+        Service.Logger.Info("MAP EFFECT: " + index + " state: " + state);
+    }
+
+    public override void OnEventVFX(Actor actor, uint vfxID, ulong targetID) {
+        Service.Logger.Info("EVENT VFX: actor: " + actor.OID + " vfx: " + vfxID + " target: " + targetID);
     }
 }
