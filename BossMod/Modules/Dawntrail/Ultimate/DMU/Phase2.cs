@@ -381,7 +381,11 @@ class ForsakenBaitsBossClones(BossModule module) : Components.UniformStackSpread
         }
 
         foreach (var clone in clones) {
-            var baiter = Raid.WithoutSlot().Where(p => !baiters.Contains(p)).SortedByRange(clone.Position).Take(1).First();
+            var baiter = Raid.WithoutSlot().Where(p => !baiters.Contains(p)).SortedByRange(clone.Position).Take(1).FirstOrDefault();
+            if (baiter == null) {
+                continue;
+            }
+
             baiters.Add(baiter);
             AddSpread(baiter);
         }
