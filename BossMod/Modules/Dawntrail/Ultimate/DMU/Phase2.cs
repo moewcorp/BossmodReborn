@@ -514,6 +514,7 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
     private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
     private PathOfLight? towers = module.FindComponent<PathOfLight>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         if (shapes == null || towers == null) {
@@ -543,7 +544,13 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
-                Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_Markerless) {
+                    Arena.AddCircle(swPosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
+                }
+
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_DN_ZENITH_Markers) {
+                    Arena.AddCircle(swPosition + (-toCenter).Rotate(34f.Degrees()).Normalized() * 3.57f, 0.75f, Colors.Safe, 1.0f);
+                }
             }
         }
 
@@ -558,7 +565,13 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (assignment == PartyRolesConfig.Assignment.H1 || assignment == PartyRolesConfig.Assignment.H2) {
-                Arena.AddCircle(swPosition + toCenter.Rotate(90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_Markerless) {
+                    Arena.AddCircle(swPosition + toCenter.Rotate(90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
+                }
+
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_DN_ZENITH_Markers) {
+                    Arena.AddCircle(swPosition + toCenter.Rotate(82f.Degrees()).Normalized() * 7.07f, 0.75f, Colors.Safe, 1.0f);
+                }
             }
 
             if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.OT) {
@@ -581,7 +594,13 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (shapes.shapes[pcSlot] == ForsakenShapes.Shape.Spread) {
-                Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_Markerless) {
+                    Arena.AddCircle(sePosition + (-toCenter.Normalized()) * 3.5f, 0.75f, Colors.Safe, 1.0f);
+                }
+
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_DN_ZENITH_Markers) {
+                    Arena.AddCircle(sePosition + (-toCenter).Rotate(-26f.Degrees()).Normalized() * 3.6f, 0.75f, Colors.Safe, 1.0f);
+                }
             }
         }
 
@@ -596,7 +615,13 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
             }
 
             if (assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
-                Arena.AddCircle(sePosition + toCenter.Rotate(-90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_Markerless) {
+                    Arena.AddCircle(sePosition + toCenter.Rotate(-90f.Degrees()).Normalized() * 4.5f, 0.75f, Colors.Safe, 1.0f);
+                }
+
+                if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_DN_ZENITH_Markers) {
+                    Arena.AddCircle(sePosition + toCenter.Rotate(-82f.Degrees()).Normalized() * 7.07f, 0.75f, Colors.Safe, 1.0f);
+                }
             }
 
             if (assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {

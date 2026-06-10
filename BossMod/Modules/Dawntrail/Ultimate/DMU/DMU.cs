@@ -4,7 +4,7 @@ class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(DMUStates),
-    ConfigType = null, // replace null with typeof(KefkaConfig) if applicable
+    ConfigType = typeof(DMUConfig),
     ObjectIDType = typeof(OID),
     ActionIDType = typeof(AID),
     StatusIDType = typeof(SID),
