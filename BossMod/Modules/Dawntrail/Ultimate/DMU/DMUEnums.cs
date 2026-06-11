@@ -90,7 +90,7 @@ public enum AID : uint {
     AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
     AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
 
-    LightOfJudgment1 = 47805, // BossP2->self, 5.0s cast, range 100 circle
+    LightOfJudgmentP2 = 47805, // BossP2->self, 5.0s cast, range 100 circle
 
     Trine = 47839, // BossP2->self, 3.0s cast, single-target
     Trine1 = 47840, // Helper->self, no cast, range 6 circle

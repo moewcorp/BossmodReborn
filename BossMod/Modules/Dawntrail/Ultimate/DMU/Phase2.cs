@@ -4,6 +4,8 @@ class UltimateEmbrace(BossModule module) : Components.CastSharedTankbuster(modul
 
 class Forsaken(BossModule module) : Components.RaidwideCast(module, (uint)AID.Forsaken);
 
+class LightOfJudgmentP2(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightOfJudgmentP2);
+
 // Used for towers' spawn locations and marking them as SW or SE depending on the spawn point.
 class PathOfLight(BossModule module) : Components.GenericTowers(module, (uint)AID.ThePathOfLight) {
     public Tower? CurrentSW;
@@ -661,12 +663,14 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
     }
 }
 
-// TODO figure out why we have to bait like this to improve hints - do we have to use cone to hit towers or not to active something?
+// TODO baiters list is most likely not needed, the same person can most likely bait all 4
 class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AllThingsEnding, new AOEShapeCone(100, 25.Degrees())) {
     private List<AOEInstance> aoes = [];
     private List<(Actor clone, ulong target)> clones = [];
+    private List<Actor> baiters = new List<Actor>();
     private enum _bait { None, Far, Close }
     private _bait currentBait = _bait.None;
+    private bool aoesLocked = false;
 
     private PathOfLight? towers = module.FindComponent<PathOfLight>();
     private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
@@ -681,9 +685,8 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
         }
 
         if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
-            currentBait = _bait.None;
+            aoesLocked = true;
             NumCasts++;
-            clones.Clear();
         }
     }
 
@@ -692,10 +695,45 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
             spell.Action.ID == (uint)AID.FuturesEndSpread || spell.Action.ID == (uint)AID.FuturesEndSpread1) {
             clones.Add((caster, spell.MainTargetID));
         }
+
+        if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
+            NumCasts++;
+            aoes.Clear();
+            baiters.Clear();
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        if (aoesLocked == true) {
+            return CollectionsMarshal.AsSpan(aoes);
+        }
+
+        aoes.Clear();
+        baiters.Clear();
+
+        foreach (var (clone, target) in clones) {
+            var baiter = Raid.WithoutSlot().Where(p => !baiters.Contains(p)).SortedByRange(clone.Position).Take(1).FirstOrDefault();
+            if (baiter == null) {
+                continue;
+            }
+
+            baiters.Add(baiter);
+            var direction = clone.AngleTo(baiter);
+            if (currentBait == _bait.Close) {
+                direction = direction + 180.Degrees();
+            }
+            aoes.Add(new(new AOEShapeCone(100, 90.Degrees()), clone.Position, direction));
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
+
+        if (aoesLocked == true) {
+            return;
+        }
 
         if (towers == null || shapes == null) {
             return;
@@ -732,26 +770,6 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
             Arena.AddCircle(midpoint - (newSouth * 12.0f), 1.0f, Colors.Safe, 2.0f);
         }
     }
-
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
-        aoes.Clear();
-
-        if (clones.Count == 0) {
-            return CollectionsMarshal.AsSpan(aoes);
-        }
-
-        foreach (var (clone, target) in clones) {
-            var player = WorldState.Actors.Find(target);
-            if (player == null) {
-                continue;
-            }
-
-            var direction = clone.AngleTo(player);
-            aoes.Add(new(new AOEShapeCone(100, 20.Degrees()), clone.Position, direction));
-        }
-
-        return CollectionsMarshal.AsSpan(aoes);
-    }
 }
 
 class WingsOfDestructionLeftRight(BossModule module) : Components.SimpleAOEGroups(module,
@@ -769,6 +787,7 @@ class WingsOfDestructionTB(BossModule module) : Components.GenericBaitAway(modul
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.WingsOfDestructionTB1) {
             casterPosition = null;
+            NumCasts++;
         }
     }
 

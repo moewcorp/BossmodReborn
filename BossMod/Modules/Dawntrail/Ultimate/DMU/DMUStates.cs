@@ -44,11 +44,13 @@ sealed class DMUStates : StateMachineBuilder {
 
         // Clones baits
         ComponentCondition<AllThingsEnding>(id + 0x50, 5.7f, o => o.NumCasts > 0, "Boss/Clones baits")
-            .DeactivateOnExit<AllThingsEnding>()
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
+        ComponentCondition<AllThingsEnding>(id + 0x55, 5.0f, o => o.NumCasts > 4, "Boss/Clones baits Resolve")
+            .DeactivateOnExit<AllThingsEnding>();
+
         // Tower set 3
-        ComponentCondition<ForsakenShapes>(id + 0x60, 5.4f, o => o.currentTowerSet > 3, "3rd Tower Set")
+        ComponentCondition<ForsakenShapes>(id + 0x60, 0.4f, o => o.currentTowerSet > 3, "3rd Tower Set")
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
@@ -60,12 +62,14 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<AllThingsEnding>();
 
         // Clones baits
-        ComponentCondition<AllThingsEnding>(id + 0x80, 5.7f, o => o.NumCasts > 1, "Boss/Clones baits")
-            .DeactivateOnExit<AllThingsEnding>()
+        ComponentCondition<AllThingsEnding>(id + 0x80, 5.7f, o => o.NumCasts > 0, "Boss/Clones baits")
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
+        ComponentCondition<AllThingsEnding>(id + 0x85, 5.0f, o => o.NumCasts > 4, "Boss/Clones baits Resolve")
+            .DeactivateOnExit<AllThingsEnding>();
+
         // Tower set 5
-        ComponentCondition<ForsakenShapes>(id + 0x90, 5.4f, o => o.currentTowerSet > 5, "5th Tower Set")
+        ComponentCondition<ForsakenShapes>(id + 0x90, 0.4f, o => o.currentTowerSet > 5, "5th Tower Set")
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
@@ -77,12 +81,14 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<AllThingsEnding>();
 
         // Clones baits
-        ComponentCondition<AllThingsEnding>(id + 0x110, 5.7f, o => o.NumCasts > 3, "Boss/Clones baits")
-            .DeactivateOnExit<AllThingsEnding>()
+        ComponentCondition<AllThingsEnding>(id + 0x110, 5.7f, o => o.NumCasts > 0, "Boss/Clones baits")
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
+        ComponentCondition<AllThingsEnding>(id + 0x115, 5.0f, o => o.NumCasts > 4, "Boss/Clones baits Resolve")
+            .DeactivateOnExit<AllThingsEnding>();
+
         // Tower set 7
-        ComponentCondition<ForsakenShapes>(id + 0x120, 5.4f, o => o.currentTowerSet > 7, "7th Tower Set")
+        ComponentCondition<ForsakenShapes>(id + 0x120, 0.4f, o => o.currentTowerSet > 7, "7th Tower Set")
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
@@ -92,15 +98,36 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<AllThingsEnding>();
 
         // Clones baits
-        ComponentCondition<AllThingsEnding>(id + 0x140, 8.7f, o => o.NumCasts > 4, "Boss/Clones baits")
+        ComponentCondition<AllThingsEnding>(id + 0x140, 5.4f, o => o.NumCasts > 0, "Boss/Clones baits");
+
+        ComponentCondition<AllThingsEnding>(id + 0x145, 5.0f, o => o.NumCasts > 7, "Boss/Clones baits Resolve")
             .DeactivateOnExit<ForsakenShapes>()
             .DeactivateOnExit<ForsakenBaitsSpreadStacks>()
             .DeactivateOnExit<ForsakenBaitsCone>()
             .DeactivateOnExit<ForsakenBaitsBossClones>()
-            .DeactivateOnExit<AllThingsEnding>()
-            .ActivateOnEnter<Trine>()
+            .DeactivateOnExit<AllThingsEnding>();
+
+        ActorCast(id + 0x150, _module.BossP2, (uint)AID.LightOfJudgmentP2, 4.1f, 5.0f, true, "Raidwide")
+            .ActivateOnEnter<LightOfJudgmentP2>()
+            .DeactivateOnExit<LightOfJudgmentP2>();
+
+        ActorCast(id + 0x160, _module.BossP2, (uint)AID.Trine, 8.2f, 3.0f, true, "Trine")
+            .ActivateOnEnter<Trine>();
+
+        ActorCastMulti(id + 0x170, _module.BossP2, [(uint)AID.WingsOfDestructionLeft, (uint)AID.WingsOfDestructionRight], 3.1f, 4.0f, true, "Left / Right")
             .ActivateOnEnter<WingsOfDestructionLeftRight>()
+            .DeactivateOnExit<WingsOfDestructionLeftRight>();
+        ComponentCondition<Trine>(id + 0x180, 5.7f, o => o.NumCasts == 10, "Trine 1 Explosions");
+        ActorCastStart(id + 0x190, _module.BossP2, (uint)AID.WingsOfDestructionTB, 0.6f, true)
             .ActivateOnEnter<WingsOfDestructionTB>();
+        ComponentCondition<Trine>(id + 0x200, 1.5f, o => o.NumCasts == 13, "Trine 2 Explosions");
+        ComponentCondition<Trine>(id + 0x210, 2.0f, o => o.NumCasts == 22, "Trine 3 Explosions")
+            .DeactivateOnExit<Trine>();
+        ComponentCondition<WingsOfDestructionTB>(id + 0x220, 0.6f, o => o.NumCasts > 0, "Tankbuster")
+            .DeactivateOnExit<WingsOfDestructionTB>();
+        ActorCast(id + 0x220, _module.BossP2, (uint)AID.UltimateEmbrace, 2.0f, 5.0f, true, "Tankbuster")
+            .ActivateOnEnter<UltimateEmbrace>()
+            .DeactivateOnExit<UltimateEmbrace>();
 
         Timeout(id + 0xFF0000, 10000, "???");
     }
