@@ -757,21 +757,78 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
 class WingsOfDestructionLeftRight(BossModule module) : Components.SimpleAOEGroups(module,
     [(uint)AID.WingsOfDestructionLeft, (uint)AID.WingsOfDestructionRight], new AOEShapeRect(80, 20));
 
-class Trine(BossModule module) : BossComponent(module)
-{
-    // TODO
+class WingsOfDestructionTB(BossModule module) : Components.GenericBaitAway(module, (uint)AID.WingsOfDestructionTB, true, true) {
+    private Actor? casterPosition;
 
-    public override void OnActorCreated(Actor actor)
-    {
-        Service.Logger.Info("ACTOR CREATED: " + actor.OID);
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.WingsOfDestructionTB) {
+            casterPosition = caster;
+        }
     }
 
-    public override void OnMapEffect(byte index, uint state)
-    {
-        Service.Logger.Info("MAP EFFECT: " + index + " state: " + state);
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.WingsOfDestructionTB1) {
+            casterPosition = null;
+        }
     }
 
-    public override void OnEventVFX(Actor actor, uint vfxID, ulong targetID) {
-        Service.Logger.Info("EVENT VFX: actor: " + actor.OID + " vfx: " + vfxID + " target: " + targetID);
+    public override void Update() {
+        CurrentBaits.Clear();
+
+        if (casterPosition == null) {
+            return;
+        }
+
+        var players = Raid.WithoutSlot().SortedByRange(casterPosition.Position).ToList();
+        if (players.Count > 1) {
+            CurrentBaits.Add(new(casterPosition, players[0], new AOEShapeCircle(7)));
+            CurrentBaits.Add(new(casterPosition, players[^1], new AOEShapeCircle(7)));
+        }
+    }
+}
+
+class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine) {
+    private List<AOEInstance> aoes = [];
+    private float radius = 10 * MathF.Sqrt(3) / 3;
+
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.YellowTriangle) {
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(radius, 0f)));
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(-radius / 2, 5f)));
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(-radius / 2, -5f)));
+        }
+
+        if (actor.OID == (uint)OID.YellowTriangle1) {
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(-radius, 0f)));
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(radius / 2, 5f)));
+            aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(radius / 2, -5f)));
+        }
+    }
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if (actor.OID == (uint)OID.YellowTriangle || actor.OID == (uint)OID.YellowTriangle1) {
+            if (state == (uint)Animations.TriangleExplosion) {
+                aoes.RemoveRange(0, 3);
+                NumCasts = NumCasts + 3;
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        if (aoes.Count == 0) {
+            return CollectionsMarshal.AsSpan(aoes);
+        }
+
+        int wave = NumCasts < 9 ? 0 : NumCasts < 12 ? 1 : 2;
+        int currentWaveSize = wave == 1 ? 3 : 9;
+
+        for (int i = 0; i < aoes.Count; i++) {
+            aoes[i] = aoes[i] with {
+                Color = i < currentWaveSize ? Colors.Danger : Colors.AOE,
+                Risky = i < currentWaveSize
+            };
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }

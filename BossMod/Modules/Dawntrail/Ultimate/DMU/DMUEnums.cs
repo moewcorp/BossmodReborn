@@ -8,7 +8,6 @@ public enum OID : uint {
     PurplePuddles = 0x1EC022, // R0.500, x0 (spawn during fight), EventObj type
     StatuePurpleEye = 0x1EBFBE, // R0.500, x2, EventObj type // Purple eye for sleep
     StatueYellowEye = 0x1EBFBF, // R0.500, x2, EventObj type // Yellow eye for confusion
-
     Actor1e8536 = 0x1E8536, // R0.500-2.000, x1, EventObj type
     Actor1ebfb4 = 0x1EBFB4, // R0.500, x1, EventObj type
     Exit = 0x1E850B, // R0.500, x1, EventObj type
@@ -17,6 +16,8 @@ public enum OID : uint {
 
     BossP2 = 0x4C32,
     P2KefkaHelpers = 0x4C39, // R3.500, x0 (spawn during fight)
+    YellowTriangle = 0x1EBFB2, // R0.500, x0 (spawn during fight), EventObj type
+    YellowTriangle1 = 0x1EBFB3, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint {
@@ -89,16 +90,14 @@ public enum AID : uint {
     AllThingsEnding = 47837, // BossP2->self, 5.0s cast, range 100 ?-degree cone
     AllThingsEnding1 = 47836, // 4C39/BossP2->self, 5.0s cast, range 100 ?-degree cone
 
-    _Ability_LightOfJudgment = 47805, // BossP2->self, 5.0s cast, range 100 circle
-    _Ability_Trine = 47839, // BossP2->self, 3.0s cast, single-target
+    LightOfJudgment1 = 47805, // BossP2->self, 5.0s cast, range 100 circle
 
+    Trine = 47839, // BossP2->self, 3.0s cast, single-target
+    Trine1 = 47840, // Helper->self, no cast, range 6 circle
     WingsOfDestructionLeft = 47821, // BossP2->self, 4.0s cast, range 80 width 40 rect
     WingsOfDestructionRight = 47822, // BossP2->self, 4.0s cast, range 80 width 40 rect
-
-    _Ability_Trine1 = 47840, // Helper->self, no cast, range 6 circle
-    _Ability_WingsOfDestruction1 = 50311, // BossP2->self, 4.0s cast, single-target
-    _Ability_WingsOfDestruction2 = 47823, // Helper->player, no cast, range 7 circle
-
+    WingsOfDestructionTB = 50311, // BossP2->self, 4.0s cast, single-target
+    WingsOfDestructionTB1 = 47823, // Helper->player, no cast, range 7 circle
 }
 
 public enum SID : uint {
@@ -149,6 +148,9 @@ public enum Animations : uint {
     PuddleExplosion = 262152,
     EyeStart = 4194432,
     EyeEnd = 16777728,
+    TriangleFlyingDown = 1048608,
+    TriangleLanded = 4194432,
+    TriangleExplosion = 262152,
 }
 
 public enum TetherID : uint {
