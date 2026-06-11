@@ -92,8 +92,9 @@ public enum AID : uint {
     _Ability_LightOfJudgment = 47805, // BossP2->self, 5.0s cast, range 100 circle
     _Ability_Trine = 47839, // BossP2->self, 3.0s cast, single-target
 
+    WingsOfDestructionLeft = 47821, // BossP2->self, 4.0s cast, range 80 width 40 rect
+    WingsOfDestructionRight = 47822, // BossP2->self, 4.0s cast, range 80 width 40 rect
 
-    _Ability_WingsOfDestruction = 47822, // BossP2->self, 4.0s cast, range 80 width 40 rect
     _Ability_Trine1 = 47840, // Helper->self, no cast, range 6 circle
     _Ability_WingsOfDestruction1 = 50311, // BossP2->self, 4.0s cast, single-target
     _Ability_WingsOfDestruction2 = 47823, // Helper->player, no cast, range 7 circle

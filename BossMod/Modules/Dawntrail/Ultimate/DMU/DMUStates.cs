@@ -98,7 +98,8 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<ForsakenBaitsCone>()
             .DeactivateOnExit<ForsakenBaitsBossClones>()
             .DeactivateOnExit<AllThingsEnding>()
-            .ActivateOnEnter<Trine>();
+            .ActivateOnEnter<Trine>()
+            .ActivateOnEnter<WingsOfDestructionLeftRight>();
 
         Timeout(id + 0xFF0000, 10000, "???");
     }

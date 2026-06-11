@@ -754,6 +754,9 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
     }
 }
 
+class WingsOfDestructionLeftRight(BossModule module) : Components.SimpleAOEGroups(module,
+    [(uint)AID.WingsOfDestructionLeft, (uint)AID.WingsOfDestructionRight], new AOEShapeRect(80, 20));
+
 class Trine(BossModule module) : BossComponent(module)
 {
     // TODO
