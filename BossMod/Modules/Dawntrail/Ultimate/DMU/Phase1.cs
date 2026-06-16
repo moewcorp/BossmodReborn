@@ -735,7 +735,6 @@ class GravitationalWave(BossModule module) : Components.GenericAOEs(module)
 }
 
 // TODO make it so it leaves behind a puddle of the AOE
-// TODO allow different configures
 // TODO add support to allow different points of views for different players in the reply
 //      Not needed as it only helps with the development and testing, just need to expand the variables to list and store all players debuffs instead
 class TeleTrouncing(BossModule module) : BossComponent(module) {
@@ -897,6 +896,11 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
 class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5, 5, 1, 1) {
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+
+    private enum TetherGroup { Support, DPS }
+    private TetherGroup? tetherSleepGroup = null;
+    private TetherGroup? tetherConfusionGroup = null;
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
         if (tether.ID != (uint)TetherID.GravenImageTether) {
@@ -908,7 +912,12 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
             return;
         }
 
+        if (source.Position.AlmostEqual(new(95.000f, 25.000f), 5)) {
+            tetherConfusionGroup = target.Class.IsSupport() ? TetherGroup.Support : TetherGroup.DPS;
+        }
+
         if (source.Position.AlmostEqual(new(107.000f, 43.000f), 5)) {
+            tetherSleepGroup = target.Class.IsSupport() ? TetherGroup.Support : TetherGroup.DPS;
             AddSpread(target, WorldState.FutureTime(6.5f));
         }
     }
@@ -929,36 +938,122 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
 
         var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
-        if (assignment == PartyRolesConfig.Assignment.MT) {
-            Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
+        // Static strategy - keep separate to make it easier to manage
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows) {
+            if (assignment == PartyRolesConfig.Assignment.MT) {
+                Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.OT) {
+                Arena.AddCircle(new WPos(104.000f, 93.636f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H1) {
+                Arena.AddCircle(new WPos(90.500f, 106.364f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H2) {
+                Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M1) {
+                Arena.AddCircle(new WPos(96.500f, 106.364f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M2) {
+                Arena.AddCircle(new WPos(106.364f, 104.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R1) {
+                Arena.AddCircle(new WPos(93.636f, 91.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R2) {
+                Arena.AddCircle(new WPos(109.500f, 93.636f), 1.0f, Colors.Safe, 2);
+            }
         }
 
-        if (assignment == PartyRolesConfig.Assignment.OT) {
-            Arena.AddCircle(new WPos(104.000f, 93.636f), 1.0f, Colors.Safe, 2);
-        }
 
-        if (assignment == PartyRolesConfig.Assignment.H1) {
-            Arena.AddCircle(new WPos(90.500f, 106.364f), 1.0f, Colors.Safe, 2);
-        }
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+            if (assignment == PartyRolesConfig.Assignment.MT) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
+                }
 
-        if (assignment == PartyRolesConfig.Assignment.H2) {
-            Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
-        }
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(93.636f, 91.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
 
-        if (assignment == PartyRolesConfig.Assignment.M1) {
-            Arena.AddCircle(new WPos(96.500f, 106.364f), 1.0f, Colors.Safe, 2);
-        }
+            if (assignment == PartyRolesConfig.Assignment.R1) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
+                }
 
-        if (assignment == PartyRolesConfig.Assignment.M2) {
-            Arena.AddCircle(new WPos(106.364f, 104.000f), 1.0f, Colors.Safe, 2);
-        }
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(93.636f, 91.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
 
-        if (assignment == PartyRolesConfig.Assignment.R1) {
-            Arena.AddCircle(new WPos(93.636f, 91.000f), 1.0f, Colors.Safe, 2);
-        }
+            if (assignment == PartyRolesConfig.Assignment.OT) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(104.000f, 93.636f), 1.0f, Colors.Safe, 2);
+                }
 
-        if (assignment == PartyRolesConfig.Assignment.R2) {
-            Arena.AddCircle(new WPos(109.500f, 93.636f), 1.0f, Colors.Safe, 2);
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(109.500f, 93.636f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R2) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(104.000f, 93.636f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(109.500f, 93.636f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H1) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(96.500f, 106.364f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(90.500f, 106.364f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M1) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(96.500f, 106.364f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(90.500f, 106.364f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H2) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(106.364f, 104.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M2) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(106.364f, 104.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
+                }
+            }
         }
     }
 }
