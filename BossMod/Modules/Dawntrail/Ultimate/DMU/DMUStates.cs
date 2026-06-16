@@ -11,7 +11,23 @@ sealed class DMUStates : StateMachineBuilder {
             .Raw.Update = () => !Module.PrimaryActor.IsTargetable;
         SimplePhase(1, Phase2, "P2")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.BossP2()?.IsDeadOrDestroyed == true;
+            .Raw.Update = () => _module.BossP2() is { IsTargetable: false, HPRatio: < 1 };
+        SimplePhase(2, Phase3, "P3")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
+            .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
+    }
+
+    private void Phase3(uint id) {
+        ActorCast(id, _module.BossP3, (uint)AID.AeroIIIAssault, 2.4f, 3, false, "Knockback")
+            .ActivateOnEnter<AeroIIIAssault>()
+            .DeactivateOnExit<AeroIIIAssault>();
+
+        ActorCast(id + 0x10, _module.BossP3, (uint)AID._Ability_DefinitionOfInsanity, 33.7f, 4, false);
+        ActorTargetable(id + 0x20, _module.ExdeathP3, true, 3.1f, "Bosses appear")
+            .SetHint(StateMachine.StateHint.DowntimeEnd)
+            .ActivateOnEnter<TheDecisiveBattle>();
+
+        Timeout(id + 0xFF0000, 10000, "P3");
     }
 
     private void Phase2(uint id) {
@@ -129,7 +145,8 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<UltimateEmbrace>()
             .DeactivateOnExit<UltimateEmbrace>();
 
-        Timeout(id + 0xFF0000, 10000, "???");
+        ActorTargetable(id + 0x30000, _module.BossP2, false, 4.1f, "Boss disappears")
+            .SetHint(StateMachine.StateHint.DowntimeStart);
     }
 
     private void Phase1(uint id) {

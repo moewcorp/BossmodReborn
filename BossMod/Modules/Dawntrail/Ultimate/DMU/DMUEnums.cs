@@ -13,11 +13,20 @@ public enum OID : uint {
     Exit = 0x1E850B, // R0.500, x1, EventObj type
     YellowOrb = 0x1EBFBD, // R0.500, x2, EventObj type // Yellow orb
     PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
+    Actor1ec023 = 0x1EC023, // R0.500, x0 (spawn during fight), EventObj type
 
     BossP2 = 0x4C32,
     P2KefkaHelpers = 0x4C39, // R3.500, x0 (spawn during fight)
     YellowTriangle = 0x1EBFB2, // R0.500, x0 (spawn during fight), EventObj type
     YellowTriangle1 = 0x1EBFB3, // R0.500, x0 (spawn during fight), EventObj type
+
+    Chaos = 0x4C34,
+    Exdeath = 0x4C35,
+    KefkaP3 = 0x4BFB, // R2.700, x0 (spawn during fight)
+    Kefka1P3 = 0x482B, // R6.000, x0 (spawn during fight)
+    WindP3 = 0x1EC03C, // R0.500, x0 (spawn during fight), EventObj type
+    WaterP3 = 0x1EC03B, // R0.500, x0 (spawn during fight), EventObj type
+    FireP3 = 0x1EC03A, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint {
@@ -98,9 +107,39 @@ public enum AID : uint {
     WingsOfDestructionRight = 47822, // BossP2->self, 4.0s cast, range 80 width 40 rect
     WingsOfDestructionTB = 50311, // BossP2->self, 4.0s cast, single-target
     WingsOfDestructionTB1 = 47823, // Helper->player, no cast, range 7 circle
+
+    // P3
+    AeroIIIAssault = 50167, // Kefka->self, 3.0s cast, range 40 circle
+    TheDecisiveBattle = 49890, // Chaos->self, 3.0s cast, single-target
+    TheDecisiveBattle1 = 49891, // Exdeath->self, 3.0s cast, single-target
+
+    _Ability_DefinitionOfInsanity = 47842, // Kefka->self, 4.0s cast, single-target
+
+    _AutoAttack_ = 49744, // Exdeath->player, no cast, single-target
+    _Ability_BowelsOfAgony = 47858, // Chaos->self, 5.0s cast, range 100 circle
+    _Ability_StrayFlames = 47859, // Helper->players, no cast, range 5 circle
+    _Ability_ThunderIII = 47890, // Exdeath->self, 7.0s cast, range 11+R circle
+    _Ability_Inferno = 47860, // Helper->player, no cast, range ?-10 donut
+    _Ability_ThunderIII1 = 47881, // Exdeath->self, 5.0s cast, single-target
+    _Ability_ThunderIII2 = 47884, // Helper->player, no cast, range 5 circle
+    _Ability_Trance = 49878, // Kefka->self, 3.9s cast, single-target
+    _Ability_LatitudinalImplosion = 47870, // Chaos->self, 5.0+0.8s cast, single-target
+    _Ability_Shockwave = 47871, // Helper->self, no cast, range 40 ?-degree cone
+    _Ability_StraySpray = 47862, // Helper->players, no cast, range ?-10 donut
+    _Ability_Tsunami = 47861, // Helper->player, no cast, range 5 circle
+    _Ability_UltimaBlaster = 47843, // 4BFB->self, no cast, range 100 circle
+    _Ability_UmbraSmash = 47872, // Chaos->location, 5.0s cast, range 100 circle
+    _Ability_VacuumWave = 47891, // Exdeath->self, 8.0s cast, range 100 circle
+    _Ability_Cyclone = 47864, // Helper->players, no cast, range 6 circle
+    _Ability_Aetherlink = 49892, // Chaos->self, no cast, single-target
+    _Ability_Aetherlink1 = 49893, // Exdeath->self, no cast, single-target
+    _Ability_UltimaBlaster1 = 47844, // 4BFB->self, no cast, range 100 width 6 rect
 }
 
 public enum SID : uint {
+    DownForTheCount = 774, // Kefka->player, extra=0xEC7
+    DamageDown = 2911, // Helper->player, extra=0x0
+
     DoubleTroubleTrap = 5078, // none->player, extra=0x0
     TelePortentRIGHT = 4878, // Helper->player, extra=0x0
     TelePortentUP = 4876, // Helper->player, extra=0x0
@@ -115,12 +154,24 @@ public enum SID : uint {
     Bind = 2518, // none->player, extra=0x0
     Confused = 1283, // _Gen_GravenImage->player, extra=0x0
     Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
-    DamageDown = 2911, // Helper->player, extra=0x0
 
     _Gen_SpellsTrouble = 5083, // none->player, extra=0x4/0x3
     _Gen_1 = 5085, // none->player, extra=0x0
     _Gen_2 = 5086, // none->player, extra=0x0
     _Gen_3 = 5084, // none->player, extra=0x0
+
+    _Gen_InEvent = 1268, // none->player, extra=0x0
+    _Gen_FatedHero = 4194, // none->player, extra=0x0
+    _Gen_EpicHero = 4192, // none->player, extra=0x0
+    _Gen_EpicVillain = 4193, // none->Chaos, extra=0x0
+    _Gen_FatedVillain = 4195, // none->Exdeath, extra=0x0
+    _Gen_Tailwind = 1603, // none->player, extra=0x0
+    _Gen_Headwind = 1602, // none->player, extra=0x0
+    _Gen_Entropy = 1600, // none->player, extra=0x0
+    _Gen_DynamicFluid = 1601, // none->player, extra=0x0
+    _Gen_LightningResistanceDownII = 2998, // Helper->player, extra=0x0
+    _Gen_ = 2273, // Kefka->Kefka, extra=0x1FF/0x22B
+    _Gen_WindResistanceDownII = 1052, // Helper->player, extra=0x0
 }
 
 public enum IconID : uint {
@@ -139,6 +190,14 @@ public enum IconID : uint {
     TowerConeIcon = 717, // player->self
 
     _Gen_Icon_m0676trg_tw_d0t1p = 259, // player->self
+
+    _Gen_Icon_sph_lockon2_num03_s8p = 338, // player->self
+    _Gen_Icon_sph_lockon2_num01_s8p = 336, // player->self
+    _Gen_Icon_sph_lockon2_num04_s8p = 339, // player->self
+    _Gen_Icon_sph_lockon2_num02_s8p = 337, // player->self
+    _Gen_Icon_sph_lockon2_num05_s8t = 437, // player->self
+    _Gen_Icon_sph_lockon2_num06_s8t = 438, // player->self
+
 }
 
 public enum Animations : uint {
@@ -155,4 +214,5 @@ public enum Animations : uint {
 
 public enum TetherID : uint {
     GravenImageTether = 45, // 4C31->player
+    _Gen_Tether_chn_m0109ac = 64, // Exdeath->GravenImage
 }

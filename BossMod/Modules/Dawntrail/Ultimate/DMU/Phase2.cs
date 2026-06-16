@@ -399,7 +399,6 @@ class ForsakenSolverSet1(BossModule module) : BossComponent(module) {
     private ForsakenShapes? shapes = module.FindComponent<ForsakenShapes>();
     private PathOfLight? towers = module.FindComponent<PathOfLight>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
-
     public uint colourCircle = Colors.Safe;
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
@@ -808,9 +807,15 @@ class WingsOfDestructionTB(BossModule module) : Components.GenericBaitAway(modul
 
 class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine) {
     private List<AOEInstance> aoes = [];
+    private List<Actor> triangles = new List<Actor>();
     private float radius = 10 * MathF.Sqrt(3) / 3;
+    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
     public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.YellowTriangle || actor.OID == (uint)OID.YellowTriangle1) {
+            triangles.Add(actor);
+        }
+
         if (actor.OID == (uint)OID.YellowTriangle) {
             aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(radius, 0f)));
             aoes.Add(new(new AOEShapeCircle(6f), actor.Position + new WDir(-radius / 2, 5f)));
@@ -824,9 +829,12 @@ class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine)
         }
     }
 
-    public override void OnActorEAnim(Actor actor, uint state) {
-        if (actor.OID == (uint)OID.YellowTriangle || actor.OID == (uint)OID.YellowTriangle1) {
-            if (state == (uint)Animations.TriangleExplosion) {
+    public override void OnActorEAnim(Actor actor, uint state)
+    {
+        if (actor.OID == (uint)OID.YellowTriangle || actor.OID == (uint)OID.YellowTriangle1)
+        {
+            if (state == (uint)Animations.TriangleExplosion)
+            {
                 aoes.RemoveRange(0, 3);
                 NumCasts = NumCasts + 3;
             }
@@ -838,16 +846,75 @@ class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine)
             return CollectionsMarshal.AsSpan(aoes);
         }
 
-        int wave = NumCasts < 9 ? 0 : NumCasts < 12 ? 1 : 2;
-        int currentWaveSize = wave == 1 ? 3 : 9;
-
-        for (int i = 0; i < aoes.Count; i++) {
+        (int currentWave, int nextWave)[] wave = [(9,3), (3,9), (9,0)];
+        var (currentSize, nextSize) = wave[NumCasts < 9 ? 0 : NumCasts < 12 ? 1 : 2];
+        var count = Math.Min(currentSize + nextSize, aoes.Count);
+        for (int i = 0; i < count; i++) {
             aoes[i] = aoes[i] with {
-                Color = i < currentWaveSize ? Colors.Danger : Colors.AOE,
-                Risky = i < currentWaveSize
+                Color = i < currentSize ? Colors.Danger : Colors.AOE,
+                Risky = i < currentSize
             };
         }
 
-        return CollectionsMarshal.AsSpan(aoes);
+        return CollectionsMarshal.AsSpan(aoes)[..count];
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (NumCasts < 9) {
+            return;
+        }
+
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length == 0) {
+            return;
+        }
+        var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+
+        var waymarkA = WorldState.Waymarks.GetFieldMark((int)Waymark.A);
+        var waymark1 = WorldState.Waymarks.GetFieldMark((int)Waymark.N1);
+
+        if (waymarkA == null || waymark1 == null) {
+            return;
+        }
+
+        var waymarkAAngle = (waymarkA.Value.ToWPos() - Arena.Center).ToAngle();
+        var waymark1Angle = (waymark1.Value.ToWPos() - Arena.Center).ToAngle();
+        var firstWave = triangles.Take(3).Select(t => t.Position).ToArray();
+
+        if (assignment != PartyRolesConfig.Assignment.MT && assignment != PartyRolesConfig.Assignment.OT) {
+            Arena.AddCircle(firstWave.MinBy(p => ((p - Arena.Center).ToAngle() - waymarkAAngle).Normalized().Deg)!, 1f, Colors.Safe, 2f);
+            return;
+        }
+
+        var boss = (Module as DMU)?.BossP2();
+        if (boss == null) {
+            return;
+        }
+
+        var ccwSpot = firstWave.MinBy(p => (waymark1Angle - (p - Arena.Center).ToAngle()).Normalized().Deg)!;
+        if (assignment == PartyRolesConfig.Assignment.OT) {
+            Arena.AddCircle(Arena.Center + (ccwSpot - Arena.Center).Normalized() * Arena.Bounds.Radius, 1f, Colors.Safe, 2f);
+        }
+
+        WPos closestSpot = ccwSpot;
+        for (float r = 0.5f; r <= (ccwSpot - boss.Position).Length(); r = r + 0.5f) {
+            List<WPos> spots = new List<WPos>();
+            for (int degree = -60; degree <= 60; degree = degree + 5) {
+                var spot = boss.Position + r * ((ccwSpot - boss.Position).ToAngle() + degree.Degrees()).ToDirection();
+
+                if (!aoes.Any(aoe => aoe.Check(spot))) {
+                    spots.Add(spot);
+                }
+            }
+
+            if (spots.Count > 0) {
+                closestSpot = spots.MinBy(spot => ((spot - boss.Position).ToAngle() - (ccwSpot - boss.Position).ToAngle()).Abs().Deg)!;
+                break;
+            }
+        }
+
+        if (assignment == PartyRolesConfig.Assignment.MT) {
+            Arena.AddCircle(closestSpot, 1f, Colors.Safe, 2f);
+        }
     }
 }
