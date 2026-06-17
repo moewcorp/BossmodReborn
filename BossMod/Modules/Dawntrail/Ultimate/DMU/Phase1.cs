@@ -743,6 +743,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     private (Direction direction, DateTime activation)? Debuff2;
     private List<WPos> hints = new List<WPos>();
     private enum Direction { UP, DOWN, LEFT, RIGHT }
+    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.TeleTrouncing1) {
@@ -782,23 +783,55 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
         // Case 1: Both debuffs are in the same direction
         if (Debuff1.Value.direction == Debuff2.Value.direction) {
             if (Debuff1.Value.direction == Direction.DOWN) { // A waymark
-                hints.Add(new WPos(87.750f, 88.030f));
-                hints.Add(new WPos(87.750f, 93.570f));
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                    hints.Add(new WPos(87.750f, 88.030f));
+                    hints.Add(new WPos(87.750f, 93.570f));
+                }
+
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                    hints.Add(new WPos(112.000f, 94.000f));
+                    hints.Add(new WPos(112.000f, 100.000f));
+                }
             }
 
             if (Debuff1.Value.direction == Direction.LEFT) { // B waymark
-                hints.Add(new WPos(112.135f, 87.993f));
-                hints.Add(new WPos(106.579f, 87.922f));
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                    hints.Add(new WPos(112.135f, 87.993f));
+                    hints.Add(new WPos(106.579f, 87.922f));
+                }
+
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                    hints.Add(new WPos(106.000f, 112.000f));
+                    hints.Add(new WPos(100.000f, 112.000f));
+                }
             }
 
             if (Debuff1.Value.direction == Direction.UP) { // C waymark
-                hints.Add(new WPos(111.989f, 112.003f));
-                hints.Add(new WPos(112.125f, 106.306f));
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                    hints.Add(new WPos(111.989f, 112.003f));
+                    hints.Add(new WPos(112.125f, 106.306f));
+                }
+
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                    hints.Add(new WPos(88.000f, 106.000f));
+                    hints.Add(new WPos(88.000f, 100.000f));
+                }
             }
 
             if (Debuff1.Value.direction == Direction.RIGHT) { // D waymark
-                hints.Add(new WPos(88.069f, 112.037f));
-                hints.Add(new WPos(93.798f, 112.161f));
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                    hints.Add(new WPos(88.069f, 112.037f));
+                    hints.Add(new WPos(93.798f, 112.161f));
+                }
+
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                    hints.Add(new WPos(94.000f, 88.000f));
+                    hints.Add(new WPos(100.000f, 88.000f));
+                }
             }
 
             return;
@@ -812,12 +845,25 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (upFirst) {
-                hints.Add(new WPos(93.781f, 93.593f)); // 1 waymark
-                hints.Add(new WPos(93.576f, 88.051f)); // non-waymark
-            } else {
-                hints.Add(new WPos(93.576f, 88.051f)); // non-waymark
-                hints.Add(new WPos(93.781f, 93.593f)); // 1 waymark
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (upFirst) {
+                    hints.Add(new WPos(93.781f, 93.593f)); // 1 waymark
+                    hints.Add(new WPos(93.576f, 88.051f)); // non-waymark
+                } else {
+                    hints.Add(new WPos(93.576f, 88.051f)); // non-waymark
+                    hints.Add(new WPos(93.781f, 93.593f)); // 1 waymark
+                }
+            }
+
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                if (upFirst) {
+                    hints.Add(new WPos(88.000f, 112.000f));
+                    hints.Add(new WPos(94.000f, 112.000f));
+                } else {
+                    hints.Add(new WPos(94.000f, 112.000f));
+                    hints.Add(new WPos(88.000f, 112.000f));
+                }
             }
         }
 
@@ -825,12 +871,25 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.RIGHT)) {
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (upFirst) {
-                hints.Add(new WPos(111.955f, 93.877f)); // non-waymark
-                hints.Add(new WPos(106.422f, 93.756f)); // 2 waymark
-            } else {
-                hints.Add(new WPos(106.422f, 93.756f)); // 2 waymark
-                hints.Add(new WPos(111.955f, 93.877f)); // non-waymark
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (upFirst) {
+                    hints.Add(new WPos(111.955f, 93.877f)); // non-waymark
+                    hints.Add(new WPos(106.422f, 93.756f)); // 2 waymark
+                } else {
+                    hints.Add(new WPos(106.422f, 93.756f)); // 2 waymark
+                    hints.Add(new WPos(111.955f, 93.877f)); // non-waymark
+                }
+            }
+
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                if (upFirst) {
+                    hints.Add(new WPos(88.000f, 94.000f));
+                    hints.Add(new WPos(88.000f, 88.000f));
+                } else {
+                    hints.Add(new WPos(88.000f, 88.000f));
+                    hints.Add(new WPos(88.000f, 94.000f));
+                }
             }
         }
 
@@ -838,12 +897,25 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.RIGHT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (downFirst) {
-                hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
-                hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
-            } else {
-                hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
-                hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (downFirst) {
+                    hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
+                    hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
+                } else {
+                    hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
+                    hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
+                }
+            }
+
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                if (downFirst) {
+                    hints.Add(new WPos(112.000f, 88.000f));
+                    hints.Add(new WPos(106.000f, 88.000f));
+                } else {
+                    hints.Add(new WPos(106.000f, 88.000f));
+                    hints.Add(new WPos(112.000f, 88.000f));
+                }
             }
         }
 
@@ -851,12 +923,25 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.LEFT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (downFirst) {
-                hints.Add(new WPos(88.103f, 106.377f)); // 4 non-waymark
-                hints.Add(new WPos(93.685f, 106.316f)); // 4 waymark
-            } else {
-                hints.Add(new WPos(93.685f, 106.316f)); // 4 waymark
-                hints.Add(new WPos(88.103f, 106.377f)); // 4 non-waymark
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
+                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (downFirst) {
+                    hints.Add(new WPos(88.103f, 106.377f)); // 4 non-waymark
+                    hints.Add(new WPos(93.685f, 106.316f)); // 4 waymark
+                } else {
+                    hints.Add(new WPos(93.685f, 106.316f)); // 4 waymark
+                    hints.Add(new WPos(88.103f, 106.377f)); // 4 non-waymark
+                }
+            }
+
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+                if (downFirst) {
+                    hints.Add(new WPos(112.000f, 106.000f));
+                    hints.Add(new WPos(112.000f, 112.000f));
+                } else {
+                    hints.Add(new WPos(112.000f, 112.000f));
+                    hints.Add(new WPos(112.000f, 106.000f));
+                }
             }
         }
     }
@@ -973,7 +1058,6 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
             }
         }
 
-
         if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
             if (assignment == PartyRolesConfig.Assignment.MT) {
                 if (tetherSleepGroup == TetherGroup.Support) {
@@ -1052,6 +1136,88 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
 
                 if (tetherConfusionGroup == TetherGroup.DPS) {
                     Arena.AddCircle(new WPos(106.364f, 109.500f), 1.0f, Colors.Safe, 2);
+                }
+            }
+        }
+
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+            if (assignment == PartyRolesConfig.Assignment.MT) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R1) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.OT) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R2) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H1) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M1) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H2) {
+                if (tetherSleepGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.Support) {
+                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M2) {
+                if (tetherSleepGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                }
+
+                if (tetherConfusionGroup == TetherGroup.DPS) {
+                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2);
                 }
             }
         }

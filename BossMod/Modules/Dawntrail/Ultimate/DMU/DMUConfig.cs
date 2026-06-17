@@ -9,6 +9,9 @@ public class DMUConfig : ConfigNode {
 
         [PropertyDisplay("Modified Xolo - non-static arrows")]
         Modified_Xolo_NonStaticArrows,
+
+        [PropertyDisplay("Freaky arrow CW box")]
+        Freaky_Arrow,
     }
 
     [PropertyDisplay("P1 TeleTrouncing strategy")]
