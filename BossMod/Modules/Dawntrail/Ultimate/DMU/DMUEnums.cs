@@ -110,23 +110,29 @@ public enum AID : uint {
 
     // P3
     AeroIIIAssault = 50167, // Kefka->self, 3.0s cast, range 40 circle
+    _AutoAttack_ = 49744, // Exdeath->player, no cast, single-target
+
     TheDecisiveBattle = 49890, // Chaos->self, 3.0s cast, single-target
     TheDecisiveBattle1 = 49891, // Exdeath->self, 3.0s cast, single-target
+    DefinitionOfInsanity = 47842, // Kefka->self, 4.0s cast, single-target
+    
+    BowelsOfAgony = 47858, // Chaos->self, 5.0s cast, range 100 circle
+    ThunderIII = 47890, // Exdeath->self, 7.0s cast, range 11+R circle
 
-    _Ability_DefinitionOfInsanity = 47842, // Kefka->self, 4.0s cast, single-target
+    Tsunami = 47861, // Helper->player, no cast, range 5 circle
+    StraySpray = 47862, // Helper->players, no cast, range ?-10 donut
+    StrayFlames = 47859, // Helper->players, no cast, range 5 circle
+    Inferno = 47860, // Helper->player, no cast, range ?-10 donut
 
-    _AutoAttack_ = 49744, // Exdeath->player, no cast, single-target
-    _Ability_BowelsOfAgony = 47858, // Chaos->self, 5.0s cast, range 100 circle
-    _Ability_StrayFlames = 47859, // Helper->players, no cast, range 5 circle
-    _Ability_ThunderIII = 47890, // Exdeath->self, 7.0s cast, range 11+R circle
-    _Ability_Inferno = 47860, // Helper->player, no cast, range ?-10 donut
-    _Ability_ThunderIII1 = 47881, // Exdeath->self, 5.0s cast, single-target
-    _Ability_ThunderIII2 = 47884, // Helper->player, no cast, range 5 circle
+    LongitudinalImplosion = 47869, // Chaos->self, 5.0+0.8s cast, single-target
+    LatitudinalImplosion = 47870, // Chaos->self, 5.0+0.8s cast, single-target
+    Shockwave = 47871, // Helper->self, no cast, range 40 ?-degree cone
+
+    ThunderIIITBCast = 47881, // Exdeath->self, 5.0s cast, single-target
+    ThunderIIITB = 47884, // Helper->player, no cast, range 5 circle
+
     _Ability_Trance = 49878, // Kefka->self, 3.9s cast, single-target
-    _Ability_LatitudinalImplosion = 47870, // Chaos->self, 5.0+0.8s cast, single-target
-    _Ability_Shockwave = 47871, // Helper->self, no cast, range 40 ?-degree cone
-    _Ability_StraySpray = 47862, // Helper->players, no cast, range ?-10 donut
-    _Ability_Tsunami = 47861, // Helper->player, no cast, range 5 circle
+
     _Ability_UltimaBlaster = 47843, // 4BFB->self, no cast, range 100 circle
     _Ability_UmbraSmash = 47872, // Chaos->location, 5.0s cast, range 100 circle
     _Ability_VacuumWave = 47891, // Exdeath->self, 8.0s cast, range 100 circle
@@ -155,6 +161,9 @@ public enum SID : uint {
     Confused = 1283, // _Gen_GravenImage->player, extra=0x0
     Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
 
+    Entropy = 1600, // none->player, extra=0x0
+    DynamicFluid = 1601, // none->player, extra=0x0
+
     _Gen_SpellsTrouble = 5083, // none->player, extra=0x4/0x3
     _Gen_1 = 5085, // none->player, extra=0x0
     _Gen_2 = 5086, // none->player, extra=0x0
@@ -167,8 +176,7 @@ public enum SID : uint {
     _Gen_FatedVillain = 4195, // none->Exdeath, extra=0x0
     _Gen_Tailwind = 1603, // none->player, extra=0x0
     _Gen_Headwind = 1602, // none->player, extra=0x0
-    _Gen_Entropy = 1600, // none->player, extra=0x0
-    _Gen_DynamicFluid = 1601, // none->player, extra=0x0
+
     _Gen_LightningResistanceDownII = 2998, // Helper->player, extra=0x0
     _Gen_ = 2273, // Kefka->Kefka, extra=0x1FF/0x22B
     _Gen_WindResistanceDownII = 1052, // Helper->player, extra=0x0

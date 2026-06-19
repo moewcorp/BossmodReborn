@@ -22,10 +22,79 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<AeroIIIAssault>()
             .DeactivateOnExit<AeroIIIAssault>();
 
-        ActorCast(id + 0x10, _module.BossP3, (uint)AID._Ability_DefinitionOfInsanity, 33.7f, 4, false);
+        ActorCast(id + 0x10, _module.BossP3, (uint)AID.DefinitionOfInsanity, 33.7f, 4);
         ActorTargetable(id + 0x20, _module.ExdeathP3, true, 3.1f, "Bosses appear")
-            .SetHint(StateMachine.StateHint.DowntimeEnd)
-            .ActivateOnEnter<TheDecisiveBattle>();
+            .SetHint(StateMachine.StateHint.DowntimeEnd);
+
+        ActorCast(id + 0x30, _module.ChaosP3, (uint)AID.TheDecisiveBattle, 0.2f, 3.0f, true)
+            .ActivateOnEnter<TheDecisiveBattle>()
+            .DeactivateOnExit<TheDecisiveBattle>();
+
+        ActorCast(id + 0x40, _module.ChaosP3, (uint)AID.BowelsOfAgony, 14.4f, 5.0f, true, "Raidwide")
+            .ActivateOnEnter<BowelsOfAgony>()
+            .DeactivateOnExit<BowelsOfAgony>()
+            .ActivateOnExit<Crystals>();
+
+        ActorCast(id + 0x50, _module.ExdeathP3, (uint)AID.ThunderIII, 12.3f, 7.0f, true, "Thunder + element 1")
+            .ActivateOnEnter<ThunderIII>()
+            .DeactivateOnExit<ThunderIII>()
+            .ExecOnEnter<Crystals>(c => {
+                if (c.nextElement == Crystals.Element.Fire) {
+                    Module.ActivateComponent<FireCrystal>();
+                }
+
+                if (c.nextElement == Crystals.Element.Water) {
+                    Module.ActivateComponent<WaterCrystal>();
+                }
+            });
+
+        Condition(id + 0x60, 0.8f, () => Module.FindComponent<FireCrystal>()?.NumCasts > 0 || Module.FindComponent<WaterCrystal>()?.NumCasts > 0, "1st Crystal")
+            .ExecOnExit<Crystals>(c => {
+                if (c.nextElement == Crystals.Element.Fire) {
+                    Module.DeactivateComponent<FireCrystal>();
+                }
+
+                if (c.nextElement == Crystals.Element.Water) {
+                    Module.DeactivateComponent<WaterCrystal>();
+                }
+            });
+
+        ActorCast(id + 0x70, _module.ExdeathP3, (uint)AID.ThunderIII, 3.4f, 5.0f, true, "Tankbuster cast")
+            .ActivateOnEnter<ThunderIIITB>();
+        ComponentCondition<ThunderIIITB>(id + 0x75, 0.1f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x80, 3.0f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
+            .DeactivateOnExit<ThunderIIITB>();
+
+        ActorCastStartMulti(id + 0x90, _module.ChaosP3, [(uint)AID.LongitudinalImplosion, (uint)AID.LatitudinalImplosion], 4.8f, true)
+            .ActivateOnEnter<LongitudinalLatitudinalImplosion>()
+            .ExecOnEnter<Crystals>(c => {
+                if (c.nextElement == Crystals.Element.Fire) {
+                    Module.ActivateComponent<FireCrystal>();
+                }
+
+                if (c.nextElement == Crystals.Element.Water) {
+                    Module.ActivateComponent<WaterCrystal>();
+                }
+            });
+
+        ComponentCondition<LongitudinalLatitudinalImplosion>(id + 0x100, 5.6f, o => o.NumCasts > 0, "Front/sides 1st");
+        ComponentCondition<LongitudinalLatitudinalImplosion>(id + 0x110, 2.0f, o => o.NumCasts > 2, "Front/sides 2nd")
+            .DeactivateOnExit<LongitudinalLatitudinalImplosion>();
+
+        Condition(id + 0x120, 3.1f, () => Module.FindComponent<WaterCrystal>()?.NumCasts > 0 || Module.FindComponent<FireCrystal>()?.NumCasts > 0, "2nd Crystal")
+            .ExecOnExit<Crystals>(c => {
+                if (c.nextElement == Crystals.Element.Fire) {
+                    Module.DeactivateComponent<FireCrystal>();
+                }
+
+                if (c.nextElement == Crystals.Element.Water) {
+                    Module.DeactivateComponent<WaterCrystal>();
+                }
+            });
+
+
+
+        // TODO deactivate Crystals -> .ActivateOnExit<Crystals>();
 
         Timeout(id + 0xFF0000, 10000, "P3");
     }
