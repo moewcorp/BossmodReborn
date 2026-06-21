@@ -782,3 +782,11 @@ class SlapHappyBaits(BossModule module) : Components.GenericBaitStack(module) {
         }
     }
 }
+
+class DamningEdict(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DamningEdict, new AOEShapeRect(60.0f, 40.0f));
+
+class LookUponMeAndDespairAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LookUponMeAndDespairAOE, new AOEShapeRect(100.0f, 8.0f));
+
+class WhiteHole(BossModule module) : Components.RaidwideCast(module, (uint)AID.WhiteHole);
+
+class EarthquakeRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.EarthquakeRaidwide);
