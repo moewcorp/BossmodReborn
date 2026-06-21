@@ -128,7 +128,10 @@ sealed class DMUStates : StateMachineBuilder {
 
         ActorCast(id + 0x220, _module.ChaosP3, (uint)AID.TheDecisiveBattle, 1.9f, 3.0f, true)
             .ActivateOnEnter<TheDecisiveBattle>()
-            .DeactivateOnExit<TheDecisiveBattle>();
+            .DeactivateOnExit<TheDecisiveBattle>()
+            .ActivateOnEnter<KefkaMax>()
+            .ActivateOnEnter<SlapHappy>()
+            .ActivateOnEnter<SlapHappyBaits>();
 
         ActorCast(id + 0x230, _module.ExdeathP3, (uint)AID.ThunderIII, 4.2f, 5.0f, true, "Tankbuster cast")
             .ActivateOnEnter<ThunderIIITB>();

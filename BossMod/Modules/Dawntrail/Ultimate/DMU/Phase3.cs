@@ -36,36 +36,14 @@ class TheDecisiveBattle(BossModule module) : BossComponent(module) {
 
         var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
-        if (assignment == PartyRolesConfig.Assignment.MT) {
-            Arena.AddCircle(new(92 - MathF.Sqrt(2), 100 - MathF.Sqrt(2)), 1, Colors.Safe);
+        if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.H1 ||
+            assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.M2) {
+            Arena.AddCircle(chaosBoss.Position, 1.25f, Colors.Safe, 2.0f);
         }
 
-        if (assignment == PartyRolesConfig.Assignment.H1) {
-            Arena.AddCircle(new(92 + MathF.Sqrt(2), 100 - MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.M1) {
-            Arena.AddCircle(new(92 - MathF.Sqrt(2), 100 + MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.M2) {
-            Arena.AddCircle(new(92 + MathF.Sqrt(2), 100 + MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.OT) {
-            Arena.AddCircle(new(108 - MathF.Sqrt(2), 100 - MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.H2) {
-            Arena.AddCircle(new(108 + MathF.Sqrt(2), 100 - MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.R1) {
-            Arena.AddCircle(new(108 - MathF.Sqrt(2), 100 + MathF.Sqrt(2)), 1, Colors.Safe);
-        }
-
-        if (assignment == PartyRolesConfig.Assignment.R2) {
-            Arena.AddCircle(new(108 + MathF.Sqrt(2), 100 + MathF.Sqrt(2)), 1, Colors.Safe);
+        if (assignment == PartyRolesConfig.Assignment.OT || assignment == PartyRolesConfig.Assignment.H2 ||
+            assignment == PartyRolesConfig.Assignment.R1 || assignment == PartyRolesConfig.Assignment.R2) {
+            Arena.AddCircle(exDeathBoss.Position, 1.25f, Colors.Safe, 2.0f);
         }
     }
 
@@ -170,10 +148,6 @@ class Crystals(BossModule module) : BossComponent(module) {
 
 class ThunderIII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ThunderIII, new AOEShapeCircle(15.0f));
 
-// TODO if I ever need to update the crystal functions due to a timing issue it should just be redesigned into the following:
-//  - Crystals elements - This is for the people baiting the crystals attack
-//  - Crystals debuffs - This is for the people that have the debuff that matches the crystal colours
-//  - This might be needed due to the fact the debuffs go off 0.8 seconds before the crystals actually go off
 class WaterCrystal(BossModule module) : Components.GenericBaitProximity(module) {
     private Crystals? crystals = module.FindComponent<Crystals>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
@@ -542,7 +516,6 @@ class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(modu
         }
 
         foreach (var bait in ActiveBaitsOn(pc)) {
-            Arena.AddCircle(bait.Source.Position, 30.0f, Colors.Object);
             Arena.AddCircle(Arena.Center + (Arena.Center - bait.Source.Position).Normalized().Rotate(angleRotation.Value * 0.5f) * 19.0f, 0.75f, Colors.Safe);
         }
     }
@@ -668,6 +641,144 @@ class Cyclone(BossModule module) : Components.GenericStackSpread(module) {
 
         foreach (var (slot, player) in Raid.WithSlot().WhereSlot(p => windDebuffs.Direction[p] is SID.Headwind or SID.Tailwind)) {
             Stacks.Add(new(player, 6.0f));
+        }
+    }
+}
+
+class KefkaMax(BossModule module) : BossComponent(module) {
+    private Actor? boss = null;
+
+    public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2) {
+        if (actor.OID == (uint)OID.Kefka && modelState == 5) {
+            boss = actor;
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (boss == null) {
+            return;
+        }
+
+        // Taken from actor source file, but with the option of adding a scale
+        var actorPos = boss.Position - boss.Rotation.ToDirection() * 20.0f;
+        var scale = 2.5f;
+        var dir = boss.Rotation.ToDirection();
+        var scale07 = scale * 0.7f * dir;
+        var scale035 = scale * 0.35f * dir;
+        var scale0433 = scale * 0.433f * dir.OrthoR();
+        var positionscale035 = actorPos - scale035;
+        Arena.AddTriangleFilled(actorPos + scale07, positionscale035 + scale0433, positionscale035 - scale0433, Colors.Object);
+    }
+}
+
+class SlapHappy(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
+
+    // Big Hands AOEs are 10y apart
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.SlapHappyRightHand) {
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoR() * 10.0f + (spell.Rotation.ToDirection().OrthoR() * 10.0f).OrthoR()));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoR() * 10.0f));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoR() * 10.0f + (spell.Rotation.ToDirection().OrthoR() * 10.0f).OrthoL()));
+            aoes.Add(new(new AOEShapeCircle(6.0f), Arena.Center));
+        }
+
+        if (spell.Action.ID == (uint)AID.SlapHappyLeftHand) {
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoL() * 10.0f).OrthoR()));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoR() * 10.0f).OrthoL()));
+            aoes.Add(new(new AOEShapeCircle(6.0f), Arena.Center));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.SlapHappyBigAOE || spell.Action.ID == (uint)AID.SlapHappySmallAOE) {
+            NumCasts++;
+            if (aoes.Count > 0) {
+                aoes.RemoveAt(0);
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+class SlapHappyBaits(BossModule module) : Components.GenericBaitStack(module) {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.SlapHappyLeftHand) {
+            var party = Raid.WithSlot(true, true, true);
+            BitMask allowedTanks = default;
+            BitMask allowedHealers = default;
+            BitMask allowedDDs = default;
+
+            for (int i = 0; i < party.Length; i++) {
+                ref var p = ref party[i];
+
+                if (p.Item2.Role == Role.Tank) {
+                    allowedTanks.Set(p.Item1);
+                }
+
+                if (p.Item2.Role == Role.Healer) {
+                    allowedHealers.Set(p.Item1);
+                }
+
+                if (p.Item2.Role == Role.Melee || p.Item2.Role == Role.Ranged) {
+                    allowedDDs.Set(p.Item1);
+                }
+            }
+
+            var addedTank = false;
+            var addedHealer = false;
+            var addedDD = false;
+
+            for (int i = 0; i < party.Length; i++) {
+                ref var player = ref party[i];
+                var p = player.Item2;
+
+                if (p.IsDead) {
+                    continue;
+                }
+
+                if (p.Role == Role.Tank) {
+                    if (!addedTank) {
+                        CurrentBaits.Add(new(caster, p, new AOEShapeCone(100, 22.5f.Degrees()), forbidden: ~allowedTanks));
+                        addedTank = true;
+                    }
+                }
+
+                if (p.Role == Role.Healer) {
+                    if (!addedHealer) {
+                        CurrentBaits.Add(new(caster, p, new AOEShapeCone(100, 22.5f.Degrees()), forbidden: ~allowedHealers));
+                        addedHealer = true;
+                    }
+                }
+
+                if (p.Role == Role.Melee || p.Role == Role.Ranged) {
+                    if (!addedDD) {
+                        CurrentBaits.Add(new(caster, p, new AOEShapeCone(100, 22.5f.Degrees()), forbidden: ~allowedDDs));
+                        addedDD = true;
+                    }
+                }
+            }
+        }
+
+        if (spell.Action.ID == (uint)AID.SlapHappyRightHand) {
+            var target = WorldState.Actors.Find(caster.TargetID);
+            if (target == null) {
+                return;
+            }
+
+            CurrentBaits.Add(new(caster, target, new AOEShapeCone(100, 22.5f.Degrees())));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.SlapHappyShockingImpactStack || spell.Action.ID == (uint)AID.SlapHappyShockwaveRole) {
+            if (CurrentBaits.Count > 0) {
+                CurrentBaits.RemoveAt(0);
+            }
         }
     }
 }

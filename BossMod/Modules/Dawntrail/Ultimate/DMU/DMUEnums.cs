@@ -30,7 +30,6 @@ public enum OID : uint {
 
     _Gen_Actor1ec03d = 0x1EC03D, // R0.500, x0 (spawn during fight), EventObj type
     _Gen_BlackHole = 0x4C38, // R1.000, x0 (spawn during fight)
-
 }
 
 public enum AID : uint {
@@ -144,19 +143,21 @@ public enum AID : uint {
     _Ability_Aetherlink = 49892, // Chaos->self, no cast, single-target
     _Ability_Aetherlink1 = 49893, // Exdeath->self, no cast, single-target
 
-    _Ability_Max = 47845, // Kefka->self, 5.0s cast, single-target
+    Max = 47845, // Kefka->self, 5.0s cast, single-target
+    
+    SlapHappyRightHand = 47846, // Kefka->self, 5.0s cast, single-target - Right hand
+    SlapHappyLeftHand = 47847, // Kefka->self, 5.0s cast, single-target - Left hand
+    SlapHappyBigAOE = 47848, // Helper->self, no cast, range 13 circle - AOE where he slams across the map
+    SlapHappySmallAOE = 47849, // Helper->self, 1.5s cast, range 6 circle - Middle small hand
+    SlapHappyShockingImpactStack = 47850, // Helper->self, no cast, range 100 ?-degree cone - party stack -> right hand
+    SlapHappyShockwaveRole = 47851, // Helper->self, no cast, range 100 ?-degree cone - role spread -> left hand
+
     _Ability_Earthquake = 50546, // Helper->self, 5.0s cast, range 100 circle
     _Ability_Earthquake1 = 50545, // Chaos->self, 5.0s cast, single-target
     _Ability_Earthquake2 = 47866, // Helper->self, no cast, range 100 circle
-    _Ability_SlapHappy = 47846, // Kefka->self, 5.0s cast, single-target
-    _Ability_SlapHappy1 = 47848, // Helper->self, no cast, range 13 circle
-    _Ability_SlapHappy2 = 47849, // Helper->self, 1.5s cast, range 6 circle
-    _Ability_ShockingImpact = 47850, // Helper->self, no cast, range 100 ?-degree cone
     _Ability_BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target
     _Ability_Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect
     _Ability_DamningEdict = 47873, // Chaos->self, 5.0s cast, range 60 width 80 rect
-    _Ability_SlapHappy3 = 47847, // Kefka->self, 5.0s cast, single-target
-    _Ability_Shockwave = 47851, // Helper->self, no cast, range 100 ?-degree cone
     _Ability_LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target
     _Ability_LookUponMeAndDespair1 = 47854, // Helper->self, 5.0s cast, range 100 width 16 rect
     _Ability_ = 50362, // Kefka->self, no cast, single-target
