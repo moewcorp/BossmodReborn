@@ -150,6 +150,15 @@ class Crystals(BossModule module) : BossComponent(module) {
             crystals.RemoveAll(c => c.actor == actor);
             nextElement = Element.Fire;
         }
+
+        if (actor.OID == (uint)OID.WindP3) {
+            crystals.RemoveAll(c => c.actor == actor);
+            nextElement = Element.None;
+        }
+
+        if (crystals.Count == 1) {
+            nextElement = Element.Wind;
+        }
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
@@ -402,9 +411,263 @@ class ThunderIIITB(BossModule module) : Components.BaitAwayCast(module, (uint)AI
     }
 }
 
-// TODO bait spot
-// TODO Wind crystal
-// TODO boss jumping around the map
-// TODO Limit cut
+class UmbraSmash(BossModule module) : Components.GenericBaitProximity(module) {
+    private Crystals? crystals = module.FindComponent<Crystals>();
+    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private bool castStarted = false;
 
-// TODO change crystal colours - mainly wind hard to tell you should stand on it
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.UmbraSmash) {
+            castStarted = true;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.UmbraSmash) {
+            NumCasts++;
+            CurrentBaits.Clear();
+        }
+    }
+
+    public override void Update() {
+        if (crystals == null || crystals.crystals.Count != 1) {
+            return;
+        }
+
+        if (castStarted == true) {
+            return;
+        }
+
+        CurrentBaits.Clear();
+
+        var chaosBoss = WorldState.Actors.FirstOrDefault(a => a.OID == (uint)OID.Chaos);
+        if (chaosBoss == null) {
+            return;
+        }
+
+        var player = Raid.WithoutSlot().SortedByRange(chaosBoss.Position).LastOrDefault();
+        if (player == null) {
+            return;
+        }
+
+        CurrentBaits.Add(new(player, new AOEShapeCircle(15.0f)));
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (crystals == null || crystals.crystals.Count != 1) {
+            return;
+        }
+
+        if (castStarted == true) {
+            return;
+        }
+
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length == 0) {
+            return;
+        }
+        var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+
+        var windCrystal = crystals.crystalsStored.First(c => c.actor.OID == (uint)OID.WindP3);
+
+        if (assignment == PartyRolesConfig.Assignment.R1) {
+            Arena.AddCircle((Module.Center - (windCrystal.actor.Position - Module.Center).Normalized() * Module.Bounds.Radius) + new WDir(0, 1.0f), 1.0f, Colors.Safe, 2.0f);
+        }
+    }
+}
+
+class UltimaBlaster(BossModule module) : Components.RaidwideInstant(module, (uint)AID.UltimaBlaster);
+
+class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(module) {
+    private Actor? startClone = null;
+    private Angle? angleRotation = null;
+    private int[] orbNumbers = Utils.MakeArray(8, -1);
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.UltimaBlaster) {
+            if (startClone == null) {
+                startClone = caster;
+            }
+
+            if (angleRotation == null) {
+                angleRotation = (startClone.Position - Arena.Center).OrthoL().Dot(caster.Position - Arena.Center) > 0 ? -45.Degrees() : 45.Degrees();
+            }
+        }
+
+        if (spell.Action.ID == (uint)AID.UltimaBlasterBait) {
+            NumCasts++;
+            if (CurrentBaits.Count > 0) {
+                CurrentBaits.RemoveAt(0);
+            }
+        }
+    }
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        var orbNumber = (IconID)iconID switch {
+            IconID.OrbNumber1 => 1,
+            IconID.OrbNumber2 => 2,
+            IconID.OrbNumber3 => 3,
+            IconID.OrbNumber4 => 4,
+            IconID.OrbNumber5 => 5,
+            IconID.OrbNumber6 => 6,
+            IconID.OrbNumber7 => 7,
+            IconID.OrbNumber8 => 8,
+            _ => -1
+        };
+
+        if (orbNumber > 0) {
+            var slot = Raid.FindSlot(targetID);
+            if (slot >= 0) {
+                orbNumbers[slot] = orbNumber;
+
+                if (startClone == null || angleRotation == null) {
+                    return;
+                }
+
+                var player = WorldState.Actors.Find(targetID);
+                if (player == null) {
+                    return;
+                }
+
+                CurrentBaits.Add(new(Arena.Center + (startClone.Position - Arena.Center).Rotate(angleRotation.Value * (orbNumber - 1)), player, new AOEShapeRect(100.0f, 3.0f)));
+            }
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (angleRotation == null) {
+            return;
+        }
+
+        foreach (var bait in ActiveBaitsOn(pc)) {
+            Arena.AddCircle(bait.Source.Position, 30.0f, Colors.Object);
+            Arena.AddCircle(Arena.Center + (Arena.Center - bait.Source.Position).Normalized().Rotate(angleRotation.Value * 0.5f) * 19.0f, 0.75f, Colors.Safe);
+        }
+    }
+}
+
+// TODO Functions (HeadTailWind & Cyclone) below work fine for the mechanics, but should be revisited and improved to solve how the mechanic works normally
+//  Most groups are currently doing LB strats which makes the mechanic resolve in a certain way / where stuff doesn't matter
+class HeadTailWind(BossModule module) : Components.GenericKnockback(module) {
+    public SID[] Direction = new SID[8];
+    private (WPos Origin, DateTime Activation, bool EventHappened) wave;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.VacuumWave) {
+            wave = new(caster.Position, DateTime.Now, false);
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.VacuumWave) {
+            NumCasts++;
+            wave.EventHappened = true;
+        }
+    }
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        SID? direction = (SID)status.ID switch {
+            SID.Headwind => SID.Headwind,
+            SID.Tailwind => SID.Tailwind,
+            _ => null
+        };
+
+        if (direction != null) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                Direction[slot] = direction.Value;
+            }
+        }
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.Headwind || status.ID == (uint)SID.Tailwind) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                Direction[slot] = 0;
+            }
+        }
+    }
+
+    public override ReadOnlySpan<Knockback> ActiveKnockbacks(int slot, Actor actor) {
+        if (wave.Origin != default) {
+            return new[] { new Knockback(wave.Origin, KnockDistance(slot, actor, wave.Origin), wave.Activation) };
+        }
+
+        return [];
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (Direction[pcSlot] != SID.Headwind || Direction[pcSlot] != SID.Tailwind) {
+            return;
+        }
+
+        foreach (var knockback in ActiveKnockbacks(pcSlot, pc)) {
+            var toSource = (knockback.Origin - pc.Position).Normalized();
+            var safeFacing = (Direction[pcSlot] == SID.Headwind ? -toSource : toSource).ToAngle();
+            Arena.PathArcTo(pc.Position, 1, (safeFacing + 45.Degrees()).Rad, (safeFacing - 45.Degrees()).Rad);
+            MiniArena.PathStroke(false, Colors.Safe);
+            Arena.PathArcTo(pc.Position, 1, (safeFacing + 225.Degrees()).Rad, (safeFacing + 135.Degrees()).Rad);
+            MiniArena.PathStroke(false, Colors.Danger);
+        }
+    }
+
+    public override void Update() {
+        if (wave.EventHappened) {
+            foreach (var player in Raid.WithoutSlot()) {
+                if (player.LastFrameMovement.Length() / WorldState.Frame.Duration > 15) {
+                    wave = default;
+                    break;
+                }
+            }
+        }
+    }
+
+    float KnockDistance(int pcSlot, Actor pc, WPos source) {
+        var direction = Direction[pcSlot];
+        if (direction != SID.Headwind && direction != SID.Tailwind) {
+            return 20;
+        }
+
+        var toSource = (source - pc.Position).Normalized();
+        var safeFacing = direction == SID.Headwind ? -toSource : toSource;
+        var rel = safeFacing.Normalized().Dot(pc.Rotation.ToDirection());
+
+        if (rel > 0.7071067f) {
+            return 10;
+        }
+
+        if (rel < -0.7071068f) {
+            return 40;
+        }
+
+        return 20;
+    }
+}
+
+class Cyclone(BossModule module) : Components.GenericStackSpread(module) {
+    private HeadTailWind? windDebuffs = module.FindComponent<HeadTailWind>();
+    public int NumCasts = 0;
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Cyclone) {
+            NumCasts++;
+        }
+    }
+
+    public override void Update() {
+        Stacks.Clear();
+
+        if (windDebuffs == null) {
+            return;
+        }
+
+        foreach (var (slot, player) in Raid.WithSlot().WhereSlot(p => windDebuffs.Direction[p] is SID.Headwind or SID.Tailwind)) {
+            Stacks.Add(new(player, 6.0f));
+        }
+    }
+}

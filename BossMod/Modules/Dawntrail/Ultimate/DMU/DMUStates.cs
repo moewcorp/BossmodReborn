@@ -81,20 +81,62 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<LongitudinalLatitudinalImplosion>(id + 0x110, 2.0f, o => o.NumCasts > 2, "Front/sides 2nd")
             .DeactivateOnExit<LongitudinalLatitudinalImplosion>();
 
-        Condition(id + 0x120, 3.1f, () => Module.FindComponent<WaterCrystal>()?.NumCasts > 0 || Module.FindComponent<FireCrystal>()?.NumCasts > 0, "2nd Crystal")
-            .ExecOnExit<Crystals>(c => {
-                if (c.nextElement == Crystals.Element.Fire) {
+        Condition(id + 0x120, 3.1f,
+                () => Module.FindComponent<WaterCrystal>()?.NumCasts > 0 ||
+                      Module.FindComponent<FireCrystal>()?.NumCasts > 0, "2nd Crystal")
+            .ExecOnExit<Crystals>(c =>
+            {
+                if (c.nextElement == Crystals.Element.Fire)
+                {
                     Module.DeactivateComponent<FireCrystal>();
                 }
 
-                if (c.nextElement == Crystals.Element.Water) {
+                if (c.nextElement == Crystals.Element.Water)
+                {
                     Module.DeactivateComponent<WaterCrystal>();
                 }
-            });
+            })
+            .ActivateOnExit<UmbraSmash>()
+            .ActivateOnEnter<UltimaBlaster>();
 
+        ActorCastStart(id + 0x130, _module.ChaosP3, (uint)AID.UmbraSmash, 9.3f, true, "UmbraSmash bait")
+            .ActivateOnEnter<UltimaBlasterLimitCut>();
 
+        ComponentCondition<UltimaBlaster>(id + 0x140, 0.8f, o => o.NumCasts > 0, "Raidwides start");
 
-        // TODO deactivate Crystals -> .ActivateOnExit<Crystals>();
+        ComponentCondition<UmbraSmash>(id + 0x150, 4.1f, o => o.NumCasts > 0, "UmbraSmash bait resolves")
+            .ActivateOnEnter<HeadTailWind>()
+            .ActivateOnEnter<Cyclone>()
+            .DeactivateOnExit<UmbraSmash>();
+
+        ComponentCondition<HeadTailWind>(id + 0x160, 3.1f, o => o.NumCasts > 0, "Knockback");
+        ComponentCondition<Cyclone>(id + 0x170, 3.9f, o => o.NumCasts == 8, "Wind stacks")
+            .DeactivateOnExit<HeadTailWind>()
+            .DeactivateOnExit<Cyclone>()
+            .DeactivateOnExit<Crystals>();
+
+        ComponentCondition<UltimaBlasterLimitCut>(id + 0x180, 11.0f, o => o.NumCasts > 0, "Limit cut starts");
+        ComponentCondition<UltimaBlasterLimitCut>(id + 0x190, 1.6f, o => o.NumCasts == 8, "Limit cut ends")
+            .DeactivateOnExit<UltimaBlaster>()
+            .DeactivateOnExit<UltimaBlasterLimitCut>();
+
+        ActorCast(id + 0x200, _module.ExdeathP3, (uint)AID.ThunderIII, 1.0f, 5.0f, true, "Tankbuster cast")
+            .ActivateOnEnter<ThunderIIITB>();
+        ComponentCondition<ThunderIIITB>(id + 0x205, 0.1f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x210, 3.1f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
+            .DeactivateOnExit<ThunderIIITB>();
+
+        ActorCast(id + 0x220, _module.ChaosP3, (uint)AID.TheDecisiveBattle, 1.9f, 3.0f, true)
+            .ActivateOnEnter<TheDecisiveBattle>()
+            .DeactivateOnExit<TheDecisiveBattle>();
+
+        ActorCast(id + 0x230, _module.ExdeathP3, (uint)AID.ThunderIII, 4.2f, 5.0f, true, "Tankbuster cast")
+            .ActivateOnEnter<ThunderIIITB>();
+        ComponentCondition<ThunderIIITB>(id + 0x235, 0.1f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x240, 3.1f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
+            .DeactivateOnExit<ThunderIIITB>();
+
+        // TODO EarthQuake
 
         Timeout(id + 0xFF0000, 10000, "P3");
     }
