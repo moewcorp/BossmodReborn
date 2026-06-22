@@ -679,9 +679,9 @@ class SlapHappy(BossModule module) : Components.GenericAOEs(module) {
         }
 
         if (spell.Action.ID == (uint)AID.SlapHappyLeftHand) {
-            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoL() * 10.0f).OrthoR()));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoL() * 10.0f).OrthoL()));
             aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f));
-            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoR() * 10.0f).OrthoL()));
+            aoes.Add(new(new AOEShapeCircle(13.0f), Arena.Center + spell.Rotation.ToDirection().OrthoL() * 10.0f + (spell.Rotation.ToDirection().OrthoL() * 10.0f).OrthoR()));
             aoes.Add(new(new AOEShapeCircle(6.0f), Arena.Center));
         }
     }
