@@ -772,6 +772,7 @@ class SlapHappyBaits(BossModule module) : Components.GenericBaitStack(module) {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.SlapHappyShockingImpactStack || spell.Action.ID == (uint)AID.SlapHappyShockwaveRole) {
             if (CurrentBaits.Count > 0) {
+                NumCasts++;
                 CurrentBaits.RemoveAt(0);
             }
         }
@@ -793,7 +794,7 @@ class Nothingness(BossModule module) : Components.BaitAwayTethers(module, new AO
 class BlackHole(BossModule module) : BossComponent(module) {
     private readonly List<(Actor blackHole, ulong target)> Tethers = [];
     private KefkaMax? kefkaMax = module.FindComponent<KefkaMax>();
-    private int NumCasts = 0;
+    public int NumCasts = 0;
 
     private enum Roles { NONE, DPS, SUPPORT, ACCRETION }
     private (Roles role, int order)[] orderedRoles = Utils.MakeArray(8, (Roles.NONE, 0));

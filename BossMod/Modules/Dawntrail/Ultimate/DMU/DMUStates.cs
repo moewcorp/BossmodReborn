@@ -129,24 +129,97 @@ sealed class DMUStates : StateMachineBuilder {
         ActorCast(id + 0x220, _module.ChaosP3, (uint)AID.TheDecisiveBattle, 1.9f, 3.0f, true)
             .ActivateOnEnter<TheDecisiveBattle>()
             .DeactivateOnExit<TheDecisiveBattle>()
-            .ActivateOnEnter<KefkaMax>()
-            .ActivateOnEnter<SlapHappy>()
-            .ActivateOnEnter<SlapHappyBaits>()
-            .ActivateOnEnter<DamningEdict>()
-            .ActivateOnEnter<LookUponMeAndDespairAOE>()
-            .ActivateOnEnter<WhiteHole>()
-            .ActivateOnEnter<EarthquakeRaidwide>()
-            .ActivateOnEnter<BlackHoleActors>()
-            .ActivateOnEnter<BlackHole>()
-            .ActivateOnEnter<Nothingness>();
+            .ActivateOnExit<ThunderIIITB>();
 
-        ActorCast(id + 0x230, _module.ExdeathP3, (uint)AID.ThunderIII, 4.2f, 5.0f, true, "Tankbuster cast")
-            .ActivateOnEnter<ThunderIIITB>();
-        ComponentCondition<ThunderIIITB>(id + 0x235, 0.1f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x235, 9.2f, o => o.NumCasts > 0, "Tankbuster 1st hit");
         ComponentCondition<ThunderIIITB>(id + 0x240, 3.1f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
-            .DeactivateOnExit<ThunderIIITB>();
+            .DeactivateOnExit<ThunderIIITB>()
+            .ActivateOnEnter<EarthquakeRaidwide>();
 
-        // TODO EarthQuake
+        ComponentCondition<EarthquakeRaidwide>(id + 0x250, 1.8f, o => o.NumCasts > 0, "Raidwide")
+            .DeactivateOnExit<EarthquakeRaidwide>()
+            .ActivateOnEnter<KefkaMax>()
+            .ActivateOnExit<SlapHappy>()
+            .ActivateOnExit<SlapHappyBaits>()
+            .ActivateOnExit<BlackHole>()
+            .ActivateOnExit<BlackHoleActors>();
+
+        ComponentCondition<SlapHappy>(id + 0x260, 18.8f, o => o.NumCasts == 4, "SlapHappy AOEs resolve + Baits")
+            .DeactivateOnExit<SlapHappy>()
+            .DeactivateOnExit<SlapHappyBaits>()
+            .ActivateOnExit<Nothingness>();
+
+        ComponentCondition<BlackHole>(id + 0x270, 7.4f, o => o.NumCasts == 1, "Tethers set 1-1");
+
+        ActorCastStart(id + 0x280, _module.ExdeathP3, (uint)AID.ThunderIII, 5.3f, true, "Tankbuster cast")
+            .ActivateOnEnter<ThunderIIITB>();
+        ComponentCondition<BlackHole>(id + 0x290, 1.8f, o => o.NumCasts > 1, "Tethers set 1-2")
+            .DeactivateOnExit<Nothingness>();
+        ComponentCondition<ThunderIIITB>(id + 0x295, 3.2f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x300, 3.1f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
+            .DeactivateOnExit<ThunderIIITB>()
+            .ActivateOnEnter<DamningEdict>();
+
+        ComponentCondition<DamningEdict>(id + 0x310, 5.0f, o => o.NumCasts > 0, "Frontal")
+            .DeactivateOnExit<DamningEdict>()
+            .ActivateOnEnter<SlapHappy>()
+            .ActivateOnEnter<SlapHappyBaits>();
+
+        ComponentCondition<SlapHappy>(id + 0x320, 4.7f, o => o.NumCasts == 4, "SlapHappy AOEs resolve + Baits")
+            .DeactivateOnExit<SlapHappy>()
+            .DeactivateOnExit<SlapHappyBaits>()
+            .ActivateOnExit<Nothingness>();
+
+        ComponentCondition<BlackHole>(id + 0x340, 7.5f, o => o.NumCasts > 3, "Tethers set 2-1");
+        ComponentCondition<BlackHole>(id + 0x350, 5.0f, o => o.NumCasts > 6, "Tethers set 2-2");
+        ComponentCondition<BlackHole>(id + 0x360, 5.1f, o => o.NumCasts > 9, "Tethers set 2-3")
+            .DeactivateOnExit<Nothingness>()
+            .ActivateOnEnter<DamningEdict>();
+
+        ComponentCondition<DamningEdict>(id + 0x370, 4.9f, o => o.NumCasts > 0, "Frontal")
+            .DeactivateOnExit<DamningEdict>()
+            .ActivateOnEnter<LookUponMeAndDespairAOE>();
+
+        ComponentCondition<LookUponMeAndDespairAOE>(id + 0x380, 1.4f, o => o.NumCasts > 0, "Middle line AOE")
+            .DeactivateOnExit<LookUponMeAndDespairAOE>()
+            .ActivateOnEnter<ThunderIIITB>();
+
+        ComponentCondition<ThunderIIITB>(id + 0x395, 4.5f, o => o.NumCasts > 0, "Tankbuster 1st hit");
+        ComponentCondition<ThunderIIITB>(id + 0x400, 3.1f, o => o.NumCasts > 1, "Tankbuster 2nd hit")
+            .DeactivateOnExit<ThunderIIITB>()
+            .ActivateOnExit<Nothingness>();
+
+        ComponentCondition<BlackHole>(id + 0x410, 10.1f, o => o.NumCasts > 12, "Tethers set 3-1");
+        ComponentCondition<BlackHole>(id + 0x420, 5.0f, o => o.NumCasts > 15, "Tethers set 3-2");
+        ComponentCondition<BlackHole>(id + 0x430, 5.1f, o => o.NumCasts > 18, "Tethers set 3-3")
+            .DeactivateOnExit<Nothingness>()
+            .ActivateOnEnter<WhiteHole>();
+
+        ComponentCondition<WhiteHole>(id + 0x440, 11.0f, o => o.NumCasts > 0, "Raidwide")
+            .DeactivateOnExit<WhiteHole>()
+            .ActivateOnEnter<LongitudinalLatitudinalImplosion>()
+            .ActivateOnEnter<SlapHappy>()
+            .ActivateOnEnter<SlapHappyBaits>();
+
+        ComponentCondition<LongitudinalLatitudinalImplosion>(id + 0x450, 0.7f, o => o.NumCasts > 0, "Front/sides 1st");
+        ComponentCondition<LongitudinalLatitudinalImplosion>(id + 0x460, 2.0f, o => o.NumCasts > 2, "Front/sides 2nd")
+            .DeactivateOnExit<LongitudinalLatitudinalImplosion>();
+
+        ComponentCondition<SlapHappy>(id + 0x470, 2.2f, o => o.NumCasts == 4, "SlapHappy AOEs resolve + Baits")
+            .DeactivateOnExit<SlapHappy>()
+            .DeactivateOnExit<SlapHappyBaits>()
+            .ActivateOnExit<Nothingness>();
+
+        ComponentCondition<BlackHole>(id + 0x480, 7.3f, o => o.NumCasts > 21, "Tethers set 4-1")
+            .ActivateOnEnter<LookUponMeAndDespairAOE>();
+        ComponentCondition<BlackHole>(id + 0x490, 7.0f, o => o.NumCasts > 23, "Tethers set 4-2 + Middle line AOE")
+            .DeactivateOnExit<Nothingness>()
+            .DeactivateOnExit<LookUponMeAndDespairAOE>();
+
+        // When chaos starts casting blizzard - deactive everything below
+        // .ActivateOnEnter<KefkaMax>()
+        // .ActivateOnEnter<BlackHoleActors>()
+        // .ActivateOnEnter<BlackHole>()
 
         Timeout(id + 0xFF0000, 10000, "P3");
     }
