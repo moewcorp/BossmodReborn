@@ -890,7 +890,7 @@ class BlackHole(BossModule module) : BossComponent(module) {
         }
 
         var startingPos = kefkaMax.boss.Position - kefkaMax.boss.Rotation.ToDirection() * 20.0f;
-        var startingAngle = (startingPos - Module.Center).ToAngle().Rad;
+        var startingAngle = (startingPos - Module.Center).ToAngle().Rad + 5 * MathF.PI / 180;
 
         var list = new List<((Actor BlackHoleActor, ulong PlayerID) item, float angle)>();
         foreach (var tether in Tethers) {
