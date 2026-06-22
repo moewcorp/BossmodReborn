@@ -646,10 +646,10 @@ class Cyclone(BossModule module) : Components.GenericStackSpread(module) {
 }
 
 class KefkaMax(BossModule module) : BossComponent(module) {
-    private Actor? boss = null;
+    public Actor? boss = null;
 
-    public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2) {
-        if (actor.OID == (uint)OID.Kefka && modelState == 5) {
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.KefkaMax) {
             boss = actor;
         }
     }
@@ -790,3 +790,123 @@ class LookUponMeAndDespairAOE(BossModule module) : Components.SimpleAOEs(module,
 class WhiteHole(BossModule module) : Components.RaidwideCast(module, (uint)AID.WhiteHole);
 
 class EarthquakeRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.EarthquakeRaidwide);
+
+class BlackHoleActors(BossModule module) : Components.Voidzone(module, 2.0f, enemies => enemies.Enemies((uint)OID.BlackHole));
+
+class Nothingness(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether);
+
+class BlackHole(BossModule module) : BossComponent(module) {
+    private readonly List<(Actor blackHole, ulong target)> Tethers = [];
+    private KefkaMax? kefkaMax = module.FindComponent<KefkaMax>();
+    private int NumCasts = 0;
+
+    private enum Roles { NONE, DPS, SUPPORT, ACCRETION }
+    private (Roles role, int order)[] orderedRoles = Utils.MakeArray(8, (Roles.NONE, 0));
+    private (Roles role, int order)[] currentSet = [];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BlackHole) {
+            currentSetSolver();
+        }
+    }
+
+    public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID == (uint)TetherID.BlackHoleTether) {
+            Tethers.Add((source, tether.Target));
+            SortTethersCW();
+        }
+    }
+
+    public override void OnUntethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID == (uint)TetherID.BlackHoleTether) {
+            Tethers.RemoveAll(t => t.blackHole.InstanceID == source.InstanceID);
+        }
+    }
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        var order = (SID)status.ID switch {
+            SID.FirstInLine => 1,
+            SID.SecondInLine => 2,
+            SID.ThirdInLine => 3,
+            _ => 0
+        };
+
+        if (order != 0) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                orderedRoles[slot].order = order;
+                if (orderedRoles[slot].role == Roles.NONE) {
+                    orderedRoles[slot].role = actor.Class.IsSupport() ? Roles.SUPPORT : Roles.DPS;
+                }
+            }
+        }
+
+        if (status.ID == (uint)SID.Accretion) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                orderedRoles[slot].role = Roles.ACCRETION;
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Nothingness) {
+            NumCasts++;
+            currentSetSolver();
+        }
+    }
+
+    private void currentSetSolver() {
+        currentSet = (NumCasts) switch {
+            0 => [new(Roles.DPS, 1)], // Set 1-1
+            1 => [new(Roles.DPS, 1), new(Roles.SUPPORT, 1)], // Set 1-2
+            3 => [new(Roles.DPS, 1), new(Roles.SUPPORT, 1), new(Roles.ACCRETION, 1)], // Set 2-1
+            6 => [new(Roles.DPS, 2), new(Roles.SUPPORT, 1), new(Roles.ACCRETION, 1)], // Set 2-2
+            9 => [new(Roles.DPS, 2), new(Roles.SUPPORT, 2), new(Roles.ACCRETION, 1)], // Set 2-3
+            12 => [new(Roles.DPS, 2), new(Roles.SUPPORT, 2), new(Roles.ACCRETION, 2)], // Set 3-1
+            15 => [new(Roles.DPS, 3), new(Roles.SUPPORT, 2), new(Roles.ACCRETION, 2)], // Set 3-2
+            18 => [new(Roles.DPS, 3), new(Roles.SUPPORT, 3), new(Roles.ACCRETION, 2)], // Set 3-3
+            21 => [new(Roles.DPS, 3), new(Roles.SUPPORT, 3)], // Set 4-1
+            23 => [new(Roles.SUPPORT, 3)], // Set 4-2
+            _ => []
+        };
+
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        for (int i = 0; i < Tethers.Count; i++) {
+            var (blackHoleActor, targetID) = Tethers[i];
+            var target = WorldState.Actors.Find(targetID);
+            if (target == null) {
+                continue;
+            }
+
+            bool assignedToMe = i < currentSet.Length && orderedRoles[pcSlot].role == currentSet[i].role && orderedRoles[pcSlot].order == currentSet[i].order;
+            Arena.AddLine(blackHoleActor.Position, target.Position, assignedToMe ? Colors.Safe : Colors.Danger, 3.0f);
+        }
+    }
+
+    // TODO move into data actor at some point called CWWith
+    private void SortTethersCW() {
+        if (kefkaMax == null || kefkaMax.boss == null) {
+            return;
+        }
+
+        var startingPos = kefkaMax.boss.Position - kefkaMax.boss.Rotation.ToDirection() * 20.0f;
+        var startingAngle = (startingPos - Module.Center).ToAngle().Rad;
+
+        var list = new List<((Actor BlackHoleActor, ulong PlayerID) item, float angle)>();
+        foreach (var tether in Tethers) {
+            var thisAngle = (tether.blackHole.Position - Module.Center).ToAngle().Rad;
+            if (thisAngle > startingAngle) {
+                thisAngle = thisAngle - Angle.DoublePI;
+            }
+            list.Add((tether, thisAngle));
+        }
+        list.Sort(static (a, b) => b.angle.CompareTo(a.angle));
+        Tethers.Clear();
+        Tethers.AddRange(list.Select(x => x.item));
+    }
+}

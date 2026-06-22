@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 public enum OID : uint {
+    // Phase 1
     Kefka = 0x4C30, // R6.000, x1
     Helper = 0x233C, // R0.500, x37, Helper type
     GravenImage = 0x4C31, // R0.500, x9
@@ -15,11 +16,13 @@ public enum OID : uint {
     PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
     Actor1ec023 = 0x1EC023, // R0.500, x0 (spawn during fight), EventObj type
 
+    // Phase 2
     BossP2 = 0x4C32,
     P2KefkaHelpers = 0x4C39, // R3.500, x0 (spawn during fight)
     YellowTriangle = 0x1EBFB2, // R0.500, x0 (spawn during fight), EventObj type
     YellowTriangle1 = 0x1EBFB3, // R0.500, x0 (spawn during fight), EventObj type
 
+    // Phase 3
     Chaos = 0x4C34,
     Exdeath = 0x4C35,
     KefkaP3 = 0x4BFB, // R2.700, x0 (spawn during fight)
@@ -27,12 +30,13 @@ public enum OID : uint {
     WindP3 = 0x1EC03C, // R0.500, x0 (spawn during fight), EventObj type
     WaterP3 = 0x1EC03B, // R0.500, x0 (spawn during fight), EventObj type
     FireP3 = 0x1EC03A, // R0.500, x0 (spawn during fight), EventObj type
+    BlackHole = 0x4C38, // R1.000, x0 (spawn during fight)
 
     _Gen_Actor1ec03d = 0x1EC03D, // R0.500, x0 (spawn during fight), EventObj type
-    _Gen_BlackHole = 0x4C38, // R1.000, x0 (spawn during fight)
 }
 
 public enum AID : uint {
+    // Phase 1
     AutoAttack = 49746, // Kefka->player, no cast, single-target
     Ability = 50173, // Kefka->location, no cast, single-target
 
@@ -161,8 +165,8 @@ public enum AID : uint {
     EarthquakeCast = 50546, // Helper->self, 5.0s cast, range 100 circle
     EarthquakeInstant = 47866, // Helper->self, no cast, range 100 circle
 
-    _Ability_BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target - summons actors around the map
-    _Ability_Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect - Tether AOE?
+    BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target - summons actors around the map
+    Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect - Tether AOE?
 
     // Unknown what these are yet, most likely the stomps he does in middle at the end
     _Ability_LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target
@@ -170,9 +174,13 @@ public enum AID : uint {
 }
 
 public enum SID : uint {
-    DownForTheCount = 774, // Kefka->player, extra=0xEC7
+    // Default
     DamageDown = 2911, // Helper->player, extra=0x0
+    MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
+    DownForTheCount = 774, // Kefka->player, extra=0xEC7
+    InEvent = 1268, // none->player, extra=0x0
 
+    // Phase 1
     DoubleTroubleTrap = 5078, // none->player, extra=0x0
     TelePortentRIGHT = 4878, // Helper->player, extra=0x0
     TelePortentUP = 4876, // Helper->player, extra=0x0
@@ -182,44 +190,40 @@ public enum SID : uint {
     TelePortentDOWN2 = 5080, // Helper->player, extra=0x0
     TelePortentLEFT2 = 5082, // Helper->player, extra=0x0
     TelePortentRIGHT2 = 5081, // Helper->player, extra=0x0
-
-    MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
     Bind = 2518, // none->player, extra=0x0
     Confused = 1283, // _Gen_GravenImage->player, extra=0x0
     Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
 
+    // Phase 3
+    FatedHero = 4194, // none->player, extra=0x0
+    EpicHero = 4192, // none->player, extra=0x0
+    EpicVillain = 4193, // none->Chaos, extra=0x0
+    FatedVillain = 4195, // none->Exdeath, extra=0x0
     Entropy = 1600, // none->player, extra=0x0
     DynamicFluid = 1601, // none->player, extra=0x0
     Tailwind = 1603, // none->player, extra=0x0
     Headwind = 1602, // none->player, extra=0x0
+    KefkaMax = 2536, // none->Kefka, extra=0x1FA
+    PrimordialCrust = 5454, // none->player, extra=0x0
+    FirstInLine = 3004, // none->player, extra=0x0
+    SecondInLine = 3005, // none->player, extra=0x0
+    ThirdInLine = 3006, // none->player, extra=0x0
+    Accretion = 1604, // none->player, extra=0x0
 
     _Gen_SpellsTrouble = 5083, // none->player, extra=0x4/0x3
     _Gen_1 = 5085, // none->player, extra=0x0
     _Gen_2 = 5086, // none->player, extra=0x0
     _Gen_3 = 5084, // none->player, extra=0x0
-
-    _Gen_InEvent = 1268, // none->player, extra=0x0
-    _Gen_FatedHero = 4194, // none->player, extra=0x0
-    _Gen_EpicHero = 4192, // none->player, extra=0x0
-    _Gen_EpicVillain = 4193, // none->Chaos, extra=0x0
-    _Gen_FatedVillain = 4195, // none->Exdeath, extra=0x0
-
     _Gen_LightningResistanceDownII = 2998, // Helper->player, extra=0x0
     _Gen_10 = 2273, // Kefka->Kefka, extra=0x1FF/0x22B
     _Gen_WindResistanceDownII = 1052, // Helper->player, extra=0x0
-
-    _Gen_11 = 2536, // none->Kefka, extra=0x1FA
-    _Gen_PrimordialCrust = 5454, // none->player, extra=0x0
-    _Gen_ThirdInLine = 3006, // none->player, extra=0x0
-    _Gen_FirstInLine = 3004, // none->player, extra=0x0
-    _Gen_Accretion = 1604, // none->player, extra=0x0
-    _Gen_SecondInLine = 3005, // none->player, extra=0x0
     _Gen_EarthResistanceDownII = 3372, // Helper->player, extra=0x0
     _Gen_Unbecoming = 5452, // 4C38->player, extra=0x1
     _Gen_MeanestExistence = 5453, // 4C38->player, extra=0x0
 }
 
 public enum IconID : uint {
+    // Phase 1
     TankIcon = 218, // player->self
     spreadIcon = 127, // player->self // Spread
     stackIcon = 128, // player->self // Stack
@@ -230,11 +234,13 @@ public enum IconID : uint {
     PurpleRingQuestionMark = 677, // Kefka->self // Questionmark
     PurpleRingBlueOrb = 678, // Kefka->self // Blue orb
 
+    // Phase 2
     SharedTankBuster = 259, // player->self
     TowerStackIcon = 715, // player->self
     TowerSpreadIcon = 716, // player->self
     TowerConeIcon = 717, // player->self
 
+    // Phase 3
     OrbNumber1 = 336, // player->self
     OrbNumber2 = 337, // player->self
     OrbNumber3 = 338, // player->self
@@ -246,19 +252,26 @@ public enum IconID : uint {
 }
 
 public enum Animations : uint {
+    // Phase 1
     PulseOrbStart = 4194432,
     PulseOrbEnd = 16777728,
     PuddleSoakReady = 1048608,
     PuddleExplosion = 262152,
     EyeStart = 4194432,
     EyeEnd = 16777728,
+
+    // Phase 2
     TriangleFlyingDown = 1048608,
     TriangleLanded = 4194432,
     TriangleExplosion = 262152,
 }
 
 public enum TetherID : uint {
+    // Phase 1
     GravenImageTether = 45, // 4C31->player
+
+    // Phase 3
+    BlackHoleTether = 84, // 4C38->player
+
     _Gen_Tether_chn_m0109ac = 64, // Exdeath->GravenImage
-    _Gen_Tether_chn_teke01h = 84, // 4C38->player
 }

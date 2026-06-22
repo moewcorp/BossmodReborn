@@ -135,7 +135,10 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<DamningEdict>()
             .ActivateOnEnter<LookUponMeAndDespairAOE>()
             .ActivateOnEnter<WhiteHole>()
-            .ActivateOnEnter<EarthquakeRaidwide>();
+            .ActivateOnEnter<EarthquakeRaidwide>()
+            .ActivateOnEnter<BlackHoleActors>()
+            .ActivateOnEnter<BlackHole>()
+            .ActivateOnEnter<Nothingness>();
 
         ActorCast(id + 0x230, _module.ExdeathP3, (uint)AID.ThunderIII, 4.2f, 5.0f, true, "Tankbuster cast")
             .ActivateOnEnter<ThunderIIITB>();
