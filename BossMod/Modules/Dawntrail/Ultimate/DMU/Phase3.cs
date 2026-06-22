@@ -453,18 +453,16 @@ class UmbraSmash(BossModule module) : Components.GenericBaitProximity(module) {
 class UltimaBlaster(BossModule module) : Components.RaidwideInstant(module, (uint)AID.UltimaBlaster);
 
 class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(module) {
-    private Actor? startClone = null;
-    private Angle? angleRotation = null;
+    private WPos startPosition;
+    private Angle angleRotate;
     private int[] orbNumbers = Utils.MakeArray(8, -1);
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.UltimaBlaster) {
-            if (startClone == null) {
-                startClone = caster;
-            }
-
-            if (angleRotation == null) {
-                angleRotation = (startClone.Position - Arena.Center).OrthoL().Dot(caster.Position - Arena.Center) > 0 ? -45.Degrees() : 45.Degrees();
+            if (startPosition == default) {
+                startPosition = caster.Position;
+            } else if (angleRotate == default) {
+                angleRotate = (startPosition - Arena.Center).OrthoL().Dot(caster.Position - Arena.Center) > 0 ? -45.Degrees() : 45.Degrees();
             }
         }
 
@@ -478,23 +476,23 @@ class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(modu
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
         var orbNumber = (IconID)iconID switch {
-            IconID.OrbNumber1 => 1,
-            IconID.OrbNumber2 => 2,
-            IconID.OrbNumber3 => 3,
-            IconID.OrbNumber4 => 4,
-            IconID.OrbNumber5 => 5,
-            IconID.OrbNumber6 => 6,
-            IconID.OrbNumber7 => 7,
-            IconID.OrbNumber8 => 8,
+            IconID.OrbNumber1 => 0,
+            IconID.OrbNumber2 => 1,
+            IconID.OrbNumber3 => 2,
+            IconID.OrbNumber4 => 3,
+            IconID.OrbNumber5 => 4,
+            IconID.OrbNumber6 => 5,
+            IconID.OrbNumber7 => 6,
+            IconID.OrbNumber8 => 7,
             _ => -1
         };
 
-        if (orbNumber > 0) {
-            var slot = Raid.FindSlot(targetID);
+        if (orbNumber >= 0) {
+            var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0) {
                 orbNumbers[slot] = orbNumber;
 
-                if (startClone == null || angleRotation == null) {
+                if (startPosition == default || angleRotate == default) {
                     return;
                 }
 
@@ -503,7 +501,8 @@ class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(modu
                     return;
                 }
 
-                CurrentBaits.Add(new(Arena.Center + (startClone.Position - Arena.Center).Rotate(angleRotation.Value * (orbNumber - 1)), player, new AOEShapeRect(100.0f, 3.0f)));
+                CurrentBaits.Add(new(Arena.Center + (startPosition - Arena.Center).Rotate(angleRotate * orbNumber), player, new AOEShapeRect(100.0f, 3.0f), WorldState.FutureTime(12.1f + 0.2f * orbNumber)));
+                CurrentBaits.Sort((a, b) => a.Activation.CompareTo(b.Activation));
             }
         }
     }
@@ -511,12 +510,8 @@ class UltimaBlasterLimitCut(BossModule module) : Components.GenericBaitAway(modu
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (angleRotation == null) {
-            return;
-        }
-
         foreach (var bait in ActiveBaitsOn(pc)) {
-            Arena.AddCircle(Arena.Center + (Arena.Center - bait.Source.Position).Normalized().Rotate(angleRotation.Value * 0.5f) * 19.0f, 0.75f, Colors.Safe);
+            Arena.AddCircle(Arena.Center + (Arena.Center - bait.Source.Position).Normalized().Rotate(angleRotate * 0.5f) * 19.0f, 0.75f, Colors.Safe);
         }
     }
 }
