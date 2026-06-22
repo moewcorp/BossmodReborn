@@ -159,6 +159,9 @@ public enum AID : uint {
 
     DamningEdict = 47873, // Chaos->self, 5.0s cast, range 60 width 80 rect - Just a simple AOE cleave from the direction the boss is looking
     WhiteHole = 48486, // Exdeath->self, 5.0s cast, range 80 circle - Simple raidwide where everyone has to be at max HP
+
+    LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
+    LookUponMeAndDespair2 = 47853, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
     LookUponMeAndDespairAOE = 47854, // Helper->self, 5.0s cast, range 100 width 16 rect - AOE on middle which simply just need to be dodged
 
     EarthquakeRaidwide = 50545, // Chaos->self, 5.0s cast, single-target
@@ -168,9 +171,23 @@ public enum AID : uint {
     BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target - summons actors around the map
     Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect - Tether AOE?
 
-    // Unknown what these are yet, most likely the stomps he does in middle at the end
-    _Ability_LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target
-    _Ability_LookUponMeAndDespair2 = 47853, // Kefka->self, 4.0+1.0s cast, single-target
+    BlizzardIIICast = 47887, // Exdeath->self, 3.0s cast, single-target - Bait cast
+    BlizzardIIIBaitCast = 47885, // Helper->location, 3.0s cast, range 6 circle - AOE puddle which will explode
+    BlizzardIIIRaidwide = 47889, // Exdeath->self, 4.0s cast, range 100 circle - Raidwide + standing still will freeze the target
+
+    KnockDownCast = 47874, // Chaos->self, 5.0s cast, single-target - Stack cast
+    KnockDown = 47875, // Helper->players, no cast, range 6 circle - Stack
+
+    BigBangCast = 47877, // Chaos->self, 5.0s cast, single-target - Hidden aoe cast
+    BigBang = 47878, // Helper->self, no cast, range 6 circle - AOEs that spawn where the stacks were taken
+
+    // TODO spawns towers in on the left and right of his feet, this will spawn 4x towers, 2 right, 2 left
+    // TODO unsure if its possible to know which tower will spawn first, but not be possible unless his animation changes
+    _Ability_StompAMole = 47855, // Kefka->self, 5.0s cast, single-target
+    _Ability_StompAMole1 = 47856, // Helper->self, 1.5s cast, range 5 circle
+
+    _Ability_BowelsOfAgony = 50719, // Chaos->self, 10.0s cast, range 100 circle - Enrage
+    _Ability_ = 50483, // Kefka->self, no cast, single-target - Most likely what the bosses cast to not be big anymore
 }
 
 public enum SID : uint {
@@ -249,6 +266,8 @@ public enum IconID : uint {
     OrbNumber6 = 438, // player->self
     OrbNumber7 = 439, // player->self
     OrbNumber8 = 440, // player->self
+    StackShare = 161, // player->self
+
 }
 
 public enum Animations : uint {

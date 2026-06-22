@@ -216,10 +216,16 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<Nothingness>()
             .DeactivateOnExit<LookUponMeAndDespairAOE>();
 
-        // When chaos starts casting blizzard - deactive everything below
-        // .ActivateOnEnter<KefkaMax>()
-        // .ActivateOnEnter<BlackHoleActors>()
-        // .ActivateOnEnter<BlackHole>()
+        ActorCast(id + 0x500, _module.ExdeathP3, (uint)AID.BlizzardIIICast, 5.3f, 3.0f, true, "Baits")
+            .DeactivateOnExit<KefkaMax>()
+            .DeactivateOnExit<BlackHoleActors>()
+            .DeactivateOnExit<BlackHole>()
+            .ActivateOnEnter<P3Blizzard>()
+            .ActivateOnEnter<P3BlizzardBaits>()
+            .ActivateOnEnter<KnockDown>()
+            .ActivateOnEnter<BigBang>()
+            .ActivateOnEnter<P3BlizzardMove>()
+            .ActivateOnEnter<StompAMole>();
 
         Timeout(id + 0xFF0000, 10000, "P3");
     }

@@ -906,3 +906,159 @@ class BlackHole(BossModule module) : BossComponent(module) {
         Tethers.AddRange(list.Select(x => x.item));
     }
 }
+
+class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlizzardIIIBaitCast, new AOEShapeCircle(6.0f));
+
+class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true) {
+    private Actor? boss = null;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIICast) {
+            boss = caster;
+        }
+
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBaitCast) {
+            NumCasts++;
+
+            if (NumCasts == 16) {
+                boss = null;
+            }
+        }
+    }
+
+    public override void Update() {
+        CurrentBaits.Clear();
+
+        if (boss == null) {
+            return;
+        }
+
+        foreach (var player in Raid.WithoutSlot()) {
+            CurrentBaits.Add(new(boss, player, new AOEShapeCircle(6.0f)));
+        }
+    }
+}
+
+class P3BlizzardMove(BossModule module) : Components.StayMove(module, 5d) {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIRaidwide) {
+            foreach (var (slot, _) in Raid.WithSlot()) {
+                PlayerStates[slot] = new(Requirement.Move, WorldState.FutureTime(spell.RemainingTime));
+            }
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIRaidwide) {
+            foreach (var (slot, _) in Raid.WithSlot()) {
+                PlayerStates[slot] = default;
+            }
+        }
+    }
+}
+
+class KnockDown(BossModule module) : Components.GenericStackSpread(module) {
+    public List<WPos> stackLocations = new List<WPos>();
+    public Class stackClass = Class.None;
+
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if (iconID == (uint)IconID.StackShare) {
+            var target = WorldState.Actors.Find(targetID);
+            if (target == null) {
+                return;
+            }
+
+            stackClass = target.Class;
+
+            BitMask allowedPlayers = default;
+            if (target.Class.IsSupport()) {
+                foreach (var (slot, player) in Raid.WithSlot()) {
+                    if (player.Class.IsSupport()) {
+                        allowedPlayers.Set(slot);
+                    }
+                }
+            }
+
+            if (target.Class.IsDD()) {
+                foreach (var (slot, player) in Raid.WithSlot()) {
+                    if (player.Class.IsDD()) {
+                        allowedPlayers.Set(slot);
+                    }
+                }
+            }
+
+            Stacks.Add(new(target, 6.0f, 4, 4, forbiddenPlayers: ~allowedPlayers));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.KnockDown) {
+            if (Stacks.Count > 0) {
+                stackLocations.Add(Stacks[0].Target.Position);
+                Stacks.RemoveAt(0);
+            }
+        }
+    }
+}
+
+class BigBang(BossModule module) : Components.GenericAOEs(module) {
+    private KnockDown? stacks = module.FindComponent<KnockDown>();
+    private List<AOEInstance> aoes = [];
+    private bool active = false;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BigBangCast) {
+            active = true;
+        }
+    }
+
+    public override void Update() {
+        aoes.Clear();
+
+        if (active == false) {
+            return;
+        }
+
+        if (stacks != null && stacks.stackLocations.Count > 0) {
+            foreach (var stack in stacks.stackLocations) {
+                aoes.Add(new(new AOEShapeCircle(6.0f), stack));
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.BigBang) {
+            if (stacks != null) {
+                NumCasts++;
+                if (stacks.stackLocations.Count > 0) {
+                    stacks.stackLocations.RemoveAt(0);
+                }
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+// TODO verify towers always spawn this distance away from the boss and the angles are correct
+// TODO look back over, if predicted towers work, we can simply just remove the actual cast ones - actual casts ones have like a 1.5second which makes it very hard to react
+// TODO add config party roles support
+// Boss position: [99.992, 99.992]
+// Tower location: [92.912, 92.912]
+// Tower location: [107.042, 107.042]
+class StompAMole(BossModule module) : Components.GenericTowers(module) {
+    // TODO
+}
+
+// TODO check the direction the boss is looking forward, from the point of the boss looking forward,
+//  - black is left
+//  - white is right
+
+/*
+    // TODO spawns towers in on the left and right of his feet, this will spawn 4x towers, 2 right, 2 left
+    // TODO unsure if its possible to know which tower will spawn first, but not be possible unless his animation changes
+    _Ability_StompAMole = 47855, // Kefka->self, 5.0s cast, single-target
+    _Ability_StompAMole1 = 47856, // Helper->self, 1.5s cast, range 5 circle
+ */
