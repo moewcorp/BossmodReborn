@@ -2,7 +2,6 @@
 
 namespace BossMod.Dawntrail.Ultimate.DMU;
 
-// TODO check knockback point is from the boss
 class AeroIIIAssault(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.AeroIIIAssault, 15f);
 
 class TheDecisiveBattle(BossModule module) : BossComponent(module) {
@@ -1043,12 +1042,12 @@ class BigBang(BossModule module) : Components.GenericAOEs(module) {
 }
 
 // TODO verify towers always spawn this distance away from the boss and the angles are correct
-// TODO add config party roles support
 class StompAMole(BossModule module) : Components.GenericTowers(module) {
     private Actor? boss = null;
     private KnockDown? stacks = module.FindComponent<KnockDown>();
     private enum TowerSide { LEFT, RIGHT }
     private List<(Tower tower, TowerSide side, int wave)> towers = new List<(Tower tower, TowerSide side, int wave)>();
+    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
     private IEnumerable<(Tower tower, TowerSide side, int wave)> currentTowers => towers.Where(t => t.wave == (NumCasts < 2 ? 0 : 1));
 
@@ -1109,8 +1108,27 @@ class StompAMole(BossModule module) : Components.GenericTowers(module) {
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        TowerSide? assignmentTower = null;
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length > 0) {
+            var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+            if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.H1 ||
+                assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.R1) {
+                assignmentTower = TowerSide.LEFT;
+            } else {
+                assignmentTower = TowerSide.RIGHT;
+            }
+        }
+
         foreach (var (tower, side, wave) in currentTowers) {
             if (tower.ForbiddenSoakers[pcSlot]) {
+                continue;
+            }
+
+            if (slots.Length > 0 && assignmentTower != side) {
+                if (tower.NumInside(Module) < tower.MaxSoakers) {
+                    tower.Shape.Outline(Arena, tower.Position, tower.Rotation, Colors.Danger, 2f);
+                }
                 continue;
             }
 
