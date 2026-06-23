@@ -1043,22 +1043,86 @@ class BigBang(BossModule module) : Components.GenericAOEs(module) {
 }
 
 // TODO verify towers always spawn this distance away from the boss and the angles are correct
-// TODO look back over, if predicted towers work, we can simply just remove the actual cast ones - actual casts ones have like a 1.5second which makes it very hard to react
 // TODO add config party roles support
-// Boss position: [99.992, 99.992]
-// Tower location: [92.912, 92.912]
-// Tower location: [107.042, 107.042]
 class StompAMole(BossModule module) : Components.GenericTowers(module) {
-    // TODO
+    private Actor? boss = null;
+    private KnockDown? stacks = module.FindComponent<KnockDown>();
+    private enum TowerSide { LEFT, RIGHT }
+    private List<(Tower tower, TowerSide side, int wave)> towers = new List<(Tower tower, TowerSide side, int wave)>();
+
+    private IEnumerable<(Tower tower, TowerSide side, int wave)> currentTowers => towers.Where(t => t.wave == (NumCasts < 2 ? 0 : 1));
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StompAMoleCast) {
+            boss = caster;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StompAMoleTower) {
+            int wave = NumCasts < 2 ? 0 : 1;
+            towers.RemoveAll(t => t.wave == wave && t.tower.Position.AlmostEqual(caster.Position, 1.0f));
+            NumCasts++;
+        }
+    }
+
+    public override void Update() {
+        if (boss == null) {
+            return;
+        }
+
+        if (stacks == null || stacks.stackClass == Class.None) {
+            return;
+        }
+
+        BitMask towerSoakers = default;
+
+        if (stacks.stackClass.IsSupport() == true) {
+            foreach (var (slot, player) in Raid.WithSlot()) {
+                if (player.Class.IsDD()) {
+                    towerSoakers.Set(slot);
+                }
+            }
+        }
+
+        if (stacks.stackClass.IsDD() == true) {
+            foreach (var (slot, player) in Raid.WithSlot()) {
+                if (player.Class.IsSupport()) {
+                    towerSoakers.Set(slot);
+                }
+            }
+        }
+
+        towers.Add(new(new Tower(boss.Position + boss.Rotation.ToDirection().OrthoL() * 10.0f, 5.0f, 2, 2, forbiddenSoakers: ~towerSoakers), TowerSide.RIGHT, 0));
+        towers.Add(new(new Tower(boss.Position + boss.Rotation.ToDirection().OrthoR() * 10.0f, 5.0f, 2, 2, forbiddenSoakers: ~towerSoakers), TowerSide.LEFT, 0));
+        towers.Add(new(new Tower(boss.Position + boss.Rotation.ToDirection().OrthoL() * 10.0f, 5.0f, 2, 2, forbiddenSoakers: towerSoakers), TowerSide.RIGHT, 1));
+        towers.Add(new(new Tower(boss.Position + boss.Rotation.ToDirection().OrthoR() * 10.0f, 5.0f, 2, 2, forbiddenSoakers: towerSoakers), TowerSide.LEFT, 1));
+        boss = null; // Prevents towers constantly getting added
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc) {
+        foreach (var (tower, side, wave) in currentTowers) {
+            if (tower.ForbiddenSoakers[pcSlot] || !tower.IsInside(pc) && tower.NumInside(Module) >= tower.MaxSoakers) {
+                tower.Shape.Draw(Arena, tower.Position, tower.Rotation);
+            }
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        foreach (var (tower, side, wave) in currentTowers) {
+            if (tower.ForbiddenSoakers[pcSlot]) {
+                continue;
+            }
+
+            var isInside = tower.IsInside(pc);
+            var numInside = tower.NumInside(Module);
+            var safe = numInside < tower.MaxSoakers || isInside && numInside <= tower.MaxSoakers;
+
+            if (safe) {
+                tower.Shape.Outline(Arena, tower.Position, tower.Rotation, Colors.Safe, 2f);
+            } else if (isInside && numInside > tower.MaxSoakers) {
+                tower.Shape.Outline(Arena, tower.Position, tower.Rotation, default, 2f);
+            }
+        }
+    }
 }
-
-// TODO check the direction the boss is looking forward, from the point of the boss looking forward,
-//  - black is left
-//  - white is right
-
-/*
-    // TODO spawns towers in on the left and right of his feet, this will spawn 4x towers, 2 right, 2 left
-    // TODO unsure if its possible to know which tower will spawn first, but not be possible unless his animation changes
-    _Ability_StompAMole = 47855, // Kefka->self, 5.0s cast, single-target
-    _Ability_StompAMole1 = 47856, // Helper->self, 1.5s cast, range 5 circle
- */

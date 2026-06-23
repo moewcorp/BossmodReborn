@@ -181,10 +181,8 @@ public enum AID : uint {
     BigBangCast = 47877, // Chaos->self, 5.0s cast, single-target - Hidden aoe cast
     BigBang = 47878, // Helper->self, no cast, range 6 circle - AOEs that spawn where the stacks were taken
 
-    // TODO spawns towers in on the left and right of his feet, this will spawn 4x towers, 2 right, 2 left
-    // TODO unsure if its possible to know which tower will spawn first, but not be possible unless his animation changes
-    _Ability_StompAMole = 47855, // Kefka->self, 5.0s cast, single-target
-    _Ability_StompAMole1 = 47856, // Helper->self, 1.5s cast, range 5 circle
+    StompAMoleCast = 47855, // Kefka->self, 5.0s cast, single-target
+    StompAMoleTower = 47856, // Helper->self, 1.5s cast, range 5 circle
 
     _Ability_BowelsOfAgony = 50719, // Chaos->self, 10.0s cast, range 100 circle - Enrage
     _Ability_ = 50483, // Kefka->self, no cast, single-target - Most likely what the bosses cast to not be big anymore
