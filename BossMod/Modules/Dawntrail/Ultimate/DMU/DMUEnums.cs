@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 public enum OID : uint {
+    // Phase 1
     Kefka = 0x4C30, // R6.000, x1
     Helper = 0x233C, // R0.500, x37, Helper type
     GravenImage = 0x4C31, // R0.500, x9
@@ -13,14 +14,29 @@ public enum OID : uint {
     Exit = 0x1E850B, // R0.500, x1, EventObj type
     YellowOrb = 0x1EBFBD, // R0.500, x2, EventObj type // Yellow orb
     PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
+    Actor1ec023 = 0x1EC023, // R0.500, x0 (spawn during fight), EventObj type
 
+    // Phase 2
     BossP2 = 0x4C32,
     P2KefkaHelpers = 0x4C39, // R3.500, x0 (spawn during fight)
     YellowTriangle = 0x1EBFB2, // R0.500, x0 (spawn during fight), EventObj type
     YellowTriangle1 = 0x1EBFB3, // R0.500, x0 (spawn during fight), EventObj type
+
+    // Phase 3
+    Chaos = 0x4C34,
+    Exdeath = 0x4C35,
+    KefkaP3 = 0x4BFB, // R2.700, x0 (spawn during fight)
+    Kefka1P3 = 0x482B, // R6.000, x0 (spawn during fight)
+    WindP3 = 0x1EC03C, // R0.500, x0 (spawn during fight), EventObj type
+    WaterP3 = 0x1EC03B, // R0.500, x0 (spawn during fight), EventObj type
+    FireP3 = 0x1EC03A, // R0.500, x0 (spawn during fight), EventObj type
+    BlackHole = 0x4C38, // R1.000, x0 (spawn during fight)
+
+    _Gen_Actor1ec03d = 0x1EC03D, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint {
+    // Phase 1
     AutoAttack = 49746, // Kefka->player, no cast, single-target
     Ability = 50173, // Kefka->location, no cast, single-target
 
@@ -98,9 +114,88 @@ public enum AID : uint {
     WingsOfDestructionRight = 47822, // BossP2->self, 4.0s cast, range 80 width 40 rect
     WingsOfDestructionTB = 50311, // BossP2->self, 4.0s cast, single-target
     WingsOfDestructionTB1 = 47823, // Helper->player, no cast, range 7 circle
+
+    // Phase 3
+    AeroIIIAssault = 50167, // Kefka->self, 3.0s cast, range 40 circle
+    ExdeathAutoAttack = 49744, // Exdeath->player, no cast, single-target
+
+    TheDecisiveBattle = 49890, // Chaos->self, 3.0s cast, single-target
+    TheDecisiveBattle1 = 49891, // Exdeath->self, 3.0s cast, single-target
+    DefinitionOfInsanity = 47842, // Kefka->self, 4.0s cast, single-target
+
+    BowelsOfAgony = 47858, // Chaos->self, 5.0s cast, range 100 circle
+    Tsunami = 47861, // Helper->player, no cast, range 5 circle
+    StraySpray = 47862, // Helper->players, no cast, range ?-10 donut
+    StrayFlames = 47859, // Helper->players, no cast, range 5 circle
+    Inferno = 47860, // Helper->player, no cast, range ?-10 donut
+
+    LongitudinalImplosion = 47869, // Chaos->self, 5.0+0.8s cast, single-target
+    LatitudinalImplosion = 47870, // Chaos->self, 5.0+0.8s cast, single-target
+    Shockwave = 47871, // Helper->self, no cast, range 40 ?-degree cone
+
+    ThunderIII = 47890, // Exdeath->self, 7.0s cast, range 11+R circle
+    ThunderIIITBCast = 47881, // Exdeath->self, 5.0s cast, single-target
+    ThunderIIITB = 47884, // Helper->player, no cast, range 5 circle
+
+    Trance = 49878, // Kefka->self, 3.9s cast, single-target
+    UltimaBlaster = 47843, // 4BFB->self, no cast, range 100 circle
+    UltimaBlasterBait = 47844, // 4BFB->self, no cast, range 100 width 6 rect
+    UmbraSmash = 47872, // Chaos->location, 5.0s cast, range 100 circle
+    VacuumWave = 47891, // Exdeath->self, 8.0s cast, range 100 circle
+
+    Cyclone = 47864, // Helper->players, no cast, range 6 circle
+    _Ability_Aetherlink = 49892, // Chaos->self, no cast, single-target
+    _Ability_Aetherlink1 = 49893, // Exdeath->self, no cast, single-target
+
+    Max = 47845, // Kefka->self, 5.0s cast, single-target
+    AbilityUnknownTeleport = 50362, // Kefka->self, no cast, single-target - most likely teleport, but not checked
+
+    SlapHappyRightHand = 47846, // Kefka->self, 5.0s cast, single-target - Right hand
+    SlapHappyLeftHand = 47847, // Kefka->self, 5.0s cast, single-target - Left hand
+    SlapHappyBigAOE = 47848, // Helper->self, no cast, range 13 circle - AOE where he slams across the map
+    SlapHappySmallAOE = 47849, // Helper->self, 1.5s cast, range 6 circle - Middle small hand
+    SlapHappyShockingImpactStack = 47850, // Helper->self, no cast, range 100 ?-degree cone - party stack -> right hand
+    SlapHappyShockwaveRole = 47851, // Helper->self, no cast, range 100 ?-degree cone - role spread -> left hand
+
+    DamningEdict = 47873, // Chaos->self, 5.0s cast, range 60 width 80 rect - Just a simple AOE cleave from the direction the boss is looking
+    WhiteHole = 48486, // Exdeath->self, 5.0s cast, range 80 circle - Simple raidwide where everyone has to be at max HP
+
+    LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
+    LookUponMeAndDespair2 = 47853, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
+    LookUponMeAndDespairAOE = 47854, // Helper->self, 5.0s cast, range 100 width 16 rect - AOE on middle which simply just need to be dodged
+
+    EarthquakeRaidwide = 50545, // Chaos->self, 5.0s cast, single-target
+    EarthquakeCast = 50546, // Helper->self, 5.0s cast, range 100 circle
+    EarthquakeInstant = 47866, // Helper->self, no cast, range 100 circle
+
+    BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target - summons actors around the map
+    Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect - Tether AOE?
+
+    BlizzardIIICast = 47887, // Exdeath->self, 3.0s cast, single-target - Bait cast
+    BlizzardIIIBaitCast = 47885, // Helper->location, 3.0s cast, range 6 circle - AOE puddle which will explode
+    BlizzardIIIRaidwide = 47889, // Exdeath->self, 4.0s cast, range 100 circle - Raidwide + standing still will freeze the target
+
+    KnockDownCast = 47874, // Chaos->self, 5.0s cast, single-target - Stack cast
+    KnockDown = 47875, // Helper->players, no cast, range 6 circle - Stack
+
+    BigBangCast = 47877, // Chaos->self, 5.0s cast, single-target - Hidden aoe cast
+    BigBang = 47878, // Helper->self, no cast, range 6 circle - AOEs that spawn where the stacks were taken
+
+    StompAMoleCast = 47855, // Kefka->self, 5.0s cast, single-target
+    StompAMoleTower = 47856, // Helper->self, 1.5s cast, range 5 circle
+
+    _Ability_BowelsOfAgony = 50719, // Chaos->self, 10.0s cast, range 100 circle - Enrage
+    _Ability_ = 50483, // Kefka->self, no cast, single-target - Most likely what the bosses cast to not be big anymore
 }
 
 public enum SID : uint {
+    // Default
+    DamageDown = 2911, // Helper->player, extra=0x0
+    MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
+    DownForTheCount = 774, // Kefka->player, extra=0xEC7
+    InEvent = 1268, // none->player, extra=0x0
+
+    // Phase 1
     DoubleTroubleTrap = 5078, // none->player, extra=0x0
     TelePortentRIGHT = 4878, // Helper->player, extra=0x0
     TelePortentUP = 4876, // Helper->player, extra=0x0
@@ -110,20 +205,40 @@ public enum SID : uint {
     TelePortentDOWN2 = 5080, // Helper->player, extra=0x0
     TelePortentLEFT2 = 5082, // Helper->player, extra=0x0
     TelePortentRIGHT2 = 5081, // Helper->player, extra=0x0
-
-    MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
     Bind = 2518, // none->player, extra=0x0
     Confused = 1283, // _Gen_GravenImage->player, extra=0x0
     Sleep = 4894, // _Gen_GravenImage->player, extra=0x0
-    DamageDown = 2911, // Helper->player, extra=0x0
+
+    // Phase 3
+    FatedHero = 4194, // none->player, extra=0x0
+    EpicHero = 4192, // none->player, extra=0x0
+    EpicVillain = 4193, // none->Chaos, extra=0x0
+    FatedVillain = 4195, // none->Exdeath, extra=0x0
+    Entropy = 1600, // none->player, extra=0x0
+    DynamicFluid = 1601, // none->player, extra=0x0
+    Tailwind = 1603, // none->player, extra=0x0
+    Headwind = 1602, // none->player, extra=0x0
+    KefkaMax = 2536, // none->Kefka, extra=0x1FA
+    PrimordialCrust = 5454, // none->player, extra=0x0
+    FirstInLine = 3004, // none->player, extra=0x0
+    SecondInLine = 3005, // none->player, extra=0x0
+    ThirdInLine = 3006, // none->player, extra=0x0
+    Accretion = 1604, // none->player, extra=0x0
 
     _Gen_SpellsTrouble = 5083, // none->player, extra=0x4/0x3
     _Gen_1 = 5085, // none->player, extra=0x0
     _Gen_2 = 5086, // none->player, extra=0x0
     _Gen_3 = 5084, // none->player, extra=0x0
+    _Gen_LightningResistanceDownII = 2998, // Helper->player, extra=0x0
+    _Gen_10 = 2273, // Kefka->Kefka, extra=0x1FF/0x22B
+    _Gen_WindResistanceDownII = 1052, // Helper->player, extra=0x0
+    _Gen_EarthResistanceDownII = 3372, // Helper->player, extra=0x0
+    _Gen_Unbecoming = 5452, // 4C38->player, extra=0x1
+    _Gen_MeanestExistence = 5453, // 4C38->player, extra=0x0
 }
 
 public enum IconID : uint {
+    // Phase 1
     TankIcon = 218, // player->self
     spreadIcon = 127, // player->self // Spread
     stackIcon = 128, // player->self // Stack
@@ -134,25 +249,46 @@ public enum IconID : uint {
     PurpleRingQuestionMark = 677, // Kefka->self // Questionmark
     PurpleRingBlueOrb = 678, // Kefka->self // Blue orb
 
+    // Phase 2
+    SharedTankBuster = 259, // player->self
     TowerStackIcon = 715, // player->self
     TowerSpreadIcon = 716, // player->self
     TowerConeIcon = 717, // player->self
 
-    _Gen_Icon_m0676trg_tw_d0t1p = 259, // player->self
+    // Phase 3
+    OrbNumber1 = 336, // player->self
+    OrbNumber2 = 337, // player->self
+    OrbNumber3 = 338, // player->self
+    OrbNumber4 = 339, // player->self
+    OrbNumber5 = 437, // player->self
+    OrbNumber6 = 438, // player->self
+    OrbNumber7 = 439, // player->self
+    OrbNumber8 = 440, // player->self
+    StackShare = 161, // player->self
+
 }
 
 public enum Animations : uint {
+    // Phase 1
     PulseOrbStart = 4194432,
     PulseOrbEnd = 16777728,
     PuddleSoakReady = 1048608,
     PuddleExplosion = 262152,
     EyeStart = 4194432,
     EyeEnd = 16777728,
+
+    // Phase 2
     TriangleFlyingDown = 1048608,
     TriangleLanded = 4194432,
     TriangleExplosion = 262152,
 }
 
 public enum TetherID : uint {
+    // Phase 1
     GravenImageTether = 45, // 4C31->player
+
+    // Phase 3
+    BlackHoleTether = 84, // 4C38->player
+
+    _Gen_Tether_chn_m0109ac = 64, // Exdeath->GravenImage
 }
