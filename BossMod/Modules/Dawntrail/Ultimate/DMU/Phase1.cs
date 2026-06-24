@@ -791,7 +791,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
                 if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
                     hints.Add(new WPos(112.000f, 94.000f));
-                    hints.Add(new WPos(111.400f, 100.000f));
+                    hints.Add(new WPos(112.000f, 100.000f));
                 }
             }
 
@@ -804,7 +804,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
                 if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
                     hints.Add(new WPos(106.000f, 112.000f));
-                    hints.Add(new WPos(100.000f, 111.400f));
+                    hints.Add(new WPos(100.000f, 112.000f));
                 }
             }
 
@@ -817,7 +817,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
                 if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
                     hints.Add(new WPos(88.000f, 106.000f));
-                    hints.Add(new WPos(88.600f, 100.000f));
+                    hints.Add(new WPos(88.000f, 100.000f));
                 }
             }
 
@@ -830,7 +830,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
                 if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
                     hints.Add(new WPos(94.000f, 88.000f));
-                    hints.Add(new WPos(100.000f, 88.600f));
+                    hints.Add(new WPos(100.000f, 88.000f));
                 }
             }
 
