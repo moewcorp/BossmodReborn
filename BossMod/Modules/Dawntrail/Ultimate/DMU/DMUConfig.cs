@@ -18,7 +18,7 @@ public class DMUConfig : ConfigNode {
         [PropertyDisplay("Modified Xolo")]
         Modified_Xolo,
 
-        [PropertyDisplay("Freaky arrow CW box")]
+        [PropertyDisplay("Freaky arrow CW box (Merry Go Round)")]
         Freaky_Arrow,
     }
 
@@ -34,6 +34,9 @@ public class DMUConfig : ConfigNode {
 
         [PropertyDisplay("EU meow braindead strategy using DN ZENITH markers")]
         Meow_DN_ZENITH_Markers,
+
+        [PropertyDisplay("NA Kroxy-Rinon (341 Melee Flex)")]
+        Kroxy_Rinon_Melee_Flex,
     }
 
     [PropertyDisplay("P2 Forsaken strategy")]
