@@ -457,9 +457,9 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260, 5.4f, o => o.NumCasts > 0, "Stacks + Knockbacks")
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .ActivateOnExit<GravenImage2>();
-        ComponentCondition<GravenImage2>(id + 0x270, 5.6f, o => !o.Active, "Sleeps + Confusion Spreads")
-            .DeactivateOnExit<GravenImage2>()
+            .ActivateOnExit<GravenImage3>();
+        ComponentCondition<GravenImage3>(id + 0x270, 5.6f, o => !o.Active, "Sleeps + Confusion Spreads")
+            .DeactivateOnExit<GravenImage3>()
             .ActivateOnExit<Gaze>();
 
         CastStart(id + 0x280, (uint)AID.MysteryMagic, 7.9f)

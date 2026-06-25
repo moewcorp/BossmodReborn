@@ -783,8 +783,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
         // Case 1: Both debuffs are in the same direction
         if (Debuff1.Value.direction == Debuff2.Value.direction) {
             if (Debuff1.Value.direction == Direction.DOWN) { // A waymark
-                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                     hints.Add(new WPos(87.750f, 88.030f));
                     hints.Add(new WPos(87.750f, 93.570f));
                 }
@@ -796,8 +795,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             }
 
             if (Debuff1.Value.direction == Direction.LEFT) { // B waymark
-                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                     hints.Add(new WPos(112.135f, 87.993f));
                     hints.Add(new WPos(106.579f, 87.922f));
                 }
@@ -809,8 +807,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             }
 
             if (Debuff1.Value.direction == Direction.UP) { // C waymark
-                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                     hints.Add(new WPos(111.989f, 112.003f));
                     hints.Add(new WPos(112.125f, 106.306f));
                 }
@@ -822,8 +819,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             }
 
             if (Debuff1.Value.direction == Direction.RIGHT) { // D waymark
-                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                    dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+                if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                     hints.Add(new WPos(88.069f, 112.037f));
                     hints.Add(new WPos(93.798f, 112.161f));
                 }
@@ -845,8 +841,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
 
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                 if (upFirst) {
                     hints.Add(new WPos(93.781f, 93.593f)); // 1 waymark
                     hints.Add(new WPos(93.576f, 88.051f)); // non-waymark
@@ -871,8 +866,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.UP || Debuff2.Value.direction == Direction.RIGHT)) {
             var upFirst = Debuff1.Value.direction == Direction.UP ? debuff1First : !debuff1First;
 
-            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                 if (upFirst) {
                     hints.Add(new WPos(111.955f, 93.877f)); // non-waymark
                     hints.Add(new WPos(106.422f, 93.756f)); // 2 waymark
@@ -897,8 +891,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.RIGHT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                 if (downFirst) {
                     hints.Add(new WPos(106.413f, 106.444f)); // 3 waymark
                     hints.Add(new WPos(106.337f, 112.135f)); // 3 non-waymark
@@ -923,8 +916,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
             (Debuff2.Value.direction == Direction.DOWN || Debuff2.Value.direction == Direction.LEFT)) {
             var downFirst = Debuff1.Value.direction == Direction.DOWN ? debuff1First : !debuff1First;
 
-            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows ||
-                dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+            if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo) {
                 if (downFirst) {
                     hints.Add(new WPos(88.103f, 106.377f)); // 4 non-waymark
                     hints.Add(new WPos(93.685f, 106.316f)); // 4 waymark
@@ -979,7 +971,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     }
 }
 
-class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5, 5, 1, 1) {
+class GravenImage3(BossModule module) : Components.UniformStackSpread(module, 5, 5, 1, 1) {
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
@@ -1024,7 +1016,7 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
         var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
         // Static strategy - keep separate to make it easier to manage
-        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows) {
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo && dmuConfig.P1GravenImage3Static) {
             if (assignment == PartyRolesConfig.Assignment.MT) {
                 Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
             }
@@ -1058,7 +1050,7 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
             }
         }
 
-        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo_NonStaticArrows) {
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo && !dmuConfig.P1GravenImage3Static) {
             if (assignment == PartyRolesConfig.Assignment.MT) {
                 if (tetherSleepGroup == TetherGroup.Support) {
                     Arena.AddCircle(new WPos(93.636f, 96.500f), 1.0f, Colors.Safe, 2);
@@ -1140,84 +1132,118 @@ class GravenImage2(BossModule module) : Components.UniformStackSpread(module, 5,
             }
         }
 
-        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow) {
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow && dmuConfig.P1GravenImage3Static) {
+            if (assignment == PartyRolesConfig.Assignment.MT) {
+                Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.OT) {
+                Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H1) {
+                Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.H2) {
+                Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M1) {
+                Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M2) {
+                Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R1) {
+                Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.R2) {
+                Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2);
+            }
+        }
+
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow && !dmuConfig.P1GravenImage3Static) {
             if (assignment == PartyRolesConfig.Assignment.MT) {
                 if (tetherSleepGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.R1) {
                 if (tetherSleepGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 93.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 84.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.OT) {
                 if (tetherSleepGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.R2) {
                 if (tetherSleepGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(93.000f, 100.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(84.000f, 100.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.H1) {
                 if (tetherSleepGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.M1) {
                 if (tetherSleepGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 108.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(100.000f, 116.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.H2) {
                 if (tetherSleepGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.Support) {
-                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
 
             if (assignment == PartyRolesConfig.Assignment.M2) {
                 if (tetherSleepGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(108.000f, 100.000f), 1.0f, Colors.Safe, 2); // Inwards
                 }
 
                 if (tetherConfusionGroup == TetherGroup.DPS) {
-                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2);
+                    Arena.AddCircle(new WPos(116.000f, 100.000f), 1.0f, Colors.Safe, 2); // Outwards
                 }
             }
         }

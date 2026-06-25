@@ -4,18 +4,18 @@
 public class DMUConfig : ConfigNode {
 
     public enum P1TeleTrouncingStrategy {
-        [PropertyDisplay("Modified Xolo - static arrows")]
-        Modified_Xolo_StaticArrows,
-
-        [PropertyDisplay("Modified Xolo - non-static arrows")]
-        Modified_Xolo_NonStaticArrows,
+        [PropertyDisplay("Modified Xolo")]
+        Modified_Xolo,
 
         [PropertyDisplay("Freaky arrow CW box")]
         Freaky_Arrow,
     }
 
     [PropertyDisplay("P1 TeleTrouncing strategy")]
-    public P1TeleTrouncingStrategy P1TeleTrouncing = P1TeleTrouncingStrategy.Modified_Xolo_StaticArrows;
+    public P1TeleTrouncingStrategy P1TeleTrouncing = P1TeleTrouncingStrategy.Modified_Xolo;
+
+    [PropertyDisplay("P1 Graven Image 3 Static Spots")]
+    public bool P1GravenImage3Static = true;
 
     public enum P2ForsakenStrategy {
         [PropertyDisplay("EU meow braindead strategy using markerless")]
