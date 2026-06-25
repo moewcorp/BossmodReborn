@@ -3,6 +3,17 @@
 [ConfigDisplay(Order = 0x400, Parent = typeof(DawntrailConfig))]
 public class DMUConfig : ConfigNode {
 
+    public enum P1GravenImage2Strategy {
+        [PropertyDisplay("Normal Graven Image 2")]
+        GravenImage2Normal,
+
+        [PropertyDisplay("Uptime Graven Image 2")]
+        GravenImage2Uptime,
+    }
+
+    [PropertyDisplay("P1 Graven Image 2 strategy")]
+    public P1GravenImage2Strategy P1GravenImage2 = P1GravenImage2Strategy.GravenImage2Uptime;
+
     public enum P1TeleTrouncingStrategy {
         [PropertyDisplay("Modified Xolo")]
         Modified_Xolo,
