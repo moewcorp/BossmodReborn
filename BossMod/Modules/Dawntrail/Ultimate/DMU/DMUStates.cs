@@ -107,7 +107,11 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<BlizzardSafeSpots>();
 
         ComponentCondition<BlizzardSafeSpots>(id + 0x190, 1.0f, o => o.NumCasts > 0, "Blizzard Safe spots")
-            .DeactivateOnExit<BlizzardSafeSpots>();
+            .DeactivateOnExit<BlizzardSafeSpots>()
+            .ActivateOnExit<CursedShriek>();
+
+        ComponentCondition<CursedShriek>(id + 0x200, 7.1f, o => o.NumCasts > 0, "Gazes Resolve")
+            .DeactivateOnExit<CursedShriek>();
 
 
         /*
