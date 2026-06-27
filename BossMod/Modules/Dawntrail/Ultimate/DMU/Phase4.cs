@@ -1,14 +1,18 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
+class GrandCrossRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.GrandCross);
+
 // GrandCross will be casted three times in a row with a fake or real
 class GrandCrossOrder(BossModule module) : BossComponent(module) {
     private List<(bool? tellingTruth, int set, List<(SID buff, DateTime expireAt)>[] playerBuffs)> grandCross = new();
     private bool tellingTruthCaught = false; // Two orbs spawn per cast, but we only want one
     private int NumCasts = 0;
+    public int currentCast = 0; // Used for state machine so it easier to detect when the cast has finished
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.GrandCross) {
             tellingTruthCaught = false;
+            currentCast++;
         }
     }
 
@@ -97,15 +101,21 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
     }
 }
 
+// TODO merge both raid wides together
+class TsunamiRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.P4Tsunami);
+class InfernoRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.P4Inferno);
+
 // Elements will be casted two times in a row with a fake or real - TODO verify the status is working correctly
 class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
     private List<(bool? tellingTruth, int set, List<(SID buff, DateTime expireAt)>[] playerBuffs)> tsunamiInferno = new();
     private bool tellingTruthCaught = false; // Two orbs spawn per cast, but we only want one
     private int NumCasts = 0;
+    public int currentCast = 0; // Used for state machine so it easier to detect when the cast has finished
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.P4Inferno || spell.Action.ID == (uint)AID.P4Tsunami) {
             tellingTruthCaught = false;
+            currentCast++;
         }
     }
 

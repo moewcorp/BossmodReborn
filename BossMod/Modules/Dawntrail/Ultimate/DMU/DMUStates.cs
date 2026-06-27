@@ -22,22 +22,62 @@ sealed class DMUStates : StateMachineBuilder {
     private void Phase4(uint id) {
         ActorCast(id, _module.KefkaP4, (uint)AID.KefkaSays, 7.3f, 5.0f, true, "Other bosses spawn")
             .ActivateOnEnter<GrandCrossOrder>()
-            .ActivateOnEnter<TsunamiInfernoOrder>()
+            .ActivateOnEnter<TsunamiInfernoOrder>();
+
+        ActorCastStart(id + 0x10, _module.KefkaP4, (uint)AID.MysteryMagic, 4.6f, true, "Mystery Magic")
             .ActivateOnEnter<BlizzardSafeSpots>()
             .ActivateOnEnter<LightningSafeSpots>();
 
-        // TODO magic one
-        // TODO first grandCross
-        // TODO first chaos cast
-        // TODO second magic
-        // ToDO second grandCross
-        // TODO second chaos cast
-        // TODO three magic
-        // TODO final grandCross
+        ComponentCondition<BlizzardSafeSpots>(id + 0x20, 5.0f, o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardSafeSpots>();
+
+        ComponentCondition<GrandCrossOrder>(id + 0x30, 4.4f, o => o.currentCast > 0, "Raidwide (1st Grand Cross)")
+            .ActivateOnEnter<GrandCrossRaidwide>()
+            .DeactivateOnExit<GrandCrossRaidwide>();
+        ComponentCondition<TsunamiInfernoOrder>(id + 0x40, 5.0f, o => o.currentCast > 0, "Raidwide (1st Tsunami Inferno)")
+            .ActivateOnEnter<TsunamiRaidwide>()
+            .ActivateOnEnter<InfernoRaidwide>()
+            .DeactivateOnExit<TsunamiRaidwide>()
+            .DeactivateOnExit<InfernoRaidwide>();
+
+        ActorCastStart(id + 0x50, _module.KefkaP4, (uint)AID.MysteryMagic, 0.5f, true, "Mystery Magic")
+            .ActivateOnEnter<BlizzardSafeSpots>()
+            .ActivateOnEnter<LightningSafeSpots>();
+
+        ComponentCondition<BlizzardSafeSpots>(id + 0x60, 5.0f, o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardSafeSpots>();
+
+        ComponentCondition<GrandCrossOrder>(id + 0x70, 4.4f, o => o.currentCast > 1, "Raidwide (2nd Grand Cross)")
+            .ActivateOnEnter<GrandCrossRaidwide>()
+            .DeactivateOnExit<GrandCrossRaidwide>();
+        ComponentCondition<TsunamiInfernoOrder>(id + 0x80, 5.2f, o => o.currentCast > 1, "Raidwide (2nd Tsunami Inferno)")
+            .ActivateOnEnter<TsunamiRaidwide>()
+            .ActivateOnEnter<InfernoRaidwide>()
+            .DeactivateOnExit<TsunamiRaidwide>()
+            .DeactivateOnExit<InfernoRaidwide>();
+
+        ActorCastStart(id + 0x90, _module.KefkaP4, (uint)AID.MysteryMagic, 0.7f, true, "Mystery Magic")
+            .ActivateOnEnter<BlizzardSafeSpots>()
+            .ActivateOnEnter<LightningSafeSpots>();
+
+        ComponentCondition<BlizzardSafeSpots>(id + 0x100, 5.0f, o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardSafeSpots>();
+
+        ComponentCondition<GrandCrossOrder>(id + 0x110, 4.2f, o => o.currentCast > 2, "Raidwide (3rd Grand Cross)")
+            .ActivateOnEnter<GrandCrossRaidwide>()
+            .DeactivateOnExit<GrandCrossRaidwide>();
+
+        // Spell 50516 - teleports exo death
+        // Flood and everything starts
 
         /*
             .ActivateOnEnter<GrandCrossOrder>()
             .ActivateOnEnter<TsunamiInfernoOrder>()
+            .ActivateOnEnter<BlizzardSafeSpots>()
+            .ActivateOnEnter<LightningSafeSpots>();
 
             .ActivateOnEnter<EdgeOfDeath>()
             .ActivateOnEnter<Antilight>()
