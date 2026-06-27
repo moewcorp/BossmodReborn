@@ -3,7 +3,7 @@
 [ConfigDisplay(Name = "Automatic out-of-combat utility actions", Parent = typeof(ActionTweaksConfig), Order = -10, Tags = ["peloton"])]
 class OutOfCombatActionsConfig : ConfigNode
 {
-    [PropertyDisplay("Enable the feature")]
+    [PropertyDisplay("Enabled")]
     public bool Enabled = false;
 
     [PropertyDisplay("Auto use Peloton when moving out of combat")]
