@@ -68,21 +68,26 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<GrandCrossOrder>(id + 0x110, 4.2f, o => o.currentCast > 2, "Raidwide (3rd Grand Cross)")
             .ActivateOnEnter<GrandCrossRaidwide>()
-            .DeactivateOnExit<GrandCrossRaidwide>();
+            .DeactivateOnExit<GrandCrossRaidwide>()
+            .ActivateOnExit<Antilight>()
+            .ActivateOnExit<EdgeOfDeath>();
 
-        // Spell 50516 - teleports exo death
-        // Flood and everything starts
+        ComponentCondition<Antilight>(id + 0x120, 12.6f, o => o.NumCasts >= 4, "Antilight + Edge of Death")
+            .DeactivateOnExit<Antilight>()
+            .DeactivateOnExit<EdgeOfDeath>()
+            .ActivateOnExit<ForkedWater>()
+            .ActivateOnExit<AccelerationBomb>();
+
+        ComponentCondition<ForkedWater>(id + 0x130, 8.4f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
+            .DeactivateOnExit<ForkedWater>()
+            .DeactivateOnExit<AccelerationBomb>();
+
+
 
         /*
             .ActivateOnEnter<GrandCrossOrder>()
             .ActivateOnEnter<TsunamiInfernoOrder>()
-            .ActivateOnEnter<BlizzardSafeSpots>()
-            .ActivateOnEnter<LightningSafeSpots>();
 
-            .ActivateOnEnter<EdgeOfDeath>()
-            .ActivateOnEnter<Antilight>()
-            .ActivateOnEnter<ForkedWater>()
-            .ActivateOnEnter<AccelerationBomb>()
             .ActivateOnEnter<CursedShriek>()
             .ActivateOnEnter<KefkaOrder>()
             .ActivateOnEnter<Inferno>()

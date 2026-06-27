@@ -184,7 +184,7 @@ class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
         foreach (var (tellingTruth, wave, playerBuffs) in tsunamiInferno) {
             var buffsStr = string.Join(", ", playerBuffs.Select((buffs, slot) =>
                 $"P{slot}:[{string.Join(",", buffs.Select(b => $"{b.buff}@{b.expireAt}"))}]"));
-            Service.Logger.Info($"Wave {wave} tellingTruth={tellingTruth} | {buffsStr}");
+            //Service.Logger.Info($"Wave {wave} tellingTruth={tellingTruth} | {buffsStr}");
         }
     }
 }
@@ -232,11 +232,13 @@ class KefkaOrder(BossModule module) : BossComponent(module) {
 class EdgeOfDeath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.EdgeOfDeath, new AOEShapeRect(47.0f, 1.0f));
 
 // TODO fix AOE middle line - small aoe line where you cant stand at all, but can be done later there is a lot of free space
+// TODO change to simple AOEs at some point maybe - so it has built-in NumCasts
 class Antilight(BossModule module) : BossComponent(module) {
     private Actor? whiteAntilight = null;
     private Actor? blackAntilight = null;
     private bool? tellingTruth = null;
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
+    public int NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
@@ -251,10 +253,16 @@ class Antilight(BossModule module) : BossComponent(module) {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
             whiteAntilight = null;
+            NumCasts++;
         }
 
         if (spell.Action.ID == (uint)AID.BlackAntilight) {
             blackAntilight = null;
+            NumCasts++;
+        }
+
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.EdgeOfDeath) {
+            NumCasts++;
         }
     }
 
@@ -275,7 +283,7 @@ class Antilight(BossModule module) : BossComponent(module) {
             return;
         }
 
-        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 3);
+        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 2); // sets are 0, 1, 2
         if (buffs == null) {
             return;
         }
@@ -311,19 +319,14 @@ class Antilight(BossModule module) : BossComponent(module) {
 }
 
 // 2x water & 2x Forked Lightning will go at the same time, these all share the same set
-class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 6.0f, 6.0f, 3, 3) {
+class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0f, 8.0f, 3, 3) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
-    private bool active = false; // TODO remove this
-
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.FloodOfNaught) {
-            active = true;
-        }
-    }
+    public int NumCasts = 0; // 4 casts will always go off, better to watch this to know if the aoes are active or not
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.FloodOfNaught) {
-            active = false;
+        if (spell.Action.ID == (uint)AID.ForkedLightningFake || spell.Action.ID == (uint)AID.ForkedLightningReal ||
+            spell.Action.ID == (uint)AID.CompressedWaterFake || spell.Action.ID == (uint)AID.CompressedWaterReal) {
+            NumCasts++;
         }
     }
 
@@ -331,7 +334,7 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 6.0
         Stacks.Clear();
         Spreads.Clear();
 
-        if (grandCrossOrder == null || active == false) {
+        if (grandCrossOrder == null || NumCasts >= 4) {
             return;
         }
 
@@ -376,6 +379,7 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 6.0
 }
 
 // 4x accleration bombs where two are from 1st set and the other 2 are from the 2nd set, so it can a mix of truth and lie
+// TODO missing spell? or maybe it just doesn't have one
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
 

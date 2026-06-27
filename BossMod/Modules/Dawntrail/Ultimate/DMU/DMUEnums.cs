@@ -203,24 +203,22 @@ public enum AID : uint {
     FloodOfNaught = 50066, // 4C36->self, 5.0+0.5s cast, single-target
     WhiteAntilight = 50068, // Helper->self, 5.5s cast, range 47 width 21 rect
     BlackAntilight = 50069, // Helper->self, 5.5s cast, range 47 width 21 rect
+    DeathSurge = 47900, // Helper->self, no cast, range 100 circle - After Antilight casts to ensure it was solved correctly
+
+    ManaCharge = 47780, // KefkaP4->self, 3.0s cast, single-target
+
+    ForkedLightningFake = 47897, // Helper->players, no cast, range 8 circle
+    ForkedLightningReal = 47896, // Helper->player, no cast, range 8 circle
+    CompressedWaterFake = 47898, // Helper->players, no cast, range 8 circle
+    CompressedWaterReal = 47899, // Helper->player, no cast, range 8 circle
 
     StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
     StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
 
-    ManaCharge = 47780, // KefkaP4->self, 3.0s cast, single-target
-
-    _Ability_DeathWave = 47899, // Helper->player, no cast, range 8 circle
-    _Ability_DeathBolt = 47897, // Helper->players, no cast, range 8 circle
-
-    _Ability_DeathSurge = 47900, // Helper->self, no cast, range 100 circle
-
-    _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target
+    _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target - I can this is the cast that will be stored for later?
     _Ability_DeathShriek = 47895, // Helper->self, no cast, range 100 circle
     _Ability_UltimaUpsurge = 49738, // KefkaP4->self, 5.0s cast, range 100 circle
 
-
-    _Ability_DeathWave1 = 47898, // Helper->players, no cast, range 8 circle
-    _Ability_DeathBolt1 = 47896, // Helper->player, no cast, range 8 circle
     _Ability_DeathShriek1 = 47894, // Helper->self, no cast, range 100 circle
     _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
 
