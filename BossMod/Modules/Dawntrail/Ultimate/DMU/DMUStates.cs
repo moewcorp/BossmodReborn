@@ -103,7 +103,11 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
-            .DeactivateOnExit<AccelerationBomb>();
+            .DeactivateOnExit<AccelerationBomb>()
+            .ActivateOnEnter<BlizzardSafeSpots>();
+
+        ComponentCondition<BlizzardSafeSpots>(id + 0x190, 1.0f, o => o.NumCasts > 0, "Blizzard Safe spots")
+            .DeactivateOnExit<BlizzardSafeSpots>();
 
 
         /*
