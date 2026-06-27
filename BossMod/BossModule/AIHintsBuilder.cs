@@ -18,6 +18,8 @@ public sealed class AIHintsBuilder : IDisposable
     private readonly List<Actor> _invincible = [];
     private ArenaBoundsCircle? _activeFateBounds;
 
+    private float ConeFallback => Math.Clamp(_hintConfig.ConeFallbackAngle, 1, 180);
+
     private static readonly uint[] invincibleStatuses =
     [
         151u, 198u, 325u, 328u, 385u, 394u,
@@ -138,34 +140,13 @@ public sealed class AIHintsBuilder : IDisposable
                 continue;
             }
 
-            int priority;
-            if (actor.FateID != default)
-            {
-                if (actor.FateID != allowedFateID)
-                {
-                    priority = AIHints.Enemy.PriorityInvincible;  // fate mob in fate we are NOT a part of can't be damaged at all
-                }
-                else
-                {
-                    priority = 0; // Relevant fate mob
-                }
-            }
-            else if (actor.PendingDead)
-            {
-                priority = AIHints.Enemy.PriorityPointless; // Mob is about to die
-            }
-            else if (actor.AggroPlayer)
-            {
-                priority = 0; // Aggroed player
-            }
-            else if (actor.InCombat && _ws.Party.FindSlot(actor.TargetID) >= 0)
-            {
-                priority = 0; // Assisting party members
-            }
-            else
-            {
-                priority = priorityPassive; // Default undesirable
-            }
+            // determine default priority for the enemy
+            var priority = actor.FateID > 0 && actor.FateID != allowedFateID ? AIHints.Enemy.PriorityInvincible // fate mob in fate we are NOT a part of can't be damaged at all
+                : MathF.Abs(actor.PosRot.Y - (_ws.Party.Player()?.PosRot.Y ?? 0)) > 12 ? AIHints.Enemy.PriorityInvincible // too far away from us vertically - TODO, this really sucks as a solution, but figuring out whether a particular enemy can be moved to is extremely hard
+                : actor.PendingDead ? AIHints.Enemy.PriorityPointless // this mob is about to be dead, any attacks will likely ghost
+                : actor.AggroPlayer ? 0 // enemies in our enmity list can be attacked, regardless of who they are targeting (since they are keeping us in combat)
+                : actor.InCombat && _ws.Party.FindSlot(actor.TargetID) >= 0 ? 0 // we generally want to assist our party members (note that it includes allied npcs in duties)
+                : priorityPassive; // this enemy is either not pulled yet or fighting someone we don't care about - try not to aggro it by default
 
             var enemy = hints.Enemies[index] = new(actor, priority, playerIsDefaultTank);
 

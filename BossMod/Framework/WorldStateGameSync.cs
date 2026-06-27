@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+﻿using BossMod.Services;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -17,7 +18,7 @@ using FFXIVClientStructs.Interop;
 namespace BossMod;
 
 // utility that updates a world state to correspond to game state
-sealed class WorldStateGameSync : IDisposable
+sealed class WorldStateGameSync : IWorldStateGameSync
 {
     private const int ObjectTableSize = 819; // should match CS; note that different ranges are used for different purposes - consider splitting?..
     private const uint InvalidEntityId = 0xE0000000;
@@ -73,9 +74,6 @@ sealed class WorldStateGameSync : IDisposable
 
     private unsafe delegate void ProcessPacketRSVDataDelegate(byte* packet);
     private readonly Hook<ProcessPacketRSVDataDelegate> _processPacketRSVDataHook;
-
-    private unsafe delegate void ProcessPacketOpenTreasureDelegate(uint actorID, byte* packet);
-    private readonly Hook<ProcessPacketOpenTreasureDelegate> _processPacketOpenTreasureHook;
 
     private unsafe delegate void* ProcessSystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
     private readonly Hook<ProcessSystemLogMessageDelegate> _processSystemLogMessageHook;
@@ -163,10 +161,6 @@ sealed class WorldStateGameSync : IDisposable
         _processSystemLogMessageHook.Enable();
         Service.Log($"[WSG] ProcessSystemLogMessage address = 0x{_processSystemLogMessageHook.Address:X}");
 
-        _processPacketOpenTreasureHook = Service.Hook.HookFromSignature<ProcessPacketOpenTreasureDelegate>("40 53 48 83 EC 20 48 8B DA 48 8D 0D ?? ?? ?? ?? 8B 52 10 E8 ?? ?? ?? ?? 48 85 C0 74 1B", ProcessPacketOpenTreasureDetour);
-        _processPacketOpenTreasureHook.Enable();
-        Service.Log($"[WSG] ProcessPacketOpenTreasure address = 0x{_processPacketOpenTreasureHook.Address:X}");
-
         _processPacketFateInfoHook = Service.Hook.HookFromSignature<ProcessPacketFateInfoDelegate>("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B7 4F 10 48 8D 57 12 41 B8", ProcessPacketFateInfoDetour);
         _processPacketFateInfoHook.Enable();
         Service.Log($"[WSG] ProcessPacketFateInfo address = 0x{_processPacketFateInfoHook.Address:X}");
@@ -211,7 +205,6 @@ sealed class WorldStateGameSync : IDisposable
         _processMapEffectHook.Dispose();
         _processPacketRSVDataHook.Dispose();
         _processSystemLogMessageHook.Dispose();
-        _processPacketOpenTreasureHook.Dispose();
         _processPacketFateTradeHook.Dispose();
         _processPacketFateInfoHook.Dispose();
         _getActionInRangeOrLoSHook.Dispose();
@@ -393,6 +386,7 @@ sealed class WorldStateGameSync : IDisposable
         var mountId = chr != null ? chr->Mount.MountId : 0u;
         var forayInfoPtr = chr != null ? chr->GetForayInfo() : null;
         var forayInfo = forayInfoPtr == null ? default : new ActorForayInfo(forayInfoPtr->Level, forayInfoPtr->Element);
+        var isOpenTreasure = obj->ObjectKind == ObjectKind.Treasure && ((Treasure*)obj)->Flags.HasFlag(Treasure.TreasureFlags.Opened);
 
         if (act == null)
         {
@@ -457,9 +451,27 @@ sealed class WorldStateGameSync : IDisposable
         }
 
         if (act.InCombat != inCombat)
+<<<<<<< HEAD
         {
             _ws.Execute(new ActorState.OpCombat(instanceID, inCombat));
         }
+=======
+            _ws.Execute(new ActorState.OpCombat(act.InstanceID, inCombat));
+        if (act.AggroPlayer != hasAggro)
+            _ws.Execute(new ActorState.OpAggroPlayer(act.InstanceID, hasAggro));
+        if (act.ModelState != modelState)
+            _ws.Execute(new ActorState.OpModelState(act.InstanceID, modelState));
+        if (act.EventState != eventState)
+            _ws.Execute(new ActorState.OpEventState(act.InstanceID, eventState));
+        if (act.TargetID != target)
+            _ws.Execute(new ActorState.OpTarget(act.InstanceID, target));
+        if (act.MountId != mountId)
+            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
+        if (act.ForayInfo != forayInfo)
+            _ws.Execute(new ActorState.OpForayInfo(act.InstanceID, forayInfo));
+        if (!act.IsOpenTreasure && isOpenTreasure)
+            _ws.Execute(new ActorState.OpEventOpenTreasure(act.InstanceID));
+>>>>>>> origin/merge
 
         if (act.AggroPlayer != hasAggro)
         {
@@ -609,8 +621,8 @@ sealed class WorldStateGameSync : IDisposable
         }
     }
 
-    // returns player entry in game's group
-    private unsafe PartyMember* UpdatePartyPlayer(bool recorderPlaybackMode, GroupManager.Group* group)
+    // returns player contentID
+    private unsafe ulong UpdatePartyPlayer(bool recorderPlaybackMode, GroupManager.Group* group)
     {
         // in worldstate, player is always in slot #0
         // in game, there are several considerations:
@@ -663,17 +675,22 @@ sealed class WorldStateGameSync : IDisposable
             // else: just assume there's no player for now...
         }
 
+<<<<<<< HEAD
         var member = player.InstanceId != default && group != null ? group->GetPartyMemberByEntityId((uint)player.InstanceId) : null;
+=======
+        // in duty support, GetPartyMemberByEntityId returns null, even for the player ID
+        var member = player.InstanceId != 0 ? group->GetPartyMemberByEntityId((uint)player.InstanceId) : null;
+>>>>>>> origin/merge
         if (member != null)
         {
             player.InCutscene |= (member->Flags & 0x10) != default;
         }
 
         UpdatePartySlot(PartyState.PlayerSlot, player);
-        return member;
+        return member == null ? player.ContentId : member->ContentId;
     }
 
-    private unsafe void UpdatePartyNormal(GroupManager.Group* group, PartyMember* player)
+    private unsafe void UpdatePartyNormal(GroupManager.Group* group, ulong playerContentId)
     {
         if (group == null)
             return;
@@ -704,8 +721,12 @@ sealed class WorldStateGameSync : IDisposable
         for (var i = 0; i < group->MemberCount; ++i)
         {
             var member = group->PartyMembers.GetPointer(i);
+<<<<<<< HEAD
             if (player != null && member->ContentId != player->ContentId && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
             {
+=======
+            if (member->ContentId != playerContentId && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
+>>>>>>> origin/merge
                 AddPartyMember(BuildPartyMember(member));
             }
             else if (player == null && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
@@ -1310,13 +1331,6 @@ sealed class WorldStateGameSync : IDisposable
     {
         _processPacketRSVDataHook.Original(packet);
         _globalOps.Add(new WorldState.OpRSVData(MemoryHelper.ReadStringNullTerminated((nint)(packet + 4)), MemoryHelper.ReadString((nint)(packet + 0x34), *(int*)packet)));
-    }
-
-    private unsafe void ProcessPacketOpenTreasureDetour(uint playerID, byte* packet)
-    {
-        _processPacketOpenTreasureHook.Original(playerID, packet);
-        var actorID = *(uint*)(packet + 16);
-        _actorOps.GetOrAdd(actorID).Add(new ActorState.OpEventOpenTreasure(actorID));
     }
 
     private unsafe void* ProcessSystemLogMessageDetour(uint entityId, uint messageId, int* args, byte argCount)

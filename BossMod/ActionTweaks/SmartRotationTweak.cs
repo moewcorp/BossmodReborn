@@ -3,8 +3,8 @@
 [ConfigDisplay(Name = "Smart character orientation", Parent = typeof(ActionTweaksConfig), Order = -20)]
 class SmartRotationConfig : ConfigNode
 {
-    [PropertyDisplay("Enable the feature", tooltip: "Replace in-game 'auto face target' option with a smarter alternative.\nWhen using an action, changes direction only if target is not in frontal cone.\nDuring cast, keep character facing the target.")]
-    public bool Enabled = false;
+    [PropertyDisplay("Enabled", tooltip: "Replace in-game 'auto face target' option with a smarter alternative.\nWhen using an action, changes direction only if target is not in frontal cone.\nDuring cast, keep character facing the target.")]
+    public bool Enabled = true;
 
     [PropertyDisplay("Automatically avoid gazes")]
     public bool AvoidGazes = true;
@@ -23,7 +23,7 @@ public sealed class SmartRotationTweak(WorldState ws, AIHints hints)
     private static readonly SmartRotationConfig _config = Service.Config.Get<SmartRotationConfig>();
     private readonly DisjointSegmentList _forbidden = new();
     private static readonly Angle _minWindow = 5f.Degrees();
-    public bool Enabled => _config.Enabled;
+    public static bool Enabled => _config.Enabled;
 
     // return 'ideal orientation' for a spell, or null if spell is not oriented (self-targeted or does not require facing)
     public Angle? GetSpellOrientation(uint spellId, WPos playerPos, bool targetIsSelf, WPos? targetPos, WPos targetLoc)
