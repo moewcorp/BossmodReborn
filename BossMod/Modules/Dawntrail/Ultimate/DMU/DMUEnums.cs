@@ -212,14 +212,17 @@ public enum AID : uint {
     CompressedWaterFake = 47898, // Helper->players, no cast, range 8 circle
     CompressedWaterReal = 47899, // Helper->player, no cast, range 8 circle
 
+    CursedShriekFake = 47895, // Helper->self, no cast, range 100 circle
+    CursedShriekReal = 47894, // Helper->self, no cast, range 100 circle
+
     StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
     StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
 
-    _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target - I can this is the cast that will be stored for later?
-    _Ability_DeathShriek = 47895, // Helper->self, no cast, range 100 circle
     _Ability_UltimaUpsurge = 49738, // KefkaP4->self, 5.0s cast, range 100 circle
 
-    _Ability_DeathShriek1 = 47894, // Helper->self, no cast, range 100 circle
+    _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target - can this is the cast that will be stored for later?
+
+    
     _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
 
     _Ability_UltimaRepeater = 47936, // 4C37->self, 4.0+1.0s cast, single-target

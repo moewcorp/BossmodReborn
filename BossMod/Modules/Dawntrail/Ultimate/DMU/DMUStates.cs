@@ -80,16 +80,23 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<ForkedWater>(id + 0x130, 8.4f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
-            .DeactivateOnExit<AccelerationBomb>();
+            .DeactivateOnExit<AccelerationBomb>()
+            .ActivateOnExit<CursedShriek>()
+            .ActivateOnExit<LightningSafeSpots>()
+            .ActivateOnExit<KefkaOrder>();
 
+        ComponentCondition<LightningSafeSpots>(id + 0x140, 7.9f, o => o.NumCasts > 0, "Lightning Safe Spots")
+            .DeactivateOnExit<LightningSafeSpots>();
+
+        ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
+            .DeactivateOnExit<CursedShriek>();
 
 
         /*
-            .ActivateOnEnter<GrandCrossOrder>()
-            .ActivateOnEnter<TsunamiInfernoOrder>()
+            .ActivateOnEnter<GrandCrossOrder>() - Stays active until end of phase
+            .ActivateOnEnter<TsunamiInfernoOrder>() - Stays active until end of phase
+            .ActivateOnEnter<KefkaOrder>() - Stays active until end of phase
 
-            .ActivateOnEnter<CursedShriek>()
-            .ActivateOnEnter<KefkaOrder>()
             .ActivateOnEnter<Inferno>()
             .ActivateOnEnter<Tsunami>()
          */

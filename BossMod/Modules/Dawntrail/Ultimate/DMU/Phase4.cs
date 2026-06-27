@@ -412,6 +412,12 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     private List<(int slot, DateTime expireAt, bool inverted)> pendingGazes = new();
     private List<Eye> eyes = new();
 
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.CursedShriekReal || spell.Action.ID == (uint)AID.CursedShriekFake) {
+            NumCasts++;
+        }
+    }
+
     public override ReadOnlySpan<Eye> ActiveEyes(int pcSlot, Actor pcActor) {
         eyes.Clear();
 
@@ -448,7 +454,7 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     public override void Update() {
         pendingGazes.Clear();
 
-        if (grandCrossOrder == null) {
+        if (grandCrossOrder == null || NumCasts >= 2) {
             return;
         }
 
