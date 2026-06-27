@@ -906,7 +906,13 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 }
 
-class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlizzardIIIBaitCast, new AOEShapeCircle(6.0f));
+class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlizzardIIIBaitCast, new AOEShapeCircle(6.0f)) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBaitCast) {
+            NumCasts++;
+        }
+    }
+}
 
 class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true) {
     private Actor? boss = null;
@@ -939,6 +945,8 @@ class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerA
 }
 
 class P3BlizzardMove(BossModule module) : Components.StayMove(module, 5d) {
+    public int NumCasts = 0;
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.BlizzardIIIRaidwide) {
             foreach (var (slot, _) in Raid.WithSlot()) {
@@ -952,6 +960,7 @@ class P3BlizzardMove(BossModule module) : Components.StayMove(module, 5d) {
             foreach (var (slot, _) in Raid.WithSlot()) {
                 PlayerStates[slot] = default;
             }
+            NumCasts++;
         }
     }
 }
@@ -1027,8 +1036,8 @@ class BigBang(BossModule module) : Components.GenericAOEs(module) {
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.BigBang) {
+            NumCasts++;
             if (stacks != null) {
-                NumCasts++;
                 if (stacks.stackLocations.Count > 0) {
                     stacks.stackLocations.RemoveAt(0);
                 }
@@ -1141,6 +1150,22 @@ class StompAMole(BossModule module) : Components.GenericTowers(module) {
             } else if (isInside && numInside > tower.MaxSoakers) {
                 tower.Shape.Outline(Arena, tower.Position, tower.Rotation, default, 2f);
             }
+        }
+    }
+}
+
+class P3Enrage(BossModule module) : BossComponent(module) {
+    public bool enrage;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BowelsOfAgonyEnrage || spell.Action.ID == (uint)AID.MeteorEnrage) {
+            enrage = true;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BowelsOfAgonyEnrage || spell.Action.ID == (uint)AID.MeteorEnrage) {
+            enrage = false;
         }
     }
 }

@@ -33,6 +33,16 @@ public enum OID : uint {
     BlackHole = 0x4C38, // R1.000, x0 (spawn during fight)
 
     _Gen_Actor1ec03d = 0x1EC03D, // R0.500, x0 (spawn during fight), EventObj type
+
+    // Phase 4
+    KefkaP4 = 0x482B,
+    NeoExdeath = 0x4C36, // R9.000, x0 (spawn during fight)
+    ChaosP4 = 0x4C33, // R6.000, x0 (spawn during fight)
+    _Gen_Kefka = 0x4C37, // R8.010, x0 (spawn during fight)
+    _Gen_Actor1ec03f = 0x1EC03F, // R0.500, x0 (spawn during fight), EventObj type
+    _Gen_Actor1ec040 = 0x1EC040, // R0.500, x0 (spawn during fight), EventObj type
+    _Gen_Actor1ec03e = 0x1EC03E, // R0.500, x0 (spawn during fight), EventObj type
+
 }
 
 public enum AID : uint {
@@ -148,6 +158,7 @@ public enum AID : uint {
     _Ability_Aetherlink1 = 49893, // Exdeath->self, no cast, single-target
 
     Max = 47845, // Kefka->self, 5.0s cast, single-target
+    _Ability_ = 50483, // Kefka->self, no cast, single-target - Most likely what the bosses cast to not be big anymore
     AbilityUnknownTeleport = 50362, // Kefka->self, no cast, single-target - most likely teleport, but not checked
 
     SlapHappyRightHand = 47846, // Kefka->self, 5.0s cast, single-target - Right hand
@@ -156,36 +167,94 @@ public enum AID : uint {
     SlapHappySmallAOE = 47849, // Helper->self, 1.5s cast, range 6 circle - Middle small hand
     SlapHappyShockingImpactStack = 47850, // Helper->self, no cast, range 100 ?-degree cone - party stack -> right hand
     SlapHappyShockwaveRole = 47851, // Helper->self, no cast, range 100 ?-degree cone - role spread -> left hand
-
     DamningEdict = 47873, // Chaos->self, 5.0s cast, range 60 width 80 rect - Just a simple AOE cleave from the direction the boss is looking
     WhiteHole = 48486, // Exdeath->self, 5.0s cast, range 80 circle - Simple raidwide where everyone has to be at max HP
-
     LookUponMeAndDespair = 47852, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
     LookUponMeAndDespair2 = 47853, // Kefka->self, 4.0+1.0s cast, single-target - Seems to be the skill to update his model to slam the map
     LookUponMeAndDespairAOE = 47854, // Helper->self, 5.0s cast, range 100 width 16 rect - AOE on middle which simply just need to be dodged
-
     EarthquakeRaidwide = 50545, // Chaos->self, 5.0s cast, single-target
     EarthquakeCast = 50546, // Helper->self, 5.0s cast, range 100 circle
     EarthquakeInstant = 47866, // Helper->self, no cast, range 100 circle
-
     BlackHole = 47867, // Exdeath->self, 3.0s cast, single-target - summons actors around the map
     Nothingness = 47868, // 4C38->self, no cast, range 125 width 6 rect - Tether AOE?
 
     BlizzardIIICast = 47887, // Exdeath->self, 3.0s cast, single-target - Bait cast
     BlizzardIIIBaitCast = 47885, // Helper->location, 3.0s cast, range 6 circle - AOE puddle which will explode
     BlizzardIIIRaidwide = 47889, // Exdeath->self, 4.0s cast, range 100 circle - Raidwide + standing still will freeze the target
-
     KnockDownCast = 47874, // Chaos->self, 5.0s cast, single-target - Stack cast
     KnockDown = 47875, // Helper->players, no cast, range 6 circle - Stack
-
     BigBangCast = 47877, // Chaos->self, 5.0s cast, single-target - Hidden aoe cast
     BigBang = 47878, // Helper->self, no cast, range 6 circle - AOEs that spawn where the stacks were taken
-
     StompAMoleCast = 47855, // Kefka->self, 5.0s cast, single-target
     StompAMoleTower = 47856, // Helper->self, 1.5s cast, range 5 circle
 
-    _Ability_BowelsOfAgony = 50719, // Chaos->self, 10.0s cast, range 100 circle - Enrage
-    _Ability_ = 50483, // Kefka->self, no cast, single-target - Most likely what the bosses cast to not be big anymore
+    MeteorEnrage = 50718, // Exdeath->self, 10.0s cast, range 100 circle
+    BowelsOfAgonyEnrage = 50719, // Chaos->self, 10.0s cast, range 100 circle
+
+    // Phase 4
+    KefkaSays = 49884, // KefkaP4->self, 5.0s cast, single-target - Summons Chaos & Exodeath actors
+    GrandCross = 47892, // 4C36->self, 9.0s cast, range 100 circle - Applies debuffs? Does it multiple times 3x it seems
+    P4Tsunami = 47905, // Helper->self, 9.0s cast, range 100 circle - Applies debuffs?
+    P4Tsunami1 = 47903, // 4C33->self, 9.0s cast, single-target - Applies buff to self for telling truth or lie
+    P4Inferno = 47904, // Helper->self, 9.0s cast, range 100 circle - Applies debuffs
+    P4Inferno1 = 47902, // 4C33->self, 9.0s cast, single-target - Applies buff to self for telling truth or lie
+
+    EdgeOfDeath = 50070, // Helper->self, 5.5s cast, range 48 width 2 rect
+    FloodOfNaught = 50066, // 4C36->self, 5.0+0.5s cast, single-target
+    WhiteAntilight = 50068, // Helper->self, 5.5s cast, range 47 width 21 rect
+    BlackAntilight = 50069, // Helper->self, 5.5s cast, range 47 width 21 rect
+
+    StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
+    StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
+
+    ManaCharge = 47780, // KefkaP4->self, 3.0s cast, single-target
+
+    _Ability_DeathWave = 47899, // Helper->player, no cast, range 8 circle
+    _Ability_DeathBolt = 47897, // Helper->players, no cast, range 8 circle
+
+    _Ability_DeathSurge = 47900, // Helper->self, no cast, range 100 circle
+
+    _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target
+    _Ability_DeathShriek = 47895, // Helper->self, no cast, range 100 circle
+    _Ability_UltimaUpsurge = 49738, // KefkaP4->self, 5.0s cast, range 100 circle
+
+
+    _Ability_DeathWave1 = 47898, // Helper->players, no cast, range 8 circle
+    _Ability_DeathBolt1 = 47896, // Helper->player, no cast, range 8 circle
+    _Ability_DeathShriek1 = 47894, // Helper->self, no cast, range 100 circle
+    _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
+
+    _Ability_UltimaRepeater = 47936, // 4C37->self, 4.0+1.0s cast, single-target
+    _Ability_UltimaRepeater1 = 47937, // Helper->self, no cast, range 100 circle
+    _Ability_1 = 50770, // 4C37->self, no cast, single-target
+    _Ability_FellForces = 50771, // Helper->players, no cast, range 3 circle
+    _Ability_FellForces1 = 50772, // Helper->players, no cast, range 5 circle
+    _Ability_FellForces2 = 50773, // Helper->players, no cast, range 5 circle
+    _Ability_2 = 49539, // Helper->self, 1.5s cast, range 40 width 10 rect
+    _Ability_Flood = 49471, // 4C37->self, 5.0+1.2s cast, single-target
+    _Ability_ChaoticFlood = 47951, // Helper->players, no cast, range 6 circle
+    _Ability_Flood1 = 49769, // Helper->self, no cast, range 40 width 10 rect
+    _Ability_MaddeningOrchestra = 47952, // 4C37->self, 5.0+0.8s cast, single-target
+    _Ability_Flare = 47954, // Helper->player, no cast, range 5 circle
+    _Ability_Holy = 47956, // Helper->players, no cast, range 5 circle
+    _Ability_MaddeningOrchestra1 = 47953, // 4C37->self, no cast, single-target
+    _Ability_ChaoticFlare = 47955, // Helper->players, no cast, range 5 circle
+    _Ability_FlareDiffusion = 47957, // Helper->players, no cast, range 25 circle
+    _Ability_ChaoticHoly = 47958, // Helper->player, no cast, range 6 circle
+    _Ability_Celestriad = 47938, // 4C37->self, 5.0s cast, single-target
+    _Ability_CatastrophicChoice = 49742, // 4C37->self, 4.3+0.7s cast, single-target
+    _Ability_FireIII = 47939, // Helper->self, no cast, range 3 circle
+    _Ability_ThunderIII = 47941, // Helper->self, no cast, range 3 circle
+    _Ability_BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
+    _Ability_Quake = 47946, // Helper->self, no cast, range 10 circle
+    _Ability_CatastrophicChoice1 = 49743, // 4C37->self, 4.3+0.7s cast, single-target
+    _Ability_Tornado = 47947, // Helper->self, no cast, range ?-40 donut
+    _Ability_StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle
+    _Ability_StrayApocalypse = 47932, // Helper->self, 4.0s cast, range 6 circle
+    _Ability_StrayApocalypse1 = 47931, // 4C37->self, 4.0s cast, single-target
+    _Ability_StrayApocalypse2 = 47933, // Helper->self, no cast, range 6 circle
+    _Ability_StrayEntropy = 47934, // 4C37->self, 5.0s cast, single-target
+    _Ability_StrayEntropy1 = 47935, // Helper->player, no cast, range 5 circle
 }
 
 public enum SID : uint {
@@ -235,6 +304,30 @@ public enum SID : uint {
     _Gen_EarthResistanceDownII = 3372, // Helper->player, extra=0x0
     _Gen_Unbecoming = 5452, // 4C38->player, extra=0x1
     _Gen_MeanestExistence = 5453, // 4C38->player, extra=0x0
+
+    // Phase 4
+    TellingTruthBuff = 2056, // none->4C36/4C33, extra=0x461/0x45F/0x462/0x460 | NeoExdeath - 1121 is fake, 1122 is real, Chaos - 1119 is fake, 1120 is real
+    AllaganField = 454, // none->player, extra=0x0
+    BeyondDeath = 1382, // none->player, extra=0x0
+    WhiteWound = 5541, // Helper->player, extra=0x0
+    BlackWound = 5542, // Helper->player, extra=0x0
+
+    ForkedLightning = 5544, // none->player, extra=0x0 - Can be either short or long (per set)
+    CompressedWater = 5545, // none->player, extra=0x0 - Can be either short or long (per set)
+    AccelerationBomb = 5546, // none->player, extra=0x0 - Can be either short or long (within set)
+    CursedShriek = 5543, // none->player, extra=0x0
+
+    DynamicFluidP4 = 5548, // none->player, extra=0x0
+    EntropyP4 = 5547, // none->player, extra=0x0
+
+
+    _Gen_ManaCharge = 1482, // KefkaP4->KefkaP4, extra=0x0
+    _Gen_ThunderCharged = 1485, // none->KefkaP4, extra=0x0
+    _Gen_BlizzardCharged = 1484, // none->KefkaP4, extra=0x0
+    _Gen_SurpriseHoly = 5351, // none->player, extra=0x0
+    _Gen_SurpriseFlare = 5350, // none->player, extra=0x0
+    _Gen_IceResistanceDownII = 2903, // Helper->player, extra=0x0
+    _Gen_FireResistanceDownII = 2902, // Helper->player, extra=0x0
 }
 
 public enum IconID : uint {

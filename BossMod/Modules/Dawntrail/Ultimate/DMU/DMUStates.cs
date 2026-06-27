@@ -15,6 +15,42 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(2, Phase3, "P3")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
+        SimplePhase(3, Phase4, "P4")
+            .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
+    }
+
+    private void Phase4(uint id) {
+        ActorCast(id, _module.KefkaP4, (uint)AID.KefkaSays, 7.3f, 5.0f, true, "Other bosses spawn")
+            .ActivateOnEnter<GrandCrossOrder>()
+            .ActivateOnEnter<TsunamiInfernoOrder>()
+            .ActivateOnEnter<BlizzardSafeSpots>()
+            .ActivateOnEnter<LightningSafeSpots>();
+
+        // TODO magic one
+        // TODO first grandCross
+        // TODO first chaos cast
+        // TODO second magic
+        // ToDO second grandCross
+        // TODO second chaos cast
+        // TODO three magic
+        // TODO final grandCross
+
+        /*
+            .ActivateOnEnter<GrandCrossOrder>()
+            .ActivateOnEnter<TsunamiInfernoOrder>()
+
+            .ActivateOnEnter<EdgeOfDeath>()
+            .ActivateOnEnter<Antilight>()
+            .ActivateOnEnter<ForkedWater>()
+            .ActivateOnEnter<AccelerationBomb>()
+            .ActivateOnEnter<CursedShriek>()
+            .ActivateOnEnter<KefkaOrder>()
+            .ActivateOnEnter<Inferno>()
+            .ActivateOnEnter<Tsunami>()
+         */
+
+
+        Timeout(id + 200000, 30.0f, "P4");
     }
 
     private void Phase3(uint id) {
@@ -216,18 +252,36 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<Nothingness>()
             .DeactivateOnExit<LookUponMeAndDespairAOE>();
 
-        ActorCast(id + 0x500, _module.ExdeathP3, (uint)AID.BlizzardIIICast, 5.3f, 3.0f, true, "Baits")
-            .DeactivateOnExit<KefkaMax>()
-            .DeactivateOnExit<BlackHoleActors>()
-            .DeactivateOnExit<BlackHole>()
+        ActorCast(id + 0x500, _module.ExdeathP3, (uint)AID.BlizzardIIICast, 5.3f, 3.0f, true, "1st Blizzard Baits")
+            .DeactivateOnEnter<KefkaMax>()
+            .DeactivateOnEnter<BlackHoleActors>()
+            .DeactivateOnEnter<BlackHole>()
             .ActivateOnEnter<P3Blizzard>()
             .ActivateOnEnter<P3BlizzardBaits>()
             .ActivateOnEnter<KnockDown>()
-            .ActivateOnEnter<BigBang>()
-            .ActivateOnEnter<P3BlizzardMove>()
             .ActivateOnEnter<StompAMole>();
 
-        Timeout(id + 0xFF0000, 10000, "P3");
+        ComponentCondition<P3Blizzard>(id + 0x510, 0.1f, o => o.NumCasts > 0, "1st Blizzard Baits");
+        ComponentCondition<P3BlizzardBaits>(id + 0x520, 3.0f, o => o.NumCasts > 0, "1st Blizzard Baits Resolve");
+        ComponentCondition<P3Blizzard>(id + 0x530, 0.1f, o => o.NumCasts > 8, "2nd Blizzard Baits");
+        ComponentCondition<StompAMole>(id + 0x540, 2.2f, o => o.NumCasts > 0, "1st Tower");
+        ComponentCondition<P3BlizzardBaits>(id + 0x550, 0.8f, o => o.NumCasts > 8, "2nd Blizzard Baits Resolve")
+            .DeactivateOnExit<P3Blizzard>()
+            .DeactivateOnExit<P3BlizzardBaits>();
+        ComponentCondition<StompAMole>(id + 0x570, 0.5f, o => o.NumCasts > 1, "2nd Tower");
+        ComponentCondition<StompAMole>(id + 0x580, 1.3f, o => o.NumCasts > 2, "3rd Tower");
+        ComponentCondition<StompAMole>(id + 0x590, 1.3f, o => o.NumCasts > 3, "4th Tower");
+        ComponentCondition<KnockDown>(id + 0x600, 1.8f, o => !o.Active, "2nd Stack")
+            .DeactivateOnExit<StompAMole>()
+            .ActivateOnEnter<BigBang>()
+            .ActivateOnEnter<P3BlizzardMove>();
+        ComponentCondition<P3BlizzardMove>(id + 0x610, 3.5f, o => o.NumCasts > 0, "Blizzard Raidwide")
+            .DeactivateOnExit<P3BlizzardMove>();
+        ComponentCondition<BigBang>(id + 0x620, 1.2f, o => o.NumCasts > 1, "Stack AOEs resolve")
+            .DeactivateOnExit<BigBang>()
+            .DeactivateOnExit<KnockDown>()
+            .ActivateOnEnter<P3Enrage>();
+        ComponentCondition<P3Enrage>(id + 0x640, 17.6f, comp => !comp.enrage, "Enrage");
     }
 
     private void Phase2(uint id) {
