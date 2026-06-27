@@ -474,6 +474,7 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
             CurrentBaits.Clear();
+            NumCasts++;
         }
     }
 
@@ -551,8 +552,10 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
     }
 }
 
+class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaUpsurge);
+
+
 /*
-    // TODO setup gaze activation
     // TODO setup timeline from P3 until slide 13
     // TODO ensure everything cleans up correctly and looks correct
     // TODO add hints for safe spots - these can be set

@@ -91,13 +91,26 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>();
 
+        ActorCast(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, 5.0f, true, "Ultima Upsurge")
+            .ActivateOnEnter<UltimaUpsurge>()
+            .DeactivateOnExit<UltimaUpsurge>()
+            .ActivateOnEnter<Inferno>()
+            .ActivateOnExit<ForkedWater>()
+            .ActivateOnExit<AccelerationBomb>();
+
+        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8)
+            .DeactivateOnExit<Inferno>();
+
+        ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
+            .DeactivateOnExit<ForkedWater>()
+            .DeactivateOnExit<AccelerationBomb>();
+
 
         /*
             .ActivateOnEnter<GrandCrossOrder>() - Stays active until end of phase
             .ActivateOnEnter<TsunamiInfernoOrder>() - Stays active until end of phase
             .ActivateOnEnter<KefkaOrder>() - Stays active until end of phase
 
-            .ActivateOnEnter<Inferno>()
             .ActivateOnEnter<Tsunami>()
          */
 
