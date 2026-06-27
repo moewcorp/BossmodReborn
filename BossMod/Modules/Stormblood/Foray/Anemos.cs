@@ -51,7 +51,7 @@ public enum NotoriousMonster : uint
     Pazuzu
 }
 
-[ZoneModuleInfo(283)]
+[ZoneModuleInfo(BossModuleInfo.Maturity.Verified, 283u)]
 public class Anemos(WorldState ws) : EurekaZone<NotoriousMonster>(ws, "Anemos")
 {
     private readonly AnemosConfig _config = Service.Config.Get<AnemosConfig>();

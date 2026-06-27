@@ -1,6 +1,5 @@
 ﻿using BossMod.Autorotation;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.ImGuiFileDialog;

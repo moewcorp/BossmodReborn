@@ -31,7 +31,7 @@ public sealed class ActorState : IEnumerable<Actor>
 
     public List<Operation> CompareToInitial()
     {
-        List<Operation> ops = new(Actors.Count * 5);
+        List<Operation> ops = [with(Actors.Count * 5)];
         foreach (var act in Actors.Values)
         {
             var instanceID = act.InstanceID;

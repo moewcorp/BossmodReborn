@@ -348,8 +348,8 @@ class ForsakenBaitsCone(BossModule module) : Components.GenericBaitAway(module, 
 }
 
 class ForsakenBaitsBossClones(BossModule module) : Components.UniformStackSpread(module, 5, 5) {
-    private List<Actor> clones = new List<Actor>(); // Also includes the boss since he will cast the same spell
-    private List<Actor> baiters = new List<Actor>(); // List of players currently baiting - prevents dupes
+    private List<Actor> clones = []; // Also includes the boss since he will cast the same spell
+    private List<Actor> baiters = []; // List of players currently baiting - prevents dupes
     private int NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
@@ -667,7 +667,7 @@ class ForsakenSolverSet2(BossModule module) : BossComponent(module) {
 class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AllThingsEnding, new AOEShapeCone(100, 25.Degrees())) {
     private List<AOEInstance> aoes = [];
     private List<(Actor clone, ulong target)> clones = [];
-    private List<Actor> baiters = new List<Actor>();
+    private List<Actor> baiters = [];
     private enum _bait { None, Far, Close }
     private _bait currentBait = _bait.None;
     private bool aoesLocked = false;

@@ -18,8 +18,6 @@ public sealed class AIHintsBuilder : IDisposable
     private readonly List<Actor> _invincible = [];
     private ArenaBoundsCircle? _activeFateBounds;
 
-    private float ConeFallback => Math.Clamp(_hintConfig.ConeFallbackAngle, 1, 180);
-
     private static readonly uint[] invincibleStatuses =
     [
         151u, 198u, 325u, 328u, 385u, 394u,

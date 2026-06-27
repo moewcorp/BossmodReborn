@@ -99,7 +99,6 @@ public sealed class RotationModuleManager : IDisposable
         Bossmods = bmm;
         PlayerSlot = playerSlot;
         Hints = hints;
-        _pMultibox = Database.Presets.DefaultPresets.First(f => f.Name == "VBM Multibox");
         _subscriptions = new
         (
             WorldState.Actors.Added.Subscribe(a => DirtyActiveModules(PlayerInstanceId == a.InstanceID)),

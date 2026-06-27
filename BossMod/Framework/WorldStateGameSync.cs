@@ -1,5 +1,4 @@
-﻿using BossMod.Services;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -18,7 +17,7 @@ using FFXIVClientStructs.Interop;
 namespace BossMod;
 
 // utility that updates a world state to correspond to game state
-sealed class WorldStateGameSync : IWorldStateGameSync
+sealed class WorldStateGameSync : IDisposable
 {
     private const int ObjectTableSize = 819; // should match CS; note that different ranges are used for different purposes - consider splitting?..
     private const uint InvalidEntityId = 0xE0000000;
@@ -451,27 +450,13 @@ sealed class WorldStateGameSync : IWorldStateGameSync
         }
 
         if (act.InCombat != inCombat)
-<<<<<<< HEAD
         {
             _ws.Execute(new ActorState.OpCombat(instanceID, inCombat));
         }
-=======
-            _ws.Execute(new ActorState.OpCombat(act.InstanceID, inCombat));
-        if (act.AggroPlayer != hasAggro)
-            _ws.Execute(new ActorState.OpAggroPlayer(act.InstanceID, hasAggro));
-        if (act.ModelState != modelState)
-            _ws.Execute(new ActorState.OpModelState(act.InstanceID, modelState));
-        if (act.EventState != eventState)
-            _ws.Execute(new ActorState.OpEventState(act.InstanceID, eventState));
-        if (act.TargetID != target)
-            _ws.Execute(new ActorState.OpTarget(act.InstanceID, target));
-        if (act.MountId != mountId)
-            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
-        if (act.ForayInfo != forayInfo)
-            _ws.Execute(new ActorState.OpForayInfo(act.InstanceID, forayInfo));
         if (!act.IsOpenTreasure && isOpenTreasure)
-            _ws.Execute(new ActorState.OpEventOpenTreasure(act.InstanceID));
->>>>>>> origin/merge
+        {
+            _ws.Execute(new ActorState.OpEventOpenTreasure(instanceID));
+        }
 
         if (act.AggroPlayer != hasAggro)
         {
@@ -675,12 +660,9 @@ sealed class WorldStateGameSync : IWorldStateGameSync
             // else: just assume there's no player for now...
         }
 
-<<<<<<< HEAD
-        var member = player.InstanceId != default && group != null ? group->GetPartyMemberByEntityId((uint)player.InstanceId) : null;
-=======
         // in duty support, GetPartyMemberByEntityId returns null, even for the player ID
-        var member = player.InstanceId != 0 ? group->GetPartyMemberByEntityId((uint)player.InstanceId) : null;
->>>>>>> origin/merge
+        var member = player.InstanceId != default ? group->GetPartyMemberByEntityId((uint)player.InstanceId) : null;
+
         if (member != null)
         {
             player.InCutscene |= (member->Flags & 0x10) != default;
@@ -721,18 +703,8 @@ sealed class WorldStateGameSync : IWorldStateGameSync
         for (var i = 0; i < group->MemberCount; ++i)
         {
             var member = group->PartyMembers.GetPointer(i);
-<<<<<<< HEAD
-            if (player != null && member->ContentId != player->ContentId && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
-            {
-=======
             if (member->ContentId != playerContentId && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
->>>>>>> origin/merge
                 AddPartyMember(BuildPartyMember(member));
-            }
-            else if (player == null && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
-            {
-                AddPartyMember(BuildPartyMember(member));
-            }
             // else: member is either a player (it was handled by a different function) or already exists in party state
         }
         // consider buddies as party members too
@@ -740,11 +712,11 @@ sealed class WorldStateGameSync : IWorldStateGameSync
         var len = ui->Buddy.DutyHelperInfo.ENpcIds.Length;
         for (var i = 0; i < len; ++i)
         {
-            ref var instanceID = ref ui->Buddy.DutyHelperInfo.DutyHelpers[i].EntityId;
+            var instanceID = ui->Buddy.DutyHelperInfo.DutyHelpers[i].EntityId;
             if (instanceID != InvalidEntityId && _ws.Party.FindSlot(instanceID) < 0)
             {
                 var obj = GameObjectManager.Instance()->Objects.GetObjectByEntityId(instanceID);
-                AddPartyMember(new(default, instanceID, false, obj != null ? obj->NameString : ""));
+                AddPartyMember(new(0, instanceID, false, obj != null ? obj->NameString : ""));
             }
             // else: buddy is non-existent or already updated, skip
         }

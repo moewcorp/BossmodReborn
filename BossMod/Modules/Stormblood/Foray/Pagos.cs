@@ -43,7 +43,7 @@ public enum NotoriousMonster : uint
     Louhi
 }
 
-[ZoneModuleInfo(581)]
+[ZoneModuleInfo(BossModuleInfo.Maturity.Verified, 581u)]
 public class Pagos(WorldState ws) : EurekaZone<NotoriousMonster>(ws, "Pagos")
 {
     private readonly PagosConfig _config = Service.Config.Get<PagosConfig>();
