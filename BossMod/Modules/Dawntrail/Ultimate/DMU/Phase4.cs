@@ -29,8 +29,10 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
             }
         }
 
-        if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.BlackWound) {
+        if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
+            status.ID == (uint)SID.AllaganField ||
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ) {
             var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0) {
                 var id = grandCross.FindIndex(e => e.set == NumCasts - 1);
@@ -53,8 +55,10 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
     }
 
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
-        if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.BlackWound ||
+        if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
+            status.ID == (uint)SID.AllaganField ||
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ||
             status.ID == (uint)SID.ForkedLightning || status.ID == (uint)SID.CompressedWater ||
             status.ID == (uint)SID.AccelerationBomb || status.ID == (uint)SID.CursedShriek) {
             var slot = Raid.FindSlot(actor.InstanceID);
@@ -197,7 +201,7 @@ class KefkaOrder(BossModule module) : BossComponent(module) {
 
     // We only care about his truth & lies after FloodOfNaught - TODO remove this after timeline has been setup?
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.FloodOfNaught) {
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1) {
             active = true;
         }
     }
@@ -261,7 +265,8 @@ class Antilight(BossModule module) : BossComponent(module) {
             NumCasts++;
         }
 
-        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.EdgeOfDeath) {
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 ||
+            spell.Action.ID == (uint)AID.EdgeOfDeath) {
             NumCasts++;
         }
     }
@@ -288,19 +293,20 @@ class Antilight(BossModule module) : BossComponent(module) {
             return;
         }
 
-        if (!hasBuff(buffs, SID.BeyondDeath) && !hasBuff(buffs, SID.AllaganField)) {
+        if (!hasBuff(buffs, SID.BeyondDeath) && !hasBuff(buffs, SID.BeyondDeath1) &&
+            !hasBuff(buffs, SID.AllaganField)) {
             return;
         }
 
         Actor correctSide;
         Actor wrongSide;
 
-        if (hasBuff(buffs, SID.BeyondDeath)) {
-            correctSide = hasBuff(buffs, SID.WhiteWound) ? whiteAntilight : blackAntilight;
-            wrongSide = hasBuff(buffs, SID.WhiteWound) ? blackAntilight : whiteAntilight;
+        if (hasBuff(buffs, SID.BeyondDeath) || hasBuff(buffs, SID.BeyondDeath1)) {
+            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
+            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
         } else {
-            correctSide = hasBuff(buffs, SID.WhiteWound) ? blackAntilight : whiteAntilight;
-            wrongSide = hasBuff(buffs, SID.WhiteWound) ? whiteAntilight : blackAntilight;
+            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
+            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
         }
 
         // If it was a lie, flip it
@@ -517,6 +523,7 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.StraySprayP4) {
             CurrentBaits.Clear();
+            NumCasts++;
         }
     }
 
@@ -556,11 +563,7 @@ class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)A
 
 
 /*
-    // TODO setup timeline from P3 until slide 13
-    // TODO ensure everything cleans up correctly and looks correct
     // TODO add hints for safe spots - these can be set
-    // TODO setup remaining slides
-
 
     // 9 - 15 (fake) - Kefka
     // 12 - 15 (real) - Kefka
@@ -573,16 +576,4 @@ class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)A
     // fake real = fake
     // real real = real
     // fake fake = real
-
-    // TODO change the timers to actually be cast events instead, so if acclerationbomb just ended then we can start the gazes
-    // TODO once setup above - ensure stacks & spreads are done correctly along with gzes
-
-    // TODO figure what casts belong to what to allow clean up and correct size of aoes
-
-
-    // TODO everything should be complete - clean up
-    // TODO add safe spots to stand in
-
-    // TODO fire appears to always be first
-    // TODO water appears to always be second
  */

@@ -201,6 +201,7 @@ public enum AID : uint {
 
     EdgeOfDeath = 50070, // Helper->self, 5.5s cast, range 48 width 2 rect
     FloodOfNaught = 50066, // 4C36->self, 5.0+0.5s cast, single-target
+    FloodOfNaught1 = 50081, // NeoExdeath->self, 5.0+0.5s cast, single-target
     WhiteAntilight = 50068, // Helper->self, 5.5s cast, range 47 width 21 rect
     BlackAntilight = 50069, // Helper->self, 5.5s cast, range 47 width 21 rect
     DeathSurge = 47900, // Helper->self, no cast, range 100 circle - After Antilight casts to ensure it was solved correctly
@@ -220,9 +221,15 @@ public enum AID : uint {
     StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
     StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
 
+
+    // TODO
+    _Ability_DeathSurge = 47901, // Helper->self, no cast, range 100 circle
+    _Ability_BlackSpark = 48333, // Helper->player, no cast, single-target
+
+
+
+
     _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target - can this is the cast that will be stored for later?
-
-
     _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
 
     _Ability_UltimaRepeater = 47936, // 4C37->self, 4.0+1.0s cast, single-target
@@ -310,8 +317,11 @@ public enum SID : uint {
     TellingTruthBuff = 2056, // none->4C36/4C33, extra=0x461/0x45F/0x462/0x460 | NeoExdeath - 1121 is fake, 1122 is real, Chaos - 1119 is fake, 1120 is real
     AllaganField = 454, // none->player, extra=0x0
     BeyondDeath = 1382, // none->player, extra=0x0
+    BeyondDeath1 = 5464, // none->player, extra=0x0
     WhiteWound = 5541, // Helper->player, extra=0x0
+    WhiteWoundOpposite = 4887, // none->player, extra=0x0 // This is actually black lol
     BlackWound = 5542, // Helper->player, extra=0x0
+    BlackWoundOpposite = 4888, // none->player, extra=0x0 // This is actually white lol
 
     ForkedLightning = 5544, // none->player, extra=0x0 - Can be either short or long (per set)
     CompressedWater = 5545, // none->player, extra=0x0 - Can be either short or long (per set)
@@ -320,7 +330,6 @@ public enum SID : uint {
 
     DynamicFluidP4 = 5548, // none->player, extra=0x0
     EntropyP4 = 5547, // none->player, extra=0x0
-
 
     _Gen_ManaCharge = 1482, // KefkaP4->KefkaP4, extra=0x0
     _Gen_ThunderCharged = 1485, // none->KefkaP4, extra=0x0

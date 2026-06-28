@@ -98,7 +98,7 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<ForkedWater>()
             .ActivateOnExit<AccelerationBomb>();
 
-        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8)
+        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8, "Inferno Baits")
             .DeactivateOnExit<Inferno>();
 
         ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
@@ -111,15 +111,17 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<CursedShriek>();
 
         ComponentCondition<CursedShriek>(id + 0x200, 7.1f, o => o.NumCasts > 0, "Gazes Resolve")
-            .DeactivateOnExit<CursedShriek>();
+            .DeactivateOnExit<CursedShriek>()
+            .ActivateOnExit<Tsunami>();
+
+        ComponentCondition<Tsunami>(id + 0x210, 10.7f, o => o.NumCasts >= 8, "Tsunami Baits")
+            .DeactivateOnExit<Tsunami>();
 
 
         /*
             .ActivateOnEnter<GrandCrossOrder>() - Stays active until end of phase
             .ActivateOnEnter<TsunamiInfernoOrder>() - Stays active until end of phase
             .ActivateOnEnter<KefkaOrder>() - Stays active until end of phase
-
-            .ActivateOnEnter<Tsunami>()
          */
 
 
