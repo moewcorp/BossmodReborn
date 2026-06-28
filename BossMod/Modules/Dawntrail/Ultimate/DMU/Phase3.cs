@@ -764,7 +764,7 @@ class SlapHappyBaits(BossModule module) : Components.GenericBaitStack(module) {
                 return;
             }
 
-            CurrentBaits.Add(new(caster, target, new AOEShapeCone(100, 22.5f.Degrees())));
+            CurrentBaits.Add(new(caster, target, new AOEShapeCone(100, 30.0f.Degrees())));
         }
     }
 
@@ -788,12 +788,9 @@ class EarthquakeRaidwide(BossModule module) : Components.RaidwideCast(module, (u
 
 class BlackHoleActors(BossModule module) : Components.Voidzone(module, 2.0f, enemies => enemies.Enemies((uint)OID.BlackHole));
 
-class Nothingness(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether);
-
-class BlackHole(BossModule module) : BossComponent(module) {
+class BlackHole(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether) {
     private readonly List<(Actor blackHole, ulong target)> Tethers = [];
     private KefkaMax? kefkaMax = module.FindComponent<KefkaMax>();
-    public int NumCasts = 0;
 
     private enum Roles { NONE, DPS, SUPPORT, ACCRETION }
     private (Roles role, int order)[] orderedRoles = Utils.MakeArray(8, (Roles.NONE, 0));
@@ -806,6 +803,8 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        base.OnTethered(source, tether);
+
         if (tether.ID == (uint)TetherID.BlackHoleTether) {
             Tethers.Add((source, tether.Target));
             SortTethersCW();
@@ -813,6 +812,8 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 
     public override void OnUntethered(Actor source, in ActorTetherInfo tether) {
+        base.OnUntethered(source, tether);
+
         if (tether.ID == (uint)TetherID.BlackHoleTether) {
             Tethers.RemoveAll(t => t.blackHole.InstanceID == source.InstanceID);
         }
@@ -849,6 +850,19 @@ class BlackHole(BossModule module) : BossComponent(module) {
             NumCasts++;
             currentSetSolver();
         }
+    }
+
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) {
+        var baits = ActiveBaitsOn(pc);
+        foreach (var bait in baits) {
+            var currentBait = bait;
+            if (IsClippedBy(player, ref currentBait)) {
+                customColor = Colors.Danger;
+                return PlayerPriority.Danger;
+            }
+        }
+
+        return base.CalcPriority(pcSlot, pc, playerSlot, player, ref customColor);
     }
 
     private void currentSetSolver() {
@@ -906,7 +920,13 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 }
 
-class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlizzardIIIBaitCast, new AOEShapeCircle(6.0f));
+class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlizzardIIIBaitCast, new AOEShapeCircle(6.0f)) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBaitCast) {
+            NumCasts++;
+        }
+    }
+}
 
 class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true) {
     private Actor? boss = null;
@@ -939,6 +959,8 @@ class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerA
 }
 
 class P3BlizzardMove(BossModule module) : Components.StayMove(module, 5d) {
+    public int NumCasts = 0;
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.BlizzardIIIRaidwide) {
             foreach (var (slot, _) in Raid.WithSlot()) {
@@ -952,6 +974,7 @@ class P3BlizzardMove(BossModule module) : Components.StayMove(module, 5d) {
             foreach (var (slot, _) in Raid.WithSlot()) {
                 PlayerStates[slot] = default;
             }
+            NumCasts++;
         }
     }
 }
@@ -1027,8 +1050,8 @@ class BigBang(BossModule module) : Components.GenericAOEs(module) {
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.BigBang) {
+            NumCasts++;
             if (stacks != null) {
-                NumCasts++;
                 if (stacks.stackLocations.Count > 0) {
                     stacks.stackLocations.RemoveAt(0);
                 }
@@ -1141,6 +1164,22 @@ class StompAMole(BossModule module) : Components.GenericTowers(module) {
             } else if (isInside && numInside > tower.MaxSoakers) {
                 tower.Shape.Outline(Arena, tower.Position, tower.Rotation, default, 2f);
             }
+        }
+    }
+}
+
+class P3Enrage(BossModule module) : BossComponent(module) {
+    public bool enrage;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BowelsOfAgonyEnrage || spell.Action.ID == (uint)AID.MeteorEnrage) {
+            enrage = true;
+        }
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BowelsOfAgonyEnrage || spell.Action.ID == (uint)AID.MeteorEnrage) {
+            enrage = false;
         }
     }
 }

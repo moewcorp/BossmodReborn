@@ -36,13 +36,26 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
     private Actor? exdeathP3;
     public Actor? ExdeathP3() => exdeathP3;
 
+    private Actor? kefkaP4;
+    public Actor? KefkaP4() => kefkaP4;
+    private Actor? neoExdeath;
+    public Actor? NeoExdeath() => neoExdeath;
+    private Actor? chaosP4;
+    public Actor? ChaosP4() => chaosP4;
+
     protected override void UpdateModule() {
         bossP2 ??= Enemies((uint)OID.BossP2).FirstOrDefault();
         chaosP3 ??= Enemies((uint)OID.Chaos).FirstOrDefault();
         exdeathP3 ??= Enemies((uint)OID.Exdeath).FirstOrDefault();
+        chaosP4 ??= Enemies((uint)OID.ChaosP4).FirstOrDefault();
+        neoExdeath ??= Enemies((uint)OID.NeoExdeath).FirstOrDefault();
 
         if (StateMachine.ActivePhaseIndex == 2) {
             bossP3 ??= Enemies((uint)OID.Kefka).FirstOrDefault();
+        }
+
+        if (StateMachine.ActivePhaseIndex == 3) {
+            kefkaP4 ??= Enemies((uint)OID.KefkaP4).FirstOrDefault();
         }
     }
 
@@ -52,5 +65,6 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
         Arena.Actor(chaosP3);
         Arena.Actor(exdeathP3);
         Arena.Actor(bossP3);
+        Arena.Actor(kefkaP4);
     }
 }
