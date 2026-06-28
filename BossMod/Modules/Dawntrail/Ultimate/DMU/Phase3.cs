@@ -764,7 +764,7 @@ class SlapHappyBaits(BossModule module) : Components.GenericBaitStack(module) {
                 return;
             }
 
-            CurrentBaits.Add(new(caster, target, new AOEShapeCone(100, 22.5f.Degrees())));
+            CurrentBaits.Add(new(caster, target, new AOEShapeCone(100, 30.0f.Degrees())));
         }
     }
 

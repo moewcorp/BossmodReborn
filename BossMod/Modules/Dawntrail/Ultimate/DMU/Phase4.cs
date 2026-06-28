@@ -615,6 +615,8 @@ class P4BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
 }
 
 /*
+    // TODO P3 tether colour
+
     // TODO setup lightning safe spots
     47776 - thunder
     47777 - thunder
