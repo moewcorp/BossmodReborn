@@ -86,22 +86,28 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<ForkedWater>(id + 0x130, 8.4f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
             .DeactivateOnExit<AccelerationBomb>()
+            .ActivateOnEnter<LightningSafeSpots>()
             .ActivateOnExit<CursedShriek>()
-            .ActivateOnExit<LightningSafeSpots>()
             .ActivateOnExit<KefkaOrder>();
 
         ComponentCondition<LightningSafeSpots>(id + 0x140, 7.9f, o => o.NumCasts > 0, "Lightning Safe Spots")
             .DeactivateOnExit<LightningSafeSpots>();
 
         ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
-            .DeactivateOnExit<CursedShriek>();
+            .DeactivateOnExit<CursedShriek>()
+            .ActivateOnExit<Inferno>();
 
-        ActorCast(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, 5.0f, true, "Ultima Upsurge")
+        ActorCastStart(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, true, "Ultima Upsurge")
             .ActivateOnEnter<UltimaUpsurge>()
-            .DeactivateOnExit<UltimaUpsurge>()
-            .ActivateOnEnter<Inferno>()
-            .ActivateOnExit<ForkedWater>()
-            .ActivateOnExit<AccelerationBomb>();
+            .ActivateOnEnter<ForkedWater>()
+            .ActivateOnEnter<AccelerationBomb>()
+            .ExecOnEnter<ForkedWater>(o => o.active = false);
+
+        ComponentCondition<Inferno>(id + 0x165, 2.7f, o => o.active == true, "Baits dropped")
+            .ExecOnExit<ForkedWater>(o => o.active = true);
+
+        ComponentCondition<UltimaUpsurge>(id + 0x166, 2.3f, o => o.NumCasts > 0, "Raidwide")
+            .DeactivateOnExit<UltimaUpsurge>();
 
         ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8, "Inferno Baits")
             .DeactivateOnExit<Inferno>();

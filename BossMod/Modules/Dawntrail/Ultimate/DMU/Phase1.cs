@@ -309,7 +309,7 @@ class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)
 class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
     protected bool questionMark = false;
     private readonly List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
-    private readonly List<AOEInstance> aoes = [];
+    public readonly List<AOEInstance> aoes = [];
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
         if (iconID == (uint)IconID.PurpleRingQuestionMark) {

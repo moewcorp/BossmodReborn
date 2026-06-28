@@ -94,22 +94,13 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
         }
         return result.OrderBy(buff => buff.expireAt).Take(count).ToList();
     }
-
-    // TODO remove
-    public override void Update() {
-        foreach (var (tellingTruth, wave, playerBuffs) in grandCross) {
-            var buffsStr = string.Join(", ", playerBuffs.Select((buffs, slot) =>
-                $"P{slot}:[{string.Join(",", buffs.Select(b => $"{b.buff}@{b.expireAt}"))}]"));
-            //Service.Logger.Info($"Wave {wave} tellingTruth={tellingTruth} | {buffsStr}");
-        }
-    }
 }
 
 // TODO merge both raid wides together
 class TsunamiRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.P4Tsunami);
 class InfernoRaidwide(BossModule module) : Components.RaidwideCast(module, (uint)AID.P4Inferno);
 
-// Elements will be casted two times in a row with a fake or real - TODO verify the status is working correctly
+// Elements will be casted two times in a row with a fake or real
 class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
     private List<(bool? tellingTruth, int set, List<(SID buff, DateTime expireAt)>[] playerBuffs)> tsunamiInferno = new();
     private bool tellingTruthCaught = false; // Two orbs spawn per cast, but we only want one
@@ -182,15 +173,6 @@ class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
         }
         return result.OrderBy(buff => buff.expireAt).Take(count).ToList();
     }
-
-    // TODO remove
-    public override void Update() {
-        foreach (var (tellingTruth, wave, playerBuffs) in tsunamiInferno) {
-            var buffsStr = string.Join(", ", playerBuffs.Select((buffs, slot) =>
-                $"P{slot}:[{string.Join(",", buffs.Select(b => $"{b.buff}@{b.expireAt}"))}]"));
-            //Service.Logger.Info($"Wave {wave} tellingTruth={tellingTruth} | {buffsStr}");
-        }
-    }
 }
 
 // Kefka will cast truth and lies throughout the encounter which need to be tracked
@@ -216,11 +198,6 @@ class KefkaOrder(BossModule module) : BossComponent(module) {
                 tellingTruthOrder.Add((false, Element.Blizzard));
             }
         }
-    }
-
-    // TODO remove
-    public override void Update() {
-        //Service.Logger.Info($"tellingTruthOrder: {string.Join(", ", tellingTruthOrder.Select(e => $"{e.tellingTruth} {e.element}"))}");
     }
 }
 
@@ -320,6 +297,7 @@ class Antilight(BossModule module) : BossComponent(module) {
 class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0f, 8.0f, 3, 3) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
     public int NumCasts = 0; // 4 casts will always go off, better to watch this to know if the aoes are active or not
+    public bool active = true; // Used to hide everything until it need to be shown if overlap with other mechancis
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.ForkedLightningFake || spell.Action.ID == (uint)AID.ForkedLightningReal ||
@@ -374,6 +352,40 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
             }
         }
     }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (active == true) {
+            base.DrawArenaForeground(pcSlot, pc);
+        }
+
+        // Stacks + nothing players
+        if (Stacks.Any(player => player.Target == pc) || !Spreads.Any(player => player.Target == pc)) {
+            if (pc.Class.IsSupport()) {
+                Arena.AddCircle(new WPos(100.0f, 88.0f), 1.0f, active ? Colors.Safe : Colors.Danger, 2.0f);
+            }
+
+            if (pc.Class.IsDD()) {
+                Arena.AddCircle(new WPos(100.0f, 112.0f), 1.0f, active ? Colors.Safe : Colors.Danger, 2.0f);
+            }
+        }
+
+        // Spread players
+        if (Spreads.Any(player => player.Target == pc)) {
+            if (pc.Class.IsSupport()) {
+                Arena.AddCircle(new WPos(88.0f, 100.0f), 1.0f, active ? Colors.Safe : Colors.Danger, 2.0f);
+            }
+
+            if (pc.Class.IsDD()) {
+                Arena.AddCircle(new WPos(112.0f, 100.0f), 1.0f, active ? Colors.Safe : Colors.Danger, 2.0f);
+            }
+        }
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (active == true) {
+            base.AddHints(slot, actor, hints);
+        }
+    }
 }
 
 // 4x accleration bombs where two are from 1st set and the other 2 are from the 2nd set, so it can a mix of truth and lie
@@ -407,7 +419,8 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
 // 2x CursedShriek from the same set always
 class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
-    private List<(int slot, DateTime expireAt, bool inverted)> pendingGazes = new();
+    private List<(int slot, DateTime expireAt, bool inverted, Actor player)> pendingGazes = new();
+    LightningSafeSpots? lightningSafeSpots = module.FindComponent<LightningSafeSpots>();
     private List<Eye> eyes = new();
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -419,7 +432,7 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     public override ReadOnlySpan<Eye> ActiveEyes(int pcSlot, Actor pcActor) {
         eyes.Clear();
 
-        foreach (var (slot, expireAt, inverted) in pendingGazes) {
+        foreach (var (slot, expireAt, inverted, _) in pendingGazes) {
             if (slot == pcSlot) {
                 continue;
             }
@@ -456,18 +469,108 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
             return;
         }
 
-        foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.CursedShriek, 2)) {
-            if ((expireAt - WorldState.CurrentTime).TotalSeconds > 8.0) {
+        var players = grandCrossOrder.getNextBuffPlayers(SID.CursedShriek, 2).ToList();
+
+        for (int i = 0; i < players.Count; i++) {
+            if ((players[i].expireAt - WorldState.CurrentTime).TotalSeconds > 8.0) {
                 continue;
             }
 
-            pendingGazes.Add((slot, expireAt, tellingTruth == false));
+            var player = Raid[players[i].slot];
+            if (player == null) {
+                continue;
+            }
+
+            pendingGazes.Add((players[i].slot, players[i].expireAt, players[i].tellingTruth == false, player));
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        // Special case: If lightning safe spots is null it means we are on the 2nd gaze which are just north and south spots instead
+        if (lightningSafeSpots == null) {
+
+            // Support gaze player
+            if (pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsSupport()) {
+                Arena.AddCircle(Module.Center - new WDir(0, 2.0f), 1f, Colors.Safe, 2f);
+            }
+
+            // DD gaze player
+            if (pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsDD()) {
+                Arena.AddCircle(Module.Center - new WDir(0, -2.0f), 1f, Colors.Safe, 2f);
+            }
+
+            // Support players
+            if (!pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsSupport()) {
+                Arena.AddCircle(Module.Center - new WDir(0, 6.0f), 1f, Colors.Safe, 2f);
+            }
+
+            // DD players
+            if (!pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsDD()) {
+                Arena.AddCircle(Module.Center - new WDir(0, -6.0f), 1f, Colors.Safe, 2f);
+            }
+
+            return;
+        }
+
+        var aoes = lightningSafeSpots.aoes.ToList();
+        if (aoes.Count == 0) {
+            return;
+        }
+
+        // For easier logic, we will just use where the actor casters are to handle the safe spots
+        foreach (var aoe in aoes) {
+            var rect = (AOEShapeRect)aoe.Shape;
+            var forward = (aoe.Rotation + rect.DirectionOffset).ToDirection();
+            var safeSpot = new WPos(0.0f, 0.0f);
+
+            // Case 1: The safe spots are in the real areas, this means we figure out the bad spot and go left of it
+            //         so the lightning aoe will be around [117.662, 89.372]
+            if (aoe.Origin.AlmostEqual(new WPos(117.662f, 89.372f), 1.0f)) {
+                var edgeCenter = aoe.Origin - forward.OrthoL() * rect.HalfWidth;
+                safeSpot = edgeCenter + forward * (Module.Center - edgeCenter).Dot(forward) - forward.OrthoL();
+            }
+
+            // Case 2: The safe spots are in the question mark areas, this means we figure out the bad spot and go right of it
+            //         so the lightning aoe will be around [110.582, 82.292]
+            if (aoe.Origin.AlmostEqual(new WPos(110.582f, 82.292f), 1.0f)) {
+                var edgeCenter = aoe.Origin + forward.OrthoL() * rect.HalfWidth;
+                safeSpot = edgeCenter + forward * (Module.Center - edgeCenter).Dot(forward) + forward.OrthoL();
+            }
+
+            // Support gaze player
+            if (pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsSupport()) {
+                Arena.AddCircle(safeSpot - forward * 2f, 1f, Colors.Safe, 2f);
+            }
+
+            // DD gaze player
+            if (pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsDD()) {
+                Arena.AddCircle(safeSpot + forward * 2f, 1f, Colors.Safe, 2f);
+            }
+
+            // Support players
+            if (!pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsSupport()) {
+                Arena.AddCircle(safeSpot - forward * 6f, 1f, Colors.Safe, 2f);
+            }
+
+            // DD players
+            if (!pendingGazes.Any(eye => eye.player == pc) && pc.Class.IsDD()) {
+                Arena.AddCircle(safeSpot + forward * 6f, 1f, Colors.Safe, 2f);
+            }
         }
     }
 }
 
 class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
+    public bool active = false;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
+            active = true;
+        }
+    }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
@@ -507,10 +610,25 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
             }
         }
     }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (active == false) {
+            Arena.AddCircle(new WPos(100.0f, 100.0f), 1.0f, Colors.Safe, 2.0f);
+        }
+    }
 }
 
 class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
+    public bool active = false;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StraySprayP4) {
+            active = true;
+        }
+    }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.StraySprayP4) {
@@ -547,6 +665,14 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
             if (tellingTruth == false) {
                 CurrentBaits.Add(new(player.Position, new AOEShapeCircle(6.0f)));
             }
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (active == false) {
+            Arena.AddCircle(new WPos(100.0f, 100.0f), 1.0f, Colors.Safe, 2.0f);
         }
     }
 }
@@ -593,8 +719,3 @@ class P4LightningSafeSpots(BossModule module) : LightningSafeSpots(module) {
         questionMark = lightning[0].tellingTruth != lightning[1].tellingTruth;
     }
 }
-
-/*
-    // TODO finish timeline + including enrage cast
-    // TODO add hints for safe spots - these can be set - for all mechanics
- */
