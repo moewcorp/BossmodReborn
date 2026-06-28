@@ -195,19 +195,11 @@ class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
 
 // Kefka will cast truth and lies throughout the encounter which need to be tracked
 class KefkaOrder(BossModule module) : BossComponent(module) {
-    private bool active = false;
-    private List<(bool tellingTruth, Element element)> tellingTruthOrder = new();
-    private enum Element { Thunder, Blizzard }
-
-    // We only care about his truth & lies after FloodOfNaught - TODO remove this after timeline has been setup?
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1) {
-            active = true;
-        }
-    }
+    public List<(bool tellingTruth, Element element)> tellingTruthOrder = new();
+    public enum Element { Thunder, Blizzard }
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
-        if (actor.OID == (uint)OID.KefkaP4 && active == true) {
+        if (actor.OID == (uint)OID.KefkaP4) {
             if (iconID == (uint)IconID.PurpleRingBlueOrb) {
                 tellingTruthOrder.Add((true, Element.Thunder));
             }
@@ -561,19 +553,74 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
 
 class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaUpsurge);
 
+// Customize version of P1 blizzard safe spots function that uses the truth and lies stored throughout the phase instead
+class P4BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
+    private readonly List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
+    private readonly List<AOEInstance> aoes = [];
+    private KefkaOrder? kefkaOrder = module.FindComponent<KefkaOrder>();
+    private bool? tellingTruth = null;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout || spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
+            aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeCone(40f, 45f.Degrees()), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout || spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
+            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
+            NumCasts++;
+            aoesAvailable.Clear();
+        }
+    }
+
+    public override void Update() {
+        if (kefkaOrder == null) {
+            return;
+        }
+
+        var blizzards = kefkaOrder.tellingTruthOrder.Where(e => e.element == KefkaOrder.Element.Blizzard).ToList();
+        if (blizzards.Count != 2) {
+            return;
+        }
+
+        // Cases: If both are the same value then its true otherwise its false
+        // 1. True + True = True
+        // 2. True + Fake = Fake
+        // 3. Fake + True = Fake
+        // 4. Fake + Fake = True
+        tellingTruth = blizzards[0].tellingTruth == blizzards[1].tellingTruth;
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        aoes.Clear();
+
+        foreach (var currentAOE in aoesAvailable) {
+            if (tellingTruth == false) {
+                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout) {
+                    aoes.Add(currentAOE.AOE);
+                }
+            }
+
+            if (tellingTruth == true) {
+                if (currentAOE.AID is ((uint)AID.BlizzardIIIBlowout1) or ((uint)AID.BlizzardIIIBlowout2)) {
+                    aoes.Add(currentAOE.AOE);
+                }
+            }
+        }
+
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
 
 /*
-    // TODO add hints for safe spots - these can be set
+    // TODO setup lightning safe spots
+    47776 - thunder
+    47777 - thunder
 
-    // 9 - 15 (fake) - Kefka
-    // 12 - 15 (real) - Kefka
-    // 13 - stores two for later? for a mystery magic ice and lightning (both real) - Kefka
+    47775 - thunder
 
-    // So we use the two from slide 9 & 12
-    // And then decide if we need to swap them base on mystery magic
-
-    // real fake = fake
-    // fake real = fake
-    // real real = real
-    // fake fake = real
+    // TODO finish timeline + including enrage cast
+    // TODO add hints for safe spots - these can be set - for all mechanics
  */
