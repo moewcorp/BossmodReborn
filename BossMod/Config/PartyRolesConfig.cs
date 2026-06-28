@@ -78,6 +78,8 @@ public class PartyRolesConfig : ConfigNode
         return res;
     }
 
+    record struct PartyMember(ulong CID, string Name, Class Class, Assignment Assignment);
+
     // automatically assign party roles based on job priority and party composition
     public void AutoAssignRoles(PartyState party)
     {
@@ -115,21 +117,21 @@ public class PartyRolesConfig : ConfigNode
         }
 
         // tank priority: PLD > WAR > DRK > GNB for MT, reverse for OT
-        tanks.Sort((a, b) => GetTankPriority(a.job).CompareTo(GetTankPriority(b.job)));
+        tanks.Sort(static (a, b) => GetTankPriority(a.job).CompareTo(GetTankPriority(b.job)));
         if (tanks.Count > 0)
             Assignments[tanks[0].contentId] = Assignment.MT;
         if (tanks.Count > 1)
             Assignments[tanks[1].contentId] = Assignment.OT;
 
         // healer priority: WHM > AST > SCH > SGE for H1, reverse for H2
-        healers.Sort((a, b) => GetHealerPriority(a.job).CompareTo(GetHealerPriority(b.job)));
+        healers.Sort(static (a, b) => GetHealerPriority(a.job).CompareTo(GetHealerPriority(b.job)));
         if (healers.Count > 0)
             Assignments[healers[0].contentId] = Assignment.H1;
         if (healers.Count > 1)
             Assignments[healers[1].contentId] = Assignment.H2;
 
         // sort ranged by priority first
-        ranged.Sort((a, b) => GetRangedPriority(a.job).CompareTo(GetRangedPriority(b.job)));
+        ranged.Sort(static (a, b) => GetRangedPriority(a.job).CompareTo(GetRangedPriority(b.job)));
 
         // melee DPS - if 3+ ranged, fill melee slots from the lowest priority ranged
         if (ranged.Count >= 3)
@@ -178,8 +180,8 @@ public class PartyRolesConfig : ConfigNode
 
     private static int GetTankPriority(Class job) => job switch
     {
-        Class.PLD or Class.GLA => 1,
-        Class.WAR or Class.MRD => 2,
+        Class.WAR or Class.MRD => 1,
+        Class.PLD or Class.GLA => 2,
         Class.DRK => 3,
         Class.GNB => 4,
         _ => 99
@@ -211,13 +213,6 @@ public class PartyRolesConfig : ConfigNode
 
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        if (ImGui.Button("Auto-Assign Roles"))
-        {
-            AutoAssignRoles(ws.Party);
-        }
-        ImGui.SameLine();
-        ImGui.TextUnformatted("Click to automatically assign party roles based on job and party order");
-
         using (var table = ImRaii.Table("tab2", 10, ImGuiTableFlags.SizingFixedFit))
         {
             if (table)
@@ -231,16 +226,15 @@ public class PartyRolesConfig : ConfigNode
                 ImGui.TableHeadersRow();
 
                 List<(ulong cid, string name, char role, Assignment assignment)> party = [];
-                for (var i = 0; i < PartyState.MaxPartySize; ++i)
+                for (int i = 0; i < PartyState.MaxPartySize; ++i)
                 {
                     ref var m = ref ws.Party.Members[i];
                     if (m.IsValid())
-                    {
                         party.Add((m.ContentId, m.Name, ws.Party[i]?.Role.ToString()[0] ?? '?', this[m.ContentId]));
-                    }
                 }
 
                 party.Sort(static (a, b) => a.role.CompareTo(b.role));
+
                 foreach (var (contentID, name, classRole, assignment) in party)
                 {
                     ImGui.TableNextRow();

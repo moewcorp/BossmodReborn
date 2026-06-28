@@ -770,7 +770,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     public int NumCasts = 0;
     private (Direction direction, DateTime activation)? Debuff1;
     private (Direction direction, DateTime activation)? Debuff2;
-    private List<WPos> hints = new List<WPos>();
+    private List<WPos> hints = [];
     private enum Direction { UP, DOWN, LEFT, RIGHT }
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
