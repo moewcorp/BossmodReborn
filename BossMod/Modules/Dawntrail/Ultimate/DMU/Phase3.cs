@@ -788,9 +788,7 @@ class EarthquakeRaidwide(BossModule module) : Components.RaidwideCast(module, (u
 
 class BlackHoleActors(BossModule module) : Components.Voidzone(module, 2.0f, enemies => enemies.Enemies((uint)OID.BlackHole));
 
-class Nothingness(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether);
-
-class BlackHole(BossModule module) : BossComponent(module) {
+class BlackHole(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether) {
     private readonly List<(Actor blackHole, ulong target)> Tethers = [];
     private KefkaMax? kefkaMax = module.FindComponent<KefkaMax>();
     public int NumCasts = 0;
@@ -806,6 +804,8 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        base.OnTethered(source, tether);
+
         if (tether.ID == (uint)TetherID.BlackHoleTether) {
             Tethers.Add((source, tether.Target));
             SortTethersCW();
@@ -813,6 +813,8 @@ class BlackHole(BossModule module) : BossComponent(module) {
     }
 
     public override void OnUntethered(Actor source, in ActorTetherInfo tether) {
+        base.OnUntethered(source, tether);
+
         if (tether.ID == (uint)TetherID.BlackHoleTether) {
             Tethers.RemoveAll(t => t.blackHole.InstanceID == source.InstanceID);
         }
@@ -849,6 +851,19 @@ class BlackHole(BossModule module) : BossComponent(module) {
             NumCasts++;
             currentSetSolver();
         }
+    }
+
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) {
+        var baits = ActiveBaitsOn(pc);
+        foreach (var bait in baits) {
+            var currentBait = bait;
+            if (IsClippedBy(player, ref currentBait)) {
+                customColor = Colors.Danger;
+                return PlayerPriority.Danger;
+            }
+        }
+
+        return base.CalcPriority(pcSlot, pc, playerSlot, player, ref customColor);
     }
 
     private void currentSetSolver() {
