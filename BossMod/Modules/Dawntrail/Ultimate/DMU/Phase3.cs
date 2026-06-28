@@ -791,7 +791,6 @@ class BlackHoleActors(BossModule module) : Components.Voidzone(module, 2.0f, ene
 class BlackHole(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(125.0f, 3.0f), (uint)TetherID.BlackHoleTether) {
     private readonly List<(Actor blackHole, ulong target)> Tethers = [];
     private KefkaMax? kefkaMax = module.FindComponent<KefkaMax>();
-    public int NumCasts = 0;
 
     private enum Roles { NONE, DPS, SUPPORT, ACCRETION }
     private (Roles role, int order)[] orderedRoles = Utils.MakeArray(8, (Roles.NONE, 0));

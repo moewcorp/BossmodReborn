@@ -19,6 +19,7 @@ sealed class DMUStates : StateMachineBuilder {
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
     }
 
+    // TODO update raidwides to actually use actors instead since it should now be fixed and able to find the boss correctly
     private void Phase4(uint id) {
         ActorCast(id, _module.KefkaP4, (uint)AID.KefkaSays, 7.3f, 5.0f, true, "Other bosses spawn")
             .ActivateOnEnter<GrandCrossOrder>()
