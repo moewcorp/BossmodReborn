@@ -16,12 +16,16 @@ sealed class DMUStates : StateMachineBuilder {
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
         SimplePhase(3, Phase4, "P4")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
     }
 
     // TODO update raidwides to actually use actors instead since it should now be fixed and able to find the boss correctly
     private void Phase4(uint id) {
-        ActorCast(id, _module.KefkaP4, (uint)AID.KefkaSays, 7.3f, 5.0f, true, "Other bosses spawn")
+        ActorTargetable(id, _module.KefkaP4, true, 2.1f, "Boss appears")
+            .SetHint(StateMachine.StateHint.DowntimeEnd);
+
+        ActorCast(id + 0x05, _module.KefkaP4, (uint)AID.KefkaSays, 5.1f, 5.0f, true, "Other bosses spawn")
             .ActivateOnEnter<GrandCrossOrder>()
             .ActivateOnEnter<TsunamiInfernoOrder>();
 
@@ -120,13 +124,14 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<P4BlizzardSafeSpots>()
             .ActivateOnEnter<P4LightningSafeSpots>();
 
+        ComponentCondition<LightningSafeSpots>(id + 0x220, 0.5f, o => o.NumCasts > 0, "Blizzard + Lightning Safe Spots")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardSafeSpots>()
+            .DeactivateOnExit<GrandCrossOrder>()
+            .DeactivateOnExit<TsunamiInfernoOrder>()
+            .DeactivateOnExit<KefkaOrder>();
 
-        /*
-            .ActivateOnEnter<GrandCrossOrder>() - Stays active until end of phase
-            .ActivateOnEnter<TsunamiInfernoOrder>() - Stays active until end of phase
-            .ActivateOnEnter<KefkaOrder>() - Stays active until end of phase
-         */
-
+        ActorCast(id + 0x230, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage");
 
         Timeout(id + 200000, 30.0f, "P4");
     }
