@@ -554,26 +554,8 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
 class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaUpsurge);
 
 // Customize version of P1 blizzard safe spots function that uses the truth and lies stored throughout the phase instead
-class P4BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
-    private readonly List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
-    private readonly List<AOEInstance> aoes = [];
+class P4BlizzardSafeSpots(BossModule module) : BlizzardSafeSpots(module) {
     private KefkaOrder? kefkaOrder = module.FindComponent<KefkaOrder>();
-    private bool? tellingTruth = null;
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout || spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
-            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
-            aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeCone(40f, 45f.Degrees()), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
-        }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.BlizzardIIIBlowout || spell.Action.ID == (uint)AID.BlizzardIIIBlowout1 ||
-            spell.Action.ID == (uint)AID.BlizzardIIIBlowout2) {
-            NumCasts++;
-            aoesAvailable.Clear();
-        }
-    }
 
     public override void Update() {
         if (kefkaOrder == null) {
@@ -590,37 +572,29 @@ class P4BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
         // 2. True + Fake = Fake
         // 3. Fake + True = Fake
         // 4. Fake + Fake = True
-        tellingTruth = blizzards[0].tellingTruth == blizzards[1].tellingTruth;
+        questionMark = blizzards[0].tellingTruth != blizzards[1].tellingTruth;
     }
+}
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
-        aoes.Clear();
+// Customize version of P1 lightning safe spots function that uses the truth and lies stored throughout the phase instead
+class P4LightningSafeSpots(BossModule module) : LightningSafeSpots(module) {
+    private KefkaOrder? kefkaOrder = module.FindComponent<KefkaOrder>();
 
-        foreach (var currentAOE in aoesAvailable) {
-            if (tellingTruth == false) {
-                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout) {
-                    aoes.Add(currentAOE.AOE);
-                }
-            }
-
-            if (tellingTruth == true) {
-                if (currentAOE.AID is ((uint)AID.BlizzardIIIBlowout1) or ((uint)AID.BlizzardIIIBlowout2)) {
-                    aoes.Add(currentAOE.AOE);
-                }
-            }
+    public override void Update() {
+        if (kefkaOrder == null) {
+            return;
         }
 
-        return CollectionsMarshal.AsSpan(aoes);
+        var lightning = kefkaOrder.tellingTruthOrder.Where(e => e.element == KefkaOrder.Element.Thunder).ToList();
+        if (lightning.Count != 2) {
+            return;
+        }
+
+        questionMark = lightning[0].tellingTruth != lightning[1].tellingTruth;
     }
 }
 
 /*
-    // TODO setup lightning safe spots
-    47776 - thunder
-    47777 - thunder
-
-    47775 - thunder
-
     // TODO finish timeline + including enrage cast
     // TODO add hints for safe spots - these can be set - for all mechanics
  */

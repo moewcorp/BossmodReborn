@@ -117,7 +117,8 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<Tsunami>(id + 0x210, 10.7f, o => o.NumCasts >= 8, "Tsunami Baits")
             .DeactivateOnExit<Tsunami>()
-            .ActivateOnEnter<P4BlizzardSafeSpots>();
+            .ActivateOnEnter<P4BlizzardSafeSpots>()
+            .ActivateOnEnter<P4LightningSafeSpots>();
 
 
         /*
