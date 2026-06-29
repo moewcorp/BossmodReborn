@@ -18,6 +18,29 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
+        SimplePhase(4, Phase5, "P5")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+    }
+
+    private void Phase5(uint id) {
+        ActorTargetable(id, _module.KefkaP5, true, 0.1f, "Boss appears")
+            .ActivateOnEnter<FellForces>()
+            .SetHint(StateMachine.StateHint.DowntimeEnd);
+
+        ActorCast(id + 0x10, _module.KefkaP5, (uint)AID.UltimaRepeaterCast, 3.0f, 5.0f, true, "Ultima Repeater")
+            .ActivateOnEnter<UltimaRepeater>()
+            .DeactivateOnExit<UltimaRepeater>()
+            .ActivateOnEnter<FellForces>()
+            .ExecOnExit<FellForces>(o => o.active = true);
+
+        ComponentCondition<FellForces>(id + 0x20, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x25, 3.1f, o => o.NumCasts > 3, "2st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x30, 3.1f, o => o.NumCasts > 6, "3st Auto Attack Stack")
+            .DeactivateOnExit<FellForces>()
+            .ActivateOnExit<ChaoticFlood>();
+
+        Timeout(id + 0x500000, 30.0f, "P5 Unknown");
     }
 
     // TODO update raidwides to actually use actors instead since it should now be fixed and able to find the boss correctly
@@ -137,9 +160,11 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<TsunamiInfernoOrder>()
             .DeactivateOnExit<KefkaOrder>();
 
-        ActorCast(id + 0x230, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage");
+        ActorCast(id + 0x40000, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage")
+            .ActivateOnEnter<UltimaUpsurge>()
+            .DeactivateOnExit<UltimaUpsurge>();
 
-        Timeout(id + 200000, 30.0f, "P4");
+        Timeout(id + 0x40010, 31.0f, "Downtime");
     }
 
     private void Phase3(uint id) {

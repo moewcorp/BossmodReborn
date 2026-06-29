@@ -38,11 +38,13 @@ public enum OID : uint {
     KefkaP4 = 0x482B,
     NeoExdeath = 0x4C36, // R9.000, x0 (spawn during fight)
     ChaosP4 = 0x4C33, // R6.000, x0 (spawn during fight)
-    _Gen_Kefka = 0x4C37, // R8.010, x0 (spawn during fight)
+
     _Gen_Actor1ec03f = 0x1EC03F, // R0.500, x0 (spawn during fight), EventObj type
     _Gen_Actor1ec040 = 0x1EC040, // R0.500, x0 (spawn during fight), EventObj type
     _Gen_Actor1ec03e = 0x1EC03E, // R0.500, x0 (spawn during fight), EventObj type
 
+    // Phase 5
+    KefkaP5 = 0x4C37, // R8.010, x0 (spawn during fight)
 }
 
 public enum AID : uint {
@@ -226,37 +228,49 @@ public enum AID : uint {
     _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
     _Ability_BlackSpark = 48333, // Helper->player, no cast, single-target - Unknown, maybe blackhole if you walk into it?
 
-    _Ability_UltimaRepeater = 47936, // 4C37->self, 4.0+1.0s cast, single-target
-    _Ability_UltimaRepeater1 = 47937, // Helper->self, no cast, range 100 circle
-    _Ability_1 = 50770, // 4C37->self, no cast, single-target
-    _Ability_FellForces = 50771, // Helper->players, no cast, range 3 circle
-    _Ability_FellForces1 = 50772, // Helper->players, no cast, range 5 circle
-    _Ability_FellForces2 = 50773, // Helper->players, no cast, range 5 circle
-    _Ability_2 = 49539, // Helper->self, 1.5s cast, range 40 width 10 rect
-    _Ability_Flood = 49471, // 4C37->self, 5.0+1.2s cast, single-target
-    _Ability_ChaoticFlood = 47951, // Helper->players, no cast, range 6 circle
-    _Ability_Flood1 = 49769, // Helper->self, no cast, range 40 width 10 rect
-    _Ability_MaddeningOrchestra = 47952, // 4C37->self, 5.0+0.8s cast, single-target
+    // Phase 5
+    UltimaRepeaterCast = 47936, // KefkaP5->self, 4.0+1.0s cast, single-target
+    UltimaRepeaterRaidwide = 47937, // Helper->self, no cast, range 100 circle
+
+    _Ability_1 = 50770, // KefkaP5->self, no cast, single-target - TODO what is this?
+
+    // TODO verify the same skill id always goes to the same target role and check who gets the 3f circle one (currently guessing tank)
+    FellForces = 50771, // Helper->players, no cast, range 3 circle
+    FellForces1 = 50772, // Helper->players, no cast, range 5 circle
+    FellForces2 = 50773, // Helper->players, no cast, range 5 circle
+
+    ChaoticFlood = 47951, // Helper->players, no cast, range 6 circle
+    ChaoticFloodAOEDisplay = 49539, // Helper->self, 1.5s cast, range 40 width 10 rect
+    ChaoticFloodAOE = 49769, // Helper->self, no cast, range 40 width 10 rect
+    ChaoticFloodStack = 49471, // KefkaP5->self, 5.0+1.2s cast, single-target
+
+    _Ability_MaddeningOrchestra = 47952, // KefkaP5->self, 5.0+0.8s cast, single-target
     _Ability_Flare = 47954, // Helper->player, no cast, range 5 circle
     _Ability_Holy = 47956, // Helper->players, no cast, range 5 circle
-    _Ability_MaddeningOrchestra1 = 47953, // 4C37->self, no cast, single-target
+    _Ability_MaddeningOrchestra1 = 47953, // KefkaP5->self, no cast, single-target
     _Ability_ChaoticFlare = 47955, // Helper->players, no cast, range 5 circle
     _Ability_FlareDiffusion = 47957, // Helper->players, no cast, range 25 circle
     _Ability_ChaoticHoly = 47958, // Helper->player, no cast, range 6 circle
-    _Ability_Celestriad = 47938, // 4C37->self, 5.0s cast, single-target
-    _Ability_CatastrophicChoice = 49742, // 4C37->self, 4.3+0.7s cast, single-target
+    _Ability_Celestriad = 47938, // KefkaP5->self, 5.0s cast, single-target
+    _Ability_CatastrophicChoice = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
     _Ability_FireIII = 47939, // Helper->self, no cast, range 3 circle
     _Ability_ThunderIII = 47941, // Helper->self, no cast, range 3 circle
     _Ability_BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
     _Ability_Quake = 47946, // Helper->self, no cast, range 10 circle
-    _Ability_CatastrophicChoice1 = 49743, // 4C37->self, 4.3+0.7s cast, single-target
+    _Ability_CatastrophicChoice1 = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
     _Ability_Tornado = 47947, // Helper->self, no cast, range ?-40 donut
     _Ability_StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle
     _Ability_StrayApocalypse = 47932, // Helper->self, 4.0s cast, range 6 circle
-    _Ability_StrayApocalypse1 = 47931, // 4C37->self, 4.0s cast, single-target
+    _Ability_StrayApocalypse1 = 47931, // KefkaP5->self, 4.0s cast, single-target
     _Ability_StrayApocalypse2 = 47933, // Helper->self, no cast, range 6 circle
-    _Ability_StrayEntropy = 47934, // 4C37->self, 5.0s cast, single-target
+    _Ability_StrayEntropy = 47934, // KefkaP5->self, 5.0s cast, single-target
     _Ability_StrayEntropy1 = 47935, // Helper->player, no cast, range 5 circle
+    _Ability_Forsaken = 47925, // KefkaP5->self, 10.0s cast, range 100 circle
+    _Ability_Forsaken1 = 47928, // Helper->self, 5.0s cast, range 8 circle
+    _Ability_ForsakenGround = 47927, // Helper->self, 5.0s cast, range 8 circle
+    _Ability_ForsakenBonds = 47929, // Helper->players, no cast, range 6 circle
+    _Ability_Forsaken2 = 47926, // KefkaP5->self, no cast, range 100 circle
+    _Ability_ForsakenNull = 47930, // KefkaP5->self, 26.0s cast, range 100 circle
 }
 
 public enum SID : uint {
@@ -327,7 +341,9 @@ public enum SID : uint {
 
     _Gen_ManaCharge = 1482, // KefkaP4->KefkaP4, extra=0x0
     _Gen_ThunderCharged = 1485, // none->KefkaP4, extra=0x0
-    _Gen_BlizzardCharged = 1484, // none->KefkaP4, extra=0x0
+    _Gen_BlizzardCharged = 1484, // none->KefkaP4, extra=0x0 -
+
+    // Phase 5
     _Gen_SurpriseHoly = 5351, // none->player, extra=0x0
     _Gen_SurpriseFlare = 5350, // none->player, extra=0x0
     _Gen_IceResistanceDownII = 2903, // Helper->player, extra=0x0

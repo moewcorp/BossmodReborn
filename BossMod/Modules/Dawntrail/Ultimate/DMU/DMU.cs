@@ -43,6 +43,9 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
     private Actor? chaosP4;
     public Actor? ChaosP4() => chaosP4;
 
+    private Actor? kefkaP5;
+    public Actor? KefkaP5() => kefkaP5;
+
     protected override void UpdateModule() {
         bossP2 ??= Enemies((uint)OID.BossP2).FirstOrDefault();
         chaosP3 ??= Enemies((uint)OID.Chaos).FirstOrDefault();
@@ -57,6 +60,10 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
         if (StateMachine.ActivePhaseIndex == 3) {
             kefkaP4 ??= Enemies((uint)OID.KefkaP4).FirstOrDefault();
         }
+
+        if (StateMachine.ActivePhaseIndex == 4) {
+            kefkaP5 ??= Enemies((uint)OID.KefkaP5).FirstOrDefault();
+        }
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc) {
@@ -66,5 +73,6 @@ public sealed class DMU(WorldState ws, Actor primary) : BossModule(ws, primary, 
         Arena.Actor(exdeathP3);
         Arena.Actor(bossP3);
         Arena.Actor(kefkaP4);
+        Arena.Actor(kefkaP5);
     }
 }
