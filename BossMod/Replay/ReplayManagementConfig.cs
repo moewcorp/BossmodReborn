@@ -3,6 +3,7 @@
 public record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
 
 [ConfigDisplay(Name = "回放", Order = 0)]
+
 public sealed class ReplayManagementConfig : ConfigNode
 {
     [PropertyDisplay("显示回放管理界面")]
@@ -44,6 +45,7 @@ public sealed class ReplayManagementConfig : ConfigNode
 
     // TODO: this should not be part of the actual config! figure out where to store transient user preferences...
     public List<ReplayMemory> ReplayHistory = [];
+
 
     public string ReplayFolder = "";
 }

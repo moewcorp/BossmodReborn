@@ -12,6 +12,7 @@ public sealed class UIRotationWindow : UIWindow
     private readonly EventSubscriptions _subscriptions;
 
     public UIRotationWindow(RotationModuleManager mgr, ActionManagerEx amex, Action openConfig) : base("自动循环", false, new(400, 400), ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoFocusOnAppearing)
+
     {
         _mgr = mgr;
         _amex = amex;
@@ -62,7 +63,7 @@ public sealed class UIRotationWindow : UIWindow
             {
                 ImGui.SameLine();
                 var plans = _mgr.Database.Plans.GetPlans(activeModule.GetType(), player.Class);
-                var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "");
+                var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "###root");
                 if (newSel != plans.SelectedIndex)
                 {
                     plans.SelectedIndex = newSel;

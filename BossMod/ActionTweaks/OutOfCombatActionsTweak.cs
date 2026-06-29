@@ -4,6 +4,7 @@
 class OutOfCombatActionsConfig : ConfigNode
 {
     [PropertyDisplay("启用该功能")]
+
     public bool Enabled = false;
 
     [PropertyDisplay("脱战时自动使用速行")]

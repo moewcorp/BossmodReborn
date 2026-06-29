@@ -35,6 +35,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     }
 
     [PropertyDisplay("按住此键可在读条时允许移动", tooltip: "需要同时启用上面的设置", tags: ["slidecast"])]
+
     public ModifierKey MoveEscapeHatch = ModifierKey.None;
 
     [PropertyDisplay("当目标死亡时自动打断读条")]
@@ -63,6 +64,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     public bool DashSafety = true;
 
     [PropertyDisplay("将上一个选项应用于所有冲刺，而不仅仅是缩短距离的冲刺", tooltip: "包括后退冲刺（例如 SAM Yaten）、传送（例如 NIN Shukuchi）和固定长度冲刺（例如 DRG Elusive Jump）")]
+
     public bool DashSafetyExtra = true;
 
     [PropertyDisplay("自动管理自动攻击", tooltip: "此设置可防止在倒计时期间提前启动自动循环，在拉动时、切换目标时以及使用任何未明确取消自动循环的操作时自动启动自动循环。")]

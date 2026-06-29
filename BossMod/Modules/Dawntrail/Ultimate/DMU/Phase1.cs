@@ -208,63 +208,48 @@ class StackSpreadOrbs(BossModule module) : Components.UniformStackSpread(module,
     }
 }
 
-class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module)
-{
-    private bool questionMark = false;
+class BlizzardSafeSpots(BossModule module) : Components.GenericAOEs(module) {
+    protected bool questionMark = false;
     private readonly List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
     private readonly List<AOEInstance> aoes = [];
 
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
-    {
-        if (iconID == (uint)IconID.BlueRingQuestionMark)
-        {
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if (iconID == (uint)IconID.BlueRingQuestionMark) {
             questionMark = true;
         }
 
-        if (iconID == (uint)IconID.BlueRingBlueOrb)
-        {
+        if (iconID == (uint)IconID.BlueRingBlueOrb) {
             questionMark = false;
         }
     }
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID is ((uint)AID.BlizzardIIIBlowout) or
-            ((uint)AID.BlizzardIIIBlowout1) or
-            ((uint)AID.BlizzardIIIBlowout2))
-        {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID is ((uint)AID.BlizzardIIIBlowout) or ((uint)AID.BlizzardIIIBlowout1) or
+            ((uint)AID.BlizzardIIIBlowout2)) {
             aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeCone(40f, 45f.Degrees()), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID is ((uint)AID.BlizzardIIIBlowout) or ((uint)AID.BlizzardIIIBlowout1) or
-            ((uint)AID.BlizzardIIIBlowout2))
-        {
+            ((uint)AID.BlizzardIIIBlowout2)) {
             NumCasts++;
             aoesAvailable.Clear();
         }
     }
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
         aoes.Clear();
 
-        foreach (var currentAOE in aoesAvailable)
-        {
-            if (questionMark)
-            {
-                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout)
-                {
+        foreach (var currentAOE in aoesAvailable) {
+            if (questionMark) {
+                if (currentAOE.AID == (uint)AID.BlizzardIIIBlowout) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
 
-            if (!questionMark)
-            {
-                if (currentAOE.AID is ((uint)AID.BlizzardIIIBlowout1) or ((uint)AID.BlizzardIIIBlowout2))
-                {
+            if (!questionMark) {
+                if (currentAOE.AID is ((uint)AID.BlizzardIIIBlowout1) or ((uint)AID.BlizzardIIIBlowout2)) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
@@ -321,64 +306,50 @@ class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)
     }
 }
 
-class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module)
-{
-    private bool questionMark = false;
+class LightningSafeSpots(BossModule module) : Components.GenericAOEs(module) {
+    protected bool questionMark = false;
     private readonly List<(uint AID, AOEInstance AOE)> aoesAvailable = [];
-    private readonly List<AOEInstance> aoes = [];
+    public readonly List<AOEInstance> aoes = [];
 
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
-    {
-        if (iconID == (uint)IconID.PurpleRingQuestionMark)
-        {
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        if (iconID == (uint)IconID.PurpleRingQuestionMark) {
             questionMark = true;
         }
 
-        if (iconID == (uint)IconID.PurpleRingBlueOrb)
-        {
+        if (iconID == (uint)IconID.PurpleRingBlueOrb) {
             questionMark = false;
         }
     }
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID is ((uint)AID.ThrummingThunderIII) or
             ((uint)AID.ThrummingThunderIII1) or
-            ((uint)AID.ThrummingThunderIII2))
-        {
+            ((uint)AID.ThrummingThunderIII2)) {
             aoesAvailable.Add((spell.Action.ID, new AOEInstance(new AOEShapeRect(40f, 5f), caster.Position, caster.Rotation, actorID: caster.InstanceID)));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID is ((uint)AID.ThrummingThunderIII) or
              ((uint)AID.ThrummingThunderIII1) or
-             ((uint)AID.ThrummingThunderIII2))
-        {
+             ((uint)AID.ThrummingThunderIII2)) {
             NumCasts++;
             aoesAvailable.Clear();
         }
     }
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
         aoes.Clear();
 
-        foreach (var currentAOE in aoesAvailable)
-        {
-            if (questionMark)
-            {
-                if (currentAOE.AID == (uint)AID.ThrummingThunderIII2)
-                {
+        foreach (var currentAOE in aoesAvailable) {
+            if (questionMark) {
+                if (currentAOE.AID == (uint)AID.ThrummingThunderIII2) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
 
-            if (!questionMark)
-            {
-                if (currentAOE.AID is ((uint)AID.ThrummingThunderIII) or ((uint)AID.ThrummingThunderIII1))
-                {
+            if (!questionMark) {
+                if (currentAOE.AID is ((uint)AID.ThrummingThunderIII) or ((uint)AID.ThrummingThunderIII1)) {
                     aoes.Add(currentAOE.AOE);
                 }
             }
@@ -799,7 +770,7 @@ class TeleTrouncing(BossModule module) : BossComponent(module) {
     public int NumCasts = 0;
     private (Direction direction, DateTime activation)? Debuff1;
     private (Direction direction, DateTime activation)? Debuff2;
-    private List<WPos> hints = new List<WPos>();
+    private List<WPos> hints = [];
     private enum Direction { UP, DOWN, LEFT, RIGHT }
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
