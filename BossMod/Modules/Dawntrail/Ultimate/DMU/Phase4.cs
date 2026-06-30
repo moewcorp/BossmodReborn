@@ -393,8 +393,16 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
 
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.AccelerationBomb) {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
+        }
+    }
+
     public override void Update() {
-        Array.Fill(PlayerStates, default);
+        foreach (var (slot, _) in Raid.WithSlot()) {
+            PlayerStates[slot] = default;
+        }
 
         if (grandCrossOrder == null) {
             return;

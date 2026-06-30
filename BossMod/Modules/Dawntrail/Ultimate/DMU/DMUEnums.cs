@@ -39,12 +39,11 @@ public enum OID : uint {
     NeoExdeath = 0x4C36, // R9.000, x0 (spawn during fight)
     ChaosP4 = 0x4C33, // R6.000, x0 (spawn during fight)
 
-    _Gen_Actor1ec03f = 0x1EC03F, // R0.500, x0 (spawn during fight), EventObj type
-    _Gen_Actor1ec040 = 0x1EC040, // R0.500, x0 (spawn during fight), EventObj type
-    _Gen_Actor1ec03e = 0x1EC03E, // R0.500, x0 (spawn during fight), EventObj type
-
     // Phase 5
     KefkaP5 = 0x4C37, // R8.010, x0 (spawn during fight)
+    IceTower = 0x1EC03F, // R0.500, x0 (spawn during fight), EventObj type
+    ThunderTower = 0x1EC040, // R0.500, x0 (spawn during fight), EventObj type
+    FireTower = 0x1EC03E, // R0.500, x0 (spawn during fight), EventObj type
 }
 
 public enum AID : uint {
@@ -232,30 +231,32 @@ public enum AID : uint {
     UltimaRepeaterCast = 47936, // KefkaP5->self, 4.0+1.0s cast, single-target
     UltimaRepeaterRaidwide = 47937, // Helper->self, no cast, range 100 circle
 
-    _Ability_1 = 50770, // KefkaP5->self, no cast, single-target - TODO what is this?
+    _Ability_1 = 50770, // KefkaP5->self, no cast, single-target - TODO Unknown most likely a teleport mid or something to ready for fell forces
 
     // TODO verify the same skill id always goes to the same target role and check who gets the 3f circle one (currently guessing tank)
     FellForces = 50771, // Helper->players, no cast, range 3 circle
     FellForces1 = 50772, // Helper->players, no cast, range 5 circle
     FellForces2 = 50773, // Helper->players, no cast, range 5 circle
 
-    ChaoticFlood = 47951, // Helper->players, no cast, range 6 circle
+    ChaoticFlood = 49471, // KefkaP5->self, 5.0+1.2s cast, single-target
+    ChaoticFloodStack = 47951, // Helper->players, no cast, range 6 circle
     ChaoticFloodAOEDisplay = 49539, // Helper->self, 1.5s cast, range 40 width 10 rect
     ChaoticFloodAOE = 49769, // Helper->self, no cast, range 40 width 10 rect
-    ChaoticFloodStack = 49471, // KefkaP5->self, 5.0+1.2s cast, single-target
 
-    _Ability_MaddeningOrchestra = 47952, // KefkaP5->self, 5.0+0.8s cast, single-target
-    _Ability_Flare = 47954, // Helper->player, no cast, range 5 circle
-    _Ability_Holy = 47956, // Helper->players, no cast, range 5 circle
-    _Ability_MaddeningOrchestra1 = 47953, // KefkaP5->self, no cast, single-target
-    _Ability_ChaoticFlare = 47955, // Helper->players, no cast, range 5 circle
-    _Ability_FlareDiffusion = 47957, // Helper->players, no cast, range 25 circle
-    _Ability_ChaoticHoly = 47958, // Helper->player, no cast, range 6 circle
+    MaddeningOrchestra = 47952, // KefkaP5->self, 5.0+0.8s cast, single-target
+    MaddeningOrchestra1 = 47953, // KefkaP5->self, no cast, single-target - This is used after the first wave of baits, but doesn't do anything
+    Holy = 47956, // Helper->players, no cast, range 5 circle
+    Flare = 47954, // Helper->player, no cast, range 5 circle
+    ChaoticFlareTB = 47955, // Helper->players, no cast, range 5 circle - The tank buster both tanks should share
+    FlareDiffusion = 47957, // Helper->players, no cast, range 25 circle
+    ChaoticHoly = 47958, // Helper->player, no cast, range 6 circle
+
     _Ability_Celestriad = 47938, // KefkaP5->self, 5.0s cast, single-target
     _Ability_CatastrophicChoice = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
     _Ability_FireIII = 47939, // Helper->self, no cast, range 3 circle
     _Ability_ThunderIII = 47941, // Helper->self, no cast, range 3 circle
     _Ability_BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
+
     _Ability_Quake = 47946, // Helper->self, no cast, range 10 circle
     _Ability_CatastrophicChoice1 = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
     _Ability_Tornado = 47947, // Helper->self, no cast, range ?-40 donut
@@ -344,8 +345,8 @@ public enum SID : uint {
     _Gen_BlizzardCharged = 1484, // none->KefkaP4, extra=0x0 -
 
     // Phase 5
-    _Gen_SurpriseHoly = 5351, // none->player, extra=0x0
-    _Gen_SurpriseFlare = 5350, // none->player, extra=0x0
+    SurpriseHoly = 5351, // none->player, extra=0x0
+    SurpriseFlare = 5350, // none->player, extra=0x0
     _Gen_IceResistanceDownII = 2903, // Helper->player, extra=0x0
     _Gen_FireResistanceDownII = 2902, // Helper->player, extra=0x0
 }
@@ -394,6 +395,10 @@ public enum Animations : uint {
     TriangleFlyingDown = 1048608,
     TriangleLanded = 4194432,
     TriangleExplosion = 262152,
+
+    // Phase 5
+    TowerGlow = 1048608,
+    TowerExplosion = 65600,
 }
 
 public enum TetherID : uint {

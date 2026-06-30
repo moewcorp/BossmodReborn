@@ -35,10 +35,44 @@ sealed class DMUStates : StateMachineBuilder {
             .ExecOnExit<FellForces>(o => o.active = true);
 
         ComponentCondition<FellForces>(id + 0x20, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
-        ComponentCondition<FellForces>(id + 0x25, 3.1f, o => o.NumCasts > 3, "2st Auto Attack Stack");
-        ComponentCondition<FellForces>(id + 0x30, 3.1f, o => o.NumCasts > 6, "3st Auto Attack Stack")
+        ComponentCondition<FellForces>(id + 0x25, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x30, 3.1f, o => o.NumCasts > 6, "3rd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>();
+
+        ActorCast(id + 0x40, _module.KefkaP5, (uint)AID.ChaoticFlood, 0.3f, 5.0f, true, "Chaotic Flood")
+            .ActivateOnEnter<ChaoticFlood>()
+            .ActivateOnEnter<ChaoticFloodStack>();
+
+        ComponentCondition<ChaoticFloodStack>(id + 0x45, 1.0f, o => o.NumCasts > 0, "1st Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x50, 0.1f, o => o.NumCasts > 0, "1st Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x55, 1.0f, o => o.NumCasts > 1, "2nd Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x60, 0.1f, o => o.NumCasts > 2, "2nd Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x65, 1.0f, o => o.NumCasts > 2, "3rd Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x70, 0.1f, o => o.NumCasts > 4, "3rd Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x75, 1.0f, o => o.NumCasts > 3, "4th Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x80, 0.1f, o => o.NumCasts > 6, "4th Flood")
+            .DeactivateOnExit<ChaoticFloodStack>()
+            .DeactivateOnExit<ChaoticFlood>()
+            .ActivateOnExit<MaddeningOrchestra>();
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x90, 9.9f, o => o.NumCasts > 0, "1st Baits Resolve")
+            .ActivateOnExit<ChaoticFlareTB>()
+            .ExecOnExit<ChaoticFlareTB>(a => a.active = true);
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x100, 3.2f, o => o.NumCasts > 5, "2nd Baits + TB Resolve")
+            .DeactivateOnExit<ChaoticFlareTB>()
+            .DeactivateOnExit<MaddeningOrchestra>()
+            .ActivateOnExit<ChaoticHolyFlareDiffusion>();
+
+        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x110, 3.5f, o => o.NumCasts > 0, "Tank Baits Resolve")
+            .DeactivateOnExit<ChaoticHolyFlareDiffusion>()
+            .ActivateOnExit<FellForces>()
+            .ExecOnExit<FellForces>(a => a.active = true && a.expectedCasts == 6);
+
+        ComponentCondition<FellForces>(id + 0x120, 4.6f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x130, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
             .DeactivateOnExit<FellForces>()
-            .ActivateOnExit<ChaoticFlood>();
+            .ActivateOnEnter<Celestriad>();
 
         Timeout(id + 0x500000, 30.0f, "P5 Unknown");
     }
