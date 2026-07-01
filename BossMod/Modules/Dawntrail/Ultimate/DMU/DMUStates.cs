@@ -18,6 +18,117 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
+        SimplePhase(4, Phase5, "P5")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+    }
+
+    private void Phase5(uint id) {
+        ActorTargetable(id, _module.KefkaP5, true, 0.1f, "Boss appears")
+            .ActivateOnEnter<FellForces>()
+            .SetHint(StateMachine.StateHint.DowntimeEnd);
+
+        ActorCast(id + 0x10, _module.KefkaP5, (uint)AID.UltimaRepeaterCast, 3.0f, 5.0f, true, "Ultima Repeater")
+            .ActivateOnEnter<UltimaRepeater>()
+            .DeactivateOnExit<UltimaRepeater>()
+            .ActivateOnEnter<FellForces>()
+            .ExecOnExit<FellForces>(o => o.active = true);
+
+        ComponentCondition<FellForces>(id + 0x20, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x25, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x30, 3.1f, o => o.NumCasts > 6, "3rd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>();
+
+        ActorCast(id + 0x40, _module.KefkaP5, (uint)AID.ChaoticFlood, 0.3f, 5.0f, true, "Chaotic Flood")
+            .ActivateOnEnter<ChaoticFlood>()
+            .ActivateOnEnter<ChaoticFloodStack>();
+
+        ComponentCondition<ChaoticFloodStack>(id + 0x45, 1.0f, o => o.NumCasts > 0, "1st Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x50, 0.1f, o => o.NumCasts > 0, "1st Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x55, 1.0f, o => o.NumCasts > 1, "2nd Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x60, 0.1f, o => o.NumCasts > 2, "2nd Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x65, 1.0f, o => o.NumCasts > 2, "3rd Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x70, 0.1f, o => o.NumCasts > 4, "3rd Flood");
+        ComponentCondition<ChaoticFloodStack>(id + 0x75, 1.0f, o => o.NumCasts > 3, "4th Stack");
+        ComponentCondition<ChaoticFlood>(id + 0x80, 0.1f, o => o.NumCasts > 6, "4th Flood")
+            .DeactivateOnExit<ChaoticFloodStack>()
+            .DeactivateOnExit<ChaoticFlood>()
+            .ActivateOnExit<MaddeningOrchestra>();
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x90, 9.9f, o => o.NumCasts > 0, "1st Baits Resolve")
+            .ActivateOnExit<ChaoticFlareTB>()
+            .ExecOnExit<ChaoticFlareTB>(a => a.active = true);
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x100, 3.2f, o => o.NumCasts > 5, "2nd Baits + TB Resolve")
+            .DeactivateOnExit<ChaoticFlareTB>()
+            .DeactivateOnExit<MaddeningOrchestra>()
+            .ActivateOnExit<ChaoticHolyFlareDiffusion>();
+
+        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x110, 3.5f, o => o.NumCasts > 0, "Tank Baits Resolve")
+            .DeactivateOnExit<ChaoticHolyFlareDiffusion>()
+            .ActivateOnExit<FellForces>()
+            .ExecOnExit<FellForces>(a => a.active = true && a.expectedCasts == 6);
+
+        ComponentCondition<FellForces>(id + 0x120, 4.6f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x130, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>();
+
+        ActorCast(id + 0x140, _module.KefkaP5, (uint)AID.Celestriad, 1.4f, 5.0f, true, "Celestraid")
+            .ActivateOnEnter<Celestriad>()
+            .ActivateOnEnter<CatastrophicChoice>();
+
+        ComponentCondition<Celestriad>(id + 0x150, 9.1f, o => o.NumCasts > 0, "1st Tower Set");
+        ComponentCondition<CatastrophicChoice>(id + 0x155, 0.2f, o => o.NumCasts > 0, "In/Out");
+        ComponentCondition<Celestriad>(id + 0x160, 5.8f, o => o.NumCasts > 4, "2nd Tower Set");
+        ComponentCondition<Celestriad>(id + 0x170, 6.0f, o => o.NumCasts > 8, "3rd Tower Set");
+        ComponentCondition<CatastrophicChoice>(id + 0x175, 0.2f, o => o.NumCasts > 1, "2nd In/Out");
+
+        ActorCast(id + 0x180, _module.KefkaP5, (uint)AID.UltimaRepeaterCast, 4.0f, 4.0f, true, "Ultima Repeater")
+            .ActivateOnEnter<UltimaRepeater>()
+            .DeactivateOnExit<UltimaRepeater>()
+            .ActivateOnEnter<FellForces>()
+            .ExecOnExit<FellForces>(o => o.active = true && o.expectedCasts == 6);
+
+        ComponentCondition<FellForces>(id + 0x190, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x200, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>();
+
+        ActorCast(id + 0x210, _module.KefkaP5, (uint)AID.StrayApocalypseCast, 20.0f, 5.0f, true, "Exa-flares start")
+            .ActivateOnEnter<StrayApocalypse>()
+            .ActivateOnEnter<StrayEntropy>();
+
+        ComponentCondition<StrayApocalypse>(id + 0x220, 15.8f, o => o.NumCasts >= 84, "Exa-Flares end");
+        ComponentCondition<StrayEntropy>(id + 0x230, 2.3f, o => !o.Active, "Spreads")
+            .DeactivateOnExit<StrayApocalypse>()
+            .DeactivateOnExit<StrayEntropy>();
+
+        ActorCast(id + 0x240, _module.KefkaP5, (uint)AID.MaddeningOrchestra, 3.3f, 5.0f, true, "Maddening Orchestra")
+            .ActivateOnEnter<MaddeningOrchestra>();
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x250, 0.9f, o => o.NumCasts > 0, "1st Baits Resolve")
+            .ActivateOnExit<ChaoticFlareTB>()
+            .ExecOnExit<ChaoticFlareTB>(a => a.active = true);
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x260, 3.2f, o => o.NumCasts > 5, "2nd Baits + TB Resolve")
+            .DeactivateOnExit<ChaoticFlareTB>()
+            .DeactivateOnExit<MaddeningOrchestra>()
+            .ActivateOnExit<ChaoticHolyFlareDiffusion>();
+
+        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x270, 3.5f, o => o.NumCasts > 0, "Tank Baits Resolve")
+            .DeactivateOnExit<ChaoticHolyFlareDiffusion>()
+            .ActivateOnExit<FellForces>()
+            .ExecOnExit<FellForces>(a => a.active = true);
+
+        ComponentCondition<FellForces>(id + 0x280, 4.7f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x290, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x300, 3.1f, o => o.NumCasts > 6, "3rd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>()
+            .ActivateOnEnter<P5ForsakenBait>()
+            .ActivateOnEnter<P5ForsakenRaidWide>()
+            .ActivateOnEnter<P5ForsakenGround>()
+            .ActivateOnEnter<P5ForsakenStack>();
+
+        Timeout(id + 0x500000, 30.0f, "P5 Unknown");
     }
 
     // TODO update raidwides to actually use actors instead since it should now be fixed and able to find the boss correctly
@@ -95,7 +206,8 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>()
-            .ActivateOnExit<Inferno>();
+            .ActivateOnExit<Inferno>()
+            .ActivateOnExit<InfernoBaits>();
 
         ActorCastStart(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, true, "Ultima Upsurge")
             .ActivateOnEnter<UltimaUpsurge>()
@@ -137,9 +249,11 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<TsunamiInfernoOrder>()
             .DeactivateOnExit<KefkaOrder>();
 
-        ActorCast(id + 0x230, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage");
+        ActorCast(id + 0x40000, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage")
+            .ActivateOnEnter<UltimaUpsurge>()
+            .DeactivateOnExit<UltimaUpsurge>();
 
-        Timeout(id + 200000, 30.0f, "P4");
+        Timeout(id + 0x40010, 31.0f, "Downtime");
     }
 
     private void Phase3(uint id) {
