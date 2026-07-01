@@ -256,10 +256,10 @@ public enum AID : uint {
     P4ThunderIII = 47941, // Helper->self, no cast, range 3 circle
     P4BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
 
-    CatastrophicChoice = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
-    CatastrophicChoice1 = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
+    CatastrophicChoiceQuake = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
+    CatastrophicChoiceTornado = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
     Quake = 47946, // Helper->self, no cast, range 10 circle
-    Tornado = 47947, // Helper->self, no cast, range ?-40 donut
+    Tornado = 47947, // Helper->self, no cast, range ?-40 donut // TODO verify AOE size
 
     _Ability_StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle
     _Ability_StrayApocalypse = 47932, // Helper->self, 4.0s cast, range 6 circle

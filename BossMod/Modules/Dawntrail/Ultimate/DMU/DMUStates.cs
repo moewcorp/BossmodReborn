@@ -71,8 +71,27 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<FellForces>(id + 0x120, 4.6f, o => o.NumCasts > 0, "1st Auto Attack Stack");
         ComponentCondition<FellForces>(id + 0x130, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
-            .DeactivateOnExit<FellForces>()
-            .ActivateOnEnter<Celestriad>();
+            .DeactivateOnExit<FellForces>();
+
+        ActorCast(id + 0x140, _module.KefkaP5, (uint)AID.Celestriad, 1.4f, 5.0f, true, "Celestraid")
+            .ActivateOnEnter<Celestriad>()
+            .ActivateOnEnter<CatastrophicChoice>();
+
+        ComponentCondition<Celestriad>(id + 0x150, 9.1f, o => o.NumCasts > 0, "1st Tower Set");
+        ComponentCondition<CatastrophicChoice>(id + 0x155, 0.2f, o => o.NumCasts > 0, "In/Out");
+        ComponentCondition<Celestriad>(id + 0x160, 5.8f, o => o.NumCasts > 4, "2nd Tower Set");
+        ComponentCondition<Celestriad>(id + 0x170, 6.0f, o => o.NumCasts > 8, "3rd Tower Set");
+        ComponentCondition<CatastrophicChoice>(id + 0x175, 0.2f, o => o.NumCasts > 1, "2nd In/Out");
+
+        ActorCast(id + 0x180, _module.KefkaP5, (uint)AID.UltimaRepeaterCast, 4.0f, 4.0f, true, "Ultima Repeater")
+            .ActivateOnEnter<UltimaRepeater>()
+            .DeactivateOnExit<UltimaRepeater>()
+            .ActivateOnEnter<FellForces>()
+            .ExecOnExit<FellForces>(o => o.active = true && o.expectedCasts == 6);
+
+        ComponentCondition<FellForces>(id + 0x190, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x200, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>();
 
         Timeout(id + 0x500000, 30.0f, "P5 Unknown");
     }

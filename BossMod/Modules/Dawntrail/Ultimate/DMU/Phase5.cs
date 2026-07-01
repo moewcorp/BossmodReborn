@@ -524,6 +524,32 @@ class Celestriad(BossModule module) : Components.GenericTowers(module) {
     }
 }
 
-// TODO after towers setup add the in/out mechanic then its done
+class CatastrophicChoice(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.CatastrophicChoiceQuake) {
+            aoes.Add(new(new AOEShapeCircle(10.0f), caster.Position));
+        }
+
+        if (spell.Action.ID == (uint)AID.CatastrophicChoiceTornado) {
+            aoes.Add(new(new AOEShapeDonut(10.0f, 40.0f), caster.Position));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Quake || spell.Action.ID == (uint)AID.Tornado) {
+            NumCasts++;
+            if (aoes.Count > 0) {
+                aoes.RemoveAt(0);
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
 // TODO add safe spots to MaddeningOrchestra, add config option of 1-6 (somehow don't include tanks or set them to 0), 0 players will not be included
 //  Lowest number is left, highest number is right, last number remaining is middle
