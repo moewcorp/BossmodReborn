@@ -93,6 +93,41 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<FellForces>(id + 0x200, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
             .DeactivateOnExit<FellForces>();
 
+        ActorCast(id + 0x210, _module.KefkaP5, (uint)AID.StrayApocalypseCast, 20.0f, 5.0f, true, "Exa-flares start")
+            .ActivateOnEnter<StrayApocalypse>()
+            .ActivateOnEnter<StrayEntropy>();
+
+        ComponentCondition<StrayApocalypse>(id + 0x220, 15.8f, o => o.NumCasts >= 84, "Exa-Flares end");
+        ComponentCondition<StrayEntropy>(id + 0x230, 2.3f, o => !o.Active, "Spreads")
+            .DeactivateOnExit<StrayApocalypse>()
+            .DeactivateOnExit<StrayEntropy>();
+
+        ActorCast(id + 0x240, _module.KefkaP5, (uint)AID.MaddeningOrchestra, 3.3f, 5.0f, true, "Maddening Orchestra")
+            .ActivateOnEnter<MaddeningOrchestra>();
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x250, 0.9f, o => o.NumCasts > 0, "1st Baits Resolve")
+            .ActivateOnExit<ChaoticFlareTB>()
+            .ExecOnExit<ChaoticFlareTB>(a => a.active = true);
+
+        ComponentCondition<MaddeningOrchestra>(id + 0x260, 3.2f, o => o.NumCasts > 5, "2nd Baits + TB Resolve")
+            .DeactivateOnExit<ChaoticFlareTB>()
+            .DeactivateOnExit<MaddeningOrchestra>()
+            .ActivateOnExit<ChaoticHolyFlareDiffusion>();
+
+        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x270, 3.5f, o => o.NumCasts > 0, "Tank Baits Resolve")
+            .DeactivateOnExit<ChaoticHolyFlareDiffusion>()
+            .ActivateOnExit<FellForces>()
+            .ExecOnExit<FellForces>(a => a.active = true);
+
+        ComponentCondition<FellForces>(id + 0x280, 4.7f, o => o.NumCasts > 0, "1st Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x290, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack");
+        ComponentCondition<FellForces>(id + 0x300, 3.1f, o => o.NumCasts > 6, "3rd Auto Attack Stack")
+            .DeactivateOnExit<FellForces>()
+            .ActivateOnEnter<P5ForsakenBait>()
+            .ActivateOnEnter<P5ForsakenRaidWide>()
+            .ActivateOnEnter<P5ForsakenGround>()
+            .ActivateOnEnter<P5ForsakenStack>();
+
         Timeout(id + 0x500000, 30.0f, "P5 Unknown");
     }
 
@@ -171,7 +206,8 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>()
-            .ActivateOnExit<Inferno>();
+            .ActivateOnExit<Inferno>()
+            .ActivateOnExit<InfernoBaits>();
 
         ActorCastStart(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, true, "Ultima Upsurge")
             .ActivateOnEnter<UltimaUpsurge>()

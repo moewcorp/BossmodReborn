@@ -255,24 +255,28 @@ public enum AID : uint {
     P4FireIII = 47939, // Helper->self, no cast, range 3 circle
     P4ThunderIII = 47941, // Helper->self, no cast, range 3 circle
     P4BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
+    StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle - This is most likely for missing the thunder tower
 
     CatastrophicChoiceQuake = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
     CatastrophicChoiceTornado = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
     Quake = 47946, // Helper->self, no cast, range 10 circle
     Tornado = 47947, // Helper->self, no cast, range ?-40 donut // TODO verify AOE size
 
-    _Ability_StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle
-    _Ability_StrayApocalypse = 47932, // Helper->self, 4.0s cast, range 6 circle
-    _Ability_StrayApocalypse1 = 47931, // KefkaP5->self, 4.0s cast, single-target
-    _Ability_StrayApocalypse2 = 47933, // Helper->self, no cast, range 6 circle
-    _Ability_StrayEntropy = 47934, // KefkaP5->self, 5.0s cast, single-target
-    _Ability_StrayEntropy1 = 47935, // Helper->player, no cast, range 5 circle
-    _Ability_Forsaken = 47925, // KefkaP5->self, 10.0s cast, range 100 circle
-    _Ability_Forsaken1 = 47928, // Helper->self, 5.0s cast, range 8 circle
-    _Ability_ForsakenGround = 47927, // Helper->self, 5.0s cast, range 8 circle
-    _Ability_ForsakenBonds = 47929, // Helper->players, no cast, range 6 circle
+    StrayApocalypseCast = 47931, // KefkaP5->self, 4.0s cast, single-target
+    StrayApocalypseExaFlareCast = 47932, // Helper->self, 4.0s cast, range 6 circle
+    StrayApocalypseExaFlare = 47933, // Helper->self, no cast, range 6 circle
+
+    StrayEntropyCast = 47934, // KefkaP5->self, 5.0s cast, single-target
+    StrayEntropySpread = 47935, // Helper->player, no cast, range 5 circle
+
+    ForsakenCast = 47925, // KefkaP5->self, 10.0s cast, range 100 circle - Cast - Raidwide
+    ForsakenGround = 47927, // Helper->self, 5.0s cast, range 8 circle - AOEs that just spawn
+    ForsakenAOEBait = 47928, // Helper->self, 5.0s cast, range 8 circle - Bait puddle
+    ForsakenBonds = 47929, // Helper->players, no cast, range 6 circle - Stack
+
     _Ability_Forsaken2 = 47926, // KefkaP5->self, no cast, range 100 circle
-    _Ability_ForsakenNull = 47930, // KefkaP5->self, 26.0s cast, range 100 circle
+
+    _Ability_ForsakenNull = 47930, // KefkaP5->self, 26.0s cast, range 100 circle - Enrage
 }
 
 public enum SID : uint {

@@ -1,4 +1,6 @@
-﻿namespace BossMod.Dawntrail.Ultimate.DMU;
+﻿using Lumina.Extensions;
+
+namespace BossMod.Dawntrail.Ultimate.DMU;
 
 class UltimaRepeater(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaRepeaterCast) {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -550,6 +552,158 @@ class CatastrophicChoice(BossModule module) : Components.GenericAOEs(module) {
         return CollectionsMarshal.AsSpan(aoes);
     }
 }
+
+class StrayApocalypse(BossModule module) : Components.Exaflare(module, 6f) {
+    private List<AOEInstance> currentAOEs = [];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StrayApocalypseExaFlareCast) {
+            Lines.Add(new(caster.Position, 7.071f * spell.Rotation.ToDirection(), Module.CastFinishAt(spell), 0.5f, 7, 7));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StrayApocalypseExaFlareCast ||
+            spell.Action.ID == (uint)AID.StrayApocalypseExaFlare) {
+            ++NumCasts;
+            var count = Lines.Count;
+            var pos = caster.Position;
+
+            for (int i = 0; i < count; ++i) {
+                var line = Lines[i];
+                if (line.Next.AlmostEqual(pos, 1f)) {
+                    AdvanceLine(line, pos);
+                    if (line.ExplosionsLeft == 0) {
+                        Lines.RemoveAt(i);
+                    }
+
+                    return;
+                }
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        currentAOEs.Clear();
+
+        var exaFlares = Lines.Take(4).ToList();
+        for (int i = 0; i < exaFlares.Count; i++) {
+            var line = Lines[i];
+            var pos = line.Next;
+            var time = line.NextExplosion;
+
+            for (int k = 0; k < line.ExplosionsLeft; k++) {
+                currentAOEs.Add(new(Shape, pos.Quantized(), line.Rotation, time, k == 0 ? ImminentColor : FutureColor));
+                pos = pos + line.Advance;
+                time = time.AddSeconds(line.TimeToMove);
+            }
+        }
+
+        return CollectionsMarshal.AsSpan(currentAOEs);
+    }
+}
+
+class StrayEntropy(BossModule module) : Components.UniformStackSpread(module, 0f, 5.0f) {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StrayEntropyCast) {
+            foreach (var (slot, player) in Raid.WithSlot()) {
+                Spreads.Add(new(player, 5.0f));
+            }
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StrayEntropySpread) {
+            Spreads.Clear();
+        }
+    }
+}
+
+class P5ForsakenRaidWide(BossModule module) : Components.RaidwideCast(module, (uint)AID.ForsakenCast);
+
+// TODO update to use MapEffects maybe?
+class P5ForsakenGround(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ForsakenGround, new AOEShapeCircle(8.0f)) {
+    private List<AOEInstance> aoes = [];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.ForsakenGround) {
+            aoes.Add(new(new AOEShapeCircle(8.0f), caster.Position, actorID: caster.InstanceID));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.ForsakenGround) {
+            NumCasts++;
+            if (aoes.Count > 0) {
+                var aoeIndex = aoes.FindIndex(a => a.ActorID == caster.InstanceID && a.Color != Colors.Danger);
+                if (aoeIndex >= 0) {
+                    var aoe = aoes[aoeIndex];
+                    aoe.Color = Colors.Danger;
+                    aoes[aoeIndex] = aoe;
+                }
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+class P5ForsakenBait(BossModule module) : Components.GenericBaitProximity(module) {
+    private bool active = true;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.ForsakenAOEBait) {
+            active = true;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.ForsakenAOEBait) {
+            CurrentBaits.Clear();
+            NumCasts++;
+        }
+    }
+
+    // Says baited onto an inter/card closest to a random player
+    public override void Update() {
+        if (active == true) {
+            OnlyShowOutlines = false;
+            return;
+        }
+
+        CurrentBaits.Clear();
+        OnlyShowOutlines = true;
+
+        var boss = ((DMU)Module).KefkaP5();
+        if (boss == null) {
+            return;
+        }
+
+        var target = Raid.WithoutSlot().SortedByRange(boss.Position).Closest(boss.Position);
+        if (target == null) {
+            return;
+        }
+
+        CurrentBaits.Add(new(target.Position, new AOEShapeCircle(8.0f)));
+    }
+}
+
+class P5ForsakenStack(BossModule module) : Components.StackTogether(module, (uint)IconID.StackShare, 5.0f, 6.0f);
+
+
+
+/*
+    ForsakenAOEBait = 47928, // Helper->self, 5.0s cast, range 8 circle - Bait puddle
+    ForsakenBonds = 47929, // Helper->players, no cast, range 6 circle - Stack
+ */
+
+
+// TODO
+//  6. Make Forsaken
+//  7. Fix timeline upon entering P5
+
 
 // TODO add safe spots to MaddeningOrchestra, add config option of 1-6 (somehow don't include tanks or set them to 0), 0 players will not be included
 //  Lowest number is left, highest number is right, last number remaining is middle
