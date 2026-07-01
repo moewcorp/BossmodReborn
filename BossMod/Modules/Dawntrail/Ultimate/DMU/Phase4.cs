@@ -393,11 +393,11 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
 
-    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+    /*public override void OnStatusLose(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.AccelerationBomb) {
             PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
         }
-    }
+    }*/
 
     public override void Update() {
         foreach (var (slot, _) in Raid.WithSlot()) {
@@ -408,7 +408,8 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
             return;
         }
 
-        foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
+        // TODO fix this
+        /*foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
             if ((expireAt - WorldState.CurrentTime).TotalSeconds > 7.0f) {
                 continue;
             }
@@ -420,7 +421,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
             if (tellingTruth == false) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
             }
-        }
+        }*/
     }
 }
 
