@@ -251,15 +251,16 @@ public enum AID : uint {
     FlareDiffusion = 47957, // Helper->players, no cast, range 25 circle
     ChaoticHoly = 47958, // Helper->player, no cast, range 6 circle
 
-    _Ability_Celestriad = 47938, // KefkaP5->self, 5.0s cast, single-target
-    _Ability_CatastrophicChoice = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
-    _Ability_FireIII = 47939, // Helper->self, no cast, range 3 circle
-    _Ability_ThunderIII = 47941, // Helper->self, no cast, range 3 circle
-    _Ability_BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
+    Celestriad = 47938, // KefkaP5->self, 5.0s cast, single-target
+    P4FireIII = 47939, // Helper->self, no cast, range 3 circle
+    P4ThunderIII = 47941, // Helper->self, no cast, range 3 circle
+    P4BlizzardIII = 47940, // Helper->self, no cast, range 3 circle
 
-    _Ability_Quake = 47946, // Helper->self, no cast, range 10 circle
-    _Ability_CatastrophicChoice1 = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
-    _Ability_Tornado = 47947, // Helper->self, no cast, range ?-40 donut
+    CatastrophicChoice = 49742, // KefkaP5->self, 4.3+0.7s cast, single-target
+    CatastrophicChoice1 = 49743, // KefkaP5->self, 4.3+0.7s cast, single-target
+    Quake = 47946, // Helper->self, no cast, range 10 circle
+    Tornado = 47947, // Helper->self, no cast, range ?-40 donut
+
     _Ability_StardustThunderIII = 47944, // Helper->self, no cast, range 100 circle
     _Ability_StrayApocalypse = 47932, // Helper->self, 4.0s cast, range 6 circle
     _Ability_StrayApocalypse1 = 47931, // KefkaP5->self, 4.0s cast, single-target
@@ -315,7 +316,6 @@ public enum SID : uint {
     _Gen_1 = 5085, // none->player, extra=0x0
     _Gen_2 = 5086, // none->player, extra=0x0
     _Gen_3 = 5084, // none->player, extra=0x0
-    _Gen_LightningResistanceDownII = 2998, // Helper->player, extra=0x0
     _Gen_10 = 2273, // Kefka->Kefka, extra=0x1FF/0x22B
     _Gen_WindResistanceDownII = 1052, // Helper->player, extra=0x0
     _Gen_EarthResistanceDownII = 3372, // Helper->player, extra=0x0
@@ -347,8 +347,9 @@ public enum SID : uint {
     // Phase 5
     SurpriseHoly = 5351, // none->player, extra=0x0
     SurpriseFlare = 5350, // none->player, extra=0x0
-    _Gen_IceResistanceDownII = 2903, // Helper->player, extra=0x0
-    _Gen_FireResistanceDownII = 2902, // Helper->player, extra=0x0
+    IceResistanceDownII = 2903, // Helper->player, extra=0x0
+    FireResistanceDownII = 2902, // Helper->player, extra=0x0
+    LightningResistanceDownII = 2998, // Helper->player, extra=0x0 - Used for TB in other phases as well
 }
 
 public enum IconID : uint {

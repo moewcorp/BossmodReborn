@@ -1,6 +1,4 @@
-﻿using BossMod.Stormblood.Foray.BaldesionArsenal.BA3AbsoluteVirtue;
-
-namespace BossMod.Dawntrail.Ultimate.DMU;
+﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 class UltimaRepeater(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaRepeaterCast) {
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -366,35 +364,165 @@ class ChaoticHolyFlareDiffusion(BossModule module) : Components.GenericBaitAway(
 }
 
 // Towers sets ~7.5 seconds apart, towers explosions and tower glows happen at the same time, so remove the tower instance from the list
+// No clue why I decided to make a list and everything and check the angle of towers to get an order, you can just get the WPos of towers since it always the same
+// and just set the order like that instead, but oh well
 class Celestriad(BossModule module) : Components.GenericTowers(module) {
-    private List<Actor> towers = [];
+    private List<(Actor actor, Elements element)> allTowers = []; // Used for the initial setup of the component
+    private enum Elements { NONE, ICE, FIRE, THUNDER, NO_ELEMENT }
+    private List<Elements> towerOrder = [Elements.NONE, Elements.NONE, Elements.NONE];
+    // Starting debuff is the one we care about; it will disappear by the time we get to final tower set so we will just save it forever as it's only necessary for towers
+    private readonly Elements[] debuffs = Utils.MakeArray(PartyState.MaxPartySize, Elements.NONE);
+
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.IceTower) {
+            allTowers.Add((actor, Elements.ICE));
+        }
+
+        if (actor.OID == (uint)OID.FireTower) {
+            allTowers.Add((actor, Elements.FIRE));
+        }
+
+        if (actor.OID == (uint)OID.ThunderTower) {
+            allTowers.Add((actor, Elements.THUNDER));
+        }
+
+        if (allTowers.Count == 9) {
+            allTowers.Sort(delegate((Actor actor, Elements element) a, (Actor actor, Elements element) b) {
+                var north = Angle.AnglesCardinals[2];
+                var xAngle = (a.actor.Position - Arena.Center).ToAngle();
+                var yAngle = (b.actor.Position - Arena.Center).ToAngle();
+
+                var xDeg = xAngle.AlmostEqual(north, 0.01f) ? 180f : xAngle.Deg;
+                var yDeg = yAngle.AlmostEqual(north, 0.01f) ? 180f : yAngle.Deg;
+
+                return xDeg < yDeg ? 1 : -1;
+            });
+
+            // We can use simple logic to solve the order, since elements spawn together in 3s
+            towerOrder[0] = allTowers[0].element;
+            towerOrder[1] = allTowers[3].element;
+            towerOrder[2] = allTowers[6].element;
+        }
+
+    }
 
     public override void OnActorEAnim(Actor actor, uint state) {
         if (actor.OID == (uint)OID.IceTower || actor.OID == (uint)OID.FireTower || actor.OID == (uint)OID.ThunderTower) {
             if (state == (uint)Animations.TowerGlow) {
-                Towers.Add(new(actor.Position, 3.0f, 2, 2));
+                Towers.Add(new(actor.Position, 3.0f, 2, 2, actorID: actor.InstanceID));
+
+                if (Towers.Count >= 4) {
+                    Towers.Sort(delegate(Tower a, Tower b) {
+                        var north = Angle.AnglesCardinals[2];
+                        var xAngle = (a.Position - Arena.Center).ToAngle();
+                        var yAngle = (b.Position - Arena.Center).ToAngle();
+
+                        var xDeg = xAngle.AlmostEqual(north, 0.01f) ? 180f : xAngle.Deg;
+                        var yDeg = yAngle.AlmostEqual(north, 0.01f) ? 180f : yAngle.Deg;
+
+                        return xDeg < yDeg ? 1 : -1;
+                    });
+                }
             }
 
+            if (state == (uint)Animations.TowerExplosion) {
+                NumCasts++;
+                Towers.RemoveAll(p => p.ActorID == actor.InstanceID);
+            }
         }
     }
 
-    //  TowerGlow = 1048608,
-    //  TowerExplosion = 65600,
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        var slot = Raid.FindSlot(actor.InstanceID);
+        if (slot < 0) {
+            return;
+        }
 
+        if (debuffs[slot] != Elements.NONE) {
+            return;
+        }
 
+        if (status.ID == (uint)SID.IceResistanceDownII) {
+            debuffs[slot] = Elements.ICE;
+        }
+
+        if (status.ID == (uint)SID.FireResistanceDownII) {
+            debuffs[slot] = Elements.FIRE;
+        }
+
+        if (status.ID == (uint)SID.LightningResistanceDownII) {
+            debuffs[slot] = Elements.THUNDER;
+        }
+
+        // If all 6 players have debuffs, we know the final two are the non-debuff players
+        if (debuffs.Count(d => d != Elements.NONE) == 6) {
+            for (int i = 0; i < debuffs.Length; i++) {
+                if (debuffs[i] == Elements.NONE) {
+                    debuffs[i] = Elements.NO_ELEMENT;
+                }
+            }
+        }
+    }
+
+    // Used for setting the forbidden soakers to the towers:
+    // Example: towerOrder is ICE, FIRE, THUNDER
+    // So we know thunder will go to Ice -> Fire -> Thunder
+    // So we know fire will go to Thunder -> Ice -> Fire
+    // So we know ice will go to Fire -> Thunder -> Ice
+    // So every wave of towers is just +1 to their element, and they will end back at their original element
+    public override void Update() {
+        if (towerOrder.Contains(Elements.NONE) || Towers.Count == 0) {
+            return;
+        }
+
+        // Assign each tower to an element index
+        var towerElements = new Elements[Towers.Count];
+        for (int i = 0; i < Towers.Count; i++) {
+            var index = allTowers.Find(t => t.actor.InstanceID == Towers[i].ActorID);
+            towerElements[i] = index == default ? Elements.NONE : index.element;
+        }
+
+        // Find the dupe element
+        var dupeElement = Elements.NONE;
+        for (int i = 0; i < towerElements.Length && dupeElement == Elements.NONE; i++) {
+            for (var k = i + 1; k < towerElements.Length; k++) {
+                if (towerElements[i] == towerElements[k]) {
+                    dupeElement = towerElements[i];
+                    break;
+                }
+            }
+        }
+        var dupeIndex = Array.LastIndexOf(towerElements, dupeElement);
+
+        // Set up the forbidden players for each tower
+        var set = NumCasts / 4;
+        for (int i = 0; i < Towers.Count; i++) {
+            var tower = Towers[i];
+            BitMask forbiddenPlayers = default;
+
+            for (var k = 0; k < debuffs.Length; k++) {
+                var playerDebuff = debuffs[k];
+                if (i == dupeIndex) {
+                    if (playerDebuff != Elements.NO_ELEMENT) {
+                        forbiddenPlayers.Set(k);
+                    }
+                } else {
+                    if (playerDebuff == Elements.NO_ELEMENT) {
+                        forbiddenPlayers.Set(k);
+                        continue;
+                    }
+
+                    var targetElement = towerOrder[(towerOrder.IndexOf(playerDebuff) + set + 1) % 3];
+                    if (targetElement != towerElements[i]) {
+                        forbiddenPlayers.Set(k);
+                    }
+                }
+            }
+            tower.ForbiddenSoakers = forbiddenPlayers;
+            Towers[i] = tower;
+        }
+    }
 }
-
-// TODO Celestriad should be pretty easy to implement
-//  Create a list of players with slots[8] and each player will gain debuffs (2 people will not get debuffs, but in a way this is a debuff)
-//  Only four towers are ever active at a time meaning we can make things simple
-//  Index all 9 towers in order from A and then create a list of active towers with their index reference
-//  1st set just debuff players CW from A into the first available tower they can take, non-debuffs ccw or just whichever tower is left over
-//      This works for non debuff players since we have the index in order, so if tower 1,3 we know which one is CW first
-//  2nd set: Now since we have the last set indexed, we can just get people to rotate from their last set tower position until they find another safe one
-
-// Might be easier to get the tower order set of elemenets like { ICE, FIRE, THUNDER} as this will tell us the order
-// Then we can solve buffs easier like on slide 17 since it always set and the only one that needs to be figured out is the 2 towers of same element
-// Could be combained with the method above
 
 // TODO after towers setup add the in/out mechanic then its done
 // TODO add safe spots to MaddeningOrchestra, add config option of 1-6 (somehow don't include tanks or set them to 0), 0 players will not be included
