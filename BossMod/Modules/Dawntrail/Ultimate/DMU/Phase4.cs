@@ -102,7 +102,7 @@ class InfernoRaidwide(BossModule module) : Components.RaidwideCast(module, (uint
 
 // Elements will be casted two times in a row with a fake or real
 class TsunamiInfernoOrder(BossModule module) : BossComponent(module) {
-    private List<(bool? tellingTruth, int set, List<(SID buff, DateTime expireAt)>[] playerBuffs)> tsunamiInferno = new();
+    public List<(bool? tellingTruth, int set, List<(SID buff, DateTime expireAt)>[] playerBuffs)> tsunamiInferno = new();
     private bool tellingTruthCaught = false; // Two orbs spawn per cast, but we only want one
     private int NumCasts = 0;
     public int currentCast = 0; // Used for state machine so it easier to detect when the cast has finished
@@ -393,14 +393,23 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
 
+    /*public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.AccelerationBomb) {
+            PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
+        }
+    }*/
+
     public override void Update() {
-        Array.Fill(PlayerStates, default);
+        foreach (var (slot, _) in Raid.WithSlot()) {
+            PlayerStates[slot] = default;
+        }
 
         if (grandCrossOrder == null) {
             return;
         }
 
-        foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
+        // TODO fix this
+        /*foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
             if ((expireAt - WorldState.CurrentTime).TotalSeconds > 7.0f) {
                 continue;
             }
@@ -412,7 +421,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
             if (tellingTruth == false) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
             }
-        }
+        }*/
     }
 }
 
@@ -562,12 +571,30 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     }
 }
 
+class InfernoBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StrayFlamesP4, new AOEShapeCircle(6.0f)) {
+    private Inferno? inferno = module.FindComponent<Inferno>();
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
+            if (inferno != null) {
+                if (inferno.truth == true) {
+                    Casters.Add(new(Shape, caster.Position, caster.Rotation));
+                }
+            }
+        }
+    }
+}
+
+// TODO move eventcast to baits function instead
 class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
+    public bool? truth = null; // TODO fix how this component actually works for the baits
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
+            CurrentBaits.Clear();
             active = true;
         }
     }

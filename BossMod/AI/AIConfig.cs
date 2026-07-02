@@ -1,6 +1,7 @@
 ﻿namespace BossMod.AI;
 
 [ConfigDisplay(Name = "AI配置", Order = 7)]
+
 sealed class AIConfig : ConfigNode
 {
     [PropertyDisplay("在标题栏中显示AI状态")]
