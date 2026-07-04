@@ -772,29 +772,6 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module, onlyS
 
 class UltimaUpsurge(BossModule module) : Components.RaidwideCast(module, (uint)AID.UltimaUpsurge);
 
-// Customize version of P1 blizzard safe spots function that uses the truth and lies stored throughout the phase instead
-class P4BlizzardSafeSpots(BossModule module) : BlizzardSafeSpots(module) {
-    private KefkaOrder? kefkaOrder = module.FindComponent<KefkaOrder>();
-
-    public override void Update() {
-        if (kefkaOrder == null) {
-            return;
-        }
-
-        var blizzards = kefkaOrder.tellingTruthOrder.Where(e => e.element == KefkaOrder.Element.Blizzard).ToList();
-        if (blizzards.Count != 2) {
-            return;
-        }
-
-        // Cases: If both are the same value then its true otherwise its false
-        // 1. True + True = True
-        // 2. True + Fake = Fake
-        // 3. Fake + True = Fake
-        // 4. Fake + Fake = True
-        questionMark = blizzards[0].tellingTruth != blizzards[1].tellingTruth;
-    }
-}
-
 // Customize version of P1 lightning safe spots function that uses the truth and lies stored throughout the phase instead
 class P4LightningSafeSpots(BossModule module) : LightningSafeSpots(module) {
     private KefkaOrder? kefkaOrder = module.FindComponent<KefkaOrder>();

@@ -56,9 +56,9 @@ public enum AID : uint {
 
     GravenImage = 48370, // Kefka->self, 3.0s cast, single-target
     PulseWave = 47785, // 4C31->player, no cast, single-target
-    BlizzardIIIBlowout = 47774, // Helper->self, 5.0s cast, range 40 ?-degree cone - Empty zone
-    BlizzardIIIBlowout1 = 47771, // Helper->self, 5.0s cast, range 40 ?-degree cone - Questionmark zone
-    BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone - Questionmark zone
+    BlizzardIIIBlowout = 47774, // Helper->self, 5.0s cast, range 40 ?-degree cone
+    BlizzardIIIBlowout1 = 47771, // Helper->self, 5.0s cast, range 40 ?-degree cone - Fake it does nothing
+    BlizzardIIIBlowout2 = 47768, // Helper->self, 5.0s cast, range 40 ?-degree cone
     BlizzardIIIBlowout3 = 47765, // Kefka->self, 5.0s cast, single-target - Not needed it seems
     MysteryMagic = 47764, // Kefka->self, 5.0s cast, single-target
     FlagrantFireIIIStack = 47779, // Helper->players, no cast, range 6 circle - Stack
