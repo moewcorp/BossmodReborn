@@ -15,12 +15,12 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(2, Phase3, "P3")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
-        SimplePhase(3, Phase4, "P4")
+        /*SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
         SimplePhase(4, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;*/
     }
 
     private void Phase5(uint id) {
@@ -185,11 +185,11 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<GrandCrossOrder>(id + 0x110, 4.2f, o => o.currentCast > 2, "Raidwide (3rd Grand Cross)")
             .ActivateOnEnter<GrandCrossRaidwide>()
             .DeactivateOnExit<GrandCrossRaidwide>()
-            .ActivateOnExit<Antilight>()
+            .ActivateOnExit<AntiLight>()
             .ActivateOnExit<EdgeOfDeath>();
 
-        ComponentCondition<Antilight>(id + 0x120, 12.6f, o => o.NumCasts >= 4, "Antilight + Edge of Death")
-            .DeactivateOnExit<Antilight>()
+        ComponentCondition<AntiLight>(id + 0x120, 12.6f, o => o.NumCasts >= 4, "Antilight + Edge of Death")
+            .DeactivateOnExit<AntiLight>()
             .DeactivateOnExit<EdgeOfDeath>()
             .ActivateOnExit<ForkedWater>()
             .ActivateOnExit<AccelerationBomb>();

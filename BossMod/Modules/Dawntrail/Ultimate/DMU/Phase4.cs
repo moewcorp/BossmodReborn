@@ -31,8 +31,8 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
 
         if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
             status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
-            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ) {
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWound1 ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWound1) {
             var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0) {
                 var id = grandCross.FindIndex(e => e.set == NumCasts - 1);
@@ -57,8 +57,8 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
             status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
-            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ||
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWound1 ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWound1 ||
             status.ID == (uint)SID.ForkedLightning || status.ID == (uint)SID.CompressedWater ||
             status.ID == (uint)SID.AccelerationBomb || status.ID == (uint)SID.CursedShriek) {
             var slot = Raid.FindSlot(actor.InstanceID);
@@ -206,36 +206,43 @@ class EdgeOfDeath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.E
 
 // TODO fix AOE middle line - small aoe line where you cant stand at all, but can be done later there is a lot of free space
 // TODO change to simple AOEs at some point maybe - so it has built-in NumCasts
-class Antilight(BossModule module) : BossComponent(module) {
-    private Actor? whiteAntilight = null;
-    private Actor? blackAntilight = null;
+// You can most likely actually figure out which debuffs go with which cast and make it simpler, but unsure
+class AntiLight(BossModule module) : BossComponent(module) {
+    private Actor? whiteAntiLight = null;
+    private Actor? blackAntiLight = null;
     private bool? tellingTruth = null;
+    private uint? spellID = null;
+    private bool swapped = false;
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
     public int NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
-            whiteAntilight = caster;
+            whiteAntiLight = caster;
         }
 
         if (spell.Action.ID == (uint)AID.BlackAntilight) {
-            blackAntilight = caster;
+            blackAntiLight = caster;
+        }
+
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 || spell.Action.ID == (uint)AID.FloodOfNaught2) {
+            spellID = spell.Action.ID;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
-            whiteAntilight = null;
+            whiteAntiLight = null;
             NumCasts++;
         }
 
         if (spell.Action.ID == (uint)AID.BlackAntilight) {
-            blackAntilight = null;
+            blackAntiLight = null;
             NumCasts++;
         }
 
         if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 ||
-            spell.Action.ID == (uint)AID.EdgeOfDeath) {
+            spell.Action.ID == (uint)AID.FloodOfNaught2 || spell.Action.ID == (uint)AID.EdgeOfDeath) {
             NumCasts++;
         }
     }
@@ -252,33 +259,54 @@ class Antilight(BossModule module) : BossComponent(module) {
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        if (grandCrossOrder == null || whiteAntilight == null || blackAntilight == null || tellingTruth == null) {
+    public override void Update() {
+        if (whiteAntiLight == null || blackAntiLight == null || spellID == null) {
             return;
         }
 
-        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 2); // sets are 0, 1, 2
+        // Depending on the flood ID cast, the orbs will cast the opposite of what they actually are
+        if ((spellID == (uint)AID.FloodOfNaught ||spellID == (uint)AID.FloodOfNaught2) && swapped == false) {
+            (whiteAntiLight, blackAntiLight) = (blackAntiLight, whiteAntiLight);
+            swapped = true;
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (grandCrossOrder == null || whiteAntiLight == null || blackAntiLight == null || tellingTruth == null || spellID == null) {
+            return;
+        }
+
+        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 2); // Sets are 0, 1, 2, and AntiLight is always the final set
         if (buffs == null) {
             return;
         }
 
+        // TODO This should never happen - most likely can be removed, as buffs will always be there by the time casters are set
         if (!hasBuff(buffs, SID.BeyondDeath) && !hasBuff(buffs, SID.BeyondDeath1) &&
             !hasBuff(buffs, SID.AllaganField)) {
             return;
         }
 
-        Actor correctSide;
-        Actor wrongSide;
+        Actor? correctSide = null;
+        Actor? wrongSide = null;
 
         if (hasBuff(buffs, SID.BeyondDeath) || hasBuff(buffs, SID.BeyondDeath1)) {
-            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
-            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
-        } else {
-            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
-            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
+            var requireWhite = hasBuff(buffs, SID.BlackWound) || hasBuff(buffs, SID.BlackWound1);
+            correctSide = requireWhite ? whiteAntiLight : blackAntiLight;
+            wrongSide = requireWhite ? blackAntiLight : whiteAntiLight;
         }
 
-        // If it was a lie, flip it
+        if (hasBuff(buffs, SID.AllaganField)) {
+            var requireWhite = hasBuff(buffs, SID.BlackWound) || hasBuff(buffs, SID.BlackWound1);
+            correctSide = requireWhite ? blackAntiLight : whiteAntiLight;
+            wrongSide = requireWhite ? whiteAntiLight : blackAntiLight;
+        }
+
+        if (correctSide == null || wrongSide == null) {
+            return;
+        }
+
+        // Fake = swap
         if (tellingTruth == false) {
             (correctSide, wrongSide) = (wrongSide, correctSide);
         }

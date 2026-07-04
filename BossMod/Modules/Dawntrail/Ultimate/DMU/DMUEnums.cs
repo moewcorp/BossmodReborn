@@ -201,9 +201,9 @@ public enum AID : uint {
     P4Inferno1 = 47902, // 4C33->self, 9.0s cast, single-target - Applies buff to self for telling truth or lie
 
     EdgeOfDeath = 50070, // Helper->self, 5.5s cast, range 48 width 2 rect
-    FloodOfNaught = 50066, // 4C36->self, 5.0+0.5s cast, single-target
-    FloodOfNaught1 = 50081, // NeoExdeath->self, 5.0+0.5s cast, single-target
-    FloodOfNaught2 = 50067, // NeoExdeath->self, 5.0+0.5s cast, single-target
+    FloodOfNaught = 50066, // NeoExdeath->self, 5.0+0.5s cast, single-target - purple will cast  white antilight, white will cast black antilight
+    FloodOfNaught1 = 50081, // NeoExdeath->self, 5.0+0.5s cast, single-target - purple will cast black antilight, white will cast white antilight
+    FloodOfNaught2 = 50067, // NeoExdeath->self, 5.0+0.5s cast, single-target - purple will cast white antilight, white will cast black antilight
     WhiteAntilight = 50068, // Helper->self, 5.5s cast, range 47 width 21 rect
     BlackAntilight = 50069, // Helper->self, 5.5s cast, range 47 width 21 rect
     DeathSurge = 47900, // Helper->self, no cast, range 100 circle - After Antilight casts to ensure it was solved correctly
@@ -335,10 +335,10 @@ public enum SID : uint {
     AllaganField = 454, // none->player, extra=0x0
     BeyondDeath = 1382, // none->player, extra=0x0
     BeyondDeath1 = 5464, // none->player, extra=0x0
-    WhiteWound = 5541, // Helper->player, extra=0x0
-    WhiteWoundOpposite = 4887, // none->player, extra=0x0 // This is actually black lol
-    BlackWound = 5542, // Helper->player, extra=0x0
-    BlackWoundOpposite = 4888, // none->player, extra=0x0 // This is actually white lol
+    BlackWound = 4888, // none->player, extra=0x0 -> White
+    BlackWound1 = 5542, // Helper->player, extra=0x0 -> White
+    WhiteWound = 4887, // none->player, extra=0x0 -> Purple
+    WhiteWound1 = 5541, // Helper->player, extra=0x0 -> Purple
 
     ForkedLightning = 5544, // none->player, extra=0x0 - Can be either short or long (per set)
     CompressedWater = 5545, // none->player, extra=0x0 - Can be either short or long (per set)
