@@ -409,7 +409,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
         }
 
         // TODO fix this
-        /*foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
+        foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
             if ((expireAt - WorldState.CurrentTime).TotalSeconds > 7.0f) {
                 continue;
             }
@@ -421,7 +421,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
             if (tellingTruth == false) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
             }
-        }*/
+        }
     }
 }
 
@@ -574,23 +574,29 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
 class InfernoBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StrayFlamesP4, new AOEShapeCircle(6.0f)) {
     private Inferno? inferno = module.FindComponent<Inferno>();
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (inferno == null || inferno.truth == null) {
+            return;
+        }
+
         if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
-            if (inferno != null) {
-                if (inferno.truth == true) {
-                    Casters.Add(new(Shape, caster.Position, caster.Rotation));
-                }
+            // Real
+            if (inferno.truth == true) {
+                Casters.Add(new(Shape, caster.Position, caster.Rotation, actorID: caster.InstanceID));
+            }
+
+            // Fake
+            if (inferno.truth == false) {
+                Casters.Add(new(new AOEShapeDonut(3.0f, 10.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
             }
         }
     }
 }
 
-// TODO move eventcast to baits function instead
-class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
+class Inferno(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
-    public bool? truth = null; // TODO fix how this component actually works for the baits
+    public bool? truth = null;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
@@ -599,25 +605,16 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
-            CurrentBaits.Clear();
-            NumCasts++;
-        }
-    }
-
     public override void Update() {
-        if (tsunamiInfernoOrder == null) {
+        if (tsunamiInfernoOrder == null || active == true) {
             return;
         }
 
         var players = tsunamiInfernoOrder.getNextBuffPlayers(SID.EntropyP4, 8);
         if (players.Count == 0) {
-            OnlyShowOutlines = false;
             return;
         }
 
-        OnlyShowOutlines = true;
         CurrentBaits.Clear();
 
         foreach (var (slot, expireAt, tellingTruth) in players) {
@@ -629,11 +626,13 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
             // Real
             if (tellingTruth == true) {
                 CurrentBaits.Add(new(player.Position, new AOEShapeCircle(6.0f)));
+                truth = true;
             }
 
             // Fake
             if (tellingTruth == false) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 6.0f))); // TODO aoe size is a guess for now
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 10.0f))); // TODO check size of aoe
+                truth = false;
             }
         }
     }
@@ -647,35 +646,38 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
     }
 }
 
-class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
+class TsunamiBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StraySprayP4, new AOEShapeCircle(6.0f)) {
+    private Tsunami? tsunami = module.FindComponent<Tsunami>();
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (tsunami == null || tsunami.truth == null) {
+            return;
+        }
+    }
+}
+
+class Tsunami(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
+    public bool? truth = null;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.StraySprayP4) {
+            CurrentBaits.Clear();
             active = true;
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.StraySprayP4) {
-            CurrentBaits.Clear();
-            NumCasts++;
-        }
-    }
-
     public override void Update() {
-        if (tsunamiInfernoOrder == null) {
+        if (tsunamiInfernoOrder == null || active == true) {
             return;
         }
 
         var players = tsunamiInfernoOrder.getNextBuffPlayers(SID.DynamicFluidP4, 8);
         if (players.Count == 0) {
-            OnlyShowOutlines = false;
             return;
         }
 
-        OnlyShowOutlines = true;
         CurrentBaits.Clear();
 
         foreach (var (slot, expireAt, tellingTruth) in players) {
@@ -684,13 +686,16 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
                 continue;
             }
 
+            // Real
             if (tellingTruth == true) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 6.0f))); // TODO aoe size is a guess for now
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 10.0f))); // TODO aoe size is a guess for now
+                truth = true;
             }
 
             // Fake
             if (tellingTruth == false) {
                 CurrentBaits.Add(new(player.Position, new AOEShapeCircle(6.0f)));
+                truth = false;
             }
         }
     }

@@ -15,12 +15,12 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(2, Phase3, "P3")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
-        SimplePhase(3, Phase4, "P4")
+        /*SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
-        SimplePhase(4, Phase5, "P5")
+            .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;*/
+        /*SimplePhase(4, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;*/
     }
 
     private void Phase5(uint id) {
@@ -221,8 +221,8 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<UltimaUpsurge>(id + 0x166, 2.3f, o => o.NumCasts > 0, "Raidwide")
             .DeactivateOnExit<UltimaUpsurge>();
 
-        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8, "Inferno Baits")
-            .DeactivateOnExit<Inferno>();
+        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8, "Inferno Baits");
+            //.DeactivateOnExit<Inferno>();
 
         ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
@@ -445,13 +445,13 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<BlackHole>(id + 0x480, 7.3f, o => o.NumCasts > 21, "Tethers set 4-1")
             .ActivateOnEnter<LookUponMeAndDespairAOE>();
         ComponentCondition<BlackHole>(id + 0x490, 7.0f, o => o.NumCasts > 23, "Tethers set 4-2 + Middle line AOE")
-            .DeactivateOnExit<LookUponMeAndDespairAOE>();
+            .DeactivateOnExit<LookUponMeAndDespairAOE>()
+            .ActivateOnExit<P3Blizzard>();
 
         ActorCast(id + 0x500, _module.ExdeathP3, (uint)AID.BlizzardIIICast, 5.3f, 3.0f, true, "1st Blizzard Baits")
             .DeactivateOnEnter<KefkaMax>()
             .DeactivateOnEnter<BlackHoleActors>()
             .DeactivateOnEnter<BlackHole>()
-            .ActivateOnEnter<P3Blizzard>()
             .ActivateOnEnter<P3BlizzardBaits>()
             .ActivateOnEnter<KnockDown>()
             .ActivateOnEnter<StompAMole>();
@@ -477,6 +477,8 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<KnockDown>()
             .ActivateOnEnter<P3Enrage>();
         ComponentCondition<P3Enrage>(id + 0x640, 17.6f, comp => !comp.enrage, "Enrage");
+
+        Timeout(id + 0x10000, 9999.0f, "Unknown???");
     }
 
     private void Phase2(uint id) {

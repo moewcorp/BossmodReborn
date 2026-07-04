@@ -930,6 +930,7 @@ class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
 class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true) {
     private Actor? boss = null;
+    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.BlizzardIIICast) {
@@ -954,6 +955,69 @@ class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerA
 
         foreach (var player in Raid.WithoutSlot()) {
             CurrentBaits.Add(new(boss, player, new AOEShapeCircle(6.0f)));
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (NumCasts >= 16) { // TODO remove this when adding hints array
+            return;
+        }
+
+        var kefkaBoss = ((DMU)Module).BossP3();
+        if (kefkaBoss == null) {
+            return;
+        }
+
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length == 0) {
+            return;
+        }
+        var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+
+        if (pc.Class.IsDD()) {
+            if (NumCasts < 8) {
+                Arena.AddCircle(kefkaBoss.Position + 10.0f * kefkaBoss.Rotation.ToDirection(), 1.0f, Colors.Safe);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M1 || assignment == PartyRolesConfig.Assignment.R1) {
+                if (NumCasts < 8) {
+                    Arena.AddCircle((kefkaBoss.Position + 10.0f * kefkaBoss.Rotation.ToDirection()) - 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Danger);
+                } else {
+                    Arena.AddCircle((kefkaBoss.Position + 10.0f * kefkaBoss.Rotation.ToDirection()) - 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Safe);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.M2 || assignment == PartyRolesConfig.Assignment.R2) {
+                if (NumCasts < 8) {
+                    Arena.AddCircle((kefkaBoss.Position + 10.0f * kefkaBoss.Rotation.ToDirection()) + 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Danger);
+                } else {
+                    Arena.AddCircle((kefkaBoss.Position + 10.0f * kefkaBoss.Rotation.ToDirection()) + 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Safe);
+                }
+            }
+        }
+
+        if (pc.Class.IsSupport()) {
+            if (NumCasts < 8) {
+                Arena.AddCircle(kefkaBoss.Position - 10.0f * kefkaBoss.Rotation.ToDirection(), 1.0f, Colors.Safe);
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.MT || assignment == PartyRolesConfig.Assignment.H1) {
+                if (NumCasts < 8) {
+                    Arena.AddCircle((kefkaBoss.Position - 10.0f * kefkaBoss.Rotation.ToDirection()) - 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Danger);
+                } else {
+                    Arena.AddCircle((kefkaBoss.Position - 10.0f * kefkaBoss.Rotation.ToDirection()) - 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Safe);
+                }
+            }
+
+            if (assignment == PartyRolesConfig.Assignment.OT || assignment == PartyRolesConfig.Assignment.H2) {
+                if (NumCasts < 8) {
+                    Arena.AddCircle((kefkaBoss.Position - 10.0f * kefkaBoss.Rotation.ToDirection()) + 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Danger);
+                } else {
+                    Arena.AddCircle((kefkaBoss.Position - 10.0f * kefkaBoss.Rotation.ToDirection()) + 8.0f * kefkaBoss.Rotation.ToDirection().OrthoL(), 1.0f, Colors.Safe);
+                }
+            }
         }
     }
 }
