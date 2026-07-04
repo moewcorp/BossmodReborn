@@ -221,8 +221,8 @@ public enum AID : uint {
 
     UltimaUpsurge = 49738, // KefkaP4->self, 5.0s cast, range 100 circle
 
-    StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
-    StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
+    StrayFlamesP4Puddle = 47906, // Helper->location, 5.0s cast, range 6 circle
+    StraySprayP4Puddle = 47909, // Helper->location, 5.0s cast, range 6 circle
     StraySprayP4Donut = 47908, // Helper->location, 5.0s cast, range 6-40 donut
     StrayFlamesP4Donut = 47907, // Helper->location, 5.0s cast, range 6-40 donut
 

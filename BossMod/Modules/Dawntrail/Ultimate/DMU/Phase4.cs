@@ -571,35 +571,37 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     }
 }
 
-class InfernoBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StrayFlamesP4, new AOEShapeCircle(6.0f)) {
-    private Inferno? inferno = module.FindComponent<Inferno>();
+class InfernoBaits(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (inferno == null || inferno.truth == null) {
-            return;
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle) {
+            aoes.Add(new(new AOEShapeCircle(6.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
         }
 
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
-            // Real
-            if (inferno.truth == true) {
-                Casters.Add(new(Shape, caster.Position, caster.Rotation, actorID: caster.InstanceID));
-            }
-
-            // Fake
-            if (inferno.truth == false) {
-                Casters.Add(new(new AOEShapeDonut(3.0f, 10.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
-            }
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
+            aoes.Add(new(new AOEShapeDonut(6.0f, 40.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
         }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle || spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
+            aoes.RemoveAll(aoe => aoe.ActorID == caster.InstanceID);
+            NumCasts++;
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
 
 class Inferno(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
-    public bool? truth = null;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle || spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
             CurrentBaits.Clear();
             active = true;
         }
@@ -626,13 +628,11 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module, onlyS
             // Real
             if (tellingTruth == true) {
                 CurrentBaits.Add(new(player.Position, new AOEShapeCircle(6.0f)));
-                truth = true;
             }
 
             // Fake
             if (tellingTruth == false) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 10.0f))); // TODO check size of aoe
-                truth = false;
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(6.0f, 40.0f)));
             }
         }
     }
@@ -646,23 +646,37 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module, onlyS
     }
 }
 
-class TsunamiBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StraySprayP4, new AOEShapeCircle(6.0f)) {
-    private Tsunami? tsunami = module.FindComponent<Tsunami>();
+class TsunamiBaits(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (tsunami == null || tsunami.truth == null) {
-            return;
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle) {
+            aoes.Add(new(new AOEShapeCircle(6.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
         }
+
+        if (spell.Action.ID == (uint)AID.StraySprayP4Donut) {
+            aoes.Add(new(new AOEShapeDonut(6.0f, 40.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle || spell.Action.ID == (uint)AID.StraySprayP4Donut) {
+            aoes.RemoveAll(aoe => aoe.ActorID == caster.InstanceID);
+            NumCasts++;
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
 
 class Tsunami(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
-    public bool? truth = null;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.StraySprayP4) {
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle || spell.Action.ID == (uint)AID.StraySprayP4Donut) {
             CurrentBaits.Clear();
             active = true;
         }
@@ -688,14 +702,12 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module, onlyS
 
             // Real
             if (tellingTruth == true) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 10.0f))); // TODO aoe size is a guess for now
-                truth = true;
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(6.0f, 40.0f)));
             }
 
             // Fake
             if (tellingTruth == false) {
                 CurrentBaits.Add(new(player.Position, new AOEShapeCircle(6.0f)));
-                truth = false;
             }
         }
     }

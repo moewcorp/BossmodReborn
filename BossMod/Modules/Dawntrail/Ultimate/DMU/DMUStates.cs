@@ -235,7 +235,8 @@ sealed class DMUStates : StateMachineBuilder {
 
         ComponentCondition<CursedShriek>(id + 0x200, 7.1f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>()
-            .ActivateOnExit<Tsunami>();
+            .ActivateOnExit<Tsunami>()
+            .ActivateOnExit<TsunamiBaits>();
 
         ComponentCondition<Tsunami>(id + 0x210, 10.7f, o => o.NumCasts >= 8, "Tsunami Baits")
             .DeactivateOnExit<Tsunami>()
@@ -477,8 +478,6 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<KnockDown>()
             .ActivateOnEnter<P3Enrage>();
         ComponentCondition<P3Enrage>(id + 0x640, 17.6f, comp => !comp.enrage, "Enrage");
-
-        Timeout(id + 0x10000, 9999.0f, "Unknown???");
     }
 
     private void Phase2(uint id) {
