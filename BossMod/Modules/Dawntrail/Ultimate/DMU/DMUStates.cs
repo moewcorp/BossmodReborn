@@ -136,7 +136,7 @@ sealed class DMUStates : StateMachineBuilder {
         ActorTargetable(id, _module.KefkaP4, true, 2.1f, "Boss appears")
             .SetHint(StateMachine.StateHint.DowntimeEnd);
 
-        ActorCast(id + 0x05, _module.KefkaP4, (uint)AID.KefkaSays, 5.1f, 5.0f, true, "Other bosses spawn")
+        ActorCast(id + 0x05, _module.KefkaP4, (uint)AID.KefkaSays, 5.2f, 5.0f, true, "Other bosses spawn")
             .ActivateOnEnter<GrandCrossOrder>()
             .ActivateOnEnter<TsunamiInfernoOrder>();
 
@@ -151,7 +151,7 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<GrandCrossOrder>(id + 0x30, 4.4f, o => o.currentCast > 0, "Raidwide (1st Grand Cross)")
             .ActivateOnEnter<GrandCrossRaidwide>()
             .DeactivateOnExit<GrandCrossRaidwide>();
-        ComponentCondition<TsunamiInfernoOrder>(id + 0x40, 5.0f, o => o.currentCast > 0, "Raidwide (1st Tsunami Inferno)")
+        ComponentCondition<TsunamiInfernoOrder>(id + 0x40, 5.1f, o => o.currentCast > 0, "Raidwide (1st Tsunami Inferno)")
             .ActivateOnEnter<TsunamiRaidwide>()
             .ActivateOnEnter<InfernoRaidwide>()
             .DeactivateOnExit<TsunamiRaidwide>()
@@ -165,7 +165,7 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<BlizzardSafeSpots>();
 
-        ComponentCondition<GrandCrossOrder>(id + 0x70, 4.4f, o => o.currentCast > 1, "Raidwide (2nd Grand Cross)")
+        ComponentCondition<GrandCrossOrder>(id + 0x70, 4.2f, o => o.currentCast > 1, "Raidwide (2nd Grand Cross)")
             .ActivateOnEnter<GrandCrossRaidwide>()
             .DeactivateOnExit<GrandCrossRaidwide>();
         ComponentCondition<TsunamiInfernoOrder>(id + 0x80, 5.2f, o => o.currentCast > 1, "Raidwide (2nd Tsunami Inferno)")
@@ -182,7 +182,7 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<BlizzardSafeSpots>();
 
-        ComponentCondition<GrandCrossOrder>(id + 0x110, 4.2f, o => o.currentCast > 2, "Raidwide (3rd Grand Cross)")
+        ComponentCondition<GrandCrossOrder>(id + 0x110, 3.9f, o => o.currentCast > 2, "Raidwide (3rd Grand Cross)")
             .ActivateOnEnter<GrandCrossRaidwide>()
             .DeactivateOnExit<GrandCrossRaidwide>()
             .ActivateOnExit<AntiLight>()
@@ -201,35 +201,36 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<CursedShriek>()
             .ActivateOnExit<KefkaOrder>();
 
-        ComponentCondition<LightningSafeSpots>(id + 0x140, 7.9f, o => o.NumCasts > 0, "Lightning Safe Spots");
+        ComponentCondition<LightningSafeSpots>(id + 0x140, 8.1f, o => o.NumCasts > 0, "Lightning Safe Spots");
 
-        ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
+        ComponentCondition<CursedShriek>(id + 0x150, 0.8f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>()
             .DeactivateOnExit<LightningSafeSpots>()
             .ActivateOnExit<Inferno>()
             .ActivateOnExit<InfernoBaits>();
 
-        ActorCastStart(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.1f, true, "Ultima Upsurge")
+        ActorCastStart(id + 0x160, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.3f, true, "Ultima Upsurge")
             .ActivateOnEnter<UltimaUpsurge>()
             .ActivateOnEnter<ForkedWater>()
             .ActivateOnEnter<AccelerationBomb>()
             .ExecOnEnter<ForkedWater>(o => o.active = false);
 
-        ComponentCondition<Inferno>(id + 0x165, 2.7f, o => o.active == true, "Baits dropped")
+        ComponentCondition<Inferno>(id + 0x165, 2.5f, o => o.active == true, "Baits dropped")
             .ExecOnExit<ForkedWater>(o => o.active = true);
 
-        ComponentCondition<UltimaUpsurge>(id + 0x166, 2.3f, o => o.NumCasts > 0, "Raidwide")
+        ComponentCondition<UltimaUpsurge>(id + 0x166, 2.5f, o => o.NumCasts > 0, "Raidwide")
             .DeactivateOnExit<UltimaUpsurge>();
 
-        ComponentCondition<Inferno>(id + 0x170, 2.7f, o => o.NumCasts >= 8, "Inferno Baits");
-            //.DeactivateOnExit<Inferno>();
+        ComponentCondition<InfernoBaits>(id + 0x170, 2.5f, o => o.NumCasts >= 8, "Inferno Baits")
+            .DeactivateOnExit<Inferno>()
+            .DeactivateOnExit<InfernoBaits>();
 
         ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
             .DeactivateOnExit<AccelerationBomb>()
             .ActivateOnEnter<BlizzardSafeSpots>();
 
-        ComponentCondition<BlizzardSafeSpots>(id + 0x190, 1.0f, o => o.NumCasts > 0, "Blizzard Safe spots")
+        ComponentCondition<BlizzardSafeSpots>(id + 0x190, 1.5f, o => o.NumCasts > 0, "Blizzard Safe spots")
             .DeactivateOnExit<BlizzardSafeSpots>()
             .ActivateOnExit<CursedShriek>();
 
@@ -238,8 +239,9 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<Tsunami>()
             .ActivateOnExit<TsunamiBaits>();
 
-        ComponentCondition<Tsunami>(id + 0x210, 10.7f, o => o.NumCasts >= 8, "Tsunami Baits")
+        ComponentCondition<TsunamiBaits>(id + 0x210, 10.7f, o => o.NumCasts >= 8, "Tsunami Baits")
             .DeactivateOnExit<Tsunami>()
+            .DeactivateOnExit<TsunamiBaits>()
             .ActivateOnEnter<BlizzardSafeSpots>()
             .ActivateOnEnter<P4LightningSafeSpots>();
 
@@ -250,7 +252,7 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<TsunamiInfernoOrder>()
             .DeactivateOnExit<KefkaOrder>();
 
-        ActorCast(id + 0x40000, _module.KefkaP4, (uint)AID.UltimaUpsurge, 7.7f, 5.0f, true, "Enrage")
+        ActorCast(id + 0x40000, _module.KefkaP4, (uint)AID.UltimaUpsurge, 4.2f, 5.0f, true, "Enrage")
             .ActivateOnEnter<UltimaUpsurge>()
             .DeactivateOnExit<UltimaUpsurge>();
 
