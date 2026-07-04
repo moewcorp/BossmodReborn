@@ -203,6 +203,7 @@ public enum AID : uint {
     EdgeOfDeath = 50070, // Helper->self, 5.5s cast, range 48 width 2 rect
     FloodOfNaught = 50066, // 4C36->self, 5.0+0.5s cast, single-target
     FloodOfNaught1 = 50081, // NeoExdeath->self, 5.0+0.5s cast, single-target
+    FloodOfNaught2 = 50067, // NeoExdeath->self, 5.0+0.5s cast, single-target
     WhiteAntilight = 50068, // Helper->self, 5.5s cast, range 47 width 21 rect
     BlackAntilight = 50069, // Helper->self, 5.5s cast, range 47 width 21 rect
     DeathSurge = 47900, // Helper->self, no cast, range 100 circle - After Antilight casts to ensure it was solved correctly
@@ -222,7 +223,10 @@ public enum AID : uint {
 
     StrayFlamesP4 = 47906, // Helper->location, 5.0s cast, range 6 circle
     StraySprayP4 = 47909, // Helper->location, 5.0s cast, range 6 circle
+    StraySprayP4Donut = 47908, // Helper->location, 5.0s cast, range 6-40 donut
+    StrayFlamesP4Donut = 47907, // Helper->location, 5.0s cast, range 6-40 donut
 
+    _Ability_StrayEarth = 47865, // Helper->player, no cast, single-target - Gaze if you get hit most likely, but unknown
     _Ability_ThrummingThunderIII = 50654, // KefkaP4->self, 5.0s cast, single-target - can this is the cast that will be stored for later?
     _Ability_ManaRelease = 47781, // KefkaP4->self, 7.0s cast, single-target
     _Ability_BlackSpark = 48333, // Helper->player, no cast, single-target - Unknown, maybe blackhole if you walk into it?
