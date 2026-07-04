@@ -31,8 +31,8 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
 
         if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
             status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
-            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ) {
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWound1 ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWound1) {
             var slot = Raid.FindSlot(actor.InstanceID);
             if (slot >= 0) {
                 var id = grandCross.FindIndex(e => e.set == NumCasts - 1);
@@ -57,8 +57,8 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.BeyondDeath || status.ID == (uint)SID.BeyondDeath1 ||
             status.ID == (uint)SID.AllaganField ||
-            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWoundOpposite ||
-            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWoundOpposite ||
+            status.ID == (uint)SID.WhiteWound || status.ID == (uint)SID.WhiteWound1 ||
+            status.ID == (uint)SID.BlackWound || status.ID == (uint)SID.BlackWound1 ||
             status.ID == (uint)SID.ForkedLightning || status.ID == (uint)SID.CompressedWater ||
             status.ID == (uint)SID.AccelerationBomb || status.ID == (uint)SID.CursedShriek) {
             var slot = Raid.FindSlot(actor.InstanceID);
@@ -206,36 +206,43 @@ class EdgeOfDeath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.E
 
 // TODO fix AOE middle line - small aoe line where you cant stand at all, but can be done later there is a lot of free space
 // TODO change to simple AOEs at some point maybe - so it has built-in NumCasts
-class Antilight(BossModule module) : BossComponent(module) {
-    private Actor? whiteAntilight = null;
-    private Actor? blackAntilight = null;
+// You can most likely actually figure out which debuffs go with which cast and make it simpler, but unsure
+class AntiLight(BossModule module) : BossComponent(module) {
+    private Actor? whiteAntiLight = null;
+    private Actor? blackAntiLight = null;
     private bool? tellingTruth = null;
+    private uint? spellID = null;
+    private bool swapped = false;
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
     public int NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
-            whiteAntilight = caster;
+            whiteAntiLight = caster;
         }
 
         if (spell.Action.ID == (uint)AID.BlackAntilight) {
-            blackAntilight = caster;
+            blackAntiLight = caster;
+        }
+
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 || spell.Action.ID == (uint)AID.FloodOfNaught2) {
+            spellID = spell.Action.ID;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.WhiteAntilight) {
-            whiteAntilight = null;
+            whiteAntiLight = null;
             NumCasts++;
         }
 
         if (spell.Action.ID == (uint)AID.BlackAntilight) {
-            blackAntilight = null;
+            blackAntiLight = null;
             NumCasts++;
         }
 
         if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 ||
-            spell.Action.ID == (uint)AID.EdgeOfDeath) {
+            spell.Action.ID == (uint)AID.FloodOfNaught2 || spell.Action.ID == (uint)AID.EdgeOfDeath) {
             NumCasts++;
         }
     }
@@ -252,33 +259,54 @@ class Antilight(BossModule module) : BossComponent(module) {
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        if (grandCrossOrder == null || whiteAntilight == null || blackAntilight == null || tellingTruth == null) {
+    public override void Update() {
+        if (whiteAntiLight == null || blackAntiLight == null || spellID == null) {
             return;
         }
 
-        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 2); // sets are 0, 1, 2
+        // Depending on the flood ID cast, the orbs will cast the opposite of what they actually are
+        if ((spellID == (uint)AID.FloodOfNaught ||spellID == (uint)AID.FloodOfNaught2) && swapped == false) {
+            (whiteAntiLight, blackAntiLight) = (blackAntiLight, whiteAntiLight);
+            swapped = true;
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (grandCrossOrder == null || whiteAntiLight == null || blackAntiLight == null || tellingTruth == null || spellID == null) {
+            return;
+        }
+
+        var buffs = grandCrossOrder.getCurrentPlayerBuffs(pcSlot, 2); // Sets are 0, 1, 2, and AntiLight is always the final set
         if (buffs == null) {
             return;
         }
 
+        // TODO This should never happen - most likely can be removed, as buffs will always be there by the time casters are set
         if (!hasBuff(buffs, SID.BeyondDeath) && !hasBuff(buffs, SID.BeyondDeath1) &&
             !hasBuff(buffs, SID.AllaganField)) {
             return;
         }
 
-        Actor correctSide;
-        Actor wrongSide;
+        Actor? correctSide = null;
+        Actor? wrongSide = null;
 
         if (hasBuff(buffs, SID.BeyondDeath) || hasBuff(buffs, SID.BeyondDeath1)) {
-            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
-            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
-        } else {
-            correctSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? blackAntilight : whiteAntilight;
-            wrongSide = (hasBuff(buffs, SID.WhiteWound) || hasBuff(buffs, SID.BlackWoundOpposite)) ? whiteAntilight : blackAntilight;
+            var requireWhite = hasBuff(buffs, SID.BlackWound) || hasBuff(buffs, SID.BlackWound1);
+            correctSide = requireWhite ? whiteAntiLight : blackAntiLight;
+            wrongSide = requireWhite ? blackAntiLight : whiteAntiLight;
         }
 
-        // If it was a lie, flip it
+        if (hasBuff(buffs, SID.AllaganField)) {
+            var requireWhite = hasBuff(buffs, SID.BlackWound) || hasBuff(buffs, SID.BlackWound1);
+            correctSide = requireWhite ? blackAntiLight : whiteAntiLight;
+            wrongSide = requireWhite ? whiteAntiLight : blackAntiLight;
+        }
+
+        if (correctSide == null || wrongSide == null) {
+            return;
+        }
+
+        // Fake = swap
         if (tellingTruth == false) {
             (correctSide, wrongSide) = (wrongSide, correctSide);
         }
@@ -409,7 +437,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
         }
 
         // TODO fix this
-        /*foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
+        foreach (var (slot, expireAt, tellingTruth) in grandCrossOrder.getNextBuffPlayers(SID.AccelerationBomb, 4)) {
             if ((expireAt - WorldState.CurrentTime).TotalSeconds > 7.0f) {
                 continue;
             }
@@ -421,7 +449,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
             if (tellingTruth == false) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
             }
-        }*/
+        }
     }
 }
 
@@ -571,53 +599,52 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
     }
 }
 
-class InfernoBaits(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StrayFlamesP4, new AOEShapeCircle(6.0f)) {
-    private Inferno? inferno = module.FindComponent<Inferno>();
+class InfernoBaits(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
-            if (inferno != null) {
-                if (inferno.truth == true) {
-                    Casters.Add(new(Shape, caster.Position, caster.Rotation));
-                }
-            }
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle) {
+            aoes.Add(new(new AOEShapeCircle(6.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
         }
+
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
+            aoes.Add(new(new AOEShapeDonut(6.0f, 40.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle || spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
+            aoes.RemoveAll(aoe => aoe.ActorID == caster.InstanceID);
+            NumCasts++;
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
     }
 }
 
-// TODO move eventcast to baits function instead
-class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
+class Inferno(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
     private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
     public bool active = false;
-    public bool? truth = null; // TODO fix how this component actually works for the baits
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
+        if (spell.Action.ID == (uint)AID.StrayFlamesP4Puddle || spell.Action.ID == (uint)AID.StrayFlamesP4Donut) {
             CurrentBaits.Clear();
             active = true;
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.StrayFlamesP4) {
-            CurrentBaits.Clear();
-            NumCasts++;
-        }
-    }
-
     public override void Update() {
-        if (tsunamiInfernoOrder == null) {
+        if (tsunamiInfernoOrder == null || active == true) {
             return;
         }
 
         var players = tsunamiInfernoOrder.getNextBuffPlayers(SID.EntropyP4, 8);
         if (players.Count == 0) {
-            OnlyShowOutlines = false;
             return;
         }
 
-        OnlyShowOutlines = true;
         CurrentBaits.Clear();
 
         foreach (var (slot, expireAt, tellingTruth) in players) {
@@ -633,7 +660,7 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
 
             // Fake
             if (tellingTruth == false) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 6.0f))); // TODO aoe size is a guess for now
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(6.0f, 40.0f)));
             }
         }
     }
@@ -647,35 +674,52 @@ class Inferno(BossModule module) : Components.GenericBaitProximity(module) {
     }
 }
 
-class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
-    private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
-    public bool active = false;
+class TsunamiBaits(BossModule module) : Components.GenericAOEs(module) {
+    private List<AOEInstance> aoes = [];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.StraySprayP4) {
-            active = true;
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle) {
+            aoes.Add(new(new AOEShapeCircle(6.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
+        }
+
+        if (spell.Action.ID == (uint)AID.StraySprayP4Donut) {
+            aoes.Add(new(new AOEShapeDonut(6.0f, 40.0f), caster.Position, caster.Rotation, actorID: caster.InstanceID));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.StraySprayP4) {
-            CurrentBaits.Clear();
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle || spell.Action.ID == (uint)AID.StraySprayP4Donut) {
+            aoes.RemoveAll(aoe => aoe.ActorID == caster.InstanceID);
             NumCasts++;
         }
     }
 
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+}
+
+class Tsunami(BossModule module) : Components.GenericBaitProximity(module, onlyShowOutlines: true) {
+    private TsunamiInfernoOrder? tsunamiInfernoOrder = module.FindComponent<TsunamiInfernoOrder>();
+    public bool active = false;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.StraySprayP4Puddle || spell.Action.ID == (uint)AID.StraySprayP4Donut) {
+            CurrentBaits.Clear();
+            active = true;
+        }
+    }
+
     public override void Update() {
-        if (tsunamiInfernoOrder == null) {
+        if (tsunamiInfernoOrder == null || active == true) {
             return;
         }
 
         var players = tsunamiInfernoOrder.getNextBuffPlayers(SID.DynamicFluidP4, 8);
         if (players.Count == 0) {
-            OnlyShowOutlines = false;
             return;
         }
 
-        OnlyShowOutlines = true;
         CurrentBaits.Clear();
 
         foreach (var (slot, expireAt, tellingTruth) in players) {
@@ -684,8 +728,9 @@ class Tsunami(BossModule module) : Components.GenericBaitProximity(module) {
                 continue;
             }
 
+            // Real
             if (tellingTruth == true) {
-                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(3.0f, 6.0f))); // TODO aoe size is a guess for now
+                CurrentBaits.Add(new(player.Position, new AOEShapeDonut(6.0f, 40.0f)));
             }
 
             // Fake

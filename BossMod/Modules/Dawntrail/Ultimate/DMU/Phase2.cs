@@ -880,7 +880,7 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
     private List<Actor> baiters = [];
     private enum _bait { None, Far, Close }
     private _bait currentBait = _bait.None;
-    private bool aoesLocked = false;
+    public bool aoesLocked = false;
 
     // If this mechanic is ever rewritten, please include a way to handle tower storing for the final set; some strategies
     // include using the two last towers for the mechanic, some will simply just use a waymark
@@ -903,11 +903,13 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
         if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
             aoesLocked = true;
-            NumCasts++;
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        Service.Logger.Info("Cast id " + spell.Action.ID + "cast name " + spell.Action.Name());
+
+
         if (spell.Action.ID == (uint)AID.PastsEndSpread || spell.Action.ID == (uint)AID.PastsEndSpread1 ||
             spell.Action.ID == (uint)AID.FuturesEndSpread || spell.Action.ID == (uint)AID.FuturesEndSpread1) {
             clones.Add((caster, spell.MainTargetID));
@@ -915,6 +917,7 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
         if (spell.Action.ID == (uint)AID.AllThingsEnding || spell.Action.ID == (uint)AID.AllThingsEnding1) {
             NumCasts++;
+            Service.Logger.Info("Num casts " + NumCasts);
             aoes.Clear();
             baiters.Clear();
         }
@@ -1124,8 +1127,18 @@ class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine)
         var waymark1Angle = (waymark1.Value.ToWPos() - Arena.Center).ToAngle();
         var firstWave = triangles.Take(3).Select(t => t.Position).ToArray();
 
+        Array.Sort(firstWave, delegate(WPos x, WPos y) {
+            var xAngle = (x - Arena.Center).ToAngle();
+            var yAngle = (y - Arena.Center).ToAngle();
+
+            var xDeg = xAngle.AlmostEqual(waymarkAAngle, 0.01f) ? 180f : (xAngle - waymarkAAngle + 180f.Degrees()).Normalized().Deg;
+            var yDeg = yAngle.AlmostEqual(waymarkAAngle, 0.01f) ? 180f : (yAngle - waymarkAAngle + 180f.Degrees()).Normalized().Deg;
+
+            return xDeg < yDeg ? 1 : -1;
+        });
+
         if (assignment != PartyRolesConfig.Assignment.MT && assignment != PartyRolesConfig.Assignment.OT) {
-            Arena.AddCircle(firstWave.MinBy(p => ((p - Arena.Center).ToAngle() - waymarkAAngle).Normalized().Deg)!, 1f, Colors.Safe, 2f);
+            Arena.AddCircle(firstWave[0], 1f, Colors.Safe, 2f);
             return;
         }
 
