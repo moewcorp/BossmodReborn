@@ -11,8 +11,12 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.GrandCross) {
-            tellingTruthCaught = false;
             currentCast++;
+
+            if (currentCast < 3)
+            {
+                tellingTruthCaught = false;
+            }
         }
     }
 
@@ -66,7 +70,7 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
                 var sid = (SID)status.ID;
                 var expireAt = status.ExpireAt;
                 foreach (var entry in grandCross) {
-                    entry.playerBuffs[slot].RemoveAll(b => b.buff == sid && b.expireAt == expireAt);
+                    entry.playerBuffs[slot].RemoveAll(b => b.buff == sid);
                 }
             }
         }
@@ -420,12 +424,6 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 // TODO missing spell? or maybe it just doesn't have one
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
-
-    /*public override void OnStatusLose(Actor actor, ref ActorStatus status) {
-        if (status.ID == (uint)SID.AccelerationBomb) {
-            PlayerStates[Raid.FindSlot(actor.InstanceID)] = default;
-        }
-    }*/
 
     public override void Update() {
         foreach (var (slot, _) in Raid.WithSlot()) {
