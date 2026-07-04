@@ -485,6 +485,23 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
         return CollectionsMarshal.AsSpan(eyes);
     }
 
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (grandCrossOrder == null || NumCasts >= 2) {
+            return;
+        }
+
+        var players = grandCrossOrder.getNextBuffPlayers(SID.CursedShriek, 2).ToList();
+        if (players.Count != 2) {
+            return;
+        }
+
+        foreach (var player in players) {
+            if (player.slot == slot) {
+                hints.Add("You're Gaze");
+            }
+        }
+    }
+
     public override void AddGlobalHints(GlobalHints hints) {
         if (eyes.Count == 0) {
             return;
@@ -507,6 +524,9 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
         }
 
         var players = grandCrossOrder.getNextBuffPlayers(SID.CursedShriek, 2).ToList();
+        if (players.Count != 2) {
+            return;
+        }
 
         for (int i = 0; i < players.Count; i++) {
             if ((players[i].expireAt - WorldState.CurrentTime).TotalSeconds > 8.0) {
@@ -562,9 +582,10 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
             var forward = (aoe.Rotation + rect.DirectionOffset).ToDirection();
             var safeSpot = new WPos(0.0f, 0.0f);
 
-            // Case 1: The safe spots are in the real areas, this means we figure out the bad spot and go left of it
-            //         so the lightning aoe will be around [117.662, 89.372]
-            if (aoe.Origin.AlmostEqual(new WPos(117.662f, 89.372f), 1.0f)) {
+            // Case 1: Either of these coordinates means we figure out the bad spot and go left of it
+            //         so the lightning aoe will be around [117.662, 89.372] or [89.372, 82.292]
+            if (aoe.Origin.AlmostEqual(new WPos(117.662f, 89.372f), 1.0f) ||
+                aoe.Origin.AlmostEqual(new WPos(89.372f, 82.292f), 1.0f)) {
                 var edgeCenter = aoe.Origin - forward.OrthoL() * rect.HalfWidth;
                 safeSpot = edgeCenter + forward * (Module.Center - edgeCenter).Dot(forward) - forward.OrthoL();
             }

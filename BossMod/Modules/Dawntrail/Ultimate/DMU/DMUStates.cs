@@ -15,12 +15,12 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(2, Phase3, "P3")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.ChaosP3()?.IsDeadOrDestroyed == true && _module.ExdeathP3()?.IsDeadOrDestroyed == true;
-        /*SimplePhase(3, Phase4, "P4")
+        SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
         SimplePhase(4, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;*/
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
     }
 
     private void Phase5(uint id) {
@@ -201,11 +201,11 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<CursedShriek>()
             .ActivateOnExit<KefkaOrder>();
 
-        ComponentCondition<LightningSafeSpots>(id + 0x140, 7.9f, o => o.NumCasts > 0, "Lightning Safe Spots")
-            .DeactivateOnExit<LightningSafeSpots>();
+        ComponentCondition<LightningSafeSpots>(id + 0x140, 7.9f, o => o.NumCasts > 0, "Lightning Safe Spots");
 
         ComponentCondition<CursedShriek>(id + 0x150, 1.1f, o => o.NumCasts > 0, "Gazes Resolve")
             .DeactivateOnExit<CursedShriek>()
+            .DeactivateOnExit<LightningSafeSpots>()
             .ActivateOnExit<Inferno>()
             .ActivateOnExit<InfernoBaits>();
 
