@@ -229,7 +229,8 @@ class AntiLight(BossModule module) : BossComponent(module) {
             blackAntiLight = caster;
         }
 
-        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 || spell.Action.ID == (uint)AID.FloodOfNaught2) {
+        if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 ||
+            spell.Action.ID == (uint)AID.FloodOfNaught2 || spell.Action.ID == (uint)AID.FloodOfNaught3) {
             spellID = spell.Action.ID;
         }
     }
@@ -246,7 +247,8 @@ class AntiLight(BossModule module) : BossComponent(module) {
         }
 
         if (spell.Action.ID == (uint)AID.FloodOfNaught || spell.Action.ID == (uint)AID.FloodOfNaught1 ||
-            spell.Action.ID == (uint)AID.FloodOfNaught2 || spell.Action.ID == (uint)AID.EdgeOfDeath) {
+            spell.Action.ID == (uint)AID.FloodOfNaught2 || spell.Action.ID == (uint)AID.FloodOfNaught3 ||
+            spell.Action.ID == (uint)AID.EdgeOfDeath) {
             NumCasts++;
         }
     }
@@ -589,8 +591,9 @@ class CursedShriek(BossModule module) : Components.GenericGaze(module) {
             }
 
             // Case 2: The safe spots are in the question mark areas, this means we figure out the bad spot and go right of it
-            //         so the lightning aoe will be around [110.582, 82.292]
-            if (aoe.Origin.AlmostEqual(new WPos(110.582f, 82.292f), 1.0f)) {
+            //         so the lightning aoe will be around [110.582, 82.292] or [82.292, 89.372]
+            if (aoe.Origin.AlmostEqual(new WPos(110.582f, 82.292f), 1.0f) ||
+                aoe.Origin.AlmostEqual(new WPos(82.292f, 89.372f), 1.0f)) {
                 var edgeCenter = aoe.Origin + forward.OrthoL() * rect.HalfWidth;
                 safeSpot = edgeCenter + forward * (Module.Center - edgeCenter).Dot(forward) + forward.OrthoL();
             }
