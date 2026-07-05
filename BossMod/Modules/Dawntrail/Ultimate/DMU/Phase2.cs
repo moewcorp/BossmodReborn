@@ -942,16 +942,32 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
             if (currentBait == _bait.Close) {
                 direction = direction + 180.Degrees();
             }
-            aoes.Add(new(new AOEShapeCone(100, 90.Degrees()), clone.Position, direction));
+            aoes.Add(new(new AOEShapeCone(20, 90.Degrees()), clone.Position, direction));
         }
 
         return CollectionsMarshal.AsSpan(aoes);
     }
 
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        if (aoesLocked == true)
+        {
+            base.DrawArenaBackground(pcSlot, pc);
+        }
+    }
+    
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (aoesLocked == true) {
+        if (aoesLocked == false) {
+            foreach (var aoe in aoes)
+            {
+                aoe.Shape.Outline(Arena, aoe.Origin, aoe.Rotation, aoe.Color, 0.5f);
+            }
+        }
+
+        if (aoesLocked == true)
+        {
             return;
         }
 
