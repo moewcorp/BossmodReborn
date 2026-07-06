@@ -18,21 +18,20 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
-        SimplePhase(4, Phase5, "P5")
+        /*SimplePhase(4, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;*/
     }
 
     private void Phase5(uint id) {
         ActorTargetable(id, _module.KefkaP5, true, 0.1f, "Boss appears")
-            .ActivateOnEnter<FellForces>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
 
         ActorCast(id + 0x10, _module.KefkaP5, (uint)AID.UltimaRepeaterCast, 3.0f, 5.0f, true, "Ultima Repeater")
             .ActivateOnEnter<UltimaRepeater>()
             .DeactivateOnExit<UltimaRepeater>()
             .ActivateOnEnter<FellForces>()
-            .ExecOnExit<FellForces>(o => o.active = true);
+            .ExecOnEnter<FellForces>(o => o.active = true);
 
         ComponentCondition<FellForces>(id + 0x20, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
         ComponentCondition<FellForces>(id + 0x25, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack");
@@ -64,10 +63,11 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<MaddeningOrchestra>()
             .ActivateOnExit<ChaoticHolyFlareDiffusion>();
 
-        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x110, 3.5f, o => o.NumCasts > 0, "Tank Baits Resolve")
+        ComponentCondition<ChaoticHolyFlareDiffusion>(id + 0x110, 3.5f, o => o.NumCasts >= 2, "Tank Baits Resolve")
             .DeactivateOnExit<ChaoticHolyFlareDiffusion>()
-            .ActivateOnExit<FellForces>()
-            .ExecOnExit<FellForces>(a => a.active = true && a.expectedCasts == 6);
+            .ActivateOnEnter<FellForces>()
+            .ExecOnExit<FellForces>(a => a.active = true)
+            .ExecOnExit<FellForces>(a => a.expectedCasts = 6);
 
         ComponentCondition<FellForces>(id + 0x120, 4.6f, o => o.NumCasts > 0, "1st Auto Attack Stack");
         ComponentCondition<FellForces>(id + 0x130, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
@@ -87,13 +87,14 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnEnter<UltimaRepeater>()
             .DeactivateOnExit<UltimaRepeater>()
             .ActivateOnEnter<FellForces>()
-            .ExecOnExit<FellForces>(o => o.active = true && o.expectedCasts == 6);
+            .ExecOnEnter<FellForces>(o => o.active = true)
+            .ExecOnEnter<FellForces>(o => o.expectedCasts = 6);
 
         ComponentCondition<FellForces>(id + 0x190, 6.0f, o => o.NumCasts > 0, "1st Auto Attack Stack");
         ComponentCondition<FellForces>(id + 0x200, 3.1f, o => o.NumCasts > 3, "2nd Auto Attack Stack")
             .DeactivateOnExit<FellForces>();
 
-        ActorCast(id + 0x210, _module.KefkaP5, (uint)AID.StrayApocalypseCast, 20.0f, 5.0f, true, "Exa-flares start")
+        ActorCast(id + 0x210, _module.KefkaP5, (uint)AID.StrayApocalypseCast, 1.5f, 5.0f, true, "Exa-flares start")
             .ActivateOnEnter<StrayApocalypse>()
             .ActivateOnEnter<StrayEntropy>();
 

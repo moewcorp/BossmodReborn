@@ -423,11 +423,10 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 }
 
 // 4x accleration bombs where two are from 1st set and the other 2 are from the 2nd set, so it can a mix of truth and lie
-// TODO missing spell? or maybe it just doesn't have one
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
 
-    public override void Update() {
+    /*public override void Update() {
         foreach (var (slot, _) in Raid.WithSlot()) {
             PlayerStates[slot] = default;
         }
@@ -450,7 +449,7 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
             }
         }
-    }
+    }*/
 }
 
 // 2x CursedShriek from the same set always
