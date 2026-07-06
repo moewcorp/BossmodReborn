@@ -29,7 +29,6 @@ Phase 3:
  
 Phase 4: 
 - Need spread / stacks show for a frame - can be easily avoided by just setting it to where numcasts is >1 or remove the baits
-- Fix acceleration bomb - might need fixing but who knows
 
 Phase 5:
 - Needs completing still
