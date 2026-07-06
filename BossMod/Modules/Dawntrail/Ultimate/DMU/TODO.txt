@@ -1,0 +1,35 @@
+﻿General (for all phases / multiple phases)
+- Activation times for spells
+- Timeline improvements
+- Turns out we only need to know some of the casts going off for blizzrd and lightning, blizzard has already been refactored
+    but lightning could also be refactored, this is for P1 & P4, p4 had extra logic for the fake & truth part, but turns out none of it is needed
+    Be careful when changing lightning tho as it is used by gazes as well
+
+Phase 1:
+- Graven Image 1 safe spots
+- P1 arrow puddles with arrows
+
+Phase 2:
+- Trines for tanks improvement for safe spot - seems like some marker strats are just before the starting position of the triangle
+    So need to add a safe distance before the triangle position like 5y, but not too much as its right next to A
+- AllEndings baits safe spots improved, seems actually work at the moment, but can most likely be improved to give more time for safety
+    e.g. the far bait is a decent distance out, but it could be moved closer in to allow more time for moving back to the towers
+    e.g. the close bait should do a check to ensure its outside the hitbox and like 2.0f away
+- Come up with a plan for forsaken rewrite that allow multiple options, like assign slots of helping and taking etc, towers 1-8 etc
+- Fix forsaken colours to make them easier to see
+- Fix forsaken baits to be outlines easier to see when they are active, so baits are outlines and then turned into full yellow aoes
+    
+Phase 3:
+- General improvements for the whole phase
+- Crystals need to be remade so they work correctly for non LB strats
+- BH hints added in terms of being idel, taking tether or passing it + where to stand for tether
+    - make tether point inwards or outwards option - e.g. if first tether set, it can be pointed anywhere, if 2nd tether set it can be pointed anywhere since it will despawn
+- Safe spots added to p3 end - should add a config option for this (default is none) + improve it to have hints in a list instead, 
+    so we can just read them and just remove them on EventCast
+ 
+Phase 4: 
+- Need spread / stacks show for a frame - can be easily avoided by just setting it to where numcasts is >1 or remove the baits
+- Fix acceleration bomb - might need fixing but who knows
+
+Phase 5:
+- Needs completing still
