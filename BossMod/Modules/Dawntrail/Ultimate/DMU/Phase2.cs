@@ -959,13 +959,6 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (aoesLocked == false) {
-            foreach (var aoe in aoes)
-            {
-                aoe.Shape.Outline(Arena, aoe.Origin, aoe.Rotation, aoe.Color, 0.5f);
-            }
-        }
-
         if (aoesLocked == true)
         {
             return;
@@ -973,6 +966,13 @@ class AllThingsEnding(BossModule module) : Components.SimpleAOEs(module, (uint)A
 
         if (towers == null || shapes == null) {
             return;
+        }
+
+        if (aoesLocked == false) {
+            foreach (var aoe in aoes)
+            {
+                aoe.Shape.Outline(Arena, aoe.Origin, aoe.Rotation, aoe.Color, 0.5f);
+            }
         }
 
         // TODO change this - its a lazy way of checking if we should draw the hint or not yet for past/future ending
