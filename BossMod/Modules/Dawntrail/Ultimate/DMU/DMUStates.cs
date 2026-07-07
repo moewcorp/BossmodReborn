@@ -509,16 +509,19 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<ForsakenSolverSet2>()
             .ActivateOnExit<ForsakenSolverSet1>()
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.AOE)
-            .ActivateOnEnter<AllThingsEnding>();
+            .ActivateOnEnter<AllThingsEnding>()
+            .ActivateOnEnter<AllThingsEndingCasts>()
+            .ExecOnExit<AllThingsEnding>(o => o.aoesLocked = false);
 
         // Clones baits
         ComponentCondition<AllThingsEnding>(id + 0x50, 5.7f, o => o.aoesLocked, "Boss/Clones baits")
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
         // Tower set 3
-        Condition(id + 0x60, 5.4f, () => Module.FindComponent<AllThingsEnding>()!.NumCasts >= 4 &&
+        Condition(id + 0x60, 5.4f, () => Module.FindComponent<AllThingsEndingCasts>()!.NumCasts >= 4 &&
                                          Module.FindComponent<ForsakenShapes>()!.currentTowerSet > 3, "3rd Tower Set + baits")
             .DeactivateOnExit<AllThingsEnding>()
+            .DeactivateOnExit<AllThingsEndingCasts>()
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
@@ -527,16 +530,19 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<ForsakenSolverSet2>()
             .ActivateOnExit<ForsakenSolverSet1>()
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.AOE)
-            .ActivateOnEnter<AllThingsEnding>();
+            .ActivateOnEnter<AllThingsEnding>()
+            .ActivateOnEnter<AllThingsEndingCasts>()
+            .ExecOnExit<AllThingsEnding>(o => o.aoesLocked = false);
 
         // Clones baits
         ComponentCondition<AllThingsEnding>(id + 0x80, 5.7f, o => o.aoesLocked, "Boss/Clones baits")
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
         // Tower set 5
-        Condition(id + 0x90, 5.4f, () => Module.FindComponent<AllThingsEnding>()!.NumCasts >= 4 &&
+        Condition(id + 0x90, 5.4f, () => Module.FindComponent<AllThingsEndingCasts>()!.NumCasts >= 4 &&
                                          Module.FindComponent<ForsakenShapes>()!.currentTowerSet > 5, "5th Tower Set + baits")
             .DeactivateOnExit<AllThingsEnding>()
+            .DeactivateOnExit<AllThingsEndingCasts>()
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
@@ -545,33 +551,39 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<ForsakenSolverSet2>()
             .ActivateOnExit<ForsakenSolverSet1>()
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.AOE)
-            .ActivateOnEnter<AllThingsEnding>();
+            .ActivateOnEnter<AllThingsEnding>()
+            .ActivateOnEnter<AllThingsEndingCasts>()
+            .ExecOnExit<AllThingsEnding>(o => o.aoesLocked = false);
 
         // Clones baits
         ComponentCondition<AllThingsEnding>(id + 0x110, 5.7f, o => o.aoesLocked, "Boss/Clones baits")
             .ExecOnExit<ForsakenSolverSet1>(s => s.colourCircle = Colors.Safe);
 
         // Tower set 7
-        Condition(id + 0x120, 5.4f, () => Module.FindComponent<AllThingsEnding>()!.NumCasts >= 4 &&
+        Condition(id + 0x120, 5.4f, () => Module.FindComponent<AllThingsEndingCasts>()!.NumCasts >= 4 &&
                                          Module.FindComponent<ForsakenShapes>()!.currentTowerSet > 7, "7th Tower Set + baits")
             .DeactivateOnExit<AllThingsEnding>()
+            .DeactivateOnExit<AllThingsEndingCasts>()
             .DeactivateOnExit<ForsakenSolverSet1>()
             .ActivateOnExit<ForsakenSolverSet2>();
 
         // Tower set 8
         ComponentCondition<ForsakenShapes>(id + 0x130, 10.0f, o => o.currentTowerSet > 8, "8th Tower Set")
             .DeactivateOnExit<ForsakenSolverSet2>()
-            .ActivateOnEnter<AllThingsEnding>();
+            .ActivateOnEnter<AllThingsEnding>()
+            .ActivateOnEnter<AllThingsEndingCasts>()
+            .ExecOnEnter<AllThingsEnding>(o => o.aoesLocked = false);
 
         // Clones baits
         ComponentCondition<AllThingsEnding>(id + 0x140, 5.4f, o => o.aoesLocked, "Boss/Clones baits");
 
-        ComponentCondition<AllThingsEnding>(id + 0x145, 5.2f, o => o.NumCasts >= 4, "Boss/Clones baits Resolve")
+        ComponentCondition<AllThingsEndingCasts>(id + 0x145, 5.2f, o => o.NumCasts >= 4, "Boss/Clones baits Resolve")
             .DeactivateOnExit<ForsakenShapes>()
             .DeactivateOnExit<ForsakenBaitsSpreadStacks>()
             .DeactivateOnExit<ForsakenBaitsCone>()
             .DeactivateOnExit<ForsakenBaitsBossClones>()
-            .DeactivateOnExit<AllThingsEnding>();
+            .DeactivateOnExit<AllThingsEnding>()
+            .DeactivateOnExit<AllThingsEndingCasts>();
 
         ActorCast(id + 0x150, _module.BossP2, (uint)AID.LightOfJudgmentP2, 4.1f, 5.0f, true, "Raidwide")
             .ActivateOnEnter<LightOfJudgmentP2>()
