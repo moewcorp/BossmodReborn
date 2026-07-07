@@ -1,4 +1,7 @@
 ﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace BossMod;
@@ -12,6 +15,9 @@ public class PartyRolesConfig : ConfigNode
     public bool AutoAssignOnDutyEnter = false;
 
     public Dictionary<ulong, Assignment> Assignments = [];
+
+    public Class[] MainTankPriority = [Class.WAR, Class.PLD, Class.DRK, Class.GNB];
+    public Class[] OffTankPriority = [Class.GNB, Class.DRK, Class.PLD, Class.WAR];
 
     public Assignment this[ulong contentID] => Assignments.GetValueOrDefault(contentID, Assignment.Unassigned);
 
@@ -116,18 +122,23 @@ public class PartyRolesConfig : ConfigNode
                 ranged.Add(member);
         }
 
-        // tank priority: WAR > PLD > DRK > GNB for MT, reverse for OT
-        tanks.Sort(static (a, b) => GetTankPriority(a.job).CompareTo(GetTankPriority(b.job)));
-
         var countM = melee.Count;
         var countR = ranged.Count;
         var countT = tanks.Count;
         var countH = healers.Count;
 
+        // main tank is picked using the user configurable MainTankPriority order
+        tanks.Sort((a, b) => GetTankPriority(a.job, MainTankPriority).CompareTo(GetTankPriority(b.job, MainTankPriority)));
         if (countT > 0)
             Assignments[tanks.Ref(0).contentId] = Assignment.MT;
+
         if (countT > 1)
-            Assignments[tanks.Ref(1).contentId] = Assignment.OT;
+        {
+            // off tank is picked among the remaining tanks using its own user configurable OffTankPriority order
+            var otCandidates = tanks.GetRange(1, countT - 1);
+            otCandidates.Sort((a, b) => GetTankPriority(a.job, OffTankPriority).CompareTo(GetTankPriority(b.job, OffTankPriority)));
+            Assignments[otCandidates.Ref(0).contentId] = Assignment.OT;
+        }
 
         // healer priority: WHM > AST > SCH > SGE for H1, reverse for H2
         healers.Sort(static (a, b) => GetHealerPriority(a.job).CompareTo(GetHealerPriority(b.job)));
@@ -190,14 +201,17 @@ public class PartyRolesConfig : ConfigNode
         Modified.Fire();
     }
 
-    private static int GetTankPriority(Class job) => job switch
+    private static int GetTankPriority(Class job, Class[] order)
     {
-        Class.WAR or Class.MRD => 1,
-        Class.PLD or Class.GLA => 2,
-        Class.DRK => 3,
-        Class.GNB => 4,
-        _ => 99
-    };
+        var canonical = job switch
+        {
+            Class.MRD => Class.WAR,
+            Class.GLA => Class.PLD,
+            _ => job
+        };
+        var idx = Array.IndexOf(order, canonical);
+        return idx >= 0 ? idx : 99;
+    }
 
     private static int GetHealerPriority(Class job) => job switch
     {
@@ -223,6 +237,41 @@ public class PartyRolesConfig : ConfigNode
         _ => 99
     };
 
+    // draws a drag-to-reorder list of tank jobs for the given priority order array (index 0 = highest priority)
+    // the id suffix on the selectable's label keeps each job's widget identity stable across the underlying array while dragging (see also UIPresetEditor.DrawModulesList)
+    private void DrawTankPriority(string id, Class[] order)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        var textColor = ImGui.GetColorU32(ImGuiCol.Text);
+        var fontSize = ImGui.GetFontSize();
+        var iconFont = Service.IconFont;
+        var icon = FontAwesomeIcon.Minus.ToIconString();
+        var iconPadding = 3f * ImGuiHelpers.GlobalScale;
+
+        var len = order.Length;
+        for (var i = 0; i < len; ++i)
+        {
+            var cursor = ImGui.GetCursorScreenPos();
+
+            ImGui.Selectable($"##{id}{order[i]}");
+
+            if (ImGui.IsItemActive() && !ImGui.IsItemHovered())
+            {
+                var j = i + (ImGui.GetMouseDragDelta().Y < 0f ? -1 : 1);
+                if (j >= 0 && j < len)
+                {
+                    (order[i], order[j]) = (order[j], order[i]);
+                    Modified.Fire();
+                    ImGui.ResetMouseDragDelta();
+                }
+            }
+
+            var iconSize = ImGui.CalcTextSizeA(iconFont, fontSize, float.MaxValue, float.MaxValue, icon, out _);
+            dl.AddText(iconFont, fontSize, cursor, textColor, icon);
+            dl.AddText(cursor with { X = cursor.X + iconSize.X + iconPadding }, textColor, order[i].ToString());
+        }
+    }
+
     public override void DrawCustom(UITree tree, WorldState ws)
     {
         if (ImGui.Button("Auto-Assign Roles"))
@@ -231,6 +280,14 @@ public class PartyRolesConfig : ConfigNode
         }
         ImGui.SameLine();
         ImGui.TextUnformatted("Click to automatically assign party roles based on job and party order");
+
+        foreach (var _ in tree.Node("Tank auto-assign priority (drag to reorder, highest to lowest)"))
+        {
+            ImGui.TextColored(ImGuiColors.TankBlue, "Main Tank:");
+            DrawTankPriority("mt", MainTankPriority);
+            ImGui.TextColored(ImGuiColors.TankBlue, "Off Tank:");
+            DrawTankPriority("ot", OffTankPriority);
+        }
 
         using (var table = ImRaii.Table("tab2", 10, ImGuiTableFlags.SizingFixedFit))
         {
