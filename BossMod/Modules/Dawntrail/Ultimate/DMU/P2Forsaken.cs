@@ -123,11 +123,11 @@ class AllThingsEnding(BossModule module) : Components.GenericBaitAway(module, on
     private void baitSafeSpot(WPos midPoint) {
         var newSouth = (midPoint - Arena.Center).Normalized();
         if (currentBait == baitType.Close) {
-            Arena.AddCircle(midPoint + (newSouth * 1.5f), 1.0f, Colors.Safe, 2.0f);
+            Arena.AddCircle(midPoint + (newSouth * 2.0f), 1.0f, Colors.Safe, 2.0f);
         }
 
         if (currentBait == baitType.Far) {
-            Arena.AddCircle(midPoint - (newSouth * 12.0f), 1.0f, Colors.Safe, 2.0f);
+            Arena.AddCircle(midPoint - (newSouth * 13.0f), 1.0f, Colors.Safe, 2.0f);
         }
     }
 }
