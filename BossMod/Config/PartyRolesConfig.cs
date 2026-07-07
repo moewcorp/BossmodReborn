@@ -102,8 +102,10 @@ public class PartyRolesConfig : ConfigNode
         List<(ulong contentId, Class job, Role role, ClassCategory category)> melee = [];
         List<(ulong contentId, Class job, Role role, ClassCategory category)> ranged = [];
 
-        foreach (var member in members)
+        var countMembers = members.Count;
+        for (var i = 0; i < countMembers; ++i)
         {
+            ref var member = ref members.Ref(i);
             if (member.role == Role.Tank)
                 tanks.Add(member);
             else if (member.role == Role.Healer)
@@ -114,31 +116,37 @@ public class PartyRolesConfig : ConfigNode
                 ranged.Add(member);
         }
 
-        // tank priority: PLD > WAR > DRK > GNB for MT, reverse for OT
-        tanks.Sort((a, b) => GetTankPriority(a.job).CompareTo(GetTankPriority(b.job)));
-        if (tanks.Count > 0)
-            Assignments[tanks[0].contentId] = Assignment.MT;
-        if (tanks.Count > 1)
-            Assignments[tanks[1].contentId] = Assignment.OT;
+        // tank priority: WAR > PLD > DRK > GNB for MT, reverse for OT
+        tanks.Sort(static (a, b) => GetTankPriority(a.job).CompareTo(GetTankPriority(b.job)));
+
+        var countM = melee.Count;
+        var countR = ranged.Count;
+        var countT = tanks.Count;
+        var countH = healers.Count;
+
+        if (countT > 0)
+            Assignments[tanks.Ref(0).contentId] = Assignment.MT;
+        if (countT > 1)
+            Assignments[tanks.Ref(1).contentId] = Assignment.OT;
 
         // healer priority: WHM > AST > SCH > SGE for H1, reverse for H2
-        healers.Sort((a, b) => GetHealerPriority(a.job).CompareTo(GetHealerPriority(b.job)));
-        if (healers.Count > 0)
-            Assignments[healers[0].contentId] = Assignment.H1;
-        if (healers.Count > 1)
-            Assignments[healers[1].contentId] = Assignment.H2;
+        healers.Sort(static (a, b) => GetHealerPriority(a.job).CompareTo(GetHealerPriority(b.job)));
+        if (countH > 0)
+            Assignments[healers.Ref(0).contentId] = Assignment.H1;
+        if (countH > 1)
+            Assignments[healers.Ref(1).contentId] = Assignment.H2;
 
         // sort ranged by priority first
-        ranged.Sort((a, b) => GetRangedPriority(a.job).CompareTo(GetRangedPriority(b.job)));
+        ranged.Sort(static (a, b) => GetRangedPriority(a.job).CompareTo(GetRangedPriority(b.job)));
 
         // melee DPS - if 3+ ranged, fill melee slots from the lowest priority ranged
-        if (ranged.Count >= 3)
+        if (countR >= 3)
         {
             // first try to move RDM to melee (if it exists and is low priority)
             var rdmIndex = -1;
-            for (var i = 0; i < ranged.Count; ++i)
+            for (var i = 0; i < countR; ++i)
             {
-                if (ranged[i].job == Class.RDM)
+                if (ranged.Ref(i).job == Class.RDM)
                 {
                     rdmIndex = i;
                     break;
@@ -150,36 +158,42 @@ public class PartyRolesConfig : ConfigNode
                 melee.Add(ranged[rdmIndex]);
                 ranged.RemoveAt(rdmIndex);
             }
+            countM = melee.Count;
+            countR = ranged.Count;
         }
 
         // if we still need more melee slots and have ranged to spare, move lowest priority ranged
-        while (melee.Count < 2 && ranged.Count > 2)
+        while (countM < 2 && countR > 2)
         {
             // take from the end (lowest priority)
-            var lastIndex = ranged.Count - 1;
+            var lastIndex = countR - 1;
             melee.Add(ranged[lastIndex]);
             ranged.RemoveAt(lastIndex);
+
+            countM = melee.Count;
+            countR = ranged.Count;
         }
 
         // assign melee by party order
-        for (var i = 0; i < melee.Count && i < 2; ++i)
+        for (var i = 0; i < countM && i < 2; ++i)
         {
-            Assignments[melee[i].contentId] = i == 0 ? Assignment.M1 : Assignment.M2;
+            Assignments[melee.Ref(i).contentId] = i == 0 ? Assignment.M1 : Assignment.M2;
         }
 
         // assign ranged (already sorted by priority)
-        if (ranged.Count > 0)
-            Assignments[ranged[0].contentId] = Assignment.R1;
-        if (ranged.Count > 1)
-            Assignments[ranged[1].contentId] = Assignment.R2;
+
+        if (countR > 0)
+            Assignments[ranged.Ref(0).contentId] = Assignment.R1;
+        if (countR > 1)
+            Assignments[ranged.Ref(1).contentId] = Assignment.R2;
 
         Modified.Fire();
     }
 
     private static int GetTankPriority(Class job) => job switch
     {
-        Class.PLD or Class.GLA => 1,
-        Class.WAR or Class.MRD => 2,
+        Class.WAR or Class.MRD => 1,
+        Class.PLD or Class.GLA => 2,
         Class.DRK => 3,
         Class.GNB => 4,
         _ => 99
