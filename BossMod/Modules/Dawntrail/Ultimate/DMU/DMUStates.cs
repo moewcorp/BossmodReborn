@@ -18,9 +18,9 @@ sealed class DMUStates : StateMachineBuilder {
         SimplePhase(3, Phase4, "P4")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP4()?.IsDeadOrDestroyed == true;
-        /*SimplePhase(4, Phase5, "P5")
+        SimplePhase(4, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
-            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;*/
+            .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
     }
 
     private void Phase5(uint id) {
