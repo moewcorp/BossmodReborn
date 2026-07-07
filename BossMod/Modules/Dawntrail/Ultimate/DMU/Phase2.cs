@@ -49,8 +49,6 @@ class PathOfLight(BossModule module) : Components.GenericTowers(module, (uint)AI
 }
 
 // Used for setting up each player's role, such as the shape the player has, the pair the player belongs, if the player is a helper or soaker, etc.
-// TODO this whole phase needs to be rewritten, its annoying to extend other strategy into it with how much they differ between each other
-//  It can work fine, its just becoming a lot of dupe logic
 class ForsakenShapes(BossModule module) : BossComponent(module) {
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
