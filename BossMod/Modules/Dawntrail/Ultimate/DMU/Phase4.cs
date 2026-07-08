@@ -71,6 +71,7 @@ class GrandCrossOrder(BossModule module) : BossComponent(module) {
                 var expireAt = status.ExpireAt;
                 foreach (var entry in grandCross) {
                     entry.playerBuffs[slot].RemoveAll(b => b.buff == sid);
+                    Service.Logger.Info("Slot:" + slot + "Removed status effect: " + status.ID + " at world time: " + status.ExpireAt);
                 }
             }
         }
@@ -423,12 +424,29 @@ class ForkedWater(BossModule module) : Components.UniformStackSpread(module, 8.0
 }
 
 // 4x accleration bombs where two are from 1st set and the other 2 are from the 2nd set, so it can a mix of truth and lie
+// TODO move the StatusLose here for acceleration bomb to reset the playerStates since it follows the standard way to do it - wont change anything tho
+// TODO improve timeline for the mechanic make the component deactivate itself, can most likely do it base on the number of buffs gone by increasing it StatusLose
 class AccelerationBomb(BossModule module) : Components.StayMove(module) {
     private GrandCrossOrder? grandCrossOrder = module.FindComponent<GrandCrossOrder>();
+    public int NumCasts = 0;
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.AccelerationBomb) {
+            var slot = Raid.FindSlot(actor.InstanceID);
+            if (slot >= 0) {
+                PlayerStates[slot] = default;
+                NumCasts++;
+
+                Service.Logger.Info($"Slot {slot} resetting");
+                Service.Logger.Info($"NumCasts {NumCasts}");
+            }
+        }
+    }
 
     public override void Update() {
         foreach (var (slot, _) in Raid.WithSlot()) {
             PlayerStates[slot] = default;
+            //Service.Logger.Info($"Slot {slot} resetting"); // todo debug - remove later
         }
 
         if (grandCrossOrder == null) {
@@ -442,10 +460,12 @@ class AccelerationBomb(BossModule module) : Components.StayMove(module) {
 
             if (tellingTruth == true) {
                 PlayerStates[slot] = new(Requirement.Stay, expireAt);
+                Service.Logger.Info($"Slot {slot} real bomb - stay still, which expires at {expireAt}"); // todo debug - remove later
             }
 
             if (tellingTruth == false) {
                 PlayerStates[slot] = new(Requirement.Move, expireAt);
+                Service.Logger.Info($"Slot {slot} fake bomb - move, which expires at {expireAt}"); // todo debug - remove later
             }
         }
     }
