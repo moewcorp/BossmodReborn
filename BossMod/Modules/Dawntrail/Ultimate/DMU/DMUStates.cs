@@ -195,7 +195,9 @@ sealed class DMUStates : StateMachineBuilder {
             .ActivateOnExit<ForkedWater>()
             .ActivateOnExit<AccelerationBomb>();
 
-        ComponentCondition<ForkedWater>(id + 0x130, 8.4f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
+        Condition(id + 0x130, 8.4f, () => Module.FindComponent<AccelerationBomb>()!.NumCasts >= 4 &&
+                                          Module.FindComponent<ForkedWater>()!.NumCasts >= 4,
+            "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
             .DeactivateOnExit<AccelerationBomb>()
             .ActivateOnEnter<LightningSafeSpots>()
@@ -226,7 +228,9 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<Inferno>()
             .DeactivateOnExit<InfernoBaits>();
 
-        ComponentCondition<ForkedWater>(id + 0x180, 4.2f, o => o.NumCasts >= 4, "Spreads + Stacks + Acceleration Bombs Resolve")
+        Condition(id + 0x180, 4.2f, () => Module.FindComponent<AccelerationBomb>()!.NumCasts >= 4 &&
+                                          Module.FindComponent<ForkedWater>()!.NumCasts >= 4,
+                "Spreads + Stacks + Acceleration Bombs Resolve")
             .DeactivateOnExit<ForkedWater>()
             .DeactivateOnExit<AccelerationBomb>()
             .ActivateOnEnter<BlizzardSafeSpots>();
