@@ -1,4 +1,7 @@
-﻿namespace BossMod.Autorotation;
+using BossMod.AI;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
+
+namespace BossMod.Autorotation;
 
 public interface IRotationModuleData
 {
@@ -11,6 +14,7 @@ public interface IRotationModuleData
 public sealed class RotationModuleManager : IDisposable
 {
     private readonly record struct ActiveModule(int DataIndex, RotationModuleDefinition Definition, RotationModule Module);
+    public readonly record struct LineOfSightFix(ulong TargetID, WPos Origin, WPos Destination);
 
     public Preset? Preset
     {
@@ -31,8 +35,25 @@ public sealed class RotationModuleManager : IDisposable
     private static readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
     private readonly EventSubscriptions _subscriptions;
     private List<ActiveModule>? ActiveModules;
+    private bool WantsLoSFix
+    {
+        get
+        {
+            var count = ActiveModules?.Count;
+            for (var i = 0; i < count; ++i)
+            {
+                if (ActiveModules![i].Module.WantsLoSFix)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 
     public static readonly Preset ForceDisable = new(""); // empty preset, so if it's activated, rotation is force disabled
+
+    private static readonly AIConfig _aiConfig = Service.Config.Get<AIConfig>();
 
     public WorldState WorldState => Bossmods.WorldState;
     public ulong PlayerInstanceId => WorldState.Party.Members[PlayerSlot].InstanceId;
@@ -41,6 +62,10 @@ public sealed class RotationModuleManager : IDisposable
     // historic data for recent events that could be interesting for modules
     public DateTime CombatStart; // default value when player is not in combat, otherwise timestamp when player entered combat
     public (DateTime Time, ActorCastEvent? Data) LastCast;
+    public LineOfSightFix? LoSFix;
+
+    public volatile float LastRasterizeMs;
+    public volatile float LastPathfindMs;
 
     // list of status effects that disable the player's default action set, but do not disable *all* actions
     // in these cases, we want to prevent active rotation modules from queueing any actions, because they might affect positioning or rotation, or interfere with player's attempt to manually use an action
@@ -58,6 +83,7 @@ public sealed class RotationModuleManager : IDisposable
         439u, // "Toad", palace of the dead
         1546u, // "Odder", heaven-on-high
         3502u, // "Owlet", EO
+        1284u, // "Out of the Action", bardam's mettle b2 and probably some others
         404u, // "Transporting", not a transformation but prevents actions
         4235u, // "Rage" status from Phantom Berserker, prevents all actions and movement
         4376u, // "Transporting", variant in Occult Crescent
@@ -86,7 +112,9 @@ public sealed class RotationModuleManager : IDisposable
             WorldState.Party.Modified.Subscribe(op => DirtyActiveModules(op.Slot == PlayerSlot)),
             WorldState.Client.ActionRequested.Subscribe(OnActionRequested),
             WorldState.Client.CountdownChanged.Subscribe(OnCountdownChanged),
-            Database.Presets.PresetModified.Subscribe(OnPresetModified)
+            WorldState.Client.ActionFailedLoS.Subscribe(OnLoSFailed),
+            Database.Presets.PresetModified.Subscribe(OnPresetModified),
+            _aiConfig.Modified.Subscribe(() => DirtyActiveModules(true))
         );
     }
 
@@ -191,7 +219,7 @@ public sealed class RotationModuleManager : IDisposable
 
     private Func<AIHints.Enemy, float> RateEnemy(StrategyEnemySelection criterion) => criterion switch
     {
-        StrategyEnemySelection.Closest => Player != null ? e => -(e.Actor.Position - Player.Position).LengthSq() : _ => 0,
+        StrategyEnemySelection.Closest => Player != null ? e => -Player.DistanceToHitbox(e.Actor) : _ => 0,
         StrategyEnemySelection.LowestCurHP => e => -e.Actor.HPMP.CurHP,
         StrategyEnemySelection.HighestCurHP => e => e.Actor.HPMP.CurHP,
         StrategyEnemySelection.LowestMaxHP => e => -e.Actor.HPMP.MaxHP,
@@ -322,5 +350,198 @@ public sealed class RotationModuleManager : IDisposable
             Service.Log($"[RMM] Luring Trap triggered, force-disabling autorotation'");
             Preset = ForceDisable;
         }
+
+        if (actor.InstanceID == PlayerInstanceId)
+        {
+            LoSFix = null; // successful cast means we're not stuck anymore
+        }
+    }
+
+    private void OnLoSFailed(ClientState.OpActionFailedLoS op)
+    {
+        if (!WantsLoSFix)
+        {
+            LoSFix = null;
+            return;
+        }
+
+        if (Hints.PathfindMapObstacles.Bitmap is null)
+            return;
+
+        // don't reevaluate if there's one fix for current target. Performance cost is huge
+        if (LoSFix?.TargetID == op.TargetId)
+            return;
+
+        if (Player is null || WorldState.Actors.Find(op.TargetId) is not { } target)
+        {
+            LoSFix = null;
+            return;
+        }
+
+        var dest = FindLosDestination(Hints.PathfindMapObstacles, Hints.PathfindMapCenter, Player, target, out var _);
+        LoSFix = dest != null ? new(op.TargetId, Player.Position, dest.Value) : null;
+    }
+
+    private static WPos? FindLosDestination(Bitmap.Region obstacleRegion, WPos mapCenter, Actor player, Actor target, out string debug)
+    {
+        var map = obstacleRegion.Bitmap!;
+        var w = map.Width;
+        var h = map.Height;
+        if (w <= 0 || h <= 0)
+        {
+            debug = $"invalid-map-size={w}x{h}";
+            return null;
+        }
+
+        // clamp to nearest in-bounds cell
+        var centerCellX = (obstacleRegion.Rect.Left + obstacleRegion.Rect.Right) * 0.5f;
+        var centerCellY = (obstacleRegion.Rect.Top + obstacleRegion.Rect.Bottom) * 0.5f;
+        var invRes = 1.0f / map.PixelSize;
+        var delta = (player.Position - mapCenter) * invRes;
+        var sx = (int)MathF.Round(centerCellX + delta.X);
+        var sy = (int)MathF.Round(centerCellY + delta.Z);
+        sx = Math.Clamp(sx, 0, w - 1);
+        sy = Math.Clamp(sy, 0, h - 1);
+
+        var visited = new bool[w * h];
+        var q = new Queue<(int x, int y)>();
+        var pass1Visited = 0;
+        var pass1BitmapReject = 0;
+        var pass1RayReject = 0;
+        var pass2Visited = 0;
+        var pass2RayReject = 0;
+        var startPos = obstacleRegion.CellCenterToWorld(mapCenter, sx, sy);
+        var startRayLoS = HasLineOfSightFrom(startPos, player.PosRot.Y, target);
+        var startBitmapLoS = obstacleRegion.HasObstacleMapLineOfSight(mapCenter, startPos, target.Position);
+        bool Passable(int x, int y) => (uint)x < (uint)w && (uint)y < (uint)h && !map[x, y];
+
+        void Enqueue(int x, int y)
+        {
+            if (!Passable(x, y))
+                return;
+            ref var slot = ref visited[y * w + x];
+            if (slot)
+                return;
+            slot = true;
+            q.Enqueue((x, y));
+        }
+
+        bool SeedFromNearestPassable(out int seededCount)
+        {
+            seededCount = 0;
+            Enqueue(sx, sy);
+            if (q.Count > 0)
+            {
+                seededCount = q.Count;
+                return true;
+            }
+
+            // start can be blocked, grow until passable seed found
+            var maxR = Math.Max(w, h);
+            for (var r = 1; r < maxR; ++r)
+            {
+                var any = false;
+                var xmin = sx - r;
+                var xmax = sx + r;
+                var ymin = sy - r;
+                var ymax = sy + r;
+
+                for (var x = xmin; x <= xmax; ++x)
+                {
+                    var before = q.Count;
+                    Enqueue(x, ymin);
+                    Enqueue(x, ymax);
+                    any |= q.Count != before;
+                }
+                for (var y = ymin + 1; y < ymax; ++y)
+                {
+                    var before = q.Count;
+                    Enqueue(xmin, y);
+                    Enqueue(xmax, y);
+                    any |= q.Count != before;
+                }
+                if (any)
+                {
+                    seededCount = q.Count;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (!SeedFromNearestPassable(out var seededPass1))
+        {
+            debug = $"seed-failed start=({sx},{sy}) start-passable={Passable(sx, sy)} start-ray={startRayLoS} start-bitmap={startBitmapLoS}";
+            return null;
+        }
+
+        // check bitmap los + raycast los
+        while (q.Count > 0)
+        {
+            var (x, y) = q.Dequeue();
+            ++pass1Visited;
+            var wpos = obstacleRegion.CellCenterToWorld(mapCenter, x, y);
+            var bitmapOK = obstacleRegion.HasObstacleMapLineOfSight(mapCenter, wpos, target.Position);
+            var rayOK = HasLineOfSightFrom(wpos, player.PosRot.Y, target);
+            if (!bitmapOK)
+                ++pass1BitmapReject;
+            if (!rayOK)
+                ++pass1RayReject;
+            if ((x != sx || y != sy) && bitmapOK && rayOK)
+            {
+                debug = $"ok-pass1 start=({sx},{sy}) seed1={seededPass1} p1v={pass1Visited} p1b-rej={pass1BitmapReject} p1r-rej={pass1RayReject}";
+                return obstacleRegion.CellCenterToWorld(mapCenter, x, y);
+            }
+
+            Enqueue(x + 1, y);
+            Enqueue(x - 1, y);
+            Enqueue(x, y + 1);
+            Enqueue(x, y - 1);
+        }
+
+        Array.Clear(visited, 0, visited.Length);
+        q.Clear();
+        if (!SeedFromNearestPassable(out var seededPass2))
+        {
+            debug = $"seed2-failed start=({sx},{sy}) pass1-visited={pass1Visited} b-reject={pass1BitmapReject} r-reject={pass1RayReject}";
+            return null;
+        }
+
+        // in case the bitmap is shit, just do raycast only
+        while (q.Count > 0)
+        {
+            var (x, y) = q.Dequeue();
+            ++pass2Visited;
+            var wpos = obstacleRegion.CellCenterToWorld(mapCenter, x, y);
+            var rayOK = HasLineOfSightFrom(wpos, player.PosRot.Y, target);
+            if (!rayOK)
+                ++pass2RayReject;
+            if ((x != sx || y != sy) && rayOK)
+            {
+                debug = $"ok-pass2 start=({sx},{sy}) seed1={seededPass1} p1v={pass1Visited} p1b-rej={pass1BitmapReject} p1r-rej={pass1RayReject} seed2={seededPass2} p2v={pass2Visited} p2r-rej={pass2RayReject}";
+                return obstacleRegion.CellCenterToWorld(mapCenter, x, y);
+            }
+
+            Enqueue(x + 1, y);
+            Enqueue(x - 1, y);
+            Enqueue(x, y + 1);
+            Enqueue(x, y - 1);
+        }
+
+        debug = $"null start=({sx},{sy}) passable={Passable(sx, sy)} start-ray={startRayLoS} start-bitmap={startBitmapLoS} seed1={seededPass1} p1v={pass1Visited} p1b-rej={pass1BitmapReject} p1r-rej={pass1RayReject} seed2={seededPass2} p2v={pass2Visited} p2r-rej={pass2RayReject}";
+        return null;
+    }
+
+    // FIXME: shouldn't be using ffi stuff in this module
+    private static bool HasLineOfSightFrom(WPos from, float sourceY, Actor target)
+    {
+        var sourcePos = from.ToVec3(sourceY + 2);
+        var targetPos = target.Position.ToVec3(target.PosRot.Y + 2);
+        var offset = targetPos - sourcePos;
+        var maxDist = offset.Length();
+        if (maxDist <= 1e-3f)
+            return true;
+        var direction = offset / maxDist;
+        return !BGCollisionModule.RaycastMaterialFilter(sourcePos, direction, out _, maxDist);
     }
 }

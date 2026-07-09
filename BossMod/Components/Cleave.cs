@@ -18,7 +18,9 @@ public class Cleave(BossModule module, uint aid, AOEShape shape, uint[]? enemyOI
         var origins = OriginsAndTargets();
         var count = origins.Count;
         if (count == 0)
+        {
             return;
+        }
 
         for (var i = 0; i < count; ++i)
         {
@@ -36,15 +38,21 @@ public class Cleave(BossModule module, uint aid, AOEShape shape, uint[]? enemyOI
         var origins = OriginsAndTargets();
         var count = origins.Count;
         if (count == 0)
+        {
             return;
+        }
 
         for (var i = 0; i < count; ++i)
         {
             var e = origins[i];
             if (actor != e.target)
+            {
                 hints.AddForbiddenZone(Shape, e.origin.Position.Quantized(), e.angle, NextExpected);
+            }
             else
+            {
                 AddTargetSpecificHints(ref actor, ref e.origin, ref hints);
+            }
         }
     }
 
@@ -56,7 +64,10 @@ public class Cleave(BossModule module, uint aid, AOEShape shape, uint[]? enemyOI
         {
             var a = raid[i];
             if (a == actor)
+            {
                 continue;
+            }
+
             switch (Shape)
             {
                 case AOEShapeCircle circle:
@@ -88,18 +99,24 @@ public class Cleave(BossModule module, uint aid, AOEShape shape, uint[]? enemyOI
     {
         var enemies = Module.Enemies(EnemyOID);
         var count = enemies.Count;
-        List<(Actor, Actor, Angle)> origins = new(count);
+        List<(Actor, Actor, Angle)> origins = [with(count)];
         for (var i = 0; i < count; ++i)
         {
             var enemy = enemies[i];
             if (enemy.IsDead)
+            {
                 continue;
+            }
 
             if (!ActiveForUntargetable && !enemy.IsTargetable)
+            {
                 continue;
+            }
 
             if (!ActiveWhileCasting && enemy.CastInfo != null)
+            {
                 continue;
+            }
 
             var target = WorldState.Actors.Find(enemy.TargetID);
             if (target != null)

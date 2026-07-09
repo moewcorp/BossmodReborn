@@ -593,17 +593,26 @@ sealed class EsotericFinisher : Components.GenericBaitAway
     }
 }
 
-sealed class Replication1CloneRelativeGuidance : BossComponent
+sealed class Replication1Guidance : BossComponent
 {
     const float InitialRadius = 7.5f;
     const float PairOffset = 2.25f;
     const float FireCenterOffset = 1.5f;
     const float NearDarkOffset = 1.0f;
+    // Spread-marker radius (matches UniformStackSpread(module, 5, 5) used by the bait components).
+    const float StaticSpreadRadius = 5f;
+
+    const float StaticWaymarkRadius = 13.65f;
 
     readonly Replication1SecondBait _bait;
     readonly PartyRolesConfig _prc = Service.Config.Get<PartyRolesConfig>();
     readonly PartyRolesConfig.Assignment[] _assignments;
     readonly M12S2LindwurmConfig.Replication1Effective _rep1;
+
+    // Cached on first non-null hit so we don't pay FindComponent's type-lookup every frame. The two components are
+    // activated AFTER this one, so the lookup has to be lazy rather than done in the constructor.
+    WingedScourge? _wingedScourge;
+    WingedScourgeSecond? _wingedScourgeSecond;
 
     WPos Center => Module.Center;
 
@@ -631,7 +640,13 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     static readonly int[] OrderNESW = [0, 1, 2, 3];
     static readonly int[] OrderWSEN = [3, 2, 1, 0];
 
-    public Replication1CloneRelativeGuidance(BossModule module) : base(module)
+    // Static strategy offsets in the new-north frame (X = rel-East, Z = rel-North).
+    static readonly WDir StaticH2R2Fire = StaticWaymarkRadius * new WDir(1f, 1f).Normalized(); // rel-NE flank (right) = A@4
+    static readonly WDir StaticH1R1Fire = StaticWaymarkRadius * new WDir(-1f, 1f).Normalized(); // rel-NW flank (left)  = D@4
+    static readonly WDir StaticRangedDark = StaticWaymarkRadius * new WDir(-1f, -1f).Normalized(); // rel-SW behind-left  = C@4
+    static readonly WDir StaticMeleeFire = new(0f, 1.5f); // baits fire: stack on the center box's north line
+
+    public Replication1Guidance(BossModule module) : base(module)
     {
         _bait = module.FindComponent<Replication1SecondBait>()!;
         _assignments = _prc.AssignmentsPerSlot(Module.WorldState.Party);
@@ -658,6 +673,16 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     // ------------------------------------------------------------
 
     WPos InitialPosition(PartyRolesConfig.Assignment a)
+    {
+        if (_rep1.IsStatic)
+            return StaticInitialPosition(a);
+        else
+        {
+            return CloneRelativeOrDNInitialPosition(a);
+        }
+    }
+
+    WPos CloneRelativeOrDNInitialPosition(PartyRolesConfig.Assignment a)
     {
         var quadrant = a switch
         {
@@ -693,6 +718,34 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
         };
 
         return anchor + sign * PairOffset * perp;
+    }
+
+    // Static preposition, expressed with angles like CloneRelativeOrDNInitialPosition.
+    // Fire stacks group up:  Melee M1/M2 share an SE point, Tanks MT/OT share an NW point (single shared point each).
+    // Dark spreads fan out:  Ranged R1/R2 around NE, Healers H1/H2 around SW, pushed out to the edge of
+    //                        their spread marker (InitialRadius + StaticSpreadRadius) and split by PairOffset.
+    WPos StaticInitialPosition(PartyRolesConfig.Assignment assignment)
+    {
+        var edgeRadius = InitialRadius + StaticSpreadRadius; // 12.5
+
+        var (angleDeg, radius, splitSign) = assignment switch
+        {
+            PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2 => (45f, InitialRadius, 0f),    // SE stack
+            PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT => (-135f, InitialRadius, 0f),  // NW stack
+            PartyRolesConfig.Assignment.R1 => (135f, edgeRadius, +1f),                                       // NE
+            PartyRolesConfig.Assignment.R2 => (135f, edgeRadius, -1f),
+            PartyRolesConfig.Assignment.H1 => (-45f, edgeRadius, -1f),                                       // SW
+            PartyRolesConfig.Assignment.H2 => (-45f, edgeRadius, +1f),
+            _ => (0f, InitialRadius, 0f)
+        };
+
+        var dir = angleDeg.Degrees().ToDirection();
+        var anchor = Center + radius * dir;
+        if (splitSign == 0f)
+            return anchor;
+
+        var perp = new WDir(-dir.Z, dir.X);
+        return anchor + splitSign * PairOffset * perp;
     }
 
     // ------------------------------------------------------------
@@ -835,6 +888,12 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
                              out var nearDark, out var farDark))
             return null;
 
+        return _rep1.IsStatic ? StaticFinalPosition(slot, actor, farDark, nearDark)
+                              : CloneRelativeOrDNFinalPosition(slot, actor, nearFire, farFire, nearDark, farDark);
+    }
+
+    WPos? CloneRelativeOrDNFinalPosition(int slot, Actor actor, WPos nearFire, WPos farFire, WPos nearDark, WPos farDark)
+    {
         var assign = _assignments[slot];
         var mech = BaitType(actor);
 
@@ -898,6 +957,7 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
         }
         else
         {
+            // Clone Relative (Static handled earlier)
             targetDark = support ? ccwDark : cwDark;
         }
 
@@ -911,6 +971,150 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     }
 
     // ------------------------------------------------------------
+    // STATIC STRATEGY
+    // ------------------------------------------------------------
+    //
+    // The dark clone closest to the wall (farDark) defines a "new North".
+    // All 8 safe spots are expressed as offsets in that rotated local frame,
+    // where +Z = relative-North (toward farDark) and +X = relative-East (90° clockwise).
+    //
+    // Ranged/healer:
+    //   - Dark (H1/R1 & H2/R2)  → behind-left cardinal waymark (rel-SW). new north @4 → C, @1 → D, ...
+    //   - Fire H1/R1            → left  flank cardinal waymark (rel-NW). new north @4 → D
+    //   - Fire H2/R2            → right flank cardinal waymark (rel-NE). new north @4 → A
+    //
+    // Melee/tank:
+    //   - Fire debuff (baits dark) → on the boss's edge in melee range, split MT/M1 left (rel-West),
+    //                                OT/M2 right (rel-East), away from the stacked fire-baiters.
+    //   - Dark debuff (baits fire) → stack both together on the center box's north line.
+
+    bool BuildNewNorthBasis(WPos farDark, out WDir north, out WDir east)
+    {
+        var v = farDark - Center;
+        var lenSq = v.LengthSq();
+        if (lenSq < 0.0001f)
+        {
+            north = default;
+            east = default;
+            return false;
+        }
+        north = v / MathF.Sqrt(lenSq);
+        east = new WDir(-north.Z, north.X); // 90° clockwise
+        return true;
+    }
+
+    static bool IsMeleeOrTank(PartyRolesConfig.Assignment assignment)
+        => assignment is PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT
+                      or PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2;
+
+    WPos? StaticFinalPosition(int slot, Actor actor, WPos farDark, WPos nearDark)
+    {
+        if (!BuildNewNorthBasis(farDark, out var north, out var east))
+            return null;
+
+        var assignment = _assignments[slot];
+        var baitsDark = BaitType(actor) == Replication1SecondBait.Assignment.Dark;
+
+        // Bait-dark melee/tank hug the non-new-north dark clone, just off it on their side, in the cone's safe gap.
+        if (baitsDark && IsMeleeOrTank(assignment))
+        {
+            var side = assignment is PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.M1 ? -1f : 1f;
+            return MeleeBaitDarkSpot(nearDark, farDark, side, slot, actor);
+        }
+
+        var localOffset = (assignment, baitsDark) switch
+        {
+            // Dark baits — ranged/healers share the behind-left cardinal waymark
+            (PartyRolesConfig.Assignment.H1, false) or (PartyRolesConfig.Assignment.R1, false) or
+            (PartyRolesConfig.Assignment.H2, false) or (PartyRolesConfig.Assignment.R2, false) => StaticRangedDark,
+
+            // Fire ranged/healer flanks
+            (PartyRolesConfig.Assignment.H1, true) or (PartyRolesConfig.Assignment.R1, true) => StaticH1R1Fire,
+            (PartyRolesConfig.Assignment.H2, true) or (PartyRolesConfig.Assignment.R2, true) => StaticH2R2Fire,
+
+            // Melee/tank baiting fire (dark debuff): stack both together on the center box's north line
+            (PartyRolesConfig.Assignment.MT, false) or (PartyRolesConfig.Assignment.M1, false) or
+            (PartyRolesConfig.Assignment.OT, false) or (PartyRolesConfig.Assignment.M2, false) => StaticMeleeFire,
+
+            _ => default
+        };
+
+        // Ranged/healers stand EXACTLY on their cardinal waymark (A/C/D rotated to new north) — never nudged
+        // off it for cones: the player body doesn't trigger the cone, only their AoE circle would.
+        return Center + localOffset.X * east + localOffset.Z * north;
+    }
+
+    // Edge melee bait-dark spot: stand at nearDark, facing new north (farDark) as 0°, then head out 45° to the
+    // side — left (CCW) for MT/M1 (side -1), right (CW) for OT/M2 (side +1). If that point is inside a cone,
+    // move further out and rotate a bit further outward until it lands in the cone's safe gap.
+    WPos MeleeBaitDarkSpot(WPos nearDark, WPos farDark, float side, int slot, Actor actor)
+    {
+        var forwardAngle = (farDark - nearDark).ToAngle(); // 0° = facing new north
+
+        const float coneCushion = 0.5f; // only the player point must be outside the cone; the bait circle may clip it
+        const float minRadius = 5f;     // hug the dark clone — only move out if the close spot is in a cone
+        const float maxRadius = 12f;
+        const float rStep = 0.5f;
+        const float angStep = 5f;
+        const int angleStepCount = 11;  // angles 0°, 5°, ..., 50° beyond the base 45°
+
+        // Precompute one direction per outward-rotation step — these depend on 'extra' only, not on 'r',
+        // so we hoist the sin/cos work out of the radius loop.
+        Span<WDir> directions = stackalloc WDir[angleStepCount];
+        for (var k = 0; k < angleStepCount; ++k)
+            directions[k] = (forwardAngle + (-side * (45f + k * angStep)).Degrees()).ToDirection();
+
+        var coneFields = ActiveConeFields(slot, actor);
+        // No active cones - the base spot is always safe; skip the search entirely.
+        if (coneFields.Length == 0)
+            return nearDark + minRadius * directions[0];
+
+        for (var r = minRadius; r <= maxRadius; r += rStep)
+            for (var k = 0; k < angleStepCount; ++k)
+            {
+                var candidate = nearDark + r * directions[k];
+                if (IsClearOf(coneFields, candidate, coneCushion))
+                    return candidate;
+            }
+
+        return nearDark + minRadius * directions[0]; // fallback: base 45° ray at the closest radius
+    }
+
+    // Signed-distance field per active cone, gathered from both WingedScourge components. Negative = inside.
+    // Both components are activated after this one, so the lookups are lazy — '??=' keeps probing until each
+    // component exists, then sticks with the cached reference for the rest of the mechanic.
+    ShapeDistance[] ActiveConeFields(int slot, Actor actor)
+    {
+        _wingedScourge ??= Module.FindComponent<WingedScourge>();
+        _wingedScourgeSecond ??= Module.FindComponent<WingedScourgeSecond>();
+
+        var primaryCones = _wingedScourge is { } primary ? primary.ActiveAOEs(slot, actor) : default;
+        var secondaryCones = _wingedScourgeSecond is { } secondary ? secondary.ActiveAOEs(slot, actor) : default;
+        var total = primaryCones.Length + secondaryCones.Length;
+        if (total == 0)
+            return [];
+
+        var fields = new ShapeDistance[total];
+        var next = 0;
+        foreach (ref readonly var cone in primaryCones)
+            fields[next++] = cone.Shape.Distance(cone.Origin, cone.Rotation);
+        foreach (ref readonly var cone in secondaryCones)
+            fields[next++] = cone.Shape.Distance(cone.Origin, cone.Rotation);
+        return fields;
+    }
+
+    // True when 'point' stays at least 'cushion' units outside every shape in 'fields' (cones and/or circles),
+    // i.e. it's clear of all those hazards with that safety margin. False if it's inside, or within the
+    // cushion of, any of them.
+    static bool IsClearOf(ShapeDistance[] fields, WPos point, float cushion)
+    {
+        for (var i = 0; i < fields.Length; ++i)
+            if (fields[i].Distance(point) < cushion)
+                return false;
+        return true;
+    }
+
+    // ------------------------------------------------------------
     // DRAW
     // ------------------------------------------------------------
 
@@ -918,6 +1122,10 @@ sealed class Replication1CloneRelativeGuidance : BossComponent
     {
         if (_assignments.Length != 8)
             return;
+
+        // Mark the wall-dark clone as "new North" for Static strategy.
+        if (_rep1.IsStatic && TryGetFormation(out _, out _, out _, out var farDark))
+            Arena.AddCircle(farDark, 1.25f, Colors.Other1);
 
         var pos = DebuffsAssigned()
             ? FinalPosition(pcSlot, pc)

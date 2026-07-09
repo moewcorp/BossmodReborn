@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace BossMod.Autorotation;
 
@@ -137,6 +137,8 @@ public sealed record class RotationModuleDefinition(string DisplayName, string D
 
                     var trackCfg = new StrategyConfigTrack(inner, trackInfo.InternalName ?? field.Name, trackInfo.DisplayName ?? field.Name, trackInfo.UiPriority, renderer);
 
+                    trackCfg.AssociatedActions.AddRange(trackInfo.ActionIDs);
+
                     foreach (var variantName in inner.GetEnumNames())
                     {
                         var variantField = inner.GetField(variantName)!;
@@ -166,7 +168,7 @@ public sealed record class RotationModuleDefinition(string DisplayName, string D
                     continue;
                 }
 
-                if (inner == typeof(int))
+                if (inner == typeof(long))
                 {
                     var attr = field.GetCustomAttribute<NumberAttribute>() ?? new();
                     Configs.Add(new StrategyConfigInt(field.Name, attr.DisplayName, (long)attr.MinValue, (long)attr.MaxValue, attr.UiPriority, attr.Renderer ?? typeof(IntRenderer), attr.Slider, attr.Speed));
@@ -197,6 +199,8 @@ public abstract class RotationModule(RotationModuleManager manager, Actor player
 
     // the main entry point of the module - given a set of strategy values, fill the queue with a set of actions to execute
     public abstract void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving);
+
+    public virtual bool WantsLoSFix => false;
 
     public virtual string DescribeState() => "";
 

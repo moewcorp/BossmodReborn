@@ -54,7 +54,9 @@ public sealed class PartyState
         {
             var slot = FindSlot(instanceID);
             if (slot >= 0)
+            {
                 _actors[slot] = actor;
+            }
         }
         actorState.Added.Subscribe(actor => assign(actor.InstanceID, actor));
         actorState.Removed.Subscribe(actor => assign(actor.InstanceID, null));
@@ -188,7 +190,7 @@ public sealed class PartyState
     public List<WorldState.Operation> CompareToInitial()
     {
         var length = Members.Length;
-        List<WorldState.Operation> ops = new(length + 1);
+        List<WorldState.Operation> ops = [with(length + 1)];
         for (var i = 0; i < length; ++i)
         {
             ref var m = ref Members[i];

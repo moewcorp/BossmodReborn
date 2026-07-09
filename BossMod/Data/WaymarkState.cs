@@ -82,11 +82,17 @@ public sealed class WaymarkState
 
     public List<WorldState.Operation> CompareToInitial()
     {
-        List<WorldState.Operation> waymarks = new(16);
+        List<WorldState.Operation> waymarks = [with(16)];
         foreach (var i in _setMarkers.SetBits())
+        {
             waymarks.Add(new OpWaymarkChange((Waymark)i, _positions[i]));
+        }
+
         foreach (var i in _setSigns.SetBits())
+        {
             waymarks.Add(new OpSignChange((Sign)i, _targets[i]));
+        }
+
         return waymarks;
     }
 
@@ -106,9 +112,13 @@ public sealed class WaymarkState
         public override void Write(ReplayRecorder.Output output)
         {
             if (Pos != null)
+            {
                 output.EmitFourCC("WAY+"u8).Emit((byte)ID).Emit(Pos.Value);
+            }
             else
+            {
                 output.EmitFourCC("WAY-"u8).Emit((byte)ID);
+            }
         }
     }
 
@@ -126,9 +136,13 @@ public sealed class WaymarkState
         public override void Write(ReplayRecorder.Output output)
         {
             if (Target is not (0ul or 0xE0000000))
+            {
                 output.EmitFourCC("SGN+"u8).Emit((byte)ID).EmitActor(Target);
+            }
             else
+            {
                 output.EmitFourCC("SGN-"u8).Emit((byte)ID);
+            }
         }
     }
 }

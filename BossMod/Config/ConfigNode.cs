@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Reflection;
 
 namespace BossMod;
 
@@ -68,7 +68,9 @@ public abstract class ConfigNode
     protected static FieldInfo[] GetSerializableFields(Type t)
     {
         if (_fieldsCache.TryGetValue(t, out var cachedFields))
+        {
             return cachedFields;
+        }
 
         var fields = t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var len = fields.Length;
@@ -98,17 +100,32 @@ public abstract class ConfigNode
             if (field != null)
             {
                 if (field.IsStatic)
-                    continue;
-                if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null)
-                    continue;
-
-                var value = jfield.Value.Deserialize(field.FieldType, ser);
-                if (value != null)
                 {
-                    field.SetValue(this, value);
+                    continue;
+                }
+
+                if (field.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var value = jfield.Value.Deserialize(field.FieldType, ser);
+                    if (value != null)
+                    {
+                        field.SetValue(this, value);
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    agg.Add(ex);
                 }
             }
         }
+
+        if (agg.Count > 0)
+            throw new AggregateException(agg);
     }
 
     // serialize node to json;

@@ -23,13 +23,15 @@ public sealed class ActorState : IEnumerable<Actor>
         protected override void Exec(WorldState ws)
         {
             if (ws.Actors.Actors.TryGetValue(InstanceID, out var actor))
+            {
                 ExecActor(ws, actor);
+            }
         }
     }
 
     public List<Operation> CompareToInitial()
     {
-        List<Operation> ops = new(Actors.Count * 5);
+        List<Operation> ops = [with(Actors.Count * 5)];
         foreach (var act in Actors.Values)
         {
             var instanceID = act.InstanceID;
@@ -41,6 +43,10 @@ public sealed class ActorState : IEnumerable<Actor>
             if (act.InCombat)
             {
                 ops.Add(new OpCombat(instanceID, true));
+            }
+            if (act.IsOpenTreasure)
+            {
+                ops.Add(new OpEventOpenTreasure(act.InstanceID));
             }
             if (act.ModelState != default)
             {
@@ -221,7 +227,10 @@ public sealed class ActorState : IEnumerable<Actor>
             var targetID = t.ID;
             var target = targetID == source.InstanceID ? source : Find(targetID); // most common case by far is self-target
             if (target == null)
+            {
                 continue;
+            }
+
             var effects = t.Effects.ValidEffects();
             var len = effects.Length;
             for (var j = 0; j < len; ++j)
@@ -590,10 +599,15 @@ public sealed class ActorState : IEnumerable<Actor>
         protected override void ExecActor(WorldState ws, Actor actor)
         {
             if (actor.Tether.Target != default)
+            {
                 ws.Actors.Untethered.Fire(actor);
+            }
+
             actor.Tether = Value;
             if (Value.Target != default)
+            {
                 ws.Actors.Tethered.Fire(actor);
+            }
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("TETH"u8).EmitActor(InstanceID).Emit(Value.ID).EmitActor(Value.Target);
     }
@@ -608,17 +622,26 @@ public sealed class ActorState : IEnumerable<Actor>
         {
             var wsactors = ws.Actors;
             if (actor.CastInfo != null)
+            {
                 wsactors.CastFinished.Fire(actor);
+            }
+
             actor.CastInfo = Value?.Clone();
             if (Value != null)
+            {
                 wsactors.CastStarted.Fire(actor);
+            }
         }
         public override void Write(ReplayRecorder.Output output)
         {
             if (Value != null)
+            {
                 output.EmitFourCC("CST+"u8).EmitActor(InstanceID).Emit(Value.Action).EmitActor(Value.TargetID).Emit(Value.Location).EmitFloatPair(Value.ElapsedTime, Value.TotalTime).Emit(Value.Interruptible).Emit(Value.Rotation);
+            }
             else
+            {
                 output.EmitFourCC("CST-"u8).EmitActor(InstanceID);
+            }
         }
     }
 
@@ -632,7 +655,10 @@ public sealed class ActorState : IEnumerable<Actor>
         {
             var wsactors = ws.Actors;
             if (actor.CastInfo?.Action == Value.Action)
+            {
                 actor.CastInfo.EventHappened = true;
+            }
+
             wsactors.AddPendingEffects(actor, Value, ws.CurrentTime);
             wsactors.CastEvent.Fire(actor, Value);
         }
@@ -726,7 +752,9 @@ public sealed class ActorState : IEnumerable<Actor>
             {
                 ws.Actors.StatusLose.Fire(actor, Index);
                 if (prev.ID == StatusIDDirectionalDisregard)
+                {
                     actor.Omnidirectional = false;
+                }
             }
             actor.Statuses[Index] = v;
             var statuses = CollectionsMarshal.AsSpan(actor.PendingStatuses);
@@ -916,7 +944,11 @@ public sealed class ActorState : IEnumerable<Actor>
     public Event<Actor> EventOpenTreasure = new();
     public sealed class OpEventOpenTreasure(ulong instanceID) : Operation(instanceID)
     {
-        protected override void ExecActor(WorldState ws, Actor actor) => ws.Actors.EventOpenTreasure.Fire(actor);
+        protected override void ExecActor(WorldState ws, Actor actor)
+        {
+            actor.IsOpenTreasure = true;
+            ws.Actors.EventOpenTreasure.Fire(actor);
+        }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("OPNT"u8).EmitActor(InstanceID);
     }
 }

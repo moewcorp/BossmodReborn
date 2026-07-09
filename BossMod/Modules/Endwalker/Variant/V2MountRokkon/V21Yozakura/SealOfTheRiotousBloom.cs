@@ -3,8 +3,8 @@ namespace BossMod.Endwalker.VariantCriterion.V2MountRokkon.V21Yozakura;
 sealed class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(module)
 {
     private enum Element { Fire, Water, Thunder, Wind }
-    private readonly List<AOEInstance> _aoes = new(10);
-    private readonly List<Element> elements = new(4);
+    private readonly List<AOEInstance> _aoes = [with(10)];
+    private readonly List<Element> elements = [with(4)];
     private static readonly AOEShapeCircle circle = new(9f);
     private static readonly AOEShapeDonut donut = new(5f, 60f);
     private static readonly AOEShapeCone cone = new(70f, 22.5f.Degrees());
@@ -80,7 +80,7 @@ sealed class SealOfRiotousBloom(BossModule module) : Components.GenericAOEs(modu
         if (_aoes.Count == 5 && eCount != 0)
         {
             var act = WorldState.FutureTime(16.3d);
-            for (var i = 0; i < eCount; ++i)
+            for (var i = eCount - 1; i >= 0; --i)
             {
                 ActivateAOE(elements[i], act);
             }

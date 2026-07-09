@@ -1,4 +1,5 @@
 ﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -37,16 +38,17 @@ public sealed class Service
     public static void Log(string msg) => LogHandlerDebug?.Invoke(msg);
     public static void LogVerbose(string msg) => LogHandlerVerbose?.Invoke(msg);
 
-    public static Lumina.GameData? LuminaGameData;
-    public static Lumina.Excel.ExcelSheet<T>? LuminaSheet<T>() where T : struct, Lumina.Excel.IExcelRow<T> => LuminaGameData?.GetExcelSheet<T>(Lumina.Data.Language.English);
+    public static Lumina.GameData LuminaGameData = null!;
+    public static Lumina.Excel.ExcelSheet<T>? LuminaSheet<T>() where T : struct, Lumina.Excel.IExcelRow<T> => LuminaGameData.GetExcelSheet<T>(Lumina.Data.Language.English);
     public static T? LuminaRow<T>(uint row) where T : struct, Lumina.Excel.IExcelRow<T> => LuminaSheet<T>()?.GetRowOrDefault(row);
     public static ConcurrentDictionary<Lumina.Text.ReadOnly.ReadOnlySeString, Lumina.Text.ReadOnly.ReadOnlySeString> LuminaRSV = []; // TODO: reconsider
 
     public static WindowSystem? WindowSystem;
 
-    // TODO: remove this and use UiBuilder.IconFont once we switch to dalamock
-    public static ImFontPtr IconFont;
+    public static ImFontPtr IconFont => UiBuilder.IconFont;
 #pragma warning restore CA2211
 
     public static readonly ConfigRoot Config = new();
+
+    public static BossModuleMainWindow? BossModWindow;
 }

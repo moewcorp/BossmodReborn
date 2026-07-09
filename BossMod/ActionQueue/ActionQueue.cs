@@ -8,7 +8,7 @@
 // - repeat the process until no more actions can be found
 public sealed class ActionQueue
 {
-    public readonly struct Entry(ActionID action, Actor? target, float priority, float expire, float delay, float castTime, Vector3 targetPos, Angle? facingAngle, bool manual)
+    public readonly struct Entry(ActionID action, Actor? target, float priority, float expire, float delay, float castTime, Vector3 targetPos, Angle? facingAngle, bool manual, bool force)
     {
         public readonly ActionID Action = action;
         public readonly Actor? Target = target;
@@ -19,6 +19,7 @@ public sealed class ActionQueue
         public readonly Vector3 TargetPos = targetPos;
         public readonly Angle? FacingAngle = facingAngle;
         public readonly bool Manual = manual;
+        public readonly bool Force = force;
     }
 
     // reference priority guidelines
@@ -49,7 +50,7 @@ public sealed class ActionQueue
     public readonly List<Entry> Entries = [];
 
     public void Clear() => Entries.Clear();
-    public void Push(in ActionID action, Actor? target, float priority, float expire = float.MaxValue, float delay = default, float castTime = default, Vector3 targetPos = default, Angle? facingAngle = null, bool manual = false) => Entries.Add(new(action, target, priority, expire, delay, castTime, targetPos, facingAngle, manual));
+    public void Push(in ActionID action, Actor? target, float priority, float expire = float.MaxValue, float delay = default, float castTime = default, Vector3 targetPos = default, Angle? facingAngle = null, bool manual = false, bool forced = false) => Entries.Add(new(action, target, priority, expire, delay, castTime, targetPos, facingAngle, manual, forced));
 
     public Entry FindBest(WorldState ws, Actor player, ReadOnlySpan<Cooldown> cooldowns, float animationLock, AIHints hints, float instantAnimLockDelay, bool allowDismount)
     {
@@ -62,7 +63,9 @@ public sealed class ActionQueue
         {
             ref var candidate = ref entries[i];
             if (candidate.Priority < Priority.Minimal)
+            {
                 break; // this and further actions are something we don't really want to execute (prio < minimal)
+            }
 
             var def = ActionDefinitions.Instance[candidate.Action];
             if (def == null)
@@ -71,17 +74,23 @@ public sealed class ActionQueue
                 continue;
             }
             if (!def.IsUnlocked(ws, player))
+            {
                 continue;
+            }
 
             if (candidate.CastTime > hints.MaxCastTime)
+            {
                 continue; // this cast can't be finished in time, look for something else
+            }
 
             var startDelay = Math.Max(Math.Max(candidate.Delay, animationLock), def.ReadyIn(cooldowns, ws.Client.DutyActions));
 
             // TODO: adjusted cast time!
             var duration = def.CastTime > 0 ? def.CastTime + def.CastAnimLock : def.InstantAnimLock + instantAnimLockDelay;
             if (startDelay + duration > deadline)
+            {
                 continue; // this action can't be done in time for higher-priority action, skip
+            }
 
             // we can use this action before deadline it seems
             if (startDelay > 0.05f)
@@ -101,33 +110,45 @@ public sealed class ActionQueue
 
         // double check that best candidate can be executed before we return it; it may have been promoted to best if a better action was interrupted for example
         if (CanExecute(ref best, ActionDefinitions.Instance[best.Action], ws, player, hints, allowDismount))
+        {
             return best;
+        }
 
         return default;
     }
 
     private bool CanExecute(ref Entry entry, ActionDefinition? def, WorldState ws, Actor player, AIHints hints, bool allowDismount)
     {
-        if (entry.Priority >= Priority.ManualEmergency || def == null)
+        if (entry.Priority >= Priority.ManualEmergency || entry.Force || def == null)
+        {
             return true; // don't make any assumptions
+        }
 
         if (!allowDismount && AutoDismountTweak.IsMountPreventingAction(ws, def.ID))
+        {
             return false;
+        }
 
         if (def.ID.Type == ActionType.Item && ws.Client.GetInventoryItemQuantity(def.ID.ID) == 0)
+        {
             return false;
+        }
 
         var range = def.Range;
         if (range > 0)
         {
             if ((RDM.AID)def.ID.ID is RDM.AID.Riposte or RDM.AID.Zwerchhau or RDM.AID.Redoublement or RDM.AID.EnchantedRiposte or RDM.AID.EnchantedZwerchhau or RDM.AID.EnchantedRedoublement && player.FindStatus(RDM.SID.Manafication) != null)
+            {
                 range = 25;
+            }
 
             var to = entry.Target?.Position ?? new(entry.TargetPos.XZ());
             var distSq = (to - player.Position).LengthSq();
             var effRange = range + player.HitboxRadius + (entry.Target?.HitboxRadius ?? default);
             if (distSq > effRange * effRange)
+            {
                 return false;
+            }
         }
 
         return def.ForbidExecute == null || !def.ForbidExecute.Invoke(ws, player, entry, hints);

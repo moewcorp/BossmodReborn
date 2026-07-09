@@ -235,14 +235,17 @@ sealed class AIManagementWindow : UIWindow
         var presets = _manager.Autorot.Database.Presets.AllPresets;
 
         var count = presets.Count;
-        List<string> presetNames = new(count + 1);
+        List<string> presetNames = [with(count + 1)];
         for (var i = 0; i < count; ++i)
         {
             presetNames.Add(presets[i].Name);
         }
 
         if (aipreset != null)
+        {
             presetNames.Add("Deactivate");
+        }
+
         var countnames = presetNames.Count;
         var selectedIndex = presetNames.IndexOf(aipreset ?? "");
 
@@ -262,7 +265,9 @@ sealed class AIManagementWindow : UIWindow
             }
         }
         if (configModified)
+        {
             _config.Modified.Fire();
+        }
     }
 
     public override void OnClose() => SetVisible(false);

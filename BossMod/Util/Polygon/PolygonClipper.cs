@@ -24,7 +24,7 @@ public sealed class PolygonClipper
         public void AddContour(ReadOnlySpan<WDir> contour, bool isOpen = false)
         {
             var count = contour.Length;
-            Path64 path = new(count);
+            Path64 path = [with(count)];
             for (var i = 0; i < count; ++i)
             {
                 path.Add(ConvertPoint(contour[i]));
@@ -88,13 +88,17 @@ public sealed class PolygonClipper
         {
             var exterior = parent[i];
             if (exterior.Polygon == null || exterior.Polygon.Count == 0)
+            {
                 continue;
+            }
 
             var extPolygon = exterior.Polygon;
             var countExt = exterior.Polygon.Count;
             var polygonPoints = new List<WDir>(countExt);
             for (var j = 0; j < countExt; ++j)
+            {
                 polygonPoints.Add(ConvertPoint(extPolygon[j]));
+            }
 
             var poly = new RelPolygonWithHoles(polygonPoints);
             result.Parts.Add(poly);
@@ -103,12 +107,17 @@ public sealed class PolygonClipper
             {
                 var interior = exterior[j];
                 if (interior.Polygon == null || interior.Polygon.Count == 0)
+                {
                     continue;
+                }
+
                 var holePoints = new List<WDir>(interior.Polygon.Count);
                 var intPolygon = interior.Polygon;
                 var countInt = intPolygon.Count;
                 for (var k = 0; k < countInt; ++k)
+                {
                     holePoints.Add(ConvertPoint(intPolygon[k]));
+                }
 
                 poly.AddHole(holePoints);
                 BuildResult(result, interior);
