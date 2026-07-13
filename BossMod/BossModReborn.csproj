@@ -44,6 +44,11 @@
     <DalamudLibPath>$(appdata)\XIVLauncherCN\addon\Hooks\dev\</DalamudLibPath>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
+    
+ <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Osx)))'">
+   <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>  
+   <EnableWindowsTargeting>true</EnableWindowsTargeting>  
+ </PropertyGroup>   
 
   <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
     <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>
