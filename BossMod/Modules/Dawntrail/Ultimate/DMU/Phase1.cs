@@ -40,7 +40,7 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
         {
             NumCasts++;
             secondTB = true;
-            activation = WorldState.FutureTime(0.3f); // TODO random guess find the actual timing
+            activation = WorldState.FutureTime(0.3f);
         }
 
         if (spell.Action.ID == (uint)AID.RevoltingRuinIII1)
@@ -226,7 +226,6 @@ class WaveCannon(BossModule module) : Components.BaitAwayEveryone(module,
     }
 }
 
-// TODO add priority system
 class WaveCannonTowers(BossModule module) : Components.CastTowers(module, (uint)AID.TowerExplosion, 4)
 {
     private readonly DateTime[] magicVulnerability = new DateTime[PartyState.MaxPartySize];
@@ -715,9 +714,6 @@ class GravitationalWave(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-// TODO make it so it leaves behind a puddle of the AOE
-// TODO add support to allow different points of views for different players in the reply
-//      Not needed as it only helps with the development and testing, just need to expand the variables to list and store all players debuffs instead
 class TeleTrouncing(BossModule module) : BossComponent(module) {
     public int NumCasts = 0;
     private (Direction direction, DateTime activation)? Debuff1;

@@ -107,8 +107,8 @@ public enum AID : uint {
     Spelldriver = 47808, // Helper->player, no cast, range 5 circle
     Spellwave = 47810, // Helper->self, no cast, range 40 ?-degree cone
 
-    PastsEnd = 47827, // BossP2->self, 6.4s cast, single-target
-    FuturesEnd = 47826, // BossP2->self, 6.4s cast, single-target
+    PastsEndCast = 47827, // BossP2->self, 6.4s cast, single-target
+    FuturesEndCast = 47826, // BossP2->self, 6.4s cast, single-target
     FuturesEndSpread = 47830, // BossP2->players, no cast, range 5 circle
     FuturesEndSpread1 = 47832, // 4C39->players, no cast, range 5 circle
     PastsEndSpread = 47831, // BossP2->player, no cast, range 5 circle
