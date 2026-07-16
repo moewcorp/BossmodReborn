@@ -214,13 +214,23 @@ public class PartyRolesConfig : ConfigNode
         var playerEntry = members[playerIdx];
 
         // ranged player wanting a melee slot is only legal when the existing algorithm would have promoted someone (3+ ranged in party)
+        var rangedCount = 0;
+        var memberCount = members.Count;
+        for (var i = 0; i < memberCount; ++i)
+        {
+            if (members[i].role == Role.Ranged)
+                ++rangedCount;
+        }
+
         var forceMeleePromotion = playerEntry.role == Role.Ranged
             && (pref == Assignment.M1 || pref == Assignment.M2)
-            && members.Count(m => m.role == Role.Ranged) >= 3;
+            && rangedCount >= 3;
 
         // silently ignore preferences whose role family the player doesn't satisfy (and isn't eligible to be promoted into)
         if (playerEntry.role != prefFamily && !forceMeleePromotion)
+        {
             return default;
+        }
 
         return new PreferredAutoAssignContext(true, playerCid, pref, forceMeleePromotion);
     }

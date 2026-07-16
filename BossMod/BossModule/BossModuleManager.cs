@@ -118,7 +118,30 @@ public sealed class BossModuleManager : IDisposable
             {
                 var m = LoadedModules[i];
                 var wasActive = m.StateMachine.ActiveState != null;
-                bool allowUpdate = !_wipeInProgress && (wasActive || !LoadedModules.Any(other => other.StateMachine.ActiveState != null && other.GetType() == m.GetType()));
+                bool allowUpdate;
+                if (_wipeInProgress)
+                {
+                    allowUpdate = false;
+                }
+                else if (wasActive)
+                {
+                    allowUpdate = true;
+                }
+                else
+                {
+                    var otherActiveOfSameType = false;
+                    var mType = m.GetType();
+                    for (var j = 0; j < LoadedModules.Count; ++j)
+                    {
+                        var other = LoadedModules[j];
+                        if (other.StateMachine.ActiveState != null && other.GetType() == mType)
+                        {
+                            otherActiveOfSameType = true;
+                            break;
+                        }
+                    }
+                    allowUpdate = !otherActiveOfSameType;
+                }
                 bool isActive;
                 try
                 {
