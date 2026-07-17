@@ -124,7 +124,7 @@ public sealed class NormalMovement : RotationModule
             if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.NoMovement && Hints.ImminentSpecialMode.activation <= World.FutureTime(1d))
                 return;
 
-            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Freezing && Hints.ImminentSpecialMode.activation <= World.FutureTime(0.5f))
+            if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Freezing && Hints.ImminentSpecialMode.activation <= World.FutureTime(0.5f) && Player.PosRot == Player.PrevPosRot)
                 Hints.WantJump = true;
         }
 
@@ -214,7 +214,7 @@ public sealed class NormalMovement : RotationModule
         var rangeStrategy = rangeOpt.As<RangeStrategy>();
         if (rangeStrategy != RangeStrategy.Any && Player.InCombat)
         {
-            var rangeReference = ResolveTargetOverride(rangeOpt.Value) ?? primaryTarget;
+            var rangeReference = ResolveTarget(rangeOpt.Value) ?? primaryTarget;
             if (rangeReference != null)
             {
                 // TODO: instead of hardcoding, is it possible to reuse goal zones for this purpose?

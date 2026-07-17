@@ -79,6 +79,8 @@ public sealed class RotationModuleManager : IDisposable
         (uint)Shadowbringers.Alliance.A33RedGirl.SID.Program000000,
         (uint)Shadowbringers.Alliance.A33RedGirl.SID.ProgramFFFFFFF,
 
+        (uint)Stormblood.Dungeon.D09DrownedCityOfSkalla.D092TheOldOne.SID.Transfiguration,
+
         565u, // "Transfiguration" from certain pomanders in Palace of the Dead
         439u, // "Toad", palace of the dead
         1546u, // "Odder", heaven-on-high

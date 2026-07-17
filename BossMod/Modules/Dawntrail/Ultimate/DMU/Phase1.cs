@@ -17,7 +17,16 @@ class RevoltingRuinIII(BossModule module) : Components.GenericBaitAway(module, (
             return;
         }
 
-        var target = secondTB ? RaidByEnmity(source, true).Skip(1).FirstOrDefault() : this.target;
+        Actor? target;
+        if (secondTB)
+        {
+            var byEnmity = RaidByEnmity(source, true);
+            target = byEnmity.Count > 1 ? byEnmity[1] : null;
+        }
+        else
+        {
+            target = this.target;
+        }
         if (target != null)
         {
             CurrentBaits.Add(new(source, target, new AOEShapeCone(30f, 45f.Degrees()), activation));

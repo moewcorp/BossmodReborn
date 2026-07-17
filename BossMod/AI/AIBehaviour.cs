@@ -384,5 +384,15 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
     }
 
-    private bool TargetIsForbidden(ulong actorId) { foreach (var e in autorot.Hints.ForbiddenTargets) { if (e.Actor.InstanceID == actorId) { return true; } } return false; }
+    private bool TargetIsForbidden(ulong actorId)
+    {
+        foreach (var e in autorot.Hints.ForbiddenTargets)
+        {
+            if (e.Actor.InstanceID == actorId)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

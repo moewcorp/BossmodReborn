@@ -148,7 +148,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
             _dalamud.UiBuilder.Draw -= DrawUI;
             Service.Condition.ConditionChange -= OnConditionChanged;
         });
-
+        ReplayVisualization.GaugeVisualizer.Dispose();
         _wndDebug.Dispose();
         _wndRotation.Dispose();
         _wndReplay.Dispose();
