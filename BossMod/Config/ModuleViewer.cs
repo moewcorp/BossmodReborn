@@ -68,8 +68,10 @@ public sealed class ModuleViewer : IDisposable
         Customize(BossModuleInfo.Category.TreasureHunt, contentType.GetRow(9u));
         Customize(BossModuleInfo.Category.GoldSaucer, contentType.GetRow(19u));
         Customize(BossModuleInfo.Category.DeepDungeon, contentType.GetRow(21u));
+        Customize(BossModuleInfo.Category.Quantum, contentType.GetRow(21u), "Quantum");
         Customize(BossModuleInfo.Category.Ultimate, contentType.GetRow(28u));
         Customize(BossModuleInfo.Category.VariantCriterion, contentType.GetRow(30u));
+        Customize(BossModuleInfo.Category.HallOfTheNovice, contentType.GetRow(20u), "Hall of the Novice");
 
         var playStyle = Service.LuminaSheet<CharaCardPlayStyle>()!;
         Customize(BossModuleInfo.Category.Foray, playStyle.GetRow(6u));
@@ -404,9 +406,9 @@ public sealed class ModuleViewer : IDisposable
                 var nmName = FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name);
                 return (new(nmName, groupId, groupId), new(module, Service.LuminaRow<Fate>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
             case BossModuleInfo.GroupType.GoldSaucer:
-                return (new("Gold saucer", groupId, groupId), new(module, $"{Service.LuminaRow<GoldSaucerTextData>(module.GroupID)?.Text}: {BNpcName(module.NameID)}", module.SortOrder));
+                return (new("Gold Saucer", groupId, groupId), new(module, $"{Service.LuminaRow<GoldSaucerTextData>(module.GroupID)?.Text}: {BNpcName(module.NameID)}", module.SortOrder));
             default:
-                return (new("Ungrouped", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("Uncategorized", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
         }
     }
 
