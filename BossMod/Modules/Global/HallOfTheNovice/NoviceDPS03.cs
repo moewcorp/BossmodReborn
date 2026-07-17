@@ -1,4 +1,4 @@
-﻿namespace BossMod.RealmReborn.Novice.NoviceDPS03;
+﻿namespace BossMod.Global.HallOfTheNovice.NoviceDPS03;
 
 public enum OID : uint
 {
@@ -9,14 +9,16 @@ public enum OID : uint
 
 class AttackAsTargeted(BossModule module) : Components.GenericInvincible(module)
 {
-    protected override IEnumerable<Actor> ForbiddenTargets(int slot, Actor actor)
+    protected override ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor)
     {
         var gladiator = WorldState.Actors.FirstOrDefault(a => a.OID == (uint)OID.N12Gladiator);
         if (gladiator != null && gladiator.TargetID != 0)
         {
             var target = WorldState.Actors.Find(gladiator.TargetID);
-
-            return WorldState.Actors.Exclude(target);
+            var excludedTarget = WorldState.Actors.Exclude(target);
+            return CollectionsMarshal.AsSpan<Actor>([.. excludedTarget]);
+            // TODO original statement
+            //return WorldState.Actors.Exclude(target);
         }
         return [];
     }
@@ -41,5 +43,5 @@ class NoviceDPS03States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "erdelf", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 159, NameID = 4784)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "erdelf", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 159, NameID = 4784)]
 public class NoviceDPS03(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20));

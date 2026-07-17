@@ -1,4 +1,4 @@
-﻿namespace BossMod.RealmReborn.Novice.NoviceBasicFinal;
+﻿namespace BossMod.Global.HallOfTheNovice.NoviceBasicFinal;
 
 public enum OID : uint
 {
@@ -27,5 +27,5 @@ class NoviceBasicFinalStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 166, NameID = 4787)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "erdelf", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 166, NameID = 4787)]
 public class NoviceBasicFinal(WorldState ws, Actor primary) : BossModule(ws, primary, new(457.383f, 271.721f), new ArenaBoundsCircle(20));
