@@ -53,6 +53,7 @@ public static class BossModuleInfo
         PVP,
         MaskedCarnivale,
         GoldSaucer,
+        HallOfTheNovice,
         Quantum,
         Advanced,
 

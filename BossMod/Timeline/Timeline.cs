@@ -18,8 +18,8 @@ public sealed class Timeline
 
         public virtual void DrawHeader(Vector2 topLeft)
         {
-            var s = ImGui.CalcTextSize(Name);
-            ImGui.GetWindowDrawList().AddText(topLeft + new Vector2((Width - s.X) * 0.5f, 0), BossMod.Colors.TextColor4, Name);
+            ImGui.SetCursorPos(topLeft - ImGui.GetWindowPos() + new Vector2(Width * 0.5f, ImGui.GetFrameHeight() * -0.5f));
+            UIMisc.TextRotated(Name, MathF.PI / 3);
         }
 
         public virtual void Draw() { }
@@ -105,8 +105,8 @@ public sealed class Timeline
     public float MaxTime;
     public float? CurrentTime;
     public float PixelsPerSecond = 10f * ImGuiHelpers.GlobalScale;
-    public float TopMargin = 20f * ImGuiHelpers.GlobalScale;
-    public float BottomMargin = 5f * ImGuiHelpers.GlobalScale;
+    public static float TopMargin => 80f * ImGuiHelpers.GlobalScale;
+    public static float BottomMargin => 5f * ImGuiHelpers.GlobalScale;
     public ColumnGroup Columns;
 
     private float _tickFrequency = 5;
@@ -130,13 +130,13 @@ public sealed class Timeline
         Columns.Update();
 
         _screenClientTL = ImGui.GetCursorScreenPos();
+        _screenClientTL.Y += TopMargin;
         Columns.DrawHeader(_screenClientTL + new Vector2(_timeAxisWidth, 0));
 
-        _screenClientTL.Y += TopMargin;
         ImGui.SetCursorScreenPos(_screenClientTL);
         _screenClientTL.X += _timeAxisWidth;
 
-        Height = Math.Max(10, ImGui.GetWindowPos().Y + ImGui.GetWindowHeight() - _screenClientTL.Y - TopMargin - BottomMargin - 8);
+        Height = Math.Max(10f, ImGui.GetWindowPos().Y + ImGui.GetWindowHeight() - _screenClientTL.Y - BottomMargin - 8f);
         ImGui.InvisibleButton("canvas", new(_timeAxisWidth + Columns.Width, Height), ImGuiButtonFlags.MouseButtonLeft | ImGuiButtonFlags.MouseButtonRight);
         HandleScrollZoom();
         DrawTimeAxis();
