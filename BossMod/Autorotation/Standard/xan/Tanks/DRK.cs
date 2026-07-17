@@ -324,7 +324,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        var canUseAuto = Player.InCombat && (HaveRaidBuffsUntil(AnimLock) || DarkArts && World.Party.WithoutSlot().Any(p => p.FindStatus(SID.TheBlackestNight, Player.InstanceID, DateTime.MaxValue) != null));
+        var canUseAuto = Player.InCombat && (HaveRaidBuffsUntil(AnimLock) || DarkArts && World.Party.WithoutSlot().Any(p => p.FindStatus((uint)SID.TheBlackestNight, Player.InstanceID, DateTime.MaxValue) != null));
 
         switch (track.Value)
         {

@@ -158,7 +158,7 @@ public sealed class ModuleViewer : IDisposable
     public void Draw(UITree tree, WorldState ws)
     {
         var availWidth = ImGui.GetContentRegionAvail().X;
-        var filterWidth = 200f; // Fixed width for filter panel
+        var filterWidth = 300f; // Fixed width for filter panel
         var moduleWidth = availWidth - filterWidth - ImGui.GetStyle().ItemSpacing.X;
 
         using (var child = ImRaii.Child("FiltersPanel", new Vector2(filterWidth, 0), true))

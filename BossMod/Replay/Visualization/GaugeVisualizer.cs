@@ -9,7 +9,7 @@ using Lumina.Data.Files;
 
 namespace BossMod.ReplayVisualization;
 
-internal class GaugeVisualizer
+internal sealed class GaugeVisualizer
 {
     private static GaugeVisualizer? _instance;
 
@@ -31,17 +31,9 @@ internal class GaugeVisualizer
             t.Dispose();
 
         _tex.Clear();
-        GaugeFont.Dispose();
     }
-
-    readonly IFontHandle GaugeFont;
 
     readonly Dictionary<string, IDalamudTextureWrap> _tex = [];
-
-    private GaugeVisualizer()
-    {
-        GaugeFont = Service.FontAtlas.NewGameFontHandle(new GameFontStyle(GameFontFamilyAndSize.MiedingerMid18));
-    }
 
     public void Draw(Actor player, ClientState clientState)
     {
@@ -119,13 +111,7 @@ internal class GaugeVisualizer
         {
             var textOrig = crAbs + Scale(125, 11);
             var text = MathF.Floor(current).ToString();
-            if (GaugeFont.Available)
-            {
-                using var gaugeFont = GaugeFont.Lock();
-                ImGui.GetWindowDrawList().AddText(gaugeFont.ImFont, 18 * ImGuiHelpers.GlobalScale, textOrig, 0xFFFFFFFF, text);
-            }
-            else
-                ImGui.GetWindowDrawList().AddText(textOrig, 0xFFFFFFFF, text);
+            ImGui.GetWindowDrawList().AddText(textOrig, 0xFFFFFFFF, text);
         }
     }
 

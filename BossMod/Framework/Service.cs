@@ -1,5 +1,4 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -47,7 +46,7 @@ public sealed class Service
     public static WindowSystem? WindowSystem;
 
     public static ImFontPtr IconFont => UiBuilder.IconFont;
-    public static IFontAtlas FontAtlas = null!;
+
 #pragma warning restore CA2211
 
     public static readonly ConfigRoot Config = new();

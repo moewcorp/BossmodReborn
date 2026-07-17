@@ -169,9 +169,9 @@ public static class UIMisc
 
         var endVert = dl.VtxCurrentIdx;
 
-        for (var ix = (int)startVert; ix < endVert; ix++)
+        for (var i = (int)startVert; i < endVert; ++i)
         {
-            ref var vert = ref dl.Handle->VtxBuffer.Ref(ix);
+            ref var vert = ref dl.Handle->VtxBuffer.Ref(i);
             vert.Pos = Rotate(vert.Pos - screenPos, radians) + screenPos;
         }
     }

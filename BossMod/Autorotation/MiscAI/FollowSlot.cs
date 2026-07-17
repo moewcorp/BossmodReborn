@@ -4,7 +4,7 @@ namespace BossMod.Autorotation.MiscAI;
 
 public sealed class FollowSlot(RotationModuleManager manager, Actor player) : TypedRotationModule<FollowSlot.Strategy>(manager, player)
 {
-    readonly AIConfig _aiConfig = Service.Config.Get<AIConfig>();
+    private static readonly AIConfig _aiConfig = Service.Config.Get<AIConfig>();
 
     public enum Flag { Disabled, Enabled }
 
@@ -24,7 +24,7 @@ public sealed class FollowSlot(RotationModuleManager manager, Actor player) : Ty
     public override void Execute(in Strategy strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         // fallback for users not using autorot (this module is meant to replace legacy ai)
-        if (_aiConfig.GoalZoneFallback && Hints.GoalZones.Count == 0 && primaryTarget is { IsAlly: false })
+        if (Hints.GoalZones.Count == 0 && primaryTarget is { IsAlly: false })
         {
             var effectiveRange = Player.Role is Role.Melee or Role.Tank ? 3f : 25f;
             Hints.GoalZones.Add(AIHints.GoalSingleTarget(primaryTarget, effectiveRange));

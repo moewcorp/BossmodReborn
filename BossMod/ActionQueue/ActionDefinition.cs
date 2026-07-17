@@ -171,8 +171,6 @@ public sealed record class ActionDefinition(ActionID ID)
 // note that it is associated to a specific worldstate, so that it can be used for things like action conditions
 public sealed class ActionDefinitions
 {
-    private static readonly ActionTweaksConfig _config = Service.Config.Get<ActionTweaksConfig>();
-
     private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.Sheets.Action> _actionsSheet = Service.LuminaSheet<Lumina.Excel.Sheets.Action>()!;
     private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.Sheets.Item> _itemsSheet = Service.LuminaSheet<Lumina.Excel.Sheets.Item>()!;
     private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.RawRow> _cjcSheet = Service.LuminaGameData!.Excel.GetSheet<Lumina.Excel.RawRow>(null, "ClassJobCategory")!;
@@ -555,7 +553,7 @@ public sealed class ActionDefinitions
         }
 
         if (id == BozjaHolsterID.LostSeraphStrike)
-            _definitions[normalAction].ForbidExecute = DashToTargetCheck;
+            _definitions[normalAction].AllowExecute = ActionPredicate.AllowDashToTarget;
     }
 
     private void RegisterDeepDungeon(ActionID id)

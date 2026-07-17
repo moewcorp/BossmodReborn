@@ -303,7 +303,7 @@ public abstract class QuestBattle : ZoneModule
         //    ObjectiveCleared.Subscribe(OnObjectiveCleared)
         //);
 
-        if (Service.IsMock)
+        if (Service.PluginInterface == null)
         {
             _pathfind = new PathfindNoop();
             _meshIsReady = new PathReadyNoop();
