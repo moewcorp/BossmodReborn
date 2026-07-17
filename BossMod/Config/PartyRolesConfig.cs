@@ -204,7 +204,7 @@ public class PartyRolesConfig : ConfigNode
             return default;
 
         var playerCid = party.Members[PartyState.PlayerSlot].ContentId;
-        if (playerCid == 0)
+        if (playerCid == default)
             return default;
 
         var playerIdx = members.FindIndex(m => m.contentId == playerCid);
