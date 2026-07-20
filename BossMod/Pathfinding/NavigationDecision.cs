@@ -550,6 +550,7 @@ public struct NavigationDecision
         var dy = map.LocalZDivRes * resolution * resolution;
         var dx = dy.OrthoL();
         var topLeft = map.Center - (width >> 1) * dx - (height >> 1) * dy;
+        var halfdxdy = dx * 0.5f + dy * 0.5f;
 
         var partitioner = Partitioner.Create(0, height);
         var pixelMaxG = map.PixelMaxG;
@@ -600,7 +601,7 @@ public struct NavigationDecision
                     var tr = cellTopLeft + dx;
                     var bl = cellTopLeft + dy;
                     var br = cellTopLeft + dx + dy;
-                    var center = cellTopLeft + (dx * 0.5f + dy * 0.5f);
+                    var center = cellTopLeft + halfdxdy;
 
                     for (var j = 0; j < count; ++j)
                     {
