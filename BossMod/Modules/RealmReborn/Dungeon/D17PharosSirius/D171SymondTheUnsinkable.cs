@@ -1,18 +1,14 @@
 namespace BossMod.RealmReborn.Dungeon.D17PharosSirius.D171SymondTheUnsinkable;
 
-
 public enum OID : uint
 {
     SymondTheUnsinkable = 0x8FB,
     Helper = 0x233C,
     ZombieWarHound = 0x8FC, // R1.650, x?
     CorruptedCrystal = 0x1B2, //1B2/Corrupted Crystal/
-    _Gen_Actor1e8f29 = 0x1E8F29, // R2.000, x?, EventObj type : single voidzone growth? : actually no idea
-    _Gen_Actor1e9058 = 0x1E9058, // R0.500, x?, EventObj type : two voidzone growth first?
-    _Gen_Actor1e9059 = 0x1E9059, // R0.500, x?, EventObj type : two voidzone growth second?
-    _Gen_Actor1e905a = 0x1E905A, // R0.500, x?, EventObj type : two voidzone growth third?
-    _Gen_Exit = 0x1E850B, // R0.500, x?, EventObj type
-
+    VoidZone1 = 0x1E9058, // R0.500, x?, EventObj type : two voidzone growth first 9
+    VoidZone2 = 0x1E9059, // R0.500, x?, EventObj type : two voidzone growth second 12
+    VoidZone3 = 0x1E905A, // R0.500, x?, EventObj type : two voidzone growth third 15
 }
 
 public enum AID : uint
@@ -33,28 +29,51 @@ public enum SID : uint
     VulnerabilityUp = 202, // CorruptedCrystal->player, extra=0x1/0x2
 }
 
-
-
-
-
 sealed class CorruptingShot(BossModule module)
     : Components.SimpleAOEs(module, (uint)AID.CorruptingShot, new AOEShapeRect(50f, 1.5f));
 
 sealed class WarHoundAdds(BossModule module) : Components.Adds(module, (uint)OID.ZombieWarHound, 1);
 sealed class CorruptingSpit(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CorruptingSpit, 6);
-//    CrystallineShower = 1542, // CorruptedCrystal->location, 3.5s cast, range 9 circle
-// I think this grows? if not find the ones that do grow to big giant spots.
-sealed class CrystallineShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrystallineShower, 9);
 
-//    GigaSlash = 1502, // SymondTheUnsinkable->self, 4.0s cast, range 20+R circle : knockback here distance 10? away from origin
+sealed class CrystallineShower(BossModule module) : Components.SimpleAOEs(module, (uint)AID.CrystallineShower, 9);
+// These are the voidzones that grow after crystalline shower lands.
+sealed class VoidZone1(BossModule module) : Components.Voidzone(module, 9, m => m.Enemies((uint)OID.VoidZone1));
+sealed class VoidZone2(BossModule module) : Components.Voidzone(module, 12, m => m.Enemies((uint)OID.VoidZone2));
+sealed class VoidZone3(BossModule module) : Components.Voidzone(module, 15, m => m.Enemies((uint)OID.VoidZone3));
+
 sealed class GigaSlash(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GigaSlash, 20);
+sealed class GigaSlashKB(BossModule module)
+    : Components.SimpleKnockbacks(module, (uint)AID.GigaSlash, 10f, shape: new AOEShapeCircle(20f));
 
 /*
  * If you reach 3 stacks of Corrupting Crystal, run away from everyone so the explosion doesn't hit them. Since you
  * are already at 3 stacks, you can run into the Crystalline Shot puddles if necessary.
- *     CorruptingBurst = 1500, // CorruptedCrystal->player, no cast, range 6 circle
-
  */
+sealed class CorruptingBurst(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true)
+{
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.CorruptedCrystal && status.Extra is 0x3)
+        {
+            CurrentBaits.Add(new(actor, actor, new AOEShapeCircle(6), WorldState.FutureTime(2.5d)));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.CorruptingBurst)
+            CurrentBaits.Clear();
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
+        base.AddHints(slot, actor, hints);
+        if (IsBaitTarget(actor))
+        {
+            hints.Add("Bait away!");
+        }
+    }
+}
 
 
 [SkipLocalsInit]
@@ -67,18 +86,22 @@ sealed class SymondTheUnsinkableStates : StateMachineBuilder
             .ActivateOnEnter<WarHoundAdds>()
             .ActivateOnEnter<CorruptingSpit>()
             .ActivateOnEnter<CrystallineShower>()
+            .ActivateOnEnter<VoidZone1>()
+            .ActivateOnEnter<VoidZone2>()
+            .ActivateOnEnter<VoidZone3>()
             .ActivateOnEnter<GigaSlash>()
-
-            ;
+            .ActivateOnEnter<GigaSlashKB>()
+            .ActivateOnEnter<CorruptingBurst>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
+
+[ModuleInfo(BossModuleInfo.Maturity.Contributed,
     StatesType = typeof(SymondTheUnsinkableStates),
     ConfigType = null, // replace null with typeof(SymondTheUnsinkableConfig) if applicable
     ObjectIDType = typeof(OID),
-    ActionIDType = null, // replace null with typeof(AID) if applicable
-    StatusIDType = null, // replace null with typeof(SID) if applicable
+    ActionIDType = typeof(AID),
+    StatusIDType = typeof(SID),
     TetherIDType = null, // replace null with typeof(TetherID) if applicable
     IconIDType = null, // replace null with typeof(IconID) if applicable
     PrimaryActorOID = (uint)OID.SymondTheUnsinkable,
