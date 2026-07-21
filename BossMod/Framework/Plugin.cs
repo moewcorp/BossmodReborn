@@ -168,6 +168,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         _hintsBuilder.Dispose();
         _zonemod.Dispose();
         _bossmod.Dispose();
+        _rsr.Dispose();
         CommandManager.RemoveHandler("/bmr");
         GarbageCollection();
     }

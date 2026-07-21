@@ -1,6 +1,6 @@
 ﻿namespace BossMod.AI;
 
-[ConfigDisplay(Name = "Automovement (Automovement is experimental, use at your own risk!)", Order = 7)]
+[ConfigDisplay(Name = "Automovement", Order = 7)]
 sealed class AIConfig : ConfigNode
 {
     [PropertyDisplay("Show status in DTR bar")]
@@ -72,6 +72,9 @@ sealed class AIConfig : ConfigNode
 
     [PropertyDisplay("Echo slash commands to chat")]
     public bool EchoToChat = true;
+
+    [PropertyDisplay("Follow RotationSolverReborn's desired positional", tooltip: "When enabled, Automovement will use the positional currently requested by RotationSolverReborn over IPC")]
+    public bool FollowRSRDesiredPositional = true;
 
     public string? AIAutorotPresetName;
 }

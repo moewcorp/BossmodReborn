@@ -27,6 +27,9 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("Show positional hints in world", tooltip: "Show tips for positional abilities, indicating to move to the flank or rear of your target")]
     public bool ShowPositionals = false;
 
+    [PropertyDisplay("Follow RotationSolverReborn's desired positional", tooltip: "When enabled, the 'Misc AI: Goes to specified positional' rotation module will override its Positional track setting and instead use the positional currently requested by RotationSolverReborn over IPC (Does not apply to Target Dummies)")]
+    public bool FollowRSRDesiredPositional = true;
+
     [PropertyDisplay("Automatically disable autorotation on death")]
     public bool ClearPresetOnDeath = true;
 

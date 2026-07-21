@@ -238,7 +238,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             }
             else if (_config.FollowTarget && target != null && AIPreset == null)
             {
-                var positional = _config.DesiredPositional;
+                var positional = _config.FollowRSRDesiredPositional && autorot.Hints.RSRDesiredPositional != Positional.Any
+                    ? autorot.Hints.RSRDesiredPositional
+                    : _config.DesiredPositional;
                 var mindist = _config.MinDistance;
                 var maxdist = _config.MaxDistanceToTarget;
                 if (positional is Positional.Rear or Positional.Flank && (target.CastInfo == null && target.NameID != 541u && target.TargetID == player.InstanceID || target.Omnidirectional)) // if player is target, rear/flank is usually impossible unless target is casting
