@@ -27,6 +27,9 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("显示身位提示", tooltip: "显示身位技能提示，指示移动到目标侧面或背面")]
     public bool ShowPositionals = false;
 
+    [PropertyDisplay("Follow RotationSolverReborn's desired positional", tooltip: "When enabled, the 'Misc AI: Goes to specified positional' rotation module will override its Positional track setting and instead use the positional currently requested by RotationSolverReborn over IPC (Does not apply to Target Dummies)")]
+    public bool FollowRSRDesiredPositional = true;
+
     [PropertyDisplay("死亡时自动关闭自动循环")]
     public bool ClearPresetOnDeath = true;
 

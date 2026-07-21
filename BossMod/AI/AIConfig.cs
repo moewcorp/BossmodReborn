@@ -1,7 +1,6 @@
 ﻿namespace BossMod.AI;
 
 [ConfigDisplay(Name = "AI配置", Order = 7)]
-
 sealed class AIConfig : ConfigNode
 {
     [PropertyDisplay("在标题栏中显示AI状态")]
@@ -73,6 +72,9 @@ sealed class AIConfig : ConfigNode
 
     [PropertyDisplay("输出斜杠命令到聊天")]
     public bool EchoToChat = true;
+
+    [PropertyDisplay("Follow RotationSolverReborn's desired positional", tooltip: "When enabled, Automovement will use the positional currently requested by RotationSolverReborn over IPC")]
+    public bool FollowRSRDesiredPositional = true;
 
     public string? AIAutorotPresetName;
 }

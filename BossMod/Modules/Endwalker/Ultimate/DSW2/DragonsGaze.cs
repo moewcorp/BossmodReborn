@@ -31,7 +31,7 @@ abstract class DragonsGaze(BossModule module, uint bossOID, double activationDel
             if (_activation == default)
                 _activation = WorldState.FutureTime(activationDelay);
             _boss = Module.Enemies(_bossOID)[0];
-            _eyePosition = Arena.Center + 40f * (180f - index * 45f).Degrees().ToDirection();
+            _eyePosition = new WPos(100, 100) + 40f * (180f - index * 45f).Degrees().ToDirection();
         }
     }
 }
