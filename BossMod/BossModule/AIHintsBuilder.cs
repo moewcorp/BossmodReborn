@@ -99,6 +99,7 @@ public sealed class AIHintsBuilder : IDisposable
         hints.Normalize();
         if (_rsr != null)
         {
+            hints.RSRDesiredPositional = _rsr.IsInstalled ? _rsr.DesiredPositional : Positional.Any;
             var now = _ws.CurrentTime;
             var soon = now.AddSeconds(0.75d);
             var hasForbiddenDirection = hints.ForbiddenDirections.Count > 0;
