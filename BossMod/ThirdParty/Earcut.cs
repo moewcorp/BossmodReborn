@@ -262,7 +262,7 @@ public sealed class Earcut
 		// look for points inside the triangle in both directions
 		while (p != null && p.z >= minZ && n != null && n.z <= maxZ)
 		{
-			if (p != a && p != c &&	PointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && Area(a, p, c) >= 0d)
+			if (p != a && p != c &&	PointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && Area(p.prev, p, p.next) >= 0d)
 			{
 				return false;
 			}
@@ -623,7 +623,7 @@ public sealed class Earcut
 	}
 
 	// find the leftmost node of a polygon ring
-	private static Node GetLeftmost(Node start)
+	private static Node  GetLeftmost(Node start)
 	{
 		Node p = start;
 		Node leftmost = start;
