@@ -30,5 +30,5 @@ public abstract class OpenWorldFate(WorldState ws, Actor primary) : SimpleBossMo
 {
     // only activate module when close and deactivate it if player leaves area
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 30f);
-    public override bool CheckReset() => base.CheckPull() || !Raid.Player()!.Position.InCircle(Arena.Center, 40f);
+    public override bool CheckReset() => base.CheckReset() || !Raid.Player()!.Position.InCircle(Arena.Center, 40f);
 }
