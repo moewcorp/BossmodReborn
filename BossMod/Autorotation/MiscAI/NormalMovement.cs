@@ -183,12 +183,13 @@ public sealed class NormalMovement : RotationModule
             _lastDecision = default;
         }
 
-        if (isSpinning)
+        if (World.CurrentCFCID == 844u && Player.FindStatus(2973u) != null) // spinning in alzadaal, expand if needed for other content
         {
             if (Hints.SpinDirection == null && navi.Destination is { } wp)
+            {
                 Hints.SpinDirection = Player.DirectionTo(wp).ToAngle();
-
-            return;
+                return;
+            }
         }
 
         if (navi.Destination == null)

@@ -56,8 +56,10 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         _ai.Execute(player, hints);
 
         // allow interrupting interact to dodge patrols
-        if (hints.ForbiddenZones.Any(z => z.containsFn(player.Position)))
+        if (hints.ForbiddenZones.Any(z => z.shapeDistance.Contains(player.Position)))
+        {
             hints.InteractWithTarget = null;
+        }
     }
 
     private static ShapeDistance GetSightCone(Actor p)
