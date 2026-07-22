@@ -395,8 +395,6 @@ public abstract class QuestBattle : ZoneModule
             }
         }
 
-        AddQuestAIHints(player, hints);
-
         curObjective = CurrentObjective;
         if (curObjective != null)
         {
@@ -412,6 +410,8 @@ public abstract class QuestBattle : ZoneModule
                 MoveNext(player, curObjective, hints);
             }
         }
+
+        AddQuestAIHints(player, hints);
     }
 
     public void DrawDebugInfo()
