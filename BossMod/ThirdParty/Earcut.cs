@@ -262,7 +262,7 @@ public sealed class Earcut
 		// look for points inside the triangle in both directions
 		while (p != null && p.z >= minZ && n != null && n.z <= maxZ)
 		{
-			if (p != a && p != c &&	PointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && Area(a, p, c) >= 0d)
+			if (p != a && p != c &&	PointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && Area(p.prev, p, p.next) >= 0d)
 			{
 				return false;
 			}
@@ -663,7 +663,8 @@ public sealed class Earcut
 	// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 	private static bool IsValidDiagonal(Node a, Node b)
 	{
-		return a.next.i != b.i && a.prev.i != b.i && !IntersectsPolygon(a, b) &&
+		var bi = b.i;
+		return a.next.i != bi && a.prev.i != bi && !IntersectsPolygon(a, b) &&
 			   LocallyInside(a, b) && LocallyInside(b, a) && MiddleInside(a, b);
 	}
 
@@ -698,13 +699,17 @@ public sealed class Earcut
 		Node p = a;
 		do
 		{
-			if (p.i != a.i && p.next.i != a.i && p.i != b.i && p.next.i != b.i &&
-					Intersects(p, p.next, a, b))
+			var next = p.next;
+			var pi = p.i;
+			var bi = b.i;
+			var nexti = next.i;
+			var ai = a.i;
+			if (pi != ai && nexti != ai && pi != bi && nexti != bi && Intersects(p, next, a, b))
 			{
 				return true;
 			}
 
-			p = p.next;
+			p = next;
 		} while (p != a);
 
 		return false;
@@ -713,9 +718,11 @@ public sealed class Earcut
 	// check if a polygon diagonal is locally inside the polygon
 	private static bool LocallyInside(Node a, Node b)
 	{
-		return Area(a.prev, a, a.next) < 0d ?
-			Area(a, b, a.next) >= 0d && Area(a, a.prev, b) >= 0d :
-			Area(a, b, a.prev) < 0d || Area(a, a.next, b) < 0d;
+		var prev = a.prev;
+		var next = a.next;
+		return Area(prev, a, next) < 0d ?
+			Area(a, b, next) >= 0d && Area(a, prev, b) >= 0d :
+			Area(a, b, prev) < 0d || Area(a, next, b) < 0d;
 	}
 
 	// check if the middle point of a polygon diagonal is inside the polygon
@@ -809,7 +816,7 @@ public sealed class Earcut
 		}
 	}
 
-	internal sealed class Node(int i, double x, double y)
+	private sealed class Node(int i, double x, double y)
 	{
 		public int i = i;
 		public double x = x;
@@ -827,7 +834,7 @@ public sealed class Earcut
 		public bool steiner;
 	}
 
-	internal static double SignedArea(ReadOnlySpan<double> data, int start, int end)
+	private static double SignedArea(ReadOnlySpan<double> data, int start, int end)
 	{
 		var sum = default(double);
 

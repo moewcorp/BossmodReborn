@@ -8,6 +8,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using CSActionType = FFXIVClientStructs.FFXIV.Client.Game.ActionType;
 
 namespace BossMod;
@@ -522,7 +523,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
 
         if (_hints.WantDismount && !_movement.FollowPathActive() && _dismountTweak.AllowDismount())
         {
-            _inst->UseAction(CSActionType.Action, 4);
+            _inst->UseAction(CSActionType.GeneralAction, 23);
         }
     }
 
@@ -567,9 +568,9 @@ public sealed unsafe class ActionManagerEx : IDisposable
             return InvalidEntityId;
         }
 
-        // note: only standard mode can be filtered
         // note: current implementation introduces slight input lag (on button press, next autorotation update will pick state updates, which will be executed on next action manager update)
-        if (mode == ActionManager.UseActionMode.None && action.Type is ActionType.Spell or ActionType.Item && _manualQueue.Push(action, targetId, GetAdjustedCastTime(action) * 0.001f, !targetOverridden, getAreaTarget, findNearestTarget))
+        var canManualQueue = mode is ActionManager.UseActionMode.None or ActionManager.UseActionMode.Macro;
+        if (canManualQueue && action.Type is ActionType.Spell or ActionType.Item && _manualQueue.Push(action, targetId, GetAdjustedCastTime(action) * 0.001f, !targetOverridden, getAreaTarget, findNearestTarget))
         {
             return false;
         }

@@ -1,9 +1,12 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 [ConfigDisplay(Order = 0x400, Parent = typeof(DawntrailConfig))]
-public class DMUConfig : ConfigNode {
+[SkipLocalsInit]
+public sealed class DMUConfig : ConfigNode
+{
 
-    public enum P1GravenImage2Strategy {
+    public enum P1GravenImage2Strategy
+    {
         [PropertyDisplay("Normal Graven Image 2")]
         GravenImage2Normal,
 
@@ -14,7 +17,8 @@ public class DMUConfig : ConfigNode {
     [PropertyDisplay("P1 Graven Image 2 strategy")]
     public P1GravenImage2Strategy P1GravenImage2 = P1GravenImage2Strategy.GravenImage2Uptime;
 
-    public enum P1TeleTrouncingStrategy {
+    public enum P1TeleTrouncingStrategy
+    {
         [PropertyDisplay("Modified Xolo")]
         Modified_Xolo,
 
@@ -28,7 +32,8 @@ public class DMUConfig : ConfigNode {
     [PropertyDisplay("P1 Graven Image 3 Static Spots")]
     public bool P1GravenImage3Static = true;
 
-    public enum P2ForsakenStrategy {
+    public enum P2ForsakenStrategy
+    {
         [PropertyDisplay("EU meow braindead strategy using markerless")]
         Meow_Markerless,
 

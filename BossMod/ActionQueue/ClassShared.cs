@@ -315,7 +315,7 @@ public sealed class Definitions : Defs
             var pos = player.Position;
             foreach (var e in hints.PotentialTargets)
             {
-                if (e.Actor.Position.InCircle(pos, 5f + e.Actor.HitboxRadius))
+                if (e.Actor.Position.InCircle(pos, 5f + e.Actor.HitboxRadius) && e.Priority >= AIHints.Enemy.PriorityPointless)
                 {
                     return true;
                 }
