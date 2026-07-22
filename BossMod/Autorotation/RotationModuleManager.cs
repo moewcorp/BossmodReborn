@@ -153,7 +153,7 @@ public sealed class RotationModuleManager : IDisposable
             return;
 
         // forced target update
-        if (Hints.ForcedTarget == null && Preset == null && Planner?.ActiveForcedTarget() is var forced && forced != null)
+        if (Hints.ForcedTarget == null && Preset == null && Planner?.ActiveForcedTarget(WorldState, PlayerSlot) is var forced && forced != null)
         {
             Hints.ForcedTarget = forced.Target != StrategyTarget.Automatic
                 ? ResolveTargetOverride(forced.Target, forced.TargetParam)
@@ -162,10 +162,11 @@ public sealed class RotationModuleManager : IDisposable
 
         // auto actions
         var target = Hints.ForcedTarget ?? WorldState.Actors.Find(Player?.TargetID ?? 0);
-        for (var i = 0; i < ActiveModules.Count; ++i)
+        var count = ActiveModules.Count;
+        for (var i = 0; i < count; ++i)
         {
             var m = ActiveModules[i];
-            var values = Preset?.ActiveStrategyOverrides(m.DataIndex) ?? Planner?.ActiveStrategyOverrides(m.DataIndex) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
+            var values = Preset?.ActiveStrategyOverrides(m.DataIndex) ?? Planner?.ActiveStrategyOverrides(m.DataIndex, WorldState, PlayerSlot) ?? throw new InvalidOperationException("Both preset and plan are null, but there are active modules");
             m.Module.Execute(values, target, estimatedAnimLockDelay, isMoving);
         }
     }
