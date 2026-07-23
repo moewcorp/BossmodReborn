@@ -343,22 +343,28 @@ sealed class TailSlap(BossModule module) : Components.SimpleAOEs(module, (uint)A
      */
     public override void OnActorEAnim(Actor actor, uint state)
     {
+        WPos arenaCenter = new WPos(0, 0);
         switch (state)
         {
             // 0x00100020 - gets cracked. Will break on next hit.
-            case 0x00040008: // Initial state
+            case 0x00040008u: // Initial state
                 if (_active.Count  < 1)
                     // Add the main outline. We do not need more than shape.
                     _active.Add(new Square(Arena.Center, 30f));
                 break;
-            case 0x00400080: // Broken platform state.
+            case 0x00400080u: // Broken platform state.
                 // never remove center square
-                if (actor.Position != Arena.Center)
+                var distanceFromCenter = (actor.Position - arenaCenter).LengthSq();
+                // The magic number 25 is used to check that the actor is not in center of arena.
+                // arenaCenter is used to make sure that ArenaBoundsCustom doesn't recalc the center position based
+                // on a new shape.
+                if (actor.OID is (uint)OID.Platform && distanceFromCenter > 25 && actor.Position != arenaCenter.Quantized())
                 {
-                    _inactive.Add(new Square(actor.Position, 10f));
+                    _inactive.Add(new Square(actor.Position.Rounded(), 10f));
                     // New arena bounds are the main arena outline minus (difference) the broken tiles.
                     ArenaBoundsCustom tailSlapArena = new([.._active], [.._inactive]);
                     Arena.Bounds = tailSlapArena;
+                    Arena.Center = arenaCenter;
                 }
                 break;
         }
