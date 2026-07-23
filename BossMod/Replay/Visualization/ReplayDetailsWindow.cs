@@ -118,6 +118,12 @@ sealed class ReplayDetailsWindow : UIWindow
         _rmm.Update(0, false, false);
         if (_mgr.ActiveModule != null)
         {
+            if (_mgr.WorldState.Client.CountdownRemaining != null)
+            {
+                ImGui.SameLine();
+                ImGui.Text($"Countdown: {_mgr.WorldState.Client.CountdownRemaining.Value:f3}");
+            }
+
             var drawTimerPre = DateTime.Now;
             _mgr.ActiveModule.Draw(_azimuthOverride ? _azimuth.Degrees() : _mgr.WorldState.Client.CameraAzimuth, _povSlot, true, true);
             var drawTimerPost = DateTime.Now;
