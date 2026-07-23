@@ -45,4 +45,7 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyDisplay("提前开怪阈值", tooltip: "倒计时大于此值时有人进入战斗，视为抢开，自动循环将被强制关闭")]
     [PropertySlider(0, 30, Speed = 1)]
     public float EarlyPullThreshold = 1.5f;
+
+    [PropertyDisplay("Disable autorotation if the boss is pulled without a countdown", tooltip: "Only applies if you have a cooldown plan active.")]
+    public bool PlannedPullSafety = true;
 }
