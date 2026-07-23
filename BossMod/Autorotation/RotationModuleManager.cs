@@ -300,8 +300,8 @@ public sealed class RotationModuleManager : IDisposable
         // some jank: we can't check value of this.Planner because the expected plan isn't loaded until either countdown starts or boss is pulled, and BMM doesn't activate the module until after this event fires, so the best we can do is check what the plan is expected to be
         else if (actor.InCombat && WorldState.Client.CountdownRemaining == null && Config.PlannedPullSafety && Bossmods.LoadedModules is [var mod] && Database.Plans.GetPlans(mod.GetType(), actor.Class).SelectedIndex >= 0)
         {
-            Service.Log($"[RMM] Boss pulled without countdown => force-disabling from '{PresetNames}'");
-            SetForceDisabled();
+            Service.Log($"[RMM] Boss pulled without countdown => force-disabling from '{Preset?.Name}'");
+            Preset = ForceDisable;
         }
     }
 

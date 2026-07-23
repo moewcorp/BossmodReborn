@@ -46,6 +46,6 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertySlider(0, 30, Speed = 1)]
     public float EarlyPullThreshold = 1.5f;
 
-    [PropertyDisplay("Disable autorotation if the boss is pulled without a countdown", tooltip: "Only applies if you have a cooldown plan active.", since: "7.5.1.28")]
+    [PropertyDisplay("Disable autorotation if the boss is pulled without a countdown", tooltip: "Only applies if you have a cooldown plan active.")]
     public bool PlannedPullSafety = true;
 }
