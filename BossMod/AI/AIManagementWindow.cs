@@ -128,24 +128,43 @@ sealed class AIManagementWindow : UIWindow
             _config.DesiredPositional = (Positional)positionalIndex;
             configModified = true;
         }
-        ImGui.SameLine();
-        ImGui.Text("最大距离 - 到目标");
+        ImGui.Text("最大距离 - 近战");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
-        var maxDistanceTargetStr = _config.MaxDistanceToTarget.ToString(CultureInfo.InvariantCulture);
-        if (ImGui.InputText("##MaxDistanceToTarget", ref maxDistanceTargetStr, 64))
+        var maxDistanceTargetMeleeStr = _config.MaxDistanceToTargetMelee.ToString(CultureInfo.InvariantCulture);
+        if (ImGui.InputText("##MaxDistanceToTargetMelee", ref maxDistanceTargetMeleeStr, 64))
         {
-            maxDistanceTargetStr = maxDistanceTargetStr.Replace(',', '.');
-            if (float.TryParse(maxDistanceTargetStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
+            maxDistanceTargetMeleeStr = maxDistanceTargetMeleeStr.Replace(',', '.');
+            if (float.TryParse(maxDistanceTargetMeleeStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
             {
-                _config.MaxDistanceToTarget = maxDistance;
+                _config.MaxDistanceToTargetMelee = maxDistance;
                 configModified = true;
             }
         }
         if (ImGui.IsItemHovered())
         {
             ImGui.BeginTooltip();
-            ImGui.Text("与目标保持的最大距离（yalms）。");
+            ImGui.Text("近战职业（含坦克）与目标保持的最大距离（yalms）。");
+            ImGui.EndTooltip();
+        }
+        ImGui.SameLine();
+        ImGui.Text("- 远程");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(100);
+        var maxDistanceTargetRangedStr = _config.MaxDistanceToTargetRanged.ToString(CultureInfo.InvariantCulture);
+        if (ImGui.InputText("##MaxDistanceTargetRanged", ref maxDistanceTargetRangedStr, 64))
+        {
+            maxDistanceTargetRangedStr = maxDistanceTargetRangedStr.Replace(',', '.');
+            if (float.TryParse(maxDistanceTargetRangedStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxDistance))
+            {
+                _config.MaxDistanceToTargetRanged = maxDistance;
+                configModified = true;
+            }
+        }
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text("远程/治疗职业与目标保持的最大距离（yalms）。");
             ImGui.EndTooltip();
         }
         ImGui.SameLine();

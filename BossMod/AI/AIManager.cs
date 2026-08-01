@@ -194,10 +194,20 @@ sealed class AIManager : IDisposable
                 HandlePositionalCommand(messageData);
                 configModified = cfgPositional != _config.DesiredPositional;
                 break;
-            case "MAXDISTANCETARGET":
-                var cfgMDT = _config.MaxDistanceToTarget;
+            case "MAXDISTANCETARGETMELEE":
+                var cfgMDTM = _config.MaxDistanceToTargetMelee;
+                HandleMaxDistanceTargetMeleeCommand(messageData);
+                configModified = cfgMDTM != _config.MaxDistanceToTargetMelee;
+                break;
+            case "MAXDISTANCETARGETRANGED":
+                var cfgMDTR = _config.MaxDistanceToTargetRanged;
+                HandleMaxDistanceTargetRangedCommand(messageData);
+                configModified = cfgMDTR != _config.MaxDistanceToTargetRanged;
+                break;
+            case "MAXDISTANCETARGET": // 兼容旧命令：同时设置近战与远程
+                var cfgMDT = _config.MaxDistanceToTargetMelee;
                 HandleMaxDistanceTargetCommand(messageData);
-                configModified = cfgMDT != _config.MaxDistanceToTarget;
+                configModified = cfgMDT != _config.MaxDistanceToTargetMelee;
                 break;
             case "MAXDISTANCESLOT":
                 var cfgMDS = _config.MaxDistanceToSlot;
@@ -615,6 +625,7 @@ sealed class AIManager : IDisposable
         }
     }
 
+    // 兼容旧命令：同时设置近战与远程距离
     private void HandleMaxDistanceTargetCommand(string[] messageData)
     {
         if (messageData.Length < 2 && _config.EchoToChat)
@@ -629,10 +640,53 @@ sealed class AIManager : IDisposable
             return;
         }
 
-        _config.MaxDistanceToTarget = distance;
+        _config.MaxDistanceToTargetMelee = distance;
+        _config.MaxDistanceToTargetRanged = distance;
         if (_config.EchoToChat)
         {
-            Service.ChatGui.Print($"[BMRAI] Max distance to target set to {distance.ToString(System.Globalization.CultureInfo.InvariantCulture)}y");
+            Service.ChatGui.Print($"[BMRAI] Max distance to target (melee & ranged) set to {distance.ToString(System.Globalization.CultureInfo.InvariantCulture)}y");
+        }
+    }
+
+    private void HandleMaxDistanceTargetMeleeCommand(string[] messageData)
+    {
+        if (messageData.Length < 2 && _config.EchoToChat)
+        {
+            Service.ChatGui.Print("[BMRAI] Missing distance value.");
+            return;
+        }
+
+        if (!float.TryParse(messageData[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var distance) && _config.EchoToChat)
+        {
+            Service.ChatGui.Print("[BMRAI] Invalid distance value.");
+            return;
+        }
+
+        _config.MaxDistanceToTargetMelee = distance;
+        if (_config.EchoToChat)
+        {
+            Service.ChatGui.Print($"[BMRAI] Max distance to target (melee) set to {distance.ToString(System.Globalization.CultureInfo.InvariantCulture)}y");
+        }
+    }
+
+    private void HandleMaxDistanceTargetRangedCommand(string[] messageData)
+    {
+        if (messageData.Length < 2 && _config.EchoToChat)
+        {
+            Service.ChatGui.Print("[BMRAI] Missing distance value.");
+            return;
+        }
+
+        if (!float.TryParse(messageData[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var distance) && _config.EchoToChat)
+        {
+            Service.ChatGui.Print("[BMRAI] Invalid distance value.");
+            return;
+        }
+
+        _config.MaxDistanceToTargetRanged = distance;
+        if (_config.EchoToChat)
+        {
+            Service.ChatGui.Print($"[BMRAI] Max distance to target (ranged) set to {distance.ToString(System.Globalization.CultureInfo.InvariantCulture)}y");
         }
     }
 

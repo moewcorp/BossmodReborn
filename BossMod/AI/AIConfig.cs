@@ -46,8 +46,14 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("到队友的最大距离")]
     public float MaxDistanceToSlot = 1f;
 
-    [PropertyDisplay("到目标的最大距离")]
-    public float MaxDistanceToTarget = 2.6f;
+    [PropertyDisplay("近战到目标的最大距离")]
+    public float MaxDistanceToTargetMelee = 1f;
+
+    [PropertyDisplay("远程到目标的最大距离")]
+    public float MaxDistanceToTargetRanged = 15f;
+
+    // 根据玩家当前职业角色动态选择到目标的最大距离；近战（含坦克）使用近战距离，其余（远程/治疗）使用远程距离
+    public float GetMaxDistanceToTarget(Role role) => role is Role.Melee or Role.Tank ? MaxDistanceToTargetMelee : MaxDistanceToTargetRanged;
 
     [PropertyDisplay("到目标圈的最小距离")]
     public float MinDistance = default;

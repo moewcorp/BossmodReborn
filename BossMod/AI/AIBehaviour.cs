@@ -257,7 +257,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             var target = autorot.WorldState.Actors.Find(player.TargetID);
             if ((!_config.FollowTarget || _config.FollowTarget && target == null) && master != player)
             {
-                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(master, Positional.Any, _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot));
+                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(master, Positional.Any, _config.FollowTarget && player.InCombat ? _config.GetMaxDistanceToTarget(player.Role) : _config.MaxDistanceToSlot));
             }
             else if (_config.FollowTarget && target != null && AIPreset == null)
             {
@@ -265,7 +265,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     ? autorot.Hints.RSRDesiredPositional
                     : _config.DesiredPositional;
                 var mindist = _config.MinDistance;
-                var maxdist = _config.MaxDistanceToTarget;
+                var maxdist = _config.GetMaxDistanceToTarget(player.Role);
                 if (positional is Positional.Rear or Positional.Flank && (target.CastInfo == null && target.NameID != 541u && target.TargetID == player.InstanceID || target.Omnidirectional)) // if player is target, rear/flank is usually impossible unless target is casting
                 {
                     positional = Positional.Any;
