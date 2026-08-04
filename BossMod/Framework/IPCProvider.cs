@@ -15,6 +15,10 @@ sealed class IPCProvider : IDisposable
     {
         Register("HasModuleByDataId", static (uint dataId) => BossModuleRegistry.FindByOID(dataId) != null);
 
+        // AOE data for external plugins (e.g. NyaDraw) to render native omen in the game world.
+        // Returns JSON-serialized list of AOEIPCDto describing all currently active avoidable AOEs.
+        Register("AOE.Active", () => AOEIPC.CollectActiveAOEs(bossmod));
+
         // Timeline IPC endpoints for external plugin integration (e.g. RotationSolverReborn)
         Register("HasActiveModule", () => bossmod.ActiveModule?.StateMachine.ActiveState != null);
         Register("ActiveModuleName", () => bossmod.ActiveModule?.PrimaryActor.Name.ToString());
