@@ -40,7 +40,9 @@ public sealed class AOEIPCDto
     public float OriginY { get; set; } // world-space height (usually player's Y), so native omen renders at correct elevation
     public float Rotation { get; set; } // final rotation in radians (aoe rotation + shape direction offset), game convention
     public double ActivationMs { get; set; } // relative milliseconds until activation
-    public uint Color { get; set; } // ARGB
+    public bool Risky { get; set; } // true = about to activate (current danger), false = later step of a stepping aoe
+    public int GroupId { get; set; } // id of the component that spawned this aoe: groups aoes of the same skill/mechanic, so stepping detection never crosses skills
+    public uint Color { get; set; } // ARGB (reserved, not forwarded)
 }
 
 public static class AOEIPC
@@ -74,9 +76,10 @@ public static class AOEIPC
             }
 
             var active = aoes.ActiveAOEs(PartyState.PlayerSlot, player);
+            var instance = 0;
             foreach (ref readonly var aoe in active)
             {
-                if (ConvertShape(aoe, now, defaultY) is { } dto)
+                if (ConvertShape(aoe, now, defaultY, i, instance++) is { } dto)
                 {
                     list.Add(dto);
                 }
@@ -86,7 +89,7 @@ public static class AOEIPC
         return JsonSerializer.Serialize(list);
     }
 
-    private static AOEIPCDto? ConvertShape(in GenericAOEs.AOEInstance aoe, DateTime now, float defaultY)
+    private static AOEIPCDto? ConvertShape(in GenericAOEs.AOEInstance aoe, DateTime now, float defaultY, int componentIndex, int instanceIndex)
     {
         AOEIPCDto? dto = aoe.Shape switch
         {
@@ -110,8 +113,16 @@ public static class AOEIPC
         dto.OriginY = defaultY;
         dto.Rotation = (aoe.Rotation + DirectionOffsetOf(aoe.Shape)).Rad;
         dto.ActivationMs = (aoe.Activation - now).TotalMilliseconds;
-        dto.Color = aoe.Color;
-        dto.Key = (ulong)HashCode.Combine(aoe.ActorID, aoe.Activation.Ticks, dto.ShapeType, dto.P1, dto.P2, dto.P3);
+        dto.Risky = aoe.Risky; // stepping aoes mark only the about-to-activate step as risky
+        dto.GroupId = componentIndex; // same component = same skill/mechanic
+        // Color is intentionally NOT forwarded: native omen carry their own colors,
+        // and custom omen fall back to NyaDraw's enemy color on the consumer side.
+        // Key must distinguish multiple AOEs spawned by the same skill (same actor & shape params
+        // but different origins). We use the component's index in the module plus the AOE's index
+        // within that component's active list: stable for chasing aoes (position never affects the key)
+        // and unique for multi-AOE skills. Shape params are still included to guard against
+        // per-frame reordering of the active list.
+        dto.Key = (ulong)HashCode.Combine(aoe.ActorID, aoe.Activation.Ticks, dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
         return dto;
     }
 
