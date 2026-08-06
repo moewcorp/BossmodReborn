@@ -15,7 +15,7 @@ sealed class IPCProvider : IDisposable
     {
         Register("HasModuleByDataId", static (uint dataId) => BossModuleRegistry.FindByOID(dataId) != null);
 
-        // AOE data for external plugins (e.g. NyaDraw) to render native omen in the game world.
+        // AOE data for external plugins.
         // Returns JSON-serialized list of AOEIPCDto describing all currently active avoidable AOEs.
         Register("AOE.Active", () => AOEIPC.CollectActiveAOEs(bossmod));
 
