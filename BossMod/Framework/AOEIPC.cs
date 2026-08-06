@@ -112,7 +112,10 @@ public static class AOEIPC
         dto.OriginZ = aoe.Origin.Z;
         dto.OriginY = defaultY;
         dto.Rotation = (aoe.Rotation + DirectionOffsetOf(aoe.Shape)).Rad;
-        dto.ActivationMs = (aoe.Activation - now).TotalMilliseconds;
+        // default activation means a persistent/always-on aoe (e.g. a ground zone spawned by an actor
+        // with no cast timeline); give it a long enough window so NyaDraw renders it instead of
+        // treating a huge negative delta as "already activated, nothing to show".
+        dto.ActivationMs = aoe.Activation == default ? 5000 : (aoe.Activation - now).TotalMilliseconds;
         dto.Risky = aoe.Risky; // stepping aoes mark only the about-to-activate step as risky
         dto.GroupId = componentIndex; // same component = same skill/mechanic
         // Color is intentionally NOT forwarded: native omen carry their own colors,
