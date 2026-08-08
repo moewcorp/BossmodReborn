@@ -13,6 +13,7 @@ public sealed class AIHintsBuilder : IDisposable
     private readonly ZoneModuleManager _zmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly RotationSolverRebornModule? _rsr;
+    private readonly AEAssistModule? _ae;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape)> _activeGazes = [];
     private readonly List<Actor> _invincible = [];
@@ -32,12 +33,13 @@ public sealed class AIHintsBuilder : IDisposable
     private static readonly ActionTweaksConfig _config = Service.Config.Get<ActionTweaksConfig>();
     private static readonly Dictionary<uint, (byte, byte, byte, uint, string, string, string, int, bool, uint)> _spellCache = [];
 
-    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm, RotationSolverRebornModule? rsr)
+    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm, RotationSolverRebornModule? rsr, AEAssistModule? ae = null)
     {
         _ws = ws;
         _bmm = bmm;
         _zmm = zmm;
         _rsr = rsr;
+        _ae = ae;
         Obstacles = new(ws);
         _subscriptions = new
         (
@@ -97,9 +99,12 @@ public sealed class AIHintsBuilder : IDisposable
             }
         }
         hints.Normalize();
-        if (_rsr != null)
+        // 期望身位：优先 RSR（若已安装且提供身位），否则用 AEAssist 框架自动推算的身位
+        var rsrPos = _rsr != null && _rsr.IsInstalled ? _rsr.DesiredPositional : Positional.Any;
+        var aePos = _ae != null && _ae.IsInstalled ? _ae.DesiredPositional : Positional.Any;
+        hints.RSRDesiredPositional = rsrPos != Positional.Any ? rsrPos : aePos;
+        if (_rsr != null && _rsr.IsInstalled)
         {
-            hints.RSRDesiredPositional = _rsr.IsInstalled ? _rsr.DesiredPositional : Positional.Any;
             var now = _ws.CurrentTime;
             var soon = now.AddSeconds(0.75d);
             var hasForbiddenDirection = hints.ForbiddenDirections.Count > 0;
@@ -108,7 +113,8 @@ public sealed class AIHintsBuilder : IDisposable
             var finish = hints.ImminentSpecialMode.finish;
             var pyreticActivation = isPyretic ? hints.ImminentSpecialMode.activation : DateTime.MaxValue;
 
-            if (_rsr.IsInstalled && (hasForbiddenDirection && forbiddenDirActivation < soon || isPyretic && pyreticActivation < soon))
+            // Pyretic/禁止方向即将生效时：让 RSR 停手，并强制断施（AEAssist 侧自行订阅 Hints 端点实现同样效果）
+            if (hasForbiddenDirection && forbiddenDirActivation < soon || isPyretic && pyreticActivation < soon)
             {
                 var activationTime = hasForbiddenDirection && forbiddenDirActivation < soon ? forbiddenDirActivation : pyreticActivation;
                 _ = Math.Max(0f, (float)(activationTime - now).TotalSeconds);
