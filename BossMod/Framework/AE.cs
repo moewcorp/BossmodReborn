@@ -13,9 +13,24 @@ public sealed class AEAssistModule : IDisposable
     private readonly ICallGateSubscriber<byte> _getDesiredPositional;
     private readonly ICallGateSubscriber<byte, object?> _desiredPositionalChanged;
     private const string aeassist = "AEAssistV3";
+    private Positional _desiredPositional = Positional.Any;
 
-    // 当前 AEAssist 期望身位，通过 DesiredPositionalChanged 事件保持更新
-    public Positional DesiredPositional { get; private set; } = Positional.Any;
+    // 当前 AEAssist 期望身位：getter 每次实时轮询 IPC。
+    // AEAssist 侧 ACR 每帧在 OnBattleUpdate 重绘身位（提前一个 GCD），事件只覆盖框架自动推算的变化，
+    // 因此必须每次访问都轮询，才能拿到提前量充足的最新值。
+    public Positional DesiredPositional
+    {
+        get
+        {
+            var pos = GetDesiredPositional();
+            if (pos != _desiredPositional)
+            {
+                _desiredPositional = pos;
+                DesiredPositionalChanged?.Invoke(pos);
+            }
+            return _desiredPositional;
+        }
+    }
 
     public event Action<Positional>? DesiredPositionalChanged;
 
@@ -32,7 +47,7 @@ public sealed class AEAssistModule : IDisposable
         {
             // AEAssist 未安装/未加载 - 忽略，仍可轮询 GetDesiredPositional()
         }
-        DesiredPositional = GetDesiredPositional();
+        _desiredPositional = GetDesiredPositional();
     }
 
     public void Dispose()
@@ -78,8 +93,12 @@ public sealed class AEAssistModule : IDisposable
 
     private void OnDesiredPositionalChanged(byte value)
     {
-        DesiredPositional = MapPositional(value);
-        DesiredPositionalChanged?.Invoke(DesiredPositional);
+        var pos = MapPositional(value);
+        if (pos != _desiredPositional)
+        {
+            _desiredPositional = pos;
+            DesiredPositionalChanged?.Invoke(pos);
+        }
     }
 
     // 与 AEAssist MeleePositionalTable 的编码对齐：1=Rear, 2=Flank, 3=Front（AE 目前无 Front）
