@@ -102,7 +102,62 @@ public static class AOEIPC
             }
         }
 
+        // generic catch-all: whatever was drawn on the mini-map this frame as a filled shape.
+        // This covers hand-drawn custom components (e.g. CE214's FlareHolyMerge) that never expose
+        // AOEInstance data, without per-module hacks. Shapes come from MiniArena.Zone* methods.
+        foreach (var zone in MiniArena.DrawnZones)
+        {
+            if (ConvertDrawnZone(zone, defaultY) is { } dto)
+            {
+                list.Add(dto);
+            }
+        }
+
         return JsonSerializer.Serialize(list);
+    }
+
+    // converts a shape recorded from the mini-map draw pass into an AOE DTO (always harmful red)
+    private static AOEIPCDto? ConvertDrawnZone(MiniArena.DrawnZone zone, float defaultY)
+    {
+        var dto = new AOEIPCDto
+        {
+            ShapeType = zone.Shape,
+            OriginX = zone.Origin.X,
+            OriginZ = zone.Origin.Z,
+            OriginY = defaultY,
+            Rotation = zone.Rotation.Rad,
+            ActivationMs = 5000, // drawn zones have no activation timeline; keep a rolling window
+            Risky = true,
+            Friendly = false,
+            GroupId = int.MaxValue, // distinguish from component-driven aoes
+        };
+        switch ((AOEIPCShapeType)zone.Shape)
+        {
+            case AOEIPCShapeType.Circle:
+                dto.P1 = zone.P1;
+                break;
+            case AOEIPCShapeType.Cone:
+                dto.P1 = zone.P2; // outer radius
+                dto.P2 = zone.P3; // half angle (rad)
+                break;
+            case AOEIPCShapeType.Donut:
+                dto.P1 = zone.P1; // inner
+                dto.P2 = zone.P2; // outer
+                break;
+            case AOEIPCShapeType.Rect:
+                dto.P1 = zone.P1; // length front
+                dto.P2 = zone.P3; // half width
+                dto.P3 = zone.P2; // length back
+                break;
+            case AOEIPCShapeType.Capsule:
+                dto.P1 = zone.P1; // radius
+                dto.P2 = zone.P2; // length
+                break;
+            default:
+                return null; // Tri/Cross/RelPoly etc. not expressible yet
+        }
+        dto.Key = (ulong)HashCode.Combine("drawn", zone.Shape, dto.P1, dto.P2, dto.P3, zone.Origin.X, zone.Origin.Z);
+        return dto;
     }
 
     // stack/spread: circle centered on the target player; stack = friendly gathering point, spread = harmful
