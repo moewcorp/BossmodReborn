@@ -200,7 +200,7 @@ sealed class TheDragonsVoiceBoss(BossModule module) : Components.SimpleAOEs(modu
 
         var spellInstance = Casters[0];
         var distanceToOrb = spellInstance.Origin + (singleOrb.Position - spellInstance.Origin).Normalized() * 6.0f;
-        hints.GoalZones.Add(AIHints.GoalProximity(distanceToOrb, 7.8f, 100.0f));
+        hints.GoalZones.Add(AIHints.GoalProximity(distanceToOrb, 2.0f, 100.0f));
     }
 }
 
@@ -278,7 +278,7 @@ sealed class Duobreath(BossModule module) : Components.GenericAOEs(module)
         var max = count > 2 ? 2 : count;
         var nextAOEs = CollectionsMarshal.AsSpan(aoes);
 
-        for (int i = 0; i < max; i++)
+        for (var i = 0; i < max; i++)
         {
             ref var aoe = ref nextAOEs[i];
             aoe.Color = i == 0 ? Colors.Danger : Colors.AOE;
