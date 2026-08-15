@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-using TerraFX.Interop.Windows;
-
-namespace BossMod.Dawntrail.Foray.ForkedTowerMagic.Normal.FTMN1TwoHeadedAevis;
+﻿namespace BossMod.Dawntrail.Foray.ForkedTowerMagic.Normal.FTMN1TwoHeadedAevis;
 sealed class StormsBreath(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.StormsBreathCast, 14f)
 {
     // on visual cast since there are x2 instances of actual knockback

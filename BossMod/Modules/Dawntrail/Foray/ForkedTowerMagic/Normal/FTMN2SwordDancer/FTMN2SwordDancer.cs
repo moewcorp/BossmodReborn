@@ -147,8 +147,8 @@ sealed class Steelsbreath(BossModule module) : Components.GenericKnockback(modul
             return [];
 
         var kbs = CollectionsMarshal.AsSpan(_knockbacks);
-        var max = count > 2 ? 2 : count;
-        return kbs[..max];
+        //var max = count > 2 ? 2 : count;
+        return kbs[..1];
     }
 
     public override void OnStatusGain(Actor actor, ref ActorStatus status)
