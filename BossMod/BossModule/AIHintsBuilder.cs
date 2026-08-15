@@ -121,7 +121,7 @@ public sealed class AIHintsBuilder : IDisposable
                 _rsr.TriggerSpecialStateWithDuration(RotationSolverRebornModule.SpecialCommandType.NoCasting, finish != default ? (float)(finish - now).TotalSeconds : _config.PyreticThreshold);
                 if (isPyretic)
                 {
-                    hints.ForceCancelCast = true;
+                    hints.ForceCancelCastMechanic = true;
                 }
             }
         }
