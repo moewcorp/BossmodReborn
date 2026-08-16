@@ -8,6 +8,11 @@ public sealed class CancelCastTweak(WorldState ws, AIHints hints)
     private readonly WorldState _ws = ws;
     private DateTime _nextCancelAllowed;
 
+    public void Reset()
+    {
+        _nextCancelAllowed = default;
+    }
+
     public bool ShouldCancel(DateTime currentTime, bool force)
     {
         if (currentTime < _nextCancelAllowed)
