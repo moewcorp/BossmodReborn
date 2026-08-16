@@ -154,6 +154,7 @@ public sealed class NormalMovement : RotationModule
 
             if (Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && Hints.ImminentSpecialMode.activation <= World.FutureTime(1d))
             {
+                //Service.Log("[CancelCast] ForceCancelCastMechanic set true due to Pyretic Special Mode");
                 Hints.ForceCancelCastMechanic = true; // this is only useful if autopyretic tweak is disabled
                 return; // pyretic is imminent, do not move
             }
