@@ -75,7 +75,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
     private DateTime _nextAllowedExecuteCommand;
     private const uint InvalidEntityId = 0xE0000000;
 
-    private readonly unsafe delegate* unmanaged<TargetSystem*, TargetSystem*> _autoSelectTarget;
+    private readonly delegate* unmanaged<TargetSystem*, TargetSystem*> _autoSelectTarget;
 
     public ActionManagerEx(WorldState ws, AIHints hints, MovementOverride movement)
     {

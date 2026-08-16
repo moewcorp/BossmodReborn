@@ -37,6 +37,10 @@ public sealed class CancelCastTweak(WorldState ws, AIHints hints)
             return false;
         }
 
+        // mount doesn't break movement as of 7.whatever
+        if (cast.Action.Type == ActionType.Mount)
+            return false;
+
         var target = _ws.Actors.Find(cast.TargetID);
         if (target == null)
         {
