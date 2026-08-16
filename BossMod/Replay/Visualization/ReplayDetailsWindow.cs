@@ -148,7 +148,7 @@ sealed class ReplayDetailsWindow : UIWindow
 
             drawnGauge = DrawGauge(true);
 
-            var compListSb = new System.Text.StringBuilder();
+            var compListSb = new StringBuilder();
             var comps = _mgr.ActiveModule.Components;
             for (var ci = 0; ci < comps.Count; ++ci)
             {
@@ -208,7 +208,11 @@ sealed class ReplayDetailsWindow : UIWindow
                     var encs = _player.Replay.Encounters;
                     for (var ei = 0; ei < encs.Count; ++ei)
                     {
-                        if (encs[ei].InstanceID == _mgr.ActiveModule.PrimaryActor.InstanceID) { enc = encs[ei]; break; }
+                        if (encs[ei].InstanceID == _mgr.ActiveModule.PrimaryActor.InstanceID)
+                        {
+                            enc = encs[ei];
+                            break;
+                        }
                     }
 
                     if (enc != null)

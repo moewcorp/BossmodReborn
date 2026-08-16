@@ -81,6 +81,7 @@ public sealed class ReplayRecorder : IDisposable
 
             return Emit(name);
         }
+
         public Output EmitContentID(ulong contentID)
         {
             if (Anonymous)

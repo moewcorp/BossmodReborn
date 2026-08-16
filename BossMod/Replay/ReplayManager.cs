@@ -198,12 +198,14 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string logDirecto
                     if (ImGui.MenuItem("Convert to compressed binary"))
                     {
                         ConvertLog(e.Replay.Result, ReplayLogFormat.BinaryCompressed, _convertAnonymize);
+                    }
                     ImGui.Separator();
                     ImGuiP.PushItemFlag(ImGuiItemFlags.SelectableDontClosePopup, true);
                     if (ImGui.MenuItem("Anonymize replay during conversion", _convertAnonymize))
+                    {
                         _convertAnonymize = !_convertAnonymize;
-                    ImGuiP.PopItemFlag();
                     }
+                    ImGuiP.PopItemFlag();
                 }
             }
 
