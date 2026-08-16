@@ -97,9 +97,9 @@ sealed class Buffet(BossModule module) : Components.GenericKnockback(module)
             var circleArcs = new Components.GenericAOEs.AOEInstance[len];
             var circleArcsCount = 0;
 
-            for (var i = 0; i < len; i++)
+            for (var i = 0; i < len; ++i)
             {
-                ref readonly var aoe = ref aoes[i];
+                ref var aoe = ref aoes[i];
                 if (aoe.Shape is AOEShapeArcCapsule arcCapsule)
                 {
                     var distance = (aoe.Origin - arcCapsule.OrbitCenter).Length();
