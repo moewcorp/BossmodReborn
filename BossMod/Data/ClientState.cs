@@ -517,8 +517,10 @@ public sealed class ClientState
     }
 
     public Event<OpFlyingChange> FlyingChanged = new();
-    public sealed record class OpFlyingChange(bool Value) : WorldState.Operation
+    public sealed class OpFlyingChange(bool value) : WorldState.Operation
     {
+        public readonly bool Value = value;
+
         protected override void Exec(WorldState ws)
         {
             ws.Client.Flying = Value;
