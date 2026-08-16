@@ -18,6 +18,9 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("在副本录像中自动录制", tooltip: "需要开启自动录制")]
     public bool AutoARR = false;
 
+    [PropertyDisplay("匿名化回放", tooltip: "若关闭此选项,回放中将包含你及录制期间所见其他玩家的个人身份信息(姓名和内容ID)")]
+    public bool Anonymize = false;
+
     [PropertyDisplay("保留的最大回放数量")]
     [PropertySlider(0, 1000)]
     public int MaxReplays = 0;

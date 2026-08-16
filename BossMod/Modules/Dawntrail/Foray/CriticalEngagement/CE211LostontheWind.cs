@@ -130,11 +130,21 @@ sealed class Buffet(BossModule module) : Components.GenericKnockback(module)
     }
 }
 
-sealed class BitingWind(BossModule module) : Components.GenericAOEs(module)
+sealed class BitingWind : Components.GenericAOEs
 {
+    public BitingWind(BossModule module) : base(module)
+    {
+        bitingWinds = module.Enemies((uint)OID.BitingWind);
+        var a30 = 30f.Degrees();
+        arcCWnear = new(4f, a30, arenaCenter);
+        arcCCWnear = new(4f, -a30, arenaCenter);
+        var a20 = 20f.Degrees();
+        arcCWfar = new(4f, a20, arenaCenter);
+        arcCCWfar = new(4f, -a20, arenaCenter);
+    }
     private readonly WPos arenaCenter = new(-150f, -860f); // different from quantized donut death wall
-    private readonly List<Actor> bitingWinds = module.Enemies((uint)OID.BitingWind);
-    private readonly AOEShapeArcCapsule arcCW = new(4f, 30f.Degrees(), module.Arena.Center), arcCCW = new(4f, -30f.Degrees(), module.Arena.Center);
+    private readonly List<Actor> bitingWinds;
+    private readonly AOEShapeArcCapsule arcCWnear, arcCCWnear, arcCWfar, arcCCWfar;
     public AOEInstance[] AOEs = [];
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs;
@@ -155,7 +165,18 @@ sealed class BitingWind(BossModule module) : Components.GenericAOEs(module)
             var rot = wind.Rotation;
             var dir = pos - arenaCenter;
             var ccw = rot.ToDirection().OrthoR().Dot(dir) < 0f;
-            AOEs[i] = new(ccw ? arcCCW : arcCW, pos.Quantized(), color: Colors.Danger);
+            const float lengthSq = 16f * 16f;
+            var isClose = (pos - arenaCenter).LengthSq() < lengthSq;
+            AOEShapeArcCapsule shape;
+            if (isClose)
+            {
+                shape = ccw ? arcCCWnear : arcCWnear;
+            }
+            else
+            {
+                shape = ccw ? arcCCWfar : arcCWfar;
+            }
+            AOEs[i] = new(shape, pos.Quantized(), color: Colors.Danger);
         }
     }
 
