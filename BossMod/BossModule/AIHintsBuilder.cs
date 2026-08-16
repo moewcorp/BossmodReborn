@@ -115,6 +115,7 @@ public sealed class AIHintsBuilder : IDisposable
                 _rsr.TriggerSpecialStateWithDuration(RotationSolverRebornModule.SpecialCommandType.NoCasting, finish != default ? (float)(finish - now).TotalSeconds : _config.PyreticThreshold);
                 if (isPyretic)
                 {
+                    //Service.Log("[AMEx] Canceling cast (RSR)");
                     hints.ForceCancelCastMechanic = true;
                 }
             }
