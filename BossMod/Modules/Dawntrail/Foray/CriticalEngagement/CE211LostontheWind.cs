@@ -137,10 +137,10 @@ sealed class BitingWind : Components.GenericAOEs
         bitingWinds = module.Enemies((uint)OID.BitingWind);
         var a30 = 30f.Degrees();
         arcCWnear = new(4f, a30, arenaCenter);
-        arcCCWnear = new(4f, a30, arenaCenter);
+        arcCCWnear = new(4f, -a30, arenaCenter);
         var a20 = 20f.Degrees();
         arcCWfar = new(4f, a20, arenaCenter);
-        arcCCWfar = new(4f, a20, arenaCenter);
+        arcCCWfar = new(4f, -a20, arenaCenter);
     }
     private readonly WPos arenaCenter = new(-150f, -860f); // different from quantized donut death wall
     private readonly List<Actor> bitingWinds;
