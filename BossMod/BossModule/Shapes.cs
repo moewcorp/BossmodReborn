@@ -412,26 +412,26 @@ public sealed class Capsule(WPos center, float halfHeight, float halfWidth, int 
 
     public override List<WDir> Contour(WPos center)
     {
-        Span<WDir> vertices = stackalloc WDir[2 * Edges];
+        Span<WDir> vertices = stackalloc WDir[2 * (Edges + 1)];
+
         var angleIncrement = MathF.PI / Edges;
         var (sinRot, cosRot) = ((float, float))Math.SinCos(Rotation.Rad);
-        var halfWidth = HalfWidth;
-        var halfHeight = HalfHeight;
         var offset = Center - center;
-        var offsetX = offset.X;
-        var offsetZ = offset.Z;
-        for (var i = 0; i < Edges; ++i)
+
+        for (var i = 0; i <= Edges; ++i)
         {
             var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement);
-            var halfWidthCos = halfWidth * cos;
-            var halfWidthSin = halfWidth * sin + halfHeight;
-            var rxTop = halfWidthCos * cosRot - halfWidthSin * sinRot + offsetX;
-            var ryTop = halfWidthCos * sinRot + halfWidthSin * cosRot + offsetZ;
-            vertices[i] = new(rxTop, ryTop);
-            var rxBot = -rxTop;
-            var ryBot = -ryTop;
-            vertices[Edges + i] = new(rxBot, ryBot);
+
+            var x = HalfWidth * cos;
+            var z = HalfWidth * sin + HalfHeight;
+
+            var rx = x * cosRot - z * sinRot;
+            var rz = x * sinRot + z * cosRot;
+
+            vertices[i] = new(rx + offset.X, rz + offset.Z);
+            vertices[Edges + 1 + i] = new(-rx + offset.X, -rz + offset.Z);
         }
+
         return [.. vertices];
     }
 
