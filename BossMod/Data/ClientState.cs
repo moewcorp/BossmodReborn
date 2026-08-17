@@ -56,8 +56,8 @@ public sealed class ClientState
         public readonly byte HandInCount = handInCount;
         public readonly uint ObjectiveNpc = objectiveNpc;
 
-        public static bool operator ==(Fate left, Fate right) => left.ID == right.ID;
-        public static bool operator !=(Fate left, Fate right) => left.ID != right.ID;
+        public static bool operator ==(Fate left, Fate right) => left.ID == right.ID && left.Center == right.Center && left.Radius == right.Radius && left.Progress == right.Progress && left.HandInCount == right.HandInCount && left.ObjectiveNpc == right.ObjectiveNpc;
+        public static bool operator !=(Fate left, Fate right) => left.ID != right.ID || left.Center != right.Center || left.Radius != right.Radius || left.Progress != right.Progress || left.HandInCount != right.HandInCount && left.ObjectiveNpc != right.ObjectiveNpc;
 
         public readonly bool Equals(Fate other) => this == other;
         public override readonly bool Equals(object? obj) => obj is Fate other && Equals(other);

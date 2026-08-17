@@ -5638,5 +5638,95 @@
       "ViewHeight": 60,
       "Filename": "155.0.1.bmp"
     }
+  ],
+  "1187.0": [
+    {
+      "MinBoundsX": -869,
+      "MinBoundsY": -204.5,
+      "MinBoundsZ": -750,
+      "MaxBoundsX": 845,
+      "MaxBoundsY": 204.5,
+      "MaxBoundsZ": 834.5,
+      "OriginX": -869,
+      "OriginZ": -750,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1187.0.1.bmp"
+    }
+  ],
+  "1188.0": [
+    {
+      "MinBoundsX": -895,
+      "MinBoundsY": -1,
+      "MinBoundsZ": -850.5,
+      "MaxBoundsX": 991.5,
+      "MaxBoundsY": 192,
+      "MaxBoundsZ": 871.5,
+      "OriginX": -895,
+      "OriginZ": -850.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1188.0.1.bmp"
+    }
+  ],
+  "1189.0": [
+    {
+      "MinBoundsX": -851.5,
+      "MinBoundsY": -300,
+      "MinBoundsZ": -949.5,
+      "MaxBoundsX": 846,
+      "MaxBoundsY": 55.5,
+      "MaxBoundsZ": 892.5,
+      "OriginX": -851.5,
+      "OriginZ": -949.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1189.0.1.bmp"
+    }
+  ],
+  "1190.0": [
+    {
+      "MinBoundsX": -779.5,
+      "MinBoundsY": -48,
+      "MinBoundsZ": -849.5,
+      "MaxBoundsX": 813.5,
+      "MaxBoundsY": 76,
+      "MaxBoundsZ": 801.5,
+      "OriginX": -779.5,
+      "OriginZ": -849.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1190.0.1.bmp"
+    }
+  ],
+  "1191.0": [
+    {
+      "MinBoundsX": -827,
+      "MinBoundsY": -14.5,
+      "MinBoundsZ": -862.5,
+      "MaxBoundsX": 801,
+      "MaxBoundsY": 183.5,
+      "MaxBoundsZ": 848.5,
+      "OriginX": -827,
+      "OriginZ": -862.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1191.0.1.bmp"
+    }
+  ],
+  "1192.0": [
+    {
+      "MinBoundsX": -895,
+      "MinBoundsY": -19,
+      "MinBoundsZ": -939.5,
+      "MaxBoundsX": 911,
+      "MaxBoundsY": 118,
+      "MaxBoundsZ": 893.5,
+      "OriginX": -895,
+      "OriginZ": -935.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1192.0.1.bmp"
+    }
   ]
 }
