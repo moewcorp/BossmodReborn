@@ -63,7 +63,7 @@ public sealed class PolygonCustom(WPos[] vertices) : Shape
 public sealed class PolygonCustomRel(WDir[] vertices) : Shape
 {
     public readonly WDir[] Vertices = vertices;
-    public override List<WDir> Contour(WPos center) => [with(Vertices.Length), .. Vertices];
+    public override List<WDir> Contour(WPos center) => ArrayListWrapper<WDir>.Wrap(Vertices);
 
     public override string ToString()
     {
