@@ -1,6 +1,3 @@
-// using System.IO;
-// using System.Globalization;
-
 using Clipper2Lib;
 
 namespace BossMod;
@@ -55,38 +52,6 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
                 }
             }
         }
-
-        // var sb = new StringBuilder();
-        // sb.AppendLine("WPos[] vertices");
-        // sb.AppendLine("[");
-
-        // const int perLine = 5;
-        // var count = 0;
-        // var culture = CultureInfo.InvariantCulture;
-        // for (var i = 0; i < count; ++i)
-        // {
-        //     var verts = combined[i].Vertices;
-        //     for (var j = 0; j < verts.Count; ++j)
-        //     {
-        //         if (count % perLine == 0)
-        //             sb.Append("    ");
-
-        //         var v = verts[j];
-        //         sb.Append($"new({v.X.ToString(culture)}f, {v.Z.ToString(culture)}f), ");
-
-        //         ++count;
-
-        //         if (count % perLine == 0)
-        //             sb.AppendLine();
-        //     }
-        // }
-
-        // if (count % perLine != 0)
-        //     sb.AppendLine();
-
-        // sb.AppendLine("];");
-
-        // File.WriteAllText("vertices.txt", sb.ToString());
 
         var center = new WPos((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f);
         var dir = center.ToWDir();
