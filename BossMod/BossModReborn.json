@@ -1,10 +1,9 @@
 {
   "Author": "The Combat Reborn Team / NiGuangOwO（本地化&适配）",
-  "Name": "Bossmod Reborn",
+  "Name": "BossMod Reborn",
   "InternalName": "BossModReborn",
-  "Punchline": "大脑按摩用的(在线安装Only)",
-  "Description": "后期软件兼容版",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
+  "Description": "国服本地化适配&插件生态联动",
   "ApplicableVersion": "any",
   "Tags": [
     "combat",
@@ -22,6 +21,7 @@
   "LoadPriority": 0,
   "IsTestingExclusive": false,
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
+  "Punchline": "大脑按摩用的(在线安装Only)",
   "AcceptsFeedback": true,
   "ImageUrls": [
     "https://raw.githubusercontent.com/FFXIV-CombatReborn/BossmodReborn/master/Data/image1.png",
