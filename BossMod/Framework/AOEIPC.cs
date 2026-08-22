@@ -37,12 +37,12 @@ public sealed class AOEIPCDto
     public float P3 { get; set; }
     public float OriginX { get; set; }
     public float OriginZ { get; set; }
-    public float OriginY { get; set; } // world-space height (usually player's Y)
+    public float OriginY { get; set; } 
     public float Rotation { get; set; } // final rotation in radians (aoe rotation + shape direction offset), game convention
     public double ActivationMs { get; set; } // relative milliseconds until activation
     public bool Risky { get; set; }
-    public bool Friendly { get; set; } // true = friendly indicator (stack/spread circles), rendered with NyaDraw's friendly color
-    public int GroupId { get; set; } // id of the component that spawned this aoe: groups aoes of the same skill/mechanic
+    public bool Friendly { get; set; } // true = friendly indicator (stack/spread circles)
+    public int GroupId { get; set; } // id of the component that spawned this aoe: groups aoes of the same mechanic
 }
 
 public static class AOEIPC
@@ -82,8 +82,6 @@ public static class AOEIPC
             }
             else if (components[i] is GenericStackSpread spread)
             {
-                // Stack (players must gather into the circle) is a friendly target point -> friendly blue.
-                // Spread (circle explodes, players must stay away / not overlap) is harmful -> red.
                 var instance = 0;
                 foreach (var stack in spread.ActiveStacks)
                 {
@@ -105,7 +103,6 @@ public static class AOEIPC
         return JsonSerializer.Serialize(list);
     }
 
-    // stack/spread: circle centered on the target player; stack = friendly gathering point, spread = harmful
     private static AOEIPCDto? ConvertStackSpreadCircle(WPos center, float radius, DateTime activation, DateTime now, float defaultY, int componentIndex, int instanceIndex, bool friendly)
     {
         if (radius <= 0)
@@ -155,7 +152,7 @@ public static class AOEIPC
         dto.ActivationMs = aoe.Activation == default ? 5000 : (aoe.Activation - now).TotalMilliseconds;
         dto.Risky = aoe.Risky;
         dto.GroupId = componentIndex;
-        dto.Key = (ulong)HashCode.Combine(aoe.ActorID, aoe.Activation.Ticks, dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
+        dto.Key = (ulong)HashCode.Combine(aoe.ActorID, (int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex);
         return dto;
     }
 
