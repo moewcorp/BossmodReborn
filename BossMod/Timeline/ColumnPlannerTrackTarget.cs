@@ -10,15 +10,15 @@ public sealed class ColumnPlannerTrackTarget(Timeline timeline, StateMachineTree
     protected override void RefreshElement(Element e) => e.Window.Color = Timeline.Colors.PlannerWindow[0];
 
     protected override List<string> DescribeElement(Element e) => [
-            $"Comment: {e.Value.Comment}",
-            $"Target: {UIStrategyValue.PreviewTarget((StrategyValueTrack)e.Value, moduleInfo)}"
+            $"备注: {e.Value.Comment}",
+            $"目标: {UIStrategyValue.PreviewTarget((StrategyValueTrack)e.Value, moduleInfo)}"
         ];
 
     protected override bool EditElement(Element e)
     {
         var modified = false;
         modified |= UIStrategyValue.DrawEditorTarget((StrategyValueTrack)e.Value, ActionTargets.All, moduleInfo);
-        modified |= ImGui.InputText("Comment", ref e.Value.Comment, 256);
+        modified |= ImGui.InputText("备注", ref e.Value.Comment, 256);
         modified |= EditElementWindow(e);
         return modified;
     }

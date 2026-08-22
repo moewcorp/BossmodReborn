@@ -36,12 +36,12 @@ sealed class ReplayTimelineWindow : UIWindow
 
     public override void Draw()
     {
-        if (ImGui.Button("Config"))
+        if (ImGui.Button("配置"))
         {
             ImGui.OpenPopup("config");
         }
         ImGui.SameLine();
-        if (ImGui.Button($"Save {(_colPlayers.AnyPlanModified ? "all changes" : "(no changes)")}"))
+        if (ImGui.Button($"保存 {(_colPlayers.AnyPlanModified ? "所有更改" : "（无更改）")}"))
         {
             _colPlayers.SaveAll();
         }
@@ -63,18 +63,18 @@ sealed class ReplayTimelineWindow : UIWindow
 
     private void DrawConfig()
     {
-        UICombo.Enum("State text", ref _colStates.TextDisplay);
-        foreach (var _ in _configTree.Node("Enemy casts columns"))
+        UICombo.Enum("状态文本", ref _colStates.TextDisplay);
+        foreach (var _ in _configTree.Node("敌人咏唱列"))
         {
             _colCastEvents.DrawConfig(_configTree);
         }
 
-        foreach (var n in _configTree.Node("Enemy details"))
+        foreach (var n in _configTree.Node("敌人详情"))
         {
             _colEnemies.DrawConfig(_configTree);
         }
 
-        foreach (var n in _configTree.Node("Player details"))
+        foreach (var n in _configTree.Node("玩家详情"))
         {
             _colPlayers.DrawConfig(_configTree);
         }

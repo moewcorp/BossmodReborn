@@ -24,11 +24,11 @@ abstract partial class AutoClear : ZoneModule
         if (targetRoom >= 0)
             DesiredRoom = targetRoom;
 
-        ImGui.Text($"Kills: {Kills}");
+        ImGui.Text($"击杀数: {Kills}");
 
         var maxPull = Config.MaxPull;
         ImGui.SetNextItemWidth(200);
-        if (ImGui.DragInt("Max mobs to pull", ref maxPull, 0.05f, 1, 15))
+        if (ImGui.DragInt("最大拉怪数量", ref maxPull, 0.05f, 1, 15))
         {
             Config.MaxPull = maxPull;
             Config.Modified.Fire();
@@ -36,13 +36,13 @@ abstract partial class AutoClear : ZoneModule
 
         var scale = Config.MinimapScale;
         ImGui.SetNextItemWidth(200);
-        if (ImGui.DragFloat("Minimap scale", ref scale, 0.05f, 0.2f, 3))
+        if (ImGui.DragFloat("小地图缩放", ref scale, 0.05f, 0.2f, 3))
         {
             Config.MinimapScale = scale;
             Config.Modified.Fire();
         }
 
-        if (ImGui.Button("Reload obstacles"))
+        if (ImGui.Button("重新加载障碍物"))
         {
             _obstacles.Dispose();
             _obstacles = new(World);
@@ -55,16 +55,16 @@ abstract partial class AutoClear : ZoneModule
         if (entry == null)
         {
             ImGui.SameLine();
-            UIMisc.HelpMarker(() => "Obstacle map missing for floor!", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
+            UIMisc.HelpMarker(() => "该层缺少障碍物地图！", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
         }
 
         if (data != null && data.PixelSize != 0.5f)
         {
             ImGui.SameLine();
-            UIMisc.HelpMarker(() => $"Wrong resolution for map; should be 0.5, got {data.PixelSize}", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
+            UIMisc.HelpMarker(() => $"地图分辨率错误；应为 0.5，实际为 {data.PixelSize}", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
         }
 
-        if (ImGui.Button("Set closest trap location as ignored"))
+        if (ImGui.Button("将最近的陷阱位置设为忽略"))
         {
             WPos? pos = null;
             var minDistanceSq = float.MaxValue;

@@ -319,7 +319,7 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
 
     private void DrawUserMarkers()
     {
-        foreach (var n in _tree.Node("User markers", r.UserMarkers.Count == 0))
+        foreach (var n in _tree.Node("用户标记", r.UserMarkers.Count == 0))
         {
             _tree.LeafNodes(r.UserMarkers, kv => $"{kv.Key:O}: {kv.Value}");
         }
@@ -331,7 +331,7 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
 
     private void DrawTimelines(Replay.Encounter enc)
     {
-        if (ImGui.Button("Show timeline"))
+        if (ImGui.Button("显示时间轴"))
         {
             OpenTimeline(enc, new());
         }
@@ -347,7 +347,7 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
 
             ImGui.SameLine();
         }
-        if (ImGui.Button("All"))
+        if (ImGui.Button("全部"))
         {
             OpenTimeline(enc, new((1u << enc.PartyMembers.Count) - 1));
         }
@@ -360,21 +360,21 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
             return;
         }
 
-        if (ImGui.MenuItem("Clear filters"))
+        if (ImGui.MenuItem("清除筛选"))
         {
             list.ClearFilters();
         }
-        if (ImGui.MenuItem("Show actor-size events", "", list.ShowActorSizeEvents, true))
+        if (ImGui.MenuItem("显示单位大小事件", "", list.ShowActorSizeEvents, true))
         {
             list.ShowActorSizeEvents = !list.ShowActorSizeEvents;
         }
-        if (ImGui.MenuItem("Show CLMV events", "", list.ShowCLMVEvents, true))
+        if (ImGui.MenuItem("显示 CLMV 事件", "", list.ShowCLMVEvents, true))
         {
             list.ShowCLMVEvents = !list.ShowCLMVEvents;
         }
-        if (ImGui.MenuItem("Pop out"))
+        if (ImGui.MenuItem("弹出窗口"))
         {
-            var windowName = $"Raw ops: {r.Path}, {(list.Encounter != null ? $"{list.ModuleInfo?.ModuleType.Name}: {list.Encounter.InstanceID:X} @ {list.Encounter.Time.Start} + {list.Encounter.Time}" : "full")}";
+            var windowName = $"原始操作: {r.Path}, {(list.Encounter != null ? $"{list.ModuleInfo?.ModuleType.Name}: {list.Encounter.InstanceID:X} @ {list.Encounter.Time.Start} + {list.Encounter.Time}" : "完整")}";
             _ = new UISimpleWindow(windowName, () => list.Draw(new(), list.Encounter?.Time.Start ?? r.Ops[0].Timestamp), true, new(1000, 1000));
         }
     }
@@ -386,13 +386,13 @@ sealed class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB,
             return;
         }
 
-        if (ImGui.MenuItem("Clear filters"))
+        if (ImGui.MenuItem("清除筛选"))
         {
             list.ClearFilters();
         }
-        if (ImGui.MenuItem("Pop out"))
+        if (ImGui.MenuItem("弹出窗口"))
         {
-            var windowName = $"Server IPCs: {r.Path}, {(list.Encounter != null ? $"{moduleInfo?.ModuleType.Name}: {list.Encounter.InstanceID:X} @ {list.Encounter.Time.Start} + {list.Encounter.Time}" : "full")}";
+            var windowName = $"服务器 IPC: {r.Path}, {(list.Encounter != null ? $"{moduleInfo?.ModuleType.Name}: {list.Encounter.InstanceID:X} @ {list.Encounter.Time.Start} + {list.Encounter.Time}" : "完整")}";
             _ = new UISimpleWindow(windowName, () => list.Draw(new(), list.Encounter?.Time.Start ?? r.Ops[0].Timestamp), true, new(1000, 1000));
         }
     }

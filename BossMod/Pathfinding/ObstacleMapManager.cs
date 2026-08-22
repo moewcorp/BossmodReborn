@@ -8,10 +8,10 @@ namespace BossMod.Pathfinding;
 [ConfigDisplay(Name = "Developer settings", Order = 9)]
 public sealed class DeveloperConfig : ConfigNode
 {
-    [PropertyDisplay("Obstacle maps: load from source")]
+    [PropertyDisplay("障碍物地图：从源加载")]
     public bool MapLoadFromSource;
 
-    [PropertyDisplay("Obstacle maps: source path", tooltip: "Should be <repo root>/BossModReborn/Pathfinding/ObstacleMaps/maplist.json")]
+    [PropertyDisplay("障碍物地图：源路径", tooltip: "应为 <仓库根目录>/BossModReborn/Pathfinding/ObstacleMaps/maplist.json")]
     public string MapSourcePath = "";
 }
 

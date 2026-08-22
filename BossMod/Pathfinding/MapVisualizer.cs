@@ -47,8 +47,8 @@ public sealed class MapVisualizer
         }
 
         var size = new Vector2(Map.Width, Map.Height) * ScreenPixelSize;
-        ImGui.TableSetupColumn("Map", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoClip, size.X);
-        ImGui.TableSetupColumn("Control");
+        ImGui.TableSetupColumn("地图", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoClip, size.X);
+        ImGui.TableSetupColumn("控制");
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
@@ -185,7 +185,7 @@ public sealed class MapVisualizer
             {
                 if (Map.IsTeleShadow(hoverNode))
                 {
-                    ImGui.TextUnformatted("Tele: shadow");
+                    ImGui.TextUnformatted("传送: 阴影");
                 }
                 if (Map.HasTeleEdges(hoverNode))
                 {
@@ -222,25 +222,25 @@ public sealed class MapVisualizer
         }
 
         // pathfinding controls
-        if (ImGui.Button("Reset pf"))
+        if (ImGui.Button("重置寻路"))
         {
             ExecTimed(() => _pathfind = BuildPathfind());
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Step pf"))
+        if (ImGui.Button("单步寻路"))
         {
             ExecTimed(() => _pathfind.ExecuteStep());
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Run pf"))
+        if (ImGui.Button("运行寻路"))
         {
             ExecTimed(() => _pathfind.Execute());
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Step back") && _pathfind.NumSteps > 0)
+        if (ImGui.Button("回退一步") && _pathfind.NumSteps > 0)
         {
             ExecTimed(() =>
             {
@@ -254,7 +254,7 @@ public sealed class MapVisualizer
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Run until reopen"))
+        if (ImGui.Button("运行至重新开放"))
         {
             ExecTimed(() =>
             {
@@ -267,7 +267,7 @@ public sealed class MapVisualizer
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Step x100"))
+        if (ImGui.Button("单步 x100"))
         {
             ExecTimed(() =>
             {
@@ -293,34 +293,34 @@ public sealed class MapVisualizer
         if (Map.HasTeleporters)
         {
             ImGui.Separator();
-            ImGui.TextUnformatted("Teleporters");
+            ImGui.TextUnformatted("传送点");
 
             var showShadow = MapVizPrefs.ShowTeleShadow;
             var showEntrances = MapVizPrefs.ShowTeleEntrances;
             var showConnections = MapVizPrefs.ShowTeleConnections;
 
-            if (ImGui.Checkbox("Show shadow###tele_shadow", ref showShadow))
+            if (ImGui.Checkbox("显示阴影###tele_shadow", ref showShadow))
             {
                 MapVizPrefs.ShowTeleShadow = showShadow;
             }
 
             ImGui.SameLine();
-            if (ImGui.Checkbox("Show entrances###tele_entr", ref showEntrances))
+            if (ImGui.Checkbox("显示入口###tele_entr", ref showEntrances))
             {
                 MapVizPrefs.ShowTeleEntrances = showEntrances;
             }
 
             ImGui.SameLine();
-            if (ImGui.Checkbox("Show connections###tele_conn", ref showConnections))
+            if (ImGui.Checkbox("显示连接###tele_conn", ref showConnections))
             {
                 MapVizPrefs.ShowTeleConnections = showConnections;
             }
 
             CountTele(out var cntShadow, out var cntEntrances, out var cntEdges);
-            ImGui.TextUnformatted($"Shadow cells: {cntShadow}, Entrances: {cntEntrances}, Edges: {cntEdges}");
+            ImGui.TextUnformatted($"阴影单元: {cntShadow}, 入口: {cntEntrances}, 边: {cntEdges}");
         }
 
-        using var n = ImRaii.TreeNode("Waypoints");
+        using var n = ImRaii.TreeNode("路径点");
         if (n)
         {
             DrawWaypoints(hoverNode >= 0 ? hoverNode : _pathfind.BestIndex());

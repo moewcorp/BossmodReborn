@@ -355,7 +355,7 @@ sealed class OpList(Replay replay, Replay.Encounter? enc, BossModuleRegistry.Inf
                 ImGui.Separator();
             }
 
-            if (ImGui.MenuItem("Jump to timestamp", "double click"))
+            if (ImGui.MenuItem("跳转到时间戳", "双击"))
                 scrollTo(o.Timestamp);
         };
     }

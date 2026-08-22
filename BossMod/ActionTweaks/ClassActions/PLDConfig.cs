@@ -3,10 +3,10 @@
 [ConfigDisplay(Parent = typeof(ActionTweaksConfig))]
 class PLDConfig : ConfigNode
 {
-    [PropertyDisplay("预读阶段禁止过早使用神圣")]
+    [PropertyDisplay("预读阶段禁止过早使用圣灵")]
     public bool ForbidEarlyHolySpirit = true;
 
-    [PropertyDisplay("预读阶段禁止过早使用飞盾（未习得神圣时）")]
+    [PropertyDisplay("预读阶段禁止过早使用投盾（未习得圣灵时）")]
     public bool ForbidEarlyShieldLob = true;
 
     public enum WingsBehavior : uint

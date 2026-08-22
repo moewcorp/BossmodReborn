@@ -43,32 +43,32 @@ public sealed class CooldownPlannerColumns : Timeline.ColumnGroup
 
     public void DrawCommonControls()
     {
-        if (ImGui.Button("Modules"))
+        if (ImGui.Button("模块"))
         {
             ImGui.OpenPopup("modules");
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Column visibility"))
+        if (ImGui.Button("列可见性"))
         {
             ImGui.OpenPopup("columns");
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Export to clipboard"))
+        if (ImGui.Button("导出到剪贴板"))
         {
             ExportToClipboard();
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Import from clipboard"))
+        if (ImGui.Button("从剪贴板导入"))
         {
             ImportFromClipboard();
         }
 
         ImGui.SameLine();
         ImGui.SetNextItemWidth(150);
-        Modified |= ImGui.InputText("Name", ref Plan.Name, 255);
+        Modified |= ImGui.InputText("名称", ref Plan.Name, 255);
 
         using (var popup = ImRaii.Popup("modules"))
         {
@@ -116,7 +116,7 @@ public sealed class CooldownPlannerColumns : Timeline.ColumnGroup
                         using var tooltip = ImRaii.Tooltip();
                         if (tooltip.Alive)
                         {
-                            ImGui.TextUnformatted("Hold shift to remove");
+                            ImGui.TextUnformatted("按住 Shift 删除");
                             UIRotationModule.DescribeModule(m.Type, m.Definition);
                         }
                     }

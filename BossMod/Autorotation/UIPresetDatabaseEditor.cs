@@ -34,7 +34,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
         }
         else
         {
-            ImGui.TextUnformatted("Select preset to edit or create a new one.");
+            ImGui.TextUnformatted("选择要编辑的预设，或创建新预设。");
         }
     }
 
@@ -48,32 +48,32 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
             return;
         }
 
-        ImGui.OpenPopup("Unsaved modifications"); // TODO: why do i have to do it every frame???
+        ImGui.OpenPopup("未保存的修改"); // TODO: why do i have to do it every frame???
         var modalOpen = true;
-        using var modal = ImRaii.PopupModal("Unsaved modifications", ref modalOpen, ImGuiWindowFlags.AlwaysAutoResize);
+        using var modal = ImRaii.PopupModal("未保存的修改", ref modalOpen, ImGuiWindowFlags.AlwaysAutoResize);
         if (!modal)
             return;
-        ImGui.TextUnformatted($"Currently opened preset {_selectedPreset?.Preset.Name} has unsaved modifications.");
-        ImGui.TextUnformatted("To select a new preset, you need to either save or discard them.");
-        ImGui.TextUnformatted("How do you want to proceed?");
+        ImGui.TextUnformatted($"当前打开的预设 {_selectedPreset?.Preset.Name} 有未保存的修改。");
+        ImGui.TextUnformatted("要选择新预设，您需要保存或放弃这些修改。");
+        ImGui.TextUnformatted("您希望如何处理？");
         if (DrawSaveCurrentPresetButton())
         {
             SaveCurrentPreset();
             CompleteChangeCurrentPreset();
         }
         ImGui.SameLine();
-        if (UIMisc.Button("Save as copy", _selectedPresetIndex < 0, "Can't save new preset as copy"))
+        if (UIMisc.Button("另存为副本", _selectedPresetIndex < 0, "无法将新预设另存为副本"))
         {
             SaveCurrentPresetAsCopy();
             CompleteChangeCurrentPreset();
         }
         ImGui.SameLine();
-        if (ImGui.Button("Discard"))
+        if (ImGui.Button("放弃"))
         {
             CompleteChangeCurrentPreset();
         }
         ImGui.SameLine();
-        if (ImGui.Button("Cancel") || !modalOpen)
+        if (ImGui.Button("取消") || !modalOpen)
         {
             _pendingSelectPresetIndex = -1;
         }
@@ -84,14 +84,14 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
     private void DrawPresetSelector()
     {
         UIMisc.HelpMarker("""
-            To start using autorotation, create a *preset*.
-            Preset configures rotation *modules* and their *strategies*.
-            Module is a piece of code that evaluates game state and fills prioritized list of candidate actions.
-            The autorotation framework selects the highest priority action from the list to execute on next opportunity.
-            Each module can be further configured by a set of *strategies*, which customize different aspects of its behaviour.
-            For example, you might want to create a 'single target' and 'aoe' presets, which would use the same modules, but would configure their strategies differently.
-            You could optionally assign keyboard modifiers to each strategy value; such value would only be applied if modifier is held.
-            This allows you, for example, to set up preset so that it delays 2-minute burst if shift is held.
+            要开始使用自动循环，请创建一个*预设*。
+            预设配置*循环模块*及其*策略*。
+            模块是一段评估游戏状态并填充候选动作优先级列表的代码。
+            自动循环框架会从列表中选择优先级最高的动作，在下一个机会执行。
+            每个模块都可以通过一组*策略*进一步配置，以自定义其行为的不同方面。
+            例如，您可以创建\"单体\"和\"AOE\"两个预设，使用相同的模块，但策略配置不同。
+            您还可以为每个策略值分配键盘修饰键；只有在按住修饰键时该值才会生效。
+            例如，您可以设置预设：按住 Shift 时延迟 2 分钟爆发技能。
             """);
         ImGui.SameLine();
 
@@ -103,7 +103,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
         }
 
         ImGui.SetNextItemWidth(200);
-        using (var combo = ImRaii.Combo("Preset", _selectedPreset == null ? "" : _selectedPresetIndex < 0 ? "<new>" : selectedPresetList[_selectedPresetIndex].Name))
+        using (var combo = ImRaii.Combo("预设", _selectedPreset == null ? "" : _selectedPresetIndex < 0 ? "<新建>" : selectedPresetList[_selectedPresetIndex].Name))
         {
             if (combo)
             {
@@ -117,25 +117,25 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
         if (DrawSaveCurrentPresetButton())
             SaveCurrentPreset();
         ImGui.SameLine();
-        if (UIMisc.Button("Save as copy", _selectedPresetIndex < 0, "Can't save new preset as copy"))
+        if (UIMisc.Button("另存为副本", _selectedPresetIndex < 0, "无法将新预设另存为副本"))
             SaveCurrentPresetAsCopy();
         ImGui.SameLine();
-        if (UIMisc.Button("Revert", 0, (!HaveUnsavedModifications, "Current preset is not modified"), (_selectedPresetIndex < 0, "No preset is selected")))
+        if (UIMisc.Button("还原", 0, (!HaveUnsavedModifications, "当前预设未修改"), (_selectedPresetIndex < 0, "未选择预设")))
             RevertCurrentPreset();
         ImGui.SameLine();
-        if (UIMisc.Button("New", HaveUnsavedModifications, "Current preset is modified, save or discard changes"))
+        if (UIMisc.Button("新建", HaveUnsavedModifications, "当前预设已修改，请保存或放弃更改"))
             CreateNewPreset(-1, false);
         ImGui.SameLine();
-        if (UIMisc.Button("Copy", 0, (HaveUnsavedModifications, "Current preset is modified, save or discard changes"), (_selectedPresetIndex < 0, "No preset is selected")))
+        if (UIMisc.Button("复制", 0, (HaveUnsavedModifications, "当前预设已修改，请保存或放弃更改"), (_selectedPresetIndex < 0, "未选择预设")))
             CreateNewPreset(_selectedPresetIndex, _selectedPresetDefault);
         ImGui.SameLine();
-        if (UIMisc.Button("Delete", 0, (_selectedPresetDefault, "The default preset can't be deleted. If you would like to hide it, you can do so in Settings -> Autorotation."), (!ImGui.GetIO().KeyShift, "Hold shift to delete"), (_selectedPresetIndex < 0, "No preset is selected")))
+        if (UIMisc.Button("删除", 0, (_selectedPresetDefault, "默认预设无法删除。如果您想隐藏它，可以在 设置 -> 自动循环 中进行。"), (!ImGui.GetIO().KeyShift, "按住 Shift 删除"), (_selectedPresetIndex < 0, "未选择预设")))
             DeleteCurrentPreset();
         ImGui.SameLine();
-        if (UIMisc.Button("Export", _selectedPreset == null, "No preset is selected"))
+        if (UIMisc.Button("导出", _selectedPreset == null, "未选择预设"))
             ExportToClipboard();
         ImGui.SameLine();
-        if (UIMisc.Button("Import", HaveUnsavedModifications, "Current preset is modified, save or discard changes"))
+        if (UIMisc.Button("导入", HaveUnsavedModifications, "当前预设已修改，请保存或放弃更改"))
             ImportNewPresetFromClipboard();
     }
 
@@ -168,7 +168,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
         }
     }
 
-    private bool DrawSaveCurrentPresetButton() => UIMisc.Button("Save", 0, (!HaveUnsavedModifications, "Current preset is not modified"), (_selectedPreset?.NameConflict ?? false, "Current preset name is empty or duplicates name of other existing preset"));
+    private bool DrawSaveCurrentPresetButton() => UIMisc.Button("保存", 0, (!HaveUnsavedModifications, "当前预设未修改"), (_selectedPreset?.NameConflict ?? false, "当前预设名称为空或与其他现有预设重名"));
 
     private void RevertCurrentPreset() => _selectedPreset = new(PresetDB, _selectedPresetIndex, _selectedPresetDefault, _selectedModuleType);
 
@@ -293,7 +293,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
             Service.Logger.Warning(ex, $"Failed to parse preset");
             Service.Notifications.AddNotification(new()
             {
-                Title = "Error while importing preset",
+                Title = "导入预设时出错",
                 Content = ex.Message,
                 Type = Dalamud.Interface.ImGuiNotification.NotificationType.Warning
             });

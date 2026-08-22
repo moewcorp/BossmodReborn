@@ -6,13 +6,13 @@ public abstract class ColumnStateMachine(Timeline timeline, StateMachineTree tre
 {
     public enum NodeTextDisplay
     {
-        [PropertyDisplay("No text")]
+        [PropertyDisplay("无文本")]
         None,
 
-        [PropertyDisplay("ID only")]
+        [PropertyDisplay("仅 ID")]
         ID,
 
-        [PropertyDisplay("ID and name")]
+        [PropertyDisplay("ID 和名称")]
         IDName,
     }
 

@@ -85,15 +85,15 @@ sealed class StateTransitionTimings
     public void Draw(UITree tree)
     {
         Action? actions = null;
-        ImGui.Checkbox("Show transitions to end", ref _showTransitionsToEnd);
-        foreach (var n in tree.Node("Encounters", _encounters.Count == 0))
+        ImGui.Checkbox("显示到结束的过渡", ref _showTransitionsToEnd);
+        foreach (var n in tree.Node("遭遇战", _encounters.Count == 0))
         {
             tree.LeafNodes(_encounters, e => $"{e.Item1.Path} @ {e.Item2.Time.Start:O} ({e.Item2.Time.Duration:f3}s)", e => EncounterContextMenu(e.Item2, ref actions));
         }
 
-        foreach (var n in tree.Node("Errors", _errors.Count == 0))
+        foreach (var n in tree.Node("错误", _errors.Count == 0))
         {
-            ImGui.InputFloat("Last seconds to ignore", ref _lastSecondsToIgnore);
+            ImGui.InputFloat("忽略最后几秒", ref _lastSecondsToIgnore);
             tree.LeafNodes(_errors.Where(e => (e.Item2.Time.End - e.Item3.Timestamp).TotalSeconds >= _lastSecondsToIgnore), error => $"{LocationString(error.Item1, error.Item2, error.Item3.Timestamp)} [{error.Item3.CompType}] {error.Item3.Message}");
         }
 
@@ -151,7 +151,7 @@ sealed class StateTransitionTimings
 
     private void EncounterContextMenu(Replay.Encounter enc, ref Action? actions)
     {
-        if (ImGui.MenuItem("Ignore this encounter"))
+        if (ImGui.MenuItem("忽略此遭遇战"))
         {
             actions += () =>
             {
@@ -173,7 +173,7 @@ sealed class StateTransitionTimings
 
     private void TransitionContextMenu(StateMetrics state, uint to, TransitionMetrics trans, UITree tree, ref Action? actions)
     {
-        if (ImGui.MenuItem("Ignore this transition"))
+        if (ImGui.MenuItem("忽略此过渡"))
         {
             actions += () =>
             {
@@ -185,7 +185,7 @@ sealed class StateTransitionTimings
                 state.Transitions.Remove(to);
             };
         }
-        if (_selected is TransitionMetrics dest && trans != dest && ImGui.MenuItem("Merge to selected transition"))
+        if (_selected is TransitionMetrics dest && trans != dest && ImGui.MenuItem("合并到选定的过渡"))
         {
             dest.Instances.AddRange(trans.Instances);
             RecalculateMetrics(dest);
@@ -197,7 +197,7 @@ sealed class StateTransitionTimings
 
     private void TransitionInstanceContextMenu(StateMetrics state, uint to, TransitionMetrics trans, TransitionMetric metric, ref Action? actions)
     {
-        if (ImGui.MenuItem("Ignore this instance"))
+        if (ImGui.MenuItem("忽略此实例"))
         {
             actions += () =>
             {

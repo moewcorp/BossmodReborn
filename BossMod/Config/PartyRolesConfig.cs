@@ -14,7 +14,7 @@ public class PartyRolesConfig : ConfigNode
     [PropertyDisplay("切换区域时自动分配职能")]
     public bool AutoAssignOnDutyEnter = false;
 
-    [PropertyDisplay("Preferred auto-assigned role", tooltip: "Only applied when auto-assigning roles (via the 'Auto-Assign Roles' button or on zone change when that option is enabled). Biases the player toward the chosen slot when their job matches the role; otherwise it falls back to the default logic.")]
+    [PropertyDisplay("首选自动分配职能", tooltip: "仅在自动分配职责时生效（通过\"自动分配职责\"按钮或启用该选项后的区域切换时）。当玩家职业与该职能匹配时，会偏向将其分配到所选槽位；否则回退到默认逻辑。")]
     public Assignment PreferredAutoAssignedRole = Assignment.Unassigned;
 
     public Dictionary<ulong, Assignment> Assignments = [];
@@ -411,7 +411,7 @@ public class PartyRolesConfig : ConfigNode
                     ImGui.TableSetupColumn(r.ToString(), ImGuiTableColumnFlags.None, 25);
                 }
 
-                ImGui.TableSetupColumn("Name");
+                ImGui.TableSetupColumn("名称");
                 ImGui.TableHeadersRow();
 
                 List<(ulong cid, string name, char role, Assignment assignment)> party = [];

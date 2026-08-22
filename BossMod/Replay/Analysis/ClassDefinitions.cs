@@ -367,7 +367,7 @@ sealed class ClassDefinitions
     {
         var ns = "ClassShared";
 
-        if (ImGui.MenuItem("Generate AID enum"))
+        if (ImGui.MenuItem("生成 AID 枚举"))
         {
             var writer = new AIDWriter(ns);
             writer.Add("None", 0);
@@ -384,7 +384,7 @@ sealed class ClassDefinitions
             ImGui.SetClipboardText(writer.Result());
         }
 
-        if (ImGui.MenuItem("Generate definitions constructor"))
+        if (ImGui.MenuItem("生成定义构造函数"))
         {
             var writer = new DefinitionWriter(ns);
             writer.Add(_actionData[ActionDefinitions.IDSprint]);
@@ -403,32 +403,32 @@ sealed class ClassDefinitions
 
     private void CtxMenuClass(ClassData cd)
     {
-        if (ImGui.MenuItem("Generate full definition"))
+        if (ImGui.MenuItem("生成完整定义"))
         {
             ImGui.SetClipboardText(GenerateClassDefinition(cd, false));
         }
 
-        if (ImGui.MenuItem("Generate definition stub"))
+        if (ImGui.MenuItem("生成本地定义存根"))
         {
             ImGui.SetClipboardText(GenerateClassDefinition(cd, true));
         }
 
-        if (ImGui.MenuItem("Generate AID enum"))
+        if (ImGui.MenuItem("生成 AID 枚举"))
         {
             ImGui.SetClipboardText(GenerateClassAID(cd));
         }
 
-        if (ImGui.MenuItem("Generate TraitID enum"))
+        if (ImGui.MenuItem("生成 TraitID 枚举"))
         {
             ImGui.SetClipboardText(GenerateClassTraitID(cd));
         }
 
-        if (ImGui.MenuItem("Generate SID enum"))
+        if (ImGui.MenuItem("生成 SID 枚举"))
         {
             ImGui.SetClipboardText(GenerateClassSID(cd));
         }
 
-        if (ImGui.MenuItem("Generate definitions constructor"))
+        if (ImGui.MenuItem("生成定义构造函数"))
         {
             ImGui.SetClipboardText(GenerateClassRegistration(cd));
         }

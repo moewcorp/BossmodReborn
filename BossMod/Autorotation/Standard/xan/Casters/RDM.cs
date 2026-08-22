@@ -30,21 +30,21 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
 
     public enum MeleeStrategy
     {
-        [PropertyDisplay("Use at full mana, if needed for movement, or during burst")]
+        [PropertyDisplay("法力满时使用，需要移动时使用，或爆发期间使用")]
         Automatic,
-        [PropertyDisplay("Do not use")]
+        [PropertyDisplay("不使用")]
         Delay,
-        [PropertyDisplay("Use ASAP, break combos if necessary")]
+        [PropertyDisplay("尽快使用，必要时打断连击")]
         Force
     }
 
     public enum ComboStrategy
     {
-        [PropertyDisplay("Always complete combo (hold if target moves out of range)")]
+        [PropertyDisplay("始终完成连击（目标移出范围时保持）")]
         Preserve,
-        [PropertyDisplay("Always complete combo; use Reprise as fallback if enough mana (NOT IMPLEMENTED, this is a placeholder option)")]
+        [PropertyDisplay("始终完成连击；法力足够时使用续斩作为后备（未实现，此为占位选项）")]
         Reprise,
-        [PropertyDisplay("Break combo if target is out of range")]
+        [PropertyDisplay("目标超出范围时打断连击")]
         Break
     }
 

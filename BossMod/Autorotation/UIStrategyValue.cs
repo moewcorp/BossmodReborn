@@ -53,7 +53,7 @@ public static class UIStrategyValue
         if (value is StrategyValueTrack tr)
         {
             modified |= DrawEditorTrackOption(tr, cfg, level);
-            modified |= ImGui.InputText("Comment", ref value.Comment, 512);
+            modified |= ImGui.InputText("备注", ref value.Comment, 512);
             modified |= DrawEditorPriority(tr);
             modified |= DrawEditorTarget(tr, cfg.Options[tr.Option].SupportedTargets, moduleInfo);
         }
@@ -88,21 +88,21 @@ public static class UIStrategyValue
     {
         var modified = false;
         var overridePriority = !float.IsNaN(value.PriorityOverride);
-        if (ImGui.Checkbox("Override priority", ref overridePriority))
+        if (ImGui.Checkbox("覆盖优先级", ref overridePriority))
         {
             modified = true;
             value.PriorityOverride = overridePriority ? ActionQueue.Priority.Low : float.NaN;
         }
         ImGui.SameLine();
         UIMisc.HelpMarker("""
-            Define custom priority for the corresponding action.
-            Priority is compared against other candidate actions; it is suggested to use a predefined base and add a small offset to disambiguate multiple actions.
-            Base priorities are the following:
-            * Very Low (1000) - action will be used only if there is nothing else to press.
-            * Low (2000) - action will be used only if it won't delay any dps action (it might delay eg. spending a second charge when there is no risk of overcapping).
-            * Medium (3000) - action will be used in next possible ogcd slot, but it won't delay gcd or any extremely important ogcds; you can expect to have at least 1 slot for medium actions per gcd.
-            * High (4000) - action will be used in the next possible ogcd slot; it won't delay gcd, but might break the rotation in some cases if not used carefully.
-            * Very High (5000) - action will be used asap; will delay gcd if needed.
+            为对应动作定义自定义优先级。
+            优先级会与其他候选动作进行比较；建议使用预定义基准并添加小偏移量来区分多个动作。
+            基准优先级如下：
+            * 非常低 (1000) - 仅在没有其他可用的动作时使用该动作。
+            * 低 (2000) - 仅当不会延迟任何输出动作时使用（例如，在没有溢出风险时，可能会延迟使用第二次充能）。
+            * 中 (3000) - 会在下一个可能的即刻技能槽位使用，但不会延迟 GCD 或任何极其重要的即刻技能；每个 GCD 至少可期望有 1 个中优先级动作槽位。
+            * 高 (4000) - 会在下一个可能的即刻技能槽位使用；不会延迟 GCD，但如果使用不当可能在某些情况下打乱循环。
+            * 非常高 (5000) - 会尽快使用；必要时会延迟 GCD。
             """);
 
         if (overridePriority)
@@ -213,10 +213,10 @@ public static class UIStrategyValue
             }
             else
             {
-                modified |= ImGui.DragFloat("Offset", ref value.Offset1, 0.1f, 0, 30);
-                modified |= ImGui.DragFloat("Direction", ref value.Offset2, 1, -180, 180);
+                modified |= ImGui.DragFloat("偏移", ref value.Offset1, 0.1f, 0, 30);
+                modified |= ImGui.DragFloat("方向", ref value.Offset2, 1, -180, 180);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"In degrees; 0 is south, increases CCW (so 90 is E, 180 is N, -90 is W)");
+                    ImGui.SetTooltip($"单位为度；0 为正南，逆时针增加（90 为正东，180 为正北，-90 为正西）");
             }
         }
 
@@ -401,7 +401,7 @@ public class FakeFloatRenderer : TrackRenderer
                 modified = true;
             }
         }
-        if (ImGui.Checkbox("Stay on edge of hitbox", ref isOnHitbox))
+        if (ImGui.Checkbox("保持在命中体积边缘", ref isOnHitbox))
         {
             value.Option = isOnHitbox ? 0 : 1;
             modified = true;

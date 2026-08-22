@@ -590,7 +590,7 @@ sealed class AbilityInfo : CommonEnumInfo
             {
                 if (ImGui.BeginPopupContextItem("casts-ctx"))
                 {
-                    if (ImGui.MenuItem("Copy (WPos, Angle) array"))
+                    if (ImGui.MenuItem("复制 (WPos, Angle) 数组"))
                     {
                         data.Casts.Sort(static (a, b) => a.Item3.Time.Start.CompareTo(b.Item3.Time.Start));
                         var inv = CultureInfo.InvariantCulture;
@@ -679,7 +679,7 @@ sealed class AbilityInfo : CommonEnumInfo
 
     public void DrawContextMenu()
     {
-        if (ImGui.MenuItem("Generate enum for boss module"))
+        if (ImGui.MenuItem("为 Boss 模块生成枚举"))
         {
             var enumPairs = new List<(string, string)>(_data.Count);
             foreach (var d in _data)
@@ -697,7 +697,7 @@ sealed class AbilityInfo : CommonEnumInfo
             ImGui.SetClipboardText(sb.ToString());
         }
 
-        if (ImGui.MenuItem("Generate missing enum values for boss module"))
+        if (ImGui.MenuItem("为 Boss 模块生成缺失的枚举值"))
         {
             var missingPairs = new List<(string, string)>();
             foreach (var kv in _data)

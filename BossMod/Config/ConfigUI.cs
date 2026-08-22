@@ -615,7 +615,7 @@ public sealed class ConfigUI : IDisposable
             }
 
             ImGui.TableSetupColumn("----");
-            ImGui.TableSetupColumn("Name");
+            ImGui.TableSetupColumn("名称");
             ImGui.TableHeadersRow();
 
             var assignments = root.Get<PartyRolesConfig>().SlotsPerAssignment(ws.Party);

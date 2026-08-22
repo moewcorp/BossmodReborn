@@ -123,7 +123,7 @@ public sealed class ColumnPlayerDetails : Timeline.ColumnGroup
 
                 using (ImRaii.Disabled(!haveDifferentPhaseTimes))
                 {
-                    if (ImGui.Button("Sync phase durations to replay"))
+                    if (ImGui.Button("将阶段时长同步到回放"))
                     {
                         for (var i = 0; i < _tree.Phases.Count; ++i)
                         {
@@ -146,13 +146,13 @@ public sealed class ColumnPlayerDetails : Timeline.ColumnGroup
 
         var isDefault = selection == list.SelectedIndex;
         ImGui.SameLine();
-        if (ImGui.Checkbox("Default", ref isDefault))
+        if (ImGui.Checkbox("默认", ref isDefault))
         {
             list.SelectedIndex = isDefault ? selection : -1;
             _planDatabase.ModifyManifest(moduleType, _playerClass);
         }
         ImGui.SameLine();
-        if (UIMisc.Button("Save", _planner == null || !_planner.Modified, "Current plan was not modified"))
+        if (UIMisc.Button("保存", _planner == null || !_planner.Modified, "当前计划未修改"))
         {
             SaveChanges();
         }

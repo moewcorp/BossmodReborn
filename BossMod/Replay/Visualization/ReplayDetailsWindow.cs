@@ -111,9 +111,9 @@ sealed class ReplayDetailsWindow : UIWindow
             _azimuth = _mgr.WorldState.Client.CameraAzimuth.Deg;
         }
 
-        ImGui.DragFloat("Camera azimuth", ref _azimuth, 1, -180f, 180f);
+        ImGui.DragFloat("相机方位角", ref _azimuth, 1, -180f, 180f);
         ImGui.SameLine();
-        ImGui.Checkbox("Override", ref _azimuthOverride);
+        ImGui.Checkbox("覆盖", ref _azimuthOverride);
         _hintsBuilder.Update(_hints, _povSlot, false);
         _rmm.Update(0, false, false);
         var drawnGauge = false;
@@ -122,7 +122,7 @@ sealed class ReplayDetailsWindow : UIWindow
             if (_mgr.WorldState.Client.CountdownRemaining != null)
             {
                 ImGui.SameLine();
-                ImGui.Text($"Countdown: {_mgr.WorldState.Client.CountdownRemaining.Value:f3}");
+                ImGui.Text($"倒计时: {_mgr.WorldState.Client.CountdownRemaining.Value:f3}");
             }
 
             var drawTimerPre = DateTime.Now;
@@ -167,17 +167,17 @@ sealed class ReplayDetailsWindow : UIWindow
                 var povOffset = pov.Position - _mgr.ActiveModule.Center;
                 povOffsetString = $"{povOffset} [R={povOffset.Length():f3}, dir={Angle.FromDirection(povOffset)}]";
             }
-            ImGui.TextUnformatted($"Current state: {_mgr.ActiveModule.StateMachine.ActiveState?.ID:X}, Time since pull: {_mgr.ActiveModule.StateMachine.TimeSinceActivation:f3}, Draw time: {(drawTimerPost - drawTimerPre).TotalMilliseconds:f3}ms, Components: {compList}, Player offset: {povOffsetString}");
+            ImGui.TextUnformatted($"当前状态: {_mgr.ActiveModule.StateMachine.ActiveState?.ID:X}, 开战时间: {_mgr.ActiveModule.StateMachine.TimeSinceActivation:f3}, 绘制时间: {(drawTimerPost - drawTimerPre).TotalMilliseconds:f3}ms, 组件: {compList}, 玩家偏移: {povOffsetString}");
         }
 
         if (!drawnGauge)
             DrawGauge(false);
 
-        if (ImGui.CollapsingHeader("Plan execution"))
+        if (ImGui.CollapsingHeader("计划执行"))
         {
             resetPF |= UIRotationWindow.DrawRotationSelector(_rmm);
 
-            if (_mgr.ActiveModule != null && ImGui.Button("Timeline"))
+            if (_mgr.ActiveModule != null && ImGui.Button("时间轴"))
             {
                 _ = new StateMachineWindow(_mgr.ActiveModule);
             }
@@ -186,7 +186,7 @@ sealed class ReplayDetailsWindow : UIWindow
             {
                 ImGui.SameLine();
                 var plans = _rotationDB.Plans.GetPlans(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
-                var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "Plan");
+                var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "计划");
                 if (newSel != plans.SelectedIndex)
                 {
                     plans.SelectedIndex = newSel;
@@ -242,12 +242,12 @@ sealed class ReplayDetailsWindow : UIWindow
         DrawAllActorsTable();
         DrawAI();
 
-        if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
+        if (ImGui.CollapsingHeader($"事件 (版本: {_player.Replay.GameVersion})"))
         {
             _events.Draw();
         }
 
-        if (ImGui.CollapsingHeader("Analysis"))
+        if (ImGui.CollapsingHeader("分析"))
         {
             _analysis.Draw();
         }
@@ -332,17 +332,17 @@ sealed class ReplayDetailsWindow : UIWindow
         }
 
         ImGui.SameLine();
-        ImGui.Checkbox("Show config", ref _showConfig);
+        ImGui.Checkbox("显示配置", ref _showConfig);
         ImGui.SameLine();
-        ImGui.Checkbox("Show debug", ref _showDebug);
+        ImGui.Checkbox("显示调试", ref _showDebug);
         ImGui.SameLine();
-        if (ImGui.Button("Split"))
+        if (ImGui.Button("拆分"))
         {
             SplitLog();
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Split (encounter)"))
+        if (ImGui.Button("拆分（遭遇战）"))
         {
             IsolateEncounter();
         }
@@ -501,25 +501,25 @@ sealed class ReplayDetailsWindow : UIWindow
 
     private bool DrawPartyTable()
     {
-        if (!ImGui.CollapsingHeader("Party"))
+        if (!ImGui.CollapsingHeader("队伍"))
         {
             return false;
         }
 
         var resetPF = false;
         ImGui.BeginTable("party", 12, ImGuiTableFlags.Resizable);
-        ImGui.TableSetupColumn("POV", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25);
-        ImGui.TableSetupColumn("Class", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 30);
-        ImGui.TableSetupColumn("Assign", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 50);
+        ImGui.TableSetupColumn("视角", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25);
+        ImGui.TableSetupColumn("职业", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 30);
+        ImGui.TableSetupColumn("职责", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 50);
         ImGui.TableSetupColumn("X", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("Z", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
-        ImGui.TableSetupColumn("Rot", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
+        ImGui.TableSetupColumn("朝向", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("HP", ImGuiTableColumnFlags.WidthFixed, 200);
-        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 100);
-        ImGui.TableSetupColumn("Target", ImGuiTableColumnFlags.None, 100);
-        ImGui.TableSetupColumn("Cast", ImGuiTableColumnFlags.None, 100);
-        ImGui.TableSetupColumn("Statuses", ImGuiTableColumnFlags.None, 100);
-        ImGui.TableSetupColumn("Hints", ImGuiTableColumnFlags.None, 250);
+        ImGui.TableSetupColumn("名称", ImGuiTableColumnFlags.None, 100);
+        ImGui.TableSetupColumn("目标", ImGuiTableColumnFlags.None, 100);
+        ImGui.TableSetupColumn("咏唱", ImGuiTableColumnFlags.None, 100);
+        ImGui.TableSetupColumn("状态", ImGuiTableColumnFlags.None, 100);
+        ImGui.TableSetupColumn("提示", ImGuiTableColumnFlags.None, 250);
         ImGui.TableHeadersRow();
         foreach ((var slot, var player) in _player.WorldState.Party.WithSlot(true))
         {
@@ -587,7 +587,7 @@ sealed class ReplayDetailsWindow : UIWindow
     {
         var moduleInfo = _mgr.ActiveModule != null ? BossModuleRegistry.FindByOID(_mgr.ActiveModule.PrimaryActor.OID) : null;
         var oidName = moduleInfo?.ObjectIDType?.GetEnumName(oid);
-        if (!ImGui.CollapsingHeader($"Enemy {oid:X} {oidName ?? ""}") || actors.Count == 0)
+        if (!ImGui.CollapsingHeader($"敌人 {oid:X} {oidName ?? ""}") || actors.Count == 0)
         {
             return;
         }
@@ -595,12 +595,12 @@ sealed class ReplayDetailsWindow : UIWindow
         ImGui.BeginTable($"enemy_{oid}", 8, ImGuiTableFlags.Resizable);
         ImGui.TableSetupColumn("X", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("Z", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
-        ImGui.TableSetupColumn("Rot", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
+        ImGui.TableSetupColumn("朝向", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("HP", ImGuiTableColumnFlags.WidthFixed, 200);
-        ImGui.TableSetupColumn("Name");
-        ImGui.TableSetupColumn("Target");
-        ImGui.TableSetupColumn("Cast");
-        ImGui.TableSetupColumn("Statuses");
+        ImGui.TableSetupColumn("名称");
+        ImGui.TableSetupColumn("目标");
+        ImGui.TableSetupColumn("咏唱");
+        ImGui.TableSetupColumn("状态");
         ImGui.TableHeadersRow();
         foreach (var enemy in actors)
         {
@@ -614,7 +614,7 @@ sealed class ReplayDetailsWindow : UIWindow
 
     private void DrawAllActorsTable()
     {
-        if (!ImGui.CollapsingHeader("All actors"))
+        if (!ImGui.CollapsingHeader("所有单位"))
         {
             return;
         }
@@ -622,12 +622,12 @@ sealed class ReplayDetailsWindow : UIWindow
         ImGui.BeginTable($"actors", 8, ImGuiTableFlags.Resizable);
         ImGui.TableSetupColumn("X", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("Z", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
-        ImGui.TableSetupColumn("Rot", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
+        ImGui.TableSetupColumn("朝向", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 90);
         ImGui.TableSetupColumn("HP", ImGuiTableColumnFlags.WidthFixed, 200);
-        ImGui.TableSetupColumn("Name");
-        ImGui.TableSetupColumn("Target");
-        ImGui.TableSetupColumn("Cast");
-        ImGui.TableSetupColumn("Statuses");
+        ImGui.TableSetupColumn("名称");
+        ImGui.TableSetupColumn("目标");
+        ImGui.TableSetupColumn("咏唱");
+        ImGui.TableSetupColumn("状态");
         ImGui.TableHeadersRow();
         foreach (var actor in _player.WorldState.Actors)
         {
@@ -641,7 +641,7 @@ sealed class ReplayDetailsWindow : UIWindow
 
     private void DrawAI()
     {
-        if (!ImGui.CollapsingHeader("AI hints"))
+        if (!ImGui.CollapsingHeader("AI 提示"))
         {
             return;
         }
@@ -656,9 +656,9 @@ sealed class ReplayDetailsWindow : UIWindow
         _pfVisu.Draw(_pfTree);
 
         var rebuild = false;
-        rebuild |= ImGui.SliderFloat("Zone cushion", ref _pfCushion, 0f, 5f);
-        rebuild |= ImGui.SliderFloat("Ability range", ref _pfTargetRadius, 3f, 25f);
-        rebuild |= UICombo.Enum("Ability positional", ref _pfPositional);
+        rebuild |= ImGui.SliderFloat("区域缓冲", ref _pfCushion, 0f, 5f);
+        rebuild |= ImGui.SliderFloat("技能范围", ref _pfTargetRadius, 3f, 25f);
+        rebuild |= UICombo.Enum("技能身位", ref _pfPositional);
         if (rebuild)
         {
             ResetPF();

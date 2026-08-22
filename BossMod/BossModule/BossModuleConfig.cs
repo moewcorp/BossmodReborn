@@ -7,7 +7,7 @@ public sealed class BossModuleConfig : ConfigNode
 {
     public override void DrawCustom(UITree tree, WorldState ws)
     {
-        if (ImGui.Button("Recenter Window"))
+        if (ImGui.Button("重置窗口位置"))
         {
             Service.BossModWindow?.RecenterWindow();
         }

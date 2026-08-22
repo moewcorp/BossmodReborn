@@ -79,7 +79,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("输出斜杠命令到聊天")]
     public bool EchoToChat = true;
 
-    [PropertyDisplay("Follow RotationSolverReborn's desired positional", tooltip: "When enabled, Automovement will use the positional currently requested by RotationSolverReborn over IPC")]
+    [PropertyDisplay("跟随 RotationSolverReborn 期望的身位", tooltip: "启用后，自动移动将通过 IPC 使用 RotationSolverReborn 当前请求的身位")]
     public bool FollowRSRDesiredPositional = true;
 
     public string? AIAutorotPresetName;

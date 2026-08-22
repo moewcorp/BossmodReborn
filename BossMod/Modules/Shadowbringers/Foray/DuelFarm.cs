@@ -121,10 +121,10 @@ public abstract class DuelFarm<Duel> : ZoneModule where Duel : struct, Enum
         var modified = false;
 
         ImGui.SetNextItemWidth(200);
-        modified |= ImGui.DragFloat("Max distance to look for new mobs", ref globalConfig.MaxPullDistance, 1, 20, 120);
+        modified |= ImGui.DragFloat("寻找新怪物的最大距离", ref globalConfig.MaxPullDistance, 1, 20, 120);
         ImGui.SetNextItemWidth(200);
-        modified |= ImGui.DragInt("Max mobs to pull (set to 0 for no limit)", ref globalConfig.MaxPullCount, 1, 0, 30);
-        modified |= ImGui.Checkbox("Assist mode (only attack mobs that are already in combat)", ref globalConfig.AssistMode);
+        modified |= ImGui.DragInt("最大拉怪数量（设为0表示无限制）", ref globalConfig.MaxPullCount, 1, 0, 30);
+        modified |= ImGui.Checkbox("辅助模式（只攻击已进入战斗的怪物）", ref globalConfig.AssistMode);
 
         if (modified)
             globalConfig.Modified.Fire();

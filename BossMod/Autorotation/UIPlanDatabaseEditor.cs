@@ -9,10 +9,10 @@ public sealed class UIPlanDatabaseEditor
     public static int DrawPlanCombo(PlanDatabase.PlanList list, int selected, string label)
     {
         ImGui.SetNextItemWidth(150);
-        using var combo = ImRaii.Combo(label, selected >= 0 && selected < list.Plans.Count ? list.Plans[selected].Name : "<none>");
+        using var combo = ImRaii.Combo(label, selected >= 0 && selected < list.Plans.Count ? list.Plans[selected].Name : "<无>");
         if (combo)
         {
-            if (ImGui.Selectable("<none>", selected < 0))
+            if (ImGui.Selectable("<无>", selected < 0))
             {
                 selected = -1;
             }

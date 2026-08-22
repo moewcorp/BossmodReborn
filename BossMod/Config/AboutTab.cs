@@ -79,13 +79,13 @@ public sealed class AboutTab(DirectoryInfo? replayDir)
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("BossMod Wiki", new(130, 0)))
+        if (ImGui.Button("BossMod 维基", new(130, 0)))
         {
             _lastErrorMessage = OpenLink("https://github.com/awgil/ffxiv_bossmod/wiki");
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Open replay folder", new(180, 0)) && replayDir != null)
+        if (ImGui.Button("打开回放文件夹", new(180, 0)) && replayDir != null)
         {
             _lastErrorMessage = OpenDirectory(replayDir);
         }

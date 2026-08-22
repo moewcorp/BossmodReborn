@@ -118,12 +118,12 @@ sealed class ParticipantInfo : CommonEnumInfo
 
     public void DrawContextMenu()
     {
-        if (ImGui.MenuItem("Generate enum for boss module"))
+        if (ImGui.MenuItem("为 Boss 模块生成枚举"))
         {
             ImGui.SetClipboardText(AddOIDEnum(new()).ToString());
         }
 
-        if (ImGui.MenuItem("Generate missing enum values for boss module"))
+        if (ImGui.MenuItem("为 Boss 模块生成缺失的枚举值"))
         {
             var sb = new StringBuilder();
             foreach (var (name, val) in Utils.DedupKeys(_data.Where(kv => _oidType?.GetEnumName(kv.Key) == null).Select(d => EnumMemberString(d.Key, d.Value))))
@@ -159,11 +159,11 @@ sealed class ParticipantInfo : CommonEnumInfo
 
     private void DrawSubContextMenu(uint oid, ParticipantData data)
     {
-        if (ImGui.MenuItem("Generate module stub (trivial states)"))
+        if (ImGui.MenuItem("生成模块存根（简单状态）"))
         {
             ImGui.SetClipboardText(AddBossModuleStub(new(), oid, data, false).ToString());
         }
-        if (ImGui.MenuItem("Generate module stub (with state machine)"))
+        if (ImGui.MenuItem("生成模块存根（带状态机）"))
         {
             ImGui.SetClipboardText(AddBossModuleStub(new(), oid, data, true).ToString());
         }

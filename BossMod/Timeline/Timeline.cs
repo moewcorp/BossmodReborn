@@ -143,7 +143,7 @@ public sealed class Timeline
         if (_allFilters.Count > 0)
         {
             ImGui.AlignTextToFramePadding();
-            ImGui.Text("Condition filters:");
+            ImGui.Text("条件筛选:");
         }
         for (var i = 0; i < _allFilters.Count; i++)
         {

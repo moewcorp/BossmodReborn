@@ -177,7 +177,7 @@ public sealed class ColumnPlayerActions : Timeline.ColumnGroup
 
     public void DrawConfig(UITree tree)
     {
-        if (ImGui.Button("Show all"))
+        if (ImGui.Button("全部显示"))
         {
             foreach (var col in Columns)
             {
@@ -186,7 +186,7 @@ public sealed class ColumnPlayerActions : Timeline.ColumnGroup
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Hide all"))
+        if (ImGui.Button("全部隐藏"))
         {
             foreach (var col in Columns)
             {

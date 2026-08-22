@@ -109,11 +109,11 @@ public sealed class ActionTweaksConfig : ConfigNode
     public override void DrawCustom(UITree tree, WorldState ws)
     {
         ImGui.AlignTextToFramePadding();
-        UIMisc.HelpMarker("If the usual (mouseover/primary) target is not valid for an action, select the next best target automatically (e.g. co-tank for Shirk)");
+        UIMisc.HelpMarker("如果常规（鼠标悬停/主目标）目标对某个技能无效，则自动选择下一个最佳目标（例如为退避选择副坦克）");
         ImGui.SameLine();
         var rsrEnabled = IsRSREnabled();
         using var color = ImRaii.PushColor(ImGuiCol.Text, 0xFF0000FFu, rsrEnabled);
-        if (ImGui.Checkbox("Smart ability targeting (Do not use with RSR)", ref SmartTargeting))
+        if (ImGui.Checkbox("智能技能目标选择（请勿与RSR同时使用）", ref SmartTargeting))
         {
             Modified.Fire();
         }

@@ -108,14 +108,14 @@ public sealed class ColumnPlannerTrackStrategy(Timeline timeline, StateMachineTr
             if (popup)
             {
                 var def = DefaultOverride;
-                if (UIStrategyValue.DrawEditorTrackOption(def, config, level, "Plan default"))
+                if (UIStrategyValue.DrawEditorTrackOption(def, config, level, "计划默认值"))
                 {
                     DefaultOverride = def;
                     NotifyModified();
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.Separator();
-                if (ImGui.Selectable("Hide column"))
+                if (ImGui.Selectable("隐藏列"))
                 {
                     Width = 0;
                 }

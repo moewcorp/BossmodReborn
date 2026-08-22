@@ -95,7 +95,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
             ImGui.TextUnformatted($"Time: Total: {_naviTimeTotal:f3}ms, Raster: {_naviTimeRaster:f3}ms, Pathfinding: {_naviTimePathfinding:f3}ms");
             ImGui.TextUnformatted($"Leeway={_navi.LeewaySeconds:f3}, ttg={_navi.TimeToGoal:f3}, dist={(_navi.Destination != null ? $"{(_navi.Destination.Value - player.Position).Length():f3}" : "---")}");
         }
-        if (ImGui.Button("Run pathfinding benchmark (x10000)"))
+        if (ImGui.Button("运行寻路基准测试 (x10000)"))
         {
             RunBenchmark(10000);
         }

@@ -143,7 +143,7 @@ sealed class IPCList(Replay replay, Replay.Encounter? enc, IEnumerable<WorldStat
             _nodes = null;
         }
         ImGui.Separator();
-        if (ImGui.MenuItem("Jump to timestamp", "double click"))
+        if (ImGui.MenuItem("跳转到时间戳", "双击"))
             scrollTo(op.Timestamp);
     }
 }
