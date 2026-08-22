@@ -20,7 +20,6 @@ public enum AOEIPCShapeType : byte
 
 public sealed class AOEIPCDto
 {
-    // stable dedup key: hash of (actorID, activationTicks, shape type, params)
     public ulong Key { get; set; }
     public int ShapeType { get; set; }
     // per-shape parameters:
@@ -152,7 +151,9 @@ public static class AOEIPC
         dto.ActivationMs = aoe.Activation == default ? 5000 : (aoe.Activation - now).TotalMilliseconds;
         dto.Risky = aoe.Risky;
         dto.GroupId = componentIndex;
-        dto.Key = (ulong)HashCode.Combine(aoe.ActorID, (int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex);
+        var h1 = HashCode.Combine(aoe.ActorID, (int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), (int)MathF.Round(dto.Rotation * 10));
+        var h2 = HashCode.Combine(dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
+        dto.Key = (ulong)HashCode.Combine(h1, h2);
         return dto;
     }
 
