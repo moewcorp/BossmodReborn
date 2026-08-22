@@ -103,7 +103,8 @@ public sealed class AIHintsBuilder : IDisposable
         var rsrPos = _rsr != null && _rsr.IsInstalled ? _rsr.DesiredPositional : Positional.Any;
         var aePos = _ae != null && _ae.IsInstalled ? _ae.DesiredPositional : Positional.Any;
         hints.RSRDesiredPositional = rsrPos != Positional.Any ? rsrPos : aePos;
-        if (_rsr != null && _rsr.IsInstalled)
+        // Pyretic/禁止方向即将生效时：让已接入的自动循环插件（RSR/AEAssist）停手，并强制断施
+        if (_rsr != null && _rsr.IsInstalled || _ae != null && _ae.IsInstalled)
         {
             var now = _ws.CurrentTime;
             var soon = now.AddSeconds(0.75d);
@@ -113,12 +114,17 @@ public sealed class AIHintsBuilder : IDisposable
             var finish = hints.ImminentSpecialMode.finish;
             var pyreticActivation = isPyretic ? hints.ImminentSpecialMode.activation : DateTime.MaxValue;
 
-            // Pyretic/禁止方向即将生效时：让 RSR 停手，并强制断施（AEAssist 侧自行订阅 Hints 端点实现同样效果）
             if (hasForbiddenDirection && forbiddenDirActivation < soon || isPyretic && pyreticActivation < soon)
             {
-                var activationTime = hasForbiddenDirection && forbiddenDirActivation < soon ? forbiddenDirActivation : pyreticActivation;
-                _ = Math.Max(0f, (float)(activationTime - now).TotalSeconds);
-                _rsr.TriggerSpecialStateWithDuration(RotationSolverRebornModule.SpecialCommandType.NoCasting, finish != default ? (float)(finish - now).TotalSeconds : _config.PyreticThreshold);
+                var duration = finish != default ? (float)(finish - now).TotalSeconds : _config.PyreticThreshold;
+                if (_rsr != null && _rsr.IsInstalled)
+                {
+                    _rsr.TriggerSpecialStateWithDuration(RotationSolverRebornModule.SpecialCommandType.NoCasting, duration);
+                }
+                if (_ae != null && _ae.IsInstalled)
+                {
+                    _ae.TriggerSpecialStateWithDuration(AEAssistModule.SpecialCommandType.NoCasting, duration);
+                }
                 if (isPyretic)
                 {
                     //Service.Log("[AMEx] Canceling cast (RSR)");

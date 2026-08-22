@@ -2,16 +2,19 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 namespace BossMod;
 
-// BossMod 消费 AEAssist 的 IPC 端点，实现 AEAssist → BossMod 联动（期望身位）。
+// BossMod 消费 AEAssist 的 IPC 端点，实现 AEAssist → BossMod 联动（期望身位、停手控制）。
 // AEAssist 侧框架层通过 MeleePositionalTable 自动推算"下一个 GCD 的期望身位"，
 // 经 DesiredPositionalIpc 暴露以下端点（与 RSR 命名对齐）：
 //   AEAssist.GetDesiredPositional                    () -> byte  轮询（0=None, 1=Rear, 2=Flank）
 //   AEAssist.ActionUpdater.DesiredPositionalChanged  (byte) -> void  事件推送
+// AEAssist 侧 BMR_IPCProvider 暴露停手控制端点（与 RSR 命名对齐）：
+//   AEAssist.TriggerSpecialStateWithDuration        (byte command, float duration) -> void
 public sealed class AEAssistModule : IDisposable
 {
     private readonly IDalamudPluginInterface _pluginInterface;
     private readonly ICallGateSubscriber<byte> _getDesiredPositional;
     private readonly ICallGateSubscriber<byte, object?> _desiredPositionalChanged;
+    private readonly ICallGateSubscriber<byte, float, object> _triggerSpecialStateWithDuration;
     private const string aeassist = "AEAssistV3";
     private Positional _desiredPositional = Positional.Any;
 
@@ -39,6 +42,7 @@ public sealed class AEAssistModule : IDisposable
         _pluginInterface = pluginInterface;
         _getDesiredPositional = pluginInterface.GetIpcSubscriber<byte>("AEAssist.GetDesiredPositional");
         _desiredPositionalChanged = pluginInterface.GetIpcSubscriber<byte, object?>("AEAssist.ActionUpdater.DesiredPositionalChanged");
+        _triggerSpecialStateWithDuration = pluginInterface.GetIpcSubscriber<byte, float, object>("AEAssist.TriggerSpecialStateWithDuration");
         try
         {
             _desiredPositionalChanged.Subscribe(OnDesiredPositionalChanged);
@@ -91,6 +95,9 @@ public sealed class AEAssistModule : IDisposable
         }
     }
 
+    // 让 AEAssist 进入指定特殊状态并持续指定时长（如 NoCasting 停手）；AEAssist 未加载时静默失败
+    public void TriggerSpecialStateWithDuration(SpecialCommandType specialCommand, float duration) => _triggerSpecialStateWithDuration.InvokeAction((byte)specialCommand, duration);
+
     private void OnDesiredPositionalChanged(byte value)
     {
         var pos = MapPositional(value);
@@ -109,4 +116,23 @@ public sealed class AEAssistModule : IDisposable
         3 => Positional.Front,
         _ => Positional.Any,
     };
+
+    // 与 AEAssist BMR_IPCProvider.SpecialCommandType 对齐（NoCasting = 13）
+    public enum SpecialCommandType : byte
+    {
+        EndSpecial,
+        HealArea,
+        HealSingle,
+        DefenseArea,
+        DefenseSingle,
+        DispelStancePositional,
+        RaiseShirk,
+        MoveForward,
+        MoveBack,
+        AntiKnockback,
+        Burst,
+        Speed,
+        LimitBreak,
+        NoCasting,
+    }
 }
