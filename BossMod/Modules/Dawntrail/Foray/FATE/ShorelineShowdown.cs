@@ -235,7 +235,7 @@ sealed class Cacophony(BossModule module) : Components.GenericAOEs(module)
         List<AOEInstance> aoes = [];
         foreach (var orb in orbs)
         {
-            aoes.Add(new(shape, orb.Position, orb.Rotation, WorldState.FutureTime(1.5f)));
+            aoes.Add(new(shape, orb.Position, orb.Rotation, WorldState.FutureTime(1.5f), actorID: orb.InstanceID));
         }
 
         return CollectionsMarshal.AsSpan(aoes);

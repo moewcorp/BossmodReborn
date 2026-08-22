@@ -71,9 +71,10 @@ public static class AOEIPC
             {
                 var active = aoes.ActiveAOEs(PartyState.PlayerSlot, player);
                 var instance = 0;
+                var forceRisky = HasRiskyDelay(aoes);
                 foreach (ref readonly var aoe in active)
                 {
-                    if (ConvertShape(aoe, now, defaultY, i, instance++) is { } dto)
+                    if (ConvertShape(aoe, now, defaultY, i, instance++, forceRisky) is { } dto)
                     {
                         list.Add(dto);
                     }
@@ -125,7 +126,7 @@ public static class AOEIPC
         return dto;
     }
 
-    private static AOEIPCDto? ConvertShape(in GenericAOEs.AOEInstance aoe, DateTime now, float defaultY, int componentIndex, int instanceIndex)
+    private static AOEIPCDto? ConvertShape(in GenericAOEs.AOEInstance aoe, DateTime now, float defaultY, int componentIndex, int instanceIndex, bool forceRisky = false)
     {
         AOEIPCDto? dto = aoe.Shape switch
         {
@@ -149,11 +150,18 @@ public static class AOEIPC
         dto.OriginY = defaultY;
         dto.Rotation = (aoe.Rotation + DirectionOffsetOf(aoe.Shape)).Rad;
         dto.ActivationMs = aoe.Activation == default ? 5000 : (aoe.Activation - now).TotalMilliseconds;
-        dto.Risky = aoe.Risky;
+        dto.Risky = forceRisky || aoe.Risky;
         dto.GroupId = componentIndex;
-        var h1 = HashCode.Combine(aoe.ActorID, (int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), (int)MathF.Round(dto.Rotation * 10));
-        var h2 = HashCode.Combine(dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
-        dto.Key = (ulong)HashCode.Combine(h1, h2);
+        if (aoe.ActorID != 0)
+        {
+            var h1 = HashCode.Combine(aoe.ActorID, dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
+            dto.Key = (ulong)HashCode.Combine(h1, (int)MathF.Round(dto.Rotation * 10));
+        }
+        else
+        {
+            var h1 = HashCode.Combine((int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
+            dto.Key = (ulong)HashCode.Combine(h1, (int)MathF.Round(dto.Rotation * 10));
+        }
         return dto;
     }
 
@@ -167,4 +175,22 @@ public static class AOEIPC
         AOEShapeCapsule c => c.DirectionOffset,
         _ => default,
     };
+
+    // true when the component delays its Risky flag via a RiskyWithSecondsLeft field (either the
+    // standard SimpleAOEs one or a custom one, e.g. CE213's Acclaim). In that case Risky means "AI
+    // should react now", not "this aoe is the next one to resolve", so NyaDraw must show everything.
+    private static bool HasRiskyDelay(GenericAOEs aoes)
+    {
+        var t = aoes.GetType();
+        while (t != null && t != typeof(GenericAOEs))
+        {
+            var f = t.GetField("RiskyWithSecondsLeft", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            if (f != null)
+            {
+                return f.GetValue(aoes) is double d && d != default;
+            }
+            t = t.BaseType;
+        }
+        return false;
+    }
 }
