@@ -1,4 +1,3 @@
-using BossMod.Components;
 using System.IO;
 using System.Text.Json;
 
@@ -16,11 +15,11 @@ public enum AOEIPCShapeType : byte
     Cross,
     TriCone,
     Capsule,
-    Custom,}
+    Custom,
+}
 
 public sealed class AOEIPCDto
 {
-    public ulong Key { get; set; }
     public int ShapeType { get; set; }
     // per-shape parameters:
     //   Circle:      P1=radius
@@ -36,12 +35,9 @@ public sealed class AOEIPCDto
     public float P3 { get; set; }
     public float OriginX { get; set; }
     public float OriginZ { get; set; }
-    public float OriginY { get; set; } 
-    public float Rotation { get; set; } // final rotation in radians (aoe rotation + shape direction offset), game convention
-    public double ActivationMs { get; set; } // relative milliseconds until activation
-    public bool Risky { get; set; }
-    public bool Friendly { get; set; } // true = friendly indicator (stack/spread circles)
-    public int GroupId { get; set; } // id of the component that spawned this aoe: groups aoes of the same mechanic
+    public float OriginY { get; set; }
+    public float Rotation { get; set; } // final rotation in radians, game convention
+    public bool IsDanger { get; set; } // drawn with Colors.Danger (about to resolve) vs plain AOE color
 }
 
 public static class AOEIPC
@@ -54,144 +50,74 @@ public static class AOEIPC
             return "[]";
         }
 
-        var player = bossmod.WorldState.Party.Player();
-        if (player == null)
-        {
-            return "[]";
-        }
-
         var list = new List<AOEIPCDto>(16);
-        var now = bossmod.WorldState.CurrentTime;
         var defaultY = Service.ObjectTable.LocalPlayer?.Position.Y ?? 0f;
-        var components = module.Components;
-        var count = components.Count;
-        for (var i = 0; i < count; ++i)
+        foreach (var zone in MiniArena.DrawnZones)
         {
-            if (components[i] is GenericStackSpread spread)
+            if (ConvertZone(zone, defaultY) is { } dto)
             {
-                var instance = 0;
-                foreach (var stack in spread.ActiveStacks)
-                {
-                    if (ConvertStackSpreadCircle(stack.Target.Position, stack.Radius, stack.Activation, now, defaultY, i, instance++, friendly: true) is { } dto)
-                    {
-                        list.Add(dto);
-                    }
-                }
-                foreach (var sp in spread.ActiveSpreads)
-                {
-                    if (ConvertStackSpreadCircle(sp.Target.Position, sp.Radius, sp.Activation, now, defaultY, i, instance++, friendly: false) is { } dto)
-                    {
-                        list.Add(dto);
-                    }
-                }
-            }
-            else
-            {
-                var active = components[i].ActiveAOEsForExternal(PartyState.PlayerSlot, player);
-                var instance = 0;
-                var forceRisky = HasRiskyDelay(components[i]);
-                foreach (ref readonly var aoe in active)
-                {
-                    if (ConvertShape(aoe, now, defaultY, i, instance++, forceRisky) is { } dto)
-                    {
-                        list.Add(dto);
-                    }
-                }
+                list.Add(dto);
             }
         }
-
+        var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
+        if (list.Count != _lastSentCount || sig != _lastSentSig)
+        {
+            DebugLog($"[BossMod] zones {_lastSentCount} -> {list.Count} [{sig}]");
+            _lastSentCount = list.Count;
+            _lastSentSig = sig;
+        }
         return JsonSerializer.Serialize(list);
     }
 
-    private static AOEIPCDto? ConvertStackSpreadCircle(WPos center, float radius, DateTime activation, DateTime now, float defaultY, int componentIndex, int instanceIndex, bool friendly)
+    private static int _lastSentCount = -1;
+    private static string? _lastSentSig;
+
+    private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone, float defaultY)
     {
-        if (radius <= 0)
-        {
-            return null;
-        }
         var dto = new AOEIPCDto
         {
-            ShapeType = (int)AOEIPCShapeType.Circle,
-            P1 = radius,
-            OriginX = center.X,
-            OriginZ = center.Z,
+            ShapeType = zone.Shape,
+            OriginX = zone.Origin.X,
+            OriginZ = zone.Origin.Z,
             OriginY = defaultY,
-            Rotation = 0,
-            ActivationMs = activation == default ? 5000 : (activation - now).TotalMilliseconds,
-            Risky = true,
-            Friendly = friendly,
-            GroupId = componentIndex,
+            Rotation = zone.Rotation.Rad,
+            IsDanger = zone.IsDanger,
         };
-        dto.Key = (ulong)HashCode.Combine(friendly ? "stack" : "spread", dto.ShapeType, dto.P1, componentIndex, instanceIndex);
-        return dto;
-    }
-
-    private static AOEIPCDto? ConvertShape(in GenericAOEs.AOEInstance aoe, DateTime now, float defaultY, int componentIndex, int instanceIndex, bool forceRisky = false)
-    {
-        AOEIPCDto? dto = aoe.Shape switch
+        switch ((AOEIPCShapeType)zone.Shape)
         {
-            AOEShapeCircle c => new() { ShapeType = (int)AOEIPCShapeType.Circle, P1 = c.Radius },
-            AOEShapeCone s => new() { ShapeType = (int)AOEIPCShapeType.Cone, P1 = s.Radius, P2 = s.HalfAngle.Rad },
-            AOEShapeRect r => new() { ShapeType = (int)AOEIPCShapeType.Rect, P1 = r.LengthFront, P2 = r.HalfWidth, P3 = r.LengthBack },
-            AOEShapeDonut d => new() { ShapeType = (int)AOEIPCShapeType.Donut, P1 = d.InnerRadius, P2 = d.OuterRadius },
-            AOEShapeDonutSector s => new() { ShapeType = (int)AOEIPCShapeType.DonutSector, P1 = s.InnerRadius, P2 = s.OuterRadius, P3 = s.HalfAngle.Rad },
-            AOEShapeCross c => new() { ShapeType = (int)AOEIPCShapeType.Cross, P1 = c.Length, P2 = c.HalfWidth },
-            AOEShapeTriCone t => new() { ShapeType = (int)AOEIPCShapeType.TriCone, P1 = t.SideLength, P2 = t.HalfAngle.Rad },
-            AOEShapeCapsule cap => new() { ShapeType = (int)AOEIPCShapeType.Capsule, P1 = cap.Radius, P2 = cap.Length },
-            _ => null,
-        };
-        if (dto == null)
-        {
-            return null;
-        }
-
-        dto.OriginX = aoe.Origin.X;
-        dto.OriginZ = aoe.Origin.Z;
-        dto.OriginY = defaultY;
-        dto.Rotation = (aoe.Rotation + DirectionOffsetOf(aoe.Shape)).Rad;
-        dto.ActivationMs = aoe.Activation == default ? 5000 : (aoe.Activation - now).TotalMilliseconds;
-        dto.Risky = forceRisky || aoe.Risky;
-        dto.GroupId = componentIndex;
-        if (aoe.ActorID != 0)
-        {
-            var h1 = HashCode.Combine(aoe.ActorID, dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
-            dto.Key = (ulong)HashCode.Combine(h1, (int)MathF.Round(dto.Rotation * 10));
-        }
-        else
-        {
-            var h1 = HashCode.Combine((int)MathF.Round(dto.OriginX * 10), (int)MathF.Round(dto.OriginZ * 10), dto.ShapeType, dto.P1, dto.P2, dto.P3, componentIndex, instanceIndex);
-            dto.Key = (ulong)HashCode.Combine(h1, (int)MathF.Round(dto.Rotation * 10));
+            case AOEIPCShapeType.Circle:
+                dto.P1 = zone.P1;
+                break;
+            case AOEIPCShapeType.Cone:
+                dto.P1 = zone.P2;
+                dto.P2 = zone.P3;
+                break;
+            case AOEIPCShapeType.Donut:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P2;
+                break;
+            case AOEIPCShapeType.DonutSector:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P2;
+                dto.P3 = zone.P3;
+                break;
+            case AOEIPCShapeType.Rect:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P3;
+                dto.P3 = zone.P2;
+                break;
+            case AOEIPCShapeType.Cross:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P2;
+                break;
+            case AOEIPCShapeType.Capsule:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P2;
+                break;
+            default:
+                return null;
         }
         return dto;
-    }
-
-    private static Angle DirectionOffsetOf(AOEShape shape) => shape switch
-    {
-        AOEShapeCone s => s.DirectionOffset,
-        AOEShapeRect r => r.DirectionOffset,
-        AOEShapeDonutSector s => s.DirectionOffset,
-        AOEShapeCross c => c.DirectionOffset,
-        AOEShapeTriCone t => t.DirectionOffset,
-        AOEShapeCapsule c => c.DirectionOffset,
-        _ => default,
-    };
-
-    // true when the component delays its Risky flag via a RiskyWithSecondsLeft field (either the
-    // standard SimpleAOEs one or a custom one, e.g. CE213's Acclaim). In that case Risky means "AI
-    // should react now", not "this aoe is the next one to resolve", so NyaDraw must show everything.
-    private static bool HasRiskyDelay(BossComponent component)
-    {
-        var t = component.GetType();
-        while (t != null && t != typeof(BossComponent))
-        {
-            var f = t.GetField("RiskyWithSecondsLeft", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-            if (f != null)
-            {
-                return f.GetValue(component) is double d && d != default;
-            }
-            t = t.BaseType;
-        }
-        return false;
     }
 
     // standalone debug log for the BossMod<->NyaDraw AOE bridge; kept out of the game's main log so

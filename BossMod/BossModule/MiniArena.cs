@@ -11,6 +11,21 @@ namespace BossMod;
 [SkipLocalsInit]
 public sealed class MiniArena(WPos center, ArenaBounds bounds)
 {
+    // shapes drawn as filled danger zones on the mini-map this frame; collected for external
+    // renderers (e.g. NyaDraw) that reproduce the mini-map instead of consuming AOEInstance data.
+    // IsDanger = drawn with Colors.Danger (about to resolve), false = plain Colors.AOE.
+    public readonly record struct DrawnZone(int Shape, WPos Origin, Angle Rotation, float P1, float P2, float P3, bool IsDanger);
+    public static readonly List<DrawnZone> DrawnZones = [];
+    public static void ResetDrawnZones() => DrawnZones.Clear();
+    private void RecordZone(AOEIPCShapeType shape, WPos origin, Angle rotation, uint color, float p1 = 0, float p2 = 0, float p3 = 0)
+    {
+        // default color = standard AOE fill; Danger = about-to-resolve highlight. Any other explicit
+        // color (melee-range indicator, safe zones, waymark helpers...) is not a danger zone.
+        if (color != default && color != Colors.AOE && color != Colors.Danger)
+            return;
+        DrawnZones.Add(new((int)shape, origin, rotation, p1, p2, p3, color == Colors.Danger));
+    }
+
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();
     private WPos _center = center;
     private readonly TriangulationCache _triCache = new();
@@ -271,6 +286,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     // draw zones - these are filled primitives clipped to arena border; note that triangulation is cached
     public void ZoneCone(WPos center, float innerRadius, float outerRadius, Angle centerDirection, Angle halfAngle, uint color)
     {
+        RecordZone(innerRadius > 0 ? AOEIPCShapeType.DonutSector : AOEIPCShapeType.Cone, center, centerDirection, color, innerRadius, outerRadius, halfAngle.Rad);
         ref var tri = ref _triCache.Get(1, center, innerRadius, outerRadius, centerDirection, halfAngle);
 
         tri ??= _bounds.ClipAndTriangulateCone(center - _center, innerRadius, outerRadius, centerDirection, halfAngle);
@@ -279,6 +295,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneCircle(WPos center, float radius, uint color)
     {
+        RecordZone(AOEIPCShapeType.Circle, center, default, color, radius);
         ref var tri = ref _triCache.Get(2, center, radius);
         if (tri == null)
         {
@@ -295,6 +312,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneDonut(WPos center, float innerRadius, float outerRadius, uint color)
     {
+        RecordZone(AOEIPCShapeType.Donut, center, default, color, innerRadius, outerRadius);
         ref var tri = ref _triCache.Get(3, center, innerRadius, outerRadius);
         if (tri == null)
         {
@@ -326,6 +344,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneIsoscelesTri(WPos apex, Angle direction, Angle halfAngle, float height, uint color)
     {
+        RecordZone(AOEIPCShapeType.TriCone, apex, direction, color, height, halfAngle.Rad);
         ref var tri = ref _triCache.Get(6, apex, direction, halfAngle, height);
         tri ??= _bounds.ClipAndTriangulateIsoscelesTri(apex - _center, direction, halfAngle, height);
         Zone(tri, color);
@@ -349,6 +368,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneRect(WPos origin, Angle direction, float lenFront, float lenBack, float halfWidth, uint color)
     {
+        RecordZone(AOEIPCShapeType.Rect, origin, direction, color, lenFront, lenBack, halfWidth);
         ref var tri = ref _triCache.Get(8, origin, direction, lenFront, lenBack, halfWidth);
         if (tri == null)
         {
@@ -385,6 +405,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneCross(WPos origin, Angle rotation, float range, float halfWidth, WPos[] contour, uint color)
     {
+        RecordZone(AOEIPCShapeType.Cross, origin, rotation, color, range, halfWidth);
         ref var tri = ref _triCache.Get(10, origin, rotation, range, halfWidth);
         if (tri == null)
         {
@@ -401,6 +422,27 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneRelPoly(RelSimplifiedComplexPolygon poly, uint color)
     {
+        if (poly.Parts.Count != 0)
+        {
+            float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
+            foreach (var part in poly.Parts)
+            {
+                foreach (var v in part.Vertices)
+                {
+                    if (v.X < minX) minX = v.X;
+                    if (v.Z < minZ) minZ = v.Z;
+                    if (v.X > maxX) maxX = v.X;
+                    if (v.Z > maxZ) maxZ = v.Z;
+                }
+            }
+            if (maxX > minX && maxZ > minZ)
+            {
+                var center = _center + new WDir((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f);
+                var halfX = (maxX - minX) * 0.5f;
+                var halfZ = (maxZ - minZ) * 0.5f;
+                RecordZone(AOEIPCShapeType.Rect, center, default, color, halfZ, halfZ, halfX);
+            }
+        }
         ref var tri = ref _triCache.Get(11, poly);
         tri ??= _bounds.ClipAndTriangulate(poly);
         Zone(tri, color);
@@ -408,6 +450,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
     public void ZoneCapsule(WPos start, WDir direction, float radius, float length, uint color)
     {
+        RecordZone(AOEIPCShapeType.Capsule, start, direction.ToAngle(), color, radius, length);
         ref var tri = ref _triCache.Get(12, start, direction, radius, length);
         if (tri == null)
         {

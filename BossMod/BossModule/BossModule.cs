@@ -297,6 +297,7 @@ public abstract class BossModule : IDisposable
 
     public virtual void DrawArena(int pcSlot, Actor pc, bool haveRisks)
     {
+        MiniArena.ResetDrawnZones();
         // draw background
         DrawArenaBackground(pcSlot, pc);
 
