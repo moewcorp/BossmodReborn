@@ -110,6 +110,12 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Framework\Shaders\Compiled\*.cso">
+    <LogicalName>BossMod.Shaders.Compiled.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Pathfinding\ObstacleMaps\*" />
   </ItemGroup>
 

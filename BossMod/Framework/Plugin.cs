@@ -72,7 +72,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
         InteropGenerator.Runtime.Resolver.GetInstance.Setup(sigScanner.SearchBase, _gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
         FFXIVClientStructs.Interop.Generated.Addresses.Register();
-
+        Dx11ArenaRenderer.Initialize(_dalamud.UiBuilder.DeviceHandle);
         dalamud.Create<Service>();
         Service.LogHandlerDebug = msg => Service.Logger.Debug(msg);
         Service.LogHandlerVerbose = msg => Service.Logger.Verbose(msg);
@@ -174,6 +174,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         _zonemod.Dispose();
         _bossmod.Dispose();
         _rsr.Dispose();
+        Dx11ArenaRenderer.Shutdown();
         CommandManager.RemoveHandler("/bmr");
         GarbageCollection();
     }
@@ -330,7 +331,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         var gameMain = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
         return link == 0
             || Service.LuminaRow<Lumina.Excel.Sheets.TerritoryType>(gameMain->CurrentTerritoryTypeId)?.TerritoryIntendedUse.RowId == 31u // deep dungeons check is hardcoded in game
-            || FFXIVClientStructs.FFXIV.Client.Game.UI.UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(link);
+            || UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(link);
     }
 
     private unsafe void ExecuteHints()
