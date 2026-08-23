@@ -1,4 +1,5 @@
 using BossMod.Components;
+using System.IO;
 using System.Text.Json;
 
 namespace BossMod;
@@ -15,8 +16,7 @@ public enum AOEIPCShapeType : byte
     Cross,
     TriCone,
     Capsule,
-    Custom,
-}
+    Custom,}
 
 public sealed class AOEIPCDto
 {
@@ -67,20 +67,7 @@ public static class AOEIPC
         var count = components.Count;
         for (var i = 0; i < count; ++i)
         {
-            if (components[i] is GenericAOEs aoes)
-            {
-                var active = aoes.ActiveAOEs(PartyState.PlayerSlot, player);
-                var instance = 0;
-                var forceRisky = HasRiskyDelay(aoes);
-                foreach (ref readonly var aoe in active)
-                {
-                    if (ConvertShape(aoe, now, defaultY, i, instance++, forceRisky) is { } dto)
-                    {
-                        list.Add(dto);
-                    }
-                }
-            }
-            else if (components[i] is GenericStackSpread spread)
+            if (components[i] is GenericStackSpread spread)
             {
                 var instance = 0;
                 foreach (var stack in spread.ActiveStacks)
@@ -93,6 +80,19 @@ public static class AOEIPC
                 foreach (var sp in spread.ActiveSpreads)
                 {
                     if (ConvertStackSpreadCircle(sp.Target.Position, sp.Radius, sp.Activation, now, defaultY, i, instance++, friendly: false) is { } dto)
+                    {
+                        list.Add(dto);
+                    }
+                }
+            }
+            else
+            {
+                var active = components[i].ActiveAOEsForExternal(PartyState.PlayerSlot, player);
+                var instance = 0;
+                var forceRisky = HasRiskyDelay(components[i]);
+                foreach (ref readonly var aoe in active)
+                {
+                    if (ConvertShape(aoe, now, defaultY, i, instance++, forceRisky) is { } dto)
                     {
                         list.Add(dto);
                     }
@@ -179,18 +179,59 @@ public static class AOEIPC
     // true when the component delays its Risky flag via a RiskyWithSecondsLeft field (either the
     // standard SimpleAOEs one or a custom one, e.g. CE213's Acclaim). In that case Risky means "AI
     // should react now", not "this aoe is the next one to resolve", so NyaDraw must show everything.
-    private static bool HasRiskyDelay(GenericAOEs aoes)
+    private static bool HasRiskyDelay(BossComponent component)
     {
-        var t = aoes.GetType();
-        while (t != null && t != typeof(GenericAOEs))
+        var t = component.GetType();
+        while (t != null && t != typeof(BossComponent))
         {
             var f = t.GetField("RiskyWithSecondsLeft", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
             if (f != null)
             {
-                return f.GetValue(aoes) is double d && d != default;
+                return f.GetValue(component) is double d && d != default;
             }
             t = t.BaseType;
         }
         return false;
+    }
+
+    // standalone debug log for the BossMod<->NyaDraw AOE bridge; kept out of the game's main log so
+    // it can be collected continuously while playing and handed over for diagnosis.
+    private static string? _debugLogPath;
+    private static long _debugLogSize;
+    private static string DebugLogPath
+    {
+        get
+        {
+            if (_debugLogPath == null)
+            {
+                try
+                {
+                    _debugLogPath = Path.Combine(Service.PluginInterface.ConfigDirectory.FullName, "AOEIPCDebug.log");
+                }
+                catch
+                {
+                    _debugLogPath = Path.Combine(Path.GetTempPath(), "AOEIPCDebug.log");
+                }
+            }
+            return _debugLogPath;
+        }
+    }
+
+    private static void DebugLog(string msg)
+    {
+        try
+        {
+            var path = DebugLogPath;
+            _debugLogSize += msg.Length + 2;
+            if (_debugLogSize > 5 * 1024 * 1024)
+            {
+                File.WriteAllText(path, "");
+                _debugLogSize = 0;
+            }
+            File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n");
+        }
+        catch
+        {
+        }
     }
 }

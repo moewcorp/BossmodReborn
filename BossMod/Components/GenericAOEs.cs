@@ -22,6 +22,8 @@ public abstract class GenericAOEs(BossModule module, uint aid = default, string 
 
     public abstract ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor);
 
+    public override ReadOnlySpan<AOEInstance> ActiveAOEsForExternal(int slot, Actor actor) => ActiveAOEs(slot, actor);
+
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
         var aoes = ActiveAOEs(slot, actor);

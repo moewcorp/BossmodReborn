@@ -1,5 +1,7 @@
 ﻿namespace BossMod;
 
+using BossMod.Components;
+
 // different encounter mechanics can be split into independent components
 // individual components should be activated and deactivated when needed (typically by state machine transitions)
 // components can also have sub-components; typically these are created immediately by constructor
@@ -34,6 +36,11 @@ public class BossComponent(BossModule module)
     }
 
     public virtual bool KeepOnPhaseChange { get; set; } // by default, all components are deactivated on phase change automatically (since phase change can happen at any time) - setting this to true prevents this
+
+    // data exported to external renderers (e.g. NyaDraw); components that draw shapes manually
+    // (DrawArenaForeground/Background) can override this to expose their danger zones as standard
+    // AOEInstances instead of leaving external plugins to guess. GenericAOEs forwards ActiveAOEs.
+    public virtual ReadOnlySpan<GenericAOEs.AOEInstance> ActiveAOEsForExternal(int slot, Actor actor) => [];
 
     public virtual void Update() { } // called every frame - it is a good place to update any cached values
     public virtual void AddHints(int slot, Actor actor, TextHints hints) { } // gather any relevant pieces of advice for specified raid member

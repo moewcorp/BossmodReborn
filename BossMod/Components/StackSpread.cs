@@ -51,6 +51,26 @@ public abstract class GenericStackSpread(BossModule module, bool raidwideOnResol
     public const string StackHint = "Stack!";
 
     public bool Active => Stacks.Count + Spreads.Count > 0;
+
+    public override ReadOnlySpan<GenericAOEs.AOEInstance> ActiveAOEsForExternal(int slot, Actor actor)
+    {
+        var count = ActiveStacks.Count + ActiveSpreads.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var aoes = new List<GenericAOEs.AOEInstance>(count);
+        foreach (var stack in ActiveStacks)
+        {
+            aoes.Add(new(new AOEShapeCircle(stack.Radius), stack.Target.Position, default, stack.Activation, actorID: stack.Target.InstanceID));
+        }
+        foreach (var sp in ActiveSpreads)
+        {
+            aoes.Add(new(new AOEShapeCircle(sp.Radius), sp.Target.Position, default, sp.Activation, actorID: sp.Target.InstanceID));
+        }
+        return CollectionsMarshal.AsSpan(aoes);
+    }
+
     public List<Stack> ActiveStacks
     {
         get
