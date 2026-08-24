@@ -36,6 +36,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
     public async Task Execute(Actor player, Actor master)
     {
+        // lots of assumptions made in this AI are broken by being in flight (or diving)
+        // e.g. being inside an obstacle is fine, AOEs may not reach the player depending on vertical distance, etc
+        if (WorldState.Client.Flying)
+        {
+            return;
+        }
+
         if (await _semaphore.WaitAsync(0).ConfigureAwait(false))
         {
             try
