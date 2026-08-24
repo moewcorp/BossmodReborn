@@ -14,12 +14,6 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     // constructors for simple polygon
     public RelSimplifiedComplexPolygon(List<WDir> simpleVertices) : this([new RelPolygonWithHoles(simpleVertices)]) { }
 
-    // build a triangulation of the polygon
-    public RelTriangle[] Triangulate()
-    {
-        return EarCut.Triangulate(this);
-    }
-
     // build a new polygon by transformation
     public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation)
     {

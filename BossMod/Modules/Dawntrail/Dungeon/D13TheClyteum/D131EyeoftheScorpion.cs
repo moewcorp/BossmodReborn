@@ -9,15 +9,13 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    AutoAttack = 50170, // 4EB6/4DD2->4C09/4C0A, no cast, single-target
-    AutoAttack_Attack = 45128, // 4C09/4C0A->4EB6/4DD2, no cast, single-target
-    AutoAttack_1 = 50110, // EyeOfTheScorpion->player, no cast, single-target
-    AutoAttack_2 = 50428, // 4C09/4C0A->4EB6/4DD2, no cast, single-target
+    AutoAttack = 50110, // EyeOfTheScorpion->player, no cast, single-target
+
     EyesOnMe = 48896, // EyeOfTheScorpion->self, 5.0s cast, range 35 circle
     PetrifyingBeamCastBar = 50175, // EyeOfTheScorpion->self, 8.0+0.5s cast, single-target
-    PetrifyingBeam = 50177, // Helper->self, 8.5s cast, range 70 100.000-degree cone
+    PetrifyingBeam = 50177, // Helper->self, 8.5s cast, range 70 100-degree cone
     PetrifyingBeamCastBar2 = 50176, // EyeOfTheScorpion->self, 8.0+0.5s cast, single-target
-    PetrifyingBeam2 = 50178, // Helper->self, 8.5s cast, range 70 100.000-degree cone
+    PetrifyingBeam2 = 50178, // Helper->self, 8.5s cast, range 70 100-degree cone
     MotionScanner = 48893, // EyeOfTheScorpion->self, 4.0s cast, single-target
     BallisticMissile = 48897, // EyeOfTheScorpion->self, no cast, single-target
     PenetratorMissile = 48901, // Helper->players, 5.0s cast, range 6 circle
