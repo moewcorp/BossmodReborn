@@ -203,10 +203,98 @@ public static unsafe partial class Dx11ArenaRenderer
     private struct TextInstance
     {
         // One glyph quad. RectNdc = (minX, minY, maxX, maxY), UvRect = (u0, v0, u1, v1).
-        // The VS expands this to the same six triangle-list vertices as ImFont::RenderText.
+        // The VS expands this to the same six triangle-list vertices as the other indexed-quad paths.
         public Vector4 RectNdc;
         public Vector4 UvRect;
         public uint Col;
+        public uint OutlineCol;
+        public float OutlineWidthPx;
+    }
+
+    // Immutable metrics loaded once from the embedded compiled MSDF metadata. Plane bounds are in em
+    // units with a bottom-up Y axis; UVs are normalized to Direct3D's top-left texture convention
+    private readonly struct ArenaFontGlyph(float advance, Vector4 planeBounds, Vector4 uvRect, bool hasQuad)
+    {
+        public readonly float Advance = advance;
+        public readonly Vector4 PlaneBounds = planeBounds; // left, bottom, right, top in em
+        public readonly Vector4 UvRect = uvRect;      // u0, v0, u1, v1, top-left texture origin
+        public readonly bool HasQuad = hasQuad;
+    }
+
+    private readonly struct ArenaFontMetrics(float lineHeight, float ascender, float descender)
+    {
+        public readonly float LineHeight = lineHeight;
+        public readonly float Ascender = ascender;
+        public readonly float Descender = descender;
+    }
+
+    // Fixed-layout v2 metadata records used by arena_font_msdf.bin. These structs are deliberately
+    // 4-byte packed and contain no references so the embedded byte payload can be viewed directly with
+    // MemoryMarshal.Cast<byte, T>() instead of decoding individual fields with BinaryReader.
+    private const uint ArenaFontBinaryMagic = 0x46534D42u; // bytes: B M S F
+    private const uint ArenaFontBinaryVersion = 2u;
+    private const uint ArenaFontBinaryAtlasTypeMsdf = 1u;
+    private const uint ArenaFontVariantText = 1u;
+    private const uint ArenaFontVariantIcons = 2u;
+    private const uint ArenaFontGlyphHasQuad = 1u;
+    private const int ArenaFontBinaryHeaderSize = 40;
+    private const int ArenaFontBinaryVariantSize = 44;
+    private const int ArenaFontBinaryGlyphSize = 44;
+    private const int ArenaFontBinaryKerningSize = 12;
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    private struct ArenaFontBinaryHeader
+    {
+        public uint Magic;
+        public uint Version;
+        public uint AtlasType;
+        public uint YOrigin;
+        public float DistanceRange;
+        public float DistanceRangeMiddle;
+        public float Size;
+        public int Width;
+        public int Height;
+        public int VariantCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    private struct ArenaFontBinaryVariant
+    {
+        public uint Kind;
+        public float EmSize;
+        public float LineHeight;
+        public float Ascender;
+        public float Descender;
+        public float UnderlineY;
+        public float UnderlineThickness;
+        public int GlyphOffset;
+        public int GlyphCount;
+        public int KerningOffset;
+        public int KerningCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    private struct ArenaFontBinaryGlyph
+    {
+        public uint Unicode;
+        public float Advance;
+        public float PlaneLeft;
+        public float PlaneBottom;
+        public float PlaneRight;
+        public float PlaneTop;
+        public float U0;
+        public float V0;
+        public float U1;
+        public float V1;
+        public uint Flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    private struct ArenaFontBinaryKerning
+    {
+        public uint Unicode1;
+        public uint Unicode2;
+        public float Advance;
     }
 
     private sealed unsafe class ArenaSdfResource
@@ -428,6 +516,14 @@ public static unsafe partial class Dx11ArenaRenderer
     private static ID3D11VertexShader* _textVertexShader;
     private static ID3D11PixelShader* _textPixelShader;
     private static ID3D11InputLayout* _textInputLayout;
+    // Arena text is completely independent of ImGui's dynamic font atlas. The immutable MSDF
+    // texture and metrics are embedded alongside the compiled shaders and owned by this renderer.
+    private static ID3D11ShaderResourceView* _arenaFontAtlasView;
+    private static Dictionary<uint, ArenaFontGlyph>? _arenaTextGlyphs;
+    private static Dictionary<uint, ArenaFontGlyph>? _arenaIconGlyphs;
+    private static Dictionary<ulong, float>? _arenaTextKerning;
+    private static ArenaFontMetrics _arenaTextMetrics;
+    private static ArenaFontMetrics _arenaIconMetrics;
 
     private static ID3D11VertexShader* _outlineShapeVertexShader;
     private static ID3D11PixelShader* _outlineShapePixelShader;
@@ -584,7 +680,7 @@ public static unsafe partial class Dx11ArenaRenderer
             _device->GetImmediateContext(&context);
             _context = context;
 
-            if (_context != null && CreateShadersAndLayouts() && CreateStencilStates() && CreateArenaSdfPipelineResources())
+            if (_context != null && CreateShadersAndLayouts() && CreateStencilStates() && CreateArenaSdfPipelineResources() && CreateArenaFontResources())
             {
                 // Publish the initialized generation only after every object required by callbacks exists.
                 _shutDown = false;
@@ -637,6 +733,12 @@ public static unsafe partial class Dx11ArenaRenderer
             Release(ref _worldLineTransformBuffer);
             Release(ref _analyticInputLayout);
             Release(ref _textInputLayout);
+            Release(ref _arenaFontAtlasView);
+            _arenaTextGlyphs = null;
+            _arenaIconGlyphs = null;
+            _arenaTextKerning = null;
+            _arenaTextMetrics = default;
+            _arenaIconMetrics = default;
             Release(ref _outlineShapeInputLayout);
             Release(ref _meshVertexShader);
             Release(ref _meshPixelShader);
@@ -871,7 +973,7 @@ public static unsafe partial class Dx11ArenaRenderer
         EnsureBuildRunStarted();
         EnsureWorldLineConstants();
         var len = curves.Length;
-        EnsureWorldCurveBuildCapacity(checked(_buildWorldCurveCount + len));
+        EnsureWorldCurveBuildCapacity(_buildWorldCurveCount + len);
         var start = _buildWorldCurveCount;
         curves.CopyTo(_buildWorldCurves!.AsSpan(start, len));
         _buildWorldCurveCount += len;
@@ -2396,16 +2498,16 @@ public static unsafe partial class Dx11ArenaRenderer
         var mipLevels = 1;
         var mipWidth = width;
         var mipHeight = height;
-        var totalSampleCount = checked(width * height);
+        var totalSampleCount = width * height;
         while (mipWidth > 1 || mipHeight > 1)
         {
             mipWidth = Math.Max(1, mipWidth >> 1);
             mipHeight = Math.Max(1, mipHeight >> 1);
-            totalSampleCount = checked(totalSampleCount + mipWidth * mipHeight);
+            totalSampleCount += mipWidth * mipHeight;
             ++mipLevels;
         }
 
-        var baseSampleCount = checked(width * height);
+        var baseSampleCount = width * height;
         var samples = ArrayPool<float>.Shared.Rent(baseSampleCount);
         var packed = ArrayPool<ushort>.Shared.Rent(totalSampleCount);
         try
@@ -2417,7 +2519,7 @@ public static unsafe partial class Dx11ArenaRenderer
             mipHeight = height;
             for (var mip = 0; mip < mipLevels; ++mip)
             {
-                var mipSampleCount = checked(mipWidth * mipHeight);
+                var mipSampleCount = mipWidth * mipHeight;
                 index.FillSignedDistanceGrid(samples, mipWidth, mipHeight, minX, minZ, spanX, spanZ);
                 for (var i = 0; i < mipSampleCount; ++i)
                 {
@@ -2447,7 +2549,7 @@ public static unsafe partial class Dx11ArenaRenderer
                 mipHeight = height;
                 for (var mip = 0; mip < mipLevels; ++mip)
                 {
-                    var mipSampleCount = checked(mipWidth * mipHeight);
+                    var mipSampleCount = mipWidth * mipHeight;
                     init[mip] = default;
                     init[mip].pSysMem = source + texelOffset;
                     init[mip].SysMemPitch = (uint)(mipWidth * sizeof(ushort));
@@ -2607,9 +2709,9 @@ public static unsafe partial class Dx11ArenaRenderer
         // 0,1,2,0,2,3; 4,5,6,4,6,7; ...
         // Existing quad draws use the first six indices unchanged. WorldCurve draws consume a longer
         // prefix, allowing the post-transform cache to reuse two vertices per generated line
-        var quadIndexCount = checked(MaxIndexedWorldCurveLines * 6);
+        var quadIndexCount = MaxIndexedWorldCurveLines * 6;
         D3D11_BUFFER_DESC quadIndexDesc = default;
-        quadIndexDesc.ByteWidth = checked((uint)(quadIndexCount * sizeof(uint)));
+        quadIndexDesc.ByteWidth = (uint)(quadIndexCount * sizeof(uint));
         quadIndexDesc.Usage = 0; // D3D11_USAGE_DEFAULT
         quadIndexDesc.BindFlags = 0x2u; // D3D11_BIND_INDEX_BUFFER
         ID3D11Buffer* quadIndexBuffer = null;
@@ -2684,82 +2786,77 @@ public static unsafe partial class Dx11ArenaRenderer
         return true;
     }
 
-    // Appends centered screen-space text using ImGui's already-built font atlas, but records the glyph quads into this renderer so MiniArena never falls back to ImDrawList text drawing
-    // The current atlas uses 16-bit ImWchar; unsupported astral scalars are skipped instead of forcing the entire text run back through ImGui
-    public static void AppendTextScreen(Vector2 center, string text, ImFontPtr font, float renderSize, uint color)
+    // Appends centered screen-space text from the renderer-owned immutable MSDF atlas. No ImFontPtr,
+    // ImFontGlyph, ImTextureID, or dynamic ImGui atlas state survives into the deferred callback.
+    public static void AppendTextScreen(Vector2 center, string text, float renderSize, uint color, uint outlineColor = 0u, float outlineWidthPx = 0f)
+        => AppendMsdfTextScreen(center, text, renderSize, color, iconFont: false, outlineColor, outlineWidthPx);
+
+    // Font Awesome 5 Free Solid lives in the same atlas as the text font but has its own metrics table.
+    public static void AppendIconScreen(Vector2 center, string text, float renderSize, uint color)
+        => AppendMsdfTextScreen(center, text, renderSize, color, iconFont: true, 0u, 0f);
+
+    private static void AppendMsdfTextScreen(Vector2 center, string text, float renderSize, uint color, bool iconFont, uint outlineColor, float outlineWidthPx)
     {
-        if (!_arenaActive || font.Handle == null || !(renderSize > 0f) || string.IsNullOrEmpty(text) || (color & 0xFF000000u) == 0)
+        if (!_arenaActive || !(renderSize > 0f) || string.IsNullOrEmpty(text) || (color & 0xFF000000u) == 0)
         {
             return;
         }
 
-        var nativeFont = font.Handle;
-        if (!(nativeFont->FontSize > 0f) || nativeFont->ContainerAtlas == null)
+        var glyphs = iconFont ? _arenaIconGlyphs : _arenaTextGlyphs;
+        if (glyphs == null || glyphs.Count == 0)
         {
             return;
         }
 
-        // Do not access ImFontAtlas texture internals here. Dalamud's generated bindings intentionally
-        // do not expose a stable TexID/TexRef field on the raw atlas. The DX11 callback captures the
-        // ImGui backend's currently-bound PS slot-0 SRV and uses that as the atlas texture
+        var metrics = iconFont ? _arenaIconMetrics : _arenaTextMetrics;
+        var lineHeightEm = metrics.LineHeight > 0f ? metrics.LineHeight : 1f;
+        var lineAdvance = lineHeightEm * renderSize;
 
-        var scale = renderSize / nativeFont->FontSize;
-        var lineHeight = nativeFont->FontSize * scale; // algebraically renderSize, kept parallel to ImGui RenderText
-
-        // Measure with the same glyph advances that will be emitted
+        // First pass measures using the exact same advances/kerning as emission. Missing ordinary
+        // text falls back to '?'; missing icon codepoints are skipped instead of drawing misleading glyphs.
         var lineWidth = 0f;
         var maxWidth = 0f;
         var lineCount = 1;
         var visibleGlyphs = 0;
+        var previous = 0u;
+        var hasPrevious = false;
 
-        // Arena labels are overwhelmingly short. Cache the first-pass glyph lookup on the stack so
-        // centering and vertex emission do not both traverse ImFont's lookup table. Long/debug text
-        // falls back to the secoond lookup rather than renting another temporary array.
         var len = text.Length;
-        var glyphCache = len <= 128 ? stackalloc nint[len] : default;
-        if (!glyphCache.IsEmpty)
+        for (var i = 0; i < len;)
         {
-            glyphCache.Clear();
-        }
-
-        for (var i = 0; i < len; ++i)
-        {
-            var ch = text[i];
-            if (char.IsHighSurrogate(ch) && i + 1 < len && char.IsLowSurrogate(text[i + 1]))
-            {
-                ++i; // current ImWchar/atlas path is 16-bit; skip unsupported astral scalar
-                continue;
-            }
-            if (char.IsSurrogate(ch))
+            var codepoint = ReadCodepoint(text, ref i);
+            if (codepoint == '\r')
             {
                 continue;
             }
-            if (ch == '\r')
-            {
-                continue;
-            }
-            if (ch == '\n')
+            if (codepoint == '\n')
             {
                 maxWidth = Math.Max(maxWidth, lineWidth);
                 lineWidth = 0f;
                 ++lineCount;
+                previous = 0u;
+                hasPrevious = false;
                 continue;
             }
 
-            var glyph = font.FindGlyph(ch);
-            if (glyph == null)
+            if (!TryGetArenaGlyph(glyphs, codepoint, iconFont, out var glyph, out var resolvedCodepoint))
             {
+                previous = 0u;
+                hasPrevious = false;
                 continue;
             }
-            if (!glyphCache.IsEmpty)
+
+            if (!iconFont && hasPrevious)
             {
-                glyphCache[i] = (nint)glyph;
+                lineWidth += GetArenaTextKerning(previous, resolvedCodepoint) * renderSize;
             }
-            lineWidth += glyph->AdvanceX * scale;
-            if (glyph->X0 != glyph->X1 && glyph->Y0 != glyph->Y1)
+            lineWidth += glyph.Advance * renderSize;
+            if (glyph.HasQuad)
             {
                 ++visibleGlyphs;
             }
+            previous = resolvedCodepoint;
+            hasPrevious = true;
         }
         maxWidth = Math.Max(maxWidth, lineWidth);
 
@@ -2769,70 +2866,121 @@ public static unsafe partial class Dx11ArenaRenderer
         }
 
         EnsureBuildRunStarted();
-
         var start = _buildTextInstanceCount;
         EnsureTextInstanceBuildCapacity(start + visibleGlyphs);
         var instances = _buildTextInstances!;
         var dst = start;
 
-        var x0 = MathF.Floor(center.X - maxWidth * 0.5f);
-        var y0 = MathF.Floor(center.Y - lineCount * lineHeight * 0.5f);
+        var x0 = MathF.Floor(center.X - 0.5f * maxWidth);
+        // Font metrics use an em-space baseline with +Y upward. Center the complete line box and
+        // convert to screen +Y-down coordinates when applying each glyph's plane bounds below.
+        var baseline0 = center.Y - 0.5f * (lineCount - 1) * lineAdvance + 0.5f * (metrics.Ascender + metrics.Descender) * renderSize;
         var x = x0;
-        var y = y0;
+        var baseline = baseline0;
+        previous = 0u;
+        hasPrevious = false;
 
-        for (var i = 0; i < len; ++i)
+        for (var i = 0; i < text.Length;)
         {
-            var ch = text[i];
-            if (char.IsHighSurrogate(ch) && i + 1 < len && char.IsLowSurrogate(text[i + 1]))
-            {
-                ++i;
-                continue;
-            }
-            if (char.IsSurrogate(ch))
+            var codepoint = ReadCodepoint(text, ref i);
+            if (codepoint == '\r')
             {
                 continue;
             }
-            if (ch == '\r')
-            {
-                continue;
-            }
-            if (ch == '\n')
+            if (codepoint == '\n')
             {
                 x = x0;
-                y += lineHeight;
+                baseline += lineAdvance;
+                previous = 0;
+                hasPrevious = false;
                 continue;
             }
 
-            var glyph = glyphCache.IsEmpty ? font.FindGlyph(ch) : (ImFontGlyph*)glyphCache[i];
-            if (glyph == null)
+            if (!TryGetArenaGlyph(glyphs, codepoint, iconFont, out var glyph, out var resolvedCodepoint))
             {
+                previous = 0;
+                hasPrevious = false;
                 continue;
             }
 
-            var g = glyph;
-            var advance = g->AdvanceX * scale;
-            if (g->X0 != g->X1 && g->Y0 != g->Y1)
+            if (!iconFont && hasPrevious)
             {
-                var x1 = x + g->X0 * scale;
-                var y1 = y + g->Y0 * scale;
-                var x2 = x + g->X1 * scale;
-                var y2 = y + g->Y1 * scale;
+                x += GetArenaTextKerning(previous, resolvedCodepoint) * renderSize;
+            }
+
+            if (glyph.HasQuad)
+            {
+                var pb = glyph.PlaneBounds;
+                var x1 = x + pb.X * renderSize;
+                var y1 = baseline - pb.W * renderSize; // top in +Y-up -> screen top
+                var x2 = x + pb.Z * renderSize;
+                var y2 = baseline - pb.Y * renderSize; // bottom in +Y-up -> screen bottom
                 var p00 = ScreenToNdc(x1, y1);
                 var p11 = ScreenToNdc(x2, y2);
                 instances[dst++] = new TextInstance
                 {
                     RectNdc = new Vector4(p00.X, p00.Y, p11.X, p11.Y),
-                    UvRect = new Vector4(g->U0, g->V0, g->U1, g->V1),
+                    UvRect = glyph.UvRect,
                     Col = color,
+                    OutlineCol = outlineColor,
+                    OutlineWidthPx = outlineWidthPx,
                 };
             }
 
-            x += advance;
+            x += glyph.Advance * renderSize;
+            previous = resolvedCodepoint;
+            hasPrevious = true;
         }
 
         var count = dst - start;
         _buildTextInstanceCount = dst;
         AppendSegment(SegmentKind.Text, start, count);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryGetArenaGlyph(Dictionary<uint, ArenaFontGlyph> glyphs, uint codepoint, bool iconFont, out ArenaFontGlyph glyph, out uint resolvedCodepoint)
+    {
+        if (glyphs.TryGetValue(codepoint, out glyph))
+        {
+            resolvedCodepoint = codepoint;
+            return true;
+        }
+        if (!iconFont && codepoint != '?' && glyphs.TryGetValue('?', out glyph))
+        {
+            resolvedCodepoint = '?';
+            return true;
+        }
+        resolvedCodepoint = 0;
+        glyph = default;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float GetArenaTextKerning(uint left, uint right)
+    {
+        var kerning = _arenaTextKerning;
+        if (kerning == null)
+        {
+            return 0f;
+        }
+        var key = ((ulong)left << 32) | right;
+        return kerning.TryGetValue(key, out var amount) ? amount : 0f;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint ReadCodepoint(string text, ref int index)
+    {
+        var first = text[index++];
+        if (char.IsHighSurrogate(first) && index < text.Length)
+        {
+            var second = text[index];
+            if (char.IsLowSurrogate(second))
+            {
+                ++index;
+                return (uint)char.ConvertToUtf32(first, second);
+            }
+        }
+        return char.IsSurrogate(first) ? 0xFFFDu : first;
     }
 
     // Flushes the current ordered run into one ImGui callback. The callback may issue multiple GPU
@@ -3068,14 +3216,13 @@ public static unsafe partial class Dx11ArenaRenderer
                             View = view,
                             Constants = overlay.CustomSdfConstants,
                         };
-                        // Record ownership immediately so exception cleanup releases any bindings
-                        // already transferred before the packet finishes assembling.
+                        // Record ownership immediately so exception cleanup releases any bindings already transferred before the packet finishes assembling
                         packet.CustomSdfCount = customCount;
                         overlay.CustomSdfView = null;
                     }
                     else
                     {
-                        // The packet already retained this exact SRV through an earlier overlay.
+                        // The packet already retained this exact SRV through an earlier overlay
                         view->Release();
                         overlay.CustomSdfView = null;
                     }
@@ -3745,16 +3892,6 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildCustomSdfCount = 0;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ID3D11ShaderResourceView* ImTextureIdToShaderResourceView(ImTextureID textureId)
-    {
-        // Dear ImGui's default ImTextureID is an unsigned 64-bit value. The DX11 backend stores
-        // ID3D11ShaderResourceView* in it. Reinterpret rather than depending on generated binding
-        // conversion operators, which have changed between ImGui/Dalamud binding generations.
-        var raw = *(ulong*)&textureId;
-        return (ID3D11ShaderResourceView*)(nuint)raw;
-    }
-
     private static void RenderBatchCallback(ImDrawList* parentList, ImDrawCmd* cmd)
     {
         // The ImGui callback may run concurrently with plugin hot-reload teardown. Serialize the
@@ -3780,9 +3917,8 @@ public static unsafe partial class Dx11ArenaRenderer
         ID3D11InputLayout* oldInputLayout = null;
         ID3D11VertexShader* oldVertexShader = null;
         ID3D11PixelShader* oldPixelShader = null;
-        // The arena renderer only owns PS resource slots t1-t3. Text must use the texture
-        // carried by this ImDrawCmd; t0 is ambient ImGui/backend state and is not a reliable
-        // way to identify the font atlas for a user callback.
+        // The arena renderer owns PS resource slots t1-t3. Text uses the immutable renderer-owned
+        // MSDF atlas at t3; t0 remains entirely owned by the ImGui backend.
         var oldPsSrvs = stackalloc ID3D11ShaderResourceView*[4];
         var oldAuxSamplers = stackalloc ID3D11SamplerState*[3];
         var oldAuxConstantBuffers = stackalloc ID3D11Buffer*[2];
@@ -3918,15 +4054,13 @@ public static unsafe partial class Dx11ArenaRenderer
 
             if (usesText)
             {
-                // ImGui records the texture that belongs to every draw command. Normal DX11 ImGui
-                // rendering binds cmd->GetTexID(); user callbacks are invoked directly, so resolve and bind that texture ourselves
-                var textureId = cmd->GetTexID();
-                fontAtlasSrv = ImTextureIdToShaderResourceView(textureId);
-                // If the command has no texture, text segments will be skipped below instead of sampling
-                // unrelated GPU state. Non-text segments in the same packet are still allowed to render
+                // Text samples the renderer-owned immutable MSDF atlas. It is created once during
+                // Initialize and released only while holding RendererLock in Shutdown, so glyph UVs
+                // and the texture identity are a permanent matched pair for this renderer generation.
+                fontAtlasSrv = _arenaFontAtlasView;
 
                 // Our text shader binds the atlas at t3; SDF paths may also use t1/t2. Capture only
-                // the slots we actually modify so t0 remains entirely owned by the ImGui backend
+                // the slots we actually modify so t0 remains entirely owned by the ImGui backend.
                 _context->PSGetShaderResources(1u, 3u, oldPsSrvs + 1);
                 capturedSrvFirstSlot = 1u;
                 capturedSrvCount = 3u;
@@ -3985,9 +4119,8 @@ public static unsafe partial class Dx11ArenaRenderer
                 auxConstantBufferStateCaptured = true;
             }
 
-            // Text uses the texture ID stored on this callback's ImDrawCmd. The draw command owns
-            // the texture identity for the duration of ImGui rendering; t1-t3 above are captured only
-            // so this callback can restore the backend's state afterward.
+            // The MSDF atlas is renderer-owned; t1-t3 above are captured only so this callback can
+            // restore the backend's state afterward.
             if (packet.NeedsStencil)
             {
                 _context->OMGetRenderTargets(1u, &oldRenderTarget, &oldDepthStencilView);
@@ -4721,7 +4854,7 @@ public static unsafe partial class Dx11ArenaRenderer
         ApplyPacketUploadOffsets(packet, baseOffset);
 
         D3D11_MAPPED_SUBRESOURCE mapped = default;
-        var hr = _context->Map((ID3D11Resource*)_uploadVertexBuffer, 0, mapType, 0, &mapped);
+        _context->Map((ID3D11Resource*)_uploadVertexBuffer, 0, mapType, 0, &mapped);
         try
         {
             var basePtr = (byte*)mapped.pData;
@@ -4792,8 +4925,8 @@ public static unsafe partial class Dx11ArenaRenderer
         }
         finally
         {
-            _context->Unmap((ID3D11Resource*)_uploadVertexBuffer, 0);
-            _uploadCursorBytes = AlignUploadOffset(checked(baseOffset + totalBytes));
+            _context->Unmap((ID3D11Resource*)_uploadVertexBuffer, 0u);
+            _uploadCursorBytes = AlignUploadOffset(baseOffset + totalBytes);
         }
     }
 
@@ -4827,9 +4960,9 @@ public static unsafe partial class Dx11ArenaRenderer
     {
         buffer = null;
         D3D11_BUFFER_DESC desc = default;
-        desc.ByteWidth = checked((uint)byteWidth);
-        desc.Usage = (D3D11_USAGE)2;   // D3D11_USAGE_DYNAMIC
-        desc.BindFlags = 0x1u;          // D3D11_BIND_VERTEX_BUFFER
+        desc.ByteWidth = (uint)byteWidth;
+        desc.Usage = (D3D11_USAGE)2; // D3D11_USAGE_DYNAMIC
+        desc.BindFlags = 0x1u; // D3D11_BIND_VERTEX_BUFFER
         desc.CPUAccessFlags = 0x10000u; // D3D11_CPU_ACCESS_WRITE
 
         ID3D11Buffer* created = null;
@@ -4871,6 +5004,268 @@ public static unsafe partial class Dx11ArenaRenderer
         _stencilView = view;
         _stencilWidth = width;
         _stencilHeight = height;
+        return true;
+    }
+
+    private static byte[]? LoadFontResourceBytes(string fileName)
+    {
+        var assembly = typeof(Dx11ArenaRenderer).Assembly;
+        var resourceName = $"BossMod.Fonts.Compiled.{fileName}";
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        var len = stream?.Length ?? 0;
+        if (stream == null || len <= 0 || len > int.MaxValue)
+        {
+            return null;
+        }
+        var bytes = GC.AllocateUninitializedArray<byte>((int)len);
+        stream.ReadExactly(bytes);
+        return bytes;
+    }
+
+    private static bool CreateArenaFontResources()
+    {
+        var rgbBottomUp = LoadFontResourceBytes("arena_font_msdf.rgb");
+        var assembly = typeof(Dx11ArenaRenderer).Assembly;
+        using var metadataStream = assembly.GetManifestResourceStream("BossMod.Fonts.Compiled.arena_font_msdf.bin");
+        if (rgbBottomUp == null || metadataStream == null || metadataStream.Length <= 0 || metadataStream.Length > int.MaxValue)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!BitConverter.IsLittleEndian)
+            {
+                return false;
+            }
+
+            // Assembly manifest resources are normally exposed as UnmanagedMemoryStream. In that case
+            // point a ReadOnlySpan directly at the embedded bytes, avoiding even the ~80 KiB metadata copy.
+            // Fall back to one byte[] copy on runtimes that do not expose a pointer-backed resource stream.
+            if (metadataStream is System.IO.UnmanagedMemoryStream unmanaged)
+            {
+                unmanaged.Position = 0;
+                byte* resourcePointer = null;
+                resourcePointer = unmanaged.PositionPointer;
+                if (resourcePointer != null)
+                {
+                    var metadata = new ReadOnlySpan<byte>(resourcePointer, (int)unmanaged.Length);
+                    return CreateArenaFontResourcesFromBinary(rgbBottomUp, metadata);
+                }
+                metadataStream.Position = 0;
+            }
+
+            var metadataBytes = GC.AllocateUninitializedArray<byte>((int)metadataStream.Length);
+            metadataStream.ReadExactly(metadataBytes);
+            return CreateArenaFontResourcesFromBinary(rgbBottomUp, metadataBytes);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static bool CreateArenaFontResourcesFromBinary(byte[] rgbBottomUp, ReadOnlySpan<byte> metadata)
+    {
+        var lenM = metadata.Length;
+        if (sizeof(ArenaFontBinaryHeader) != ArenaFontBinaryHeaderSize || sizeof(ArenaFontBinaryVariant) != ArenaFontBinaryVariantSize ||
+            sizeof(ArenaFontBinaryGlyph) != ArenaFontBinaryGlyphSize || sizeof(ArenaFontBinaryKerning) != ArenaFontBinaryKerningSize ||
+            lenM < ArenaFontBinaryHeaderSize)
+        {
+            return false;
+        }
+
+        var headerRecords = MemoryMarshal.Cast<byte, ArenaFontBinaryHeader>(metadata[..ArenaFontBinaryHeaderSize]);
+        if (headerRecords.Length != 1)
+        {
+            return false;
+        }
+
+        ref readonly var header = ref headerRecords[0];
+        if (header.Magic != ArenaFontBinaryMagic || header.Version != ArenaFontBinaryVersion || header.AtlasType != ArenaFontBinaryAtlasTypeMsdf ||
+            header.YOrigin != 0u || header.Width <= 0 || header.Height <= 0 || header.VariantCount is < 0 or > 64)
+        {
+            return false;
+        }
+
+        var variantBytes = header.VariantCount * ArenaFontBinaryVariantSize;
+        var dataStart = ArenaFontBinaryHeaderSize + variantBytes;
+        if (dataStart > lenM)
+        {
+            return false;
+        }
+
+        var variants = MemoryMarshal.Cast<byte, ArenaFontBinaryVariant>(metadata.Slice(ArenaFontBinaryHeaderSize, variantBytes));
+        if (variants.Length != header.VariantCount)
+        {
+            return false;
+        }
+
+        // Validate the converter's tightly packed section layout before taking any further casts
+        var expectedOffset = dataStart;
+        var lenV = variants.Length;
+        for (var i = 0; i < lenV; ++i)
+        {
+            ref readonly var variant = ref variants[i];
+            var countG = variant.GlyphCount;
+            var countK = variant.KerningCount;
+            if (variant.Kind > ArenaFontVariantIcons || countG is < 0 or > 1_000_000 || countK is < 0 or > 10_000_000 || variant.GlyphOffset != expectedOffset)
+            {
+                return false;
+            }
+
+            expectedOffset += countG * ArenaFontBinaryGlyphSize;
+            if (variant.KerningOffset != expectedOffset)
+            {
+                return false;
+            }
+            expectedOffset += countK * ArenaFontBinaryKerningSize;
+            if (expectedOffset > lenM)
+            {
+                return false;
+            }
+        }
+        if (expectedOffset != lenM)
+        {
+            return false;
+        }
+
+        var width = header.Width;
+        var height = header.Height;
+
+        // -format bin emits exactly the three MSDF channels as raw bytes. msdfgen's atlas bitmap
+        // is bottom-up, while D3D11 texture memory/UV convention is top-down. The v2 metadata converter
+        // has already normalized UVs; the texture bytes still need the same one-time row flip/alpha expansion.
+        var rgbByteCount = width * height * 3;
+        var rgbaByteCount = width * height * 4;
+        if (rgbBottomUp.Length != rgbByteCount)
+        {
+            return false;
+        }
+        var rgbaTopDown = GC.AllocateUninitializedArray<byte>(rgbaByteCount);
+        for (var dstY = 0; dstY < height; ++dstY)
+        {
+            var srcY = height - 1 - dstY;
+            var src = srcY * width * 3;
+            var dst = dstY * width * 4;
+            for (var x = 0; x < width; ++x)
+            {
+                rgbaTopDown[dst++] = rgbBottomUp[src++];
+                rgbaTopDown[dst++] = rgbBottomUp[src++];
+                rgbaTopDown[dst++] = rgbBottomUp[src++];
+                rgbaTopDown[dst++] = 0xFF;
+            }
+        }
+
+        Dictionary<uint, ArenaFontGlyph>? textGlyphs = null;
+        Dictionary<uint, ArenaFontGlyph>? iconGlyphs = null;
+        Dictionary<ulong, float>? textKerning = null;
+        ArenaFontMetrics textMetrics = default;
+        ArenaFontMetrics iconMetrics = default;
+
+        for (var variantIndex = 0; variantIndex < lenV; ++variantIndex)
+        {
+            ref readonly var variant = ref variants[variantIndex];
+            var isText = variant.Kind == ArenaFontVariantText;
+            var isIcons = variant.Kind == ArenaFontVariantIcons;
+            if (!isText && !isIcons)
+            {
+                continue;
+            }
+
+            var countG = variant.GlyphCount;
+            var metrics = new ArenaFontMetrics(variant.LineHeight, variant.Ascender, variant.Descender);
+            var glyphBytes = countG * ArenaFontBinaryGlyphSize;
+            var glyphRecords = MemoryMarshal.Cast<byte, ArenaFontBinaryGlyph>(metadata.Slice(variant.GlyphOffset, glyphBytes));
+            var lenG = glyphRecords.Length;
+            if (glyphRecords.Length != countG)
+            {
+                return false;
+            }
+
+            var glyphTable = new Dictionary<uint, ArenaFontGlyph>(countG);
+            for (var i = 0; i < lenG; ++i)
+            {
+                ref readonly var glyph = ref glyphRecords[i];
+                if ((glyph.Flags & ~ArenaFontGlyphHasQuad) != 0u)
+                {
+                    return false;
+                }
+
+                var hasQuad = (glyph.Flags & ArenaFontGlyphHasQuad) != 0u;
+                glyphTable[glyph.Unicode] = hasQuad ? new ArenaFontGlyph(glyph.Advance, new Vector4(glyph.PlaneLeft, glyph.PlaneBottom, glyph.PlaneRight, glyph.PlaneTop),
+                        new Vector4(glyph.U0, glyph.V0, glyph.U1, glyph.V1), hasQuad: true) : new ArenaFontGlyph(glyph.Advance, default, default, hasQuad: false);
+            }
+
+            var countK = variant.KerningCount;
+            var variantKerning = isText ? new Dictionary<ulong, float>(countK) : null;
+            if (countK != 0)
+            {
+                var kerningBytes = countK * ArenaFontBinaryKerningSize;
+                var kerningRecords = MemoryMarshal.Cast<byte, ArenaFontBinaryKerning>(metadata.Slice(variant.KerningOffset, kerningBytes));
+                var lenK = kerningRecords.Length;
+                if (lenK != countK)
+                {
+                    return false;
+                }
+
+                if (variantKerning != null)
+                {
+                    for (var i = 0; i < lenK; ++i)
+                    {
+                        ref readonly var kerning = ref kerningRecords[i];
+                        variantKerning[((ulong)kerning.Unicode1 << 32) | kerning.Unicode2] = kerning.Advance;
+                    }
+                }
+            }
+
+            if (isText)
+            {
+                textGlyphs = glyphTable;
+                textMetrics = metrics;
+                textKerning = variantKerning;
+            }
+            else
+            {
+                iconGlyphs = glyphTable;
+                iconMetrics = metrics;
+            }
+        }
+
+        if (textGlyphs == null || iconGlyphs == null || !textGlyphs.ContainsKey('?'))
+        {
+            return false;
+        }
+
+        D3D11_TEXTURE2D_DESC textureDesc = default;
+        textureDesc.Width = (uint)width;
+        textureDesc.Height = (uint)height;
+        textureDesc.MipLevels = 1u;
+        textureDesc.ArraySize = 1u;
+        textureDesc.Format = (DXGI_FORMAT)28; // R8G8B8A8_UNORM -- MSDF values are linear, never sRGB
+        textureDesc.SampleDesc.Count = 1u;
+        textureDesc.Usage = 0; // D3D11_USAGE_DEFAULT
+        textureDesc.BindFlags = 0x8u; // D3D11_BIND_SHADER_RESOURCE
+
+        ID3D11Texture2D* texture = null;
+        fixed (byte* pixels = rgbaTopDown)
+        {
+            D3D11_SUBRESOURCE_DATA initialData = default;
+            initialData.pSysMem = pixels;
+            initialData.SysMemPitch = (uint)(width * 4);
+            _device->CreateTexture2D(&textureDesc, &initialData, &texture);
+        }
+
+        ID3D11ShaderResourceView* view = null;
+        _device->CreateShaderResourceView((ID3D11Resource*)texture, null, &view);
+        texture->Release();
+
+        _arenaFontAtlasView = view;
+        _arenaTextGlyphs = textGlyphs;
+        _arenaIconGlyphs = iconGlyphs;
+        _arenaTextKerning = textKerning;
+        _arenaTextMetrics = textMetrics;
+        _arenaIconMetrics = iconMetrics;
         return true;
     }
 
@@ -5206,7 +5601,7 @@ public static unsafe partial class Dx11ArenaRenderer
         fixed (byte* pColor = color)
         fixed (byte* pBytecode = vsBytecode)
         {
-            var elements = stackalloc D3D11_INPUT_ELEMENT_DESC[3];
+            var elements = stackalloc D3D11_INPUT_ELEMENT_DESC[5];
             elements[0] = new D3D11_INPUT_ELEMENT_DESC
             {
                 SemanticName = (sbyte*)pTexcoord,
@@ -5237,9 +5632,29 @@ public static unsafe partial class Dx11ArenaRenderer
                 InputSlotClass = (D3D11_INPUT_CLASSIFICATION)1,
                 InstanceDataStepRate = 1u,
             };
+            elements[3] = new D3D11_INPUT_ELEMENT_DESC
+            {
+                SemanticName = (sbyte*)pColor,
+                SemanticIndex = 1u,
+                Format = (DXGI_FORMAT)28, // R8G8B8A8_UNORM
+                InputSlot = 0u,
+                AlignedByteOffset = 36u,
+                InputSlotClass = (D3D11_INPUT_CLASSIFICATION)1,
+                InstanceDataStepRate = 1u,
+            };
+            elements[4] = new D3D11_INPUT_ELEMENT_DESC
+            {
+                SemanticName = (sbyte*)pTexcoord,
+                SemanticIndex = 2u,
+                Format = (DXGI_FORMAT)41, // R32_FLOAT
+                InputSlot = 0u,
+                AlignedByteOffset = 40u,
+                InputSlotClass = (D3D11_INPUT_CLASSIFICATION)1,
+                InstanceDataStepRate = 1u,
+            };
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 3u, pBytecode, (nuint)vsBytecode.Length, &created);
+            _device->CreateInputLayout(elements, 5u, pBytecode, (nuint)vsBytecode.Length, &created);
             layout = created;
         }
     }
@@ -5392,7 +5807,7 @@ public static unsafe partial class Dx11ArenaRenderer
             nint id;
             do
             {
-                id = (nint)unchecked(++_nextPacketId);
+                id = (nint)(++_nextPacketId);
             } while (id == 0 || PendingPackets.ContainsKey(id));
 
             PendingPackets.Add(id, packet);

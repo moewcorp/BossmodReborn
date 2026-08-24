@@ -1,15 +1,19 @@
 struct VS_INPUT
 {
-    float4 rectNdc : TEXCOORD0;
-    float4 uvRect  : TEXCOORD1;
-    float4 col     : COLOR0;
+    float4 rectNdc      : TEXCOORD0;
+    float4 uvRect       : TEXCOORD1;
+    float4 col          : COLOR0;
+    float4 outlineCol   : COLOR1;
+    float  outlineWidth : TEXCOORD2;
 };
 
 struct PS_INPUT
 {
-    float4 pos : SV_POSITION;
-    float2 uv  : TEXCOORD0;
-    float4 col : COLOR0;
+    float4 pos          : SV_POSITION;
+    float2 uv           : TEXCOORD0;
+    nointerpolation float4 col          : COLOR0;
+    nointerpolation float4 outlineCol   : COLOR1;
+    nointerpolation float  outlineWidth : TEXCOORD1;
 };
 
 static const float2 Quad[4] =
@@ -30,5 +34,7 @@ PS_INPUT main(VS_INPUT input, uint vertexId : SV_VertexID)
         corner.x < 0.5f ? input.uvRect.x : input.uvRect.z,
         corner.y < 0.5f ? input.uvRect.y : input.uvRect.w);
     output.col = input.col;
+    output.outlineCol = input.outlineCol;
+    output.outlineWidth = input.outlineWidth;
     return output;
 }

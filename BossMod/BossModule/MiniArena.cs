@@ -59,8 +59,6 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     private float _frameScreenMarginSize;
     private float _frameCardinalsFontSize = 17f;
     private bool _frameShowOutlinesAndShadows;
-    private ImFontPtr _frameFont;
-    private ImFontPtr _frameIconFont;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool InBounds(WPos position) => _bounds.Contains(position - _center);
@@ -81,8 +79,6 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
         _frameActorScale = Config.ActorScale;
         _frameShowOutlinesAndShadows = Config.ShowOutlinesAndShadows;
         _frameCardinalsFontSize = Config.CardinalsFontSize;
-        _frameFont = ImGui.GetFont();
-        _frameIconFont = Service.IconFont;
         var screenHalfSize = _frameScreenHalfSize = 150f * arenaScale;
         var screenMarginSize = _frameScreenMarginSize = 20f * arenaScale;
 
@@ -417,17 +413,18 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TextScreen(Vector2 center, string text, uint color, float fontSize = 17f)
-        => Dx11ArenaRenderer.AppendTextScreen(center, text, _frameFont, fontSize * _frameArenaScale, color);
+    public void TextScreen(Vector2 center, string text, uint color, float fontSize = 17f, uint outlineColor = 0u, float outlineWidth = 0f)
+        => Dx11ArenaRenderer.AppendTextScreen(center, text, fontSize * _frameArenaScale, color, outlineColor, outlineWidth * _frameArenaScale);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TextWorld(WPos center, string text, uint color, float fontSize = 17f) => TextScreen(WorldPositionToScreenPosition(center), text, color, fontSize);
+    public void TextWorld(WPos center, string text, uint color, float fontSize = 17f, uint outlineColor = 0u, float outlineWidth = 0f)
+        => TextScreen(WorldPositionToScreenPosition(center), text, color, fontSize, outlineColor, outlineWidth);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IconScreen(Vector2 center, FontAwesomeIcon icon, uint color, float fontSize = 17f)
     {
         var text = icon.ToIconString();
-        Dx11ArenaRenderer.AppendTextScreen(center, text, _frameIconFont, fontSize, color);
+        Dx11ArenaRenderer.AppendIconScreen(center, text, fontSize, color);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
