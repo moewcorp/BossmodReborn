@@ -636,7 +636,7 @@ public abstract class BossModule : IDisposable
                 var pos = Arena.WorldPositionToScreenPosition(actor.Position);
                 var scale = WindowConfig.ArenaScale * 24f;
 
-                ImGui.GetWindowDrawList().AddImage(wrap.Handle, pos - new Vector2(scale), pos);
+                Arena.SpriteScreen(pos - new Vector2(scale), pos, wrap);
             }
         }
     }

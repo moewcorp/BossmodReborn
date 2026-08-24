@@ -1,4 +1,5 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface;
 
 namespace BossMod;
@@ -413,6 +414,10 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SpriteScreen(Vector2 min, Vector2 max, IDalamudTextureWrap texture, uint color = 0xFFFFFFFFu)
+        => Dx11ArenaRenderer.AppendSpriteScreen(min, max, texture, color);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TextScreen(Vector2 center, string text, uint color, float fontSize = 17f, uint outlineColor = 0u, float outlineWidth = 0f)
         => Dx11ArenaRenderer.AppendTextScreen(center, text, fontSize * _frameArenaScale, color, outlineColor, outlineWidth * _frameArenaScale);
 
@@ -440,7 +445,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
         TextScreen(center - offS, "N", Colors.CardinalN, fontSetting);
         TextScreen(center + offS, "S", Colors.CardinalS, fontSetting);
         TextScreen(center + offE, "E", Colors.CardinalE, fontSetting);
-        TextScreen(center - offE, "W", Colors.CardinalW, fontSetting);
+        TextScreen(center - offE * 1.02f, "W", Colors.CardinalW, fontSetting); // w is slightly wider, so we are putting it 2% farther away than the E
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

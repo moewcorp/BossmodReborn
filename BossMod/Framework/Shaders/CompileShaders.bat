@@ -83,6 +83,8 @@ call :compile text_vs.hlsl                      vs_5_0 text_vs.cso
 if errorlevel 1 exit /b 1
 call :compile text_ps.hlsl                      ps_5_0 text_ps.cso
 if errorlevel 1 exit /b 1
+call :compile sprite_ps.hlsl                    ps_5_0 sprite_ps.cso
+if errorlevel 1 exit /b 1
 
 call :compile analytic_vs.hlsl                  vs_5_0 analytic_vs.cso
 if errorlevel 1 exit /b 1
@@ -110,7 +112,7 @@ call :compile_define custom_outline_ps.hlsl     ps_5_0 custom_clip_edge_ps.cso C
 if errorlevel 1 exit /b 1
 
 echo.
-echo All 20 Shader Model 5.0 shaders compiled successfully.
+echo All 21 Shader Model 5.0 shaders compiled successfully.
 echo Output:
 echo   %OUT%
 exit /b 0

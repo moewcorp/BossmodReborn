@@ -1,4 +1,5 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 using System.Buffers;
 using System.Threading;
 using TerraFX.Interop.DirectX;
@@ -368,7 +369,8 @@ public static unsafe partial class Dx11ArenaRenderer
         ArenaSdfOutline,
         AnalyticClipEdgeOverlay,
         CustomClipEdgeOverlay,
-        Text
+        Text,
+        Sprite
     }
 
     private struct DrawSegment
@@ -379,12 +381,19 @@ public static unsafe partial class Dx11ArenaRenderer
         // Index into BatchPacket.CustomSdfs for segments that sample a custom polygon SDF
         // Ordinary segments leave this at -1
         public int CustomSdfBinding;
+        // Index into BatchPacket.Sprites for textured screen quads; ordinary segments leave this at -1.
+        public int SpriteBinding;
     }
 
     private struct CustomSdfBinding
     {
         public ID3D11ShaderResourceView* View;
         public OutlineSdfConstants Constants;
+    }
+
+    private struct SpriteBinding
+    {
+        public ID3D11ShaderResourceView* View;
     }
 
     // Clipped outlines are drawn normally in submission order, then only the arena-generated
@@ -420,6 +429,8 @@ public static unsafe partial class Dx11ArenaRenderer
         public int OutlineCount;
         public TextInstance[]? TextInstances;
         public int TextInstanceCount;
+        public SpriteBinding[]? Sprites;
+        public int SpriteCount;
         public ID3D11ShaderResourceView* ArenaSdfView;
         public OutlineSdfConstants OutlineSdfConstants;
         public CustomSdfBinding[]? CustomSdfs;
@@ -515,6 +526,7 @@ public static unsafe partial class Dx11ArenaRenderer
 
     private static ID3D11VertexShader* _textVertexShader;
     private static ID3D11PixelShader* _textPixelShader;
+    private static ID3D11PixelShader* _spritePixelShader;
     private static ID3D11InputLayout* _textInputLayout;
     // Arena text is completely independent of ImGui's dynamic font atlas. The immutable MSDF
     // texture and metrics are embedded alongside the compiled shaders and owned by this renderer.
@@ -594,6 +606,8 @@ public static unsafe partial class Dx11ArenaRenderer
     private static int _buildOutlineCount;
     private static TextInstance[]? _buildTextInstances;
     private static int _buildTextInstanceCount;
+    private static SpriteBinding[]? _buildSprites;
+    private static int _buildSpriteCount;
     private static bool _buildNeedsStencil;
     private static bool _buildModifiesDepthState;
     private static long _arenaStencilKey;
@@ -752,6 +766,7 @@ public static unsafe partial class Dx11ArenaRenderer
             Release(ref _analyticPixelShader);
             Release(ref _textVertexShader);
             Release(ref _textPixelShader);
+            Release(ref _spritePixelShader);
             Release(ref _outlineShapeVertexShader);
             Release(ref _outlineShapePixelShader);
             Release(ref _outlineUnclippedPixelShader);
@@ -2786,6 +2801,48 @@ public static unsafe partial class Dx11ArenaRenderer
         return true;
     }
 
+    // Appends a Dalamud-owned RGBA texture as a screen-space quad. Keep ImTextureID opaque at the
+    // public call sites; unwrap it only here at the DX11 backend boundary. Dalamud's texture-wrap
+    // implementation documents Handle as the low-level TerraFX IUnknown (DX11: SRV). AddRef immediately
+    // so the deferred callback owns the resource independently of GetWrapOrEmpty's current-frame lifetime.
+    public static void AppendSpriteScreen(Vector2 min, Vector2 max, IDalamudTextureWrap texture, uint color = 0xFFFFFFFFu)
+    {
+        if (!_arenaActive || !(max.X > min.X) || !(max.Y > min.Y) || (color & 0xFF000000u) == 0)
+        {
+            return;
+        }
+
+        var textureId = texture.Handle;
+        var rawHandle = Unsafe.BitCast<ImTextureID, ulong>(textureId);
+        if (rawHandle == 0)
+        {
+            return;
+        }
+
+        EnsureBuildRunStarted();
+
+        var view = (ID3D11ShaderResourceView*)(nuint)rawHandle;
+        EnsureSpriteBuildCapacity(_buildSpriteCount + 1);
+        var binding = _buildSpriteCount++;
+        view->AddRef();
+        _buildSprites![binding] = new SpriteBinding { View = view };
+
+        var start = _buildTextInstanceCount;
+        EnsureTextInstanceBuildCapacity(start + 1);
+        var p00 = ScreenToNdc(min);
+        var p11 = ScreenToNdc(max);
+        _buildTextInstances![start] = new TextInstance
+        {
+            RectNdc = new Vector4(p00.X, p00.Y, p11.X, p11.Y),
+            UvRect = new Vector4(0f, 0f, 1f, 1f),
+            Col = color,
+            OutlineCol = 0u,
+            OutlineWidthPx = 0f,
+        };
+        _buildTextInstanceCount = start + 1;
+        AppendSegment(SegmentKind.Sprite, start, 1, spriteBinding: binding);
+    }
+
     // Appends centered screen-space text from the renderer-owned immutable MSDF atlas. No ImFontPtr,
     // ImFontGlyph, ImTextureID, or dynamic ImGui atlas state survives into the deferred callback.
     public static void AppendTextScreen(Vector2 center, string text, float renderSize, uint color, uint outlineColor = 0u, float outlineWidthPx = 0f)
@@ -3016,6 +3073,8 @@ public static unsafe partial class Dx11ArenaRenderer
         packet.OutlineCount = _buildOutlineCount;
         packet.TextInstances = _buildTextInstances;
         packet.TextInstanceCount = _buildTextInstanceCount;
+        packet.Sprites = _buildSprites;
+        packet.SpriteCount = _buildSpriteCount;
         packet.ArenaSdfView = _buildArenaSdf?.View;
         packet.OutlineSdfConstants = _buildOutlineSdfConstants;
         packet.CustomSdfs = _buildCustomSdfs;
@@ -3046,6 +3105,7 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildAnalytics = null;
         _buildOutlines = null;
         _buildTextInstances = null;
+        _buildSprites = null;
         _buildCustomSdfs = null;
         _buildSegments = null;
         _buildMeshVertexCount = 0;
@@ -3059,6 +3119,7 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildAnalyticCount = 0;
         _buildOutlineCount = 0;
         _buildTextInstanceCount = 0;
+        _buildSpriteCount = 0;
         _buildSegmentCount = 0;
         _buildNeedsStencil = false;
         _buildModifiesDepthState = false;
@@ -3483,7 +3544,7 @@ public static unsafe partial class Dx11ArenaRenderer
     private static Vector2 ScreenToNdc(Vector2 p) => new(p.X * _buildNdcScale.X + _buildNdcOffset.X, p.Y * _buildNdcScale.Y + _buildNdcOffset.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AppendSegment(SegmentKind kind, int start, int count, int customSdfBinding = -1)
+    private static void AppendSegment(SegmentKind kind, int start, int count, int customSdfBinding = -1, int spriteBinding = -1)
     {
         if (count == 0)
         {
@@ -3501,7 +3562,7 @@ public static unsafe partial class Dx11ArenaRenderer
         if (n != 0)
         {
             ref var previous = ref _buildSegments![n - 1];
-            if (previous.Kind == kind && previous.CustomSdfBinding == customSdfBinding && previous.Start + previous.Count == start)
+            if (previous.Kind == kind && previous.CustomSdfBinding == customSdfBinding && previous.SpriteBinding == spriteBinding && previous.Start + previous.Count == start)
             {
                 previous.Count += count;
                 return;
@@ -3509,7 +3570,7 @@ public static unsafe partial class Dx11ArenaRenderer
         }
 
         EnsureSegmentBuildCapacity(n + 1);
-        _buildSegments![n] = new DrawSegment { Kind = kind, Start = start, Count = count, CustomSdfBinding = customSdfBinding };
+        _buildSegments![n] = new DrawSegment { Kind = kind, Start = start, Count = count, CustomSdfBinding = customSdfBinding, SpriteBinding = spriteBinding };
         _buildSegmentCount = n + 1;
     }
 
@@ -3755,6 +3816,30 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildOutlines = replacement;
     }
 
+    private static void EnsureSpriteBuildCapacity(int required)
+    {
+        if (_buildSprites != null && required <= _buildSprites.Length)
+        {
+            return;
+        }
+
+        var capacity = _buildSprites?.Length ?? 16;
+        while (capacity < required)
+        {
+            capacity *= 2;
+        }
+        var replacement = ArrayPool<SpriteBinding>.Shared.Rent(capacity);
+        if (_buildSprites != null)
+        {
+            if (_buildSpriteCount != 0)
+            {
+                Array.Copy(_buildSprites, replacement, _buildSpriteCount);
+            }
+            ArrayPool<SpriteBinding>.Shared.Return(_buildSprites, clearArray: false);
+        }
+        _buildSprites = replacement;
+    }
+
     private static void EnsureTextInstanceBuildCapacity(int required)
     {
         if (_buildTextInstances != null && required <= _buildTextInstances.Length)
@@ -3845,6 +3930,18 @@ public static unsafe partial class Dx11ArenaRenderer
             {
                 ArrayPool<TextInstance>.Shared.Return(_buildTextInstances);
             }
+            if (_buildSprites != null)
+            {
+                for (var i = 0; i < _buildSpriteCount; ++i)
+                {
+                    var view = _buildSprites[i].View;
+                    if (view != null)
+                    {
+                        view->Release();
+                    }
+                }
+                ArrayPool<SpriteBinding>.Shared.Return(_buildSprites, clearArray: false);
+            }
             if (_buildCustomSdfs != null)
             {
                 for (var i = 0; i < _buildCustomSdfCount; ++i)
@@ -3871,6 +3968,7 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildAnalytics = null;
         _buildOutlines = null;
         _buildTextInstances = null;
+        _buildSprites = null;
         _buildCustomSdfs = null;
         _buildSegments = null;
         _buildMeshVertexCount = 0;
@@ -3884,6 +3982,7 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildAnalyticCount = 0;
         _buildOutlineCount = 0;
         _buildTextInstanceCount = 0;
+        _buildSpriteCount = 0;
         _buildSegmentCount = 0;
         _buildNeedsStencil = false;
         _buildModifiesDepthState = false;
@@ -4147,6 +4246,7 @@ public static unsafe partial class Dx11ArenaRenderer
             var boundVertexFamily = vertexNone;
             ID3D11PixelShader* boundPixelShader = null;
             var boundCustomSdfBinding = -1;
+            var boundSpriteBinding = -1; // -1 means renderer font atlas is currently bound at t3
 
             if (usesArenaSdf)
             {
@@ -4248,226 +4348,230 @@ public static unsafe partial class Dx11ArenaRenderer
             for (var segmentIndex = 0; segmentIndex < count; ++segmentIndex)
             {
                 var segment = segments[segmentIndex];
-                if (segment.Kind == SegmentKind.CustomSdfFill)
+                switch (segment.Kind)
                 {
-                    if (!packet.NeedsStencil || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
-                    {
-                        continue;
-                    }
-                    // Arena clipping comes from the already-populated stencil, just like the
-                    // ZoneRelPoly path. The pixel shader evaluates the custom SDF and applies a centered one-pixel coverage ramp at its boundary
-                    if (boundDepthMode != 1)
-                    {
-                        _context->OMSetDepthStencilState(_stencilTestState, 1u);
-                        boundDepthMode = 1;
-                    }
-                    BindPipeline(vertexMesh, _customSdfFillPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->Draw((uint)segment.Count, (uint)segment.Start);
-                    continue;
-                }
+                    case SegmentKind.CustomSdfFill:
+                        if (!packet.NeedsStencil || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
+                        {
+                            break;
+                        }
 
-                if (segment.Kind == SegmentKind.AnalyticOutline)
-                {
-                    // Draw the outline of the actual clipped intersection in one pass
-                    if (packet.ArenaSdfView == null)
-                    {
-                        continue;
-                    }
+                        // Arena clipping comes from the already-populated stencil, just like the ZoneRelPoly path
+                        // The pixel shader evaluates the custom SDF and applies a centered one-pixel coverage ramp at its boundary
+                        if (boundDepthMode != 1)
+                        {
+                            _context->OMSetDepthStencilState(_stencilTestState, 1u);
+                            boundDepthMode = 1;
+                        }
+                        BindPipeline(vertexMesh, _customSdfFillPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->Draw((uint)segment.Count, (uint)segment.Start);
+                        break;
 
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _outlineShapePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
+                    case SegmentKind.AnalyticOutline:
+                        if (packet.ArenaSdfView == null)
+                        {
+                            break;
+                        }
 
-                if (segment.Kind == SegmentKind.AnalyticOutlineUnclipped)
-                {
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _outlineUnclippedPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _outlineShapePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                if (segment.Kind == SegmentKind.ArenaSdfOutline)
-                {
-                    if (packet.ArenaSdfView == null)
-                        continue;
+                    case SegmentKind.AnalyticOutlineUnclipped:
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _outlineUnclippedPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _arenaSdfOutlinePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
+                    case SegmentKind.ArenaSdfOutline:
+                        if (packet.ArenaSdfView == null)
+                        {
+                            break;
+                        }
 
-                if (segment.Kind == SegmentKind.CustomSdfOutline)
-                {
-                    if (packet.ArenaSdfView == null || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
-                        continue;
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _arenaSdfOutlinePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _customOutlinePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
+                    case SegmentKind.CustomSdfOutline:
+                        if (packet.ArenaSdfView == null || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
+                        {
+                            break;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _customOutlinePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                if (segment.Kind == SegmentKind.AnalyticClipEdgeOverlay)
-                {
-                    if (packet.ArenaSdfView == null)
-                        continue;
+                    case SegmentKind.AnalyticClipEdgeOverlay:
+                        if (packet.ArenaSdfView == null)
+                        {
+                            break;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _outlineClipEdgePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _outlineClipEdgePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
+                    case SegmentKind.CustomClipEdgeOverlay:
+                        if (packet.ArenaSdfView == null || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
+                        {
+                            break;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexOutline, _customClipEdgePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                if (segment.Kind == SegmentKind.CustomClipEdgeOverlay)
-                {
-                    if (packet.ArenaSdfView == null || !BindCustomSdf(packet, segment.CustomSdfBinding, ref boundCustomSdfBinding))
-                        continue;
+                    case SegmentKind.Text:
+                        if (fontAtlasSrv == null)
+                        {
+                            break;
+                        }
+                        if (boundSpriteBinding != -1)
+                        {
+                            var textView = fontAtlasSrv;
+                            _context->PSSetShaderResources(3u, 1u, &textView);
+                            boundSpriteBinding = -1;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexText, _textPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
 
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexOutline, _customClipEdgePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.Text)
-                {
-                    if (fontAtlasSrv == null)
-                        continue;
-
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-
-                    BindPipeline(vertexText, _textPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.ScreenAnalytic)
-                {
-                    // Fixed-size screen decorations are intentionally not clipped by ArenaBounds
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexAnalytic, _analyticPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.WorldLine)
-                {
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexWorldLine, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.WorldCurve)
-                {
-                    if (segment.CustomSdfBinding <= 0)
-                    {
-                        continue;
-                    }
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexWorldCurve, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    var indicesPerCurve = (uint)segment.CustomSdfBinding * 6u;
-                    _context->DrawIndexedInstanced(indicesPerCurve, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.Stroke)
-                {
-                    // Polylines are intentionally unclipped, matching the existing primitive path
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexStroke, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.PrimitiveTriangleStroke)
-                {
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexPrimitiveTriangleStroke, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawInstanced(18u, (uint)segment.Count, 0u, (uint)segment.Start);
-                    continue;
-                }
-
-                if (segment.Kind == SegmentKind.PrimitiveMesh)
-                {
-                    // General-purpose primitives are intentionally not clipped to ArenaBounds.
-                    // Keep the ImGui window scissor, but bypass our private arena stencil
-                    if (boundDepthMode != 2)
-                    {
-                        _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
-                        boundDepthMode = 2;
-                    }
-                    BindPipeline(vertexMesh, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->Draw((uint)segment.Count, (uint)segment.Start);
-                    continue;
-                }
-
-                if (packet.NeedsStencil && boundDepthMode != 1)
-                {
-                    _context->OMSetDepthStencilState(_stencilTestState, 1u);
-                    boundDepthMode = 1;
-                }
-
-                if (segment.Kind == SegmentKind.Mesh)
-                {
-                    BindPipeline(vertexMesh, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->Draw((uint)segment.Count, (uint)segment.Start);
-                }
-                else
-                {
-                    BindPipeline(vertexAnalytic, _analyticPixelShader, ref boundVertexFamily, ref boundPixelShader);
-                    _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                    case SegmentKind.Sprite:
+                        var binding = segment.SpriteBinding;
+                        if ((uint)binding >= (uint)packet.SpriteCount || packet.Sprites == null)
+                        {
+                            break;
+                        }
+                        if (boundSpriteBinding != binding)
+                        {
+                            var spriteView = packet.Sprites[binding].View;
+                            if (spriteView == null)
+                                break;
+                            _context->PSSetShaderResources(3u, 1u, &spriteView);
+                            boundSpriteBinding = binding;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexText, _spritePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
+                    case SegmentKind.ScreenAnalytic:
+                        // Fixed-size screen decorations are intentionally not clipped by ArenaBounds
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexAnalytic, _analyticPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
+                    case SegmentKind.WorldLine:
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexWorldLine, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
+                    case SegmentKind.WorldCurve:
+                        if (segment.CustomSdfBinding <= 0)
+                        {
+                            break;
+                        }
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexWorldCurve, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        var indicesPerCurve = (uint)segment.CustomSdfBinding * 6u;
+                        _context->DrawIndexedInstanced(indicesPerCurve, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
+                    case SegmentKind.Stroke:
+                        // Polylines are intentionally unclipped, matching the existing primitive path
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexStroke, _strokePixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
+                    case SegmentKind.PrimitiveTriangleStroke:
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexPrimitiveTriangleStroke, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawInstanced(18u, (uint)segment.Count, 0u, (uint)segment.Start);
+                        break;
+                    case SegmentKind.PrimitiveMesh:
+                        // General-purpose primitives are intentionally not clipped to ArenaBounds
+                        // Keep the ImGui window scissor, but bypass our private arena stencil
+                        if (boundDepthMode != 2)
+                        {
+                            _context->OMSetDepthStencilState(_stencilDisabledState, 0u);
+                            boundDepthMode = 2;
+                        }
+                        BindPipeline(vertexMesh, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->Draw((uint)segment.Count, (uint)segment.Start);
+                        break;
+                    case SegmentKind.Mesh:
+                        if (packet.NeedsStencil && boundDepthMode != 1)
+                        {
+                            _context->OMSetDepthStencilState(_stencilTestState, 1u);
+                            boundDepthMode = 1;
+                        }
+                        BindPipeline(vertexMesh, _meshPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->Draw((uint)segment.Count, (uint)segment.Start);
+                        break;
+                    case SegmentKind.Analytic:
+                        if (packet.NeedsStencil && boundDepthMode != 1)
+                        {
+                            _context->OMSetDepthStencilState(_stencilTestState, 1u);
+                            boundDepthMode = 1;
+                        }
+                        BindPipeline(vertexAnalytic, _analyticPixelShader, ref boundVertexFamily, ref boundPixelShader);
+                        _context->DrawIndexedInstanced(6u, (uint)segment.Count, 0u, 0, (uint)segment.Start);
+                        break;
                 }
             }
         }
@@ -5337,6 +5441,10 @@ public static unsafe partial class Dx11ArenaRenderer
         {
             return false;
         }
+        if (!CreatePixelShaderResource("sprite_ps.cso", out _spritePixelShader))
+        {
+            return false;
+        }
         if (!CreateVertexShaderResource("analytic_vs.cso", out _analyticVertexShader, out var analyticVsBytecode))
         {
             return false;
@@ -5842,6 +5950,19 @@ public static unsafe partial class Dx11ArenaRenderer
             }
             ArrayPool<CustomSdfBinding>.Shared.Return(packet.CustomSdfs, clearArray: false);
         }
+        if (packet.Sprites != null)
+        {
+            var count = packet.SpriteCount;
+            for (var i = 0; i < count; ++i)
+            {
+                var view = packet.Sprites[i].View;
+                if (view != null)
+                {
+                    view->Release();
+                }
+            }
+            ArrayPool<SpriteBinding>.Shared.Return(packet.Sprites, clearArray: false);
+        }
         if (packet.MeshVertices is MeshVertex[] mv)
         {
             ArrayPool<MeshVertex>.Shared.Return(mv);
@@ -5903,6 +6024,8 @@ public static unsafe partial class Dx11ArenaRenderer
         packet.OutlineCount = 0;
         packet.TextInstances = null;
         packet.TextInstanceCount = 0;
+        packet.Sprites = null;
+        packet.SpriteCount = 0;
         packet.ArenaSdfView = null;
         packet.OutlineSdfConstants = default;
         packet.CustomSdfs = null;
