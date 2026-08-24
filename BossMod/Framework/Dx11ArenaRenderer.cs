@@ -1,5 +1,6 @@
 using Dalamud.Bindings.ImGui;
 using System.Buffers;
+using System.Threading;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
 
@@ -364,6 +365,12 @@ public static unsafe partial class Dx11ArenaRenderer
     }
 
     private static readonly ImDrawCallback DrawCallback = RenderBatchCallback;
+    // DX11 objects below are process/game-owned COM resources used from the deferred ImGui render callback.
+    // Hot reload can call Shutdown while a callback from the previous UI frame is still executing, so
+    // teardown must be mutually exclusive with callback execution. Lock ordering is always RendererLock -> PendingPackets when both are needed.
+    private static readonly Lock RendererLock = new();
+    private static volatile bool _shutDown = true;
+    public static bool IsInitialized = false;
     private static readonly Dictionary<nint, BatchPacket> PendingPackets = [];
     private static readonly Stack<BatchPacket> BatchPacketPool = new(16);
 
@@ -561,159 +568,159 @@ public static unsafe partial class Dx11ArenaRenderer
     private static CustomSdfBinding[]? _buildCustomSdfs;
     private static int _buildCustomSdfCount;
 
-    public static bool IsInitialized
-        => _device != null && _context != null &&
-        _meshVertexShader != null && _meshPixelShader != null && _meshInputLayout != null &&
-        _primitiveTriangleStrokeVertexShader != null && _primitiveTriangleStrokeInputLayout != null &&
-        _strokeVertexShader != null && _strokePixelShader != null && _strokeInputLayout != null &&
-        _worldLineVertexShader != null && _worldLineInputLayout != null && _worldCurveVertexShader != null && _worldCurveInputLayout != null && _worldLineConstantBuffer != null && _worldLineTransformBuffer != null &&
-        _analyticVertexShader != null && _analyticPixelShader != null && _analyticInputLayout != null &&
-        _outlineShapeVertexShader != null && _outlineShapePixelShader != null && _outlineUnclippedPixelShader != null && _customOutlinePixelShader != null && _arenaSdfOutlinePixelShader != null && _arenaSdfStencilPixelShader != null && _customSdfFillPixelShader != null &&
-        _outlineClipEdgePixelShader != null && _customClipEdgePixelShader != null && _outlineShapeInputLayout != null &&
-        _stencilWriteState != null && _stencilTestState != null && _stencilDisabledState != null &&
-        _arenaSdfSampler != null && _outlineSdfConstantBuffer != null && _customSdfConstantBuffer != null &&
-        _quadIndexBuffer != null;
-
     // call once during plugin initialization with dalamud.UiBuilder.DeviceHandle
     public static void Initialize(nint deviceHandle)
     {
+        // Dispose any previous renderer generation first. Shutdown serializes against an in-flight
+        // RenderBatchCallback and leaves the gate closed until all new resources are ready.
         Shutdown();
 
-        _device = (ID3D11Device*)deviceHandle;
-        _device->AddRef();
-
-        ID3D11DeviceContext* context = null;
-        _device->GetImmediateContext(&context);
-        _context = context;
-
-        if (_context == null)
+        lock (RendererLock)
         {
-            Shutdown();
-            return;
+            _device = (ID3D11Device*)deviceHandle;
+            _device->AddRef();
+
+            ID3D11DeviceContext* context = null;
+            _device->GetImmediateContext(&context);
+            _context = context;
+
+            if (_context != null && CreateShadersAndLayouts() && CreateStencilStates() && CreateArenaSdfPipelineResources())
+            {
+                // Publish the initialized generation only after every object required by callbacks exists.
+                _shutDown = false;
+                IsInitialized = true;
+                return;
+            }
         }
 
-        if (!CreateShadersAndLayouts() || !CreateStencilStates() || !CreateArenaSdfPipelineResources())
-        {
-            Shutdown();
-        }
+        // Initialization failed. Keep the gate closed and release whatever was created.
+        Shutdown();
     }
 
     public static void Shutdown()
     {
-        _arenaActive = false;
-        BuildPath.Clear();
-        ResetBuildRun(returnArrays: true);
-
-        lock (PendingPackets)
+        lock (RendererLock)
         {
-            foreach (var packet in PendingPackets.Values)
+            // Close the gate before touching any COM object. A callback that has not started yet will
+            // return without using renderer state; an already-running callback owns RendererLock, so
+            // we wait here until its draw/state-restore finally block has completed.
+            _shutDown = true;
+            IsInitialized = false;
+            _arenaActive = false;
+            BuildPath.Clear();
+            ResetBuildRun(returnArrays: true);
+
+            lock (PendingPackets)
             {
-                ReturnPacketArrays(packet);
+                foreach (var packet in PendingPackets.Values)
+                {
+                    ReturnPacketArrays(packet);
+                }
+                PendingPackets.Clear();
+                _submitFrame = -1;
             }
-            PendingPackets.Clear();
-            _submitFrame = -1;
-        }
 
-        Release(ref _uploadVertexBuffer);
-        Release(ref _outlineSdfConstantBuffer);
-        Release(ref _customSdfConstantBuffer);
-        Release(ref _quadIndexBuffer);
-        Release(ref _arenaSdfSampler);
-        Release(ref _stencilView);
-        Release(ref _stencilWriteState);
-        Release(ref _stencilTestState);
-        Release(ref _stencilDisabledState);
-        Release(ref _meshInputLayout);
-        Release(ref _strokeInputLayout);
-        Release(ref _worldLineInputLayout);
-        Release(ref _worldCurveInputLayout);
-        Release(ref _worldLineConstantBuffer);
-        Release(ref _worldLineTransformBuffer);
-        Release(ref _analyticInputLayout);
-        Release(ref _textInputLayout);
-        Release(ref _outlineShapeInputLayout);
-        Release(ref _meshVertexShader);
-        Release(ref _meshPixelShader);
-        Release(ref _primitiveTriangleStrokeVertexShader);
-        Release(ref _primitiveTriangleStrokeInputLayout);
-        Release(ref _strokeVertexShader);
-        Release(ref _strokePixelShader);
-        Release(ref _worldLineVertexShader);
-        Release(ref _worldCurveVertexShader);
-        Release(ref _analyticVertexShader);
-        Release(ref _analyticPixelShader);
-        Release(ref _textVertexShader);
-        Release(ref _textPixelShader);
-        Release(ref _outlineShapeVertexShader);
-        Release(ref _outlineShapePixelShader);
-        Release(ref _outlineUnclippedPixelShader);
-        Release(ref _customOutlinePixelShader);
-        Release(ref _arenaSdfOutlinePixelShader);
-        Release(ref _arenaSdfStencilPixelShader);
-        Release(ref _customSdfFillPixelShader);
-        Release(ref _outlineClipEdgePixelShader);
-        Release(ref _customClipEdgePixelShader);
+            Release(ref _uploadVertexBuffer);
+            Release(ref _outlineSdfConstantBuffer);
+            Release(ref _customSdfConstantBuffer);
+            Release(ref _quadIndexBuffer);
+            Release(ref _arenaSdfSampler);
+            Release(ref _stencilView);
+            Release(ref _stencilWriteState);
+            Release(ref _stencilTestState);
+            Release(ref _stencilDisabledState);
+            Release(ref _meshInputLayout);
+            Release(ref _strokeInputLayout);
+            Release(ref _worldLineInputLayout);
+            Release(ref _worldCurveInputLayout);
+            Release(ref _worldLineConstantBuffer);
+            Release(ref _worldLineTransformBuffer);
+            Release(ref _analyticInputLayout);
+            Release(ref _textInputLayout);
+            Release(ref _outlineShapeInputLayout);
+            Release(ref _meshVertexShader);
+            Release(ref _meshPixelShader);
+            Release(ref _primitiveTriangleStrokeVertexShader);
+            Release(ref _primitiveTriangleStrokeInputLayout);
+            Release(ref _strokeVertexShader);
+            Release(ref _strokePixelShader);
+            Release(ref _worldLineVertexShader);
+            Release(ref _worldCurveVertexShader);
+            Release(ref _analyticVertexShader);
+            Release(ref _analyticPixelShader);
+            Release(ref _textVertexShader);
+            Release(ref _textPixelShader);
+            Release(ref _outlineShapeVertexShader);
+            Release(ref _outlineShapePixelShader);
+            Release(ref _outlineUnclippedPixelShader);
+            Release(ref _customOutlinePixelShader);
+            Release(ref _arenaSdfOutlinePixelShader);
+            Release(ref _arenaSdfStencilPixelShader);
+            Release(ref _customSdfFillPixelShader);
+            Release(ref _outlineClipEdgePixelShader);
+            Release(ref _customClipEdgePixelShader);
 
-        ReleaseDeferredOutlineOverlays();
+            ReleaseDeferredOutlineOverlays();
 
-        foreach (var resource in ArenaSdfCache.Values)
-        {
-            var view = resource.View;
-            if (view != null)
+            foreach (var resource in ArenaSdfCache.Values)
             {
-                view->Release();
+                var view = resource.View;
+                if (view != null)
+                {
+                    view->Release();
+                }
             }
-        }
-        ArenaSdfCache.Clear();
-        foreach (var resource in CustomSdfCache.Values)
-        {
-            var view = resource.View;
-            if (view != null)
+            ArenaSdfCache.Clear();
+            foreach (var resource in CustomSdfCache.Values)
             {
-                view->Release();
+                var view = resource.View;
+                if (view != null)
+                {
+                    view->Release();
+                }
             }
-        }
-        CustomSdfCache.Clear();
-        _arenaSdfCacheBytes = 0;
-        _customSdfCacheBytes = 0;
-        _arenaSdfUseCounter = 0;
-        _arenaShape = null;
-        _buildArenaSdf = null;
-        _buildCustomSdfs = null;
-        _buildCustomSdfCount = 0;
+            CustomSdfCache.Clear();
+            _arenaSdfCacheBytes = 0;
+            _customSdfCacheBytes = 0;
+            _arenaSdfUseCounter = 0;
+            _arenaShape = null;
+            _buildArenaSdf = null;
+            _buildCustomSdfs = null;
+            _buildCustomSdfCount = 0;
 
-        if (_context != null)
-        {
-            _context->Release();
-            _context = null;
-        }
+            if (_context != null)
+            {
+                _context->Release();
+                _context = null;
+            }
 
-        if (_device != null)
-        {
-            _device->Release();
-            _device = null;
-        }
+            if (_device != null)
+            {
+                _device->Release();
+                _device = null;
+            }
 
-        _uploadVertexCapacityBytes = 0;
-        _uploadRenderFrame = -1;
-        _uploadCursorBytes = 0;
-        _uploadMeshOffsetBytes = 0u;
-        _uploadPrimitiveTriangleStrokeOffsetBytes = 0u;
-        _uploadStrokeOffsetBytes = 0u;
-        _uploadWorldLineOffsetBytes = 0u;
-        _uploadWorldCurveOffsetBytes = 0u;
-        _uploadAnalyticOffsetBytes = 0u;
-        _uploadOutlineOffsetBytes = 0u;
-        _uploadTextOffsetBytes = 0u;
-        _outlineSdfConstantsValid = false;
-        _customSdfConstantsValid = false;
-        _uploadedWorldLineConstantsValid = false;
-        _lastUploadedWorldLineConstants = default;
-        _stencilWidth = 0;
-        _stencilHeight = 0;
-        _arenaStencilKey = 0L;
-        _arenaStencilMaskQueued = false;
-        _renderedStencilKey = 0L;
+            _uploadVertexCapacityBytes = 0;
+            _uploadRenderFrame = -1;
+            _uploadCursorBytes = 0;
+            _uploadMeshOffsetBytes = 0u;
+            _uploadPrimitiveTriangleStrokeOffsetBytes = 0u;
+            _uploadStrokeOffsetBytes = 0u;
+            _uploadWorldLineOffsetBytes = 0u;
+            _uploadWorldCurveOffsetBytes = 0u;
+            _uploadAnalyticOffsetBytes = 0u;
+            _uploadOutlineOffsetBytes = 0u;
+            _uploadTextOffsetBytes = 0u;
+            _outlineSdfConstantsValid = false;
+            _customSdfConstantsValid = false;
+            _uploadedWorldLineConstantsValid = false;
+            _lastUploadedWorldLineConstants = default;
+            _stencilWidth = 0;
+            _stencilHeight = 0;
+            _arenaStencilKey = 0L;
+            _arenaStencilMaskQueued = false;
+            _renderedStencilKey = 0L;
+        }
     }
 
     // Starts accumulation for one MiniArena. Arena background and clipping are SDF-driven. Arena shapes are considered immutable and keyed by object identity
@@ -3738,7 +3745,33 @@ public static unsafe partial class Dx11ArenaRenderer
         _buildCustomSdfCount = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ID3D11ShaderResourceView* ImTextureIdToShaderResourceView(ImTextureID textureId)
+    {
+        // Dear ImGui's default ImTextureID is an unsigned 64-bit value. The DX11 backend stores
+        // ID3D11ShaderResourceView* in it. Reinterpret rather than depending on generated binding
+        // conversion operators, which have changed between ImGui/Dalamud binding generations.
+        var raw = *(ulong*)&textureId;
+        return (ID3D11ShaderResourceView*)(nuint)raw;
+    }
+
     private static void RenderBatchCallback(ImDrawList* parentList, ImDrawCmd* cmd)
+    {
+        // The ImGui callback may run concurrently with plugin hot-reload teardown. Serialize the
+        // complete callback, including its finally/state restoration, against Shutdown so none of
+        // the global D3D11 objects can be released while native driver calls are in flight.
+        lock (RendererLock)
+        {
+            if (_shutDown)
+            {
+                return;
+            }
+
+            RenderBatchCallbackImpl(parentList, cmd);
+        }
+    }
+
+    private static void RenderBatchCallbackImpl(ImDrawList* parentList, ImDrawCmd* cmd)
     {
         BatchPacket? packet = null;
 
@@ -3747,8 +3780,9 @@ public static unsafe partial class Dx11ArenaRenderer
         ID3D11InputLayout* oldInputLayout = null;
         ID3D11VertexShader* oldVertexShader = null;
         ID3D11PixelShader* oldPixelShader = null;
-        // PS resources used by the arena occupy t1-t3; text additionally needs ImGui's t0 atlas.
-        // Capture contiguous ranges so mixed outline/custom/text packets need one SRV COM call total.
+        // The arena renderer only owns PS resource slots t1-t3. Text must use the texture
+        // carried by this ImDrawCmd; t0 is ambient ImGui/backend state and is not a reliable
+        // way to identify the font atlas for a user callback.
         var oldPsSrvs = stackalloc ID3D11ShaderResourceView*[4];
         var oldAuxSamplers = stackalloc ID3D11SamplerState*[3];
         var oldAuxConstantBuffers = stackalloc ID3D11Buffer*[2];
@@ -3884,11 +3918,18 @@ public static unsafe partial class Dx11ArenaRenderer
 
             if (usesText)
             {
-                // Text needs ImGui's t0 atlas and overwrites t3; capture the whole t0-t3 range in one call
-                _context->PSGetShaderResources(0u, 4u, oldPsSrvs);
-                fontAtlasSrv = oldPsSrvs[0];
-                capturedSrvFirstSlot = 0u;
-                capturedSrvCount = 4u;
+                // ImGui records the texture that belongs to every draw command. Normal DX11 ImGui
+                // rendering binds cmd->GetTexID(); user callbacks are invoked directly, so resolve and bind that texture ourselves
+                var textureId = cmd->GetTexID();
+                fontAtlasSrv = ImTextureIdToShaderResourceView(textureId);
+                // If the command has no texture, text segments will be skipped below instead of sampling
+                // unrelated GPU state. Non-text segments in the same packet are still allowed to render
+
+                // Our text shader binds the atlas at t3; SDF paths may also use t1/t2. Capture only
+                // the slots we actually modify so t0 remains entirely owned by the ImGui backend
+                _context->PSGetShaderResources(1u, 3u, oldPsSrvs + 1);
+                capturedSrvFirstSlot = 1u;
+                capturedSrvCount = 3u;
                 auxSrvStateCaptured = true;
             }
             else if (usesSdf)
@@ -3944,8 +3985,9 @@ public static unsafe partial class Dx11ArenaRenderer
                 auxConstantBufferStateCaptured = true;
             }
 
-            // When text is present, the t0-t3 capture above also AddRefs ImGui's current atlas SRV,
-            // keeping it alive for our glyph draws without a separate PSGetShaderResources call
+            // Text uses the texture ID stored on this callback's ImDrawCmd. The draw command owns
+            // the texture identity for the duration of ImGui rendering; t1-t3 above are captured only
+            // so this callback can restore the backend's state afterward.
             if (packet.NeedsStencil)
             {
                 _context->OMGetRenderTargets(1u, &oldRenderTarget, &oldDepthStencilView);
@@ -5321,27 +5363,19 @@ public static unsafe partial class Dx11ArenaRenderer
         // MiniArena submission and the renderer callback can overlap across the ImGui/render
         // boundary. Keep frame cleanup synchronized with callback packet removal; otherwise a new
         // frame can reclaim a packet before its queued draw callback consumes it
-        if (System.Threading.Volatile.Read(ref _submitFrame) == frame)
+        if (Volatile.Read(ref _submitFrame) == frame)
         {
             return;
         }
 
-        lock (PendingPackets)
-        {
-            if (_submitFrame == frame)
-            {
-                return;
-            }
-
-            // Draw-list callbacks are expected to execute as part of the frame that owns them.
-            // Reclaim anything left from an abandoned previous frame before accepting new packets.
-            foreach (var stale in PendingPackets.Values)
-            {
-                ReturnPacketArrays(stale);
-            }
-            PendingPackets.Clear();
-            System.Threading.Volatile.Write(ref _submitFrame, frame);
-        }
+        // Packet lifetime is owned by the queued ImGui callback, not by the ImGui frame number.
+        // UI submission can advance to frame N+1 while the render thread is still consuming frame N.
+        // Reclaiming PendingPackets here races RenderBatchCallback: the callback can subsequently
+        // receive a valid packet id that has already been removed/repooled and silently draw nothing.
+        // Successfully queued packets are removed and returned by RenderBatchCallback's finally block.
+        // Failed AddCallback registrations clean themselves up at the call site, and Shutdown() remains
+        // the final owner for callbacks that are genuinely abandoned during teardown
+        Volatile.Write(ref _submitFrame, frame);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -5350,7 +5384,7 @@ public static unsafe partial class Dx11ArenaRenderer
 
     private static nint RegisterPacket(BatchPacket packet)
     {
-        packet.SubmitFrame = System.Threading.Volatile.Read(ref _submitFrame);
+        packet.SubmitFrame = Volatile.Read(ref _submitFrame);
         // Every packet originates from a prepared arena/run, so frame cleanup already happened in
         // EnsureArenaPrepared. Synchronize ownership with RenderBatchCallback/PrepareFrame
         lock (PendingPackets)
