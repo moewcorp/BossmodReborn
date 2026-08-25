@@ -328,6 +328,8 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     {
         if (poly.Parts.Count != 0)
         {
+            // decompose the polygon into 10x10 cells (the natural omen resolution) instead of one
+            // fat AABB, so concave shapes like L-shaped reflection zones stay close to the original
             float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
             foreach (var part in poly.Parts)
             {
@@ -339,12 +341,17 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
                     if (v.Z > maxZ) maxZ = v.Z;
                 }
             }
-            if (maxX > minX && maxZ > minZ)
+            const float cell = 10f;
+            for (var cx = MathF.Floor(minX / cell) * cell; cx <= maxX; cx += cell)
             {
-                var center = _center + new WDir((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f);
-                var halfX = (maxX - minX) * 0.5f;
-                var halfZ = (maxZ - minZ) * 0.5f;
-                RecordZone(AOEIPCShapeType.Rect, center, default, color, halfZ, halfZ, halfX);
+                for (var cz = MathF.Floor(minZ / cell) * cell; cz <= maxZ; cz += cell)
+                {
+                    var local = new WDir(cx, cz);
+                    if (poly.Contains(local))
+                    {
+                        RecordZone(AOEIPCShapeType.Rect, _center + local, default, color, cell * 0.5f, cell * 0.5f, cell * 0.5f);
+                    }
+                }
             }
         }
         Dx11ArenaRenderer.AppendRelPoly(poly, color != default ? color : Colors.AOE);
