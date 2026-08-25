@@ -1,7 +1,4 @@
-﻿using BossMod.AI;
-using static BossMod.ActorCastEvent;
-
-namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE214TinyTerror;
+﻿namespace BossMod.Dawntrail.Foray.CriticalEngagement.CE214TinyTerror;
 
 public enum OID : uint
 {
