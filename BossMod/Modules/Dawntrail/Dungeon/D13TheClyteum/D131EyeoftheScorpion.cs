@@ -71,6 +71,12 @@ sealed class MotionTracker(BossModule module) : Components.StayMove(module)
             else if (renderflags == 16384)
             {
                 TrackingBeam = null;
+                // clear the special state when the thing despawns, just in case you're hanging out right at the edge.
+                var group = Raid.WithSlot(true);
+                foreach (var p in group)
+                {
+                    PlayerStates[p.Item1] = default;
+                }
             }
         }
     }
