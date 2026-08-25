@@ -10,7 +10,7 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         Angle forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
         float range = 10000f,
         bool inverted = false,
-        ulong actorID = default, Vector2? eyeCenter = null)
+        ulong actorID = default)
     {
         public readonly WPos Position = position;
         public readonly DateTime Activation = activation;
@@ -18,7 +18,6 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         public readonly float Range = range;
         public readonly bool Inverted = inverted;
         public readonly ulong ActorID = actorID;
-        public readonly Vector2? EyeCenter = eyeCenter; // position where the eye should be drawn
     }
 
     private const float _eyeOuterH = 10f;
@@ -90,7 +89,7 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         {
             ref readonly var eye = ref eyes[i];
             var danger = HitByEye(ref pc, eye) != eye.Inverted;
-            var eyePos = eye.EyeCenter == null ? IndicatorScreenPos(eye.Position) : eye.EyeCenter;
+            var eyePos = IndicatorScreenPos(eye.Position);
             if (eyePos is Vector2 pos)
             {
                 DrawEye(pos, danger);
@@ -109,14 +108,12 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
     {
         var bodyColor = danger ? Colors.Enemy : Colors.PC;
 
-        // All pieces are analytic screen-space instances. Consecutive ScreenAnalytic segments merge
-        // into one instanced draw, so this richer icon does not require polygon tessellation or ImGui.
+        // All pieces are analytic screen-space instances and consecutive ScreenAnalytic segments merge into one instanced draw
         Dx11ArenaRenderer.AppendScreenEye(eyeCenter + new Vector2(0f, _eyeShadowOffsetY), _eyeOuterH, _eyeOuterV, _eyeShadow);
         Dx11ArenaRenderer.AppendScreenEye(eyeCenter, _eyeOuterH, _eyeOuterV, Colors.Border);
         Dx11ArenaRenderer.AppendScreenEye(eyeCenter, _eyeOuterH - _eyeBorder, _eyeOuterV - _eyeBorder, bodyColor);
 
-        // Preserve the legacy status semantics: the whole eye body is red/green. The inner circles
-        // only add depth/readability and never replace the state color with a white sclera.
+        // the whole eye body is red/green. The inner circles only add depth/readability
         Dx11ArenaRenderer.AppendScreenCircle(eyeCenter, _eyeIrisR, Colors.Border);
         Dx11ArenaRenderer.AppendScreenCircle(eyeCenter, _eyePupilR, _eyePupil);
         Dx11ArenaRenderer.AppendScreenCircle(eyeCenter + new Vector2(-0.9f, -0.9f), _eyeHighlightR, _eyeHighlight);
@@ -175,7 +172,7 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
         if (spell.Action.ID == WatchedAction)
         {
             var loc = spell.LocXZ;
-            Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID, IndicatorScreenPos(loc)));
+            Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
         }
     }
 
@@ -212,7 +209,7 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
             if (spell.Action.ID == AIDs[i])
             {
                 var loc = spell.LocXZ;
-                Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID, IndicatorScreenPos(loc)));
+                Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
                 if (Eyes.Count == ExpectedNumCasters)
                 {
                     SortHelpers.SortEyesByActivation(Eyes);
